@@ -1,3 +1,5 @@
+![CI](https://github.com/raold/second-brain/actions/workflows/ci.yml/badge.svg)
+
 # LLM Output Processor
 
 > Ingest, Embed, and Search Text Semantically using OpenAI Embeddings + Qdrant Vector DB.
