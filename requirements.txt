@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+httpx
+qdrant-client
+openai
+sentence-transformers
+loguru>=0.7.2

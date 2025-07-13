@@ -1,0 +1,21 @@
+{
+  "id": "test-001",
+  "type": "memory",
+  "intent": "store",
+  "target": "person",
+  "context": "voice",
+  "priority": "normal",
+  "ttl": "30d",
+  "dependencies": [],
+  "data": {
+    "note": "Spoke with Alex about integrating the new storage system into the NAS",
+    "timestamp": "2025-07-12T23:00:00Z"
+  },
+  "metadata": {
+    "confidence": 0.95,
+    "source": "manual-test",
+    "origin": "curl-test",
+    "user_id": "dro"
+  },
+  "status": "stored"
+}
