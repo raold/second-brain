@@ -26,6 +26,39 @@ This API enables ingestion of text data, which is embedded via OpenAI's `text-em
 
 ---
 
+## 📁 Project Structure
+
+```
+second-brain/
+├── app/
+│   ├── main.py
+│   ├── router.py
+│   ├── auth.py
+│   ├── config.py
+│   ├── qdrant_client.py
+│   └── utils/
+│       ├── logger.py
+│       └── openai_client.py
+├── tests/
+│   ├── __init__.py
+│   ├── test_health.py
+│   ├── test_ingest.py
+│   └── test_search.py
+├── docs/
+│   ├── USAGE.md
+│   ├── ARCHITECTURE.md
+│   └── CHANGE_AUDIT.md
+├── logs/               # Log files (gitignored)
+├── qdrant_data/        # Persistent data for Qdrant (gitignored)
+├── docker-compose.yml
+├── Makefile
+├── requirements.txt
+├── .gitignore
+├── LICENSE
+└── README.md
+```
+---
+
 ## 🔧 Setup
 
 1. Clone the repo:
