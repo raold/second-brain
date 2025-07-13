@@ -30,6 +30,10 @@ This API enables ingestion of text data, which is embedded via OpenAI's `text-em
 
 ## 📁 Project Structure
 
+---
+
+![System Architecture - Dark Theme](docs/fc3585e6-dca3-4044-a2a1-b2192fd49eb2.png)
+
 ```
 second-brain/
 ├── app/
