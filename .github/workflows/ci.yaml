@@ -9,7 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    env:
+      ENVIRONMENT: test
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
