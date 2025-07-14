@@ -3,6 +3,9 @@
 import os
 from loguru import logger
 from app.config import Config
+from app.utils.logger import get_logger
+
+logger = get_logger()
 
 # Ensure logs directory exists
 os.makedirs(os.path.dirname(Config.LOG_PATH), exist_ok=True)
