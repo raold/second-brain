@@ -16,7 +16,8 @@ logs:
 	docker compose logs -f
 
 test:
-	docker exec llm_output_processor pytest
+#	docker exec llm_output_processor pytest
+	PYTHONPATH=. pytest --cov=app tests/
 
 restart:
 	docker compose down
@@ -27,4 +28,7 @@ test:
 	pytest tests/
 
 lint:
-	black app/ tests/
+	ruff check .
+
+ci:
+	lint test
