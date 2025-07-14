@@ -2,22 +2,25 @@
 
 import os
 from loguru import logger
-from app.config import Config
-from app.utils.logger import get_logger
 
-logger = get_logger()
+_log_initialized = False
 
-# Ensure logs directory exists
-os.makedirs(os.path.dirname(Config.LOG_PATH), exist_ok=True)
+def get_logger():
+    """Initializes and returns the logger instance, avoiding reinitialization."""
+    global _log_initialized
+    if not _log_initialized:
+        from app.config import Config  # Lazy import to avoid circular dependency
 
-logger.add(
-    Config.LOG_PATH,
-    rotation="1 MB",
-    retention="10 days",
-    level=Config.LOG_LEVEL,
-    enqueue=True,
-    backtrace=True,
-    diagnose=True
-)
+        log_path = Config.LOG_PATH
+        log_level = Config.LOG_LEVEL
 
-logger.info(f"Logger initialized. Path: {Config.LOG_PATH}, Level: {Config.LOG_LEVEL}")
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+
+        logger.remove()
+        logger.add(log_path, rotation="10 MB", retention="7 days", level=log_level)
+        logger.add(lambda msg: print(msg, end=""), level=log_level)
+
+        logger.info(f"Logger initialized. Path: {log_path}, Level: {log_level}")
+        _log_initialized = True
+
+    return logger
