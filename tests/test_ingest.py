@@ -1,13 +1,20 @@
-# app/tests/test_ingest.py
-
 from fastapi.testclient import TestClient
 from app.main import app
 from app.config import Config
+from unittest.mock import patch
+import pytest
 
 client = TestClient(app)
-AUTH_HEADER = {"Authorization": Config.API_TOKENS[0]}
 
-def test_ingest():
+@pytest.fixture(autouse=True)
+def inject_test_token(monkeypatch):
+    monkeypatch.setattr(Config, 'API_TOKENS', {'test-token'})
+
+AUTH_HEADER = {"Authorization": "Bearer test-token"}
+
+@patch("app.qdrant_client_wrapper.qdrant_client.upsert")
+@patch("app.utils.openai_client.embed_text", return_value=[0.0] * Config.QDRANT_VECTOR_SIZE)
+def test_ingest(mock_embed_text, mock_qdrant_upsert):
     payload = {
         "id": "test-id",
         "type": "note",
@@ -25,3 +32,5 @@ def test_ingest():
 
     response = client.post("/ingest", json=payload, headers=AUTH_HEADER)
     assert response.status_code == 200
+    mock_embed_text.assert_called_once()
+    mock_qdrant_upsert.assert_called_once()

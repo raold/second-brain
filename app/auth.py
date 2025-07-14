@@ -1,13 +1,14 @@
-# app/auth.py
-import os
 from fastapi import Request, HTTPException
 from fastapi.security.utils import get_authorization_scheme_param
+from app.config import Config
+import logging
 
-API_TOKENS = set(os.getenv("API_TOKENS", "").split(","))
+logger = logging.getLogger(__name__)
 
 def verify_token(request: Request):
     authorization: str = request.headers.get("Authorization")
     scheme, token = get_authorization_scheme_param(authorization)
 
-    if not token or scheme.lower() != "bearer" or token.strip() not in API_TOKENS:
+    if not token or scheme.lower() != "bearer" or token.strip() not in Config.API_TOKENS:
+        logger.warning(f"Unauthorized access attempt with token: {token}")
         raise HTTPException(status_code=401, detail="Invalid or missing token")
