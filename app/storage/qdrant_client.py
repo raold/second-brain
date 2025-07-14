@@ -1,79 +1,71 @@
+from uuid import uuid5, NAMESPACE_URL, UUID
+from datetime import datetime
+from typing import Union, Optional
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Filter, SearchParams, PointStruct
-from openai import OpenAI
-from uuid import uuid5, NAMESPACE_URL
+from qdrant_client.http.models import PointStruct, Filter, FieldCondition, MatchValue, SearchParams
 from app.utils.logger import logger
+from app.config import Config
+from app.utils.openai_client import get_openai_embedding
 import os
+from openai import OpenAI
 
-client = QdrantClient("qdrant", port=6333)
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = QdrantClient(host=Config.QDRANT_HOST, port=Config.QDRANT_PORT)
 
-def store_vector(payload):
-    note = payload.data.get("note")
-    if not note:
-        raise ValueError("Payload 'data.note' is required for vectorization.")
+def to_uuid(text: str) -> UUID:
+    return uuid5(NAMESPACE_URL, text)
 
+def get_openai_client():
+    return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def qdrant_upsert(payload: dict):
     try:
-        model_name = "text-embedding-3-small"
-        response = openai_client.embeddings.create(
-            model=model_name,
-            input=note
+        openai_client = get_openai_client()
+        embedding = get_openai_embedding(payload["data"]["note"], openai_client)
+        if not embedding:
+            raise ValueError("Generated embedding is empty")
+
+        payload["metadata"]["embedding_model"] = Config.OPENAI_EMBEDDING_MODEL
+        point = PointStruct(
+            id=to_uuid(payload["id"]),
+            vector=embedding,
+            payload=payload
         )
-        vector = response.data[0].embedding
-    except Exception as e:
-        logger.error(f"[OpenAI ERROR] Failed to embed note: {e}")
-        return
-
-    try:
-        # Convert string IDs to UUIDv5 if not already an int
-        point_id = payload.id
-        if not isinstance(point_id, int):
-            point_id = str(uuid5(NAMESPACE_URL, str(payload.id)))
-
-        # Add embedding model to metadata
-        payload.metadata["embedding_model"] = model_name
 
         client.upsert(
-            collection_name="second_brain",
-            points=[
-                PointStruct(
-                    id=point_id,
-                    vector=vector,
-                    payload=payload.dict()
-                )
-            ]
+            collection_name=Config.QDRANT_COLLECTION_NAME,
+            points=[point]
         )
-        logger.info(f"[Qdrant] Stored vector for ID: {point_id}")
+        logger.info(f"[Qdrant] Upserted vector for ID: {payload['id']}")
     except Exception as e:
-        logger.error(f"[Qdrant ERROR] Failed to upsert vector: {e}")
+        logger.exception(f"[Qdrant ERROR] Failed to upsert vector for ID={payload['id']}: {str(e)}")
 
-def qdrant_search(query, top_k=5):
+def qdrant_search(query: str, top_k: int = 5):
     try:
-        response = openai_client.embeddings.create(
-            model="text-embedding-3-small",
-            input=query
-        )
-        vector = response.data[0].embedding
-    except Exception as e:
-        logger.error(f"[OpenAI ERROR] Failed to embed search query: {e}")
-        return []
+        openai_client = get_openai_client()
+        query_vector = get_openai_embedding(query, openai_client)
+        if not query_vector:
+            raise ValueError("Query embedding is empty")
 
-    try:
-        hits = client.search(
-            collection_name="second_brain",
-            query_vector=vector,
-            limit=top_k
+        search_result = client.search(
+            collection_name=Config.QDRANT_COLLECTION_NAME,
+            query_vector=query_vector,
+            limit=top_k,
+            search_params=SearchParams(hnsw_ef=128, exact=False)
         )
-        return [
+
+        logger.info(f"[Qdrant] Search for query '{query}' returned {len(search_result)} results")
+        results = [
             {
-                "id": hit.id,
-                "score": hit.score,
-                "note": hit.payload.get("data", {}).get("note", ""),
-                "timestamp": hit.payload.get("metadata", {}).get("timestamp", ""),
-                "source": hit.payload.get("metadata", {}).get("source", "")
+                "id": str(result.id),
+                "score": result.score,
+                "note": result.payload.get("data", {}).get("note"),
+                "timestamp": result.payload.get("metadata", {}).get("timestamp"),
+                "source": result.payload.get("metadata", {}).get("source")
             }
-            for hit in hits
+            for result in search_result
         ]
+
+        return results
     except Exception as e:
-        logger.error(f"[Qdrant ERROR] Search failed: {e}")
+        logger.exception(f"[Qdrant ERROR] Search failed for query='{query}': {str(e)}")
         return []
