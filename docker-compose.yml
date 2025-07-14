@@ -1,3 +1,10 @@
+# Deployment Configuration for llm_output_processor
+
+## docker-compose.yml
+#  - Mounts the local `./app` directory into the container at `/app/app` to preserve the `app.` import namespace.
+#  - Includes a `qdrant` service for vector storage.
+#  - Logging and restart policies configured.
+
 services:
   llm-output-processor:
     build: .
@@ -6,6 +13,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - ./app:/app/app
       - ./logs:/app/logs
     depends_on:
       - qdrant
@@ -29,3 +37,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+networks:
+  app-net:
+    driver: bridge
