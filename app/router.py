@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Request, Depends
 from app.auth import verify_token
-from app.qdrant_client import qdrant_upsert, qdrant_search
+from app.qdrant_client_wrapper import qdrant_search, qdrant_upsert
 from app.utils.logger import logger
 
 router = APIRouter()
