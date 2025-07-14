@@ -25,16 +25,13 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov ruff
 
-      - name: Auto-fix lint issues (ruff)
-        run: |
-          ruff check . --fix || echo "Lint auto-fixed"
-
       - name: Run Linting (ruff)
         run: |
           ruff check .
 
       - name: Run Tests with Coverage
         run: |
+          export PYTHONPATH=.
           pytest --cov=app tests/
 
       - name: Upload Coverage Report
