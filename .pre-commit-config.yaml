@@ -1,0 +1,10 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
+
+  - repo: https://github.com/pytest-dev/pytest
+    rev: 7.4.2
+    hooks:
+      - id: pytest
