@@ -1,4 +1,4 @@
-![CI](https://github.com/<username>/<repo>/actions/workflows/<workflow_file>.yml/badge.svg)
+![CI](https://github.com/raold/second-brain/actions/workflows/ci.yml/badge.svg)
 
 
 # LLM Output Processor
