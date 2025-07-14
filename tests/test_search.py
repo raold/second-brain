@@ -1,10 +1,12 @@
 # /tests/test_search.py
 
-from fastapi.testclient import TestClient
-from app.main import app
-from app.config import Config
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
 import pytest
+from fastapi.testclient import TestClient
+
+from app.config import Config
+from app.main import app
 
 client = TestClient(app)
 

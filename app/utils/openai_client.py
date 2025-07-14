@@ -1,9 +1,11 @@
 # app/utils/openai_client.py
 
 import time
-from typing import List, Optional
+from typing import List
+
 import openai
 from tenacity import retry, stop_after_attempt, wait_exponential
+
 from app.config import Config
 from app.utils.logger import get_logger
 

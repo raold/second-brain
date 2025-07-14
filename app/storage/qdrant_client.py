@@ -1,13 +1,15 @@
-from uuid import uuid5, NAMESPACE_URL, UUID
-from datetime import datetime
-from typing import Union, Optional, List, Dict, Any
-from qdrant_client import QdrantClient
-from qdrant_client.http.models import PointStruct, Filter, FieldCondition, MatchValue, SearchParams
-from app.utils.logger import logger
-from app.config import Config
-from app.utils.openai_client import get_openai_embedding
 import os
+from datetime import datetime
+from typing import Any, Dict, List
+from uuid import NAMESPACE_URL, UUID, uuid5
+
 from openai import OpenAI
+from qdrant_client import QdrantClient
+from qdrant_client.http.models import PointStruct, SearchParams
+
+from app.config import Config
+from app.utils.logger import logger
+from app.utils.openai_client import get_openai_embedding
 
 # Initialize Qdrant client
 client = QdrantClient(host=Config.QDRANT_HOST, port=Config.QDRANT_PORT)

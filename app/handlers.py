@@ -1,10 +1,11 @@
+import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+from app.models import Payload
 from app.storage.markdown_writer import write_markdown
 from app.storage.qdrant_client import qdrant_upsert
 from app.storage.shell_runner import run_shell_command
-from pathlib import Path
-import datetime
-from typing import Optional, Dict, Any
-from app.models import Payload, PayloadType
 from app.utils.logger import get_logger
 
 logger = get_logger()

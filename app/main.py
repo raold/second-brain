@@ -2,9 +2,10 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import Config
 from app.router import router
 from app.utils.logger import logger
-from app.config import Config
 
 app = FastAPI(
     title="LLM Output Processor",

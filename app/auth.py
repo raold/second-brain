@@ -1,5 +1,6 @@
-from fastapi import Request, HTTPException, status
+from fastapi import HTTPException, Request, status
 from fastapi.security.utils import get_authorization_scheme_param
+
 from app.config import Config
 from app.utils.logger import get_logger
 

@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 # Load .env file if present (useful in local dev)
