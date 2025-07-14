@@ -28,6 +28,14 @@ This API enables ingestion of text data, which is embedded via OpenAI's `text-em
 
 ---
 
+## 🏁 Getting Started
+
+See the [full Deployment Instructions](./docs/DEPLOYMENT.md) for detailed setup and configuration steps.
+
+---
+
+---
+
 ## 📁 Project Structure
 
 ---
