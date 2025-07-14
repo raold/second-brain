@@ -12,9 +12,9 @@ def inject_test_token(monkeypatch):
 
 AUTH_HEADER = {"Authorization": "Bearer test-token"}
 
-@patch("app.qdrant_client_wrapper.qdrant_client.upsert")
-@patch("app.utils.openai_client.embed_text", return_value=[0.0] * Config.QDRANT_VECTOR_SIZE)
-def test_ingest(mock_embed_text, mock_qdrant_upsert):
+@patch("app.handlers.qdrant_upsert")
+@patch("app.handlers.write_markdown")
+def test_ingest(mock_write_markdown, mock_qdrant_upsert):
     payload = {
         "id": "test-id",
         "type": "note",
@@ -32,5 +32,5 @@ def test_ingest(mock_embed_text, mock_qdrant_upsert):
 
     response = client.post("/ingest", json=payload, headers=AUTH_HEADER)
     assert response.status_code == 200
-    mock_embed_text.assert_called_once()
+    mock_write_markdown.assert_called_once()
     mock_qdrant_upsert.assert_called_once()
