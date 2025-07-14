@@ -25,10 +25,26 @@ This API enables ingestion of text data, which is embedded via OpenAI's `text-em
 - OpenAI API Key
 - Python 3.10+ (for local dev)
 
-## 🤝 Contributing
+# Contributing to LLM Output Processor
 
-We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+We welcome contributions of all kinds — bug reports, feature requests, code, and documentation!
 
+## 🛠 How to Contribute
+
+1. **Fork the Repository**
+2. **Create a Feature Branch**
+3. **Commit Changes**
+- Use descriptive commit messages.
+- Format code before committing:
+  ```
+  make lint
+  ```
+4. **Write Tests**
+- Add tests for new features or bug fixes:
+  ```
+  make test
+  ```
+5. **Push and Open a PR**
 
 ## 🔒 Security Vulnerabilities
 
