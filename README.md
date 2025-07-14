@@ -1,5 +1,4 @@
-![CI](https://github.com/raold/second-brain/actions/workflows/ci.yml/badge.svg)
-
+[![CI Pipeline](https://github.com/raold/second-brain/actions/workflows/ci.yaml/badge.svg)](https://github.com/raold/second-brain/actions/workflows/ci.yaml)
 
 # LLM Output Processor
 
