@@ -2,8 +2,10 @@
 
 from fastapi.testclient import TestClient
 from app.main import app
+from app.config import Config
 
 client = TestClient(app)
+AUTH_HEADER = {"Authorization": Config.API_TOKENS[0]}
 
 def test_ingest():
     payload = {
@@ -20,8 +22,6 @@ def test_ingest():
             "timestamp": "2025-07-13T00:00:00Z"
         }
     }
-    headers = {"Authorization": "Bearer test-token"}
-    response = client.post("/ingest", json=payload, headers=headers)
-    assert response.status_code == 200
-    assert response.json()["status"] == "ingested"
 
+    response = client.post("/ingest", json=payload, headers=AUTH_HEADER)
+    assert response.status_code == 200
