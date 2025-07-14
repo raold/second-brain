@@ -5,12 +5,12 @@
 
 > Ingest, Embed, and Search Text Semantically using OpenAI Embeddings + Qdrant Vector DB.
 
----
+
 
 ## 📦 Project Overview
 This API enables ingestion of text data, which is embedded via OpenAI's `text-embedding-3-small` model and stored in Qdrant for semantic search.
 
----
+
 
 ## 🚀 Features
 - Token-based auth
@@ -20,26 +20,28 @@ This API enables ingestion of text data, which is embedded via OpenAI's `text-em
 - Automated test suite (pytest)
 - Makefile for dev workflow
 
----
+
 
 ## ⚙️ Requirements
 - Docker + Docker Compose
 - OpenAI API Key
 - Python 3.10+ (for local dev)
 
----
+
+
 
 ## 🏁 Getting Started
 
 See the [full Deployment Instructions](./docs/DEPLOYMENT.md) for detailed setup and configuration steps.
 
----
 
----
+
+
+
+
 
 ## 📁 Project Structure
 
----
 
 ![System Architecture - Dark Theme](docs/system_architecture.png)
 
@@ -72,7 +74,7 @@ second-brain/
 ├── LICENSE
 └── README.md
 ```
----
+
 
 ## 🔧 Setup
 
@@ -103,7 +105,6 @@ API Docs:
 Qdrant Dashboard:  
 [http://localhost:6333/dashboard](http://localhost:6333/dashboard)
 
----
 
 ## ✅ API Endpoints
 
@@ -111,7 +112,7 @@ Qdrant Dashboard:
 - `POST /ingest` - Ingest a text payload
 - `GET /search?q=text` - Search semantically
 
----
+
 
 ## 🧪 Testing
 ```bash
@@ -123,12 +124,12 @@ make test
 make lint
 ```
 
----
+
 
 ## 🛡️ License
 AGPLv3 — Free for use with source-sharing required for derivatives.
 
----
+
 
 ## 🛠️ Roadmap
 - API Rate Limiting
