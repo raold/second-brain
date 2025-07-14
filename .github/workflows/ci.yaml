@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
 
     steps:
       - name: Checkout code
@@ -25,6 +27,12 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov ruff
 
+      - name: Debug PYTHONPATH
+        run: |
+          echo "PYTHONPATH=$PYTHONPATH"
+          ls -la app/
+          python3 -c "import app.utils.logger; print('Logger imported successfully')"
+
       - name: Auto-fix lint issues
         run: |
           ruff check . --fix
@@ -35,7 +43,6 @@ jobs:
 
       - name: Run Tests with Coverage
         run: |
-          export PYTHONPATH=.
           pytest --cov=app tests/
 
       - name: Upload Coverage Report
