@@ -8,7 +8,7 @@ from app.utils.logger import get_logger
 logger = get_logger()
 
 
-def get_openai_embedding(text: str) -> list:
+def get_openai_embedding(text: str, openai_client=None) -> list:
     start_time = time.time()
 
     logger.debug(
@@ -19,7 +19,9 @@ def get_openai_embedding(text: str) -> list:
         }
     )
 
-    response = openai.Embedding.create(
+    # Use the provided client or the global openai module
+    client = openai_client or openai
+    response = client.Embedding.create(
         input=text,
         model=Config.OPENAI_EMBEDDING_MODEL
     )

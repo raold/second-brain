@@ -23,7 +23,7 @@ def handle_store(payload: Payload):
 
     if target in ("note", "memory"):
         write_markdown(payload)
-        qdrant_upsert(payload)
+        qdrant_upsert(payload.dict())
 
     elif target == "task":
         store_task(payload)
