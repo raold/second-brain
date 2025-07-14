@@ -2,49 +2,42 @@
 
 ## Supported Versions
 
-We actively support the latest version of this project. Older versions will receive security updates on a best-effort basis, but are not guaranteed.
+We actively support the latest version of this project. Older versions are not supported by default but may receive patches on a best-effort basis.
 
 | Version | Supported        |
 | ------- | ---------------- |
 | 1.x.x   | ✅ Supported      |
-| < 1.0   | ❌ Not supported  |
+| < 1.0   | ❌ Not Supported  |
 
-For guaranteed support and patches, please stay updated on the latest release.
-
----
+We encourage all users to upgrade to the latest release.
 
 ## Reporting a Vulnerability
 
-If you discover a vulnerability or have security concerns, please follow the steps below:
+If you discover a vulnerability, we strongly encourage responsible disclosure. Please report it via:
 
-1. **Email Us Directly:**  
-   Please send detailed information to **security@oldham.io**. Include:
-   - A description of the vulnerability.
-   - Steps to reproduce the issue.
-   - Any potential impact or exploitability analysis.
+📧 **security@oldham.io**
 
-2. **Expected Response Time:**  
-   We aim to respond within **3 business days** to acknowledge the report. A complete assessment may take longer depending on complexity.
+Include the following information if possible:
+- Description of the vulnerability
+- Potential impact
+- Steps to reproduce
+- Environment (OS, version, etc.)
 
-3. **Coordinated Disclosure:**  
-   We appreciate responsible disclosure and will work with you to coordinate public release timelines where appropriate.
+We aim to respond within **3 business days** and will coordinate disclosure responsibly.
 
-4. **Hall of Fame:**  
-   Security researchers who responsibly disclose vulnerabilities may be recognized in our project's acknowledgments (optional).
+## Security Best Practices
 
----
+- Keep your dependencies updated.
+- Run the application in isolated environments (e.g., containers).
+- Regularly rotate API tokens and secrets.
+- Never commit `.env` files or secrets to source control.
+- Monitor logs for suspicious activity.
 
-## Security Best Practices for Users
+## Hall of Fame
 
-- Always run the latest released version.
-- Rotate API tokens and secrets regularly.
-- Use environment-specific `.env` files and avoid committing secrets to version control.
-- Run in isolated containers in production.
+We recognize researchers who responsibly disclose vulnerabilities. If you wish to be acknowledged, please let us know when reporting.
 
----
+## Resources
 
-## Contact
-
-For any security-related matters, please contact:
-
-**security@oldham.io**
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [README.md](./README.md)
