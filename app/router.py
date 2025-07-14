@@ -1,12 +1,14 @@
 # app/router.py
 
+from typing import Any, Dict
+
 from fastapi import APIRouter, Depends, HTTPException, status
+
 from app.auth import verify_token
-from app.storage.qdrant_client import qdrant_search, qdrant_upsert
-from app.storage.markdown_writer import write_markdown
 from app.models import Payload
+from app.storage.markdown_writer import write_markdown
+from app.storage.qdrant_client import qdrant_search, qdrant_upsert
 from app.utils.logger import logger
-from typing import Dict, Any, List
 
 router = APIRouter()
 
@@ -46,7 +48,7 @@ async def ingest_endpoint(payload: Payload, _: None = Depends(verify_token)) -> 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to ingest payload: {str(e)}"
-        )
+        ) from e
 
 @router.get("/search")
 async def search_endpoint(q: str, _: None = Depends(verify_token)) -> Dict[str, Any]:
@@ -74,4 +76,4 @@ async def search_endpoint(q: str, _: None = Depends(verify_token)) -> Dict[str, 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Search failed: {str(e)}"
-        )
+        ) from e

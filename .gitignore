@@ -15,6 +15,9 @@ logs/
 .pytest_cache/
 coverage/
 
+# Ruff cache
+.ruff_cache/
+
 # VSCode
 .vscode/
 

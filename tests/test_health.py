@@ -1,9 +1,11 @@
 # /tests/test_health.py
 
-from fastapi.testclient import TestClient
-from app.main import app
 from unittest.mock import patch
+
 import pytest
+from fastapi.testclient import TestClient
+
+from app.main import app
 
 client = TestClient(app)
 
