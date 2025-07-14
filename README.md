@@ -20,17 +20,52 @@ This API enables ingestion of text data, which is embedded via OpenAI's `text-em
 - Makefile for dev workflow
 
 
-
 ## ⚙️ Requirements
 - Docker + Docker Compose
 - OpenAI API Key
 - Python 3.10+ (for local dev)
 
+# Contributing to LLM Output Processor
 
+We welcome contributions of all kinds — bug reports, feature requests, code, and documentation!
+
+## 🛠 How to Contribute
+
+1. **Fork the Repository**
+2. **Create a Feature Branch**
+3. **Commit Changes**
+- Use descriptive commit messages.
+- Format code before committing:
+  ```
+  make lint
+  ```
+4. **Write Tests**
+- Add tests for new features or bug fixes:
+  ```
+  make test
+  ```
+5. **Push and Open a PR**
+
+## 🔒 Security Vulnerabilities
+
+Please report any security vulnerabilities **privately** via [security@oldham.io](mailto:security@oldham.io).  
+Do **not** open public issues for security concerns — see [SECURITY.md](./SECURITY.md) for full details.
+
+## ✅ Guidelines
+
+- Follow the existing coding style.
+- Write clear, concise documentation when applicable.
+- Keep PRs focused — avoid large, multi-purpose changes.
+- Tests and linters must pass in CI.
+
+## 📋 Resources
+
+- [README.md](./README.md)
+- [SECURITY.md](./SECURITY.md)
+
+---
 
 ## 📁 Project Structure
-
-
 ![System Architecture - Dark Theme](docs/system_architecture.png)
 
 ```
@@ -116,8 +151,6 @@ make test
 ```bash
 make lint
 ```
-
-
 
 ## 🛡️ License
 AGPLv3 — Free for use with source-sharing required for derivatives.
