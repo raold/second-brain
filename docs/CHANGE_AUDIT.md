@@ -13,8 +13,9 @@ This document tracks the changes, enhancements, and refactors applied to upgrade
 - `app/router.py`: Added logging on API calls.
 - `app/main.py`: Logs config summary on startup.
 - `Makefile`: Streamlined dev/test commands.
-- `docker-compose.yml`: Logging config, resource settings.
+- `docker-compose.yml`: Logging config, resource settings, volume mount updated for consistent import paths.
 - `.gitignore`: Added for Python and environment exclusions.
+- `README.md`: Added 🚀 icon for Getting Started and linked to `docs/DEPLOYMENT.md`.
 
 ---
 
@@ -24,6 +25,7 @@ This document tracks the changes, enhancements, and refactors applied to upgrade
   - `USAGE.md`
   - `ARCHITECTURE.md`
   - `CHANGE_AUDIT.md`
+  - `DEPLOYMENT.md`: Full deployment instructions.
 - `LICENSE`: AGPLv3
 - `Makefile`: For streamlined Docker/dev/test workflow.
 
@@ -58,3 +60,6 @@ Via `.env` or `config.py`:
 - `Initial production-hardened release`
 - `Added retry logic and logging enhancements`
 - `Added test suite and developer docs`
+- `Linked README Getting Started to /docs/DEPLOYMENT.md`
+- `Updated docker-compose volume mount for correct import namespace`
+- `Added 🚀 icon to Getting Started section in README`
