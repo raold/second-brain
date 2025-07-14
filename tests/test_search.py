@@ -12,7 +12,7 @@ def inject_test_token(monkeypatch):
 
 AUTH_HEADER = {"Authorization": "Bearer test-token"}
 
-@patch("app.qdrant_client.qdrant_search", return_value=[])
+@patch("app.storage.qdrant_client.qdrant_search", return_value=[])
 def test_search_empty(mock_qdrant_search):
     response = client.get("/search?q=nonexistent", headers=AUTH_HEADER)
     assert response.status_code == 200
