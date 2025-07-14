@@ -27,6 +27,9 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov ruff
 
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+
       - name: Auto-fix lint issues (ruff)
         run: |
           ruff check . --fix || echo "Lint auto-fixed"
