@@ -9,8 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      PYTHONPATH: .
 
     steps:
       - name: Checkout code
@@ -27,22 +25,22 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov ruff
 
-      - name: Debug PYTHONPATH
+      - name: Auto-fix lint issues (ruff)
         run: |
-          echo "PYTHONPATH=$PYTHONPATH"
-          ls -la app/
-          python3 -c "import app.utils.logger; print('Logger imported successfully')"
-
-      - name: Auto-fix lint issues
-        run: |
-          ruff check . --fix
+          ruff check . --fix || echo "Lint auto-fixed"
 
       - name: Run Linting (ruff)
         run: |
           ruff check .
 
+      - name: Debug PYTHONPATH
+        run: |
+          echo "PYTHONPATH=$PYTHONPATH"
+          ls -la /home/runner/work/second-brain/second-brain/app
+
       - name: Run Tests with Coverage
         run: |
+          export PYTHONPATH=./app
           pytest --cov=app tests/
 
       - name: Upload Coverage Report
