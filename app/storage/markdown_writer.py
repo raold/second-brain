@@ -1,18 +1,19 @@
 from pathlib import Path
 import datetime
+from app.models import Payload
 
-def write_markdown(payload):
+def write_markdown(payload: Payload):
     path = Path("/data/memories")
     path.mkdir(parents=True, exist_ok=True)
     file = path / f"{payload.id}.md"
     content = f"""
-# {payload.target.title()} Entry
+# {payload.target.title() if payload.target else 'Note'} Entry
 
 **ID**: {payload.id}  
 **Timestamp**: {datetime.datetime.now().isoformat()}  
 **Tags**: {', '.join(payload.data.get('tags', []))}  
 
 ## Note:
-{payload.data.get('note')}
+{payload.data.get('note', '')}
 """
     file.write_text(content)

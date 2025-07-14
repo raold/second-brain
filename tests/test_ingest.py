@@ -14,9 +14,9 @@ def inject_test_token(monkeypatch):
 
 AUTH_HEADER = {"Authorization": "Bearer test-token"}
 
-@patch("app.qdrant_client.get_openai_client")
-@patch("app.qdrant_client.qdrant_upsert")
-@patch("app.handlers.write_markdown")
+@patch("app.storage.qdrant_client.get_openai_client")
+@patch("app.storage.qdrant_client.qdrant_upsert")
+@patch("app.storage.markdown_writer.write_markdown")
 def test_ingest(mock_write_markdown, mock_qdrant_upsert, mock_get_openai_client):
     mock_openai_client = MagicMock()
     mock_get_openai_client.return_value = mock_openai_client

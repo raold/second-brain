@@ -14,8 +14,8 @@ def inject_test_token(monkeypatch):
 
 AUTH_HEADER = {"Authorization": "Bearer test-token"}
 
-@patch("app.qdrant_client.qdrant_search", return_value=[])
-@patch("app.qdrant_client.get_openai_client")
+@patch("app.storage.qdrant_client.qdrant_search", return_value=[])
+@patch("app.storage.qdrant_client.get_openai_client")
 def test_search_empty(mock_get_openai_client, mock_qdrant_search):
     mock_openai_client = MagicMock()
     mock_get_openai_client.return_value = mock_openai_client

@@ -14,8 +14,8 @@ def inject_test_token(monkeypatch):
 
 AUTH_HEADER = {"Authorization": "Bearer test-token"}
 
-@patch("app.qdrant_client.qdrant_upsert")
-@patch("app.qdrant_client.qdrant_search")
+@patch("app.storage.qdrant_client.qdrant_upsert")
+@patch("app.storage.qdrant_client.qdrant_search")
 def test_health_check(mock_qdrant_search, mock_qdrant_upsert):
     mock_qdrant_search.return_value = []
     mock_qdrant_upsert.return_value = None
