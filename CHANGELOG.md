@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.2.0] - 2025-07-14
+
+### Added
+- Consolidated router functionality into single `app/router.py` file.
+- Proper Pydantic v2 compatibility using `model_dump()` instead of deprecated `dict()`.
+- Enhanced type hints and error handling in storage modules.
+
+### Changed
+- Removed duplicate `search_router.py` and consolidated all endpoints in `router.py`.
+- Updated import paths to use correct `app.storage.*` module structure.
+- Fixed `get_openai_embedding()` function signature to accept optional client parameter.
+- Updated test mocks to use correct import paths for storage modules.
+- Router now uses proper Pydantic models for request validation.
+
+### Fixed
+- Code duplication between routers causing maintenance issues.
+- Import path inconsistencies between `app.qdrant_client` and `app.storage.qdrant_client`.
+- Test failures due to incorrect mock patching paths.
+- Pydantic v2 deprecation warnings for `dict()` method usage.
+- Function signature mismatch in OpenAI embedding client.
+
+### Upcoming
+- Full mocking of external dependencies (OpenAI, Qdrant) in test suite.
+- Metrics, monitoring, and rate limiting.
+
+---
+
 ## [1.1.0] - 2025-07-14
 
 ### Added

@@ -1,4 +1,4 @@
-.PHONY: build up down logs restart test lint
+.PHONY: build up down logs restart test lint ci
 
 build:
 	docker compose build
@@ -16,16 +16,12 @@ logs:
 	docker compose logs -f
 
 test:
-#	docker exec llm_output_processor pytest
 	PYTHONPATH=. pytest --cov=app tests/
 
 restart:
 	docker compose down
 	docker compose build
 	docker compose up -d
-
-test:
-	pytest tests/
 
 lint:
 	ruff check .

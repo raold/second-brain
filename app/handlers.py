@@ -3,103 +3,228 @@ from app.storage.qdrant_client import qdrant_upsert
 from app.storage.shell_runner import run_shell_command
 from pathlib import Path
 import datetime
-from app.models import Payload  # Assuming you have a Payload model
+from typing import Optional, Dict, Any
+from app.models import Payload, PayloadType
+from app.utils.logger import get_logger
 
-def dispatch_payload(payload: Payload):
-    print(f"[Router] Dispatching {payload.type}:{payload.intent} to {payload.target}")
+logger = get_logger()
 
-    if payload.intent == "store":
-        return handle_store(payload)
+def dispatch_payload(payload: Payload) -> Optional[Dict[str, Any]]:
+    """
+    Dispatch payload to appropriate handler based on intent.
+    
+    Args:
+        payload: Payload to dispatch
+        
+    Returns:
+        Result dictionary or None if failed
+    """
+    try:
+        logger.info(f"Dispatching {payload.type}:{payload.intent} to {payload.target}")
+        
+        if payload.intent == "store":
+            return handle_store(payload)
+        elif payload.intent == "execute":
+            return handle_execute(payload)
+        else:
+            logger.warning(f"Unknown intent: {payload.intent}")
+            return {"status": "error", "message": f"Unknown intent: {payload.intent}"}
+            
+    except Exception as e:
+        logger.exception(f"Failed to dispatch payload {payload.id}: {str(e)}")
+        return {"status": "error", "message": str(e)}
 
-    if payload.intent == "execute":
-        return handle_execute(payload)
+def handle_store(payload: Payload) -> Optional[Dict[str, Any]]:
+    """
+    Handle store intent for different target types.
+    
+    Args:
+        payload: Payload to store
+        
+    Returns:
+        Result dictionary or None if failed
+    """
+    try:
+        target = payload.target
+        
+        if target in ("note", "memory"):
+            # Store in both markdown and vector database
+            markdown_success = write_markdown(payload)
+            vector_success = qdrant_upsert(payload.model_dump())
+            
+            if markdown_success and vector_success:
+                logger.info(f"Successfully stored {target}: {payload.id}")
+                return {"status": "success", "type": target, "id": payload.id}
+            else:
+                logger.error(f"Failed to store {target}: {payload.id}")
+                return {"status": "error", "message": "Storage failed"}
+                
+        elif target == "task":
+            return store_task(payload)
+        elif target == "bookmark":
+            return store_bookmark(payload)
+        elif target == "person":
+            return store_contact(payload)
+        else:
+            logger.warning(f"Unknown store target: {target}")
+            return {"status": "error", "message": f"Unknown target: {target}"}
+            
+    except Exception as e:
+        logger.exception(f"Failed to handle store for payload {payload.id}: {str(e)}")
+        return {"status": "error", "message": str(e)}
 
-    print(f"[Router] Unknown intent: {payload.intent}")
-    return None
+def handle_execute(payload: Payload) -> Optional[Dict[str, Any]]:
+    """
+    Handle execute intent for shell commands.
+    
+    Args:
+        payload: Payload containing command to execute
+        
+    Returns:
+        Result dictionary or None if failed
+    """
+    try:
+        command = payload.data.get("command")
+        if not command:
+            logger.error("Missing command in execute payload")
+            return {"status": "error", "message": "Missing command"}
+        
+        result = run_shell_command(command)
+        if result:
+            logger.info(f"Command executed successfully: {command}")
+            return {
+                "status": "success",
+                "command": command,
+                "returncode": result["returncode"],
+                "stdout": result["stdout"],
+                "stderr": result["stderr"]
+            }
+        else:
+            logger.error(f"Command execution failed: {command}")
+            return {"status": "error", "message": "Command execution failed"}
+            
+    except Exception as e:
+        logger.exception(f"Failed to handle execute for payload {payload.id}: {str(e)}")
+        return {"status": "error", "message": str(e)}
 
+def store_task(payload: Payload) -> Optional[Dict[str, Any]]:
+    """
+    Store task in markdown file.
+    
+    Args:
+        payload: Payload containing task data
+        
+    Returns:
+        Result dictionary or None if failed
+    """
+    try:
+        note = payload.data.get("note", "").strip()
+        if not note:
+            logger.error("Task payload missing note content")
+            return {"status": "error", "message": "Missing task content"}
+        
+        timestamp = payload.data.get("timestamp", datetime.datetime.now().isoformat())
+        task_line = f"- [ ] {note}  \n  – created: {timestamp}\n"
 
-def handle_store(payload: Payload):
-    target = payload.target
+        path = Path("/data/tasks.md")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        
+        with path.open("a", encoding="utf-8") as f:
+            f.write(task_line)
 
-    if target in ("note", "memory"):
-        write_markdown(payload)
-        qdrant_upsert(payload.dict())
+        logger.info(f"Task stored: {note}")
+        return {"status": "success", "type": "task", "content": note}
+        
+    except Exception as e:
+        logger.exception(f"Failed to store task for payload {payload.id}: {str(e)}")
+        return {"status": "error", "message": str(e)}
 
-    elif target == "task":
-        store_task(payload)
+def store_bookmark(payload: Payload) -> Optional[Dict[str, Any]]:
+    """
+    Store bookmark in markdown file.
+    
+    Args:
+        payload: Payload containing bookmark data
+        
+    Returns:
+        Result dictionary or None if failed
+    """
+    try:
+        note = payload.data.get("note", "").strip()
+        url = payload.data.get("url", "").strip()
+        
+        if not note or not url:
+            logger.error("Bookmark payload missing note or URL")
+            return {"status": "error", "message": "Missing note or URL"}
+        
+        timestamp = payload.data.get("timestamp", datetime.datetime.now().isoformat())
+        entry = f"- [{note}]({url})  \n  – saved: {timestamp}\n"
 
-    elif target == "bookmark":
-        store_bookmark(payload)
+        path = Path("/data/bookmarks.md")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        
+        with path.open("a", encoding="utf-8") as f:
+            f.write(entry)
 
-    elif target == "person":
-        store_contact(payload)
+        logger.info(f"Bookmark stored: {note} => {url}")
+        return {"status": "success", "type": "bookmark", "note": note, "url": url}
+        
+    except Exception as e:
+        logger.exception(f"Failed to store bookmark for payload {payload.id}: {str(e)}")
+        return {"status": "error", "message": str(e)}
 
-    else:
-        print(f"[Store] Unknown target: {target}")
-    return None
-
-
-def handle_execute(payload: Payload):
-    command = payload.data.get("command")
-    if command:
-        run_shell_command(command)
-    else:
-        print("[Execute] Missing command in payload")
-    return None
-
-
-def store_task(payload: Payload):
-    note = payload.data.get("note", "").strip()
-    timestamp = payload.data.get("timestamp", datetime.datetime.now().isoformat())
-    task_line = f"- [ ] {note}  \n  – created: {timestamp}\n"
-
-    path = Path("/data/tasks.md")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a") as f:
-        f.write(task_line)
-
-    print(f"[Task] Logged: {note}")
-
-
-def store_bookmark(payload: Payload):
-    note = payload.data.get("note", "").strip()
-    url = payload.data.get("url", "")
-    timestamp = payload.data.get("timestamp", datetime.datetime.now().isoformat())
-
-    entry = f"- [{note}]({url})  \n  – saved: {timestamp}\n"
-
-    path = Path("/data/bookmarks.md")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a") as f:
-        f.write(entry)
-
-    print(f"[Bookmark] Logged: {note} => {url}")
-
-
-def store_contact(payload: Payload):
-    print(f"[Person] Storing contact info")
-    contact_info = payload.data.get("contact_info", "Unknown Contact")
-    print(f"[Person] Contact Info: {contact_info}")
-
+def store_contact(payload: Payload) -> Optional[Dict[str, Any]]:
+    """
+    Store contact information.
+    
+    Args:
+        payload: Payload containing contact data
+        
+    Returns:
+        Result dictionary or None if failed
+    """
+    try:
+        contact_info = payload.data.get("contact_info", "Unknown Contact")
+        logger.info(f"Contact stored: {contact_info}")
+        return {"status": "success", "type": "contact", "info": contact_info}
+        
+    except Exception as e:
+        logger.exception(f"Failed to store contact for payload {payload.id}: {str(e)}")
+        return {"status": "error", "message": str(e)}
 
 def categorize_payload(payload: Payload) -> Payload:
-    note = payload.data.get("note", "").lower()
-
-    if "http" in note or "www" in note:
-        payload.intent = "store"
-        payload.target = "bookmark"
-
-    elif "remind" in note or "todo" in note or "task" in note:
-        payload.intent = "store"
-        payload.target = "task"
-
-    elif note.startswith("cmd:") or note.startswith("run ") or note.startswith("!"):
-        payload.intent = "execute"
-        payload.target = "shell"
-        payload.data["command"] = note.replace("cmd:", "").strip()
-
-    else:
+    """
+    Automatically categorize payload based on content.
+    
+    Args:
+        payload: Payload to categorize
+        
+    Returns:
+        Modified payload with intent and target set
+    """
+    try:
+        note = payload.data.get("note", "").lower()
+        
+        if "http" in note or "www" in note:
+            payload.intent = "store"
+            payload.target = "bookmark"
+        elif "remind" in note or "todo" in note or "task" in note:
+            payload.intent = "store"
+            payload.target = "task"
+        elif note.startswith("cmd:") or note.startswith("run ") or note.startswith("!"):
+            payload.intent = "execute"
+            payload.target = "shell"
+            payload.data["command"] = note.replace("cmd:", "").strip()
+        else:
+            payload.intent = "store"
+            payload.target = "note"
+        
+        logger.info(f"Payload categorized as {payload.intent}:{payload.target}")
+        return payload
+        
+    except Exception as e:
+        logger.exception(f"Failed to categorize payload {payload.id}: {str(e)}")
+        # Default to note if categorization fails
         payload.intent = "store"
         payload.target = "note"
-
-    return payload
+        return payload
