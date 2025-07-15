@@ -27,3 +27,5 @@ Thumbs.db
 
 # Qdrant data
 qdrant_data/
+qdrant_data_staging/
+qdrant_data_production/
