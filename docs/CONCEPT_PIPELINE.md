@@ -51,10 +51,6 @@ Retrieval Endpoints:
 → /ws/generate → Streamed tokens
 → TTS output (optional voice playback)
 
-yaml
-Copy
-Edit
-
 ### Bonus Features
 - **Interruptible streaming:** voice or signal to cancel mid-response.
 - **OCR & Multi-modal ingestion:** images/screenshots → text → /ingest.
