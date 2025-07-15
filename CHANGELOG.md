@@ -1,4 +1,4 @@
-## [v1.4.0] - 2025-07-14
+## [v1.4.0] - 2025-07-15
 ### Added
 - Test suite now fully mocks OpenAI embedding and Qdrant vector DB for all integration tests. No real API keys or running Qdrant instance are required for tests. This is achieved by:
   - Patching `get_openai_embedding` to return a fixed vector in all test files.
