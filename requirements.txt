@@ -23,3 +23,9 @@ prometheus-fastapi-instrumentator>=6.0.0
 sentry-sdk>=1.39.0
 structlog>=24.1.0
 cachetools>=5.3.3
+
+PyPDF2  # For PDF plugins (optional, required for PDF features)
+sqlalchemy>=2.0
+prometheus_client
+asyncpg
+python-multipart

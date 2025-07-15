@@ -1,6 +1,10 @@
-from app.plugins import Plugin, register_plugin
+import datetime
+import threading
+
 from plyer import notification
-import threading, time, datetime
+
+from app.plugins import Plugin, register_plugin
+
 
 class ReminderPlugin(Plugin):
     def __init__(self):

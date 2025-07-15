@@ -1,9 +1,9 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
-from fastapi.responses import JSONResponse
-from app.auth import verify_token_str
-from app.utils.openai_client import get_openai_stream, elevenlabs_tts_stream
 import asyncio
-import json
+
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
+
+from app.auth import verify_token_str
+from app.utils.openai_client import elevenlabs_tts_stream, get_openai_stream
 
 router = APIRouter()
 

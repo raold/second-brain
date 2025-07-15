@@ -12,7 +12,7 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def inject_test_token(monkeypatch):
-    monkeypatch.setattr(Config, 'API_TOKENS', {'test-token'})
+    monkeypatch.setattr(Config, 'API_TOKENS', ['test-token'])
 
 @pytest.fixture(autouse=True)
 def mock_openai_embedding():
@@ -26,7 +26,7 @@ def test_search_empty(mock_qdrant_search):
     response = client.get("/search?q=nonexistent", headers=AUTH_HEADER)
     assert response.status_code == 200
     assert response.json() == {"query": "nonexistent", "results": []}
-    mock_qdrant_search.assert_called_once_with("nonexistent")
+    mock_qdrant_search.assert_called_once_with("nonexistent", filters={})
 
 @patch("app.router.qdrant_search")
 def test_search_embedding_failure(mock_qdrant_search):

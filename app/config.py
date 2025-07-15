@@ -21,7 +21,7 @@ class Config:
     QDRANT_DISTANCE = os.getenv("QDRANT_DISTANCE", "Cosine")
 
     # === Logging ===
-    LOG_PATH = os.getenv("LOG_PATH", "logs/processor.log")
+    LOG_PATH = os.getenv("LOG_PATH", "tests/logs/processor.log")
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
     # === OpenAI Retry Settings ===

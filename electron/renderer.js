@@ -97,7 +97,7 @@ async function onRecordingStop() {
         priority: 'normal',
         ttl: '1d',
         data: { note: data.transcript },
-        metadata: {}
+        meta: {}
       })
     });
     if (!ingestRes.ok) throw new Error('Ingest failed');

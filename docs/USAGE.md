@@ -20,7 +20,7 @@
   "data": {
     "note": "Some text to embed"
   },
-  "metadata": {
+  "meta": {
     "source": "manual",
     "timestamp": "2025-07-13T00:00:00Z",
     "intent": "note",

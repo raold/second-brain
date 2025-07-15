@@ -1,6 +1,8 @@
 import asyncio
+
 from app.models import Base
 from app.storage.postgres import engine
+
 
 async def init_db():
     async with engine.begin() as conn:

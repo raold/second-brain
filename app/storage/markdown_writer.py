@@ -4,9 +4,8 @@ import re
 from pathlib import Path
 
 from app.models import Payload
-from app.utils.logger import get_logger
+from app.utils.logger import logger
 
-logger = get_logger()
 
 def sanitize_filename(filename: str) -> str:
     """Sanitize filename to prevent path traversal and invalid characters."""

@@ -12,8 +12,9 @@ Requires:
     pip install websockets
 """
 import asyncio
-import websockets
 import json
+
+import websockets
 
 API_TOKEN = "test-token"  # Replace with your valid token
 PROMPT = "Hello world this is a test of real-time streaming"

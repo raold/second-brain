@@ -1,32 +1,31 @@
 # app/utils/openai_client.py
 
-import time
-from typing import List
-
-import openai
-from tenacity import retry, stop_after_attempt, wait_exponential
-
 import asyncio
-import aiohttp
 import base64
+import os
+import time
+
+import aiohttp
+import openai
+from cachetools import LRUCache, cached
 
 from app.config import Config
-from app.utils.logger import get_logger
-from cachetools import LRUCache, cached
-from prometheus_client import Counter, Histogram
-
-logger = get_logger()
+from app.utils.logger import logger
 
 # LRU cache for embeddings (up to 1000 unique texts)
 _embedding_cache = LRUCache(maxsize=1000)
 
 # Prometheus metrics
-embedding_cache_hit = Counter('embedding_cache_hit', 'Embedding cache hits')
-embedding_cache_miss = Counter('embedding_cache_miss', 'Embedding cache misses')
-embedding_latency = Histogram('embedding_latency_seconds', 'Embedding generation latency (seconds)')
+try:
+    from prometheus_client import Counter, Histogram
+    embedding_cache_hit = Counter('embedding_cache_hit', 'Embedding cache hits')
+    embedding_cache_miss = Counter('embedding_cache_miss', 'Embedding cache misses')
+    embedding_latency = Histogram('embedding_latency_seconds', 'Embedding generation latency (seconds)')
+except ImportError:
+    embedding_cache_hit = embedding_cache_miss = embedding_latency = None
 
-ELEVENLABS_API_KEY = "YOUR_ELEVENLABS_API_KEY"  # Set this in your environment or config
-ELEVENLABS_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"  # Default voice, can be parameterized
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "demo-key")
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
 
 @cached(_embedding_cache, key=lambda text, client=None, model=None: (text, model or "default"))
 def get_openai_embedding(text: str, client=None, model: str = None):
@@ -46,9 +45,11 @@ def get_openai_embedding(text: str, client=None, model: str = None):
     """
     cache_key = (text, model or "default")
     if cache_key in _embedding_cache:
-        embedding_cache_hit.inc()
+        if embedding_cache_hit:
+            embedding_cache_hit.inc()
         return _embedding_cache[cache_key]
-    embedding_cache_miss.inc()
+    if embedding_cache_miss:
+        embedding_cache_miss.inc()
     start_time = time.time()
     
     # Validate input
@@ -64,13 +65,7 @@ def get_openai_embedding(text: str, client=None, model: str = None):
         logger.warning(f"Text truncated from {len(text)} to {max_length} characters")
         text = text[:max_length]
     
-    logger.debug(
-        "Generating embedding",
-        extra={
-            "input_length": len(text),
-            "model": Config.OPENAI_EMBEDDING_MODEL,
-        }
-    )
+    logger.debug(f"Generating embedding: input_length={len(text)}, model={Config.OPENAI_EMBEDDING_MODEL}")
 
     try:
         # Use the provided client or the global openai module
@@ -96,7 +91,8 @@ def get_openai_embedding(text: str, client=None, model: str = None):
         if len(embedding) != Config.QDRANT_VECTOR_SIZE:
             logger.warning(f"Embedding size {len(embedding)} doesn't match expected size {Config.QDRANT_VECTOR_SIZE}")
         
-        embedding_latency.observe(time.time() - start_time)
+        if embedding_latency:
+            embedding_latency.observe(time.time() - start_time)
         duration = time.time() - start_time
         logger.info(f"Embedding generated in {duration:.2f}s (size: {len(embedding)})")
         
@@ -121,8 +117,8 @@ async def elevenlabs_tts_stream(text: str, voice_id: str = None, api_key: str = 
     """
     Async generator that yields audio chunks from ElevenLabs TTS API as base64 strings.
     """
-    voice_id = voice_id or ELEVENLABS_VOICE_ID
-    api_key = api_key or ELEVENLABS_API_KEY
+    voice_id = str(voice_id or ELEVENLABS_VOICE_ID or "EXAVITQu4vr4xnSDxMaL")
+    api_key = str(api_key or ELEVENLABS_API_KEY or "demo-key")
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream"
     headers = {
         "xi-api-key": api_key,
