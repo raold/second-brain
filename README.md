@@ -62,7 +62,7 @@ second-brain/
 │   ├── USAGE.md             # Usage examples
 │   ├── CI_CACHING.md        # CI/CD caching strategy
 │   ├── ENVIRONMENT_VARIABLES.md # Environment configuration
-│   ├── CONTRIUBUTING.md     # Contribution guidelines
+│   ├── CONTRIBUTING.md      # Contribution guidelines
 │   ├── architecture.puml    # PlantUML architecture diagram
 │   └── system_architecture.png # Architecture visualization
 ├── .github/
