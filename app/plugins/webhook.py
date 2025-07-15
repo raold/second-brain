@@ -5,6 +5,7 @@ import requests
 from app.plugins import Plugin, register_plugin
 from app.utils.logger import logger
 
+
 class WebhookPlugin(Plugin):
     def __init__(self):
         super().__init__('webhook')

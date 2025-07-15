@@ -1,20 +1,14 @@
 # /tests/test_ingest.py
 
-import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import select
 from fastapi import Request
+from fastapi.testclient import TestClient
 
-import app.utils.openai_client as openai_client
-from app.config import Config
-from app.main import app
-from app.models import Memory, PayloadType, Priority
-import app.auth as app_auth
 import app.router as app_router
-import types
+from app.main import app
+
 
 def always_allow(request: Request):
     return None

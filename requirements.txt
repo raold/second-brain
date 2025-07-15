@@ -29,3 +29,4 @@ sqlalchemy>=2.0
 prometheus_client
 asyncpg
 python-multipart
+aiohttp

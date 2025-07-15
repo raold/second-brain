@@ -1,5 +1,6 @@
 # app/main.py
 
+import os
 import uuid
 
 import sentry_sdk
@@ -48,8 +49,6 @@ app.include_router(router)
 app.include_router(ws_router)
 
 # Serve static UI files at /ui
-import os
-
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if not os.path.exists(static_dir):
     os.makedirs(static_dir)
@@ -59,8 +58,6 @@ app.mount("/ui", StaticFiles(directory=static_dir), name="ui")
 Instrumentator().instrument(app).expose(app, include_in_schema=False, should_gzip=True)
 
 # Sentry error monitoring (optional, set SENTRY_DSN env var)
-import os
-
 SENTRY_DSN = os.getenv("SENTRY_DSN")
 if SENTRY_DSN:
     sentry_sdk.init(dsn=SENTRY_DSN, traces_sample_rate=1.0)

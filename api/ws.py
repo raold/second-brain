@@ -99,7 +99,9 @@ async def generate_openai_stream(request: PromptRequest):
             stream=True
         )
         async for chunk in stream:
-            content = chunk.choices[0].delta.content if chunk.choices and chunk.choices[0].delta and hasattr(chunk.choices[0].delta, 'content') else None
+            content = None
+            if chunk.choices and chunk.choices[0].delta and hasattr(chunk.choices[0].delta, 'content'):
+                content = chunk.choices[0].delta.content
             if content:
                 yield {
                     "token": content,
