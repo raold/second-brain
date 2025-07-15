@@ -12,33 +12,27 @@ Whisper ASR (local/cloud)
 │
 ▼
 LLM Output Processor API (POST /ingest)
-
-Token-based auth
-
-Rich metadata: context, priority, intent
+• Token-based Authentication
+• Rich metadata: context, priority, intent
 │
 ▼
-+--------------------------------------+
-| Qdrant Vector Store + Markdown Files |
++------------------------------------------------+
+| Qdrant Vector Store + Markdown Files (.md) |
 | + PostgreSQL (optional metadata DB) |
-| + Version History per record |
-+--------------------------------------+
+| + Version History Tracking per record |
++------------------------------------------------+
 │
 ▼
-Prometheus / Grafana for Metrics
-Sentry for Error Monitoring
-Structured JSON Logs (Correlation IDs)
+Prometheus / Grafana → Metrics & Monitoring
+Sentry → Error Tracking
+Structured JSON Logs → Correlation IDs
 │
 ▼
-Retrieval via:
-/search
-/ranked-search
-/records
-/ws/generate (streamed LLM responses)
-
-yaml
-Copy
-Edit
+Retrieval Endpoints:
+• /search
+• /ranked-search
+• /records
+• /ws/generate (streamed LLM responses)
 
 ---
 
