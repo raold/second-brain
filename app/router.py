@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile, BackgroundTasks
 
 from app.auth import verify_token
 from app.models import Payload
@@ -12,6 +12,11 @@ from qdrant_client.http.exceptions import UnexpectedResponse
 from app.utils.logger import logger
 from app.config import Config
 import openai
+from app.utils.openai_client import detect_intent_via_llm
+from app.storage.postgres import get_async_session
+from app.models import Memory
+import datetime
+from sqlalchemy import select, and_
 
 router = APIRouter()
 
@@ -21,7 +26,7 @@ async def health_check() -> Dict[str, str]:
     return {"status": "ok"}
 
 @router.post("/ingest")
-async def ingest_endpoint(payload: Payload, _: None = Depends(verify_token)) -> Dict[str, Any]:
+async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, _: None = Depends(verify_token)) -> Dict[str, Any]:
     """
     Ingest a payload into the second brain system.
     
@@ -37,14 +42,23 @@ async def ingest_endpoint(payload: Payload, _: None = Depends(verify_token)) -> 
     try:
         logger.info(f"Received ingestion request: {payload.id}")
         
+        # Auto-detect intent if not provided
+        if not payload.intent:
+            note = payload.data.get("note") or payload.data.get("text") or ""
+            if note:
+                payload.intent = await detect_intent_via_llm(note)
+                payload.metadata["intent"] = payload.intent
         # Store in markdown file
         write_markdown(payload)
         
         # Store in vector database
         qdrant_upsert(payload.model_dump())
         
+        # Store in Postgres (background)
+        background_tasks.add_task(store_memory_pg, payload)
+        
         logger.info(f"Successfully ingested payload: {payload.id}")
-        return {"status": "ingested", "id": payload.id}
+        return {"status": "ingested", "id": payload.id, "intent": payload.intent}
         
     except Exception as e:
         logger.error(f"Failed to ingest payload {payload.id}: {str(e)}")
@@ -52,6 +66,22 @@ async def ingest_endpoint(payload: Payload, _: None = Depends(verify_token)) -> 
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to ingest payload: {str(e)}"
         ) from e
+
+async def store_memory_pg(payload: Payload):
+    from sqlalchemy import insert
+    async for session in get_async_session():
+        stmt = insert(Memory).values(
+            id=payload.id,
+            qdrant_id=payload.id,  # assuming 1:1 for now
+            note=payload.data.get("note") or payload.data.get("text") or "",
+            intent=payload.intent,
+            type=payload.type,
+            timestamp=datetime.datetime.utcnow(),
+            user=payload.metadata.get("user"),
+            metadata=payload.metadata
+        )
+        await session.execute(stmt)
+        await session.commit()
 
 @router.get("/search")
 async def search_endpoint(
@@ -262,3 +292,30 @@ def get_models():
     Returns the current LLM and embedding model versions in use.
     """
     return {"model_versions": Config.MODEL_VERSIONS}
+
+@router.get("/memories/search", tags=["Memories"])
+async def memories_search(
+    intent: Optional[str] = Query(None),
+    type: Optional[str] = Query(None),
+    note: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    session=Depends(get_async_session)
+):
+    filters = []
+    if intent:
+        filters.append(Memory.intent == intent)
+    if type:
+        filters.append(Memory.type == type)
+    if note:
+        filters.append(Memory.note.ilike(f"%{note}%"))
+    if date_from:
+        filters.append(Memory.timestamp >= date_from)
+    if date_to:
+        filters.append(Memory.timestamp <= date_to)
+    stmt = select(Memory).where(and_(*filters)) if filters else select(Memory)
+    result = await session.execute(stmt)
+    memories = [dict(row._mapping["Memory"].__dict__) for row in result.fetchall()]
+    for m in memories:
+        m.pop("_sa_instance_state", None)
+    return {"results": memories}

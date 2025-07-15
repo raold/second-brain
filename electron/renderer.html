@@ -108,6 +108,18 @@
   <button class="rec-btn" id="recBtn">🎤 Record</button>
   <div class="status" id="status"></div>
   <div class="transcript" id="transcript" aria-label="Transcript"></div>
+  <div id="intentRow" style="display:none;margin-bottom:1em;">
+    <label for="intentSelect">Intent:</label>
+    <select id="intentSelect">
+      <option value="question">Question</option>
+      <option value="reminder">Reminder</option>
+      <option value="note">Note</option>
+      <option value="todo">Todo</option>
+      <option value="command">Command</option>
+      <option value="other">Other</option>
+    </select>
+    <span id="intentDetected" style="color:var(--accent2);margin-left:0.5em;"></span>
+  </div>
   <div class="subtitles" id="subtitles" aria-label="Live Subtitles"></div>
   <div class="audio-controls" id="audioControls"></div>
   <button id="downloadFullAudio" style="display:none;margin-top:1em;">⬇️ Download Full Audio</button>

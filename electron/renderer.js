@@ -54,6 +54,12 @@ recBtn.onclick = async () => {
   }
 };
 
+const intentRow = document.getElementById('intentRow');
+const intentSelect = document.getElementById('intentSelect');
+const intentDetected = document.getElementById('intentDetected');
+let currentIntent = '';
+
+// After transcription, call ingest and show intent
 async function onRecordingStop() {
   const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
   // Show playback
@@ -72,13 +78,40 @@ async function onRecordingStop() {
     if (!res.ok) throw new Error('Transcription failed');
     const data = await res.json();
     transcriptDiv.textContent = data.transcript;
-    statusDiv.textContent = 'Transcript ready. Connecting to LLM...';
-    // Connect to /ws/generate and stream tokens
+    statusDiv.textContent = 'Transcript ready. Detecting intent...';
+    // Call ingest to get intent
+    const ingestRes = await fetch('http://localhost:8000/ingest', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || ''), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: 'electron-' + Date.now(),
+        type: 'note',
+        context: 'electron',
+        priority: 'normal',
+        ttl: '1d',
+        data: { note: data.transcript },
+        metadata: {}
+      })
+    });
+    if (!ingestRes.ok) throw new Error('Ingest failed');
+    const ingestData = await ingestRes.json();
+    currentIntent = ingestData.intent || 'other';
+    intentSelect.value = currentIntent;
+    intentDetected.textContent = `(Detected: ${currentIntent})`;
+    intentRow.style.display = '';
+    statusDiv.textContent = 'Intent detected: ' + currentIntent;
+    // Continue to LLM streaming
     connectToWSGenerate(data.transcript);
   } catch (e) {
-    statusDiv.textContent = 'Transcription error.';
+    statusDiv.textContent = 'Transcription or ingest error.';
   }
 }
+
+// Listen for manual override
+intentSelect.onchange = () => {
+  currentIntent = intentSelect.value;
+  intentDetected.textContent = `(Overridden: ${currentIntent})`;
+};
 
 const ELEVENLABS_API_KEY = 'YOUR_ELEVENLABS_API_KEY'; // Set your key here
 const ELEVENLABS_VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'; // Default voice

@@ -3,6 +3,24 @@ from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
+from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, async_sessionmaker
+from sqlalchemy.orm import declarative_base, Mapped, mapped_column
+from sqlalchemy import String, DateTime, JSON, select
+import uuid, datetime
+
+Base = declarative_base()
+
+class Memory(AsyncAttrs, Base):
+    __tablename__ = "memories"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    qdrant_id: Mapped[str] = mapped_column(String, nullable=False)
+    note: Mapped[str] = mapped_column(String, nullable=False)
+    intent: Mapped[str] = mapped_column(String, nullable=True)
+    type: Mapped[str] = mapped_column(String, nullable=True)
+    timestamp: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.datetime.utcnow)
+    user: Mapped[str] = mapped_column(String, nullable=True)
+    metadata: Mapped[dict] = mapped_column(JSON, nullable=True)
+
 
 class Priority(str, Enum):
     LOW = "low"
@@ -17,11 +35,16 @@ class PayloadType(str, Enum):
     PERSON = "person"
 
 class Payload(BaseModel):
-    """Payload model for ingesting data into the second brain system."""
+    """Payload model for ingesting data into the second brain system.
+    intent: semantic classification (question, reminder, note, todo, command, other)
+    """
     
     id: str = Field(..., description="Unique identifier for the payload")
     type: PayloadType = Field(..., description="Type of payload")
-    intent: Optional[str] = Field(None, description="Intent of the payload (store, execute, etc.)")
+    intent: Optional[str] = Field(
+        None,
+        description="Intent of the payload (semantic: question, reminder, note, todo, command, other)"
+    )
     target: Optional[str] = Field(None, description="Target destination for the payload")
     context: str = Field(..., description="Context of the payload")
     priority: Priority = Field(default=Priority.NORMAL, description="Priority level")

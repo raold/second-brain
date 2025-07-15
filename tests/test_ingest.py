@@ -8,8 +8,20 @@ from fastapi.testclient import TestClient
 from app.config import Config
 from app.main import app
 from app.models import PayloadType, Priority
+import app.utils.openai_client as openai_client
 
 client = TestClient(app)
+
+def mock_detect_intent_via_llm(text, client=None, model=None):
+    if 'remind' in text:
+        return 'reminder'
+    if '?' in text:
+        return 'question'
+    return 'note'
+
+@pytest.fixture(autouse=True)
+def patch_openai(monkeypatch):
+    monkeypatch.setattr(openai_client, 'detect_intent_via_llm', lambda text, client=None, model=None: mock_detect_intent_via_llm(text))
 
 @pytest.fixture(autouse=True)
 def inject_test_token(monkeypatch):
@@ -79,3 +91,19 @@ def test_ingest_markdown_failure(mock_write_markdown):
     response = client.post("/ingest", json=payload, headers=AUTH_HEADER)
     assert response.status_code == 500
     assert "Failed to ingest payload" in response.json()["detail"]
+
+def test_ingest_intent_detection():
+    payload = {
+        "id": "test-intent-001",
+        "type": "note",
+        "context": "test",
+        "priority": "normal",
+        "ttl": "1d",
+        "data": {"note": "Remind me to call Alice."},
+        "metadata": {}
+    }
+    headers = {"Authorization": "Bearer testtoken"}
+    response = client.post("/ingest", json=payload, headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["intent"] == "reminder"

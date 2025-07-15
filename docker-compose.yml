@@ -47,6 +47,21 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: brain
+      POSTGRES_PASSWORD: brainpw
+      POSTGRES_DB: brain
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
 networks:
   app-net:
     driver: bridge
+
+volumes:
+  pgdata:
