@@ -10,20 +10,23 @@ import asyncio
 
 from app.config import Config
 from app.utils.logger import get_logger
+from cachetools import LRUCache, cached
+from prometheus_client import Counter, Histogram
 
 logger = get_logger()
 
-@retry(
-    stop=stop_after_attempt(Config.OPENAI_RETRY_ATTEMPTS),
-    wait=wait_exponential(
-        multiplier=Config.OPENAI_RETRY_MULTIPLIER,
-        min=Config.OPENAI_RETRY_MIN_WAIT,
-        max=Config.OPENAI_RETRY_MAX_WAIT
-    )
-)
-def get_openai_embedding(text: str, openai_client=None) -> List[float]:
+# LRU cache for embeddings (up to 1000 unique texts)
+_embedding_cache = LRUCache(maxsize=1000)
+
+# Prometheus metrics
+embedding_cache_hit = Counter('embedding_cache_hit', 'Embedding cache hits')
+embedding_cache_miss = Counter('embedding_cache_miss', 'Embedding cache misses')
+embedding_latency = Histogram('embedding_latency_seconds', 'Embedding generation latency (seconds)')
+
+@cached(_embedding_cache, key=lambda text, client=None, model=None: (text, model or "default"))
+def get_openai_embedding(text: str, client=None, model: str = None):
     """
-    Generate embedding for text using OpenAI API with retry logic.
+    Get embedding for text, using OpenAI API. Uses LRU cache for repeated texts.
     
     Args:
         text: Text to embed
@@ -36,6 +39,11 @@ def get_openai_embedding(text: str, openai_client=None) -> List[float]:
         ValueError: If text is invalid
         Exception: If API call fails after retries
     """
+    cache_key = (text, model or "default")
+    if cache_key in _embedding_cache:
+        embedding_cache_hit.inc()
+        return _embedding_cache[cache_key]
+    embedding_cache_miss.inc()
     start_time = time.time()
     
     # Validate input
@@ -61,7 +69,7 @@ def get_openai_embedding(text: str, openai_client=None) -> List[float]:
 
     try:
         # Use the provided client or the global openai module
-        client = openai_client or openai
+        client = client or openai
         response = client.embeddings.create(
             input=text,
             model=Config.OPENAI_EMBEDDING_MODEL
@@ -83,6 +91,7 @@ def get_openai_embedding(text: str, openai_client=None) -> List[float]:
         if len(embedding) != Config.QDRANT_VECTOR_SIZE:
             logger.warning(f"Embedding size {len(embedding)} doesn't match expected size {Config.QDRANT_VECTOR_SIZE}")
         
+        embedding_latency.observe(time.time() - start_time)
         duration = time.time() - start_time
         logger.info(f"Embedding generated in {duration:.2f}s (size: {len(embedding)})")
         

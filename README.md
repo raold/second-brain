@@ -27,66 +27,70 @@ This API enables ingestion of text data, which is embedded via OpenAI's `text-em
 - GitHub repository (for CI/CD features)
 
 ## 📁 Project Structure
-![System Architecture - Dark Theme](docs/system_architecture.png)
-
 ```
 second-brain/
 ├── app/
 │   ├── __init__.py
-│   ├── main.py                   # FastAPI application entry point
-│   ├── router.py                 # API endpoints and routing
-│   ├── auth.py                   # Authentication middleware
-│   ├── config.py                 # Configuration management
-│   ├── models.py                 # Pydantic data models
-│   ├── handlers.py               # Business logic handlers
+│   ├── main.py                # FastAPI app entry
+│   ├── router.py              # API endpoints & routing
+│   ├── auth.py                # Auth middleware
+│   ├── config.py              # Config management
+│   ├── models.py              # Pydantic models
+│   ├── handlers.py            # Business logic
+│   ├── static/                # Static UI assets (version history, etc)
+│   ├── api/
+│   │   └── websocket.py       # WebSocket endpoints
 │   ├── utils/
 │   │   ├── __init__.py
-│   │   ├── logger.py             # Logging configuration
-│   │   └── openai_client.py      # OpenAI API client
+│   │   ├── logger.py          # structlog config
+│   │   └── openai_client.py   # OpenAI embedding client (with caching)
 │   ├── storage/
-│   │   ├── qdrant_client.py      # Qdrant vector database client
-│   │   ├── markdown_writer.py    # Markdown file operations
-│   │   └── shell_runner.py       # Shell command execution
+│   │   ├── qdrant_client.py   # Qdrant vector DB client (with caching)
+│   │   ├── markdown_writer.py # Markdown file ops
+│   │   └── shell_runner.py    # Shell command exec
 │   └── data/
-│       ├── memories/             # Stored memory files
-│       └── tasks.md              # Task management
+│       ├── memories/         # Markdown memory files
+│       └── tasks.md          # Task management
 ├── tests/
 │   ├── __init__.py
-│   ├── test_health.py            # Health endpoint tests
-│   ├── test_ingest.py            # Ingestion endpoint tests
-│   ├── test_search.py            # Search endpoint tests
-│   └── test_payload.json         # Test data
+│   ├── test_health.py         # Health endpoint tests
+│   ├── test_ingest.py         # Ingestion endpoint tests
+│   ├── test_search.py         # Search endpoint tests
+│   ├── test_ranked_search.py  # Hybrid/ranking search tests
+│   ├── test_payload.json      # Test data
+│   └── client/
+│       ├── ws_client_example.py
+│       └── ws_client_example.html
 ├── docs/
-│   ├── ARCHITECTURE.md           # System architecture documentation
-│   ├── DEPLOYMENT.md             # Deployment instructions
-│   ├── USAGE.md                  # Usage examples
-│   ├── CI_CACHING.md             # CI/CD caching strategy
-│   ├── ENVIRONMENT_VARIABLES.md  # Environment configuration
-│   ├── CONTRIBUTING.md           # Contribution guidelines
-│   ├── architecture.puml         # PlantUML architecture diagram
-│   └── system_architecture.png   # Architecture visualization
+│   ├── ARCHITECTURE.md
+│   ├── DEPLOYMENT.md
+│   ├── USAGE.md
+│   ├── CI_CACHING.md
+│   ├── ENVIRONMENT_VARIABLES.md
+│   ├── CONTRIBUTING.md
+│   ├── TESTING.md
+│   ├── grafana_llm_observability_dashboard.json
+│   ├── logging_monitoring_architecture.mmd
+│   ├── architecture.puml
+│   ├── system_architecture.png
+│   ├── SECURITY.md
+│   ├── LICENSE
+│   └── CHANGELOG.md
 ├── .github/
 │   └── workflows/
-│       ├── ci.yaml               # CI pipeline with caching
-│       └── deploy.yml            # Deployment automation
-├── logs/                         # Log files (gitignored)
-├── qdrant_data/                  # Development Qdrant data (gitignored)
-├── qdrant_data_staging/          # Staging Qdrant data (gitignored)
-├── qdrant_data_production/       # Production Qdrant data (gitignored)
-├── docker-compose.yml            # Development environment
-├── docker-compose.staging.yml    # Staging environment
-├── docker-compose.production.yml # Production environment
-├── Dockerfile                    # Optimized Docker image
-├── requirements.txt              # Python dependencies
-├── Makefile                      # Development commands
-├── ruff.toml                     # Linting configuration
-├── pytest.ini                    # Test configuration
-├── .env.example                  # Environment variables template
-├── .gitignore                    # Git ignore rules
-├── CHANGELOG.md                  # Release history
-├── SECURITY.md                   # Security policy
-├── LICENSE                       # AGPLv3 license
-└── README.md                     # This file
+│       ├── ci.yaml
+│       └── deploy.yml
+├── logs/                      # Log files (gitignored)
+├── qdrant_data*/              # Qdrant data (dev/staging/prod, gitignored)
+├── docker-compose*.yml        # Compose files for all envs
+├── Dockerfile
+├── requirements.txt
+├── Makefile
+├── ruff.toml
+├── pytest.ini
+├── .env.example
+├── .gitignore
+└── README.md
 ```
 
 ## 🔧 Setup

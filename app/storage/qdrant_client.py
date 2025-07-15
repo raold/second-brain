@@ -13,9 +13,23 @@ from app.utils.logger import logger
 from app.utils.openai_client import get_openai_embedding
 import time
 from dateutil import parser as date_parser
+from cachetools import LRUCache, cached
+from prometheus_client import Counter, Histogram
 
 # Initialize Qdrant client
 client = QdrantClient(host=Config.QDRANT_HOST, port=Config.QDRANT_PORT)
+
+# LRU cache for search results (up to 1000 unique queries)
+_search_cache = LRUCache(maxsize=1000)
+
+# Prometheus metrics
+search_cache_hit = Counter('search_cache_hit', 'Search result cache hits')
+search_cache_miss = Counter('search_cache_miss', 'Search result cache misses')
+qdrant_search_latency = Histogram('qdrant_search_latency_seconds', 'Qdrant search latency (seconds)')
+
+def _search_cache_key(query, top_k=5, filters=None):
+    import json
+    return (query, top_k, json.dumps(filters, sort_keys=True))
 
 def to_uuid(text: str) -> UUID:
     """Convert text to deterministic UUID using namespace."""
@@ -109,11 +123,21 @@ def qdrant_upsert(payload: Dict[str, Any]) -> None:
         
         logger.info(f"[Qdrant] Successfully upserted vector for ID: {payload['id']}")
         
+        # Invalidate search cache on upsert
+        _search_cache.clear()
+        
     except Exception as e:
         logger.exception(f"[Qdrant ERROR] Failed to upsert vector for ID={payload.get('id', 'unknown')}: {str(e)}")
         raise  # Re-raise the exception so the router can handle it
 
+@cached(_search_cache, key=lambda query, top_k=5, filters=None: _search_cache_key(query, top_k, filters))
 def qdrant_search(query: str, top_k: int = 5, filters: dict = None) -> List[Dict[str, Any]]:
+    cache_key = _search_cache_key(query, top_k, filters)
+    if cache_key in _search_cache:
+        search_cache_hit.inc()
+        return _search_cache[cache_key]
+    search_cache_miss.inc()
+    start = time.time()
     """
     Search for semantically similar content in Qdrant, with optional metadata filtering.
     
@@ -203,6 +227,7 @@ def qdrant_search(query: str, top_k: int = 5, filters: dict = None) -> List[Dict
             for result in search_result
         ]
         logger.info(f"[Qdrant] Search for query '{query}' returned {len(results)} results")
+        qdrant_search_latency.observe(time.time() - start)
         return results
     except Exception as e:
         logger.exception(f"[Qdrant ERROR] Search failed for query='{query}': {str(e)}")

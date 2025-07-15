@@ -1,0 +1,70 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "LLM Observability Dashboard",
+    "panels": [
+      {
+        "type": "stat",
+        "title": "Embedding Cache Hit Rate",
+        "targets": [
+          {"expr": "embedding_cache_hit / (embedding_cache_hit + embedding_cache_miss)", "legendFormat": "Hit Rate"}
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4}
+      },
+      {
+        "type": "stat",
+        "title": "Search Cache Hit Rate",
+        "targets": [
+          {"expr": "search_cache_hit / (search_cache_hit + search_cache_miss)", "legendFormat": "Hit Rate"}
+        ],
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4}
+      },
+      {
+        "type": "timeseries",
+        "title": "Embedding Latency (s)",
+        "targets": [
+          {"expr": "histogram_quantile(0.95, sum(rate(embedding_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p95"},
+          {"expr": "histogram_quantile(0.50, sum(rate(embedding_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p50"}
+        ],
+        "gridPos": {"x": 0, "y": 4, "w": 6, "h": 6}
+      },
+      {
+        "type": "timeseries",
+        "title": "Qdrant Search Latency (s)",
+        "targets": [
+          {"expr": "histogram_quantile(0.95, sum(rate(qdrant_search_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p95"},
+          {"expr": "histogram_quantile(0.50, sum(rate(qdrant_search_latency_seconds_bucket[5m])) by (le))", "legendFormat": "p50"}
+        ],
+        "gridPos": {"x": 6, "y": 4, "w": 6, "h": 6}
+      },
+      {
+        "type": "timeseries",
+        "title": "API Request Latency (s)",
+        "targets": [
+          {"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95"},
+          {"expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50"}
+        ],
+        "gridPos": {"x": 0, "y": 10, "w": 6, "h": 6}
+      },
+      {
+        "type": "timeseries",
+        "title": "API QPS (Requests per Second)",
+        "targets": [
+          {"expr": "sum(rate(http_requests_total[1m]))", "legendFormat": "QPS"}
+        ],
+        "gridPos": {"x": 6, "y": 10, "w": 6, "h": 6}
+      },
+      {
+        "type": "timeseries",
+        "title": "API Error Rate",
+        "targets": [
+          {"expr": "sum(rate(http_requests_total{status=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m]))", "legendFormat": "5xx Error Rate"},
+          {"expr": "sum(rate(http_requests_total{status=~\"4..\"}[1m])) / sum(rate(http_requests_total[1m]))", "legendFormat": "4xx Error Rate"}
+        ],
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 6}
+      }
+    ],
+    "schemaVersion": 37,
+    "version": 1
+  }
+} 
