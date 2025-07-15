@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Model Version History</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        h1 { color: #333; }
+        label, input, button, select { font-size: 1em; }
+        table { border-collapse: collapse; margin-top: 1em; }
+        th, td { border: 1px solid #ccc; padding: 0.5em 1em; }
+        th { background: #f0f0f0; }
+        #error, #listError { color: red; }
+        #current { margin-top: 1em; }
+        #recordsTable { margin-top: 2em; }
+        .clickable { color: #0074d9; cursor: pointer; text-decoration: underline; }
+        .loading { color: #888; }
+    </style>
+</head>
+<body>
+    <h1>Model Version History Viewer</h1>
+    <section>
+        <h2>Current Model Versions</h2>
+        <pre id="models">Loading...</pre>
+    </section>
+    <section>
+        <h2>Records</h2>
+        <form onsubmit="event.preventDefault(); fetchRecords();">
+            <label for="type">Type:</label>
+            <input type="text" id="type" placeholder="(optional)">
+            <label for="note">Note contains:</label>
+            <input type="text" id="note" placeholder="(optional)">
+            <button type="submit">Search</button>
+        </form>
+        <div id="listError"></div>
+        <div id="recordsLoading" class="loading">Loading records...</div>
+        <table id="recordsTable" style="display:none;">
+            <thead>
+                <tr><th>ID</th><th>Note</th><th>Type</th><th>Timestamp</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+    <section>
+        <h2>Check Version History by Record ID</h2>
+        <label for="recordId">Record ID:</label>
+        <input type="text" id="recordId" placeholder="Enter record ID">
+        <button onclick="fetchHistory()">Get Version History</button>
+        <div id="error"></div>
+        <div id="current"></div>
+        <table id="historyTable" style="display:none;">
+            <thead>
+                <tr><th>#</th><th>Embedding Model</th><th>Model Version</th><th>Timestamp</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+    <script>
+    async function fetchModels() {
+        const res = await fetch('/models');
+        const data = await res.json();
+        document.getElementById('models').textContent = JSON.stringify(data.model_versions, null, 2);
+    }
+    fetchModels();
+
+    async function fetchRecords() {
+        document.getElementById('recordsLoading').style.display = '';
+        document.getElementById('recordsTable').style.display = 'none';
+        document.getElementById('listError').textContent = '';
+        const type = document.getElementById('type').value.trim();
+        const note = document.getElementById('note').value.trim();
+        let url = `/records?limit=20`;
+        if (type) url += `&type=${encodeURIComponent(type)}`;
+        if (note) url += `&note=${encodeURIComponent(note)}`;
+        try {
+            const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') } });
+            if (!res.ok) throw new Error((await res.json()).detail || 'Failed to fetch records');
+            const data = await res.json();
+            const tbody = document.querySelector('#recordsTable tbody');
+            tbody.innerHTML = '';
+            if (!data.records.length) {
+                document.getElementById('listError').textContent = 'No records found.';
+                document.getElementById('recordsLoading').style.display = 'none';
+                return;
+            }
+            data.records.forEach(r => {
+                const row = `<tr>
+                    <td class="clickable" onclick="fetchHistoryById('${r.id}')">${r.id}</td>
+                    <td>${r.note}</td>
+                    <td>${r.type}</td>
+                    <td>${r.timestamp}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+            document.getElementById('recordsTable').style.display = '';
+        } catch (e) {
+            document.getElementById('listError').textContent = e.message;
+        } finally {
+            document.getElementById('recordsLoading').style.display = 'none';
+        }
+    }
+    fetchRecords();
+
+    function fetchHistoryById(id) {
+        document.getElementById('recordId').value = id;
+        fetchHistory();
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    async function fetchHistory() {
+        const id = document.getElementById('recordId').value.trim();
+        document.getElementById('error').textContent = '';
+        document.getElementById('current').textContent = '';
+        document.getElementById('historyTable').style.display = 'none';
+        if (!id) {
+            document.getElementById('error').textContent = 'Please enter a record ID.';
+            return;
+        }
+        try {
+            const res = await fetch(`/records/${id}/version-history`, { headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') } });
+            if (!res.ok) throw new Error((await res.json()).detail || 'Not found');
+            const data = await res.json();
+            const history = data.version_history;
+            if (!history || !history.length) {
+                document.getElementById('error').textContent = 'No version history found.';
+                return;
+            }
+            // Show current version
+            const latest = history[history.length - 1];
+            document.getElementById('current').innerHTML = `<b>Current:</b> ${latest.embedding_model} / ${latest.model_version} @ ${latest.timestamp}`;
+            // Populate table
+            const tbody = document.querySelector('#historyTable tbody');
+            tbody.innerHTML = '';
+            history.forEach((v, i) => {
+                const row = `<tr><td>${i+1}</td><td>${v.embedding_model}</td><td>${v.model_version}</td><td>${v.timestamp}</td></tr>`;
+                tbody.innerHTML += row;
+            });
+            document.getElementById('historyTable').style.display = '';
+        } catch (e) {
+            document.getElementById('error').textContent = e.message;
+        }
+    }
+    </script>
+</body>
+</html> 

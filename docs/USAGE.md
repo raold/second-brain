@@ -45,6 +45,7 @@ make logs
 ```bash
 make test
 ```
+- See [Testing Guide](./TESTING.md) for details on our mocking approach for OpenAI and Qdrant in integration tests.
 
 ## Logs
 Available under `logs/processor.log`.

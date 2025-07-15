@@ -6,6 +6,8 @@ from typing import List
 import openai
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+import asyncio
+
 from app.config import Config
 from app.utils.logger import get_logger
 
@@ -60,20 +62,19 @@ def get_openai_embedding(text: str, openai_client=None) -> List[float]:
     try:
         # Use the provided client or the global openai module
         client = openai_client or openai
-        
-        response = client.Embedding.create(
+        response = client.embeddings.create(
             input=text,
             model=Config.OPENAI_EMBEDDING_MODEL
         )
         
         # Validate response
-        if not response or "data" not in response:
+        if not response or not hasattr(response, "data"):
             raise ValueError("Invalid response from OpenAI API")
         
-        if not response["data"] or len(response["data"]) == 0:
+        if not response.data or len(response.data) == 0:
             raise ValueError("No embedding data in response")
         
-        embedding = response["data"][0]["embedding"]
+        embedding = response.data[0].embedding
         
         # Validate embedding
         if not embedding or not isinstance(embedding, list):
@@ -91,3 +92,13 @@ def get_openai_embedding(text: str, openai_client=None) -> List[float]:
         duration = time.time() - start_time
         logger.error(f"Failed to generate embedding after {duration:.2f}s: {str(e)}")
         raise
+
+async def get_openai_stream(prompt: str):
+    """
+    Async generator that yields text chunks for streaming.
+    Replace this with real OpenAI stream=True logic as needed.
+    """
+    # Simulate streaming by splitting prompt into words
+    for word in prompt.split():
+        await asyncio.sleep(0.1)  # Simulate network/processing delay
+        yield word + " "

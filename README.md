@@ -151,6 +151,7 @@ See the [full Deployment Instructions](./docs/DEPLOYMENT.md) for detailed setup 
 ```bash
 make test
 ```
+- See [Testing Guide](./docs/TESTING.md) for our approach to mocking OpenAI and Qdrant in integration tests.
 
 ## 🧹 Formatting
 ```bash
@@ -185,6 +186,7 @@ make lint
 - [**Architecture Overview**](./docs/ARCHITECTURE.md) — System design and architecture
 - [**Usage Examples**](./docs/USAGE.md) — Example API requests and usage patterns
 - [**Contributing Guidelines**](./docs/CONTRIBUTING.md) — How to contribute to this project
+- [**Testing Guide**](./docs/TESTING.md) — How to run and extend tests, and our mocking approach
 
 ## 📋 Resources
 
@@ -194,6 +196,7 @@ make lint
 - [**Usage Examples**](./docs/USAGE.md) - API usage patterns and examples
 - [**CI Caching Strategy**](./docs/CI_CACHING.md) - Performance optimization guide
 - [**Environment Variables**](./docs/ENVIRONMENT_VARIABLES.md) - Configuration management
+- [**Testing Guide**](./docs/TESTING.md) - Test running and mocking best practices
 
 ### 🛠️ Development
 - [**Contributing Guidelines**](./docs/CONTRIBUTING.md) - How to contribute to the project
@@ -217,6 +220,11 @@ make lint
 - **API Health Check**: `GET /health` - Service health status
 - **Qdrant Dashboard**: [http://localhost:6333/dashboard](http://localhost:6333/dashboard) - Vector database management
 - **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs) - Interactive API docs
+
+## 📊 Metrics & Monitoring
+- **Prometheus metrics** available at `/metrics` for all API endpoints (request count, latency, errors).
+- **Sentry error monitoring** enabled if `SENTRY_DSN` is set in the environment.
+- See [Architecture Overview](./docs/ARCHITECTURE.md#metrics--monitoring) for details.
 
 ## 🛡️ License
 [**AGPLv3**](./docs/LICENSE) — Free for use with source-sharing required for derivatives.

@@ -17,6 +17,11 @@ def inject_test_token(monkeypatch):
 
 AUTH_HEADER = {"Authorization": "Bearer test-token"}
 
+@pytest.fixture(autouse=True)
+def mock_openai_embedding():
+    with patch("app.utils.openai_client.get_openai_embedding", return_value=[0.1] * 1536):
+        yield
+
 @patch("app.router.qdrant_upsert", return_value=True)
 @patch("app.router.write_markdown", return_value=True)
 def test_ingest(mock_write_markdown, mock_qdrant_upsert):
