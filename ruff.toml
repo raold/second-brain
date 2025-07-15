@@ -16,3 +16,10 @@ select = [
     "I",  # isort
     "C90"  # mccabe complexity
 ]
+ignore = [
+    "C901",  # function too complex
+    "E501",  # line too long
+    "B008",  # function call in default argument
+    "B904",  # raise ... from err
+    "B011",  # assert False
+]
