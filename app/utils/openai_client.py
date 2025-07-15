@@ -139,3 +139,26 @@ async def elevenlabs_tts_stream(text: str, voice_id: str = None, api_key: str = 
                     break
                 # Yield as base64 for easy transport
                 yield base64.b64encode(chunk).decode("utf-8")
+
+async def detect_intent_via_llm(text: str, client=None, model: str = None) -> str:
+    """
+    Use OpenAI LLM to classify the intent of the text.
+    Returns one of: question, reminder, note, todo, command, other
+    """
+    import openai
+    client = client or openai
+    model = model or "gpt-3.5-turbo"
+    prompt = (
+        "Classify the following text as one of: question, reminder, note, todo, command, other. "
+        "Respond with only the label.\nText: " + text
+    )
+    response = await client.chat.completions.create(
+        model=model,
+        messages=[{"role": "system", "content": "You are an intent classifier."},
+                  {"role": "user", "content": prompt}],
+        max_tokens=5,
+        temperature=0
+    )
+    label = response.choices[0].message.content.strip().lower()
+    allowed = {"question", "reminder", "note", "todo", "command", "other"}
+    return label if label in allowed else "other"
