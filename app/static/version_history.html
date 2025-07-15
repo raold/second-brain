@@ -2,22 +2,159 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Model Version History</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 2em; }
-        h1 { color: #333; }
-        label, input, button, select { font-size: 1em; }
-        table { border-collapse: collapse; margin-top: 1em; }
-        th, td { border: 1px solid #ccc; padding: 0.5em 1em; }
-        th { background: #f0f0f0; }
-        #error, #listError { color: red; }
-        #current { margin-top: 1em; }
-        #recordsTable { margin-top: 2em; }
-        .clickable { color: #0074d9; cursor: pointer; text-decoration: underline; }
-        .loading { color: #888; }
+    <link rel="manifest" href="/static/manifest.json">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/static/service-worker.js');
+        });
+      }
+    </script>
+    <style id="theme-style">
+      :root {
+        --bg: #fbf1c7;
+        --bg-alt: #f2e5bc;
+        --fg: #3c3836;
+        --fg-alt: #504945;
+        --primary: #b57614;
+        --primary-dark: #af3a03;
+        --accent: #458588;
+        --accent2: #b16286;
+        --border: #d5c4a1;
+        --error: #cc241d;
+        --success: #98971a;
+        --shadow: 0 2px 8px #28282822;
+      }
+      [data-theme="dark"] {
+        --bg: #282828;
+        --bg-alt: #3c3836;
+        --fg: #ebdbb2;
+        --fg-alt: #bdae93;
+        --primary: #fabd2f;
+        --primary-dark: #fe8019;
+        --accent: #83a598;
+        --accent2: #d3869b;
+        --border: #504945;
+        --error: #fb4934;
+        --success: #b8bb26;
+        --shadow: 0 2px 8px #0008;
+      }
+      [data-theme="dracula"] {
+        --bg: #282a36;
+        --bg-alt: #343746;
+        --fg: #f8f8f2;
+        --fg-alt: #bd93f9;
+        --primary: #ff79c6;
+        --primary-dark: #bd93f9;
+        --accent: #8be9fd;
+        --accent2: #50fa7b;
+        --border: #44475a;
+        --error: #ff5555;
+        --success: #50fa7b;
+        --shadow: 0 2px 8px #0008;
+      }
+      html, body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: system-ui, Arial, sans-serif;
+        margin: 0; padding: 1em;
+        min-height: 100vh;
+        transition: background 0.2s, color 0.2s;
+      }
+      h1 { font-size: 1.3em; margin-bottom: 0.5em; color: var(--primary-dark); }
+      .theme-toggle {
+        float: right;
+        background: var(--bg-alt);
+        color: var(--fg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.4em 1em;
+        cursor: pointer;
+        margin-bottom: 1em;
+        font-size: 1em;
+        box-shadow: var(--shadow);
+      }
+      section {
+        background: var(--bg-alt);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        margin-bottom: 1.2em;
+        padding: 1em;
+        border: 1px solid var(--border);
+        transition: background 0.2s, border 0.2s;
+      }
+      h2 { color: var(--accent2); }
+      label, input, button, select { font-size: 1em; }
+      input, select {
+        background: var(--bg);
+        color: var(--fg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0.4em 0.7em;
+        margin-right: 0.5em;
+        margin-bottom: 0.5em;
+        transition: border 0.2s;
+      }
+      input:focus, select:focus {
+        border-color: var(--primary);
+        outline: none;
+      }
+      button {
+        background: var(--primary);
+        color: var(--bg);
+        border: none;
+        border-radius: 4px;
+        padding: 0.5em 1.2em;
+        cursor: pointer;
+        font-size: 1em;
+        box-shadow: var(--shadow);
+        transition: background 0.2s;
+      }
+      button:hover { background: var(--primary-dark); }
+      table {
+        border-collapse: collapse;
+        margin-top: 1em;
+        width: 100%;
+        background: var(--bg);
+        color: var(--fg-alt);
+        border-radius: 6px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      th, td {
+        border: 1px solid var(--border);
+        padding: 0.5em 1em;
+      }
+      th { background: var(--accent); color: var(--bg); }
+      tr:nth-child(even) { background: var(--bg-alt); }
+      #error, #listError { color: var(--error); }
+      #current { margin-top: 1em; color: var(--success); }
+      #recordsTable { margin-top: 2em; }
+      .clickable { color: var(--accent2); cursor: pointer; text-decoration: underline; }
+      .loading { color: var(--accent); }
+      pre {
+        background: var(--bg);
+        color: var(--fg-alt);
+        border-radius: 4px;
+        padding: 0.5em;
+        margin-top: 0.5em;
+        font-size: 1em;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+      }
+      @media (max-width: 600px) {
+        body { margin: 0.5em; }
+        h1 { font-size: 1.2em; }
+        section { margin-bottom: 1.5em; padding: 0.7em; }
+        table, th, td { font-size: 0.95em; }
+        input, button, select { width: 100%; margin-bottom: 0.5em; }
+      }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌗 Gruvbox Light</button>
     <h1>Model Version History Viewer</h1>
     <section>
         <h2>Current Model Versions</h2>
@@ -140,6 +277,26 @@
             document.getElementById('error').textContent = e.message;
         }
     }
+    </script>
+    <script>
+      // Theme toggle logic
+      const themeToggle = document.getElementById('themeToggle');
+      const themeNames = ['Gruvbox Light', 'Gruvbox Dark', 'Dracula'];
+      const themeKeys = ['light', 'dark', 'dracula'];
+      function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        themeToggle.textContent = `🌗 ${themeNames[themeKeys.indexOf(theme)]}`;
+      }
+      function getTheme() {
+        return localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      }
+      setTheme(getTheme());
+      themeToggle.onclick = () => {
+        const idx = themeKeys.indexOf(getTheme());
+        const next = themeKeys[(idx + 1) % themeKeys.length];
+        setTheme(next);
+      };
     </script>
 </body>
 </html> 

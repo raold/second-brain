@@ -1,0 +1,47 @@
+name: Electron App CI
+
+on:
+  push:
+    paths:
+      - 'electron/**'
+      - '.github/workflows/electron-ci.yml'
+  pull_request:
+    paths:
+      - 'electron/**'
+      - '.github/workflows/electron-ci.yml'
+
+jobs:
+  build-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        working-directory: electron
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install
+      - name: Lint
+        run: npm run lint || true
+      - name: Run Jest unit tests
+        run: npm test
+      - name: Run Playwright E2E tests
+        run: npx playwright install --with-deps && npm run e2e
+      - name: Build Electron app
+        run: npm run build
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-build-${{ matrix.os }}
+          path: electron/dist/
+      - name: Upload coverage (if any)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.os }}
+          path: electron/coverage/ 
