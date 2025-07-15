@@ -85,3 +85,23 @@ make test
 - **Sentry Error Monitoring:**
   - If the `SENTRY_DSN` environment variable is set, all unhandled exceptions and traces are sent to Sentry.
   - Configure your Sentry DSN in the environment to enable.
+
+## Observability Dashboard
+
+A sample Grafana dashboard is provided for instant observability of your LLM API:
+
+- **Panels include:**
+  - Embedding cache hit rate
+  - Search cache hit rate
+  - Embedding latency (p50, p95)
+  - Qdrant search latency (p50, p95)
+  - API request latency (p50, p95)
+  - API QPS (requests per second)
+  - API error rates (4xx, 5xx)
+
+**To use:**
+1. Open Grafana and go to "Import Dashboard".
+2. Upload or paste the contents of [`docs/grafana_llm_observability_dashboard.json`](./grafana_llm_observability_dashboard.json).
+3. Select your Prometheus data source.
+
+You’ll get a full view of API, cache, and vector DB performance at a glance.
