@@ -179,12 +179,12 @@ make lint
 
 ## 📚 Documentation
 
-- [**CI Caching Strategy**](./docs/CI_CACHING.md) - Performance optimization guide
-- [**Environment Variables**](./docs/ENVIRONMENT_VARIABLES.md) - Configuration management
-- [**Deployment Guide**](./docs/DEPLOYMENT.md) - Production deployment instructions
-- [**Architecture Overview**](./docs/ARCHITECTURE.md) - System design documentation
-- [**Usage Examples**](./docs/USAGE.md) - API usage patterns
-- [**Contributing Guidelines**](./docs/CONTRIBUTING.md) - How to contribute
+- [**CI Caching Strategy**](./docs/CI_CACHING.md) — How CI/CD caching works and how to optimize builds
+- [**Environment Variables**](./docs/ENVIRONMENT_VARIABLES.md) — All environment configuration options
+- [**Deployment Guide**](./docs/DEPLOYMENT.md) — How to deploy in production and staging
+- [**Architecture Overview**](./docs/ARCHITECTURE.md) — System design and architecture
+- [**Usage Examples**](./docs/USAGE.md) — Example API requests and usage patterns
+- [**Contributing Guidelines**](./docs/CONTRIBUTING.md) — How to contribute to this project
 
 ## 📋 Resources
 

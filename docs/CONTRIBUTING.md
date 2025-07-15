@@ -10,40 +10,20 @@ We welcome contributions of all kinds — bug fixes, new features, documentation
 git clone https://github.com/yourusername/second-brain.git
 cd second-brain
 
-markdown
-Copy
-Edit
-
 2. **Set up the environment**:
 make install
 make dev
 
-markdown
-Copy
-Edit
-
 3. **Run tests locally** before submitting:
 make test
 
-markdown
-Copy
-Edit
-
 4. **Lint your code**:
 make lint
-
-markdown
-Copy
-Edit
 
 5. **Commit using conventional commits**:
 feat: add new endpoint for async search
 fix: resolve circular import in logger
 docs: update README for local dev instructions
-
-yaml
-Copy
-Edit
 
 6. **Push to your fork** and **open a Pull Request** against `main`.
 
@@ -73,4 +53,4 @@ Edit
 ## Support & Questions
 
 - For bugs or feature requests, open an [issue](https://github.com/raold/second-brain/issues).
-- For discussions, ideas, or help, join our Discord.
+- For discussions, ideas, or help, join our Discord. 
