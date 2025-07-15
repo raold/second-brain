@@ -1,6 +1,6 @@
 import os
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.orm import sessionmaker
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 POSTGRES_USER = os.getenv("POSTGRES_USER", "brain")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "brainpw")

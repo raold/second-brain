@@ -11,7 +11,7 @@
     "note": "Spoke with Alex about integrating the new storage system into the NAS",
     "timestamp": "2025-07-12T23:00:00Z"
   },
-  "metadata": {
+  "meta": {
     "confidence": 0.95,
     "source": "manual-test",
     "origin": "curl-test",

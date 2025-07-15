@@ -6,7 +6,7 @@
 > Ingest, Embed, Search, Replay, and Summarize Text Semantically using OpenAI Embeddings, Qdrant Vector DB, and Postgres. Now with real-time streaming, intent detection, feedback/correction, plugin system, Electron/mobile/PWA support, and advanced UI/UX.
 
 ## 📦 Project Overview
-This API enables ingestion of text data, which is embedded via OpenAI's `text-embedding-3-small` model and stored in Qdrant for semantic search. Memories and metadata are persisted in Postgres for advanced querying, replay, and personalized ranking.
+This API enables ingestion of text data, which is embedded via OpenAI's `text-embedding-3-small` model and stored in Qdrant for semantic search. Memories and meta information are persisted in Postgres for advanced querying, replay, and personalized ranking.
 
 ## 🚀 Features
 - **Token-based authentication** with environment-specific tokens

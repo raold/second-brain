@@ -127,7 +127,9 @@ def store_task(payload: Payload) -> Optional[Dict[str, Any]]:
         timestamp = payload.data.get("timestamp", datetime.datetime.now().isoformat())
         task_line = f"- [ ] {note}  \n  – created: {timestamp}\n"
 
-        path = Path("/data/tasks.md")
+        import os
+        data_dir = os.getenv("DATA_DIR", "./data")
+        path = Path(data_dir) / "tasks.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         
         with path.open("a", encoding="utf-8") as f:
@@ -161,7 +163,9 @@ def store_bookmark(payload: Payload) -> Optional[Dict[str, Any]]:
         timestamp = payload.data.get("timestamp", datetime.datetime.now().isoformat())
         entry = f"- [{note}]({url})  \n  – saved: {timestamp}\n"
 
-        path = Path("/data/bookmarks.md")
+        import os
+        data_dir = os.getenv("DATA_DIR", "./data")
+        path = Path(data_dir) / "bookmarks.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         
         with path.open("a", encoding="utf-8") as f:

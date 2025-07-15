@@ -1,6 +1,8 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 from fastapi.testclient import TestClient
+
 from app.main import app
 
 client = TestClient(app)
@@ -9,7 +11,9 @@ AUTH_HEADER = {"Authorization": "Bearer test-token"}
 @pytest.fixture(autouse=True)
 def inject_test_token(monkeypatch):
     from app.config import Config
-    monkeypatch.setattr(Config, 'API_TOKENS', {'test-token'})
+    monkeypatch.setattr(Config, 'API_TOKENS', ['test-token'])
+
+import types
 
 @patch("app.storage.qdrant_client.get_openai_embedding", return_value=[0.1] * 1536)
 @patch("app.storage.qdrant_client.client.search")
@@ -35,17 +39,23 @@ def test_ranked_search_vector_only(mock_search, mock_embed):
 
 @patch("app.storage.qdrant_client.get_openai_embedding", return_value=[0.1] * 1536)
 @patch("app.storage.qdrant_client.client.search")
-def test_ranked_search_metadata_match(mock_search, mock_embed):
+@patch("app.storage.qdrant_client._process_qdrant_results", side_effect=lambda x: x)
+def test_ranked_search_metadata_match(mock_process, mock_search, mock_embed):
     mock_search.return_value = [
-        type("Result", (), {
+        {
             "id": "id2",
             "score": 0.5,
+            "note": "B",
+            "timestamp": "2025-07-14T00:00:00Z",
+            "type": "special",
+            "embedding_model": "em2",
+            "model_version": "v2",
             "payload": {
                 "data": {"note": "B"},
                 "metadata": {"model_version": "v2", "embedding_model": "em2", "timestamp": "2025-07-14T00:00:00Z"},
                 "type": "special"
             }
-        })()
+        }
     ]
     url = "/ranked-search?q=test&model_version=v2&embedding_model=em2&type=special"
     resp = client.get(url, headers=AUTH_HEADER)
@@ -59,17 +69,23 @@ def test_ranked_search_metadata_match(mock_search, mock_embed):
 
 @patch("app.storage.qdrant_client.get_openai_embedding", return_value=[0.1] * 1536)
 @patch("app.storage.qdrant_client.client.search")
-def test_ranked_search_timestamp_range(mock_search, mock_embed):
+@patch("app.storage.qdrant_client._process_qdrant_results", side_effect=lambda x: x)
+def test_ranked_search_timestamp_range(mock_process, mock_search, mock_embed):
     mock_search.return_value = [
-        type("Result", (), {
+        {
             "id": "id3",
             "score": 0.7,
+            "note": "C",
+            "timestamp": "2025-07-14T12:00:00Z",
+            "type": "test",
+            "embedding_model": "em3",
+            "model_version": "v3",
             "payload": {
                 "data": {"note": "C"},
                 "metadata": {"model_version": "v3", "embedding_model": "em3", "timestamp": "2025-07-14T12:00:00Z"},
                 "type": "test"
             }
-        })()
+        }
     ]
     url = "/ranked-search?q=test&timestamp_from=2025-07-14T00:00:00Z&timestamp_to=2025-07-15T00:00:00Z"
     resp = client.get(url, headers=AUTH_HEADER)

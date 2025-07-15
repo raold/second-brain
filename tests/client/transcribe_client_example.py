@@ -1,6 +1,7 @@
-import requests
 import argparse
 import os
+
+import requests
 
 API_URL = "http://localhost:8000/transcribe"
 TOKEN = os.getenv("API_TOKEN", "test-token")

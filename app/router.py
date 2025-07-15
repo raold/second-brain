@@ -1,23 +1,18 @@
 # app/router.py
 
+
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile, status
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile, BackgroundTasks
-
+from app.models import Memory, MemoryFeedback, Payload, PayloadType, Priority
+from app.storage.postgres import AsyncSessionLocal, get_async_session
 from app.auth import verify_token
-from app.models import Payload
-from app.storage.markdown_writer import write_markdown
-from app.storage.qdrant_client import qdrant_search, qdrant_upsert, to_uuid, client
-from qdrant_client.http.exceptions import UnexpectedResponse
 from app.utils.logger import logger
+from app.storage.qdrant_client import client, qdrant_search, qdrant_upsert, to_uuid
 from app.config import Config
-import openai
-from app.utils.openai_client import detect_intent_via_llm
-from app.storage.postgres import get_async_session
-from app.models import Memory
+from app.storage.markdown_writer import write_markdown
+
 import datetime
-from sqlalchemy import select, and_, delete, update
-from app.models import MemoryFeedback
 
 router = APIRouter()
 
@@ -26,8 +21,27 @@ async def health_check() -> Dict[str, str]:
     """Health check endpoint."""
     return {"status": "ok"}
 
+async def store_memory_pg(payload: Payload, session):
+    from sqlalchemy import insert
+    stmt = insert(Memory).values(
+        id=payload.id,
+        qdrant_id=payload.id,  # assuming 1:1 for now
+        note=payload.data.get("note") or payload.data.get("text") or "",
+        intent=payload.intent,
+        type=payload.type,
+        timestamp=datetime.datetime.utcnow(),
+        user=payload.meta.get("user"),
+        meta=payload.meta
+    )
+    await session.execute(stmt)
+    await session.commit()
+
+async def store_memory_pg_background(payload: Payload):
+    async with AsyncSessionLocal() as session:
+        await store_memory_pg(payload, session)
+
 @router.post("/ingest")
-async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, _: None = Depends(verify_token)) -> Dict[str, Any]:
+async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, session=Depends(get_async_session), _: None = Depends(verify_token)) -> Dict[str, Any]:
     """
     Ingest a payload into the second brain system.
     
@@ -48,7 +62,7 @@ async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, _
             note = payload.data.get("note") or payload.data.get("text") or ""
             if note:
                 payload.intent = await detect_intent_via_llm(note)
-                payload.metadata["intent"] = payload.intent
+                payload.meta["intent"] = payload.intent
         # Store in markdown file
         write_markdown(payload)
         
@@ -56,7 +70,7 @@ async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, _
         qdrant_upsert(payload.model_dump())
         
         # Store in Postgres (background)
-        background_tasks.add_task(store_memory_pg, payload)
+        background_tasks.add_task(store_memory_pg_background, payload)
         
         logger.info(f"Successfully ingested payload: {payload.id}")
         return {"status": "ingested", "id": payload.id, "intent": payload.intent}
@@ -67,22 +81,6 @@ async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, _
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to ingest payload: {str(e)}"
         ) from e
-
-async def store_memory_pg(payload: Payload):
-    from sqlalchemy import insert
-    async for session in get_async_session():
-        stmt = insert(Memory).values(
-            id=payload.id,
-            qdrant_id=payload.id,  # assuming 1:1 for now
-            note=payload.data.get("note") or payload.data.get("text") or "",
-            intent=payload.intent,
-            type=payload.type,
-            timestamp=datetime.datetime.utcnow(),
-            user=payload.metadata.get("user"),
-            metadata=payload.metadata
-        )
-        await session.execute(stmt)
-        await session.commit()
 
 @router.get("/search")
 async def search_endpoint(
@@ -110,7 +108,7 @@ async def search_endpoint(
         HTTPException: If search fails
     """
     try:
-        logger.info("Received search query", query=q, model_version=model_version, embedding_model=embedding_model, type=type, timestamp_from=timestamp_from, timestamp_to=timestamp_to)
+        logger.info(f"Received search query: q={q}, model_version={model_version}, embedding_model={embedding_model}, type={type}, timestamp_from={timestamp_from}, timestamp_to={timestamp_to}")
         filters = {}
         if model_version:
             filters["model_version"] = model_version
@@ -121,7 +119,7 @@ async def search_endpoint(
         if timestamp_from or timestamp_to:
             filters["timestamp"] = {"from": timestamp_from, "to": timestamp_to}
         results = qdrant_search(q, filters=filters)
-        logger.info("Search completed", query=q, num_results=len(results))
+        logger.info(f"Search completed: q={q}, num_results={len(results)}")
         return {"query": q, "results": results}
     except Exception as e:
         logger.error(f"Search failed for query '{q}': {str(e)}")
@@ -129,6 +127,52 @@ async def search_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Search failed: {str(e)}"
         ) from e
+
+def _build_search_filters(model_version, embedding_model, type, timestamp_from, timestamp_to):
+    filters = {}
+    if model_version:
+        filters["model_version"] = model_version
+    if embedding_model:
+        filters["embedding_model"] = embedding_model
+    if type:
+        filters["type"] = type
+    if timestamp_from or timestamp_to:
+        filters["timestamp"] = {"from": timestamp_from, "to": timestamp_to}
+    return filters
+
+def _score_and_explain_result(r, filters):
+    meta_score = 0.0
+    explanation = []
+    model_version = filters.get("model_version")
+    embedding_model = filters.get("embedding_model")
+    type_ = filters.get("type")
+    ts_filter = filters.get("timestamp")
+    if model_version and r.get("model_version") == model_version:
+        meta_score += 0.5
+        explanation.append("model_version match")
+    if embedding_model and r.get("embedding_model") == embedding_model:
+        meta_score += 0.2
+        explanation.append("embedding_model match")
+    if type_ and r.get("type") == type_:
+        meta_score += 0.2
+        explanation.append("type match")
+    if ts_filter:
+        ts = r.get("timestamp")
+        tf = ts_filter.get("from")
+        tt = ts_filter.get("to")
+        if ts and ((not tf or ts >= tf) and (not tt or ts <= tt)):
+            meta_score += 0.1
+            explanation.append("timestamp in range")
+    meta_score = min(meta_score, 1.0)
+    vector_score = r["score"]
+    final_score = 0.8 * vector_score + 0.2 * meta_score
+    return {
+        **r,
+        "vector_score": vector_score,
+        "metadata_score": meta_score,
+        "final_score": final_score,
+        "explanation": ", ".join(explanation) or "vector only"
+    }
 
 @router.get("/ranked-search", tags=["Search"])
 async def ranked_search_endpoint(
@@ -145,56 +189,12 @@ async def ranked_search_endpoint(
     Returns ranked results with score explanations.
     """
     try:
-        logger.info("Received ranked search query", query=q, model_version=model_version, embedding_model=embedding_model, type=type, timestamp_from=timestamp_from, timestamp_to=timestamp_to)
-        filters = {}
-        if model_version:
-            filters["model_version"] = model_version
-        if embedding_model:
-            filters["embedding_model"] = embedding_model
-        if type:
-            filters["type"] = type
-        if timestamp_from or timestamp_to:
-            filters["timestamp"] = {"from": timestamp_from, "to": timestamp_to}
-        # Use hybrid search
+        logger.info(f"Received ranked search query: q={q}, model_version={model_version}, embedding_model={embedding_model}, type={type}, timestamp_from={timestamp_from}, timestamp_to={timestamp_to}")
+        filters = _build_search_filters(model_version, embedding_model, type, timestamp_from, timestamp_to)
         results = qdrant_search(q, filters=filters)
-        # Compute metadata score and final score
-        ranked = []
-        for r in results:
-            meta_score = 0.0
-            explanation = []
-            if model_version:
-                if r["model_version"] == model_version:
-                    meta_score += 0.5
-                    explanation.append("model_version match")
-            if embedding_model:
-                if r["embedding_model"] == embedding_model:
-                    meta_score += 0.2
-                    explanation.append("embedding_model match")
-            if type:
-                if r["type"] == type:
-                    meta_score += 0.2
-                    explanation.append("type match")
-            # Timestamp range bonus
-            if filters.get("timestamp"):
-                ts = r.get("timestamp")
-                tf = filters["timestamp"].get("from")
-                tt = filters["timestamp"].get("to")
-                if ts and ((not tf or ts >= tf) and (not tt or ts <= tt)):
-                    meta_score += 0.1
-                    explanation.append("timestamp in range")
-            # Normalize meta_score to max 1.0
-            meta_score = min(meta_score, 1.0)
-            vector_score = r["score"]
-            final_score = 0.8 * vector_score + 0.2 * meta_score
-            ranked.append({
-                **r,
-                "vector_score": vector_score,
-                "metadata_score": meta_score,
-                "final_score": final_score,
-                "explanation": ", ".join(explanation) or "vector only"
-            })
+        ranked = [_score_and_explain_result(r, filters) for r in results]
         ranked.sort(key=lambda x: x["final_score"], reverse=True)
-        logger.info("Ranked search completed", query=q, num_results=len(ranked))
+        logger.info(f"Ranked search completed: q={q}, num_results={len(ranked)}")
         return {"query": q, "results": ranked}
     except Exception as e:
         logger.error(f"Ranked search failed for query '{q}': {str(e)}")
@@ -221,7 +221,10 @@ async def transcribe_endpoint(
             model="whisper-1",
             file=(file.filename, audio_bytes, file.content_type)
         )
-        text = transcript.text if hasattr(transcript, "text") else transcript["text"]
+        # OpenAI may return an object or dict; handle both
+        text = getattr(transcript, "text", None) or (transcript["text"] if isinstance(transcript, dict) and "text" in transcript else None)
+        if not text:
+            raise HTTPException(status_code=500, detail="No transcript text returned.")
         return {"transcript": text}
     except Exception as e:
         logger.error(f"Transcription failed: {e}")
@@ -235,20 +238,23 @@ async def get_version_history(id: str, _: None = Depends(verify_token)) -> Dict[
     try:
         result = client.retrieve(
             collection_name=Config.QDRANT_COLLECTION,
-            ids=[to_uuid(id)],
+            ids=[str(to_uuid(id))],
             with_payload=True
         )
-        if not result or not result[0].payload.get("metadata", {}).get("version_history"):
+        payload = getattr(result[0], "payload", None) if result and len(result) > 0 else None
+        meta = payload.get("metadata", {}) if payload else None
+        version_history = meta.get("version_history") if meta else None
+        if not version_history:
             raise HTTPException(status_code=404, detail="Version history not found for this record.")
-        return {"id": id, "version_history": result[0].payload["metadata"]["version_history"]}
+        return {"id": id, "version_history": version_history}
     except UnexpectedResponse:
         raise HTTPException(status_code=404, detail="Record not found.")
     except Exception as e:
         logger.error(f"Failed to fetch version history for {id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch version history: {e}")
 
-@router.get("/records", tags=["Records"])
-async def list_records(
+@router.get("/zzzzzzzzzz", tags=["Records"])
+async def zzzzzzzzzz_handler(
     type: Optional[str] = Query(None, description="Filter by record type"),
     note: Optional[str] = Query(None, description="Filter by note substring"),
     limit: int = Query(20, ge=1, le=100, description="Max records to return"),
@@ -256,7 +262,7 @@ async def list_records(
     _: None = Depends(verify_token)
 ) -> dict:
     """
-    List records with optional filtering and pagination.
+    List records with optional filtering and pagination. (TEMP: /zzzzzzzzzz for deep conflict test)
     """
     try:
         # Qdrant scroll API for pagination
@@ -268,9 +274,9 @@ async def list_records(
         )
         records = []
         for point in scroll_result[0]:
-            payload = point.payload
-            meta = payload.get("metadata", {})
-            data = payload.get("data", {})
+            payload = getattr(point, "payload", {}) or {}
+            meta = payload.get("metadata", {}) if payload else {}
+            data = payload.get("data", {}) if payload else {}
             # Filtering
             if type and payload.get("type") != type:
                 continue
@@ -335,29 +341,35 @@ async def delete_memory(id: str, hard: bool = False, session=Depends(get_async_s
     if hard:
         from app.storage.qdrant_client import client, to_uuid
         try:
-            client.delete(collection_name=Config.QDRANT_COLLECTION, points_selector={"points": [to_uuid(id)]})
+            client.delete(collection_name=Config.QDRANT_COLLECTION, points_selector=[str(to_uuid(id))])
         except Exception as e:
             logger.warning(f"Qdrant delete failed for {id}: {e}")
     return {"status": "deleted", "id": id, "hard": hard}
 
 @router.put("/memories/{id}", tags=["Memories"])
-async def update_memory(id: str, note: str, intent: Optional[str] = None, type: Optional[str] = None, session=Depends(get_async_session)):
+async def update_memory(
+    id: str,
+    note: str,
+    intent: Optional[str] = None,
+    type: Optional[str] = None,
+    session=Depends(get_async_session)
+):
     # Update in Postgres
     stmt = update(Memory).where(Memory.id == id).values(note=note, intent=intent, type=type)
     await session.execute(stmt)
     await session.commit()
     # Re-embed and upsert in Qdrant
     from app.storage.qdrant_client import qdrant_upsert
-    from app.models import Payload
     payload = Payload(
         id=id,
-        type=type or "note",
+        type=PayloadType(type) if type else PayloadType.NOTE,
         intent=intent,
         context="corrected",
-        priority="normal",
+        priority=Priority.NORMAL,
         ttl="1d",
         data={"note": note},
-        metadata={"intent": intent}
+        meta={"intent": intent},
+        target="default"
     )
     qdrant_upsert(payload.model_dump())
     return {"status": "updated", "id": id, "note": note, "intent": intent, "type": type}
@@ -369,7 +381,6 @@ async def summarize_memories(
     session=Depends(get_async_session)
 ):
     # Fetch memories by IDs or query
-    from app.utils.openai_client import detect_intent_via_llm
     memories = []
     if ids:
         result = await session.execute(select(Memory).where(Memory.id.in_(ids), Memory.deleted == False))
@@ -387,8 +398,9 @@ async def summarize_memories(
 
 @router.post("/memories/{id}/feedback", tags=["Memories"])
 async def memory_feedback(id: str, feedback_type: str, user: Optional[str] = None, session=Depends(get_async_session)):
+    import uuid
+
     from sqlalchemy import insert
-    import uuid, datetime
     await session.execute(insert(MemoryFeedback).values(
         id=str(uuid.uuid4()),
         memory_id=id,

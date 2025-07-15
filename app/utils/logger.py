@@ -1,32 +1,16 @@
 # app/utils/logger.py
 
+import os
 import logging
-import structlog
 
-# Configure structlog for JSON output
-structlog.configure(
-    processors=[
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.stdlib.add_log_level,
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer(),
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
+log_dir = "tests/logs"
+os.makedirs(log_dir, exist_ok=True)
+log_path = os.path.join(log_dir, "processor.log")
 
-# Set up root logger for structlog
-logging.basicConfig(
-    format="%(message)s",
-    stream=None,
-    level=logging.INFO,
-)
+logger = logging.getLogger("root")
+logger.setLevel(logging.INFO)
 
-def get_logger(name=None):
-    return structlog.get_logger(name)
-
-logger = get_logger()
+fh = logging.FileHandler(log_path)
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)

@@ -1,11 +1,12 @@
-import asyncio
-import websockets
-import json
-import requests
 import argparse
+import asyncio
+import json
 import os
-import tempfile
 import sys
+import tempfile
+
+import requests
+import websockets
 
 API_URL = "ws://localhost:8000/ws/generate?token=test-token"
 TTS_API_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
