@@ -41,3 +41,4 @@ We recognize researchers who responsibly disclose vulnerabilities. If you wish t
 
 - [CONTRIBUTING.md](./CONTRIBUTING.md)
 - [README.md](./README.md)
+- [TESTING.md](./TESTING.md)

@@ -14,6 +14,11 @@ client = TestClient(app)
 def inject_test_token(monkeypatch):
     monkeypatch.setattr(Config, 'API_TOKENS', {'test-token'})
 
+@pytest.fixture(autouse=True)
+def mock_openai_embedding():
+    with patch("app.utils.openai_client.get_openai_embedding", return_value=[0.1] * 1536):
+        yield
+
 AUTH_HEADER = {"Authorization": "Bearer test-token"}
 
 @patch("app.router.qdrant_search", return_value=[])

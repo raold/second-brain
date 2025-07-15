@@ -6,6 +6,7 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import PointStruct, SearchParams
+from qdrant_client.http.exceptions import UnexpectedResponse
 
 from app.config import Config
 from app.utils.logger import logger
@@ -64,9 +65,32 @@ def qdrant_upsert(payload: Dict[str, Any]) -> None:
         # Prepare payload with metadata
         if "metadata" not in payload:
             payload["metadata"] = {}
-        
-        payload["metadata"]["embedding_model"] = Config.OPENAI_EMBEDDING_MODEL
-        payload["metadata"]["timestamp"] = datetime.now().isoformat()
+        # Version info to append
+        version_info = {
+            "embedding_model": Config.MODEL_VERSIONS["embedding"],
+            "model_version": Config.MODEL_VERSIONS["llm"],
+            "timestamp": datetime.now().isoformat(),
+        }
+        # Try to fetch existing record for version history
+        version_history = []
+        try:
+            existing = client.retrieve(
+                collection_name=Config.QDRANT_COLLECTION,
+                ids=[to_uuid(payload["id"])],
+                with_payload=True
+            )
+            if existing and existing[0].payload.get("metadata", {}).get("version_history"):
+                version_history = existing[0].payload["metadata"]["version_history"]
+        except UnexpectedResponse:
+            # Not found, start new history
+            version_history = []
+        except Exception as e:
+            logger.warning(f"[Qdrant] Could not fetch existing record for version history: {e}")
+        version_history = version_history + [version_info]
+        payload["metadata"]["embedding_model"] = version_info["embedding_model"]
+        payload["metadata"]["model_version"] = version_info["model_version"]
+        payload["metadata"]["timestamp"] = version_info["timestamp"]
+        payload["metadata"]["version_history"] = version_history
         
         # Create point for Qdrant
         point = PointStruct(
@@ -134,7 +158,9 @@ def qdrant_search(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
                 "timestamp": result.payload.get("metadata", {}).get("timestamp", ""),
                 "source": result.payload.get("metadata", {}).get("source", ""),
                 "type": result.payload.get("type", ""),
-                "priority": result.payload.get("priority", "")
+                "priority": result.payload.get("priority", ""),
+                "embedding_model": result.payload.get("metadata", {}).get("embedding_model", ""),
+                "model_version": result.payload.get("metadata", {}).get("model_version", "")
             }
             for result in search_result
         ]

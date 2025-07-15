@@ -57,3 +57,15 @@ make logs
 make test
 ```
 - Tests validate ingestion, search, and health checks.
+- See [Testing Guide](./TESTING.md) for our approach to mocking OpenAI and Qdrant in integration tests.
+
+## Metrics & Monitoring
+
+- **Prometheus Metrics:**
+  - The API exposes a `/metrics` endpoint (not in OpenAPI schema) for Prometheus scraping.
+  - All FastAPI endpoints are instrumented for request count, latency, and error metrics.
+  - Enable by default; scrape `/metrics` with your Prometheus server.
+
+- **Sentry Error Monitoring:**
+  - If the `SENTRY_DSN` environment variable is set, all unhandled exceptions and traces are sent to Sentry.
+  - Configure your Sentry DSN in the environment to enable.

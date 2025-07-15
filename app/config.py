@@ -30,6 +30,12 @@ class Config:
     OPENAI_RETRY_MIN_WAIT = int(os.getenv("OPENAI_RETRY_MIN_WAIT", 2))
     OPENAI_RETRY_MAX_WAIT = int(os.getenv("OPENAI_RETRY_MAX_WAIT", 10))
 
+    # === Model Version Tracking ===
+    MODEL_VERSIONS = {
+        "llm": os.getenv("MODEL_VERSION_LLM", "gpt-4o"),
+        "embedding": os.getenv("MODEL_VERSION_EMBEDDING", "text-embedding-3-small")
+    }
+
     @classmethod
     def summary(cls):
         return {

@@ -227,3 +227,4 @@ if not settings.openai_api_key:
 - [GitHub Secrets Documentation](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
 - [GitHub Environments](https://docs.github.com/en/actions/deployment/targeting-different-environments)
 - [Docker Compose Environment Variables](https://docs.docker.com/compose/environment-variables/) 
+- [Testing Guide](./TESTING.md) 
