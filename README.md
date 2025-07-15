@@ -219,7 +219,7 @@ make lint
 - **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs) - Interactive API docs
 
 ## 🛡️ License
-AGPLv3 — Free for use with source-sharing required for derivatives.
+[**AGPLv3**](./docs/LICENSE) — Free for use with source-sharing required for derivatives.
 
 ## 🛠️ Roadmap
 - **v1.3.0**: Full test mocking, metrics/monitoring, API rate limiting
