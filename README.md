@@ -202,9 +202,9 @@ make lint
 - [**Docker Configuration**](./Dockerfile) - Container setup
 
 ### 🔒 Security & Legal
-- [**Security Policy**](./SECURITY.md) - Security vulnerabilities and reporting
-- [**License**](./LICENSE) - AGPLv3 license terms
-- [**Changelog**](./CHANGELOG.md) - Release history and changes
+- [**Security Policy**](./docs/SECURITY.md) - Security vulnerabilities and reporting
+- [**License**](./docs/LICENSE) - AGPLv3 license terms
+- [**Changelog**](./docs/CHANGELOG.md) - Release history and changes
 
 ### 🚀 CI/CD & Deployment
 - [**CI Pipeline**](./.github/workflows/ci.yaml) - Continuous integration workflow
