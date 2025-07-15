@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile
 
 from app.auth import verify_token
 from app.models import Payload
@@ -11,6 +11,7 @@ from app.storage.qdrant_client import qdrant_search, qdrant_upsert, to_uuid, cli
 from qdrant_client.http.exceptions import UnexpectedResponse
 from app.utils.logger import logger
 from app.config import Config
+import openai
 
 router = APIRouter()
 
@@ -170,6 +171,30 @@ async def ranked_search_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ranked search failed: {str(e)}"
         ) from e
+
+@router.post("/transcribe", tags=["Transcription"])
+async def transcribe_endpoint(
+    file: UploadFile = File(...),
+    _: None = Depends(verify_token)
+) -> dict:
+    """
+    Accept an audio file, transcribe it using OpenAI Whisper API, and return the transcript.
+    """
+    try:
+        # Read audio file bytes
+        audio_bytes = await file.read()
+        if not audio_bytes:
+            raise HTTPException(status_code=400, detail="Empty audio file.")
+        # Call OpenAI Whisper API
+        transcript = openai.audio.transcriptions.create(
+            model="whisper-1",
+            file=(file.filename, audio_bytes, file.content_type)
+        )
+        text = transcript.text if hasattr(transcript, "text") else transcript["text"]
+        return {"transcript": text}
+    except Exception as e:
+        logger.error(f"Transcription failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {e}")
 
 @router.get("/records/{id}/version-history", tags=["Records"])
 async def get_version_history(id: str, _: None = Depends(verify_token)) -> Dict[str, Any]:
