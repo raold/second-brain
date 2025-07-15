@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.4.0] - 2025-07-14
+
+## ✨ Added
+
+### ✅ Intent Detection with OpenAI LLM
+- Auto-classifies each ingested transcript as:
+  - **question**, **reminder**, **note**, **todo**, **command**, or **other**
+- Intent is:
+  - Stored in the payload and metadata.
+  - Displayed in the **Electron app** with **manual override option** before proceeding.
+- Added **unit and integration tests** for intent detection with OpenAI calls mocked.
+
+### ✅ Memory Persistence Layer with PostgreSQL
+- Added **Postgres service** in `docker-compose.yml` for local development.
+- Introduced **SQLAlchemy async model** for a `memories` table:
+  - Stores metadata, Qdrant references, timestamps, intent, etc.
+- Implemented **async DB connection logic** and **initialization script (`init_db.py`)**.
+- **Ingest pipeline** now inserts metadata into Postgres **after Qdrant upsert** via background tasks.
+- New API:
+  - `/memories/search`: Query Postgres directly for metadata (filter by **intent**, **type**, **note content**, **date range**).
+
+
+## 🛠️ Changed
+- Backend models and ingest logic updated to support **intent classification** and **Postgres persistence**.
+- Enhanced test coverage for:
+  - Ingestion flow
+  - Intent detection accuracy
+
 ## [1.2.0] - 2025-07-14
 
 ### 🚀 Major Performance & CI/CD Improvements
