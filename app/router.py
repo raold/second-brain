@@ -16,7 +16,8 @@ from app.utils.openai_client import detect_intent_via_llm
 from app.storage.postgres import get_async_session
 from app.models import Memory
 import datetime
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, delete, update
+from app.models import MemoryFeedback
 
 router = APIRouter()
 
@@ -300,6 +301,7 @@ async def memories_search(
     note: Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
+    include_deleted: bool = False,
     session=Depends(get_async_session)
 ):
     filters = []
@@ -313,9 +315,86 @@ async def memories_search(
         filters.append(Memory.timestamp >= date_from)
     if date_to:
         filters.append(Memory.timestamp <= date_to)
+    if not include_deleted:
+        filters.append(Memory.deleted == False)
     stmt = select(Memory).where(and_(*filters)) if filters else select(Memory)
     result = await session.execute(stmt)
     memories = [dict(row._mapping["Memory"].__dict__) for row in result.fetchall()]
     for m in memories:
         m.pop("_sa_instance_state", None)
     return {"results": memories}
+
+@router.delete("/memories/{id}", tags=["Memories"])
+async def delete_memory(id: str, hard: bool = False, session=Depends(get_async_session)):
+    if hard:
+        await session.execute(delete(Memory).where(Memory.id == id))
+    else:
+        await session.execute(update(Memory).where(Memory.id == id).values(deleted=True))
+    await session.commit()
+    # Delete from Qdrant if hard
+    if hard:
+        from app.storage.qdrant_client import client, to_uuid
+        try:
+            client.delete(collection_name=Config.QDRANT_COLLECTION, points_selector={"points": [to_uuid(id)]})
+        except Exception as e:
+            logger.warning(f"Qdrant delete failed for {id}: {e}")
+    return {"status": "deleted", "id": id, "hard": hard}
+
+@router.put("/memories/{id}", tags=["Memories"])
+async def update_memory(id: str, note: str, intent: Optional[str] = None, type: Optional[str] = None, session=Depends(get_async_session)):
+    # Update in Postgres
+    stmt = update(Memory).where(Memory.id == id).values(note=note, intent=intent, type=type)
+    await session.execute(stmt)
+    await session.commit()
+    # Re-embed and upsert in Qdrant
+    from app.storage.qdrant_client import qdrant_upsert
+    from app.models import Payload
+    payload = Payload(
+        id=id,
+        type=type or "note",
+        intent=intent,
+        context="corrected",
+        priority="normal",
+        ttl="1d",
+        data={"note": note},
+        metadata={"intent": intent}
+    )
+    qdrant_upsert(payload.model_dump())
+    return {"status": "updated", "id": id, "note": note, "intent": intent, "type": type}
+
+@router.post("/memories/summarize", tags=["Memories"])
+async def summarize_memories(
+    ids: Optional[List[str]] = None,
+    query: Optional[str] = None,
+    session=Depends(get_async_session)
+):
+    # Fetch memories by IDs or query
+    from app.utils.openai_client import detect_intent_via_llm
+    memories = []
+    if ids:
+        result = await session.execute(select(Memory).where(Memory.id.in_(ids), Memory.deleted == False))
+        memories = [row._mapping["Memory"] for row in result.fetchall()]
+    elif query:
+        result = await session.execute(select(Memory).where(Memory.note.ilike(f"%{query}%"), Memory.deleted == False))
+        memories = [row._mapping["Memory"] for row in result.fetchall()]
+    if not memories:
+        return {"summary": "No memories found."}
+    # Summarize with LLM (stub)
+    notes = '\n'.join(m.note for m in memories)
+    # TODO: Replace with real LLM call
+    summary = f"Summary of {len(memories)} memories: {notes[:500]}..."
+    return {"summary": summary}
+
+@router.post("/memories/{id}/feedback", tags=["Memories"])
+async def memory_feedback(id: str, feedback_type: str, user: Optional[str] = None, session=Depends(get_async_session)):
+    from sqlalchemy import insert
+    import uuid, datetime
+    await session.execute(insert(MemoryFeedback).values(
+        id=str(uuid.uuid4()),
+        memory_id=id,
+        user=user,
+        feedback_type=feedback_type,
+        timestamp=datetime.datetime.utcnow()
+    ))
+    await session.commit()
+    return {"status": "ok"}
