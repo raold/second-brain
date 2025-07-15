@@ -3,6 +3,7 @@
 ## Prerequisites
 - Docker and Docker Compose installed
 - An OpenAI API key
+- Postgres (included in docker-compose)
 
 ## Quick Start
 
@@ -22,6 +23,7 @@ Edit `.env` to set your OpenAI API key and other settings.
 ```bash
 docker compose up --build -d
 ```
+This will start the FastAPI app, Qdrant, and Postgres services.
 
 ### 4. Verify the API is Running
 ```bash
@@ -40,6 +42,9 @@ Expected output:
 
 ### Qdrant
 - Runs on port 6333 for vector storage.
+
+### Postgres
+- Runs on port 5432 for memory persistence.
 
 ## Directory Structure
 ```
@@ -70,6 +75,7 @@ docker compose logs -f
 docker exec -it llm_output_processor /bin/bash
 ```
 
-## Notes
-- Ensure ports 8000 (API) and 6333 (Qdrant) are open on your host.
+## Additional Notes
+- Electron and mobile/PWA clients can be run separately; see README for details.
+- Ensure ports 8000 (API), 6333 (Qdrant), and 5432 (Postgres) are open on your host.
 - Use a `.env` file for secret keys and environment configuration.

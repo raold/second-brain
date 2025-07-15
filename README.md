@@ -3,22 +3,33 @@
 
 # LLM Output Processor
 
-> Ingest, Embed, and Search Text Semantically using OpenAI Embeddings + Qdrant Vector DB.
+> Ingest, Embed, Search, Replay, and Summarize Text Semantically using OpenAI Embeddings, Qdrant Vector DB, and Postgres. Now with real-time streaming, intent detection, feedback/correction, plugin system, Electron/mobile/PWA support, and advanced UI/UX.
 
 ## 📦 Project Overview
-This API enables ingestion of text data, which is embedded via OpenAI's `text-embedding-3-small` model and stored in Qdrant for semantic search.
+This API enables ingestion of text data, which is embedded via OpenAI's `text-embedding-3-small` model and stored in Qdrant for semantic search. Memories and metadata are persisted in Postgres for advanced querying, replay, and personalized ranking.
 
 ## 🚀 Features
 - **Token-based authentication** with environment-specific tokens
 - **Production-grade logging** with rotation and environment-specific levels
 - **Retry and backoff** for OpenAI API with tenacity
 - **Dimension validation** for embeddings
-- **Automated test suite** (pytest) with comprehensive coverage
+- **Automated test suite** (pytest, Jest, Playwright) with comprehensive coverage
 - **Makefile** for streamlined development workflow
-- **CI/CD Pipeline** with 50-70% faster builds through intelligent caching
+- **CI/CD Pipeline** with advanced caching, Electron build/test, and artifact upload
 - **Multi-environment deployment** (staging → production)
 - **Docker layer caching** for 60-80% faster builds
 - **Environment-specific configurations** with secure secret management
+- **Real-time WebSocket streaming** for LLM output and TTS audio
+- **Model version tracking** and version history per record
+- **Intent detection/classification** (question, reminder, note, todo, command, other)
+- **Memory persistence layer** with Postgres and SQL querying
+- **Feedback/correction loop** (edit, delete, correct intent, upvote)
+- **Replay and summarization** endpoints for memory synthesis
+- **Personalized ranking** with feedback tracking
+- **Plugin system** for reminders, webhooks, file/PDF search, and more
+- **Electron/mobile/PWA clients** with voice, TTS, and advanced UI/UX
+- **Advanced UI**: version history, theming, settings, accessibility, and export
+- **Performance optimizations**: LRU caching, Prometheus metrics, Sentry, Grafana
 
 ## ⚙️ Requirements
 - Docker + Docker Compose
@@ -26,7 +37,7 @@ This API enables ingestion of text data, which is embedded via OpenAI's `text-em
 - Python 3.11+ (for local dev)
 - GitHub repository (for CI/CD features)
 
-## 📁 Project Structure
+## 🏗️ Project Structure
 ```
 second-brain/
 ├── app/
@@ -47,10 +58,14 @@ second-brain/
 │   ├── storage/
 │   │   ├── qdrant_client.py   # Qdrant vector DB client (with caching)
 │   │   ├── markdown_writer.py # Markdown file ops
-│   │   └── shell_runner.py    # Shell command exec
-│   └── data/
-│       ├── memories/         # Markdown memory files
-│       └── tasks.md          # Task management
+│   │   ├── shell_runner.py    # Shell command exec
+│   │   └── postgres_client.py # Postgres memory persistence
+│   ├── plugins/               # Plugin system and integrations
+│   ├── data/
+│   │   ├── memories/          # Markdown memory files
+│   │   └── tasks.md           # Task management
+├── electron/                  # Electron voice assistant client
+├── mobile/                    # Mobile/PWA client
 ├── tests/
 │   ├── __init__.py
 │   ├── test_health.py         # Health endpoint tests
@@ -59,7 +74,6 @@ second-brain/
 │   ├── test_ranked_search.py  # Hybrid/ranking search tests
 │   ├── test_payload.json      # Test data
 │   └── client/
-│       ├── ws_client_example.py
 │       └── ws_client_example.html
 ├── docs/
 │   ├── ARCHITECTURE.md
@@ -76,10 +90,6 @@ second-brain/
 │   ├── SECURITY.md
 │   ├── LICENSE
 │   └── CHANGELOG.md
-├── .github/
-│   └── workflows/
-│       ├── ci.yaml
-│       └── deploy.yml
 ├── logs/                      # Log files (gitignored)
 ├── qdrant_data*/              # Qdrant data (dev/staging/prod, gitignored)
 ├── docker-compose*.yml        # Compose files for all envs
@@ -148,8 +158,16 @@ See the [full Deployment Instructions](./docs/DEPLOYMENT.md) for detailed setup 
 ## ✅ API Endpoints
 
 - `GET /health` - Health check
-- `POST /ingest` - Ingest a text payload
-- `GET /search?q=text` - Search semantically
+- `POST /ingest` - Ingest a text payload (with intent detection, versioning, and Postgres persistence)
+- `GET /search?q=text` - Search semantically (Qdrant + hybrid ranking)
+- `GET /ws/generate` - Real-time LLM output streaming (WebSocket)
+- `GET /models` - List current model/embedding versions
+- `GET /records` - List/search records with filtering and pagination
+- `GET /records/{id}/version-history` - Get version history for a record
+- `POST /feedback` - Submit feedback (upvote, correct, ignore)
+- `POST /memories/search` - SQL query for memories/metadata (Postgres)
+- `POST /memories/summarize` - Summarize memories via LLM
+- `POST /plugin/{name}` - Trigger plugin actions (reminder, webhook, file search, etc)
 
 ## 🧪 Testing
 ```bash
@@ -236,23 +254,16 @@ make lint
 - **Sentry error monitoring** enabled if `SENTRY_DSN` is set in the environment.
 - See [Architecture Overview](./docs/ARCHITECTURE.md#metrics--monitoring) for details.
 
-## 🛡️ License
-[**AGPLv3**](./docs/LICENSE) — Free for use with source-sharing required for derivatives.
+## 🆕 Major Features (v1.4.0+)
 
-## 🚨 Recent Major Changes (since v1.2.1)
-
-- **Model Version History & UI:**
-  - Version history tracked per record in Qdrant; viewable via `/records/{id}/version-history` and a web UI at `/ui/version_history.html` (with record listing, filtering, and detail view).
-- **Metrics & Monitoring:**
-  - Prometheus `/metrics` endpoint for API metrics; Sentry integration for error monitoring; Grafana dashboard examples in docs.
-- **Structured Logging:**
-  - JSON logs via structlog, with per-request correlation IDs for distributed tracing.
-- **Hybrid Search & Ranking:**
-  - `/search` supports metadata+vector hybrid search; `/ranked-search` returns weighted, explained results.
-- **Testing & Mocking:**
-  - All new endpoints and integrations are fully tested and mocked; patterns documented in `docs/TESTING.md`.
-- **Documentation:**
-  - All new features and architecture diagrams are documented in README, ARCHITECTURE.md, and TESTING.md.
+- **Intent Detection & Classification**: Auto-tags transcripts with intent (question, reminder, note, todo, command, other) using OpenAI LLM.
+- **Memory Persistence Layer**: Stores all memories and metadata in Postgres for advanced querying, replay, and personalized ranking.
+- **Feedback & Correction Loop**: Edit, delete, correct intent, and upvote memories via API and UI.
+- **Replay & Summarization**: Aggregate and summarize related memories for "recall everything about X" workflows.
+- **Plugin System**: Extensible plugins for reminders, webhooks, file/PDF search, and more.
+- **Electron/Mobile/PWA Clients**: Voice assistant pipeline with real-time streaming, TTS, and advanced UI/UX.
+- **Advanced UI/UX**: Version history, theming, settings, accessibility, and export features.
+- **Performance & Observability**: LRU caching, Prometheus metrics, Sentry error monitoring, Grafana dashboards.
 
 ## 📋 Roadmap
 - **v1.3.0**: Full test mocking, metrics/monitoring, API rate limiting

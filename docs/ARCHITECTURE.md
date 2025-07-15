@@ -6,22 +6,31 @@
                       |
                       v
                  [Qdrant Vector DB]
+                      |
+                      v
+                 [Postgres DB]
+                      |
+                      v
+                 [Plugins/Integrations]
 ```
 
-## Voice Assistant Pipeline (Mobile & Electron)
+## Voice Assistant Pipeline (Mobile, Electron, PWA)
 
-This diagram illustrates the end-to-end flow for voice input, transcription, LLM processing, and TTS output across mobile and Electron clients:
+This diagram illustrates the end-to-end flow for voice input, transcription, LLM processing, TTS output, intent detection, memory persistence, feedback, replay, and plugins:
 
 ```mermaid
 flowchart TD
-    subgraph "🏗️ Full Pipeline — Mobile & Electron Voice Assistant"
-        A1["🎙️ 1. Input: Mobile & Electron"]
-        A2["Mobile:<br/>• Native app or PWA<br/>• Mic recording (MediaRecorder API)<br/>• Send audio blob to backend"]
+    subgraph "🏕️ Full Pipeline — Mobile, Electron, PWA Voice Assistant"
+        A1["🎙️ 1. Input: Mobile, Electron, PWA"]
+        A2["Mobile/PWA:<br/>• Mic recording (MediaRecorder API)<br/>• Send audio blob to backend"]
         A3["Electron:<br/>• Mic recording (getUserMedia)<br/>• Send audio buffer to backend"]
         B["🧠 2. Processing: Backend<br/>API Endpoint: /transcribe<br/>• Accepts audio blob<br/>• Calls OpenAI Whisper API<br/>• Returns transcript"]
-        C1["POST /ingest<br/>Save & embed transcript"]
+        C1["POST /ingest<br/>Save, embed, classify intent, persist to Qdrant & Postgres"]
         C2["WS /generate<br/>Stream LLM response"]
         D["🔊 3. Output: ElevenLabs TTS<br/>• Stream tokens from /ws/generate<br/>• Batch & send to ElevenLabs TTS API<br/>• Playback audio stream"]
+        E["📝 4. Feedback/Correction<br/>• Edit/Delete/Correct/Upvote via API/UI<br/>• Update Postgres/Qdrant"]
+        F["🔁 5. Replay/Summarize<br/>• Aggregate related memories<br/>• Summarize via LLM"]
+        G["🔌 6. Plugins/Integrations<br/>• Reminders, webhooks, file/PDF search, etc."]
     end
 
     %% Input
@@ -36,15 +45,21 @@ flowchart TD
 
     %% Output
     C2 --> D
+    C1 --> E
+    E --> F
+    F --> G
 
     %% System Components Table (as a comment for reference)
     %% Component         Role
     %% Mobile/PWA        Record mic input → send to /transcribe
     %% Electron App      Same as above for desktop
     %% /transcribe       New API endpoint → OpenAI Whisper API
-    %% /ingest           Store + embed the transcription
+    %% /ingest           Store + embed + classify intent + persist
     %% /ws/generate      Get real-time LLM responses
     %% TTS Handler       Batches tokens → ElevenLabs API → audio playback
+    %% Feedback API      Edit/delete/correct/upvote memories
+    %% Replay/Summarize  Aggregate/summarize memories
+    %% Plugins           Reminders, webhooks, file/PDF search, etc.
 ```
 
 **Explanation:**
@@ -70,13 +85,38 @@ flowchart TD
 - Stores and indexes embeddings.
 - Configured for 1536-dimension vectors using Cosine distance.
 
+### 4. Postgres Memory Persistence
+- Stores all memories, metadata, intent, feedback, and version history.
+- Enables advanced SQL querying, replay, and personalized ranking.
+
+### 5. Plugin System
+- Extensible plugins for reminders, webhooks, file/PDF search, and more.
+- Plugins can trigger actions, notifications, and integrations.
+
+### 6. Feedback & Correction Loop
+- API/UI endpoints for edit, delete, correct intent, and upvote.
+- Feedback tracked in Postgres for personalized ranking.
+
+### 7. Replay & Summarization
+- Aggregate and summarize related memories for recall workflows.
+- LLM-powered summarization endpoint.
+
 ## Data Flow
 
 1. **Ingest**
-   - Input text ➡ OpenAI Embedding ➡ Stored in Qdrant.
+   - Input text/audio → OpenAI Embedding + Whisper → Intent detection → Stored in Qdrant & Postgres.
 
 2. **Search**
-   - Query text ➡ OpenAI Embedding ➡ Similar vectors retrieved from Qdrant.
+   - Query text → OpenAI Embedding → Similar vectors retrieved from Qdrant → Metadata/intent/feedback from Postgres.
+
+3. **Replay/Summarize**
+   - Aggregate related memories from Postgres → Summarize via LLM.
+
+4. **Feedback/Correction**
+   - User edits/deletes/corrects/upvotes memory → Updates Qdrant & Postgres.
+
+5. **Plugins/Integrations**
+   - Trigger plugin actions (reminders, webhooks, file search, etc).
 
 ## Configuration
 
