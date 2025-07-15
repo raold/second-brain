@@ -7,6 +7,8 @@ import openai
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 import asyncio
+import aiohttp
+import base64
 
 from app.config import Config
 from app.utils.logger import get_logger
@@ -22,6 +24,9 @@ _embedding_cache = LRUCache(maxsize=1000)
 embedding_cache_hit = Counter('embedding_cache_hit', 'Embedding cache hits')
 embedding_cache_miss = Counter('embedding_cache_miss', 'Embedding cache misses')
 embedding_latency = Histogram('embedding_latency_seconds', 'Embedding generation latency (seconds)')
+
+ELEVENLABS_API_KEY = "YOUR_ELEVENLABS_API_KEY"  # Set this in your environment or config
+ELEVENLABS_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"  # Default voice, can be parameterized
 
 @cached(_embedding_cache, key=lambda text, client=None, model=None: (text, model or "default"))
 def get_openai_embedding(text: str, client=None, model: str = None):
@@ -111,3 +116,26 @@ async def get_openai_stream(prompt: str):
     for word in prompt.split():
         await asyncio.sleep(0.1)  # Simulate network/processing delay
         yield word + " "
+
+async def elevenlabs_tts_stream(text: str, voice_id: str = None, api_key: str = None):
+    """
+    Async generator that yields audio chunks from ElevenLabs TTS API as base64 strings.
+    """
+    voice_id = voice_id or ELEVENLABS_VOICE_ID
+    api_key = api_key or ELEVENLABS_API_KEY
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream"
+    headers = {
+        "xi-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+    payload = {"text": text, "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}}
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, json=payload) as resp:
+            if resp.status != 200:
+                detail = await resp.text()
+                raise Exception(f"TTS error: {resp.status} {detail}")
+            async for chunk in resp.content.iter_chunked(4096):
+                if not chunk:
+                    break
+                # Yield as base64 for easy transport
+                yield base64.b64encode(chunk).decode("utf-8")

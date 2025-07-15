@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch & Streaming Demo</title>
+  <style id="theme-style">
+    :root {
+      --bg: #fbf1c7;
+      --bg-alt: #f2e5bc;
+      --fg: #3c3836;
+      --fg-alt: #504945;
+      --primary: #b57614;
+      --primary-dark: #af3a03;
+      --accent: #458588;
+      --accent2: #b16286;
+      --border: #d5c4a1;
+      --error: #cc241d;
+      --success: #98971a;
+      --shadow: 0 2px 8px #28282822;
+    }
+    [data-theme="dark"] {
+      --bg: #282828;
+      --bg-alt: #3c3836;
+      --fg: #ebdbb2;
+      --fg-alt: #bdae93;
+      --primary: #fabd2f;
+      --primary-dark: #fe8019;
+      --accent: #83a598;
+      --accent2: #d3869b;
+      --border: #504945;
+      --error: #fb4934;
+      --success: #b8bb26;
+      --shadow: 0 2px 8px #0008;
+    }
+    [data-theme="dracula"] {
+      --bg: #282a36;
+      --bg-alt: #343746;
+      --fg: #f8f8f2;
+      --fg-alt: #bd93f9;
+      --primary: #ff79c6;
+      --primary-dark: #bd93f9;
+      --accent: #8be9fd;
+      --accent2: #50fa7b;
+      --border: #44475a;
+      --error: #ff5555;
+      --success: #50fa7b;
+      --shadow: 0 2px 8px #0008;
+    }
+    html, body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0; padding: 1em;
+      min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
+    }
+    h1 { font-size: 1.3em; margin-bottom: 0.5em; color: var(--primary-dark); }
+    .theme-toggle {
+      float: right;
+      background: var(--bg-alt);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4em 1em;
+      cursor: pointer;
+      margin-bottom: 1em;
+      font-size: 1em;
+      box-shadow: var(--shadow);
+    }
+    .prompt-list { margin-bottom: 1em; }
+    .prompt-row { display: flex; gap: 0.5em; margin-bottom: 0.5em; }
+    .prompt-row input, .prompt-row select {
+      flex: 1; padding: 0.5em; font-size: 1em;
+      background: var(--bg-alt); color: var(--fg);
+      border: 1px solid var(--border); border-radius: 4px;
+      transition: border 0.2s;
+    }
+    .prompt-row input:focus, .prompt-row select:focus {
+      border-color: var(--primary);
+      outline: none;
+    }
+    .prompt-row button {
+      padding: 0.5em 1em;
+      background: var(--error);
+      color: var(--bg);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .prompt-row button:hover { background: var(--primary-dark); }
+    #addPrompt, #resetPrompts {
+      background: var(--primary);
+      color: var(--bg);
+      border: none;
+      border-radius: 4px;
+      padding: 0.5em 1.2em;
+      margin-bottom: 1em;
+      margin-right: 0.5em;
+      cursor: pointer;
+      font-size: 1em;
+      box-shadow: var(--shadow);
+      transition: background 0.2s;
+    }
+    #addPrompt:hover, #resetPrompts:hover { background: var(--primary-dark); }
+    #sendBatch {
+      padding: 0.7em 1.5em; font-size: 1em;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      margin-bottom: 1em;
+      transition: background 0.2s;
+    }
+    #sendBatch:disabled { background: var(--border); color: var(--fg-alt); cursor: not-allowed; }
+    .results { margin-top: 2em; }
+    .result-item {
+      background: var(--bg-alt);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.2em;
+      padding: 1em;
+      border: 1px solid var(--border);
+      transition: background 0.2s, border 0.2s;
+    }
+    .result-header { font-weight: bold; margin-bottom: 0.5em; color: var(--accent2); }
+    .progress { color: var(--accent); font-size: 0.95em; }
+    .error { color: var(--error); }
+    .spinner { display: inline-block; width: 1em; height: 1em; border: 2px solid var(--accent); border-radius: 50%; border-top: 2px solid transparent; animation: spin 1s linear infinite; vertical-align: middle; margin-left: 0.5em; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    pre {
+      background: var(--bg);
+      color: var(--fg-alt);
+      border-radius: 4px;
+      padding: 0.5em;
+      margin-top: 0.5em;
+      font-size: 1em;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+    }
+    audio, a[download] {
+      margin-top: 0.5em;
+      width: 100%;
+      background: var(--bg);
+      color: var(--primary-dark);
+      border-radius: 4px;
+      outline: none;
+    }
+    a[download] {
+      display: inline-block;
+      padding: 0.3em 1em;
+      background: var(--accent2);
+      color: var(--bg);
+      text-decoration: none;
+      border-radius: 4px;
+      margin-left: 0.5em;
+      font-size: 1em;
+      box-shadow: var(--shadow);
+      transition: background 0.2s;
+    }
+    a[download]:hover { background: var(--primary-dark); }
+    button[aria-label] { background: var(--accent2); color: var(--bg); border: none; border-radius: 4px; padding: 0.3em 1em; margin-left: 0.5em; cursor: pointer; transition: background 0.2s; }
+    button[aria-label]:hover { background: var(--primary-dark); }
+    #summary { color: var(--success); }
+    @media (max-width: 600px) {
+      .prompt-row { flex-direction: column; gap: 0.2em; }
+      #sendBatch, #addPrompt, #resetPrompts { width: 100%; margin-right: 0; }
+      .result-item { padding: 0.7em; }
+      pre { font-size: 0.95em; }
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌗 Gruvbox Light</button>
+  <h1>Batch & Streaming Demo</h1>
+  <div class="prompt-list" id="promptList"></div>
+  <button id="addPrompt">+ Add Prompt</button>
+  <button id="resetPrompts" style="margin-left:1em;">Reset</button>
+  <br>
+  <button id="sendBatch">Send Batch</button>
+  <div class="results" id="results"></div>
+  <div id="summary" style="margin-top:1em;font-weight:bold;"></div>
+  <script>
+    let promptIdx = 0;
+    function addPromptRow(init) {
+      const row = document.createElement('div');
+      row.className = 'prompt-row';
+      row.innerHTML = `
+        <input type="text" placeholder="Prompt or text..." value="${init?.prompt||''}">
+        <select>
+          <option value="llm">LLM</option>
+          <option value="tts">TTS</option>
+        </select>
+        <button type="button">Remove</button>
+      `;
+      row.querySelector('button').onclick = () => row.remove();
+      // Allow Enter to submit batch
+      row.querySelector('input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('sendBatch').click();
+      });
+      document.getElementById('promptList').appendChild(row);
+    }
+    document.getElementById('addPrompt').onclick = () => addPromptRow();
+    // Add two rows by default
+    addPromptRow({prompt: 'What is the capital of France?'});
+    addPromptRow({prompt: 'Summarize the theory of relativity.'});
+
+    document.getElementById('resetPrompts').onclick = () => {
+      document.getElementById('promptList').innerHTML = '';
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('summary').textContent = '';
+      addPromptRow({prompt: 'What is the capital of France?'});
+      addPromptRow({prompt: 'Summarize the theory of relativity.'});
+    };
+
+    document.getElementById('sendBatch').onclick = async () => {
+      const rows = Array.from(document.querySelectorAll('.prompt-row'));
+      if (!rows.length) return;
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('summary').textContent = '';
+      const batch = rows.map((row, i) => ({
+        id: 'req' + (promptIdx++),
+        prompt: row.querySelector('input').value,
+        type: row.querySelector('select').value
+      })).filter(item => item.prompt.trim());
+      if (!batch.length) return;
+      document.getElementById('sendBatch').disabled = true;
+      document.getElementById('sendBatch').textContent = 'Sending...';
+      const startTimes = {};
+      const resultsDiv = document.getElementById('results');
+      const resultMap = {};
+      let completed = 0, failed = 0;
+      batch.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        let extra = '';
+        if (item.type === 'tts') {
+          extra = `<audio id="audio-${item.id}" controls style="display:none;width:100%;margin-top:0.5em;"></audio><a id="download-${item.id}" style="display:none;margin-left:1em;">Download</a>`;
+        }
+        let copyBtn = '';
+        if (item.type === 'llm') {
+          copyBtn = `<button id="copy-${item.id}" aria-label="Copy result" style="float:right;">Copy</button>`;
+        }
+        div.innerHTML = `<div class=\"result-header\"><span style=\"font-size:0.95em;color:#555;\">Prompt:</span> <span style=\"font-size:0.95em;\">${item.prompt.replace(/</g,'&lt;')}</span> ${copyBtn}</div><div class=\"progress\" id=\"progress-${item.id}\">Waiting...</div><span class=\"spinner\" id=\"spinner-${item.id}\" style=\"display:none;\"></span><span id=\"timer-${item.id}\" style=\"font-size:0.9em;color:#888;float:right;\"></span><pre id=\"output-${item.id}\" style=\"margin:0;\"></pre>${extra}`;
+        resultsDiv.appendChild(div);
+        resultMap[item.id] = div;
+        if (item.type === 'tts') {
+          resultMap[item.id].audioChunks = [];
+        }
+        startTimes[item.id] = Date.now();
+        if (item.type === 'llm') {
+          setTimeout(() => {
+            const btn = document.getElementById('copy-' + item.id);
+            if (btn) btn.onclick = () => {
+              const out = document.getElementById('output-' + item.id);
+              navigator.clipboard.writeText(out.textContent);
+              btn.textContent = 'Copied!';
+              setTimeout(() => btn.textContent = 'Copy', 1200);
+            };
+          }, 100);
+        }
+      });
+      // Timer update
+      const timerInt = setInterval(() => {
+        Object.keys(startTimes).forEach(id => {
+          const t = document.getElementById('timer-' + id);
+          if (t && startTimes[id]) {
+            const elapsed = ((Date.now() - startTimes[id]) / 1000).toFixed(1);
+            t.textContent = `Elapsed: ${elapsed}s`;
+          }
+        });
+      }, 200);
+      // Open WebSocket
+      const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws/generate?token=' + (localStorage.getItem('token')||''));
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ batch, json: true }));
+      };
+      ws.onmessage = (event) => {
+        let msg;
+        try { msg = JSON.parse(event.data); } catch { return; }
+        if (!msg.id || !resultMap[msg.id]) return;
+        const spinner = resultMap[msg.id].querySelector('.spinner');
+        if (msg.error) {
+          resultMap[msg.id].querySelector('.progress').textContent = 'Error: ' + msg.error;
+          resultMap[msg.id].querySelector('.progress').className = 'progress error';
+          spinner.style.display = 'none';
+          failed++;
+          completed++;
+          finishIfAll();
+          return;
+        }
+        // TTS streaming
+        if (msg.tts) {
+          if (msg.chunk) {
+            resultMap[msg.id].audioChunks.push(msg.chunk);
+            resultMap[msg.id].querySelector('.progress').textContent = 'Streaming audio...';
+            spinner.style.display = '';
+          }
+          if (msg.done) {
+            spinner.style.display = 'none';
+            resultMap[msg.id].querySelector('.progress').textContent = 'Done.';
+            const audioData = resultMap[msg.id].audioChunks.join('');
+            const audioBlob = base64ToBlob(audioData, 'audio/mpeg');
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audioElem = document.getElementById('audio-' + msg.id);
+            const downloadElem = document.getElementById('download-' + msg.id);
+            if (audioElem) {
+              audioElem.src = audioUrl;
+              audioElem.style.display = '';
+              audioElem.setAttribute('aria-label', 'TTS audio playback');
+            }
+            if (downloadElem) {
+              downloadElem.href = audioUrl;
+              downloadElem.download = 'tts-' + msg.id + '.mp3';
+              downloadElem.textContent = 'Download';
+              downloadElem.style.display = '';
+              downloadElem.setAttribute('aria-label', 'Download TTS audio');
+            }
+            completed++;
+            finishIfAll();
+          }
+          return;
+        }
+        // LLM streaming
+        if (msg.chunk) {
+          const out = resultMap[msg.id].querySelector('pre');
+          out.textContent += msg.chunk;
+          resultMap[msg.id].querySelector('.progress').textContent = 'Streaming...';
+          spinner.style.display = '';
+          out.scrollTop = out.scrollHeight;
+        }
+        if (msg.done) {
+          resultMap[msg.id].querySelector('.progress').textContent = 'Done.';
+          spinner.style.display = 'none';
+          completed++;
+          finishIfAll();
+        }
+      };
+      function finishIfAll() {
+        if (completed >= batch.length) {
+          clearInterval(timerInt);
+          document.getElementById('sendBatch').disabled = false;
+          document.getElementById('sendBatch').textContent = 'Send Batch';
+          document.getElementById('summary').textContent = `Batch complete: ${batch.length - failed} succeeded, ${failed} failed.`;
+        }
+      }
+      // Helper to convert base64 to Blob
+      function base64ToBlob(base64, mime) {
+        const byteChars = atob(base64);
+        const byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) {
+          byteNumbers[i] = byteChars.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], {type: mime});
+      }
+      ws.onerror = (e) => {
+        batch.forEach(item => {
+          resultMap[item.id].querySelector('.progress').textContent = 'WebSocket error.';
+          resultMap[item.id].querySelector('.progress').className = 'progress error';
+        });
+        document.getElementById('sendBatch').disabled = false;
+        document.getElementById('sendBatch').textContent = 'Send Batch';
+        document.getElementById('summary').textContent = `Batch failed: ${batch.length - failed} succeeded, ${failed} failed.`;
+      };
+      ws.onclose = () => {
+        document.getElementById('sendBatch').disabled = false;
+        document.getElementById('sendBatch').textContent = 'Send Batch';
+        document.getElementById('summary').textContent = `Batch complete: ${batch.length - failed} succeeded, ${failed} failed.`;
+      };
+    };
+
+    // Theme toggle logic
+    const themeToggle = document.getElementById('themeToggle');
+    const themeNames = ['Gruvbox Light', 'Gruvbox Dark', 'Dracula'];
+    const themeKeys = ['light', 'dark', 'dracula'];
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      themeToggle.textContent = `🌗 ${themeNames[themeKeys.indexOf(theme)]}`;
+    }
+    function getTheme() {
+      return localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+    setTheme(getTheme());
+    themeToggle.onclick = () => {
+      const idx = themeKeys.indexOf(getTheme());
+      const next = themeKeys[(idx + 1) % themeKeys.length];
+      setTheme(next);
+    };
+  </script>
+</body>
+</html> 

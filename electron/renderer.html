@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice LLM Electron Demo</title>
+  <style id="theme-style">
+    :root {
+      --bg: #fbf1c7;
+      --bg-alt: #f2e5bc;
+      --fg: #3c3836;
+      --fg-alt: #504945;
+      --primary: #b57614;
+      --primary-dark: #af3a03;
+      --accent: #458588;
+      --accent2: #b16286;
+      --border: #d5c4a1;
+      --error: #cc241d;
+      --success: #98971a;
+      --shadow: 0 2px 8px #28282822;
+    }
+    [data-theme="dark"] {
+      --bg: #282828;
+      --bg-alt: #3c3836;
+      --fg: #ebdbb2;
+      --fg-alt: #bdae93;
+      --primary: #fabd2f;
+      --primary-dark: #fe8019;
+      --accent: #83a598;
+      --accent2: #d3869b;
+      --border: #504945;
+      --error: #fb4934;
+      --success: #b8bb26;
+      --shadow: 0 2px 8px #0008;
+    }
+    [data-theme="dracula"] {
+      --bg: #282a36;
+      --bg-alt: #343746;
+      --fg: #f8f8f2;
+      --fg-alt: #bd93f9;
+      --primary: #ff79c6;
+      --primary-dark: #bd93f9;
+      --accent: #8be9fd;
+      --accent2: #50fa7b;
+      --border: #44475a;
+      --error: #ff5555;
+      --success: #50fa7b;
+      --shadow: 0 2px 8px #0008;
+    }
+    html, body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0; padding: 1em;
+      min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
+    }
+    h1 { font-size: 1.3em; margin-bottom: 0.5em; color: var(--primary-dark); }
+    .theme-toggle {
+      float: right;
+      background: var(--bg-alt);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4em 1em;
+      cursor: pointer;
+      margin-bottom: 1em;
+      font-size: 1em;
+      box-shadow: var(--shadow);
+    }
+    .rec-btn {
+      background: var(--primary);
+      color: var(--bg);
+      border: none;
+      border-radius: 4px;
+      padding: 0.7em 1.5em;
+      font-size: 1.1em;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      margin-bottom: 1em;
+      transition: background 0.2s;
+    }
+    .rec-btn.recording { background: var(--error); }
+    .status { color: var(--accent2); margin-bottom: 1em; }
+    .transcript, .subtitles {
+      background: var(--bg-alt);
+      color: var(--fg-alt);
+      border-radius: 6px;
+      box-shadow: var(--shadow);
+      padding: 1em;
+      margin-bottom: 1em;
+      border: 1px solid var(--border);
+      font-size: 1.1em;
+      min-height: 2em;
+      word-break: break-word;
+    }
+    .audio-controls { margin-top: 1em; }
+    @media (max-width: 600px) {
+      .transcript, .subtitles { font-size: 1em; padding: 0.7em; }
+      .rec-btn, .theme-toggle { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌗 Gruvbox Light</button>
+  <button id="settingsBtn" aria-label="Settings" style="float:right;margin-right:0.5em;">⚙️</button>
+  <h1>Voice LLM Electron Demo</h1>
+  <button class="rec-btn" id="recBtn">🎤 Record</button>
+  <div class="status" id="status"></div>
+  <div class="transcript" id="transcript" aria-label="Transcript"></div>
+  <div class="subtitles" id="subtitles" aria-label="Live Subtitles"></div>
+  <div class="audio-controls" id="audioControls"></div>
+  <button id="downloadFullAudio" style="display:none;margin-top:1em;">⬇️ Download Full Audio</button>
+  <div id="settingsPanel" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-alt);color:var(--fg);padding:2em 2em 1em 2em;border-radius:10px;box-shadow:var(--shadow);min-width:320px;max-width:90vw;">
+      <h2 style="margin-top:0;color:var(--primary-dark);">Settings</h2>
+      <label for="apiKeyInput">ElevenLabs API Key:</label><br>
+      <input id="apiKeyInput" type="password" style="width:100%;margin-bottom:1em;" autocomplete="off"><br>
+      <label for="voiceSelect">Voice:</label><br>
+      <select id="voiceSelect" style="width:100%;margin-bottom:1em;"></select><br>
+      <label for="chunkSizeInput">TTS Chunk Size:</label><br>
+      <input id="chunkSizeInput" type="number" min="1" max="100" style="width:100%;margin-bottom:1em;"><br>
+      <label for="pauseInput">TTS Pause (ms):</label><br>
+      <input id="pauseInput" type="number" min="100" max="5000" step="100" style="width:100%;margin-bottom:1em;"><br>
+      <button id="saveSettings">Save</button>
+      <button id="closeSettings" style="margin-left:1em;">Close</button>
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html> 
