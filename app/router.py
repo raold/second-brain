@@ -53,31 +53,122 @@ async def ingest_endpoint(payload: Payload, _: None = Depends(verify_token)) -> 
         ) from e
 
 @router.get("/search")
-async def search_endpoint(q: str, _: None = Depends(verify_token)) -> Dict[str, Any]:
+async def search_endpoint(
+    q: str,
+    model_version: Optional[str] = Query(None, description="Filter by model version"),
+    embedding_model: Optional[str] = Query(None, description="Filter by embedding model"),
+    type: Optional[str] = Query(None, description="Filter by record type"),
+    timestamp_from: Optional[str] = Query(None, description="Filter: timestamp >= (ISO8601)"),
+    timestamp_to: Optional[str] = Query(None, description="Filter: timestamp <= (ISO8601)"),
+    _: None = Depends(verify_token)
+) -> dict:
     """
-    Search for semantically similar content.
+    Search for semantically similar content, with optional metadata filtering.
     
     Args:
         q: Search query string
-        
+        model_version: Filter by model version
+        embedding_model: Filter by embedding model
+        type: Filter by record type
+        timestamp_from: Filter: timestamp >= (ISO8601)
+        timestamp_to: Filter: timestamp <= (ISO8601)
     Returns:
         Dict containing query and search results
-        
     Raises:
         HTTPException: If search fails
     """
     try:
-        logger.info(f"Received search query: '{q}'")
-        results = qdrant_search(q)
-        
-        logger.info(f"Search completed for query '{q}' with {len(results)} results")
+        logger.info("Received search query", query=q, model_version=model_version, embedding_model=embedding_model, type=type, timestamp_from=timestamp_from, timestamp_to=timestamp_to)
+        filters = {}
+        if model_version:
+            filters["model_version"] = model_version
+        if embedding_model:
+            filters["embedding_model"] = embedding_model
+        if type:
+            filters["type"] = type
+        if timestamp_from or timestamp_to:
+            filters["timestamp"] = {"from": timestamp_from, "to": timestamp_to}
+        results = qdrant_search(q, filters=filters)
+        logger.info("Search completed", query=q, num_results=len(results))
         return {"query": q, "results": results}
-        
     except Exception as e:
         logger.error(f"Search failed for query '{q}': {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Search failed: {str(e)}"
+        ) from e
+
+@router.get("/ranked-search", tags=["Search"])
+async def ranked_search_endpoint(
+    q: str,
+    model_version: Optional[str] = Query(None, description="Filter by model version"),
+    embedding_model: Optional[str] = Query(None, description="Filter by embedding model"),
+    type: Optional[str] = Query(None, description="Filter by record type"),
+    timestamp_from: Optional[str] = Query(None, description="Filter: timestamp >= (ISO8601)"),
+    timestamp_to: Optional[str] = Query(None, description="Filter: timestamp <= (ISO8601)"),
+    _: None = Depends(verify_token)
+) -> dict:
+    """
+    Hybrid ranked search: combines vector similarity and metadata relevance.
+    Returns ranked results with score explanations.
+    """
+    try:
+        logger.info("Received ranked search query", query=q, model_version=model_version, embedding_model=embedding_model, type=type, timestamp_from=timestamp_from, timestamp_to=timestamp_to)
+        filters = {}
+        if model_version:
+            filters["model_version"] = model_version
+        if embedding_model:
+            filters["embedding_model"] = embedding_model
+        if type:
+            filters["type"] = type
+        if timestamp_from or timestamp_to:
+            filters["timestamp"] = {"from": timestamp_from, "to": timestamp_to}
+        # Use hybrid search
+        results = qdrant_search(q, filters=filters)
+        # Compute metadata score and final score
+        ranked = []
+        for r in results:
+            meta_score = 0.0
+            explanation = []
+            if model_version:
+                if r["model_version"] == model_version:
+                    meta_score += 0.5
+                    explanation.append("model_version match")
+            if embedding_model:
+                if r["embedding_model"] == embedding_model:
+                    meta_score += 0.2
+                    explanation.append("embedding_model match")
+            if type:
+                if r["type"] == type:
+                    meta_score += 0.2
+                    explanation.append("type match")
+            # Timestamp range bonus
+            if filters.get("timestamp"):
+                ts = r.get("timestamp")
+                tf = filters["timestamp"].get("from")
+                tt = filters["timestamp"].get("to")
+                if ts and ((not tf or ts >= tf) and (not tt or ts <= tt)):
+                    meta_score += 0.1
+                    explanation.append("timestamp in range")
+            # Normalize meta_score to max 1.0
+            meta_score = min(meta_score, 1.0)
+            vector_score = r["score"]
+            final_score = 0.8 * vector_score + 0.2 * meta_score
+            ranked.append({
+                **r,
+                "vector_score": vector_score,
+                "metadata_score": meta_score,
+                "final_score": final_score,
+                "explanation": ", ".join(explanation) or "vector only"
+            })
+        ranked.sort(key=lambda x: x["final_score"], reverse=True)
+        logger.info("Ranked search completed", query=q, num_results=len(ranked))
+        return {"query": q, "results": ranked}
+    except Exception as e:
+        logger.error(f"Ranked search failed for query '{q}': {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ranked search failed: {str(e)}"
         ) from e
 
 @router.get("/records/{id}/version-history", tags=["Records"])

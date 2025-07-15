@@ -5,6 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
+import structlog
+import uuid
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 from app.config import Config
 from app.router import router
@@ -16,6 +21,20 @@ app = FastAPI(
     version="1.0.0",
     description="Ingest and search semantically indexed memory"
 )
+
+# Correlation ID middleware
+class CorrelationIdMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        correlation_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+        # Bind correlation_id to structlog context for this request
+        structlog.contextvars.bind_contextvars(correlation_id=correlation_id)
+        response: Response = await call_next(request)
+        response.headers["X-Request-ID"] = correlation_id
+        # Unbind after request
+        structlog.contextvars.clear_contextvars()
+        return response
+
+app.add_middleware(CorrelationIdMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

@@ -42,13 +42,29 @@ All settings centralized in `config.py` and `.env`:
 - Retry configurations
 - Logging levels and paths
 
-## Logging
-- Structured logs via Loguru.
-- Logs are rotated and retained.
-- Live logs accessible via:
-```bash
-make logs
+### Logging & Monitoring Architecture
+
+```mermaid
+%% See docs/logging_monitoring_architecture.mmd for the source
+flowchart TD
+    A["Client Request"] -->|"X-Request-ID header"| B["FastAPI App"]
+    B --> C["CorrelationIdMiddleware"]
+    C -->|"Bind correlation_id"| D["structlog Context"]
+    D --> E["App Logic"]
+    E --> F["structlog JSON Log"]
+    F --> G["Log Aggregator (Loki/ELK)"]
+    C -->|"Add X-Request-ID to response"| H["Client Response"]
+    subgraph Metrics
+        B --> I["Prometheus Instrumentator"]
+        I --> J["/metrics endpoint"]
+        J --> K["Prometheus"]
+        K --> L["Grafana Dashboards"]
+    end
+    E -->|"Error"| M["Sentry"]
+    style M fill:#fdd
 ```
+
+*For editing or viewing the diagram source, see [`docs/logging_monitoring_architecture.mmd`](./logging_monitoring_architecture.mmd).* 
 
 ## Testing
 

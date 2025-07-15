@@ -11,6 +11,9 @@
 - Prometheus metrics integration: `/metrics` endpoint exposes API metrics for Prometheus scraping.
 - Sentry error monitoring: If `SENTRY_DSN` is set, errors and traces are sent to Sentry.
 - Docs updated to describe metrics and monitoring setup.
+- Hybrid search: `/search` endpoint now supports metadata filtering (model_version, embedding_model, type, timestamp range) combined with vector similarity using Qdrant's hybrid search API.
+- Ranking pipeline: `/ranked-search` endpoint returns results with weighted scores (vector + metadata relevance) and explanations for each result.
+- All ranking and hybrid search logic is fully covered by tests, including timestamp range handling and score explanations.
 
 ## [1.2.2] - 2025-07-14
 ### Added
