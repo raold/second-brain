@@ -5,34 +5,34 @@
 ## ✅ Full Conceptual Pipeline: Speech → Storage → Retrieval
 
 🎙️ Voice Input
-│
-▼
+   │
+   ▼
 Whisper ASR (local/cloud)
-→ Converts speech to text
-│
-▼
+ → Converts speech to text
+   │
+   ▼
 LLM Output Processor API (POST /ingest)
-• Token-based Authentication
-• Rich metadata: context, priority, intent
-│
-▼
+   • Token-based Authentication
+   • Rich metadata: context, priority, intent
+   │
+   ▼
 +------------------------------------------------+
-| Qdrant Vector Store + Markdown Files (.md) |
-| + PostgreSQL (optional metadata DB) |
-| + Version History Tracking per record |
+| Qdrant Vector Store + Markdown Files (.md)     |
+| + PostgreSQL (optional metadata DB)            |
+| + Version History Tracking per record          |
 +------------------------------------------------+
-│
-▼
+   │
+   ▼
 Prometheus / Grafana → Metrics & Monitoring
 Sentry → Error Tracking
 Structured JSON Logs → Correlation IDs
-│
-▼
+   │
+   ▼
 Retrieval Endpoints:
-• /search
-• /ranked-search
-• /records
-• /ws/generate (streamed LLM responses)
+   • /search
+   • /ranked-search
+   • /records
+   • /ws/generate (streamed LLM responses)
 
 ---
 
