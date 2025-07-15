@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column
-from sqlalchemy import String, DateTime, JSON, select
+from sqlalchemy import String, DateTime, JSON, select, Boolean
 import uuid, datetime
 
 Base = declarative_base()
@@ -20,6 +20,7 @@ class Memory(AsyncAttrs, Base):
     timestamp: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.datetime.utcnow)
     user: Mapped[str] = mapped_column(String, nullable=True)
     metadata: Mapped[dict] = mapped_column(JSON, nullable=True)
+    deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class Priority(str, Enum):
@@ -51,3 +52,11 @@ class Payload(BaseModel):
     ttl: str = Field(..., description="Time to live for the payload")
     data: Dict[str, Any] = Field(..., description="Main data content")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+
+class MemoryFeedback(AsyncAttrs, Base):
+    __tablename__ = "memory_feedback"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    memory_id: Mapped[str] = mapped_column(String, nullable=False)
+    user: Mapped[str] = mapped_column(String, nullable=True)
+    feedback_type: Mapped[str] = mapped_column(String, nullable=False)  # upvote, correct, ignore
+    timestamp: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.datetime.utcnow)

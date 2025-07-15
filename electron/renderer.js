@@ -69,6 +69,13 @@ async function onRecordingStop() {
   statusDiv.textContent = 'Transcribing...';
   const formData = new FormData();
   formData.append('file', audioBlob, 'audio.webm');
+  showProgressBar();
+  // Simulate progress (replace with real progress if backend supports)
+  let fakeProgress = 0;
+  const progressInt = setInterval(() => {
+    fakeProgress = Math.min(100, fakeProgress + 10);
+    updateProgressBar(fakeProgress);
+  }, 200);
   try {
     const res = await fetch('http://localhost:8000/transcribe', {
       method: 'POST',
@@ -100,9 +107,13 @@ async function onRecordingStop() {
     intentDetected.textContent = `(Detected: ${currentIntent})`;
     intentRow.style.display = '';
     statusDiv.textContent = 'Intent detected: ' + currentIntent;
+    lastMemoryId = ingestData.id;
+    feedbackRow.style.display = '';
     // Continue to LLM streaming
     connectToWSGenerate(data.transcript);
   } catch (e) {
+    clearInterval(progressInt);
+    hideProgressBar();
     statusDiv.textContent = 'Transcription or ingest error.';
   }
 }
@@ -120,6 +131,21 @@ const TTS_PAUSE_MS = 1200;
 
 let audioQueue = [], currentAudioIdx = -1;
 
+// Transcription progress indicator
+const progressBar = document.createElement('div');
+progressBar.style.display = 'none';
+progressBar.style.height = '6px';
+progressBar.style.background = 'var(--accent)';
+progressBar.style.width = '0%';
+progressBar.style.transition = 'width 0.2s';
+document.body.insertBefore(progressBar, transcriptDiv);
+
+// Show/hide progress bar
+function showProgressBar() { progressBar.style.display = ''; progressBar.style.width = '0%'; }
+function updateProgressBar(percent) { progressBar.style.width = percent + '%'; }
+function hideProgressBar() { progressBar.style.display = 'none'; }
+
+// Stream ElevenLabs TTS directly (Web Audio API)
 async function streamToTTS(text, chunkIdx) {
   if (!text.trim()) return;
   setTTSStatus(chunkIdx, 'processing');
@@ -133,16 +159,37 @@ async function streamToTTS(text, chunkIdx) {
       body: JSON.stringify({ text, voice_settings: { stability: 0.5, similarity_boost: 0.5 } })
     });
     if (!resp.ok) throw new Error('TTS failed');
-    const reader = resp.body.getReader();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createBufferSource();
+    let audioBuffer = null;
     let audioChunks = [];
+    const reader = resp.body.getReader();
+    let playing = false;
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       audioChunks.push(value);
+      // Try to decode and play as soon as we have enough data
+      if (!playing && audioChunks.reduce((acc, v) => acc + v.length, 0) > 8000) {
+        const blob = new Blob(audioChunks, { type: 'audio/mpeg' });
+        const arrayBuffer = await blob.arrayBuffer();
+        audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.start();
+        playing = true;
+      }
     }
-    const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
-    const url = URL.createObjectURL(audioBlob);
-    audioQueue.push({ url, text, idx: chunkIdx });
+    if (!playing) {
+      // Play whatever we have at the end
+      const blob = new Blob(audioChunks, { type: 'audio/mpeg' });
+      const arrayBuffer = await blob.arrayBuffer();
+      audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      source.buffer = audioBuffer;
+      source.connect(audioCtx.destination);
+      source.start();
+    }
+    audioQueue.push({ url: URL.createObjectURL(new Blob(audioChunks, { type: 'audio/mpeg' })), text, idx: chunkIdx });
     renderAudioQueue();
     setTTSStatus(chunkIdx, 'ready');
     if (audioQueue.length === 1 || currentAudioIdx === chunkIdx - 1) {
@@ -215,6 +262,8 @@ function triggerTTSBuffer() {
   streamToTTS(text, audioQueue.length);
 }
 
+// WebSocket heartbeat/ping
+let wsHeartbeatInt = null;
 function connectToWSGenerate(prompt) {
   subtitlesDiv.textContent = '';
   tokenBuffer = [];
@@ -250,8 +299,15 @@ function connectToWSGenerate(prompt) {
   ws.onerror = (e) => {
     statusDiv.textContent = 'WebSocket error.';
   };
+  if (wsHeartbeatInt) clearInterval(wsHeartbeatInt);
+  wsHeartbeatInt = setInterval(() => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ ping: true }));
+    }
+  }, 10000);
   ws.onclose = () => {
     statusDiv.textContent = 'LLM connection closed.';
+    if (wsHeartbeatInt) clearInterval(wsHeartbeatInt);
     // Flush any remaining buffer
     if (ttsBuffer.trim()) triggerTTSBuffer();
   };
@@ -368,4 +424,136 @@ downloadFullAudio.onclick = () => {
 // Show/hide download button
 function updateDownloadButton() {
   downloadFullAudio.style.display = audioQueue.length > 0 ? '' : 'none';
+}
+
+const feedbackRow = document.getElementById('feedbackRow');
+const editLastBtn = document.getElementById('editLastBtn');
+const forgetLastBtn = document.getElementById('forgetLastBtn');
+const correctLastBtn = document.getElementById('correctLastBtn');
+const editModal = document.getElementById('editModal');
+const editNoteInput = document.getElementById('editNoteInput');
+const editIntentSelect = document.getElementById('editIntentSelect');
+const saveEditBtn = document.getElementById('saveEditBtn');
+const closeEditBtn = document.getElementById('closeEditBtn');
+
+let lastMemoryId = null;
+
+// Edit Last
+editLastBtn.onclick = () => {
+  if (!lastMemoryId) return;
+  editNoteInput.value = transcriptDiv.textContent;
+  editIntentSelect.value = currentIntent;
+  editModal.style.display = 'flex';
+};
+closeEditBtn.onclick = () => { editModal.style.display = 'none'; };
+saveEditBtn.onclick = async () => {
+  if (!lastMemoryId) return;
+  const newNote = editNoteInput.value;
+  const newIntent = editIntentSelect.value;
+  statusDiv.textContent = 'Saving edit...';
+  const resp = await fetch(`http://localhost:8000/memories/${lastMemoryId}?note=${encodeURIComponent(newNote)}&intent=${encodeURIComponent(newIntent)}`, {
+    method: 'PUT',
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
+  });
+  if (resp.ok) {
+    transcriptDiv.textContent = newNote;
+    currentIntent = newIntent;
+    intentSelect.value = newIntent;
+    intentDetected.textContent = `(Overridden: ${newIntent})`;
+    statusDiv.textContent = 'Memory updated.';
+    editModal.style.display = 'none';
+  } else {
+    statusDiv.textContent = 'Edit failed.';
+  }
+};
+
+// Forget Last
+forgetLastBtn.onclick = async () => {
+  if (!lastMemoryId) return;
+  statusDiv.textContent = 'Deleting memory...';
+  const resp = await fetch(`http://localhost:8000/memories/${lastMemoryId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
+  });
+  if (resp.ok) {
+    statusDiv.textContent = 'Memory deleted.';
+    transcriptDiv.textContent = '';
+    intentRow.style.display = 'none';
+    feedbackRow.style.display = 'none';
+    subtitlesDiv.textContent = '';
+    audioControls.innerHTML = '';
+    lastMemoryId = null;
+  } else {
+    statusDiv.textContent = 'Delete failed.';
+  }
+};
+
+// Correct Last (shortcut: open edit modal with current values)
+correctLastBtn.onclick = () => {
+  editLastBtn.onclick();
+};
+
+// Voice command triggers (Web Speech API)
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SpeechRecognition) {
+  const recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.onresult = (event) => {
+    const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+    if (transcript.includes('forget this')) forgetLastBtn.onclick();
+    if (transcript.includes('edit last')) editLastBtn.onclick();
+    if (transcript.includes('correct last intent')) correctLastBtn.onclick();
+    if (transcript.startsWith('recall') || transcript.startsWith('replay')) {
+      const keyword = transcript.replace(/^(recall|replay)\s*/, '');
+      enterReplayMode(keyword);
+    }
+    if (transcript.startsWith('summarize')) {
+      const keyword = transcript.replace(/^summarize\s*/, '');
+      summarizeMemories(keyword);
+    }
+  };
+  // Start recognition on app load
+  recognition.start();
+}
+
+// Upvote/correct/ignore feedback on search results
+function renderSearchResults(results) {
+  // ... existing code ...
+  results.forEach(r => {
+    // ... existing code ...
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.innerHTML = `
+      <button onclick="window.sendFeedback('${r.id}','upvote')">👍</button>
+      <button onclick="window.sendFeedback('${r.id}','correct')">✏️</button>
+      <button onclick="window.sendFeedback('${r.id}','ignore')">🚫</button>
+    `;
+    // ... append feedbackDiv to result ...
+  });
+}
+window.sendFeedback = async (id, type) => {
+  await fetch(`http://localhost:8000/memories/${id}/feedback`, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || ''), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ feedback_type: type, user: 'me' })
+  });
+};
+
+// Replay mode
+async function enterReplayMode(keyword) {
+  statusDiv.textContent = 'Searching memories...';
+  const res = await fetch(`http://localhost:8000/memories/search?note=${encodeURIComponent(keyword)}`);
+  const data = await res.json();
+  // Render memories and playback
+  // ... render logic ...
+}
+async function summarizeMemories(keyword) {
+  statusDiv.textContent = 'Summarizing...';
+  const res = await fetch('http://localhost:8000/memories/summarize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: keyword })
+  });
+  const data = await res.json();
+  // Show summary in UI
+  // ... render logic ...
 } 

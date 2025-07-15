@@ -7,8 +7,10 @@ from fastapi.testclient import TestClient
 
 from app.config import Config
 from app.main import app
-from app.models import PayloadType, Priority
+from app.models import PayloadType, Priority, Memory
 import app.utils.openai_client as openai_client
+from sqlalchemy import select
+import asyncio
 
 client = TestClient(app)
 
@@ -107,3 +109,56 @@ def test_ingest_intent_detection():
     assert response.status_code == 200
     data = response.json()
     assert data["intent"] == "reminder"
+
+@pytest.fixture
+def memory_in_db(client, patch_openai):
+    # Insert a memory for testing
+    payload = {
+        "id": "test-feedback-001",
+        "type": "note",
+        "context": "test",
+        "priority": "normal",
+        "ttl": "1d",
+        "data": {"note": "Remember to test delete."},
+        "metadata": {}
+    }
+    headers = {"Authorization": "Bearer testtoken"}
+    client.post("/ingest", json=payload, headers=headers)
+    yield payload["id"]
+
+
+def test_delete_memory(client, memory_in_db, monkeypatch):
+    # Mock Qdrant delete
+    monkeypatch.setattr("app.storage.qdrant_client.client.delete", lambda *a, **kw: None)
+    resp = client.delete(f"/memories/{memory_in_db}", headers={"Authorization": "Bearer testtoken"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "deleted"
+    # Check not in Postgres
+    from app.storage.postgres import AsyncSessionLocal
+    async def check():
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(select(Memory).where(Memory.id == memory_in_db))
+            assert result.scalar() is None
+    asyncio.run(check())
+
+
+def test_update_memory(client, memory_in_db, monkeypatch):
+    # Mock Qdrant upsert
+    monkeypatch.setattr("app.storage.qdrant_client.qdrant_upsert", lambda *a, **kw: None)
+    new_note = "Updated note for feedback test."
+    new_intent = "todo"
+    resp = client.put(f"/memories/{memory_in_db}?note={new_note}&intent={new_intent}", headers={"Authorization": "Bearer testtoken"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "updated"
+    # Check updated in Postgres
+    from app.storage.postgres import AsyncSessionLocal
+    async def check():
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(select(Memory).where(Memory.id == memory_in_db))
+            mem = result.scalar()
+            assert mem is not None
+            assert mem.note == new_note
+            assert mem.intent == new_intent
+    asyncio.run(check())

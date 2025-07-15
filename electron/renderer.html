@@ -120,6 +120,29 @@
     </select>
     <span id="intentDetected" style="color:var(--accent2);margin-left:0.5em;"></span>
   </div>
+  <div id="feedbackRow" style="display:none;margin-bottom:1em;">
+    <button id="editLastBtn">✏️ Edit Last</button>
+    <button id="forgetLastBtn">🗑️ Forget Last</button>
+    <button id="correctLastBtn">✅ Correct Last</button>
+  </div>
+  <div id="editModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-alt);color:var(--fg);padding:2em 2em 1em 2em;border-radius:10px;box-shadow:var(--shadow);min-width:320px;max-width:90vw;">
+      <h2 style="margin-top:0;color:var(--primary-dark);">Edit Last Memory</h2>
+      <label for="editNoteInput">Text:</label><br>
+      <textarea id="editNoteInput" style="width:100%;height:4em;margin-bottom:1em;"></textarea><br>
+      <label for="editIntentSelect">Intent:</label><br>
+      <select id="editIntentSelect">
+        <option value="question">Question</option>
+        <option value="reminder">Reminder</option>
+        <option value="note">Note</option>
+        <option value="todo">Todo</option>
+        <option value="command">Command</option>
+        <option value="other">Other</option>
+      </select><br>
+      <button id="saveEditBtn">Save</button>
+      <button id="closeEditBtn" style="margin-left:1em;">Cancel</button>
+    </div>
+  </div>
   <div class="subtitles" id="subtitles" aria-label="Live Subtitles"></div>
   <div class="audio-controls" id="audioControls"></div>
   <button id="downloadFullAudio" style="display:none;margin-top:1em;">⬇️ Download Full Audio</button>
