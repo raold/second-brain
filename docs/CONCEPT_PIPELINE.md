@@ -5,17 +5,18 @@
 ## ✅ Full Conceptual Pipeline: Speech → Storage → Retrieval
 
 graph TD
-    A[🎙️ Voice Input] --> B[Whisper ASR<br>(local/cloud)]
-    B -->|Converts speech to text| C[LLM Output Processor API<br>(POST /ingest)]
-    C -->|Token-based Authentication<br>Rich metadata: context, priority, intent| D[Qdrant Vector Store + Markdown Files (.md)<br>+ PostgreSQL (optional metadata DB)<br>+ Version History Tracking per record]
-    D --> E[Prometheus / Grafana<br>→ Metrics & Monitoring]
-    D --> F[Sentry<br>→ Error Tracking]
-    D --> G[Structured JSON Logs<br>→ Correlation IDs]
+    A[Voice Input] --> B[Whisper ASR]
+    B --> C[LLM Output Processor API]
+    C --> D[Qdrant Vector Store]
+    D --> E[Prometheus / Grafana]
+    D --> F[Sentry]
+    D --> G[Structured JSON Logs]
     D --> H[Retrieval Endpoints]
-    H --> I[/search]
-    H --> J[/ranked-search]
-    H --> K[/records]
-    H --> L[/ws/generate<br>(streamed LLM responses)]
+    H --> I[search]
+    H --> J[ranked-search]
+    H --> K[records]
+    H --> L[ws/generate]
+
 
 ## ✅ Real-Time Voice Assistant UX
 
