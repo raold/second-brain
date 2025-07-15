@@ -11,6 +11,8 @@ from qdrant_client.http.exceptions import UnexpectedResponse
 from app.config import Config
 from app.utils.logger import logger
 from app.utils.openai_client import get_openai_embedding
+import time
+from dateutil import parser as date_parser
 
 # Initialize Qdrant client
 client = QdrantClient(host=Config.QDRANT_HOST, port=Config.QDRANT_PORT)
@@ -111,17 +113,16 @@ def qdrant_upsert(payload: Dict[str, Any]) -> None:
         logger.exception(f"[Qdrant ERROR] Failed to upsert vector for ID={payload.get('id', 'unknown')}: {str(e)}")
         raise  # Re-raise the exception so the router can handle it
 
-def qdrant_search(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+def qdrant_search(query: str, top_k: int = 5, filters: dict = None) -> List[Dict[str, Any]]:
     """
-    Search for semantically similar content in Qdrant.
+    Search for semantically similar content in Qdrant, with optional metadata filtering.
     
     Args:
         query: Search query string
         top_k: Number of results to return (default: 5)
-        
+        filters: Dict of metadata filters (model_version, embedding_model, type, timestamp)
     Returns:
         List of search results with metadata
-        
     Raises:
         ValueError: If query is invalid
     """
@@ -129,26 +130,63 @@ def qdrant_search(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         # Validate query
         if not query or not isinstance(query, str):
             raise ValueError("Query must be a non-empty string")
-        
         if top_k <= 0 or top_k > 100:
             raise ValueError("top_k must be between 1 and 100")
-        
         # Get OpenAI client
         openai_client = get_openai_client()
-        
         # Generate query embedding
         query_vector = get_openai_embedding(query, openai_client)
         if not query_vector:
             raise ValueError("Query embedding is empty")
-
+        # Build Qdrant filter
+        qdrant_filter = None
+        if filters:
+            from qdrant_client.http import models as qmodels
+            must = []
+            if filters.get("model_version"):
+                must.append(qmodels.FieldCondition(
+                    key="metadata.model_version",
+                    match=qmodels.MatchValue(value=filters["model_version"])
+                ))
+            if filters.get("embedding_model"):
+                must.append(qmodels.FieldCondition(
+                    key="metadata.embedding_model",
+                    match=qmodels.MatchValue(value=filters["embedding_model"])
+                ))
+            if filters.get("type"):
+                must.append(qmodels.FieldCondition(
+                    key="type",
+                    match=qmodels.MatchValue(value=filters["type"])
+                ))
+            if filters.get("timestamp"):
+                ts = filters["timestamp"]
+                range_args = {}
+                if ts.get("from"):
+                    # Convert ISO8601 to epoch seconds
+                    try:
+                        range_args["gte"] = int(date_parser.parse(ts["from"]).timestamp())
+                    except Exception:
+                        pass
+                if ts.get("to"):
+                    try:
+                        range_args["lte"] = int(date_parser.parse(ts["to"]).timestamp())
+                    except Exception:
+                        pass
+                if range_args:
+                    must.append(qmodels.FieldCondition(
+                        key="metadata.timestamp",
+                        range=qmodels.Range(**range_args)
+                    ))
+            if must:
+                qdrant_filter = qmodels.Filter(must=must)
         # Search in Qdrant
         search_result = client.search(
             collection_name=Config.QDRANT_COLLECTION,
             query_vector=query_vector,
             limit=top_k,
-            search_params=SearchParams(hnsw_ef=128, exact=False)
+            search_params=SearchParams(hnsw_ef=128, exact=False),
+            query_filter=qdrant_filter
         )
-
         # Process results
         results = [
             {
@@ -164,10 +202,8 @@ def qdrant_search(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
             }
             for result in search_result
         ]
-
         logger.info(f"[Qdrant] Search for query '{query}' returned {len(results)} results")
         return results
-        
     except Exception as e:
         logger.exception(f"[Qdrant ERROR] Search failed for query='{query}': {str(e)}")
         raise  # Re-raise the exception so the router can handle it

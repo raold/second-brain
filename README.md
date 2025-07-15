@@ -158,6 +158,12 @@ make test
 make lint
 ```
 
+## 📝 Logging
+- Structured JSON logs via [structlog](https://www.structlog.org/), compatible with log aggregation tools (Loki, ELK, etc).
+- Each request gets a unique correlation ID (`X-Request-ID`), included in all logs for distributed tracing.
+- Search logs by correlation ID to trace requests end-to-end.
+- See [Architecture Overview](./docs/ARCHITECTURE.md#logging--monitoring-architecture) for a diagram of the logging and monitoring flow.
+
 ## 🚀 CI/CD Features
 
 ### Performance Optimizations
@@ -229,7 +235,22 @@ make lint
 ## 🛡️ License
 [**AGPLv3**](./docs/LICENSE) — Free for use with source-sharing required for derivatives.
 
-## 🛠️ Roadmap
+## 🚨 Recent Major Changes (since v1.2.1)
+
+- **Model Version History & UI:**
+  - Version history tracked per record in Qdrant; viewable via `/records/{id}/version-history` and a web UI at `/ui/version_history.html` (with record listing, filtering, and detail view).
+- **Metrics & Monitoring:**
+  - Prometheus `/metrics` endpoint for API metrics; Sentry integration for error monitoring; Grafana dashboard examples in docs.
+- **Structured Logging:**
+  - JSON logs via structlog, with per-request correlation IDs for distributed tracing.
+- **Hybrid Search & Ranking:**
+  - `/search` supports metadata+vector hybrid search; `/ranked-search` returns weighted, explained results.
+- **Testing & Mocking:**
+  - All new endpoints and integrations are fully tested and mocked; patterns documented in `docs/TESTING.md`.
+- **Documentation:**
+  - All new features and architecture diagrams are documented in README, ARCHITECTURE.md, and TESTING.md.
+
+## 📋 Roadmap
 - **v1.3.0**: Full test mocking, metrics/monitoring, API rate limiting
 - **v1.4.0**: Blue-green deployment, database migration automation
 - **v1.5.0**: Advanced caching strategies, performance monitoring
