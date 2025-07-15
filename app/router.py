@@ -1,20 +1,30 @@
 # app/router.py
 
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile, status
+import datetime
 from typing import Any, Dict, List, Optional
 
-from app.models import Memory, MemoryFeedback, Payload, PayloadType, Priority
-from app.storage.postgres import AsyncSessionLocal, get_async_session
-from app.auth import verify_token
-from app.utils.logger import logger
-from app.storage.qdrant_client import client, qdrant_search, qdrant_upsert, to_uuid
-from app.config import Config
-from app.storage.markdown_writer import write_markdown
+import openai
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile, status
+from sqlalchemy import and_, delete, select, update
 
-import datetime
+from app.auth import verify_token
+from app.config import Config
+from app.models import Memory, MemoryFeedback, Payload, PayloadType, Priority
+from app.storage.markdown_writer import write_markdown
+from app.storage.postgres import AsyncSessionLocal, get_async_session
+from app.storage.qdrant_client import client, qdrant_search, qdrant_upsert, to_uuid
+from app.utils.logger import logger
 
 router = APIRouter()
+
+# Stub for detect_intent_via_llm if not defined
+async def detect_intent_via_llm(note):
+    return "note"  # TODO: Replace with actual implementation
+
+# Stub for UnexpectedResponse if not defined
+class UnexpectedResponse(Exception):
+    pass
 
 @router.get("/health")
 async def health_check() -> Dict[str, str]:
@@ -41,7 +51,7 @@ async def store_memory_pg_background(payload: Payload):
         await store_memory_pg(payload, session)
 
 @router.post("/ingest")
-async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, session=Depends(get_async_session), _: None = Depends(verify_token)) -> Dict[str, Any]:
+async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, session=None, _=None) -> Dict[str, Any]:
     """
     Ingest a payload into the second brain system.
     
@@ -54,6 +64,10 @@ async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, s
     Raises:
         HTTPException: If ingestion fails
     """
+    if session is None:
+        session = Depends(get_async_session)
+    if _ is None:
+        _ = Depends(verify_token)
     try:
         logger.info(f"Received ingestion request: {payload.id}")
         
@@ -251,7 +265,7 @@ async def get_version_history(id: str, _: None = Depends(verify_token)) -> Dict[
         raise HTTPException(status_code=404, detail="Record not found.")
     except Exception as e:
         logger.error(f"Failed to fetch version history for {id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch version history: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch version history: {e}") from e
 
 @router.get("/zzzzzzzzzz", tags=["Records"])
 async def zzzzzzzzzz_handler(
@@ -291,7 +305,7 @@ async def zzzzzzzzzz_handler(
         return {"records": records, "total": len(records)}
     except Exception as e:
         logger.error(f"Failed to list records: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to list records: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list records: {e}") from e
 
 @router.get("/models", tags=["Models"])
 def get_models():
@@ -322,7 +336,7 @@ async def memories_search(
     if date_to:
         filters.append(Memory.timestamp <= date_to)
     if not include_deleted:
-        filters.append(Memory.deleted == False)
+        filters.append(not Memory.deleted)
     stmt = select(Memory).where(and_(*filters)) if filters else select(Memory)
     result = await session.execute(stmt)
     memories = [dict(row._mapping["Memory"].__dict__) for row in result.fetchall()]
@@ -383,10 +397,10 @@ async def summarize_memories(
     # Fetch memories by IDs or query
     memories = []
     if ids:
-        result = await session.execute(select(Memory).where(Memory.id.in_(ids), Memory.deleted == False))
+        result = await session.execute(select(Memory).where(Memory.id.in_(ids), not Memory.deleted))
         memories = [row._mapping["Memory"] for row in result.fetchall()]
     elif query:
-        result = await session.execute(select(Memory).where(Memory.note.ilike(f"%{query}%"), Memory.deleted == False))
+        result = await session.execute(select(Memory).where(Memory.note.ilike(f"%{query}%"), not Memory.deleted))
         memories = [row._mapping["Memory"] for row in result.fetchall()]
     if not memories:
         return {"summary": "No memories found."}

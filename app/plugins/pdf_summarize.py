@@ -7,6 +7,7 @@ if typing.TYPE_CHECKING:
     pass  # type: ignore
 from app.utils.logger import logger
 
+
 class PDFSummarizePlugin(Plugin):
     def __init__(self):
         super().__init__('pdf_summarize')

@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
+
 from app.isolate_test import app
+
 
 def test_isolate():
     client = TestClient(app)

@@ -13,7 +13,6 @@ def inject_test_token(monkeypatch):
     from app.config import Config
     monkeypatch.setattr(Config, 'API_TOKENS', ['test-token'])
 
-import types
 
 @patch("app.storage.qdrant_client.get_openai_embedding", return_value=[0.1] * 1536)
 @patch("app.storage.qdrant_client.client.search")

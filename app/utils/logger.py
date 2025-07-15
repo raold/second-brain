@@ -1,7 +1,7 @@
 # app/utils/logger.py
 
-import os
 import logging
+import os
 
 log_dir = "tests/logs"
 os.makedirs(log_dir, exist_ok=True)

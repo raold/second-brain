@@ -1,9 +1,9 @@
 # Test-Target Entry
 
 **ID**: test-intent-001  
-**Type**: PayloadType.NOTE  
-**Timestamp**: 2025-07-15T15:26:11.934852  
-**Priority**: Priority.NORMAL  
+**Type**: note  
+**Timestamp**: 2025-07-15T16:45:36.273623  
+**Priority**: normal  
 **Tags**: None  
 
 ## Note:

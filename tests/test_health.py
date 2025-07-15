@@ -1,16 +1,13 @@
 # /tests/test_health.py
 
-from unittest.mock import patch, MagicMock
-
-import pytest
-from fastapi.testclient import TestClient
-from fastapi import Request
-
-from app.main import app
-import app.auth as app_auth
-import app.router as app_router
-import types
 from types import SimpleNamespace
+from unittest.mock import patch
+
+from fastapi import Request
+from fastapi.testclient import TestClient
+
+import app.router as app_router
+from app.main import app
 
 AUTH_HEADER = {"Authorization": "Bearer test-token"}
 client = TestClient(app)
