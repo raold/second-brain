@@ -61,7 +61,8 @@ Do **not** open public issues for security concerns — see [SECURITY.md](./SECU
 ## 📋 Resources
 
 - [README.md](./README.md)
-- [SECURITY.md](./SECURITY.md)
+- [SECURITY.md](./docs/SECURITY.md)
+- [CONTRIUBUTING.md](./docs/CONTRIUBTING.md)
 
 ---
 
