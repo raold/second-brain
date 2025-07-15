@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Electron Voice Assistant Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        button { font-size: 1.1em; margin: 0.5em; }
+        #status { margin-top: 1em; color: #333; }
+        #transcript { margin-top: 1em; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>Electron Voice Assistant Demo</h1>
+    <div>
+        <label for="language">TTS Language/Model (optional):</label>
+        <input type="text" id="language" placeholder="en, de, etc (optional)">
+    </div>
+    <div>
+        <button onclick="startRec()">🎙️ Start Recording</button>
+        <button onclick="stopRec()">⏹️ Stop & Transcribe</button>
+        <button onclick="runPipeline()">▶️ Run Full Pipeline</button>
+    </div>
+    <div id="status">Status: Idle</div>
+    <div id="transcript"></div>
+    <script src="electron_voice_pipeline_example.js"></script>
+    <script>
+    function setStatus(msg) {
+        document.getElementById('status').textContent = 'Status: ' + msg;
+    }
+    function setTranscript(text) {
+        document.getElementById('transcript').textContent = text ? 'Transcript: ' + text : '';
+    }
+    async function startRec() {
+        setStatus('Recording...');
+        await window.voicePipeline.startRecording();
+    }
+    async function stopRec() {
+        setStatus('Transcribing...');
+        try {
+            const transcript = await window.voicePipeline.stopAndTranscribe();
+            setStatus('Transcription complete.');
+            setTranscript(transcript);
+        } catch (e) {
+            setStatus('Transcription failed.');
+            setTranscript('');
+            alert(e);
+        }
+    }
+    async function runPipeline() {
+        const lang = document.getElementById('language').value.trim();
+        if (lang) {
+            window.TTS_LANGUAGE = lang;
+        }
+        setStatus('Running full pipeline...');
+        setTranscript('');
+        try {
+            await window.voicePipeline.runVoicePipeline();
+            setStatus('Pipeline complete.');
+        } catch (e) {
+            setStatus('Pipeline error.');
+            alert(e);
+        }
+    }
+    </script>
+</body>
+</html> 

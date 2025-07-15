@@ -8,6 +8,51 @@
                  [Qdrant Vector DB]
 ```
 
+## Voice Assistant Pipeline (Mobile & Electron)
+
+This diagram illustrates the end-to-end flow for voice input, transcription, LLM processing, and TTS output across mobile and Electron clients:
+
+```mermaid
+flowchart TD
+    subgraph "🏗️ Full Pipeline — Mobile & Electron Voice Assistant"
+        A1["🎙️ 1. Input: Mobile & Electron"]
+        A2["Mobile:<br/>• Native app or PWA<br/>• Mic recording (MediaRecorder API)<br/>• Send audio blob to backend"]
+        A3["Electron:<br/>• Mic recording (getUserMedia)<br/>• Send audio buffer to backend"]
+        B["🧠 2. Processing: Backend<br/>API Endpoint: /transcribe<br/>• Accepts audio blob<br/>• Calls OpenAI Whisper API<br/>• Returns transcript"]
+        C1["POST /ingest<br/>Save & embed transcript"]
+        C2["WS /generate<br/>Stream LLM response"]
+        D["🔊 3. Output: ElevenLabs TTS<br/>• Stream tokens from /ws/generate<br/>• Batch & send to ElevenLabs TTS API<br/>• Playback audio stream"]
+    end
+
+    %% Input
+    A1 --> A2
+    A1 --> A3
+    A2 --> B
+    A3 --> B
+
+    %% Processing
+    B -->|Transcript| C1
+    B -->|Transcript| C2
+
+    %% Output
+    C2 --> D
+
+    %% System Components Table (as a comment for reference)
+    %% Component         Role
+    %% Mobile/PWA        Record mic input → send to /transcribe
+    %% Electron App      Same as above for desktop
+    %% /transcribe       New API endpoint → OpenAI Whisper API
+    %% /ingest           Store + embed the transcription
+    %% /ws/generate      Get real-time LLM responses
+    %% TTS Handler       Batches tokens → ElevenLabs API → audio playback
+```
+
+**Explanation:**
+- **Input:** Users speak into a mobile app/PWA or Electron desktop app, which records audio and sends it to the backend.
+- **Processing:** The `/transcribe` endpoint uses Whisper (local or OpenAI) to convert speech to text. The transcript is then ingested and embedded, and can be used to generate LLM responses in real time.
+- **Output:** LLM responses are streamed, batched, and sent to ElevenLabs TTS for audio playback to the user.
+- **System Components:** See the table in the diagram comments for a breakdown of each component and its role.
+
 ## Components
 
 ### 1. FastAPI Application
