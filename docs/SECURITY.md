@@ -32,6 +32,9 @@ We aim to respond within **3 business days** and will coordinate disclosure resp
 - Regularly rotate API tokens and secrets.
 - Never commit `.env` files or secrets to source control.
 - Monitor logs for suspicious activity.
+- Secure Postgres and Qdrant with strong passwords and network rules.
+- Review plugin code and integrations for security risks.
+- Limit feedback/correction endpoint access to authenticated users.
 
 ## Hall of Fame
 

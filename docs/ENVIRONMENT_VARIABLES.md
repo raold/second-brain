@@ -83,6 +83,15 @@ LOG_LEVEL=INFO
 QDRANT_HOST=localhost
 QDRANT_PORT=6333
 QDRANT_COLLECTION_NAME=memories
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=memories
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+TTS_API_KEY=elevenlabs-your-key-here
+PLUGINS_ENABLED=reminder,webhook,file_search
+ELECTRON_API_URL=http://localhost:8000
+FEEDBACK_API_ENABLED=true
 ```
 
 ### Staging

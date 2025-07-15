@@ -141,3 +141,19 @@ def test_ingest_and_search_versions(mock_search, mock_upsert, mock_embedding):
 - [CI_CACHING.md](./CI_CACHING.md)
 - [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md)
 - [CONTRIBUTING.md](./CONTRIBUTING.md) 
+
+### Postgres Memory Persistence
+- Patch Postgres client methods in tests that require DB operations.
+- Use fixtures to mock SQL queries and responses.
+
+### Plugins & Integrations
+- Patch plugin entrypoints and external API calls.
+- Use fixtures for plugin state and responses.
+
+### Electron/Mobile/PWA
+- Use Jest and Playwright for E2E and UI tests.
+- Mock backend API responses for streaming, TTS, and feedback endpoints.
+
+### Feedback, Replay, Summarization
+- Patch feedback endpoints and replay/summarization logic.
+- Test both API and UI flows for edit, delete, correct, upvote, and replay. 

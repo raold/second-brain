@@ -33,7 +33,8 @@ docs: update README for local dev instructions
 
 - Follow **PEP8** and use **Ruff** for linting.
 - Ensure **tests** are provided for new features or fixes.
-- See [Testing Guide](./TESTING.md) for our approach to mocking OpenAI and Qdrant in integration tests.
+- See [Testing Guide](./TESTING.md) for our approach to mocking OpenAI, Qdrant, Postgres, plugins, and Electron/mobile in integration tests.
+- For plugins, Electron/mobile, or new backend modules, include tests and documentation.
 - Keep PRs focused and minimal. Large changes? Open an issue first.
 - Document your changes where relevant (README, code docstrings, etc.).
 - Respect the **Code of Conduct**.

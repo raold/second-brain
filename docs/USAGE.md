@@ -22,15 +22,37 @@
   },
   "metadata": {
     "source": "manual",
-    "timestamp": "2025-07-13T00:00:00Z"
+    "timestamp": "2025-07-13T00:00:00Z",
+    "intent": "note",
+    "model_version": "gpt-4o"
   }
 }
 ```
 
-### Search
-`GET /search?q=<query>`
+### WebSocket Streaming
+`GET /ws/generate`
+- Real-time LLM output streaming (JSON or text chunks)
 - Requires `Authorization: Bearer <token>`
-- Returns semantically similar entries.
+
+### Memories Search
+`POST /memories/search`
+- SQL query for memories/metadata (Postgres)
+
+### Summarize Memories
+`POST /memories/summarize`
+- Summarize memories via LLM
+
+### Feedback
+`POST /feedback`
+- Submit feedback (upvote, correct, ignore)
+
+### Plugins
+`POST /plugin/{name}`
+- Trigger plugin actions (reminder, webhook, file search, etc)
+
+## Electron/Mobile/PWA Usage
+- See README for setup and usage of Electron and mobile/PWA clients.
+- Voice input, real-time streaming, TTS, and advanced UI/UX supported.
 
 ## Running the App
 
