@@ -1,0 +1,114 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types: [completed]
+  workflow_dispatch: # Allow manual deployment
+
+jobs:
+  deploy-staging:
+    if: github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Cache Docker layers
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_REGISTRY }}/llm-output-processor:staging-${{ github.sha }}
+            ${{ secrets.DOCKER_REGISTRY }}/llm-output-processor:staging-latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Deploy to staging
+        env:
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          STAGING_API_TOKENS: ${{ secrets.STAGING_API_TOKENS }}
+        run: |
+          echo "Deploying to staging environment..."
+          docker-compose -f docker-compose.staging.yml down || true
+          docker-compose -f docker-compose.staging.yml pull
+          docker-compose -f docker-compose.staging.yml up -d
+
+      - name: Health check staging
+        run: |
+          echo "Performing health check on staging..."
+          # Wait for service to be ready
+          timeout 60 bash -c 'until curl -f http://localhost:8001/health; do sleep 2; done'
+          echo "Staging deployment successful!"
+
+  deploy-production:
+    if: github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    needs: deploy-staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Cache Docker layers
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_REGISTRY }}/llm-output-processor:production-${{ github.sha }}
+            ${{ secrets.DOCKER_REGISTRY }}/llm-output-processor:production-latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Deploy to production
+        env:
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PRODUCTION_API_TOKENS: ${{ secrets.PRODUCTION_API_TOKENS }}
+        run: |
+          echo "Deploying to production environment..."
+          docker-compose -f docker-compose.production.yml down || true
+          docker-compose -f docker-compose.production.yml pull
+          docker-compose -f docker-compose.production.yml up -d
+
+      - name: Health check production
+        run: |
+          echo "Performing health check on production..."
+          # Wait for service to be ready
+          timeout 60 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
+          echo "Production deployment successful!"
+
+      - name: Notify deployment success
+        run: |
+          echo "🚀 Deployment to production completed successfully!"
+          echo "Version: ${{ github.sha }}"
+          echo "Environment: Production"
+          echo "Docker Image: ${{ secrets.DOCKER_REGISTRY }}/llm-output-processor:production-${{ github.sha }}" 
