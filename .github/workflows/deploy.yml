@@ -15,6 +15,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install Docker Compose CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-plugin
+          docker compose version
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -45,16 +51,20 @@ jobs:
           STAGING_API_TOKENS: ${{ secrets.STAGING_API_TOKENS }}
         run: |
           echo "Deploying to staging environment..."
-          docker-compose -f docker-compose.staging.yml down || true
-          docker-compose -f docker-compose.staging.yml pull
-          docker-compose -f docker-compose.staging.yml up -d
+          docker compose -f docker-compose.staging.yml down || true
+          docker compose -f docker-compose.staging.yml pull
+          docker compose -f docker-compose.staging.yml up -d
 
       - name: Health check staging
         run: |
           echo "Performing health check on staging..."
-          # Wait for service to be ready
           timeout 60 bash -c 'until curl -f http://localhost:8001/health; do sleep 2; done'
           echo "Staging deployment successful!"
+
+      - name: Print logs on failure
+        if: failure()
+        run: |
+          docker compose logs
 
   deploy-production:
     if: github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main'
@@ -64,6 +74,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Install Docker Compose CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-plugin
+          docker compose version
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -95,16 +111,20 @@ jobs:
           PRODUCTION_API_TOKENS: ${{ secrets.PRODUCTION_API_TOKENS }}
         run: |
           echo "Deploying to production environment..."
-          docker-compose -f docker-compose.production.yml down || true
-          docker-compose -f docker-compose.production.yml pull
-          docker-compose -f docker-compose.production.yml up -d
+          docker compose -f docker-compose.production.yml down || true
+          docker compose -f docker-compose.production.yml pull
+          docker compose -f docker-compose.production.yml up -d
 
       - name: Health check production
         run: |
           echo "Performing health check on production..."
-          # Wait for service to be ready
           timeout 60 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
           echo "Production deployment successful!"
+
+      - name: Print logs on failure
+        if: failure()
+        run: |
+          docker compose logs
 
       - name: Notify deployment success
         run: |
