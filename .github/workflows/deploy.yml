@@ -1,4 +1,4 @@
-name: Deploy
+name: deploy
 
 on:
   workflow_run:
@@ -18,15 +18,16 @@ jobs:
       - name: Copy .env.example to .env
         run: cp .env.example .env
 
-      - name: Install Docker Compose CLI
-        run: |
-          # Install Docker Compose using the official method
-          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      # Add Docker login step - CRITICAL FIX
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # Cache Docker layers
       - name: Cache Docker layers
@@ -43,10 +44,16 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKER_REGISTRY && format('{0}/llm-output-processor:staging-{1}', secrets.DOCKER_REGISTRY, github.sha) || format('llm-output-processor:staging-{0}', github.sha) }}
-            ${{ secrets.DOCKER_REGISTRY && format('{0}/llm-output-processor:staging-latest', secrets.DOCKER_REGISTRY) || 'llm-output-processor:staging-latest' }}
+            ${{ secrets.DOCKER_REGISTRY && format('{0}/second-brain:staging-{1}', secrets.DOCKER_REGISTRY, github.sha) || format('second-brain:staging-{0}', github.sha) }}
+            ${{ secrets.DOCKER_REGISTRY && format('{0}/second-brain:staging-latest', secrets.DOCKER_REGISTRY) || 'second-brain:staging-latest' }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      # Move cache - PERFORMANCE FIX
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
       - name: Deploy to staging
         env:
@@ -59,16 +66,24 @@ jobs:
           docker compose -f docker-compose.staging.yml pull
           docker compose -f docker-compose.staging.yml up -d
 
+      - name: Wait for services to start
+        run: |
+          echo "Waiting for services to start..."
+          sleep 30
+
       - name: Health check staging
         run: |
           echo "Performing health check on staging..."
-          timeout 60 bash -c 'until curl -f http://localhost:8001/health; do sleep 2; done'
+          timeout 120 bash -c 'until curl -f http://localhost:8001/health; do echo "Waiting for health check..."; sleep 5; done'
           echo "Staging deployment successful!"
 
       - name: Print logs on failure
         if: failure()
         run: |
-          docker compose logs
+          echo "=== Docker Compose Logs ==="
+          docker compose -f docker-compose.staging.yml logs
+          echo "=== Container Status ==="
+          docker compose -f docker-compose.staging.yml ps
 
   deploy-production:
     if: github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main'
@@ -82,15 +97,16 @@ jobs:
       - name: Copy .env.example to .env
         run: cp .env.example .env
 
-      - name: Install Docker Compose CLI
-        run: |
-          # Install Docker Compose using the official method
-          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      # Add Docker login step - CRITICAL FIX
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # Cache Docker layers
       - name: Cache Docker layers
@@ -107,10 +123,16 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKER_REGISTRY && format('{0}/llm-output-processor:production-{1}', secrets.DOCKER_REGISTRY, github.sha) || format('llm-output-processor:production-{0}', github.sha) }}
-            ${{ secrets.DOCKER_REGISTRY && format('{0}/llm-output-processor:production-latest', secrets.DOCKER_REGISTRY) || 'llm-output-processor:production-latest' }}
+            ${{ secrets.DOCKER_REGISTRY && format('{0}/second-brain:production-{1}', secrets.DOCKER_REGISTRY, github.sha) || format('second-brain:production-{0}', github.sha) }}
+            ${{ secrets.DOCKER_REGISTRY && format('{0}/second-brain:production-latest', secrets.DOCKER_REGISTRY) || 'second-brain:production-latest' }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      # Move cache - PERFORMANCE FIX
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
       - name: Deploy to production
         env:
@@ -123,20 +145,28 @@ jobs:
           docker compose -f docker-compose.production.yml pull
           docker compose -f docker-compose.production.yml up -d
 
+      - name: Wait for services to start
+        run: |
+          echo "Waiting for services to start..."
+          sleep 30
+
       - name: Health check production
         run: |
           echo "Performing health check on production..."
-          timeout 60 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
+          timeout 120 bash -c 'until curl -f http://localhost:8000/health; do echo "Waiting for health check..."; sleep 5; done'
           echo "Production deployment successful!"
 
       - name: Print logs on failure
         if: failure()
         run: |
-          docker compose logs
+          echo "=== Docker Compose Logs ==="
+          docker compose -f docker-compose.production.yml logs
+          echo "=== Container Status ==="
+          docker compose -f docker-compose.production.yml ps
 
       - name: Notify deployment success
         run: |
           echo "🚀 Deployment to production completed successfully!"
           echo "Version: ${{ github.sha }}"
           echo "Environment: Production"
-          echo "Docker Image: ${{ secrets.DOCKER_REGISTRY && format('{0}/llm-output-processor:production-{1}', secrets.DOCKER_REGISTRY, github.sha) || format('llm-output-processor:production-{0}', github.sha) }}" 
+          echo "Docker Image: ${{ secrets.DOCKER_REGISTRY && format('{0}/second-brain:production-{1}', secrets.DOCKER_REGISTRY, github.sha) || format('second-brain:production-{0}', github.sha) }}"
