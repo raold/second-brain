@@ -15,25 +15,6 @@
 - Ranking pipeline: `/ranked-search` endpoint returns results with weighted scores (vector + metadata relevance) and explanations for each result.
 - All ranking and hybrid search logic is fully covered by tests, including timestamp range handling and score explanations.
 
-## [1.2.2] - 2025-07-14
-### Added
-- New `docs/TESTING.md` with a comprehensive guide to running, extending, and mocking tests (OpenAI, Qdrant) for fast, reliable integration tests.
-- All documentation files now cross-link to each other, including the new Testing Guide, ensuring no missing or broken links.
-- README, USAGE, ARCHITECTURE, CONTRIBUTING, SECURITY, CI_CACHING, and ENVIRONMENT_VARIABLES docs updated to reference the Testing Guide and clarify the mocking/testing approach.
-
-### Changed
-- Documentation reviewed and improved for clarity, completeness, and cross-referencing. 
-
-## [1.2.3] - 2025-07-14
-### Added
-- Version history tracking for model/embedding versions per record in Qdrant.
-- `/records/{id}/version-history` API endpoint.
-- Simple web UI for version history display. 
-
-## [1.2.4] - 2025-07-14
-### Added
-- Prometheus metrics and Sentry error monitoring integration. 
-
 ## [1.3.0] - 2025-07-14
 ### Added
 - **Advanced Version History UI:**
@@ -56,3 +37,22 @@
 
 ### Fixed
 - Ensured all endpoints and integrations are robustly tested and isolated from external dependencies in CI. 
+
+## [1.2.4] - 2025-07-14
+### Added
+- Prometheus metrics and Sentry error monitoring integration. 
+
+## [1.2.3] - 2025-07-14
+### Added
+- Version history tracking for model/embedding versions per record in Qdrant.
+- `/records/{id}/version-history` API endpoint.
+- Simple web UI for version history display. 
+
+## [1.2.2] - 2025-07-14
+### Added
+- New `docs/TESTING.md` with a comprehensive guide to running, extending, and mocking tests (OpenAI, Qdrant) for fast, reliable integration tests.
+- All documentation files now cross-link to each other, including the new Testing Guide, ensuring no missing or broken links.
+- README, USAGE, ARCHITECTURE, CONTRIBUTING, SECURITY, CI_CACHING, and ENVIRONMENT_VARIABLES docs updated to reference the Testing Guide and clarify the mocking/testing approach.
+
+### Changed
+- Documentation reviewed and improved for clarity, completeness, and cross-referencing. 
