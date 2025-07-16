@@ -240,7 +240,7 @@ make lint
 
 ## 📋 Roadmap
 
-### 🔄 Version 1.5.0 - Advanced Storage & Performance (IN PROGRESS)
+### 🔄 Version 1.5.1 - Performance Monitoring Framework (IN PROGRESS)
 **Focus: Database Integration & Optimization**
 
 - 🔄 **PostgreSQL Integration** (Code Complete, Deployment Pending)
@@ -268,38 +268,63 @@ make lint
   - ✅ Cache hit rate tracking and optimization recommendations
   - ⚠️ PostgreSQL metrics show connection failures
 
-**Current Status**: 
-- **Code Implementation**: 90% complete
-- **Infrastructure Deployment**: 30% complete (PostgreSQL not running)
-- **Test Results**: 85.7% success rate with Markdown-only fallback mode
-- **Production Ready**: ❌ Requires PostgreSQL container setup
+**Current Status v1.5.1**: 
+- **Performance Monitoring**: ✅ 85% complete (6/7 endpoints working)
+- **Infrastructure Health**: ❌ Critical failures requiring immediate attention
+- **Code Quality**: ⚠️ Multiple blocking bugs identified and partially fixed
+- **Production Readiness**: ❌ Not ready for production deployment
 
-### 🎯 Version 1.6.0 - Plugin System & Real-time Features (CURRENT)
+**Blocking Issues**:
+- PostgreSQL container not running (database features non-functional)
+- Qdrant container unhealthy (semantic search returning 500 errors)  
+- DateTime import conflicts in router.py causing health endpoint failures
+- Unicode emoji logging crashes on Windows console (cp1252 encoding)
+- Search endpoint returns 422 validation errors
+
+### 🎯 Version 1.6.0 - Plugin System & Real-time Features (FUTURE)
 **Focus: Extensibility & Live Processing**
 
+**Priority: Fix v1.5.1 blocking issues before proceeding**
+
 - **Plugin Architecture**
-  - Create `app/plugins/` framework with plugin manager
-  - Built-in plugins: reminders, webhooks, file search, calendar integration
-  - Plugin marketplace and documentation system
-  - Configurable plugin pipelines and event handlers
+  - Dynamic plugin loading with hot-reload capabilities
+  - Plugin marketplace and discovery system
+  - Sandboxed execution environment for third-party plugins
+  - Plugin API with standardized interfaces
 
-- **Real-time WebSocket API**
-  - Add `app/api/websocket.py` for live streaming
-  - Real-time LLM output streaming for chat interfaces
-  - Live transcription processing and intent detection
-  - WebSocket authentication and connection management
+- **WebSocket Real-time API**
+  - Live memory streaming and updates
+  - Real-time collaboration features
+  - Push notifications for memory events
+  - WebSocket-based search with live results
 
-- **Intent Detection & Classification**
-  - Advanced LLM-based intent classification
-  - Custom intent types and user-defined categories
-  - Intent-based routing and automated actions
-  - Machine learning model for intent prediction improvement
+- **Enhanced Intent Detection**
+  - Machine learning-based intent classification
+  - Custom intent types and user-defined schemas
+  - Intent-based workflow automation
+  - Smart memory categorization and tagging
 
-- **Feedback & Correction System**
-  - Memory editing and correction workflows
-  - User feedback collection (upvote/downvote/edit)
-  - Automated quality scoring and content improvement
-  - Version history and change tracking
+- **User Feedback System**
+  - Rating and relevance feedback for search results
+  - User preference learning and personalization
+  - Memory quality scoring and auto-improvement
+  - Community-driven memory validation
+
+**Immediate Next Steps for v1.5.1 Completion**:
+1. 🚨 **Critical Bug Fixes**
+   - Fix datetime import conflicts in router.py
+   - Resolve Unicode emoji logging issues on Windows
+   - Fix search endpoint validation errors
+   
+2. 🐳 **Infrastructure Setup**
+   - Start PostgreSQL container and verify connectivity
+   - Fix Qdrant health issues and search functionality
+   - Implement proper environment variable handling
+   
+3. ✅ **Testing & Validation**
+   - Achieve 100% performance test success rate
+   - Validate all database operations end-to-end
+   - Complete integration testing with all services running
 
 ### 🚀 Version 1.7.0 - Client Applications & Advanced UI
 **Focus: User Interfaces & Multi-platform Support**
