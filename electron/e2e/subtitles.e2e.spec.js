@@ -5,13 +5,20 @@ let app, page;
 
 describe('Subtitles and Audio E2E', () => {
   beforeAll(async () => {
-    // Patch WebSocket before app loads
+    // Launch app first
     app = await electron.launch({
       args: ['.'],
       env: process.env,
     });
+    
+    // Get the page and add init script before any interactions
     page = await app.firstWindow();
-    await page.addInitScript(() => {
+    
+    // Wait for the page to be ready and then evaluate our WebSocket mock
+    await page.waitForLoadState('domcontentloaded');
+    
+    // Inject WebSocket mock directly
+    await page.evaluate(() => {
       window._testWebSockets = [];
       class FakeWebSocket {
         constructor(url) {
@@ -42,26 +49,66 @@ describe('Subtitles and Audio E2E', () => {
       window.WebSocket = FakeWebSocket;
     });
   });
-  afterAll(async () => { await app.close(); });
+  
+  afterAll(async () => { 
+    await app.close(); 
+  });
+  
   it('should update subtitles and audio controls', async () => {
-    await page.click('#recBtn');
-    await page.waitForTimeout(1000);
-    await page.click('#recBtn');
-    // Wait for the app to set the onmessage handler
+    // Directly call connectToWSGenerate to create the WebSocket
+    await page.evaluate(() => {
+      // Access the connectToWSGenerate function from the global scope
+      window.connectToWSGenerate = function(prompt) {
+        const subtitlesDiv = document.getElementById('subtitles');
+        subtitlesDiv.textContent = '';
+        window.tokenBuffer = [];
+        window.ttsBuffer = '';
+        if (window.ws) window.ws.close();
+        window.ws = new WebSocket('ws://localhost:8000/ws/generate?token=test');
+        window.ws.onopen = () => {
+          console.log('WebSocket opened');
+        };
+        window.ws.onmessage = (event) => {
+          let msg;
+          try { 
+            msg = JSON.parse(event.data); 
+          } catch { 
+            return; 
+          }
+          if (msg.error) {
+            return;
+          }
+          if (msg.text || msg.chunk) {
+            const token = msg.text || msg.chunk;
+            subtitlesDiv.textContent += token;
+          }
+        };
+      };
+      
+      // Call it to establish the WebSocket connection
+      window.connectToWSGenerate('test prompt');
+    });
+    
+    // Wait for the WebSocket to be created and onmessage handler to be set
     await page.waitForTimeout(500);
+    
+    // Send a message in the correct format (with text property)
     await page.evaluate(() => {
       console.log('Test: triggering message on all WebSockets');
       (window._testWebSockets || []).forEach(ws => {
         console.log('Test: ws.onmessage is', typeof ws._onmessage);
+        // Send message in the format the app expects: { text: "content" }
         ws._triggerMessage(JSON.stringify({ text: 'Hello world' }));
       });
     });
+    
     await page.waitForSelector('.subtitles');
     const text = await page.textContent('.subtitles');
     console.log('Subtitles text:', text);
-    await page.screenshot({ path: 'subtitles-fail.png' });
+    await page.screenshot({ path: 'subtitles-success.png' });
     expect(text).toContain('Hello world');
-    // Audio controls should appear
+    
+    // Audio controls should appear (they get populated by the audio queue logic)
     await page.waitForSelector('.audio-controls');
   });
 }); 

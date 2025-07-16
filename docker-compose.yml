@@ -1,7 +1,7 @@
 services:
-  llm-output-processor:
+  second-brain:
     build: .
-    container_name: llm_output_processor
+    container_name: second_brain
     env_file: .env
     ports:
       - "8000:8000"

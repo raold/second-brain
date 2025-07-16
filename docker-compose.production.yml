@@ -1,8 +1,8 @@
 services:
-  llm-output-processor:
+  second-brain:
     build: .
-    container_name: llm_output_processor_production
-    image: ${DOCKER_REGISTRY:-localhost}/llm-output-processor:production-latest
+    container_name: second_brain_production
+    image: ${DOCKER_REGISTRY:-localhost}/second-brain:production-latest
     ports:
       - "8000:8000"
     depends_on:

@@ -10,7 +10,7 @@ down:
 	docker compose down
 
 bash:
-	docker exec -it llm_output_processor /bin/bash
+	docker exec -it second_brain /bin/bash
 
 logs:
 	docker compose logs -f
