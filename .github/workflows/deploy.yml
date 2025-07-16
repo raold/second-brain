@@ -169,4 +169,8 @@ jobs:
           echo "🚀 Deployment to production completed successfully!"
           echo "Version: ${{ github.sha }}"
           echo "Environment: Production"
+<<<<<<< HEAD
           echo "Docker Image: ${{ secrets.DOCKER_REGISTRY && format('{0}/second-brain:production-{1}', secrets.DOCKER_REGISTRY, github.sha) || format('second-brain:production-{0}', github.sha) }}"
+=======
+          echo "Docker Image: ${{ secrets.DOCKER_REGISTRY && format('{0}/second-brain:production-{1}', secrets.DOCKER_REGISTRY, github.sha) || format('second-brain:production-{0}', github.sha) }}"
+>>>>>>> e42961a68f6a092b597b2dcbec9b425b7cd71d8c
