@@ -1,9 +1,0 @@
-{
-  "id": "test-circular-import-fix",
-  "type": "memory", 
-  "context": "test",
-  "ttl": "1h",
-  "data": {
-    "note": "Testing circular import fixes - all dependencies working!"
-  }
-} 

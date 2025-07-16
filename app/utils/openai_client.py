@@ -10,7 +10,7 @@ import aiohttp
 import openai
 from cachetools import LRUCache, cached
 
-from app.config import Config
+from app.config import config
 from app.utils.logger import logger
 from app.utils.cache import (
     get_cache, async_cached_function, 
@@ -85,7 +85,7 @@ def _call_openai_embedding_api(text: str, client, model: str = None):
     Raises:
         Exception: If API call fails
     """
-    model = model or Config.OPENAI_EMBEDDING_MODEL
+    model = model or config.openai['embedding_model']
     logger.debug(f"Generating embedding: input_length={len(text)}, model={model}")
     
     # Use the provided client or the global openai module
@@ -119,99 +119,98 @@ def _validate_embedding_response(response) -> List[float]:
         raise ValueError("Invalid embedding response: invalid embedding field")
     
     # Validate embedding dimensions
-    if len(embedding) != Config.QDRANT_VECTOR_SIZE:
-        raise ValueError(f"Embedding dimension mismatch: got {len(embedding)}, expected {Config.QDRANT_VECTOR_SIZE}")
+    if len(embedding) != config.qdrant['vector_size']:
+        raise ValueError(f"Embedding dimension mismatch: got {len(embedding)}, expected {config.qdrant['vector_size']}")
     
     return embedding
 
-def get_openai_embedding(text: str, client=None, model: str = None):
+def get_openai_embedding(text: str, model: str = None) -> List[float]:
     """
-    Get embedding for text, using OpenAI API. Uses advanced LRU cache with TTL.
+    Generate embeddings for the given text using OpenAI's API.
     
     Args:
-        text: Text to embed
-        client: Optional OpenAI client instance
-        model: Optional model override
+        text: Input text to embed
+        model: OpenAI embedding model to use (optional)
         
     Returns:
-        List of embedding values
+        List of float values representing the embedding
         
     Raises:
-        ValueError: If text is invalid
-        Exception: If API call fails after retries
+        Exception: If API call fails
     """
-    # Generate cache key
-    cache_key = f"{text}::{model or 'default'}"
+    model = model or config.openai['embedding_model']
+    logger.debug(f"Generating embedding: input_length={len(text)}, model={model}")
     
     # Check cache first
-    cached_result = _embedding_cache.get(cache_key)
-    if cached_result is not None:
-        logger.debug(f"Embedding cache hit for text length: {len(text)}")
-        return cached_result
+    cache_key = f"embedding:{hash(text)}:{model}"
+    cached_embedding = _embedding_cache.get(cache_key)
+    if cached_embedding is not None:
+        logger.debug(f"Cache hit for embedding: {text[:50]}...")
+        return cached_embedding
     
     start_time = time.time()
     
     try:
-        # Validate input
-        _validate_embedding_input(text)
+        # Record API call attempt
+        if openai_api_calls:
+            openai_api_calls.labels(endpoint='embeddings', status='attempt').inc()
         
-        # Preprocess text
-        processed_text = _preprocess_text_for_embedding(text)
+        client = get_openai_client()
+        response = client.embeddings.create(
+            input=text,
+            model=model
+        )
         
-        # Make API call
-        response = _call_openai_embedding_api(processed_text, client, model)
+        embedding = response.data[0].embedding
         
-        # Record API call metric
+        # Validate embedding dimensions
+        if len(embedding) != config.qdrant['vector_size']:
+            raise ValueError(f"Embedding dimension mismatch: got {len(embedding)}, expected {config.qdrant['vector_size']}")
+        
+        # Cache the result
+        _embedding_cache.set(cache_key, embedding)
+        
+        # Record metrics
+        if embedding_latency:
+            embedding_latency.observe(time.time() - start_time)
         if openai_api_calls:
             openai_api_calls.labels(endpoint='embeddings', status='success').inc()
         
-        # Validate and extract embedding
-        embedding = _validate_embedding_response(response)
-        
-        # Store in cache
-        _embedding_cache.set(cache_key, embedding)
-        
-        # Log performance metrics
-        if embedding_latency:
-            embedding_latency.observe(time.time() - start_time)
-        duration = time.time() - start_time
-        logger.info(f"Embedding generated in {duration:.2f}s (size: {len(embedding)})")
-        
+        logger.debug(f"Generated embedding in {time.time() - start_time:.2f}s")
         return embedding
         
     except Exception as e:
-        # Record API failure metric
+        # Record failure
         if openai_api_calls:
             openai_api_calls.labels(endpoint='embeddings', status='error').inc()
-            
-        duration = time.time() - start_time
-        logger.error(f"Failed to generate embedding after {duration:.2f}s: {str(e)}")
+        
+        logger.error(f"Failed to generate embedding: {e}")
         raise
 
 # Async version of embedding function
-async def get_openai_embedding_async(text: str, client=None, model: str = None):
+async def get_openai_embedding_async(text: str, model: str = None):
     """
     Async version of get_openai_embedding for better performance in async contexts.
     """
     # For now, we'll run the sync version in a thread pool
     # Future enhancement could implement true async OpenAI client
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, get_openai_embedding, text, client, model)
+    return await loop.run_in_executor(None, get_openai_embedding, text, model)
 
-def get_openai_client():
+def get_openai_client() -> openai.OpenAI:
     """
-    Get configured OpenAI client instance.
+    Get OpenAI client with API key validation.
     
     Returns:
-        OpenAI client instance
+        Configured OpenAI client
         
     Raises:
         ValueError: If API key is not configured
     """
-    if not Config.OPENAI_API_KEY:
+    if not config.openai['api_key']:
         raise ValueError("OpenAI API key not configured")
     
-    return openai.OpenAI(api_key=Config.OPENAI_API_KEY)
+    return openai.OpenAI(api_key=config.openai['api_key'])
 
 async def get_openai_stream(prompt: str):
     """

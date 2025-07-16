@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Request, status
 from fastapi.security.utils import get_authorization_scheme_param
 
-from app.config import Config
+from app.config import config
 from app.utils.logger import logger
 
 
@@ -41,7 +41,7 @@ def verify_token_str(token: str) -> bool:
     """
     if not token:
         return False
-    tokens = Config.API_TOKENS
+    tokens = config.api_tokens
     if isinstance(tokens, set):
         tokens = list(tokens)
     return token.strip() in tokens

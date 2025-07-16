@@ -17,6 +17,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy import select, insert, update, delete, func, and_, or_
 from sqlalchemy.orm import selectinload
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 from app.config import config
 from app.utils.logger import get_logger
@@ -24,6 +25,12 @@ from app.utils.cache import (
     get_cache, async_cached_function, CacheConfig,
     ANALYTICS_CACHE_CONFIG, MEMORY_ACCESS_CACHE_CONFIG
 )
+from app.utils.exceptions import (
+    DatabaseError, DatabaseConnectionError, DatabaseTimeoutError, 
+    DatabaseIntegrityError, DuplicateMemoryError, MemoryNotFoundError,
+    map_external_exception
+)
+from app.utils.retry import database_retry, async_timeout, async_with_semaphore
 
 logger = get_logger()
 
@@ -276,6 +283,9 @@ class PostgresClient:
     
     # Memory CRUD Operations with caching
     
+    @database_retry(circuit_breaker_name="postgres_store")
+    @async_timeout(30.0, "store_memory")
+    @async_with_semaphore(10, "store_memory")
     async def store_memory(
         self,
         text_content: str,
@@ -289,7 +299,7 @@ class PostgresClient:
         metadata: Optional[Dict[str, Any]] = None,
         parent_id: Optional[str] = None
     ) -> str:
-        """Store a new memory in the database with performance monitoring."""
+        """Store a new memory in the database with enhanced error handling."""
         start_time = time.time()
         
         try:
@@ -321,29 +331,57 @@ class PostgresClient:
                     "text_content": text_content,
                     "intent_type": intent_type,
                     "priority": priority,
-                    "source": source,
-                    "tags": tags or [],
                     "created_at": memory.created_at.isoformat(),
-                    "metadata": metadata or {}
+                    "embedding_dimensions": memory.embedding_dimensions
                 }
                 _memory_cache.set(cache_key, memory_data)
                 
                 # Record metrics
                 if postgres_operations:
-                    postgres_operations.labels(operation='store_memory', status='success').inc()
+                    postgres_operations.labels(operation='store', status='success').inc()
                 if postgres_query_latency:
-                    postgres_query_latency.labels(operation='store_memory').observe(time.time() - start_time)
+                    postgres_query_latency.labels(operation='store').observe(time.time() - start_time)
                 
-                logger.info(f"Stored memory with ID: {memory_id}")
+                logger.info(f"Stored memory {memory_id} in {time.time() - start_time:.2f}s")
                 return memory_id
                 
-        except Exception as e:
-            # Record failure metric
-            if postgres_operations:
-                postgres_operations.labels(operation='store_memory', status='error').inc()
-            
-            logger.error(f"Failed to store memory: {e}")
+        except IntegrityError as e:
+            # Handle duplicate keys or constraint violations
+            if "duplicate key" in str(e).lower():
+                raise DuplicateMemoryError(f"Memory with similar content already exists")
+            else:
+                raise DatabaseIntegrityError(str(e), constraint=getattr(e, 'constraint', None))
+                
+        except OperationalError as e:
+            # Handle database operational errors
+            if "connection" in str(e).lower():
+                raise DatabaseConnectionError(f"Database connection failed: {e}")
+            else:
+                raise DatabaseError(f"Database operation failed: {e}")
+                
+        except asyncpg.exceptions.PostgresError as e:
+            # Handle specific PostgreSQL errors
+            if e.sqlstate == '23505':  # Unique constraint violation
+                raise DuplicateMemoryError(f"Memory already exists")
+            elif e.sqlstate == '08003':  # Connection does not exist
+                raise DatabaseConnectionError(f"Database connection lost: {e}")
+            else:
+                raise DatabaseError(f"PostgreSQL error [{e.sqlstate}]: {e}")
+                
+        except asyncio.TimeoutError:
+            # This will be caught by the @async_timeout decorator
             raise
+            
+        except Exception as e:
+            # Map any other exceptions to our hierarchy
+            mapped_exc = map_external_exception(e)
+            logger.error(f"Unexpected error storing memory: {mapped_exc}")
+            
+            # Record failure metrics
+            if postgres_operations:
+                postgres_operations.labels(operation='store', status='error').inc()
+            
+            raise mapped_exc
     
     async def get_memory(self, memory_id: str, use_cache: bool = True) -> Optional[Dict[str, Any]]:
         """Retrieve memory by ID with caching."""
@@ -845,6 +883,18 @@ async def get_postgres_client() -> PostgresClient:
     return postgres_client
 
 
+# Compatibility functions for old session patterns
+async def get_async_session():
+    """Compatibility function for old session dependency pattern."""
+    client = await get_postgres_client()
+    async with client.session_factory() as session:
+        yield session
+
+
+# Compatibility alias for old session factory
+AsyncSessionLocal = lambda: get_postgres_client().session_factory
+
+
 async def close_postgres_client():
-    """Close PostgreSQL client connections."""
+    """Compatibility function for closing postgres client."""
     await postgres_client.close() 

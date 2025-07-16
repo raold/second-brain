@@ -14,8 +14,7 @@ from app.config import Config
 from app.models import Memory, MemoryFeedback, Payload, PayloadType, Priority
 from app.storage.dual_storage import get_dual_storage
 from app.storage.markdown_writer import write_markdown
-from app.storage.postgres import AsyncSessionLocal, get_async_session
-from app.storage.postgres_client import get_postgres_client
+from app.storage.postgres_client import get_postgres_client, AsyncSessionLocal, get_async_session
 from app.storage.qdrant_client import client, qdrant_search, qdrant_upsert, to_uuid, get_qdrant_stats
 from app.utils.logger import logger
 from app.utils.cache import get_all_cache_stats, clear_all_caches
