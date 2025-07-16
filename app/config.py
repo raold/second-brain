@@ -1,129 +1,231 @@
 import os
-
-from dotenv import load_dotenv
-
-# Load .env file if present (useful in local dev)
-load_dotenv()
+import logging
+from typing import Dict, Any, Optional
+from pathlib import Path
 
 class Config:
-    # === OpenAI Settings ===
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+    """Unified configuration system with smart defaults and environment detection."""
+    
+    def __init__(self):
+        # Auto-detect environment
+        self.is_docker = self._detect_docker_environment()
+        self.is_ci = os.getenv('CI', '').lower() in ('true', '1')
+        self.is_windows = os.name == 'nt'
+        
+        # Core settings
+        self.debug = os.getenv('DEBUG', 'false').lower() == 'true'
+        self.log_level = self._get_log_level()
+        
+        # API Configuration
+        self.api_tokens = self._get_api_tokens()
+        self.host = os.getenv('HOST', '0.0.0.0')
+        self.port = int(os.getenv('PORT', '8000'))
+        
+        # Database Configuration (with smart defaults)
+        self.postgres = self._get_postgres_config()
+        self.qdrant = self._get_qdrant_config()
+        
+        # Cache Configuration (simplified)
+        self.cache = self._get_cache_config()
+        
+        # OpenAI Configuration
+        self.openai_api_key = os.getenv('OPENAI_API_KEY', '')
+        self.openai = self._get_openai_config()
+        
+        # Model Version Tracking
+        self.model_versions = self._get_model_versions()
+        
+        # Storage Configuration
+        self.storage = self._get_storage_config()
 
-    # === API Authentication ===
-    API_TOKENS = os.getenv("API_TOKENS", "").split(",")
+    def _detect_docker_environment(self) -> bool:
+        """Auto-detect if running in Docker container."""
+        # Check common Docker environment indicators
+        docker_indicators = [
+            os.path.exists('/.dockerenv'),
+            os.getenv('DOCKER_CONTAINER') == 'true',
+            'docker' in os.getenv('HOSTNAME', '').lower()
+        ]
+        return any(docker_indicators)
 
-    # === Qdrant Settings ===
-    QDRANT_HOST = os.getenv("QDRANT_HOST", "qdrant")
-    QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
-    QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "second_brain")
-    QDRANT_VECTOR_SIZE = int(os.getenv("QDRANT_VECTOR_SIZE", 1536))
-    QDRANT_DISTANCE = os.getenv("QDRANT_DISTANCE", "Cosine")
+    def _get_log_level(self) -> str:
+        """Get appropriate log level based on environment."""
+        if self.is_ci:
+            return 'WARNING'  # Reduce noise in CI
+        elif self.debug:
+            return 'DEBUG'
+        else:
+            return os.getenv('LOG_LEVEL', 'INFO')
 
-    # === PostgreSQL Settings ===
-    POSTGRES_HOST = os.getenv("POSTGRES_HOST", "postgres")
-    POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", 5432))
-    POSTGRES_DB = os.getenv("POSTGRES_DB", "brain")
-    POSTGRES_USER = os.getenv("POSTGRES_USER", "brain")
-    POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "brainpw")
-    POSTGRES_POOL_SIZE = int(os.getenv("POSTGRES_POOL_SIZE", 20))
-    POSTGRES_MAX_OVERFLOW = int(os.getenv("POSTGRES_MAX_OVERFLOW", 30))
+    def _get_api_tokens(self) -> list:
+        """Get API tokens with fallback defaults."""
+        tokens_str = os.getenv('API_TOKENS', 'dev-token,test-token')
+        return [token.strip() for token in tokens_str.split(',') if token.strip()]
 
-    # === Application Settings ===
-    DEBUG = os.getenv("DEBUG", "false").lower() == "true"
-    ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
-
-    # === Logging ===
-    LOG_PATH = os.getenv("LOG_PATH", "tests/logs/processor.log")
-    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-
-    # === OpenAI Retry Settings ===
-    OPENAI_RETRY_ATTEMPTS = int(os.getenv("OPENAI_RETRY_ATTEMPTS", 3))
-    OPENAI_RETRY_MULTIPLIER = int(os.getenv("OPENAI_RETRY_MULTIPLIER", 1))
-    OPENAI_RETRY_MIN_WAIT = int(os.getenv("OPENAI_RETRY_MIN_WAIT", 2))
-    OPENAI_RETRY_MAX_WAIT = int(os.getenv("OPENAI_RETRY_MAX_WAIT", 10))
-
-    # === Model Version Tracking ===
-    MODEL_VERSIONS = {
-        "llm": os.getenv("MODEL_VERSION_LLM", "gpt-4o"),
-        "embedding": os.getenv("MODEL_VERSION_EMBEDDING", "text-embedding-3-small")
-    }
-
-    # === Performance Optimization Settings ===
-    
-    # Cache Configuration
-    CACHE_ENABLED = os.getenv("CACHE_ENABLED", "true").lower() == "true"
-    
-    # Embedding Cache Settings
-    EMBEDDING_CACHE_SIZE = int(os.getenv("EMBEDDING_CACHE_SIZE", 2000))
-    EMBEDDING_CACHE_TTL = int(os.getenv("EMBEDDING_CACHE_TTL", 3600))  # 1 hour
-    
-    # Search Cache Settings
-    SEARCH_CACHE_SIZE = int(os.getenv("SEARCH_CACHE_SIZE", 1000))
-    SEARCH_CACHE_TTL = int(os.getenv("SEARCH_CACHE_TTL", 300))  # 5 minutes
-    
-    # Query Cache Settings
-    QUERY_CACHE_SIZE = int(os.getenv("QUERY_CACHE_SIZE", 500))
-    QUERY_CACHE_TTL = int(os.getenv("QUERY_CACHE_TTL", 300))  # 5 minutes
-    
-    # Memory Access Cache Settings
-    MEMORY_ACCESS_CACHE_SIZE = int(os.getenv("MEMORY_ACCESS_CACHE_SIZE", 5000))
-    MEMORY_ACCESS_CACHE_TTL = int(os.getenv("MEMORY_ACCESS_CACHE_TTL", 1800))  # 30 minutes
-    
-    # Analytics Cache Settings
-    ANALYTICS_CACHE_SIZE = int(os.getenv("ANALYTICS_CACHE_SIZE", 100))
-    ANALYTICS_CACHE_TTL = int(os.getenv("ANALYTICS_CACHE_TTL", 60))  # 1 minute
-    
-    # Intent Detection Cache Settings
-    INTENT_CACHE_SIZE = int(os.getenv("INTENT_CACHE_SIZE", 500))
-    INTENT_CACHE_TTL = int(os.getenv("INTENT_CACHE_TTL", 3600))  # 1 hour
-    
-    # Dual Storage Cache Settings
-    DUAL_STORAGE_CACHE_SIZE = int(os.getenv("DUAL_STORAGE_CACHE_SIZE", 1000))
-    DUAL_STORAGE_CACHE_TTL = int(os.getenv("DUAL_STORAGE_CACHE_TTL", 600))  # 10 minutes
-    
-    # Performance Monitoring
-    PERFORMANCE_MONITORING_ENABLED = os.getenv("PERFORMANCE_MONITORING_ENABLED", "true").lower() == "true"
-    METRICS_ENABLED = os.getenv("METRICS_ENABLED", "true").lower() == "true"
-    
-    # Connection Pool Optimization
-    CONNECTION_POOL_MONITORING = os.getenv("CONNECTION_POOL_MONITORING", "true").lower() == "true"
-    
-    # Smart Eviction Settings
-    SMART_EVICTION_ENABLED = os.getenv("SMART_EVICTION_ENABLED", "true").lower() == "true"
-    CACHE_CLEANUP_INTERVAL = int(os.getenv("CACHE_CLEANUP_INTERVAL", 300))  # 5 minutes
-    
-    # Async Operations
-    ASYNC_STORAGE_ENABLED = os.getenv("ASYNC_STORAGE_ENABLED", "true").lower() == "true"
-    
-    # Health Check Configuration
-    HEALTH_CHECK_CACHE_TTL = int(os.getenv("HEALTH_CHECK_CACHE_TTL", 30))  # 30 seconds
-    
-    @classmethod
-    def summary(cls) -> dict:
-        """Get configuration summary for logging."""
+    def _get_postgres_config(self) -> Dict[str, Any]:
+        """Get PostgreSQL configuration with smart defaults."""
+        # Smart hostname detection
+        if self.is_docker:
+            default_host = 'postgres'
+        else:
+            default_host = 'localhost'
+            
         return {
-            "environment": cls.ENVIRONMENT,
-            "debug": cls.DEBUG,
-            "qdrant_host": cls.QDRANT_HOST,
-            "postgres_host": cls.POSTGRES_HOST,
-            "cache_enabled": cls.CACHE_ENABLED,
-            "performance_monitoring": cls.PERFORMANCE_MONITORING_ENABLED,
-            "metrics_enabled": cls.METRICS_ENABLED,
-            "embedding_model": cls.OPENAI_EMBEDDING_MODEL,
-            "connection_pools": {
-                "postgres_pool_size": cls.POSTGRES_POOL_SIZE,
-                "postgres_max_overflow": cls.POSTGRES_MAX_OVERFLOW
+            'host': os.getenv('POSTGRES_HOST', default_host),
+            'port': int(os.getenv('POSTGRES_PORT', '5432')),
+            'database': os.getenv('POSTGRES_DB', 'secondbrain'),
+            'username': os.getenv('POSTGRES_USER', 'postgres'),
+            'password': os.getenv('POSTGRES_PASSWORD', 'postgres'),
+            'pool_size': int(os.getenv('POSTGRES_POOL_SIZE', '10')),
+            'max_overflow': int(os.getenv('POSTGRES_MAX_OVERFLOW', '20')),
+            'pool_timeout': int(os.getenv('POSTGRES_POOL_TIMEOUT', '30')),
+        }
+
+    def _get_qdrant_config(self) -> Dict[str, Any]:
+        """Get Qdrant configuration with smart defaults."""
+        if self.is_docker:
+            default_host = 'qdrant'
+        else:
+            default_host = 'localhost'
+            
+        return {
+            'host': os.getenv('QDRANT_HOST', default_host),
+            'port': int(os.getenv('QDRANT_PORT', '6333')),
+            'timeout': int(os.getenv('QDRANT_TIMEOUT', '30')),
+            'collection': os.getenv('QDRANT_COLLECTION', 'second_brain'),
+            'vector_size': int(os.getenv('QDRANT_VECTOR_SIZE', '1536')),
+            'distance': os.getenv('QDRANT_DISTANCE', 'Cosine'),
+        }
+
+    def _get_cache_config(self) -> Dict[str, Any]:
+        """Simplified cache configuration."""
+        # Single cache size setting that scales others
+        base_size = int(os.getenv('CACHE_SIZE', '1000'))
+        
+        return {
+            'enabled': os.getenv('CACHE_ENABLED', 'true').lower() == 'true',
+            'default_ttl': int(os.getenv('CACHE_TTL', '300')),  # 5 minutes default
+            'sizes': {
+                'embeddings': base_size * 2,     # 2000 default
+                'queries': base_size // 2,       # 500 default  
+                'memories': base_size * 5,       # 5000 default
+                'search': base_size,             # 1000 default
+                'analytics': base_size // 10,    # 100 default
             },
-            "cache_configurations": {
-                "embedding_cache": {"size": cls.EMBEDDING_CACHE_SIZE, "ttl": cls.EMBEDDING_CACHE_TTL},
-                "search_cache": {"size": cls.SEARCH_CACHE_SIZE, "ttl": cls.SEARCH_CACHE_TTL},
-                "memory_cache": {"size": cls.MEMORY_ACCESS_CACHE_SIZE, "ttl": cls.MEMORY_ACCESS_CACHE_TTL},
-                "analytics_cache": {"size": cls.ANALYTICS_CACHE_SIZE, "ttl": cls.ANALYTICS_CACHE_TTL}
-            },
-            "optimizations": {
-                "smart_eviction": cls.SMART_EVICTION_ENABLED,
-                "async_storage": cls.ASYNC_STORAGE_ENABLED,
-                "connection_monitoring": cls.CONNECTION_POOL_MONITORING
+            'ttls': {
+                'embeddings': 3600,              # 1 hour
+                'queries': 300,                  # 5 minutes
+                'memories': 1800,                # 30 minutes
+                'search': 300,                   # 5 minutes
+                'analytics': 900,                # 15 minutes
             }
         }
+
+    def _get_openai_config(self) -> Dict[str, Any]:
+        """Get OpenAI configuration with smart defaults."""
+        return {
+            'api_key': os.getenv('OPENAI_API_KEY', ''),
+            'embedding_model': os.getenv('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small'),
+            'retry_attempts': int(os.getenv('OPENAI_RETRY_ATTEMPTS', '3')),
+            'retry_multiplier': int(os.getenv('OPENAI_RETRY_MULTIPLIER', '1')),
+            'retry_min_wait': int(os.getenv('OPENAI_RETRY_MIN_WAIT', '2')),
+            'retry_max_wait': int(os.getenv('OPENAI_RETRY_MAX_WAIT', '10')),
+        }
+
+    def _get_model_versions(self) -> Dict[str, str]:
+        """Get model version tracking."""
+        return {
+            "llm": os.getenv("MODEL_VERSION_LLM", "gpt-4o"),
+            "embedding": os.getenv("MODEL_VERSION_EMBEDDING", "text-embedding-3-small")
+        }
+
+    def _get_storage_config(self) -> Dict[str, Any]:
+        """Storage configuration with smart defaults."""
+        return {
+            'data_dir': Path(os.getenv('DATA_DIR', './app/data')),
+            'backup_enabled': os.getenv('BACKUP_ENABLED', 'true').lower() == 'true',
+            'dual_storage': os.getenv('DUAL_STORAGE', 'true').lower() == 'true',
+        }
+
+    def get_postgres_url(self) -> str:
+        """Get PostgreSQL connection URL."""
+        pg = self.postgres
+        return f"postgresql+asyncpg://{pg['username']}:{pg['password']}@{pg['host']}:{pg['port']}/{pg['database']}"
+
+    def get_qdrant_url(self) -> str:
+        """Get Qdrant connection URL."""
+        qd = self.qdrant
+        return f"http://{qd['host']}:{qd['port']}"
+
+    def setup_logging(self) -> None:
+        """Setup logging with Windows-compatible settings."""
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        
+        # Use simple text format on Windows to avoid emoji encoding issues
+        if self.is_windows or self.is_ci:
+            log_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+        
+        logging.basicConfig(
+            level=getattr(logging, self.log_level),
+            format=log_format,
+            handlers=[
+                logging.StreamHandler(),
+                logging.FileHandler('logs/app.log') if os.path.exists('logs') else logging.NullHandler()
+            ]
+        )
+
+    def validate(self) -> None:
+        """Validate configuration and warn about issues."""
+        issues = []
+        
+        if not self.openai_api_key:
+            issues.append("OPENAI_API_KEY not set - OpenAI features will be disabled")
+        
+        if not self.api_tokens:
+            issues.append("No API tokens configured - authentication will fail")
+        
+        if self.is_docker and self.postgres['host'] == 'localhost':
+            issues.append("Docker environment detected but PostgreSQL host is localhost")
+        
+        if issues:
+            print("⚠️  Configuration Issues:")
+            for issue in issues:
+                print(f"   - {issue}")
+
+    def __str__(self) -> str:
+        """String representation for debugging."""
+        return f"""Configuration:
+  Environment: {'Docker' if self.is_docker else 'Local'} {'(CI)' if self.is_ci else ''}
+  Debug: {self.debug}
+  PostgreSQL: {self.postgres['host']}:{self.postgres['port']}
+  Qdrant: {self.qdrant['host']}:{self.qdrant['port']}
+  Cache: {'Enabled' if self.cache['enabled'] else 'Disabled'}
+  Log Level: {self.log_level}"""
+
+    def summary(self) -> dict:
+        """Get configuration summary for logging."""
+        return {
+            "environment": "Docker" if self.is_docker else "Local",
+            "debug": self.debug,
+            "postgres_host": self.postgres['host'],
+            "qdrant_host": self.qdrant['host'],
+            "cache_enabled": self.cache['enabled'],
+            "log_level": self.log_level,
+            "is_windows": self.is_windows,
+            "is_ci": self.is_ci
+        }
+
+# Global configuration instance
+config = Config()
+
+# Legacy compatibility - deprecated, use config object instead
+OPENAI_API_KEY = config.openai_api_key
+API_TOKENS = config.api_tokens
+POSTGRES_HOST = config.postgres['host']
+POSTGRES_PORT = config.postgres['port']
+POSTGRES_DB = config.postgres['database']
+POSTGRES_USER = config.postgres['username']
+POSTGRES_PASSWORD = config.postgres['password']
+QDRANT_HOST = config.qdrant['host']
+QDRANT_PORT = config.qdrant['port']
+DATA_DIR = str(config.storage['data_dir'])

@@ -7,7 +7,7 @@ from cachetools import LRUCache, cached
 from openai import OpenAI
 from qdrant_client import QdrantClient
 
-from app.config import Config
+from app.config import config
 from app.utils.logger import logger
 from app.utils.openai_client import get_openai_embedding
 from app.utils.cache import (
@@ -17,9 +17,9 @@ from app.utils.cache import (
 
 # Initialize Qdrant client with connection pooling
 client = QdrantClient(
-    host=Config.QDRANT_HOST, 
-    port=Config.QDRANT_PORT,
-    timeout=30,  # 30 second timeout
+    host=config.qdrant['host'], 
+    port=config.qdrant['port'],
+    timeout=config.qdrant['timeout'],  # 30 second timeout
     grpc_port=6334,  # Enable gRPC for better performance
     prefer_grpc=True
 )
@@ -77,7 +77,7 @@ def _get_qdrant_health() -> Dict[str, Any]:
         our_collection_exists = False
         our_collection_info = None
         try:
-            our_collection_info = client.get_collection(Config.QDRANT_COLLECTION)
+            our_collection_info = client.get_collection(config.qdrant['collection'])
             our_collection_exists = True
         except Exception:
             pass
@@ -177,7 +177,7 @@ def _get_version_history(payload_id: str) -> List[Dict[str, Any]]:
         from qdrant_client.http.exceptions import UnexpectedResponse
         
         existing = client.retrieve(
-            collection_name=Config.QDRANT_COLLECTION,
+            collection_name=config.qdrant['collection'],
             ids=[str(to_uuid(payload_id))],
             with_payload=True
         )
@@ -204,8 +204,8 @@ def _update_payload_metadata(payload: Dict[str, Any]) -> None:
     
     # Add timestamps
     meta["timestamp"] = datetime.now().isoformat()
-    meta["embedding_model"] = Config.OPENAI_EMBEDDING_MODEL
-    meta["model_version"] = Config.MODEL_VERSIONS.get("embedding", "unknown")
+    meta["embedding_model"] = config.openai['embedding_model']
+    meta["model_version"] = config.model_versions.get("embedding", "unknown")
     
     # Version history management
     version_history = _get_version_history(payload["id"])
@@ -245,7 +245,7 @@ def _perform_upsert(point) -> None:
     """
     try:
         client.upsert(
-            collection_name=Config.QDRANT_COLLECTION,
+            collection_name=config.qdrant['collection'],
             points=[point]
         )
         
@@ -429,7 +429,7 @@ def qdrant_search(query: str, top_k: int = 5, filters: Optional[dict] = None) ->
         
         # Perform search with optimized parameters
         search_result = client.search(
-            collection_name=Config.QDRANT_COLLECTION,
+            collection_name=config.qdrant['collection'],
             query_vector=query_vector,
             limit=top_k,
             search_params=SearchParams(
@@ -479,7 +479,7 @@ def get_qdrant_stats() -> Dict[str, Any]:
             "cache_statistics": cache_stats,
             "performance_optimizations": {
                 "grpc_enabled": True,
-                "connection_timeout": 30,
+                "connection_timeout": config.qdrant['timeout'],
                 "search_cache_ttl": SEARCH_CACHE_CONFIG.ttl_seconds,
                 "smart_eviction": True
             }

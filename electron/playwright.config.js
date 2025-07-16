@@ -7,7 +7,8 @@ module.exports = {
   use: {
     headless: true,
     launchOptions: {
-      args: ['.']
+      args: ['.', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      env: process.env,
     }
   },
   projects: [

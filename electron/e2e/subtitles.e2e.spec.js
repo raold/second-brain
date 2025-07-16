@@ -7,7 +7,7 @@ describe('Subtitles and Audio E2E', () => {
   beforeAll(async () => {
     // Launch app first
     app = await electron.launch({
-      args: ['.'],
+      args: ['.', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
       env: process.env,
     });
     

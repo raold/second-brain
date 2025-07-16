@@ -18,7 +18,7 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy import select, insert, update, delete, func, and_, or_
 from sqlalchemy.orm import selectinload
 
-from app.config import Config
+from app.config import config
 from app.utils.logger import get_logger
 from app.utils.cache import (
     get_cache, async_cached_function, CacheConfig,
@@ -125,20 +125,20 @@ class PostgresClient:
             
         try:
             # Create async engine with advanced connection pooling
-            database_url = f"postgresql+asyncpg://{Config.POSTGRES_USER}:{Config.POSTGRES_PASSWORD}@{Config.POSTGRES_HOST}:{Config.POSTGRES_PORT}/{Config.POSTGRES_DB}"
+            database_url = f"postgresql+asyncpg://{config.postgres['username']}:{config.postgres['password']}@{config.postgres['host']}:{config.postgres['port']}/{config.postgres['database']}"
             
             self.engine = create_async_engine(
                 database_url,
                 # Connection pool settings
-                pool_size=Config.POSTGRES_POOL_SIZE,  # 20 connections
-                max_overflow=Config.POSTGRES_MAX_OVERFLOW,  # 30 additional connections
+                pool_size=config.postgres['pool_size'],  # 20 connections
+                max_overflow=config.postgres['max_overflow'],  # 30 additional connections
                 pool_timeout=30,  # 30 seconds to get connection
                 pool_recycle=3600,  # Recycle connections every hour
                 pool_pre_ping=True,  # Validate connections before use
                 
                 # Performance settings
-                echo=Config.DEBUG,  # Log SQL queries in debug mode
-                echo_pool=Config.DEBUG,  # Log pool events in debug mode
+                echo=config.debug,  # Log SQL queries in debug mode
+                echo_pool=config.debug,  # Log pool events in debug mode
                 
                 # Connection arguments for asyncpg
                 connect_args={

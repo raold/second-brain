@@ -2,6 +2,7 @@
 
 import os
 import uuid
+import logging
 
 import sentry_sdk
 import structlog
@@ -14,10 +15,13 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from app.api.websocket import router as ws_router
-from app.config import Config
+from app.config import config
 from app.router import router
 from app.storage.postgres_client import postgres_client, close_postgres_client
-from app.utils.logger import logger
+
+# Setup logging with Windows compatibility first
+config.setup_logging()
+logger = logging.getLogger("main")
 
 app = FastAPI(
     title="Second Brain - AI Memory Assistant",
@@ -67,32 +71,51 @@ if SENTRY_DSN:
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on application startup."""
-    logger.info("🔄 Initializing application services...")
+    if config.is_windows or config.is_ci:
+        logger.info("Initializing application services...")
+    else:
+        logger.info("🔄 Initializing application services...")
     
     try:
         # Initialize PostgreSQL client
         await postgres_client.initialize()
-        logger.info("✅ PostgreSQL client initialized")
+        if config.is_windows or config.is_ci:
+            logger.info("PostgreSQL client initialized")
+            logger.info("Second Brain - AI Memory Assistant ready")
+        else:
+            logger.info("✅ PostgreSQL client initialized")
+            logger.info("🚀 Second Brain - AI Memory Assistant ready")
         
-        logger.info("🚀 Second Brain - AI Memory Assistant ready")
-        logger.info(f"Loaded Config: {Config.summary()}")
+        logger.info(f"Loaded Config: {config.summary()}")
         
     except Exception as e:
-        logger.error(f"❌ Failed to initialize services: {e}")
+        if config.is_windows or config.is_ci:
+            logger.error(f"Failed to initialize services: {e}")
+        else:
+            logger.error(f"❌ Failed to initialize services: {e}")
         raise
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Clean up services on application shutdown."""
-    logger.info("🔄 Shutting down application services...")
+    if config.is_windows or config.is_ci:
+        logger.info("Shutting down application services...")
+    else:
+        logger.info("🔄 Shutting down application services...")
     
     try:
         # Close PostgreSQL connections
         await close_postgres_client()
-        logger.info("✅ PostgreSQL client closed")
-        
-        logger.info("👋 Application shutdown complete")
+        if config.is_windows or config.is_ci:
+            logger.info("PostgreSQL client closed")
+            logger.info("Application shutdown complete")
+        else:
+            logger.info("✅ PostgreSQL client closed")
+            logger.info("👋 Application shutdown complete")
         
     except Exception as e:
-        logger.error(f"❌ Error during shutdown: {e}")
+        if config.is_windows or config.is_ci:
+            logger.error(f"Error during shutdown: {e}")
+        else:
+            logger.error(f"❌ Error during shutdown: {e}")

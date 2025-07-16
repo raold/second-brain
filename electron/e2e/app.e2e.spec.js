@@ -5,7 +5,10 @@ let app, page;
 
 describe('Electron Voice LLM App', () => {
   beforeAll(async () => {
-    app = await electron.launch({ args: ['.'] });
+    app = await electron.launch({ 
+      args: ['.', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      env: process.env,
+    });
     page = await app.firstWindow();
   });
   afterAll(async () => {

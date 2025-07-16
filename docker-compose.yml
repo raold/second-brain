@@ -9,6 +9,7 @@ services:
       - ./:/app
     depends_on:
       - qdrant
+      - postgres
     networks:
       - app-net
     restart: unless-stopped
@@ -51,13 +52,15 @@ services:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_USER: brain
-      POSTGRES_PASSWORD: brainpw
-      POSTGRES_DB: brain
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: secondbrain
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-net
 
 networks:
   app-net:
