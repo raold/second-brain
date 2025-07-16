@@ -337,4 +337,4 @@ make lint
 ## 🔒 Security Vulnerabilities
 
 Please report any security vulnerabilities **privately** via [security@oldham.io](mailto:security@oldham.io).  
-Do **not** open public issues for security concerns — see [SECURITY.md](./SECURITY.md) for full details.
+Do **not** open public issues for security concerns — see [SECURITY.md](./docs/SECURITY.md) for full details.
