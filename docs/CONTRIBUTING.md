@@ -1,6 +1,6 @@
 # Contributing to LLM Output Processor
 
-First off, thanks for your interest in contributing! 🎉
+Thanks for your interest in contributing! 🎉
 
 We welcome contributions of all kinds — bug fixes, new features, documentation, and tests.
 
