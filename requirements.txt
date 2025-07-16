@@ -26,7 +26,9 @@ cachetools>=5.3.3
 
 PyPDF2  # For PDF plugins (optional, required for PDF features)
 sqlalchemy>=2.0
+alembic>=1.13.0
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.0
 prometheus_client
-asyncpg
 python-multipart
 aiohttp

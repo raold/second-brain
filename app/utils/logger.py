@@ -14,3 +14,8 @@ fh = logging.FileHandler(log_path)
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 fh.setFormatter(formatter)
 logger.addHandler(fh)
+
+
+def get_logger():
+    """Returns the configured logger instance"""
+    return logger

@@ -16,12 +16,13 @@ from starlette.responses import Response
 from app.api.websocket import router as ws_router
 from app.config import Config
 from app.router import router
+from app.storage.postgres_client import postgres_client, close_postgres_client
 from app.utils.logger import logger
 
 app = FastAPI(
-    title="LLM Output Processor",
-    version="1.0.0",
-    description="Ingest and search semantically indexed memory"
+    title="Second Brain - AI Memory Assistant",
+    version="1.5.0",
+    description="Ingest, embed, search, and replay text semantically with PostgreSQL persistence"
 )
 
 # Correlation ID middleware
@@ -62,5 +63,36 @@ SENTRY_DSN = os.getenv("SENTRY_DSN")
 if SENTRY_DSN:
     sentry_sdk.init(dsn=SENTRY_DSN, traces_sample_rate=1.0)
 
-logger.info("🚀 LLM Output Processor ready")
-logger.info(f"Loaded Config: {Config.summary()}")
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on application startup."""
+    logger.info("🔄 Initializing application services...")
+    
+    try:
+        # Initialize PostgreSQL client
+        await postgres_client.initialize()
+        logger.info("✅ PostgreSQL client initialized")
+        
+        logger.info("🚀 Second Brain - AI Memory Assistant ready")
+        logger.info(f"Loaded Config: {Config.summary()}")
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize services: {e}")
+        raise
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up services on application shutdown."""
+    logger.info("🔄 Shutting down application services...")
+    
+    try:
+        # Close PostgreSQL connections
+        await close_postgres_client()
+        logger.info("✅ PostgreSQL client closed")
+        
+        logger.info("👋 Application shutdown complete")
+        
+    except Exception as e:
+        logger.error(f"❌ Error during shutdown: {e}")

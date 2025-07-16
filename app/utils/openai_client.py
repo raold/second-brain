@@ -4,6 +4,7 @@ import asyncio
 import base64
 import os
 import time
+from typing import List
 
 import aiohttp
 import openai
@@ -11,30 +12,126 @@ from cachetools import LRUCache, cached
 
 from app.config import Config
 from app.utils.logger import logger
+from app.utils.cache import (
+    get_cache, async_cached_function, 
+    EMBEDDING_CACHE_CONFIG, CacheConfig
+)
 
-# LRU cache for embeddings (up to 1000 unique texts)
-_embedding_cache = LRUCache(maxsize=1000)
+# Enhanced embedding cache with TTL and metrics
+_embedding_cache = get_cache("embeddings", EMBEDDING_CACHE_CONFIG)
 
 # Prometheus metrics
 try:
     from prometheus_client import Counter, Histogram
-    embedding_cache_hit = Counter('embedding_cache_hit', 'Embedding cache hits')
-    embedding_cache_miss = Counter('embedding_cache_miss', 'Embedding cache misses')
     embedding_latency = Histogram('embedding_latency_seconds', 'Embedding generation latency (seconds)')
+    openai_api_calls = Counter('openai_api_calls_total', 'OpenAI API calls', ['endpoint', 'status'])
 except ImportError:
-    embedding_cache_hit = embedding_cache_miss = embedding_latency = None
+    embedding_latency = openai_api_calls = None
 
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "demo-key")
 ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
 
-@cached(_embedding_cache, key=lambda text, client=None, model=None: (text, model or "default"))
-def get_openai_embedding(text: str, client=None, model: str = None):
+def _validate_embedding_input(text: str) -> None:
     """
-    Get embedding for text, using OpenAI API. Uses LRU cache for repeated texts.
+    Validate input text for embedding generation.
+    
+    Args:
+        text: Text to validate
+        
+    Raises:
+        ValueError: If text is invalid
+    """
+    if not text or not isinstance(text, str):
+        raise ValueError("Text must be a non-empty string")
+    
+    if len(text.strip()) == 0:
+        raise ValueError("Text cannot be empty or whitespace only")
+    
+    # Check for reasonable length limits
+    if len(text) > 100000:  # 100k characters
+        raise ValueError("Text too long for embedding generation")
+
+def _preprocess_text_for_embedding(text: str) -> str:
+    """
+    Preprocess text before sending to embedding API.
+    
+    Args:
+        text: Input text
+        
+    Returns:
+        Preprocessed text
+    """
+    # Strip whitespace and normalize
+    processed = text.strip()
+    
+    # Remove excessive whitespace
+    import re
+    processed = re.sub(r'\s+', ' ', processed)
+    
+    return processed
+
+def _call_openai_embedding_api(text: str, client, model: str = None):
+    """
+    Make the actual API call to OpenAI embeddings endpoint.
     
     Args:
         text: Text to embed
-        openai_client: Optional OpenAI client instance
+        client: OpenAI client instance
+        model: Optional model override
+        
+    Returns:
+        Raw OpenAI API response
+        
+    Raises:
+        Exception: If API call fails
+    """
+    model = model or Config.OPENAI_EMBEDDING_MODEL
+    logger.debug(f"Generating embedding: input_length={len(text)}, model={model}")
+    
+    # Use the provided client or the global openai module
+    client = client or openai
+    return client.embeddings.create(
+        input=text,
+        model=model
+    )
+
+def _validate_embedding_response(response) -> List[float]:
+    """
+    Validate and extract embedding from OpenAI API response.
+    
+    Args:
+        response: OpenAI API response
+        
+    Returns:
+        List of embedding values
+        
+    Raises:
+        ValueError: If response is invalid
+    """
+    if not hasattr(response, 'data') or not response.data:
+        raise ValueError("Invalid embedding response: no data field")
+    
+    if len(response.data) == 0:
+        raise ValueError("Invalid embedding response: empty data")
+    
+    embedding = response.data[0].embedding
+    if not embedding or not isinstance(embedding, list):
+        raise ValueError("Invalid embedding response: invalid embedding field")
+    
+    # Validate embedding dimensions
+    if len(embedding) != Config.QDRANT_VECTOR_SIZE:
+        raise ValueError(f"Embedding dimension mismatch: got {len(embedding)}, expected {Config.QDRANT_VECTOR_SIZE}")
+    
+    return embedding
+
+def get_openai_embedding(text: str, client=None, model: str = None):
+    """
+    Get embedding for text, using OpenAI API. Uses advanced LRU cache with TTL.
+    
+    Args:
+        text: Text to embed
+        client: Optional OpenAI client instance
+        model: Optional model override
         
     Returns:
         List of embedding values
@@ -43,54 +140,38 @@ def get_openai_embedding(text: str, client=None, model: str = None):
         ValueError: If text is invalid
         Exception: If API call fails after retries
     """
-    cache_key = (text, model or "default")
-    if cache_key in _embedding_cache:
-        if embedding_cache_hit:
-            embedding_cache_hit.inc()
-        return _embedding_cache[cache_key]
-    if embedding_cache_miss:
-        embedding_cache_miss.inc()
+    # Generate cache key
+    cache_key = f"{text}::{model or 'default'}"
+    
+    # Check cache first
+    cached_result = _embedding_cache.get(cache_key)
+    if cached_result is not None:
+        logger.debug(f"Embedding cache hit for text length: {len(text)}")
+        return cached_result
+    
     start_time = time.time()
     
-    # Validate input
-    if not text or not isinstance(text, str):
-        raise ValueError("Text must be a non-empty string")
-    
-    if len(text.strip()) == 0:
-        raise ValueError("Text cannot be empty or whitespace only")
-    
-    # Truncate text if too long (OpenAI has limits)
-    max_length = 8192  # Conservative limit for embedding models
-    if len(text) > max_length:
-        logger.warning(f"Text truncated from {len(text)} to {max_length} characters")
-        text = text[:max_length]
-    
-    logger.debug(f"Generating embedding: input_length={len(text)}, model={Config.OPENAI_EMBEDDING_MODEL}")
-
     try:
-        # Use the provided client or the global openai module
-        client = client or openai
-        response = client.embeddings.create(
-            input=text,
-            model=Config.OPENAI_EMBEDDING_MODEL
-        )
+        # Validate input
+        _validate_embedding_input(text)
         
-        # Validate response
-        if not response or not hasattr(response, "data"):
-            raise ValueError("Invalid response from OpenAI API")
+        # Preprocess text
+        processed_text = _preprocess_text_for_embedding(text)
         
-        if not response.data or len(response.data) == 0:
-            raise ValueError("No embedding data in response")
+        # Make API call
+        response = _call_openai_embedding_api(processed_text, client, model)
         
-        embedding = response.data[0].embedding
+        # Record API call metric
+        if openai_api_calls:
+            openai_api_calls.labels(endpoint='embeddings', status='success').inc()
         
-        # Validate embedding
-        if not embedding or not isinstance(embedding, list):
-            raise ValueError("Invalid embedding format in response")
+        # Validate and extract embedding
+        embedding = _validate_embedding_response(response)
         
-        if len(embedding) != Config.QDRANT_VECTOR_SIZE:
-            logger.warning(f"Embedding size {len(embedding)} doesn't match expected size {Config.QDRANT_VECTOR_SIZE}")
+        # Store in cache
+        _embedding_cache.set(cache_key, embedding)
         
+        # Log performance metrics
         if embedding_latency:
             embedding_latency.observe(time.time() - start_time)
         duration = time.time() - start_time
@@ -99,9 +180,38 @@ def get_openai_embedding(text: str, client=None, model: str = None):
         return embedding
         
     except Exception as e:
+        # Record API failure metric
+        if openai_api_calls:
+            openai_api_calls.labels(endpoint='embeddings', status='error').inc()
+            
         duration = time.time() - start_time
         logger.error(f"Failed to generate embedding after {duration:.2f}s: {str(e)}")
         raise
+
+# Async version of embedding function
+async def get_openai_embedding_async(text: str, client=None, model: str = None):
+    """
+    Async version of get_openai_embedding for better performance in async contexts.
+    """
+    # For now, we'll run the sync version in a thread pool
+    # Future enhancement could implement true async OpenAI client
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, get_openai_embedding, text, client, model)
+
+def get_openai_client():
+    """
+    Get configured OpenAI client instance.
+    
+    Returns:
+        OpenAI client instance
+        
+    Raises:
+        ValueError: If API key is not configured
+    """
+    if not Config.OPENAI_API_KEY:
+        raise ValueError("OpenAI API key not configured")
+    
+    return openai.OpenAI(api_key=Config.OPENAI_API_KEY)
 
 async def get_openai_stream(prompt: str):
     """

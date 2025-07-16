@@ -10,6 +10,32 @@ from app.utils.logger import get_logger
 
 logger = get_logger()
 
+def _write_to_markdown_file(filename: str, content: str, data_dir: str = None) -> bool:
+    """
+    Shared utility to write content to a markdown file.
+    
+    Args:
+        filename: Name of the markdown file (e.g., "tasks.md")
+        content: Content to append to the file
+        data_dir: Optional data directory path
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        import os
+        data_dir = data_dir or os.getenv("DATA_DIR", "./data")
+        path = Path(data_dir) / filename
+        path.parent.mkdir(parents=True, exist_ok=True)
+        
+        with path.open("a", encoding="utf-8") as f:
+            f.write(content)
+        
+        return True
+    except Exception as e:
+        logger.exception(f"Failed to write to {filename}: {str(e)}")
+        return False
+
 def dispatch_payload(payload: Payload) -> Optional[Dict[str, Any]]:
     """
     Dispatch payload to appropriate handler based on intent.
@@ -127,16 +153,12 @@ def store_task(payload: Payload) -> Optional[Dict[str, Any]]:
         timestamp = payload.data.get("timestamp", datetime.datetime.now().isoformat())
         task_line = f"- [ ] {note}  \n  – created: {timestamp}\n"
 
-        import os
-        data_dir = os.getenv("DATA_DIR", "./data")
-        path = Path(data_dir) / "tasks.md"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        
-        with path.open("a", encoding="utf-8") as f:
-            f.write(task_line)
-
-        logger.info(f"Task stored: {note}")
-        return {"status": "success", "type": "task", "content": note}
+        success = _write_to_markdown_file("tasks.md", task_line)
+        if success:
+            logger.info(f"Task stored: {note}")
+            return {"status": "success", "type": "task", "content": note}
+        else:
+            return {"status": "error", "message": "Failed to write task file"}
         
     except Exception as e:
         logger.exception(f"Failed to store task for payload {payload.id}: {str(e)}")
@@ -163,16 +185,12 @@ def store_bookmark(payload: Payload) -> Optional[Dict[str, Any]]:
         timestamp = payload.data.get("timestamp", datetime.datetime.now().isoformat())
         entry = f"- [{note}]({url})  \n  – saved: {timestamp}\n"
 
-        import os
-        data_dir = os.getenv("DATA_DIR", "./data")
-        path = Path(data_dir) / "bookmarks.md"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        
-        with path.open("a", encoding="utf-8") as f:
-            f.write(entry)
-
-        logger.info(f"Bookmark stored: {note} => {url}")
-        return {"status": "success", "type": "bookmark", "note": note, "url": url}
+        success = _write_to_markdown_file("bookmarks.md", entry)
+        if success:
+            logger.info(f"Bookmark stored: {note} => {url}")
+            return {"status": "success", "type": "bookmark", "note": note, "url": url}
+        else:
+            return {"status": "error", "message": "Failed to write bookmark file"}
         
     except Exception as e:
         logger.exception(f"Failed to store bookmark for payload {payload.id}: {str(e)}")
