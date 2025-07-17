@@ -291,7 +291,6 @@ make lint
 
 ## 📚 Documentation
 
-<<<<<<< HEAD
 - [**CI Caching Strategy**](./docs/CI_CACHING.md) — How CI/CD caching works and how to optimize builds
 - [**Environment Variables**](./docs/ENVIRONMENT_VARIABLES.md) — All environment configuration options
 - [**Deployment Guide**](./docs/DEPLOYMENT.md) — How to deploy in production and staging
@@ -299,11 +298,10 @@ make lint
 - [**Usage Examples**](./docs/USAGE.md) — Example API requests and usage patterns
 - [**Contributing Guidelines**](./docs/CONTRIBUTING.md) — How to contribute to this project
 - [**Testing Guide**](./docs/TESTING.md) — How to run and extend tests, and our mocking approach
-=======
+
 - [**Architecture Overview**](./docs/ARCHITECTURE.md) — System design and architecture
 - [**Deployment Guide**](./docs/DEPLOYMENT.md) — How to deploy in production and staging  
 - [**Usage Examples**](./docs/USAGE.md) — Example API requests and usage patterns
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 ## 📋 Resources
 
@@ -318,16 +316,13 @@ make lint
 
 ### 🛠️ Development
 - [**Contributing Guidelines**](./docs/CONTRIBUTING.md) - How to contribute to the project
-=======
 
 ### 🛠️ Development
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 - [**Makefile**](./Makefile) - Development commands and shortcuts
 - [**Requirements**](./requirements.txt) - Python dependencies
 - [**Docker Configuration**](./Dockerfile) - Container setup
 
 ### 🔒 Security & Legal
-<<<<<<< HEAD
 - [**Security Policy**](./docs/SECURITY.md) - Security vulnerabilities and reporting
 - [**License**](./docs/LICENSE) - AGPLv3 license terms
 - [**Changelog**](./docs/CHANGELOG.md) - Release history and changes
