@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from app.database import get_database
 from app.database_mock import MockDatabase
+from app.version import get_version_info
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -105,7 +106,14 @@ app.add_middleware(
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "healthy", "service": "second-brain"}
+    version_info = get_version_info()
+    return {
+        "status": "healthy", 
+        "service": "second-brain",
+        "version": version_info["version"],
+        "build": version_info["build"],
+        "api_version": version_info["api_version"]
+    }
 
 
 # Database and index status
