@@ -1,8 +1,15 @@
+<<<<<<< HEAD
+=======
+/**
+ * @jest-environment jsdom
+ */
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 const { JSDOM } = require('jsdom');
 
 describe('Settings Panel', () => {
   let window, document;
   beforeEach(() => {
+<<<<<<< HEAD
     const dom = new JSDOM(`<!DOCTYPE html><input id='apiKeyInput'><input id='chunkSizeInput'><input id='pauseInput'><select id='voiceSelect'></select>`);
     window = dom.window;
     document = window.document;
@@ -12,6 +19,15 @@ describe('Settings Panel', () => {
   afterEach(() => {
     delete global.document;
     delete global.localStorage;
+=======
+    const dom = new JSDOM(`<!DOCTYPE html><input id='apiKeyInput'><input id='chunkSizeInput'><input id='pauseInput'><select id='voiceSelect'></select>`, { url: 'http://localhost/' });
+    window = dom.window;
+    document = window.document;
+    global.document = document;
+  });
+  afterEach(() => {
+    delete global.document;
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
   });
   it('should save and load settings', () => {
     document.getElementById('apiKeyInput').value = 'test-key';

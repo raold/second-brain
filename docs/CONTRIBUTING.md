@@ -1,6 +1,10 @@
 # Contributing to LLM Output Processor
 
+<<<<<<< HEAD
 First off, thanks for your interest in contributing! 🎉
+=======
+Thanks for your interest in contributing! 🎉
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 We welcome contributions of all kinds — bug fixes, new features, documentation, and tests.
 
@@ -55,4 +59,8 @@ docs: update README for local dev instructions
 ## Support & Questions
 
 - For bugs or feature requests, open an [issue](https://github.com/raold/second-brain/issues).
+<<<<<<< HEAD
 - For discussions, ideas, or help, join our Discord. 
+=======
+- For discussions, ideas, or help, join our Discord. 
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01

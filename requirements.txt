@@ -29,3 +29,9 @@ sqlalchemy>=2.0
 prometheus_client
 asyncpg
 python-multipart
+aiohttp
+alembic>=1.13.0
+asyncio>=3.4.3
+psutil>=5.9.0
+humanize>=4.0.0
+plyer>=2.1

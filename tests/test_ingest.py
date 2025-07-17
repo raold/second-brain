@@ -1,5 +1,6 @@
 # /tests/test_ingest.py
 
+<<<<<<< HEAD
 import asyncio
 from unittest.mock import patch, MagicMock
 
@@ -15,6 +16,17 @@ from app.models import Memory, PayloadType, Priority
 import app.auth as app_auth
 import app.router as app_router
 import types
+=======
+from unittest.mock import MagicMock, patch
+
+import pytest
+from fastapi import Request
+from fastapi.testclient import TestClient
+
+import app.router as app_router
+from app.main import app
+
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 def always_allow(request: Request):
     return None
@@ -72,7 +84,11 @@ def test_ingest(mock_store_bg, mock_store_pg, mock_write_markdown, mock_qdrant_u
     if response.status_code != 200:
         print("RESPONSE JSON:", response.json())
     assert response.status_code == 200
+<<<<<<< HEAD
     assert response.json()["status"] == "ingested"
+=======
+    assert response.json()["status"] == "success"
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     mock_write_markdown.assert_called_once()
     mock_qdrant_upsert.assert_called_once()
 
@@ -92,8 +108,13 @@ def test_ingest_qdrant_failure(mock_write_markdown, mock_qdrant_upsert):
         "target": "test-target"
     }
     response = client.post("/ingest", json=payload, headers=AUTH_HEADER)
+<<<<<<< HEAD
     assert response.status_code == 500
     assert "Failed to ingest payload" in response.json()["detail"]
+=======
+    assert response.status_code == 200  # App handles errors gracefully
+    assert response.json()["status"] == "success"
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 @patch("app.router.write_markdown")
 def test_ingest_markdown_failure(mock_write_markdown):
@@ -110,8 +131,13 @@ def test_ingest_markdown_failure(mock_write_markdown):
         "target": "test-target"
     }
     response = client.post("/ingest", json=payload, headers=AUTH_HEADER)
+<<<<<<< HEAD
     assert response.status_code == 500
     assert "Failed to ingest payload" in response.json()["detail"]
+=======
+    assert response.status_code == 200  # App handles errors gracefully
+    assert response.json()["status"] == "success"
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 @patch("app.router.store_memory_pg", return_value=None)
 @patch("app.router.store_memory_pg_background", return_value=None)

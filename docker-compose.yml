@@ -13,8 +13,8 @@ services:
       - app-net
     restart: unless-stopped
     environment:
-      APP_ENV: ci
-      API_TOKENS: test-token
+      APP_ENV: ${APP_ENV:-development}
+      API_TOKENS: ${API_TOKENS:-default_token}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -51,9 +51,9 @@ services:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_USER: brain
-      POSTGRES_PASSWORD: brainpw
-      POSTGRES_DB: brain
+      POSTGRES_USER: ${POSTGRES_USER:-brain}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-brain}
     ports:
       - "5432:5432"
     volumes:

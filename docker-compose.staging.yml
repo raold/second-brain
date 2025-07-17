@@ -1,8 +1,15 @@
 services:
+<<<<<<< HEAD
   llm-output-processor:
     build: .
     container_name: llm_output_processor_staging
     image: ${DOCKER_REGISTRY:-localhost}/llm-output-processor:staging-latest
+=======
+  second-brain:
+    build: .
+    container_name: second_brain_staging
+    image: ${DOCKER_REGISTRY:-localhost}/second-brain:staging-latest
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     ports:
       - "8001:8000"  # Different port for staging
     depends_on:

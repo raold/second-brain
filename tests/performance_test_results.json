@@ -1,0 +1,657 @@
+{
+  "timestamp": 1752701605.2346883,
+  "tests_passed": 6,
+  "tests_failed": 1,
+  "results": {
+    "health": {
+      "status": "passed",
+      "data": {
+        "status": "ok",
+        "timestamp": "2025-07-16T17:33:25.512714",
+        "version": "1.5.0",
+        "services": {
+          "postgresql": {
+            "status": "healthy",
+            "database_time": "2025-07-16T21:33:25.509079+00:00",
+            "total_memories": 3,
+            "active_memories": 3,
+            "total_searches": 0,
+            "connection_pool": {
+              "size": 20,
+              "checked_out": 1,
+              "overflow": -19,
+              "checked_in": 0
+            },
+            "query_time_ms": 6.03,
+            "timestamp": "2025-07-16T21:33:25.506681+00:00"
+          },
+          "qdrant": "ok"
+        }
+      }
+    },
+    "performance": {
+      "status": "passed",
+      "data": {
+        "timestamp": "2025-07-16T21:33:25.515759+00:00",
+        "system_health_score": 30.0,
+        "cache_performance": {
+          "embeddings": {
+            "name": "embeddings",
+            "size": 0,
+            "max_size": 2000,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 3600,
+            "total_requests": 0
+          },
+          "postgres_queries": {
+            "name": "postgres_queries",
+            "size": 0,
+            "max_size": 500,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 300,
+            "total_requests": 0
+          },
+          "postgres_memories": {
+            "name": "postgres_memories",
+            "size": 0,
+            "max_size": 5000,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 1800,
+            "total_requests": 0
+          },
+          "postgres_analytics": {
+            "name": "postgres_analytics",
+            "size": 0,
+            "max_size": 100,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 60,
+            "total_requests": 0
+          },
+          "smart_dual_storage": {
+            "name": "smart_dual_storage",
+            "size": 0,
+            "max_size": 1000,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 600,
+            "total_requests": 0
+          },
+          "intent_detection": {
+            "name": "intent_detection",
+            "size": 0,
+            "max_size": 500,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 3600,
+            "total_requests": 0
+          },
+          "smart_qdrant_search": {
+            "name": "smart_qdrant_search",
+            "size": 0,
+            "max_size": 1000,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 300,
+            "total_requests": 0
+          },
+          "qdrant_vectors": {
+            "name": "qdrant_vectors",
+            "size": 0,
+            "max_size": 500,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 1800,
+            "total_requests": 0
+          },
+          "qdrant_collection_info": {
+            "name": "qdrant_collection_info",
+            "size": 0,
+            "max_size": 10,
+            "hit_count": 0,
+            "miss_count": 3,
+            "hit_rate_percent": 0.0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 300,
+            "total_requests": 3
+          },
+          "_summary": {
+            "total_caches": 9,
+            "total_size": 0,
+            "total_hits": 0,
+            "total_misses": 3,
+            "overall_hit_rate_percent": 0.0,
+            "total_requests": 3
+          }
+        },
+        "database_performance": {
+          "postgresql": {
+            "health": {
+              "status": "healthy",
+              "database_time": "2025-07-16T21:33:25.509079+00:00",
+              "total_memories": 3,
+              "active_memories": 3,
+              "total_searches": 0,
+              "connection_pool": {
+                "size": 20,
+                "checked_out": 1,
+                "overflow": -19,
+                "checked_in": 0
+              },
+              "query_time_ms": 6.03,
+              "timestamp": "2025-07-16T21:33:25.506681+00:00"
+            },
+            "cache_statistics": {
+              "query_cache": {
+                "name": "postgres_queries",
+                "size": 0,
+                "max_size": 500,
+                "hit_count": 0,
+                "miss_count": 0,
+                "hit_rate_percent": 0,
+                "eviction_count": 0,
+                "last_eviction": null,
+                "ttl_seconds": 300,
+                "total_requests": 0
+              },
+              "memory_cache": {
+                "name": "postgres_memories",
+                "size": 0,
+                "max_size": 5000,
+                "hit_count": 0,
+                "miss_count": 0,
+                "hit_rate_percent": 0,
+                "eviction_count": 0,
+                "last_eviction": null,
+                "ttl_seconds": 1800,
+                "total_requests": 0
+              },
+              "analytics_cache": {
+                "name": "postgres_analytics",
+                "size": 0,
+                "max_size": 100,
+                "hit_count": 0,
+                "miss_count": 0,
+                "hit_rate_percent": 0,
+                "eviction_count": 0,
+                "last_eviction": null,
+                "ttl_seconds": 60,
+                "total_requests": 0
+              }
+            },
+            "connection_pool": {
+              "size": 20,
+              "checked_out": 1,
+              "overflow": -19,
+              "checked_in": 0
+            }
+          },
+          "qdrant": {
+            "status": "unhealthy",
+            "error": "'QdrantClient' object has no attribute 'get_cluster'",
+            "timestamp": "2025-07-16T17:33:25.515759",
+            "cache_statistics": {
+              "search_cache": {
+                "name": "smart_qdrant_search",
+                "size": 0,
+                "max_size": 1000,
+                "hit_count": 0,
+                "miss_count": 0,
+                "hit_rate_percent": 0,
+                "eviction_count": 0,
+                "last_eviction": null,
+                "ttl_seconds": 300,
+                "total_requests": 0
+              },
+              "vector_cache": {
+                "name": "qdrant_vectors",
+                "size": 0,
+                "max_size": 500,
+                "hit_count": 0,
+                "miss_count": 0,
+                "hit_rate_percent": 0,
+                "eviction_count": 0,
+                "last_eviction": null,
+                "ttl_seconds": 1800,
+                "total_requests": 0
+              },
+              "collection_info_cache": {
+                "name": "qdrant_collection_info",
+                "size": 0,
+                "max_size": 10,
+                "hit_count": 0,
+                "miss_count": 4,
+                "hit_rate_percent": 0.0,
+                "eviction_count": 0,
+                "last_eviction": null,
+                "ttl_seconds": 300,
+                "total_requests": 4
+              }
+            },
+            "performance_optimizations": {
+              "grpc_enabled": true,
+              "connection_timeout": 30,
+              "search_cache_ttl": 300,
+              "smart_eviction": true
+            }
+          }
+        },
+        "storage_performance": {
+          "dual_storage_cache": {
+            "name": "smart_dual_storage",
+            "size": 0,
+            "max_size": 1000,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 600,
+            "total_requests": 0
+          },
+          "intent_detection_cache": {
+            "name": "intent_detection",
+            "size": 0,
+            "max_size": 500,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 3600,
+            "total_requests": 0
+          },
+          "storage_success_rates": {
+            "markdown": {
+              "success_count": 0,
+              "total_count": 0,
+              "success_rate": 0.0
+            },
+            "postgres": {
+              "success_count": 0,
+              "total_count": 0,
+              "success_rate": 0.0
+            }
+          },
+          "configuration": {
+            "postgres_enabled": true,
+            "markdown_enabled": true,
+            "cache_enabled": true,
+            "async_operations": true
+          }
+        },
+        "optimizations_enabled": {
+          "lru_caching": true,
+          "connection_pooling": true,
+          "smart_eviction": true,
+          "async_operations": true,
+          "query_result_caching": true,
+          "embedding_caching": true,
+          "intent_detection_caching": true,
+          "grpc_enabled": true
+        },
+        "recommendations": [
+          "Consider increasing cache sizes and TTL values for better hit rates",
+          "Check Qdrant service health and connectivity",
+          "Investigate PostgreSQL storage failures"
+        ]
+      }
+    },
+    "cache": {
+      "status": "passed",
+      "data": {
+        "cache_statistics": {
+          "embeddings": {
+            "name": "embeddings",
+            "size": 0,
+            "max_size": 2000,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 3600,
+            "total_requests": 0
+          },
+          "postgres_queries": {
+            "name": "postgres_queries",
+            "size": 0,
+            "max_size": 500,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 300,
+            "total_requests": 0
+          },
+          "postgres_memories": {
+            "name": "postgres_memories",
+            "size": 0,
+            "max_size": 5000,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 1800,
+            "total_requests": 0
+          },
+          "postgres_analytics": {
+            "name": "postgres_analytics",
+            "size": 0,
+            "max_size": 100,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 60,
+            "total_requests": 0
+          },
+          "smart_dual_storage": {
+            "name": "smart_dual_storage",
+            "size": 0,
+            "max_size": 1000,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 600,
+            "total_requests": 0
+          },
+          "intent_detection": {
+            "name": "intent_detection",
+            "size": 0,
+            "max_size": 500,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 3600,
+            "total_requests": 0
+          },
+          "smart_qdrant_search": {
+            "name": "smart_qdrant_search",
+            "size": 0,
+            "max_size": 1000,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 300,
+            "total_requests": 0
+          },
+          "qdrant_vectors": {
+            "name": "qdrant_vectors",
+            "size": 0,
+            "max_size": 500,
+            "hit_count": 0,
+            "miss_count": 0,
+            "hit_rate_percent": 0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 1800,
+            "total_requests": 0
+          },
+          "qdrant_collection_info": {
+            "name": "qdrant_collection_info",
+            "size": 0,
+            "max_size": 10,
+            "hit_count": 0,
+            "miss_count": 4,
+            "hit_rate_percent": 0.0,
+            "eviction_count": 0,
+            "last_eviction": null,
+            "ttl_seconds": 300,
+            "total_requests": 4
+          },
+          "_summary": {
+            "total_caches": 9,
+            "total_size": 0,
+            "total_hits": 0,
+            "total_misses": 4,
+            "overall_hit_rate_percent": 0.0,
+            "total_requests": 4
+          }
+        },
+        "analysis": {
+          "total_cache_hit_rate": 0.0,
+          "cache_efficiency": {
+            "overall_efficiency": "poor",
+            "issues": [
+              "Low cache hit rate: 0.0%",
+              "embeddings cache has low hit rate: 0.0%",
+              "postgres_queries cache has low hit rate: 0.0%",
+              "postgres_memories cache has low hit rate: 0.0%",
+              "postgres_analytics cache has low hit rate: 0.0%",
+              "smart_dual_storage cache has low hit rate: 0.0%",
+              "intent_detection cache has low hit rate: 0.0%",
+              "smart_qdrant_search cache has low hit rate: 0.0%",
+              "qdrant_vectors cache has low hit rate: 0.0%",
+              "qdrant_collection_info cache has low hit rate: 0.0%"
+            ],
+            "strengths": []
+          },
+          "recommendations": [
+            "Consider increasing cache sizes for frequently accessed data",
+            "Review cache TTL settings - may be too short",
+            "Investigate cache key generation - may have too much variation",
+            "Consider implementing cache warming strategies"
+          ],
+          "timestamp": "2025-07-16T21:33:25.517759+00:00"
+        }
+      }
+    },
+    "database": {
+      "status": "passed",
+      "data": {
+        "timestamp": "2025-07-16T21:33:25.520279+00:00",
+        "postgresql": {
+          "status": "healthy",
+          "health_check": {
+            "status": "healthy",
+            "database_time": "2025-07-16T21:33:25.509079+00:00",
+            "total_memories": 3,
+            "active_memories": 3,
+            "total_searches": 0,
+            "connection_pool": {
+              "size": 20,
+              "checked_out": 1,
+              "overflow": -19,
+              "checked_in": 0
+            },
+            "query_time_ms": 6.03,
+            "timestamp": "2025-07-16T21:33:25.506681+00:00"
+          },
+          "cache_performance": {
+            "query_cache": {
+              "name": "postgres_queries",
+              "size": 0,
+              "max_size": 500,
+              "hit_count": 0,
+              "miss_count": 0,
+              "hit_rate_percent": 0,
+              "eviction_count": 0,
+              "last_eviction": null,
+              "ttl_seconds": 300,
+              "total_requests": 0
+            },
+            "memory_cache": {
+              "name": "postgres_memories",
+              "size": 0,
+              "max_size": 5000,
+              "hit_count": 0,
+              "miss_count": 0,
+              "hit_rate_percent": 0,
+              "eviction_count": 0,
+              "last_eviction": null,
+              "ttl_seconds": 1800,
+              "total_requests": 0
+            },
+            "analytics_cache": {
+              "name": "postgres_analytics",
+              "size": 0,
+              "max_size": 100,
+              "hit_count": 0,
+              "miss_count": 0,
+              "hit_rate_percent": 0,
+              "eviction_count": 0,
+              "last_eviction": null,
+              "ttl_seconds": 60,
+              "total_requests": 0
+            }
+          },
+          "connection_pool_utilization": {
+            "utilization_percent": 5.0,
+            "status": "low",
+            "checked_out": 1,
+            "pool_size": 20
+          },
+          "query_performance": {
+            "avg_query_time_ms": 6.03,
+            "health": "good"
+          }
+        },
+        "qdrant": {
+          "status": "unhealthy",
+          "error": "'QdrantClient' object has no attribute 'get_cluster'",
+          "timestamp": "2025-07-16T17:33:25.520279",
+          "cache_statistics": {
+            "search_cache": {
+              "name": "smart_qdrant_search",
+              "size": 0,
+              "max_size": 1000,
+              "hit_count": 0,
+              "miss_count": 0,
+              "hit_rate_percent": 0,
+              "eviction_count": 0,
+              "last_eviction": null,
+              "ttl_seconds": 300,
+              "total_requests": 0
+            },
+            "vector_cache": {
+              "name": "qdrant_vectors",
+              "size": 0,
+              "max_size": 500,
+              "hit_count": 0,
+              "miss_count": 0,
+              "hit_rate_percent": 0,
+              "eviction_count": 0,
+              "last_eviction": null,
+              "ttl_seconds": 1800,
+              "total_requests": 0
+            },
+            "collection_info_cache": {
+              "name": "qdrant_collection_info",
+              "size": 0,
+              "max_size": 10,
+              "hit_count": 0,
+              "miss_count": 5,
+              "hit_rate_percent": 0.0,
+              "eviction_count": 0,
+              "last_eviction": null,
+              "ttl_seconds": 300,
+              "total_requests": 5
+            }
+          },
+          "performance_optimizations": {
+            "grpc_enabled": true,
+            "connection_timeout": 30,
+            "search_cache_ttl": 300,
+            "smart_eviction": true
+          },
+          "performance_analysis": {
+            "status": "poor",
+            "issues": [
+              "Qdrant is not healthy",
+              "Low search cache hit rate"
+            ],
+            "optimizations": [
+              "Consider adjusting search cache TTL",
+              "gRPC enabled for better performance"
+            ]
+          }
+        },
+        "overall_status": "partial"
+      }
+    },
+    "recommendations": {
+      "status": "passed",
+      "data": {
+        "timestamp": "2025-07-16T21:33:25.523020+00:00",
+        "cache_recommendations": [
+          "Consider increasing cache sizes for frequently accessed data",
+          "Review cache TTL settings - may be too short",
+          "Investigate cache key generation - may have too much variation",
+          "Consider implementing cache warming strategies"
+        ],
+        "database_recommendations": [
+          "PostgreSQL connection issues detected - check database availability",
+          "Qdrant connection issues detected - check vector database availability"
+        ],
+        "storage_recommendations": [
+          "PostgreSQL storage success rate is 0.0% - investigate failures",
+          "Markdown storage success rate is 0.0% - check file system permissions",
+          "Dual storage cache hit rate is low - consider increasing cache size or TTL"
+        ],
+        "system_recommendations": [
+          "System health score is below optimal - review individual component recommendations",
+          "Critical: System performance is poor - immediate attention required",
+          "Consider scaling resources or optimizing configuration",
+          "Implement cache warming strategies for frequently accessed data"
+        ],
+        "priority_actions": [
+          {
+            "priority": "high",
+            "action": "Optimize cache configuration",
+            "impact": "Poor cache performance affecting response times"
+          }
+        ]
+      }
+    },
+    "memory_operations": {
+      "status": "failed",
+      "error": "Search failed: 500"
+    },
+    "cache_clearing": {
+      "status": "passed",
+      "data": {
+        "status": "success",
+        "message": "All caches have been cleared",
+        "timestamp": "2025-07-16T21:33:25.856576+00:00"
+      }
+    }
+  }
+}

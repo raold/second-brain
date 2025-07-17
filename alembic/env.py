@@ -1,9 +1,24 @@
+<<<<<<< HEAD
+=======
+import os
+import sys
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
+<<<<<<< HEAD
+=======
+# Add the project root to the Python path
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+# Import our models and config
+from app.config import POSTGRES_DB, POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER
+from app.storage.postgres_client import Base
+
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -13,11 +28,21 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+<<<<<<< HEAD
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 target_metadata = None
+=======
+# Set the database URL from our configuration (use psycopg2 for migrations)
+database_url = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+config.set_main_option("sqlalchemy.url", database_url)
+
+# add your model's MetaData object here
+# for 'autogenerate' support
+target_metadata = Base.metadata
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

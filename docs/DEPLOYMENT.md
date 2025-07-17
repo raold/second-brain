@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Deployment Instructions for llm_output_processor
+=======
+# Deployment Instructions for second-brain
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 ## Prerequisites
 - Docker and Docker Compose installed
@@ -10,7 +14,11 @@
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/raold/second-brain.git
+<<<<<<< HEAD
 cd llm_output_processor_v1.0
+=======
+cd second-brain
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 ```
 
 ### 2. Configure Environment Variables
@@ -36,7 +44,11 @@ Expected output:
 
 ## Services
 
+<<<<<<< HEAD
 ### llm_output_processor
+=======
+### second_brain
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 - Hosts the FastAPI application.
 - Exposes API on port 8000.
 
@@ -48,7 +60,11 @@ Expected output:
 
 ## Directory Structure
 ```
+<<<<<<< HEAD
 llm_output_processor_v1.0/
+=======
+second-brain/
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 ├── app/
 ├── logs/
 ├── qdrant_data/
@@ -72,7 +88,11 @@ docker compose logs -f
 
 ### Enter the app container
 ```bash
+<<<<<<< HEAD
 docker exec -it llm_output_processor /bin/bash
+=======
+docker exec -it second_brain /bin/bash
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 ```
 
 ## Additional Notes

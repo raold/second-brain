@@ -5,16 +5,22 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
+<<<<<<< HEAD
 from app.config import Config
+=======
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 from app.main import app
 
 client = TestClient(app)
 
 @pytest.fixture(autouse=True)
+<<<<<<< HEAD
 def inject_test_token(monkeypatch):
     monkeypatch.setattr(Config, 'API_TOKENS', ['test-token'])
 
 @pytest.fixture(autouse=True)
+=======
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 def mock_openai_embedding():
     with patch("app.utils.openai_client.get_openai_embedding", return_value=[0.1] * 1536):
         yield

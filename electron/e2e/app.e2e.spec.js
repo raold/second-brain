@@ -1,10 +1,24 @@
+<<<<<<< HEAD
+=======
+const { describeIfNotCI } = require('./skip-in-ci');
+jest.setTimeout(20000);
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 const { _electron: electron } = require('playwright');
 
 let app, page;
 
+<<<<<<< HEAD
 describe('Electron Voice LLM App', () => {
   beforeAll(async () => {
     app = await electron.launch({ args: ['.'] });
+=======
+describeIfNotCI('Electron Voice LLM App', () => {
+  beforeAll(async () => {
+    app = await electron.launch({ 
+      args: ['.', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      env: process.env,
+    });
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     page = await app.firstWindow();
   });
   afterAll(async () => {

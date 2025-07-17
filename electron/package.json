@@ -5,6 +5,11 @@
   "description": "Electron voice assistant demo with LLM and TTS integration.",
   "scripts": {
     "test": "jest",
+<<<<<<< HEAD
+=======
+    "test:unit": "jest --testPathIgnorePatterns=e2e",
+    "test:e2e": "jest --config jest.e2e.config.js",
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     "e2e": "playwright test",
     "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx",
     "build": "electron-builder"
@@ -12,8 +17,17 @@
   "devDependencies": {
     "electron": "^29.0.0",
     "electron-builder": "^24.0.0",
+<<<<<<< HEAD
     "jest": "^29.0.0",
     "playwright": "^1.44.0",
     "eslint": "^8.0.0"
   }
 } 
+=======
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "jest-environment-jsdom": "^30.0.4",
+    "playwright": "^1.44.0"
+  }
+}
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01

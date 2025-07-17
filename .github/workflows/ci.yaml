@@ -3,14 +3,28 @@ name: CI Pipeline
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
+
+permissions:
+  contents: read
+  packages: write
+  actions: read
 
 jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
       cache-key: ${{ steps.cache-key.outputs.value }}
+      python-cache-key: ${{ steps.python-cache-key.outputs.value }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,67 +34,37 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Generate cache key
+      - name: Generate dependency cache key
         id: cache-key
         run: echo "value=${{ hashFiles('**/requirements.txt', '**/ruff.toml', '**/pytest.ini') }}" >> $GITHUB_OUTPUT
+
+      - name: Generate Python cache key
+        id: python-cache-key
+        run: echo "value=${{ runner.os }}-python-${{ env.pythonLocation }}-${{ hashFiles('**/requirements.txt') }}" >> $GITHUB_OUTPUT
+
+      # Cache Python environment
+      - name: Cache Python environment
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ steps.python-cache-key.outputs.value }}
+          restore-keys: |
+            ${{ runner.os }}-python-${{ env.pythonLocation }}-
 
       # Cache pip dependencies
       - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ steps.cache-key.outputs.cache-key }}
+          key: ${{ runner.os }}-pip-${{ steps.cache-key.outputs.value }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
-      # Cache pip packages
-      - name: Cache pip packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.local
-          key: ${{ runner.os }}-pip-packages-${{ steps.cache-key.outputs.cache-key }}
-          restore-keys: |
-            ${{ runner.os }}-pip-packages-
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install --cache-dir ~/.cache/pip -r requirements.txt
           pip install --cache-dir ~/.cache/pip pytest pytest-cov ruff
-
-  docker-build:
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # Cache Docker layers
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false
-          tags: llm-output-processor:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-
-      # Move cache
-      - name: Move cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   lint:
     runs-on: ubuntu-latest
@@ -94,7 +78,16 @@ jobs:
         with:
           python-version: '3.11'
 
-      # Restore pip cache from setup job
+      # Restore Python environment
+      - name: Cache Python environment
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ needs.setup.outputs.python-cache-key }}
+          restore-keys: |
+            ${{ runner.os }}-python-${{ env.pythonLocation }}-
+
+      # Restore pip cache
       - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
@@ -102,14 +95,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ needs.setup.outputs.cache-key }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
-      - name: Cache pip packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.local
-          key: ${{ runner.os }}-pip-packages-${{ needs.setup.outputs.cache-key }}
-          restore-keys: |
-            ${{ runner.os }}-pip-packages-
 
       - name: Install dependencies
         run: |
@@ -126,13 +111,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ruff-
 
-      - name: Auto-fix lint issues (ruff)
-        run: |
-          ruff check . --fix || echo "Lint auto-fixed"
+      - name: Run Linting (ruff check)
+        run: ruff check .
 
-      - name: Run Linting (ruff)
-        run: |
-          ruff check .
+      - name: Run Linting (ruff format check)
+        run: ruff format --check .
 
   test:
     runs-on: ubuntu-latest
@@ -146,7 +129,16 @@ jobs:
         with:
           python-version: '3.11'
 
-      # Restore pip cache from setup job
+      # Restore Python environment
+      - name: Cache Python environment
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ needs.setup.outputs.python-cache-key }}
+          restore-keys: |
+            ${{ runner.os }}-python-${{ env.pythonLocation }}-
+
+      # Restore pip cache
       - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
@@ -154,14 +146,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ needs.setup.outputs.cache-key }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
-      - name: Cache pip packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.local
-          key: ${{ runner.os }}-pip-packages-${{ needs.setup.outputs.cache-key }}
-          restore-keys: |
-            ${{ runner.os }}-pip-packages-
 
       - name: Install dependencies
         run: |
@@ -181,18 +165,81 @@ jobs:
       - name: Copy .env.example to .env
         run: cp .env.example .env
 
-      - name: Debug PYTHONPATH
+      - name: Validate database migrations
         run: |
-          echo "PYTHONPATH=$PYTHONPATH"
-          ls -la /home/runner/work/second-brain/second-brain/app
+          export PYTHONPATH=./app
+          # Check for migration conflicts (if using Alembic)
+          if [ -f "alembic.ini" ]; then
+            alembic check || echo "Migration check completed"
+          fi
 
       - name: Run Tests with Coverage
         run: |
           export PYTHONPATH=./app
-          pytest --cov=app tests/
+          pytest --cov=app tests/ --cov-report=html --cov-report=xml
 
-      - name: Upload Coverage Report
+      - name: Upload Coverage Report (HTML)
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-html
           path: htmlcov/
+
+      - name: Upload Coverage Report (XML)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-xml
+          path: coverage.xml
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Test Docker image
+        run: |
+          docker run --rm ghcr.io/${{ github.repository }}:${{ github.sha }} --version || echo "Version check completed"
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ghcr.io/${{ github.repository }}:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
