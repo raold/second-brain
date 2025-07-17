@@ -19,21 +19,30 @@ class TestIntegrationSuite:
     """Integration tests for full system functionality."""
 
     @pytest.mark.asyncio
-    async def test_version_info_integration(self):
-        """Test version information system."""
+    async def test_version_info_integration(self, client):
+        """Test version info integration across app, API, and docs."""
+        # Get version from version module
         version_info = get_version_info()
-        assert version_info["version"] == "2.2.0"
-        assert version_info["codename"] == "Performance"
-        assert version_info["api_version"] == "v1"
+        assert version_info["version"] == "2.2.3"
+        assert version_info["build"] == "stable"
+
+        # Get version from API endpoint
+        response = await client.get("/health")
+        assert response.status_code == 200
+        api_data = response.json()
+        assert api_data["version"] == "2.2.3"
+
+        # Ensure consistency across sources
+        assert version_info["version"] == api_data["version"]
 
     @pytest.mark.asyncio
     async def test_health_endpoint_with_version(self, client):
-        """Test health endpoint returns version info."""
+        """Test health endpoint returns correct version."""
         response = await client.get("/health")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert data["version"] == "2.2.0"
+        assert data["version"] == "2.2.3"
         assert "timestamp" in data
 
     @pytest.mark.asyncio

@@ -13,6 +13,7 @@ from typing import Any
 
 import httpx
 import psutil
+import pytest
 
 from app.database_mock import MockDatabase
 
@@ -432,6 +433,61 @@ async def main():
     benchmark.save_report(report)
 
     return report
+
+
+# Pytest test functions
+@pytest.mark.asyncio
+async def test_performance_benchmarking():
+    """Test that performance benchmarking functionality works."""
+    # Test basic benchmark class instantiation
+    benchmark = PerformanceBenchmark()
+    assert benchmark.base_url == "http://localhost:8000"
+    assert benchmark.api_key == "test-performance-key"
+    assert isinstance(benchmark.results, list)
+
+
+@pytest.mark.asyncio 
+async def test_benchmark_metrics_structure():
+    """Test that benchmark result structure is correct."""
+    # Create a test result
+    result = BenchmarkResult(
+        test_name="Test",
+        endpoint="/test",
+        method="GET", 
+        avg_response_time=0.1,
+        min_response_time=0.05,
+        max_response_time=0.2,
+        p95_response_time=0.15,
+        p99_response_time=0.18,
+        throughput=100.0,
+        error_rate=0.0,
+        success_rate=1.0,
+        memory_usage=50.0,
+        cpu_usage=10.0,
+        total_requests=100,
+        passed=True
+    )
+    
+    assert result.test_name == "Test"
+    assert result.avg_response_time == 0.1
+    assert result.passed == True
+
+
+@pytest.mark.asyncio
+async def test_percentile_calculation():
+    """Test percentile calculation function."""
+    benchmark = PerformanceBenchmark()
+    
+    # Test with sample data
+    data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    
+    p50 = benchmark._percentile(data, 50)
+    p95 = benchmark._percentile(data, 95)
+    p99 = benchmark._percentile(data, 99)
+    
+    assert p50 >= 5  # 50th percentile should be around middle
+    assert p95 >= 9  # 95th percentile should be near top
+    assert p99 >= 9  # 99th percentile should be near top
 
 
 if __name__ == "__main__":
