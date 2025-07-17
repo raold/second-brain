@@ -5,18 +5,19 @@ Minimal dependencies, direct database access.
 
 import logging
 import os
+import time
+import traceback
 from contextlib import asynccontextmanager
 from datetime import datetime
-import time
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
-import traceback
 from pydantic import BaseModel, Field
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.connection_pool import PoolConfig, close_pool, get_pool_manager, initialize_pool
 from app.database import get_database
 from app.database_mock import MockDatabase
 from app.docs import (
@@ -26,9 +27,8 @@ from app.docs import (
     StatusResponse,
     setup_openapi_documentation,
 )
+from app.security import SecurityConfig, SecurityManager
 from app.version import get_version_info
-from app.security import SecurityManager, SecurityConfig, get_security_manager
-from app.connection_pool import initialize_pool, close_pool, get_pool_manager, PoolConfig
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -45,7 +45,7 @@ security_config = SecurityConfig(
     max_content_length=50000,  # 50KB for larger memories
     enable_rate_limiting=True,
     enable_input_validation=True,
-    enable_security_headers=True
+    enable_security_headers=True,
 )
 
 # Initialize security manager
@@ -100,12 +100,8 @@ async def lifespan(app: FastAPI):
 
     # Initialize database connection pool
     database_url = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/secondbrain")
-    pool_config = PoolConfig(
-        min_connections=5,
-        max_connections=20,
-        max_inactive_connection_lifetime=300.0
-    )
-    
+    pool_config = PoolConfig(min_connections=5, max_connections=20, max_inactive_connection_lifetime=300.0)
+
     try:
         await initialize_pool(database_url, pool_config)
         logger.info("Database connection pool initialized")
@@ -130,7 +126,7 @@ async def lifespan(app: FastAPI):
             logger.info("Database closed (fallback mode)")
         except Exception as cleanup_error:
             logger.error(f"Error in fallback cleanup: {cleanup_error}")
-    
+
     logger.info("Application shutdown complete")
 
 
@@ -141,6 +137,7 @@ app = FastAPI(
 
 # Setup OpenAPI documentation
 setup_openapi_documentation(app)
+
 
 # Add comprehensive error handling
 @app.exception_handler(StarletteHTTPException)
@@ -155,10 +152,11 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
                 "type": "HTTPException",
                 "timestamp": datetime.utcnow().isoformat(),
                 "path": str(request.url.path),
-                "method": request.method
+                "method": request.method,
             }
-        }
+        },
     )
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -173,31 +171,33 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
                 "timestamp": datetime.utcnow().isoformat(),
                 "path": str(request.url.path),
                 "method": request.method,
-                "details": exc.errors()
+                "details": exc.errors(),
             }
-        }
+        },
     )
+
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     """Handle unexpected exceptions with proper logging."""
     error_id = f"error_{int(time.time())}"
     logger.error(f"Unexpected error {error_id}: {exc}\n{traceback.format_exc()}")
-    
+
     return JSONResponse(
         status_code=500,
         content={
             "error": {
                 "code": 500,
                 "message": "Internal server error occurred",
-                "type": "InternalServerError", 
+                "type": "InternalServerError",
                 "timestamp": datetime.utcnow().isoformat(),
                 "path": str(request.url.path),
                 "method": request.method,
-                "error_id": error_id
+                "error_id": error_id,
             }
-        }
+        },
     )
+
 
 # Add security middleware
 for middleware_class, middleware_kwargs in security_manager.get_security_middleware():
@@ -269,18 +269,20 @@ async def get_status(db=Depends(get_db_instance), _: str = Depends(verify_api_ke
     summary="Store Memory",
     description="Store a new memory with optional metadata",
 )
-async def store_memory(request: MemoryRequest, request_obj: Request, db=Depends(get_db_instance), _: str = Depends(verify_api_key)):
+async def store_memory(
+    request: MemoryRequest, request_obj: Request, db=Depends(get_db_instance), _: str = Depends(verify_api_key)
+):
     """Store a new memory."""
     try:
         # Security validation
         if not security_manager.validate_request(request_obj):
             raise HTTPException(status_code=429, detail="Rate limit exceeded")
-        
+
         # Input validation
         validator = security_manager.input_validator
         validated_content = validator.validate_memory_content(request.content)
         validated_metadata = validator.validate_metadata(request.metadata or {})
-        
+
         memory_id = await db.store_memory(validated_content, validated_metadata)
         memory = await db.get_memory(memory_id)
 
@@ -304,18 +306,20 @@ async def store_memory(request: MemoryRequest, request_obj: Request, db=Depends(
     summary="Search Memories",
     description="Semantic search across stored memories",
 )
-async def search_memories(request: SearchRequest, request_obj: Request, db=Depends(get_db_instance), _: str = Depends(verify_api_key)):
+async def search_memories(
+    request: SearchRequest, request_obj: Request, db=Depends(get_db_instance), _: str = Depends(verify_api_key)
+):
     """Search memories using vector similarity."""
     try:
         # Security validation
         if not security_manager.validate_request(request_obj):
             raise HTTPException(status_code=429, detail="Rate limit exceeded")
-        
+
         # Input validation
         validator = security_manager.input_validator
         validated_query = validator.validate_search_query(request.query)
         validated_limit = validator.validate_search_limit(request.limit or 10)
-        
+
         memories = await db.search_memories(validated_query, validated_limit)
         return [MemoryResponse(**memory) for memory in memories]
 
@@ -392,18 +396,14 @@ async def get_security_status(_: str = Depends(verify_api_key)):
     """Get security monitoring statistics."""
     try:
         security_stats = security_manager.get_security_stats()
-        
+
         # Get pool health if available
         pool_health = {}
         pool_manager = get_pool_manager()
         if pool_manager:
             pool_health = await pool_manager.health_check()
-        
-        return {
-            "security": security_stats,
-            "database_pool": pool_health,
-            "timestamp": datetime.utcnow()
-        }
+
+        return {"security": security_stats, "database_pool": pool_health, "timestamp": datetime.utcnow()}
     except Exception as e:
         logger.error(f"Failed to get security status: {e}")
         raise HTTPException(status_code=500, detail="Failed to get security status")
@@ -419,34 +419,35 @@ async def get_security_status(_: str = Depends(verify_api_key)):
 async def get_metrics(_: str = Depends(verify_api_key)):
     """Get comprehensive system metrics for monitoring."""
     try:
-        import psutil
         import time
-        
+
+        import psutil
+
         # System metrics
         system_metrics = {
             "cpu_percent": psutil.cpu_percent(interval=0.1),
             "memory_percent": psutil.virtual_memory().percent,
             "memory_used_mb": psutil.virtual_memory().used // 1024 // 1024,
             "memory_available_mb": psutil.virtual_memory().available // 1024 // 1024,
-            "disk_percent": psutil.disk_usage('/').percent if hasattr(psutil.disk_usage('/'), 'percent') else 0,
+            "disk_percent": psutil.disk_usage("/").percent if hasattr(psutil.disk_usage("/"), "percent") else 0,
             "uptime_seconds": time.time() - psutil.boot_time(),
         }
-        
+
         # Security metrics
         security_stats = security_manager.get_security_stats()
-        
+
         # Database pool metrics
         pool_health = {}
         pool_manager = get_pool_manager()
         if pool_manager:
             pool_health = await pool_manager.health_check()
-            
+
         # Application metrics
         app_metrics = {
             "version": get_version_info()["version"],
-            "environment": "test" if os.getenv("USE_MOCK_DATABASE", "false").lower() == "true" else "production"
+            "environment": "test" if os.getenv("USE_MOCK_DATABASE", "false").lower() == "true" else "production",
         }
-        
+
         return {
             "status": "healthy",
             "timestamp": datetime.utcnow().isoformat(),
@@ -454,7 +455,7 @@ async def get_metrics(_: str = Depends(verify_api_key)):
             "security": security_stats,
             "database": pool_health,
             "application": app_metrics,
-            "uptime_formatted": f"{system_metrics['uptime_seconds'] // 3600:.0f}h {(system_metrics['uptime_seconds'] % 3600) // 60:.0f}m"
+            "uptime_formatted": f"{system_metrics['uptime_seconds'] // 3600:.0f}h {(system_metrics['uptime_seconds'] % 3600) // 60:.0f}m",
         }
     except Exception as e:
         logger.error(f"Failed to get metrics: {e}")
