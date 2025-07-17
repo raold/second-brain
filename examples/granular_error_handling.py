@@ -6,27 +6,27 @@ Shows how the new error handling system provides better visibility and control.
 import asyncio
 
 from app.utils.exceptions import (
-    DatabaseConnectionError,
-    DatabaseTimeoutError,
-    DatabaseIntegrityError,
-    OpenAIRateLimitError,
-    OpenAIQuotaError,
-    OpenAIAuthError,
-    VectorStoreConnectionError,
-    EmbeddingDimensionError,
     CircuitBreakerError,
+    DatabaseConnectionError,
+    DatabaseIntegrityError,
+    DatabaseTimeoutError,
+    EmbeddingDimensionError,
+    OpenAIAuthError,
+    OpenAIQuotaError,
+    OpenAIRateLimitError,
     SecondBrainError,
-    map_external_exception,
+    VectorStoreConnectionError,
+    get_retry_delay,
     is_retryable_error,
-    get_retry_delay
+    map_external_exception,
 )
 from app.utils.retry import (
-    database_retry,
-    async_timeout,
+    _circuit_breakers,
     api_retry,
+    async_timeout,
     async_with_semaphore,
+    database_retry,
     vector_store_retry,
-    _circuit_breakers
 )
 
 
