@@ -81,7 +81,6 @@ This API enables ingestion of text data, which is embedded via OpenAI's `text-em
 - **Docker layer caching** for 60-80% faster builds
 - **Makefile** for streamlined development workflow
 - **Modular architecture** with refactored, testable components
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 ## ⚙️ Requirements
 - Docker + Docker Compose
@@ -253,7 +252,6 @@ See the [full Deployment Instructions](./docs/DEPLOYMENT.md) for detailed setup 
 - **Version History**: Parent-child memory relationships
 - **Filtering**: Search by intent, tags, priority, date ranges
 - **Analytics**: User feedback and search history tracking
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 ## 🧪 Testing
 ```bash
@@ -348,7 +346,6 @@ make lint
 
 ### 🚀 CI/CD & Deployment
 - [**Development Environment**](./docker-compose.yml) - Local development setup
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 ### 📊 Monitoring & Health
 - **API Health Check**: `GET /health` - Service health status
@@ -360,7 +357,6 @@ make lint
 - **Sentry error monitoring** enabled if `SENTRY_DSN` is set in the environment.
 - See [Architecture Overview](./docs/ARCHITECTURE.md#metrics--monitoring) for details.
 
-<<<<<<< HEAD
 ## 🆕 Major Features (v1.4.0+)
 
 - **Intent Detection & Classification**: Auto-tags transcripts with intent (question, reminder, note, todo, command, other) using OpenAI LLM.
@@ -376,7 +372,7 @@ make lint
 - **v1.3.0**: Full test mocking, metrics/monitoring, API rate limiting
 - **v1.4.0**: Blue-green deployment, database migration automation
 - **v1.5.0**: Advanced caching strategies, performance monitoring
-=======
+
 ## 🆕 Recent Improvements (v1.4.0)
 
 - **Comprehensive Test Suite**: Added unit tests, integration tests, and error scenario testing with 90%+ coverage
@@ -510,8 +506,4 @@ make lint
 ## 🔒 Security Vulnerabilities
 
 Please report any security vulnerabilities **privately** via [security@oldham.io](mailto:security@oldham.io).  
-<<<<<<< HEAD
-Do **not** open public issues for security concerns — see [SECURITY.md](./SECURITY.md) for full details.
-=======
 Do **not** open public issues for security concerns — see [SECURITY.md](./docs/SECURITY.md) for full details.
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
