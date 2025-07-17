@@ -1,5 +1,33 @@
 # Changelog
 
+---
+
+For previous versions, see repository commit history.
+
+## [1.5.0] - 2025-07-15
+
+### 🚀 Next-Level Enhancements & Production Features
+- Real-time WebSocket streaming for LLM and TTS output
+- Model version tracking and version history per record
+- Intent detection/classification (question, reminder, note, todo, command, other)
+- Memory persistence layer with Postgres and SQL querying
+- Feedback/correction loop (edit, delete, correct intent, upvote)
+- Replay and summarization endpoints for memory synthesis
+- Personalized ranking with feedback tracking
+- Plugin system for reminders, webhooks, file/PDF search, and more
+- Electron/mobile/PWA clients with voice, TTS, and advanced UI/UX
+- Advanced UI: version history, theming, settings, accessibility, and export
+- Performance optimizations: LRU caching, Prometheus metrics, Sentry, Grafana
+
+All “Next-Level Enhancements” accomplished:
+- Intent detection/classification is robust and integrated
+- Memory persistence and SQL querying are production-grade
+- Feedback/correction loop is user-friendly and reliable
+- Performance and UX are modern, with real-time streaming and progress
+- Plugins/integrations are real, actionable, and extensible
+- Replay, summarization, and personalized ranking are implemented or scaffolded
+
+The project is now a production-ready, extensible, and intelligent memory/voice assistant platform with advanced search, feedback, replay, summarization, personalized ranking, and robust plugin architecture.
 ## [1.4.0] - 2025-07-14
 
 ## ✨ Added
@@ -134,32 +162,3 @@
 ### Upcoming
 - Full mocking of external dependencies (OpenAI, Qdrant) in test suite.
 - Metrics, monitoring, and rate limiting.
-
----
-
-For previous versions, see repository commit history.
-
-## [1.5.0] - 2025-07-15
-
-### 🚀 Next-Level Enhancements & Production Features
-- Real-time WebSocket streaming for LLM and TTS output
-- Model version tracking and version history per record
-- Intent detection/classification (question, reminder, note, todo, command, other)
-- Memory persistence layer with Postgres and SQL querying
-- Feedback/correction loop (edit, delete, correct intent, upvote)
-- Replay and summarization endpoints for memory synthesis
-- Personalized ranking with feedback tracking
-- Plugin system for reminders, webhooks, file/PDF search, and more
-- Electron/mobile/PWA clients with voice, TTS, and advanced UI/UX
-- Advanced UI: version history, theming, settings, accessibility, and export
-- Performance optimizations: LRU caching, Prometheus metrics, Sentry, Grafana
-
-All “Next-Level Enhancements” accomplished:
-- Intent detection/classification is robust and integrated
-- Memory persistence and SQL querying are production-grade
-- Feedback/correction loop is user-friendly and reliable
-- Performance and UX are modern, with real-time streaming and progress
-- Plugins/integrations are real, actionable, and extensible
-- Replay, summarization, and personalized ranking are implemented or scaffolded
-
-The project is now a production-ready, extensible, and intelligent memory/voice assistant platform with advanced search, feedback, replay, summarization, personalized ranking, and robust plugin architecture.
