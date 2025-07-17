@@ -5,14 +5,17 @@ Provides granular error handling for async operations.
 
 import asyncio
 import time
-from functools import wraps
-from typing import Callable, Optional, Tuple, Type, Union, Any
 from dataclasses import dataclass
 from enum import Enum
+from functools import wraps
+from typing import Callable, Optional, Tuple, Type
 
 from app.utils.exceptions import (
-    SecondBrainError, AsyncOperationError, CircuitBreakerError,
-    is_retryable_error, get_retry_delay, map_external_exception
+    CircuitBreakerError,
+    SecondBrainError,
+    get_retry_delay,
+    is_retryable_error,
+    map_external_exception,
 )
 from app.utils.logger import get_logger
 

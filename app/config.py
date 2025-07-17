@@ -1,7 +1,8 @@
-import os
 import logging
-from typing import Dict, Any, Optional
+import os
 from pathlib import Path
+from typing import Any, Dict
+
 
 class Config:
     """Unified configuration system with smart defaults and environment detection."""

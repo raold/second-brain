@@ -6,10 +6,9 @@ Verifies cache functionality, database performance, and monitoring endpoints.
 import asyncio
 import json
 import time
-from typing import Dict, Any
+from typing import Any, Dict
 
 import httpx
-import pytest
 
 
 class PerformanceOptimizationTester:
@@ -56,7 +55,7 @@ class PerformanceOptimizationTester:
             raise Exception(f"Performance endpoint failed: {response.status_code}")
         
         perf_data = response.json()
-        print(f"✅ Performance endpoint working")
+        print("✅ Performance endpoint working")
         print(f"   🎯 System health score: {perf_data.get('system_health_score', 'N/A')}")
         
         # Check cache performance
@@ -85,7 +84,7 @@ class PerformanceOptimizationTester:
             raise Exception(f"Cache endpoint failed: {response.status_code}")
         
         cache_data = response.json()
-        print(f"✅ Cache endpoint working")
+        print("✅ Cache endpoint working")
         
         # Analyze cache statistics
         analysis = cache_data.get('analysis', {})
@@ -107,7 +106,7 @@ class PerformanceOptimizationTester:
             raise Exception(f"Database performance endpoint failed: {response.status_code}")
         
         db_data = response.json()
-        print(f"✅ Database performance endpoint working")
+        print("✅ Database performance endpoint working")
         
         # Check PostgreSQL metrics
         postgres_data = db_data.get('postgresql', {})
@@ -135,12 +134,12 @@ class PerformanceOptimizationTester:
             raise Exception(f"Recommendations endpoint failed: {response.status_code}")
         
         rec_data = response.json()
-        print(f"✅ Recommendations endpoint working")
+        print("✅ Recommendations endpoint working")
         
         # Show priority actions
         priority_actions = rec_data.get('priority_actions', [])
         if priority_actions:
-            print(f"   🚨 Priority actions:")
+            print("   🚨 Priority actions:")
             for action in priority_actions[:3]:  # Show top 3
                 priority = action.get('priority', 'unknown')
                 desc = action.get('action', 'Unknown action')
@@ -218,7 +217,7 @@ class PerformanceOptimizationTester:
         
         # Verify caching is working (subsequent searches should be faster)
         if len(times) >= 2 and times[1] < times[0]:
-            print(f"   ⚡ Cache acceleration detected!")
+            print("   ⚡ Cache acceleration detected!")
         
         return {
             "ingest_time": ingest_time,
@@ -267,7 +266,7 @@ class PerformanceOptimizationTester:
                 print(f"❌ {test_name} test failed: {e}")
         
         print(f"\n{'='*50}")
-        print(f"🎯 Test Summary:")
+        print("🎯 Test Summary:")
         print(f"   ✅ Passed: {results['tests_passed']}")
         print(f"   ❌ Failed: {results['tests_failed']}")
         print(f"   📊 Success Rate: {results['tests_passed']/(results['tests_passed']+results['tests_failed'])*100:.1f}%")
@@ -284,7 +283,7 @@ async def main():
         with open("performance_test_results.json", "w") as f:
             json.dump(results, f, indent=2)
         
-        print(f"\n📄 Results saved to performance_test_results.json")
+        print("\n📄 Results saved to performance_test_results.json")
         
         # Return exit code based on results
         if results["tests_failed"] > 0:

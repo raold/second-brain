@@ -1,8 +1,8 @@
 # app/main.py
 
+import logging
 import os
 import uuid
-import logging
 
 import sentry_sdk
 import structlog
@@ -17,7 +17,7 @@ from starlette.responses import Response
 from app.api.websocket import router as ws_router
 from app.config import config
 from app.router import router
-from app.storage.postgres_client import postgres_client, close_postgres_client
+from app.storage.postgres_client import close_postgres_client, postgres_client
 
 # Setup logging with Windows compatibility first
 config.setup_logging()

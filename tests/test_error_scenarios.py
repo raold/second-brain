@@ -1,10 +1,8 @@
 # tests/test_error_scenarios.py
 
-import pytest
-from unittest.mock import patch, Mock, MagicMock
 import asyncio
 from concurrent.futures import TimeoutError
-from fastapi import HTTPException
+from unittest.mock import MagicMock, Mock, patch
 
 from app.main import app
 
@@ -16,7 +14,6 @@ class TestNetworkErrors:
         """Test OpenAI API timeout during embedding generation"""
         
         # Override the autouse mock to simulate timeout
-        from unittest.mock import MagicMock
         timeout_mock = MagicMock(side_effect=TimeoutError("OpenAI API timeout"))
         monkeypatch.setattr("app.storage.qdrant_client.get_openai_embedding", timeout_mock)
         monkeypatch.setattr("app.utils.openai_client.get_openai_embedding", timeout_mock)
@@ -29,7 +26,6 @@ class TestNetworkErrors:
         """Test OpenAI API rate limiting"""
         
         import openai
-        from unittest.mock import MagicMock
         
         rate_limit_mock = MagicMock(side_effect=openai.RateLimitError(
             message="Rate limit exceeded",
@@ -268,7 +264,6 @@ class TestConcurrencyErrors:
         }
         
         import threading
-        import time
         
         results = []
         
@@ -276,7 +271,7 @@ class TestConcurrencyErrors:
             try:
                 response = test_client.post("/ingest", json=payload, headers=auth_header)
                 results.append(response.status_code)
-            except Exception as e:
+            except Exception:
                 results.append(500)
         
         # Send multiple concurrent requests
@@ -366,7 +361,6 @@ class TestDataCorruptionErrors:
     def test_corrupted_embedding_response(self, test_client, auth_header, sample_payload_dict, monkeypatch):
         """Test handling of corrupted OpenAI embedding response"""
         
-        from unittest.mock import MagicMock
         # Return corrupted embedding
         corrupted_mock = MagicMock(return_value=None)
         monkeypatch.setattr("app.storage.qdrant_client.get_openai_embedding", corrupted_mock)
@@ -414,7 +408,6 @@ class TestTimeoutErrors:
     def test_slow_embedding_generation(self, test_client, auth_header, sample_payload_dict, monkeypatch):
         """Test slow embedding generation timeout"""
         
-        from unittest.mock import MagicMock
         # Simulate timeout error
         slow_mock = MagicMock(side_effect=TimeoutError("Embedding generation timeout"))
         monkeypatch.setattr("app.storage.qdrant_client.get_openai_embedding", slow_mock)

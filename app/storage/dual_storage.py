@@ -6,19 +6,14 @@ Manages both Markdown file storage (legacy) and PostgreSQL persistence (new).
 import asyncio
 import json
 import time
-import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.storage.markdown_writer import write_markdown
 from app.storage.postgres_client import get_postgres_client
+from app.utils.cache import CacheConfig, get_cache, get_smart_cache
 from app.utils.logger import get_logger
 from app.utils.openai_client import get_openai_embedding_async
-from app.utils.cache import (
-    get_cache, get_smart_cache, async_cached_function,
-    CacheConfig, MEMORY_ACCESS_CACHE_CONFIG
-)
 
 logger = get_logger()
 
@@ -39,7 +34,7 @@ _intent_detection_cache = get_cache("intent_detection", CacheConfig(
 
 # Prometheus metrics
 try:
-    from prometheus_client import Counter, Histogram, Gauge
+    from prometheus_client import Counter, Gauge, Histogram
     dual_storage_operations = Counter('dual_storage_operations_total', 'Dual storage operations', ['operation', 'storage_type', 'status'])
     dual_storage_latency = Histogram('dual_storage_latency_seconds', 'Dual storage operation latency', ['operation'])
     intent_detection_latency = Histogram('intent_detection_latency_seconds', 'Intent detection latency')

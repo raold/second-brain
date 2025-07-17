@@ -3,17 +3,12 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from uuid import NAMESPACE_URL, UUID, uuid5
 
-from cachetools import LRUCache, cached
-from openai import OpenAI
 from qdrant_client import QdrantClient
 
 from app.config import config
+from app.utils.cache import SEARCH_CACHE_CONFIG, CacheConfig, get_cache, get_smart_cache
 from app.utils.logger import logger
 from app.utils.openai_client import get_openai_embedding
-from app.utils.cache import (
-    get_cache, get_smart_cache, 
-    SEARCH_CACHE_CONFIG, CacheConfig
-)
 
 # Initialize Qdrant client with connection pooling
 client = QdrantClient(
@@ -42,7 +37,7 @@ _collection_info_cache = get_cache("qdrant_collection_info", CacheConfig(
 
 # Prometheus metrics
 try:
-    from prometheus_client import Counter, Histogram, Gauge
+    from prometheus_client import Counter, Gauge, Histogram
     qdrant_search_latency = Histogram('qdrant_search_latency_seconds', 'Qdrant search latency (seconds)')
     qdrant_operations = Counter('qdrant_operations_total', 'Qdrant operations by type', ['operation', 'status'])
     qdrant_connection_pool = Gauge('qdrant_connection_pool_size', 'Qdrant connection pool size')
@@ -256,7 +251,7 @@ def _perform_upsert(point) -> None:
         # Invalidate search cache on upsert
         _search_cache.clear()
         
-    except Exception as e:
+    except Exception:
         # Record failure metric
         if qdrant_operations:
             qdrant_operations.labels(operation='upsert', status='error').inc()
@@ -314,7 +309,7 @@ def _build_qdrant_filter(filters: dict):
     if not filters:
         return None
     
-    from qdrant_client.http.models import Filter, FieldCondition, MatchValue, MatchAny, Range
+    from qdrant_client.http.models import FieldCondition, Filter, MatchAny, MatchValue, Range
     
     conditions = []
     
@@ -332,7 +327,7 @@ def _build_qdrant_filter(filters: dict):
                     range_condition["lte"] = to_ts
                 conditions.append(
                     FieldCondition(
-                        key=f"meta.timestamp",
+                        key="meta.timestamp",
                         range=Range(**range_condition)
                     )
                 )

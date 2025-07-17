@@ -2,11 +2,10 @@
 
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import openai
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile, status
-from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, delete, select, update
 
 from app.auth import verify_token
@@ -14,10 +13,10 @@ from app.config import config
 from app.models import Memory, MemoryFeedback, Payload, PayloadType, Priority
 from app.storage.dual_storage import get_dual_storage
 from app.storage.markdown_writer import write_markdown
-from app.storage.postgres_client import get_postgres_client, AsyncSessionLocal, get_async_session
-from app.storage.qdrant_client import client, qdrant_search, qdrant_upsert, to_uuid, get_qdrant_stats
+from app.storage.postgres_client import AsyncSessionLocal, get_async_session, get_postgres_client
+from app.storage.qdrant_client import client, get_qdrant_stats, qdrant_search, qdrant_upsert, to_uuid
+from app.utils.cache import clear_all_caches, get_all_cache_stats
 from app.utils.logger import logger
-from app.utils.cache import get_all_cache_stats, clear_all_caches
 
 router = APIRouter()
 
@@ -943,6 +942,7 @@ async def clear_caches_endpoint(_: None = Depends(verify_token)) -> Dict[str, st
         except Exception as e:
             logger.warning(f"Failed to access PostgreSQL client for cache clearing: {e}")
         
+
         logger.info("All caches cleared successfully")
         return {
             "status": "success", 
@@ -1071,38 +1071,45 @@ async def performance_recommendations_endpoint(_: None = Depends(verify_token)) 
 
 # Helper functions for performance analysis
 
-def _calculate_system_health_score(cache_stats, postgres_stats, qdrant_stats, dual_storage_stats) -> float:
-    """Calculate overall system health score (0-100)."""
+def _calculate_system_health_score(
+    cache_stats: Dict[str, Any], 
+    postgres_stats: Dict[str, Any], 
+    qdrant_stats: Dict[str, Any], 
+    dual_storage_stats: Dict[str, Any]
+) -> float:
+    """
+    Calculate overall system health score (0-100) with improved logic and error handling.
+    
+    Scoring breakdown:
+    - Cache performance: 25% (hit rate based)
+    - Database health: 35% (PostgreSQL: 15%, Qdrant: 20%)
+    - Storage performance: 25% (dual storage success rates)
+    - System optimization: 15% (response times and resource usage)
+    """
     try:
-        score = 100.0
+        # Initialize component scores
+        cache_score = _calculate_cache_score(cache_stats)
+        db_score = _calculate_database_score(postgres_stats, qdrant_stats)
+        storage_score = _calculate_storage_score(dual_storage_stats)
+        optimization_score = _calculate_optimization_score(postgres_stats, qdrant_stats)
         
-        # Cache performance (25% weight)
-        cache_hit_rate = cache_stats.get("_summary", {}).get("overall_hit_rate_percent", 0)
-        cache_score = min(cache_hit_rate, 100) * 0.25
-        
-        # Database performance (35% weight)
-        db_score = 0
-        if postgres_stats.get("health", {}).get("status") == "healthy":
-            db_score += 15
-        if qdrant_stats.get("status") == "healthy":
-            db_score += 20
-        
-        # Storage performance (25% weight)
-        storage_score = 0
-        storage_success_rates = dual_storage_stats.get("storage_success_rates", {})
-        postgres_success = storage_success_rates.get("postgres", {}).get("success_rate", 0)
-        markdown_success = storage_success_rates.get("markdown", {}).get("success_rate", 0)
-        storage_score = ((postgres_success + markdown_success) / 2) * 0.25
-        
-        # System optimization (15% weight)
-        optimization_score = 15.0  # Assume optimizations are enabled
-        
+        # Calculate weighted total
         total_score = cache_score + db_score + storage_score + optimization_score
-        return round(min(max(total_score, 0), 100), 1)
+        
+        # Ensure score is within bounds and log the breakdown
+        final_score = round(min(max(total_score, 0), 100), 1)
+        
+        logger.info(
+            f"Health score breakdown: Cache={cache_score:.1f}, "
+            f"DB={db_score:.1f}, Storage={storage_score:.1f}, "
+            f"Optimization={optimization_score:.1f}, Total={final_score:.1f}"
+        )
+        
+        return final_score
         
     except Exception as e:
-        logger.warning(f"Failed to calculate system health score: {e}")
-        return 50.0  # Default neutral score
+        logger.error(f"Failed to calculate system health score: {e}", exc_info=True)
+        return 50.0  # Default neutral score on error
 
 def _analyze_cache_efficiency(cache_stats) -> Dict[str, Any]:
     """Analyze cache efficiency and identify issues."""

@@ -4,8 +4,8 @@ Provides granular error handling for async operations and different failure mode
 """
 
 import asyncio
-from typing import Optional, Dict, Any
 from enum import Enum
+from typing import Any, Dict, Optional
 
 
 class ErrorSeverity(Enum):

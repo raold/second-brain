@@ -8,14 +8,10 @@ from typing import List
 
 import aiohttp
 import openai
-from cachetools import LRUCache, cached
 
 from app.config import config
+from app.utils.cache import EMBEDDING_CACHE_CONFIG, get_cache
 from app.utils.logger import logger
-from app.utils.cache import (
-    get_cache, async_cached_function, 
-    EMBEDDING_CACHE_CONFIG, CacheConfig
-)
 
 # Enhanced embedding cache with TTL and metrics
 _embedding_cache = get_cache("embeddings", EMBEDDING_CACHE_CONFIG)

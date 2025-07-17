@@ -4,33 +4,45 @@ Handles database operations for the Second Brain application with advanced perfo
 """
 
 import asyncio
-import json
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import asyncpg
-from sqlalchemy import MetaData, Table, Column, String, Text, DateTime, JSON, Float, Integer, Boolean
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy import select, insert, update, delete, func, and_, or_
-from sqlalchemy.orm import selectinload
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    String,
+    Text,
+    and_,
+    func,
+    select,
+)
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.declarative import declarative_base
 
 from app.config import config
-from app.utils.logger import get_logger
 from app.utils.cache import (
-    get_cache, async_cached_function, CacheConfig,
-    ANALYTICS_CACHE_CONFIG, MEMORY_ACCESS_CACHE_CONFIG
+    ANALYTICS_CACHE_CONFIG,
+    MEMORY_ACCESS_CACHE_CONFIG,
+    CacheConfig,
+    get_cache,
 )
 from app.utils.exceptions import (
-    DatabaseError, DatabaseConnectionError, DatabaseTimeoutError, 
-    DatabaseIntegrityError, DuplicateMemoryError, MemoryNotFoundError,
-    map_external_exception
+    DatabaseConnectionError,
+    DatabaseError,
+    DatabaseIntegrityError,
+    DuplicateMemoryError,
+    map_external_exception,
 )
-from app.utils.retry import database_retry, async_timeout, async_with_semaphore
+from app.utils.logger import get_logger
+from app.utils.retry import async_timeout, async_with_semaphore, database_retry
 
 logger = get_logger()
 
@@ -49,7 +61,7 @@ _analytics_cache = get_cache("postgres_analytics", ANALYTICS_CACHE_CONFIG)
 
 # Prometheus metrics
 try:
-    from prometheus_client import Counter, Histogram, Gauge
+    from prometheus_client import Counter, Gauge, Histogram
     postgres_operations = Counter('postgres_operations_total', 'PostgreSQL operations', ['operation', 'status'])
     postgres_query_latency = Histogram('postgres_query_latency_seconds', 'PostgreSQL query latency', ['operation'])
     postgres_connection_pool = Gauge('postgres_connection_pool_stats', 'PostgreSQL connection pool statistics', ['stat'])
@@ -375,7 +387,7 @@ class PostgresClient:
         except IntegrityError as e:
             # Handle duplicate keys or constraint violations
             if "duplicate key" in str(e).lower():
-                raise DuplicateMemoryError(f"Memory with similar content already exists")
+                raise DuplicateMemoryError("Memory with similar content already exists")
             else:
                 raise DatabaseIntegrityError(str(e), constraint=getattr(e, 'constraint', None))
                 
@@ -389,7 +401,7 @@ class PostgresClient:
         except asyncpg.exceptions.PostgresError as e:
             # Handle specific PostgreSQL errors
             if e.sqlstate == '23505':  # Unique constraint violation
-                raise DuplicateMemoryError(f"Memory already exists")
+                raise DuplicateMemoryError("Memory already exists")
             elif e.sqlstate == '08003':  # Connection does not exist
                 raise DatabaseConnectionError(f"Database connection lost: {e}")
             else:

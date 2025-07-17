@@ -3,26 +3,24 @@ Advanced caching utilities for Second Brain performance optimization.
 Provides LRU caching with TTL, metrics, and distributed caching interface.
 """
 
-import asyncio
+import hashlib
 import json
 import time
-from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, Dict, List, Optional, Union, Tuple
-from functools import wraps
 from dataclasses import dataclass
-import hashlib
+from datetime import datetime, timezone
+from functools import wraps
+from typing import Any, Callable, Dict, Optional
 
-from cachetools import LRUCache, TTLCache, cached
+from cachetools import LRUCache, TTLCache
 from cachetools.keys import hashkey
 
-from app.config import config
 from app.utils.logger import get_logger
 
 logger = get_logger()
 
 # Prometheus metrics (optional)
 try:
-    from prometheus_client import Counter, Histogram, Gauge
+    from prometheus_client import Counter, Gauge, Histogram
     cache_hits = Counter('cache_hits_total', 'Cache hits by type', ['cache_type'])
     cache_misses = Counter('cache_misses_total', 'Cache misses by type', ['cache_type'])
     cache_operations = Histogram('cache_operation_duration_seconds', 'Cache operation duration', ['operation', 'cache_type'])

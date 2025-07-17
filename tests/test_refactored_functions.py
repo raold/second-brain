@@ -1,12 +1,9 @@
 # tests/test_refactored_functions.py
 
-import pytest
-from unittest.mock import Mock, MagicMock, patch, call, AsyncMock
-from datetime import datetime
-from typing import Dict, Any, List
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from fastapi import HTTPException
+
 
 # Test the refactored qdrant_client functions
 class TestQdrantClientRefactored:
@@ -95,8 +92,9 @@ class TestQdrantClientRefactored:
     @patch('app.storage.qdrant_client.client')
     def test_get_version_history_not_found(self, mock_client):
         """Test retrieving version history when record not found"""
-        from app.storage.qdrant_client import _get_version_history
         from qdrant_client.http.exceptions import UnexpectedResponse
+
+        from app.storage.qdrant_client import _get_version_history
         
         mock_client.retrieve.side_effect = UnexpectedResponse(
             status_code=404,
@@ -247,8 +245,8 @@ class TestRouterRefactored:
     @pytest.mark.asyncio
     async def test_detect_or_assign_intent_missing(self, mock_detect):
         """Test intent detection when not provided"""
-        from app.router import _detect_or_assign_intent
         from app.models import Payload, PayloadType, Priority
+        from app.router import _detect_or_assign_intent
         
         mock_detect.return_value = "detected_intent"
         
@@ -270,8 +268,8 @@ class TestRouterRefactored:
     @pytest.mark.asyncio
     async def test_detect_or_assign_intent_existing(self):
         """Test intent detection when already provided"""
-        from app.router import _detect_or_assign_intent
         from app.models import Payload, PayloadType, Priority
+        from app.router import _detect_or_assign_intent
         
         payload = Payload(
             id="test",
@@ -292,9 +290,9 @@ class TestRouterRefactored:
     @patch('app.router.qdrant_upsert')
     def test_perform_storage_operations(self, mock_qdrant, mock_markdown):
         """Test storage operations"""
-        from app.router import _perform_storage_operations
+
         from app.models import Payload, PayloadType, Priority
-        from fastapi import BackgroundTasks
+        from app.router import _perform_storage_operations
         
         payload = Payload(
             id="test",
@@ -316,8 +314,8 @@ class TestRouterRefactored:
     
     def test_build_ingest_response(self):
         """Test ingest response building"""
-        from app.router import _build_ingest_response
         from app.models import Payload, PayloadType, Priority
+        from app.router import _build_ingest_response
         
         payload = Payload(
             id="test-123",

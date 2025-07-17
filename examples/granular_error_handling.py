@@ -4,6 +4,7 @@ Shows how the new error handling system provides better visibility and control.
 """
 
 import asyncio
+
 from app.utils.exceptions import *
 from app.utils.retry import *
 

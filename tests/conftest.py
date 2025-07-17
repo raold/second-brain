@@ -1,16 +1,16 @@
 # tests/conftest.py
 
+from types import SimpleNamespace
+from unittest.mock import MagicMock, Mock
+
 import pytest
-from unittest.mock import Mock, MagicMock, patch
 from fastapi import Request
 from fastapi.testclient import TestClient
-from types import SimpleNamespace
 
 import app.router as app_router
+from app.config import config
 from app.main import app
 from app.models import Payload, PayloadType, Priority
-from app.config import config
-
 
 # ===== AUTHENTICATION FIXTURES =====
 

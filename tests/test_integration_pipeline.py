@@ -1,10 +1,6 @@
 # tests/test_integration_pipeline.py
 
-import pytest
-from unittest.mock import patch, Mock
-from fastapi.testclient import TestClient
-
-from app.main import app
+from unittest.mock import Mock, patch
 
 
 class TestFullPipelineIntegration:
@@ -260,7 +256,6 @@ class TestPipelinePerformance:
     def test_concurrent_operations(self, test_client, auth_header, multiple_payloads):
         """Test concurrent ingestion and search operations"""
         import concurrent.futures
-        import threading
         
         results = []
         
