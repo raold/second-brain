@@ -78,14 +78,16 @@ class MockDatabase:
             # Calculate mock similarity based on simple text matching
             similarity = self._calculate_mock_similarity(query_embedding, memory["embedding"])
 
-            results.append({
-                "id": memory["id"],
-                "content": memory["content"],
-                "metadata": memory["metadata"],
-                "created_at": memory["created_at"],
-                "updated_at": memory["updated_at"],
-                "similarity": similarity,
-            })
+            results.append(
+                {
+                    "id": memory["id"],
+                    "content": memory["content"],
+                    "metadata": memory["metadata"],
+                    "created_at": memory["created_at"],
+                    "updated_at": memory["updated_at"],
+                    "similarity": similarity,
+                }
+            )
 
         # Sort by similarity and return top results
         results.sort(key=lambda x: x["similarity"], reverse=True)

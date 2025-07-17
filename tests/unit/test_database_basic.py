@@ -2,6 +2,7 @@
 import asyncio
 import os
 import sys
+
 import pytest
 
 # Add the current directory to Python path
@@ -14,23 +15,23 @@ from app.database import Database
 async def test_database_initialization():
     """Test the database initialization."""
     print("🔧 Testing Database initialization...")
-    
+
     try:
         db = Database()
         print("✅ Database instance created")
-        
+
         # Test initialization
         await db.initialize()
         print("✅ Database initialized successfully")
-        
+
         # Test basic functionality
         stats = await db.get_index_stats()
         print(f"✅ Index stats retrieved: {stats}")
-        
+
         # Clean up
         await db.close()
         print("✅ Database connection closed")
-        
+
     except Exception as e:
         print(f"❌ Database setup failed: {e}")
         raise

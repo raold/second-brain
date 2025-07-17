@@ -18,6 +18,7 @@ VERSION_METADATA = {
     "api_version": "v1",
 }
 
+
 def get_version_info():
     """Get formatted version information."""
     return {

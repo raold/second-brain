@@ -14,14 +14,14 @@ os.environ["USE_MOCK_DATABASE"] = "true"
 os.environ["API_TOKENS"] = "test-key-1,test-key-2"
 
 # Ensure the app gets the test values by clearing any cached imports
-modules_to_clear = ['app.app', 'app.database', 'app.database_mock']
+modules_to_clear = ["app.app", "app.database", "app.database_mock"]
 for module in modules_to_clear:
     if module in sys.modules:
         del sys.modules[module]
 
-# Now import after environment is set
-from app.app import app
-from app.database_mock import MockDatabase
+# Import after environment is set (required for test configuration)
+from app.app import app  # noqa: E402
+from app.database_mock import MockDatabase  # noqa: E402
 
 
 @pytest_asyncio.fixture(scope="function")

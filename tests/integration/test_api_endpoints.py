@@ -3,13 +3,10 @@ Extended integration tests for Second Brain v2.0.0
 Comprehensive test coverage for all components
 """
 
-import asyncio
 import os
-import pytest
-from httpx import AsyncClient
-from unittest.mock import patch, AsyncMock
 
-from app.app import app
+import pytest
+
 from app.database_mock import MockDatabase
 from app.version import get_version_info
 
@@ -60,41 +57,39 @@ class TestIntegrationSuite:
                 "tags": ["unicode", "special-chars"],
                 "priority": 1,
                 "nested": {"level": 2, "data": [1, 2, 3]},
-                "timestamp": "2025-07-17T13:00:00Z"
-            }
+                "timestamp": "2025-07-17T13:00:00Z",
+            },
         }
-        
+
         # Store memory
         response = await client.post("/memories", json=complex_memory, params={"api_key": api_key})
         assert response.status_code == 200
         stored_memory = response.json()
         memory_id = stored_memory["id"]
-        
+
         # Verify stored data
         assert stored_memory["content"] == complex_memory["content"]
         assert stored_memory["metadata"]["nested"]["level"] == 2
-        
+
         # Retrieve memory
         response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
         assert response.status_code == 200
         retrieved_memory = response.json()
         assert retrieved_memory["content"] == complex_memory["content"]
-        
+
         # Search for memory
         search_response = await client.post(
-            "/memories/search", 
-            json={"query": "unicode special", "limit": 5}, 
-            params={"api_key": api_key}
+            "/memories/search", json={"query": "unicode special", "limit": 5}, params={"api_key": api_key}
         )
         assert search_response.status_code == 200
         search_results = search_response.json()
         assert len(search_results) > 0
         assert search_results[0]["id"] == memory_id
-        
+
         # Delete memory
         delete_response = await client.delete(f"/memories/{memory_id}", params={"api_key": api_key})
         assert delete_response.status_code == 200
-        
+
         # Verify deletion
         get_response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
         assert get_response.status_code == 404
@@ -107,28 +102,26 @@ class TestIntegrationSuite:
         for i in range(15):
             memory_data = {
                 "content": f"Batch memory {i} with unique content",
-                "metadata": {"batch": i, "type": "batch_test"}
+                "metadata": {"batch": i, "type": "batch_test"},
             }
             response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
             assert response.status_code == 200
             memories.append(response.json())
-        
+
         # Test pagination
         response = await client.get("/memories", params={"api_key": api_key, "limit": 10})
         assert response.status_code == 200
         page1 = response.json()
         assert len(page1) == 10
-        
+
         response = await client.get("/memories", params={"api_key": api_key, "limit": 10, "offset": 10})
         assert response.status_code == 200
         page2 = response.json()
         assert len(page2) == 5
-        
+
         # Test search with limit
         search_response = await client.post(
-            "/memories/search", 
-            json={"query": "batch", "limit": 3}, 
-            params={"api_key": api_key}
+            "/memories/search", json={"query": "batch", "limit": 3}, params={"api_key": api_key}
         )
         assert search_response.status_code == 200
         search_results = search_response.json()
@@ -139,27 +132,23 @@ class TestIntegrationSuite:
         """Test comprehensive error handling."""
         # Test invalid JSON
         response = await client.post(
-            "/memories", 
-            content="invalid json", 
+            "/memories",
+            content="invalid json",
             headers={"Content-Type": "application/json"},
-            params={"api_key": api_key}
+            params={"api_key": api_key},
         )
         assert response.status_code == 422
-        
+
         # Test missing required fields
         response = await client.post("/memories", json={}, params={"api_key": api_key})
         assert response.status_code == 422
-        
+
         # Test invalid memory ID
         response = await client.get("/memories/invalid-id", params={"api_key": api_key})
         assert response.status_code == 404
-        
+
         # Test invalid search query
-        response = await client.post(
-            "/memories/search", 
-            json={"limit": -1}, 
-            params={"api_key": api_key}
-        )
+        response = await client.post("/memories/search", json={"limit": -1}, params={"api_key": api_key})
         assert response.status_code == 422
 
     @pytest.mark.asyncio
@@ -168,15 +157,15 @@ class TestIntegrationSuite:
         # Test missing API key
         response = await client.get("/memories")
         assert response.status_code == 422
-        
+
         # Test empty API key
         response = await client.get("/memories", params={"api_key": ""})
         assert response.status_code == 401
-        
+
         # Test invalid API key
         response = await client.get("/memories", params={"api_key": "invalid-key"})
         assert response.status_code == 401
-        
+
         # Test valid API key from list
         response = await client.get("/memories", params={"api_key": "test-key-2"})
         assert response.status_code == 200
@@ -187,13 +176,9 @@ class TestIntegrationSuite:
         # Test CORS headers
         response = await client.options("/memories", params={"api_key": api_key})
         # FastAPI handles OPTIONS automatically
-        
+
         # Test with custom headers
-        response = await client.get(
-            "/memories", 
-            params={"api_key": api_key},
-            headers={"X-Test-Header": "test-value"}
-        )
+        response = await client.get("/memories", params={"api_key": api_key}, headers={"X-Test-Header": "test-value"})
         assert response.status_code == 200
 
 
@@ -204,13 +189,13 @@ class TestMockDatabaseEdgeCases:
     async def test_uninitialized_database(self):
         """Test operations on uninitialized database."""
         db = MockDatabase()
-        
+
         with pytest.raises(RuntimeError, match="Database not initialized"):
             await db.store_memory("test", {})
-        
+
         with pytest.raises(RuntimeError, match="Database not initialized"):
             await db.get_memory("test-id")
-        
+
         with pytest.raises(RuntimeError, match="Database not initialized"):
             await db.search_memories("test")
 
@@ -221,7 +206,7 @@ class TestMockDatabaseEdgeCases:
         memory_id = await db.store_memory("", {})
         memory = await db.get_memory(memory_id)
         assert memory["content"] == ""
-        
+
         # Very long content
         long_content = "x" * 10000
         memory_id = await db.store_memory(long_content, {})
@@ -235,19 +220,14 @@ class TestMockDatabaseEdgeCases:
         memory_id = await db.store_memory("test", None)
         memory = await db.get_memory(memory_id)
         assert memory["metadata"] == {}
-        
+
         # Empty metadata
         memory_id = await db.store_memory("test", {})
         memory = await db.get_memory(memory_id)
         assert memory["metadata"] == {}
-        
+
         # Complex nested metadata
-        complex_metadata = {
-            "nested": {"deep": {"value": 42}},
-            "array": [1, 2, 3],
-            "boolean": True,
-            "null": None
-        }
+        complex_metadata = {"nested": {"deep": {"value": 42}}, "array": [1, 2, 3], "boolean": True, "null": None}
         memory_id = await db.store_memory("test", complex_metadata)
         memory = await db.get_memory(memory_id)
         assert memory["metadata"]["nested"]["deep"]["value"] == 42
@@ -259,19 +239,19 @@ class TestMockDatabaseEdgeCases:
         await db.store_memory("Python programming", {"type": "code"})
         await db.store_memory("Java development", {"type": "code"})
         await db.store_memory("Database design", {"type": "design"})
-        
+
         # Empty query
         results = await db.search_memories("", limit=10)
         assert len(results) == 3
-        
+
         # Very specific query
         results = await db.search_memories("Python", limit=1)
         assert len(results) == 1
-        
+
         # Limit of 0
         results = await db.search_memories("Python", limit=0)
         assert len(results) == 0
-        
+
         # Large limit
         results = await db.search_memories("code", limit=100)
         assert len(results) <= 3
@@ -282,15 +262,15 @@ class TestMockDatabaseEdgeCases:
         # Store memories
         for i in range(5):
             await db.store_memory(f"Memory {i}", {"index": i})
-        
+
         # Normal pagination
         results = await db.get_all_memories(limit=3, offset=0)
         assert len(results) == 3
-        
+
         # Offset beyond data
         results = await db.get_all_memories(limit=3, offset=10)
         assert len(results) == 0
-        
+
         # Large limit
         results = await db.get_all_memories(limit=100, offset=0)
         assert len(results) == 5
@@ -301,7 +281,7 @@ class TestMockDatabaseEdgeCases:
         # Get nonexistent memory
         memory = await db.get_memory("nonexistent-id")
         assert memory is None
-        
+
         # Delete nonexistent memory
         result = await db.delete_memory("nonexistent-id")
         assert result is False
@@ -312,11 +292,11 @@ class TestMockDatabaseEdgeCases:
         # Store and delete memory
         memory_id = await db.store_memory("test", {})
         await db.delete_memory(memory_id)
-        
+
         # Verify cleanup
         memory = await db.get_memory(memory_id)
         assert memory is None
-        
+
         # Close database
         await db.close()
         assert db.is_initialized is False

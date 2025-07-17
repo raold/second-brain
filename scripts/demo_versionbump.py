@@ -4,34 +4,34 @@ VERSIONBUMP Command Demo
 Shows how to use the VERSIONBUMP command system
 """
 
-import sys
 from pathlib import Path
+
 
 def show_versionbump_usage():
     """Display comprehensive usage information for VERSIONBUMP command"""
-    
+
     current_dir = Path.cwd()
-    
+
     print("🚀 VERSIONBUMP Command System")
     print("=" * 50)
     print()
     print("📋 **WHAT IT DOES:**")
     print("   Complete automated version bump workflow:")
     print("   ✅ Updates app/version.py")
-    print("   ✅ Updates README.md") 
+    print("   ✅ Updates README.md")
     print("   ✅ Updates CHANGELOG.md")
     print("   ✅ Updates docs/ recursively")
     print("   ✅ Git add + commit + push")
     print("   ✅ Creates Git tag")
     print("   ✅ Generates GitHub release notes")
     print()
-    
+
     print("🎯 **USAGE (Windows):**")
     print()
     print("   **PowerShell (Recommended):**")
     print("   ```powershell")
     print("   scripts\\VERSIONBUMP.ps1 patch")
-    print("   scripts\\VERSIONBUMP.ps1 minor") 
+    print("   scripts\\VERSIONBUMP.ps1 minor")
     print("   scripts\\VERSIONBUMP.ps1 major")
     print("   ```")
     print()
@@ -49,7 +49,7 @@ def show_versionbump_usage():
     print("   python scripts/version_bump.py major")
     print("   ```")
     print()
-    
+
     print("📦 **VERSION TYPES:**")
     print()
     print("   **PATCH (2.1.1 → 2.1.2)** - Bug fixes, documentation")
@@ -58,7 +58,7 @@ def show_versionbump_usage():
     print("   ```")
     print()
     print("   **MINOR (2.1.1 → 2.2.0)** - New features, enhancements")
-    print("   ```") 
+    print("   ```")
     print("   VERSIONBUMP minor")
     print("   ```")
     print()
@@ -67,7 +67,7 @@ def show_versionbump_usage():
     print("   VERSIONBUMP major")
     print("   ```")
     print()
-    
+
     print("🔄 **WORKFLOW EXAMPLE:**")
     print()
     print("   1. **Make changes** → Edit code, fix bugs, add features")
@@ -76,14 +76,14 @@ def show_versionbump_usage():
     print("   4. **GitHub release** → Copy-paste generated release notes")
     print("   5. **Done!** → v2.1.2 is live on GitHub")
     print()
-    
+
     print("📝 **EXAMPLE OUTPUT:**")
     print("   ```")
     print("   🚀 Starting version bump: patch")
     print("   🔄 Version bump: 2.1.1 → 2.1.2")
     print("   ✅ Updated version.py: 2.1.1 → 2.1.2")
     print("   ✅ Updated README.md with version 2.1.2")
-    print("   ✅ Updated CHANGELOG.md with version 2.1.2") 
+    print("   ✅ Updated CHANGELOG.md with version 2.1.2")
     print("   ✅ Updated 3 files in docs/")
     print("   ✅ Added all changes to git")
     print("   ✅ Committed changes")
@@ -92,7 +92,7 @@ def show_versionbump_usage():
     print("   🎉 Version bump completed successfully!")
     print("   ```")
     print()
-    
+
     print("🏷️ **RELEASE INFORMATION GENERATED:**")
     print("   ```markdown")
     print("   🔧 Second Brain v2.1.2 - Bug Fix Release")
@@ -104,37 +104,39 @@ def show_versionbump_usage():
     print("   ...")
     print("   ```")
     print()
-    
+
     print("⚡ **QUICK START:**")
     print()
     print("   **Right now, try this:**")
     print("   ```powershell")
     print("   # Test the version bump logic (no changes made)")
-    print("   python -c \"")
+    print('   python -c "')
     print("   import sys")
     print("   sys.path.append('scripts')")
     print("   from version_bump import VersionBumper")
     print("   b = VersionBumper()")
-    print("   print(f'Current: {b.get_current_version()}')") 
-    print("   print(f'Next patch: {b.calculate_new_version(\\\"patch\\\")}')\"")
+    print("   print(f'Current: {b.get_current_version()}')")
+    print('   print(f\'Next patch: {b.calculate_new_version(\\"patch\\")}\')"')
     print("   ```")
     print()
-    
+
     print("✨ **READY TO USE:**")
     print("   The VERSIONBUMP system is fully set up and ready!")
     print("   Just run the command when you want to release a new version.")
     print()
     print("   **Example for next release:**")
-    print(f"   ```powershell")
+    print("   ```powershell")
     print(f"   # From: {current_dir}")
-    print(f"   scripts\\VERSIONBUMP.ps1 patch")
-    print(f"   ```")
+    print("   scripts\\VERSIONBUMP.ps1 patch")
+    print("   ```")
     print()
     print("🎉 **Happy version bumping!** 🚀📦✨")
+
 
 def main():
     """Main entry point"""
     show_versionbump_usage()
+
 
 if __name__ == "__main__":
     main()

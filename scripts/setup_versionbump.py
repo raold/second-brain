@@ -4,23 +4,23 @@ Setup VERSIONBUMP Command
 Creates aliases and shortcuts for the VERSIONBUMP command across different platforms
 """
 
-import os
-import sys
 import platform
+import sys
 from pathlib import Path
+
 
 def setup_versionbump_command():
     """Setup VERSIONBUMP command for the current platform"""
-    
+
     # Get paths
     script_dir = Path(__file__).parent
     root_dir = script_dir.parent
-    
+
     system = platform.system().lower()
-    
+
     print(f"🔧 Setting up VERSIONBUMP command for {system}")
     print(f"📁 Root directory: {root_dir}")
-    
+
     if system == "windows":
         setup_windows_command(script_dir, root_dir)
     elif system in ["linux", "darwin"]:  # Linux or macOS
@@ -28,32 +28,33 @@ def setup_versionbump_command():
     else:
         print(f"❌ Unsupported platform: {system}")
         return False
-    
+
     return True
+
 
 def setup_windows_command(script_dir, root_dir):
     """Setup VERSIONBUMP command for Windows"""
-    
+
     # Create a batch file in the scripts directory
-    batch_content = f'''@echo off
+    batch_content = f"""@echo off
 REM VERSIONBUMP Command - Auto-generated
 cd /d "{root_dir}"
 python scripts\\version_bump.py %*
-'''
-    
+"""
+
     batch_file = script_dir / "versionbump.bat"
     batch_file.write_text(batch_content)
-    
+
     print(f"✅ Created batch file: {batch_file}")
-    
+
     # Instructions for adding to PATH
     print("\n📋 To make VERSIONBUMP available system-wide:")
     print(f"1. Add this directory to your PATH: {script_dir}")
     print("2. Or run from project root: scripts\\VERSIONBUMP.bat [major|minor|patch]")
     print("3. Or use PowerShell: scripts\\VERSIONBUMP.ps1 [major|minor|patch]")
-    
+
     # Create PowerShell profile entry
-    powershell_alias = f'''
+    powershell_alias = f"""
 # VERSIONBUMP alias for Second Brain
 function VERSIONBUMP {{
     param([string]$BumpType)
@@ -63,46 +64,48 @@ function VERSIONBUMP {{
     }}
     & "{script_dir / 'VERSIONBUMP.ps1'}" $BumpType
 }}
-'''
-    
-    print(f"\n📝 PowerShell alias (add to your profile):")
+"""
+
+    print("\n📝 PowerShell alias (add to your profile):")
     print(powershell_alias)
+
 
 def setup_unix_command(script_dir, root_dir):
     """Setup VERSIONBUMP command for Unix-like systems"""
-    
+
     # Create a shell script
-    shell_script = f'''#!/bin/bash
+    shell_script = f"""#!/bin/bash
 # VERSIONBUMP Command - Auto-generated
 cd "{root_dir}"
 python3 scripts/version_bump.py "$@"
-'''
-    
+"""
+
     script_file = script_dir / "versionbump"
     script_file.write_text(shell_script)
     script_file.chmod(0o755)  # Make executable
-    
+
     print(f"✅ Created shell script: {script_file}")
-    
+
     # Create alias for common shells
-    bash_alias = f'''
+    bash_alias = f"""
 # VERSIONBUMP alias for Second Brain
 alias VERSIONBUMP='cd "{root_dir}" && python3 scripts/version_bump.py'
-'''
-    
-    print(f"\n📝 Bash/Zsh alias (add to your ~/.bashrc or ~/.zshrc):")
+"""
+
+    print("\n📝 Bash/Zsh alias (add to your ~/.bashrc or ~/.zshrc):")
     print(bash_alias)
-    
-    print(f"\n📋 To make VERSIONBUMP available system-wide:")
+
+    print("\n📋 To make VERSIONBUMP available system-wide:")
     print(f"1. Add this directory to your PATH: {script_dir}")
-    print(f"2. Or run from project root: scripts/versionbump [major|minor|patch]")
-    print(f"3. Or add the alias above to your shell configuration")
+    print("2. Or run from project root: scripts/versionbump [major|minor|patch]")
+    print("3. Or add the alias above to your shell configuration")
+
 
 def main():
     """Main entry point"""
     print("🚀 Second Brain Version Bump Command Setup")
-    print("="*50)
-    
+    print("=" * 50)
+
     if setup_versionbump_command():
         print("\n🎉 VERSIONBUMP command setup completed!")
         print("\n📚 Usage:")
@@ -120,6 +123,7 @@ def main():
     else:
         print("\n❌ Setup failed!")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
