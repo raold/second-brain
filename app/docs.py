@@ -164,8 +164,8 @@ All endpoints require an API key passed as a query parameter:
         "email": "support@secondbrain.ai"
     }
     app.license_info = {
-        "name": "MIT License",
-        "url": "https://opensource.org/licenses/MIT"
+        "name": "GNU Affero General Public License v3.0",
+        "url": "https://www.gnu.org/licenses/agpl-3.0"
     }
     app.servers = [
         {

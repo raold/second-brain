@@ -75,10 +75,10 @@ git clone https://github.com/raold/second-brain.git
 cd second-brain
 
 # Install dependencies
-pip install -r requirements-minimal.txt
+pip install -r requirements.txt
 
 # Setup environment
-cp .env.example .env
+cp config/environments/env.example .env
 # Edit .env with your configuration
 ```
 
@@ -88,7 +88,7 @@ cp .env.example .env
 psql -d your_database -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
 # Initialize database tables
-python setup_db.py
+python scripts/setup/setup_database.py
 ```
 
 ### **4. Configuration**
@@ -169,13 +169,18 @@ curl -X GET "http://localhost:8000/status?api_key=your_token"
 ### **Quick Test**
 ```bash
 # Test with mock database (no OpenAI API required)
-python test_mock_database.py
+python tests/unit/test_mock_database.py
 
 # Run full test suite
-python -m pytest test_refactored.py -v --asyncio-mode=auto
+pytest tests/ -v
 
 # Run with coverage
-python -m pytest test_refactored.py --cov=app --cov-report=html --asyncio-mode=auto
+pytest tests/ --cov=app --cov-report=html
+
+# Test specific categories
+pytest tests/unit/ -v          # Unit tests
+pytest tests/integration/ -v   # Integration tests
+pytest tests/performance/ -v   # Performance tests
 ```
 
 ### **Mock Database**
@@ -275,10 +280,13 @@ ON memories USING ivfflat (embedding vector_cosine_ops);
 
 ## 📚 **Documentation**
 
-- **[Architecture Guide](docs/ARCHITECTURE.md)** - System design and components
-- **[Usage Guide](docs/USAGE.md)** - API usage and examples
-- **[Testing Guide](docs/TESTING.md)** - Testing strategies and mock database
-- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment
+- **[Repository Structure](REPOSITORY_STRUCTURE.md)** - Directory organization and conventions
+- **[Contributing Guide](CONTRIBUTING.md)** - Development setup and contribution guidelines
+- **[Architecture Guide](docs/architecture/)** - System design and components
+- **[API Documentation](docs/api/)** - Complete endpoint reference and examples
+- **[Deployment Guide](docs/deployment/)** - Production setup and Docker configurations
+- **[Development Guide](docs/development/)** - Project status, roadmap, and development notes
+- **[User Guide](docs/user/)** - Usage tutorials and examples
 - **[Changelog](CHANGELOG.md)** - Version history and breaking changes
 
 ## 🤝 **Contributing**
@@ -292,9 +300,9 @@ ON memories USING ivfflat (embedding vector_cosine_ops);
 
 ```bash
 # Development setup
-pip install -r requirements-minimal.txt
-python test_mock_database.py  # Quick test
-python -m pytest test_refactored.py -v  # Full test suite
+pip install -r requirements.txt
+python tests/unit/test_mock_database.py  # Quick test
+pytest tests/ -v  # Full test suite
 ```
 
 ## 📜 **License**
