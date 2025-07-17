@@ -4,9 +4,12 @@ Test the mock database functionality.
 
 import asyncio
 
+import pytest
+
 from app.database_mock import get_mock_database
 
 
+@pytest.mark.asyncio
 async def test_mock_database():
     """Test mock database functionality."""
     # Get database

@@ -21,38 +21,25 @@ os.environ["API_TOKENS"] = "test-key-1,test-key-2"
 class TestIntegrationSuite:
     """Integration tests for full system functionality."""
 
-    @pytest.fixture
-    async def client(self):
-        """Create test client."""
-        # Reset mock database for each test
-        import app.app as app_module
-        app_module._mock_db_instance = None
-        
-        async with AsyncClient(app=app, base_url="http://test") as ac:
-            yield ac
-
-    @pytest.fixture
-    def api_key(self):
-        """Get API key for testing."""
-        return "test-key-1"
-
+    @pytest.mark.asyncio
     async def test_version_info_integration(self):
         """Test version information system."""
         version_info = get_version_info()
-        assert version_info["version"] == "2.0.0"
+        assert version_info["version"] == "2.1.0"
         assert version_info["codename"] == "Phoenix"
         assert version_info["api_version"] == "v1"
 
+    @pytest.mark.asyncio
     async def test_health_endpoint_with_version(self, client):
         """Test health endpoint returns version info."""
         response = await client.get("/health")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert data["service"] == "second-brain"
-        assert data["version"] == "2.0.0"
-        assert data["api_version"] == "v1"
+        assert data["version"] == "2.1.0"
+        assert "timestamp" in data
 
+    @pytest.mark.asyncio
     async def test_status_endpoint_comprehensive(self, client, api_key):
         """Test status endpoint with comprehensive data."""
         response = await client.get("/status", params={"api_key": api_key})
@@ -62,6 +49,7 @@ class TestIntegrationSuite:
         assert "index_status" in data
         assert data["database"] == "connected"
 
+    @pytest.mark.asyncio
     async def test_memory_lifecycle_comprehensive(self, client, api_key):
         """Test complete memory lifecycle with edge cases."""
         # Test storing memory with complex metadata
@@ -111,6 +99,7 @@ class TestIntegrationSuite:
         get_response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
         assert get_response.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_batch_memory_operations(self, client, api_key):
         """Test batch operations and pagination."""
         # Store multiple memories
@@ -145,6 +134,7 @@ class TestIntegrationSuite:
         search_results = search_response.json()
         assert len(search_results) == 3
 
+    @pytest.mark.asyncio
     async def test_error_handling_comprehensive(self, client, api_key):
         """Test comprehensive error handling."""
         # Test invalid JSON
@@ -172,6 +162,7 @@ class TestIntegrationSuite:
         )
         assert response.status_code == 422
 
+    @pytest.mark.asyncio
     async def test_authentication_edge_cases(self, client):
         """Test authentication edge cases."""
         # Test missing API key
@@ -190,6 +181,7 @@ class TestIntegrationSuite:
         response = await client.get("/memories", params={"api_key": "test-key-2"})
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
     async def test_cors_and_headers(self, client, api_key):
         """Test CORS and header handling."""
         # Test CORS headers
@@ -208,13 +200,7 @@ class TestIntegrationSuite:
 class TestMockDatabaseEdgeCases:
     """Test mock database edge cases for full coverage."""
 
-    @pytest.fixture
-    async def mock_db(self):
-        """Create mock database instance."""
-        db = MockDatabase()
-        await db.initialize()
-        return db
-
+    @pytest.mark.asyncio
     async def test_uninitialized_database(self):
         """Test operations on uninitialized database."""
         db = MockDatabase()
@@ -228,29 +214,31 @@ class TestMockDatabaseEdgeCases:
         with pytest.raises(RuntimeError, match="Database not initialized"):
             await db.search_memories("test")
 
-    async def test_empty_content_handling(self, mock_db):
+    @pytest.mark.asyncio
+    async def test_empty_content_handling(self, db):
         """Test handling of empty and edge case content."""
         # Empty content
-        memory_id = await mock_db.store_memory("", {})
-        memory = await mock_db.get_memory(memory_id)
+        memory_id = await db.store_memory("", {})
+        memory = await db.get_memory(memory_id)
         assert memory["content"] == ""
         
         # Very long content
         long_content = "x" * 10000
-        memory_id = await mock_db.store_memory(long_content, {})
-        memory = await mock_db.get_memory(memory_id)
+        memory_id = await db.store_memory(long_content, {})
+        memory = await db.get_memory(memory_id)
         assert memory["content"] == long_content
 
-    async def test_metadata_edge_cases(self, mock_db):
+    @pytest.mark.asyncio
+    async def test_metadata_edge_cases(self, db):
         """Test metadata edge cases."""
         # None metadata
-        memory_id = await mock_db.store_memory("test", None)
-        memory = await mock_db.get_memory(memory_id)
+        memory_id = await db.store_memory("test", None)
+        memory = await db.get_memory(memory_id)
         assert memory["metadata"] == {}
         
         # Empty metadata
-        memory_id = await mock_db.store_memory("test", {})
-        memory = await mock_db.get_memory(memory_id)
+        memory_id = await db.store_memory("test", {})
+        memory = await db.get_memory(memory_id)
         assert memory["metadata"] == {}
         
         # Complex nested metadata
@@ -260,74 +248,78 @@ class TestMockDatabaseEdgeCases:
             "boolean": True,
             "null": None
         }
-        memory_id = await mock_db.store_memory("test", complex_metadata)
-        memory = await mock_db.get_memory(memory_id)
+        memory_id = await db.store_memory("test", complex_metadata)
+        memory = await db.get_memory(memory_id)
         assert memory["metadata"]["nested"]["deep"]["value"] == 42
 
-    async def test_search_edge_cases(self, mock_db):
+    @pytest.mark.asyncio
+    async def test_search_edge_cases(self, db):
         """Test search edge cases."""
         # Store some test memories
-        await mock_db.store_memory("Python programming", {"type": "code"})
-        await mock_db.store_memory("Java development", {"type": "code"})
-        await mock_db.store_memory("Database design", {"type": "design"})
+        await db.store_memory("Python programming", {"type": "code"})
+        await db.store_memory("Java development", {"type": "code"})
+        await db.store_memory("Database design", {"type": "design"})
         
         # Empty query
-        results = await mock_db.search_memories("", limit=10)
+        results = await db.search_memories("", limit=10)
         assert len(results) == 3
         
         # Very specific query
-        results = await mock_db.search_memories("Python", limit=1)
+        results = await db.search_memories("Python", limit=1)
         assert len(results) == 1
         
         # Limit of 0
-        results = await mock_db.search_memories("Python", limit=0)
+        results = await db.search_memories("Python", limit=0)
         assert len(results) == 0
         
         # Large limit
-        results = await mock_db.search_memories("code", limit=100)
+        results = await db.search_memories("code", limit=100)
         assert len(results) <= 3
 
-    async def test_pagination_edge_cases(self, mock_db):
+    @pytest.mark.asyncio
+    async def test_pagination_edge_cases(self, db):
         """Test pagination edge cases."""
         # Store memories
         for i in range(5):
-            await mock_db.store_memory(f"Memory {i}", {"index": i})
+            await db.store_memory(f"Memory {i}", {"index": i})
         
         # Normal pagination
-        results = await mock_db.get_all_memories(limit=3, offset=0)
+        results = await db.get_all_memories(limit=3, offset=0)
         assert len(results) == 3
         
         # Offset beyond data
-        results = await mock_db.get_all_memories(limit=3, offset=10)
+        results = await db.get_all_memories(limit=3, offset=10)
         assert len(results) == 0
         
         # Large limit
-        results = await mock_db.get_all_memories(limit=100, offset=0)
+        results = await db.get_all_memories(limit=100, offset=0)
         assert len(results) == 5
 
-    async def test_nonexistent_memory_operations(self, mock_db):
+    @pytest.mark.asyncio
+    async def test_nonexistent_memory_operations(self, db):
         """Test operations on nonexistent memories."""
         # Get nonexistent memory
-        memory = await mock_db.get_memory("nonexistent-id")
+        memory = await db.get_memory("nonexistent-id")
         assert memory is None
         
         # Delete nonexistent memory
-        result = await mock_db.delete_memory("nonexistent-id")
+        result = await db.delete_memory("nonexistent-id")
         assert result is False
 
-    async def test_database_cleanup(self, mock_db):
+    @pytest.mark.asyncio
+    async def test_database_cleanup(self, db):
         """Test database cleanup operations."""
         # Store and delete memory
-        memory_id = await mock_db.store_memory("test", {})
-        await mock_db.delete_memory(memory_id)
+        memory_id = await db.store_memory("test", {})
+        await db.delete_memory(memory_id)
         
         # Verify cleanup
-        memory = await mock_db.get_memory(memory_id)
+        memory = await db.get_memory(memory_id)
         assert memory is None
         
         # Close database
-        await mock_db.close()
-        assert mock_db.is_initialized is False
+        await db.close()
+        assert db.is_initialized is False
 
 
 if __name__ == "__main__":

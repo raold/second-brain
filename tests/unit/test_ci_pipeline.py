@@ -12,6 +12,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+import pytest
+
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -42,6 +44,7 @@ class MockOpenAI:
         self.embeddings = MockEmbeddings()
 
 
+@pytest.mark.asyncio
 async def test_environment_setup():
     """Test that the environment is set up correctly."""
     print("🔧 Testing Environment Setup...")
@@ -91,6 +94,7 @@ async def test_environment_setup():
     return True
 
 
+@pytest.mark.asyncio
 async def test_database_connection():
     """Test database connection and schema setup."""
     print("\n🔧 Testing Database Connection...")
@@ -124,6 +128,7 @@ async def test_database_connection():
     return True
 
 
+@pytest.mark.asyncio
 async def test_mock_database_functionality():
     """Test the mock database functionality."""
     print("\n🔧 Testing Mock Database Functionality...")
@@ -164,6 +169,7 @@ async def test_mock_database_functionality():
     return True
 
 
+@pytest.mark.asyncio
 async def test_real_database_functionality():
     """Test the real database functionality if available."""
     print("\n🔧 Testing Real Database Functionality...")
@@ -211,6 +217,7 @@ async def test_real_database_functionality():
     return True
 
 
+@pytest.mark.asyncio
 async def test_api_endpoints():
     """Test the FastAPI endpoints."""
     print("\n🔧 Testing API Endpoints...")
@@ -282,6 +289,7 @@ async def test_api_endpoints():
     return True
 
 
+@pytest.mark.asyncio
 async def test_docker_build():
     """Test Docker build process."""
     print("\n🔧 Testing Docker Build...")
@@ -320,6 +328,7 @@ async def test_docker_build():
     return True
 
 
+@pytest.mark.asyncio
 async def test_linting_and_formatting():
     """Test code quality with ruff."""
     print("\n🔧 Testing Code Quality (Linting)...")
@@ -343,6 +352,7 @@ async def test_linting_and_formatting():
     return True
 
 
+@pytest.mark.asyncio
 async def test_requirements_installation():
     """Test that all requirements can be installed."""
     print("\n🔧 Testing Requirements Installation...")

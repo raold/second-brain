@@ -2,42 +2,20 @@
 Simple test suite for the refactored Second Brain application.
 """
 
-import os
-
 import pytest
-from httpx import AsyncClient
-
-from app.app import app
-from app.database_mock import MockDatabase
-
-# Set up test environment
-os.environ["USE_MOCK_DATABASE"] = "true"
-os.environ["API_TOKENS"] = "test-key-1,test-key-2"
 
 
 class TestAPI:
     """Test the API endpoints."""
 
-    @pytest.fixture
-    async def client(self):
-        """Create test client."""
-        async with AsyncClient(app=app, base_url="http://test") as ac:
-            yield ac
-
-    @pytest.fixture
-    def api_key(self):
-        """Get API key for testing."""
-        import os
-
-        tokens = os.getenv("API_TOKENS", "").split(",")
-        return tokens[0].strip() if tokens else "test-key"
-
+    @pytest.mark.asyncio
     async def test_health_check(self, client):
         """Test health check endpoint."""
         response = await client.get("/health")
         assert response.status_code == 200
         assert response.json()["status"] == "healthy"
 
+    @pytest.mark.asyncio
     async def test_store_memory(self, client, api_key):
         """Test storing a memory."""
         memory_data = {"content": "This is a test memory", "metadata": {"type": "test", "tags": ["example"]}}
@@ -50,6 +28,7 @@ class TestAPI:
         assert data["metadata"] == memory_data["metadata"]
         assert "id" in data
 
+    @pytest.mark.asyncio
     async def test_search_memories(self, client, api_key):
         """Test searching memories."""
         # First store a memory
@@ -68,6 +47,7 @@ class TestAPI:
         assert len(results) > 0
         assert results[0]["content"] == memory_data["content"]
 
+    @pytest.mark.asyncio
     async def test_get_memory(self, client, api_key):
         """Test getting a specific memory."""
         # First store a memory
@@ -85,6 +65,7 @@ class TestAPI:
         assert data["content"] == memory_data["content"]
         assert data["id"] == memory_id
 
+    @pytest.mark.asyncio
     async def test_delete_memory(self, client, api_key):
         """Test deleting a memory."""
         # First store a memory
@@ -104,6 +85,7 @@ class TestAPI:
         get_response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
         assert get_response.status_code == 404
 
+    @pytest.mark.asyncio
     async def test_list_memories(self, client, api_key):
         """Test listing memories."""
         response = await client.get("/memories", params={"api_key": api_key, "limit": 10})
@@ -112,6 +94,7 @@ class TestAPI:
         data = response.json()
         assert isinstance(data, list)
 
+    @pytest.mark.asyncio
     async def test_authentication_required(self, client):
         """Test that authentication is required."""
         response = await client.get("/memories")
@@ -124,13 +107,7 @@ class TestAPI:
 class TestDatabase:
     """Test database operations."""
 
-    @pytest.fixture
-    async def db(self):
-        """Get mock database instance for testing."""
-        mock_db = MockDatabase()
-        await mock_db.initialize()
-        return mock_db
-
+    @pytest.mark.asyncio
     async def test_store_and_retrieve_memory(self, db):
         """Test storing and retrieving a memory."""
         content = "Test memory content"
@@ -147,6 +124,7 @@ class TestDatabase:
         assert memory["metadata"] == metadata
         assert memory["id"] == memory_id
 
+    @pytest.mark.asyncio
     async def test_search_memories(self, db):
         """Test searching memories."""
         # Store test memories
@@ -158,6 +136,7 @@ class TestDatabase:
         assert len(results) > 0
         assert results[0]["similarity"] > 0.5  # Should be reasonably similar
 
+    @pytest.mark.asyncio
     async def test_delete_memory(self, db):
         """Test deleting a memory."""
         # Store memory
@@ -175,6 +154,7 @@ class TestDatabase:
         memory = await db.get_memory(memory_id)
         assert memory is None
 
+    @pytest.mark.asyncio
     async def test_list_memories(self, db):
         """Test listing memories."""
         # Store a few memories
