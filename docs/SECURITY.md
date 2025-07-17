@@ -6,7 +6,8 @@ We actively support the latest version of this project. Older versions are not s
 
 | Version | Supported        |
 | ------- | ---------------- |
-| 1.x.x   | ✅ Supported      |
+| 2.x.x   | ✅ Supported      |
+| 1.x.x   | ❌ Not Supported  |
 | < 1.0   | ❌ Not Supported  |
 
 We encourage all users to upgrade to the latest release.
@@ -22,23 +23,6 @@ Include the following information if possible:
 - Potential impact
 - Steps to reproduce
 - Environment (OS, version, etc.)
-
-We aim to respond within **3 business days** and will coordinate disclosure responsibly.
-
-## Security Best Practices
-
-- Keep your dependencies updated.
-- Run the application in isolated environments (e.g., containers).
-- Regularly rotate API tokens and secrets.
-- Never commit `.env` files or secrets to source control.
-- Monitor logs for suspicious activity.
-- Secure Postgres and Qdrant with strong passwords and network rules.
-- Review plugin code and integrations for security risks.
-- Limit feedback/correction endpoint access to authenticated users.
-
-## Hall of Fame
-
-We recognize researchers who responsibly disclose vulnerabilities. If you wish to be acknowledged, please let us know when reporting.
 
 ## Resources
 
