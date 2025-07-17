@@ -7,12 +7,11 @@ import asyncio
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock
+from typing import List
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from qdrant_client.http.models import PointStruct, ScoredPoint
-
 
 # ===== OPENAI MOCKS =====
 
@@ -245,7 +244,6 @@ def mock_postgres_client():
     
     # In-memory storage
     memory_storage = {}
-    search_history = {}
     
     async def store_memory(**kwargs):
         """Mock store_memory operation"""

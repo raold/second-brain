@@ -296,6 +296,38 @@ def qdrant_upsert(payload: Dict[str, Any]) -> None:
         logger.exception(f"[Qdrant ERROR] Failed to upsert vector for ID={payload.get('id', 'unknown')}: {str(e)}")
         raise  # Re-raise the exception so the router can handle it
 
+def _parse_timestamp_to_unix(timestamp: str) -> float:
+    """
+    Parse ISO timestamp string to Unix timestamp.
+    
+    Args:
+        timestamp: ISO timestamp string (e.g., "2023-01-01T00:00:00Z")
+        
+    Returns:
+        Unix timestamp as float
+        
+    Raises:
+        ValueError: If timestamp cannot be parsed
+    """
+    from datetime import datetime
+    
+    try:
+        # Handle various ISO formats
+        if timestamp.endswith('Z'):
+            # UTC timezone
+            dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+        elif '+' in timestamp or timestamp.count('-') > 2:
+            # Has timezone info
+            dt = datetime.fromisoformat(timestamp)
+        else:
+            # Assume UTC if no timezone
+            dt = datetime.fromisoformat(timestamp + '+00:00')
+        
+        return dt.timestamp()
+    except ValueError as e:
+        raise ValueError(f"Unable to parse timestamp '{timestamp}': {e}")
+
+
 def _build_qdrant_filter(filters: dict):
     """
     Build Qdrant filter from search filters dictionary.
@@ -316,21 +348,31 @@ def _build_qdrant_filter(filters: dict):
     # Handle various filter types
     for key, value in filters.items():
         if key == "timestamp" and isinstance(value, dict):
-            # Handle timestamp range
+            # Handle timestamp range - convert ISO strings to Unix timestamps
             from_ts = value.get("from")
             to_ts = value.get("to")
             if from_ts or to_ts:
                 range_condition = {}
                 if from_ts:
-                    range_condition["gte"] = from_ts
+                    try:
+                        range_condition["gte"] = _parse_timestamp_to_unix(from_ts)
+                    except ValueError as e:
+                        logger.warning(f"Invalid 'from' timestamp '{from_ts}': {e}")
+                        continue  # Skip this filter if timestamp is invalid
                 if to_ts:
-                    range_condition["lte"] = to_ts
-                conditions.append(
-                    FieldCondition(
-                        key="meta.timestamp",
-                        range=Range(**range_condition)
+                    try:
+                        range_condition["lte"] = _parse_timestamp_to_unix(to_ts)
+                    except ValueError as e:
+                        logger.warning(f"Invalid 'to' timestamp '{to_ts}': {e}")
+                        continue  # Skip this filter if timestamp is invalid
+                
+                if range_condition:  # Only add if we have valid timestamps
+                    conditions.append(
+                        FieldCondition(
+                            key="meta.timestamp",
+                            range=Range(**range_condition)
+                        )
                     )
-                )
         elif isinstance(value, list):
             # Handle list values (match any)
             conditions.append(

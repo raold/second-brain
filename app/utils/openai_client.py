@@ -4,7 +4,7 @@ import asyncio
 import base64
 import os
 import time
-from typing import List
+from typing import List, Optional
 
 import aiohttp
 import openai
@@ -104,19 +104,45 @@ def _validate_embedding_response(response) -> List[float]:
     Raises:
         ValueError: If response is invalid
     """
-    if not hasattr(response, 'data') or not response.data:
-        raise ValueError("Invalid embedding response: no data field")
+    # Check if response object exists
+    if response is None:
+        raise ValueError("Invalid embedding response: response is None")
+    
+    # Check for data field
+    if not hasattr(response, 'data'):
+        available_attrs = dir(response) if response else []
+        raise ValueError(f"Invalid embedding response: no 'data' field. Available attributes: {available_attrs}")
+    
+    if not response.data:
+        raise ValueError("Invalid embedding response: data field is None or empty")
     
     if len(response.data) == 0:
-        raise ValueError("Invalid embedding response: empty data")
+        raise ValueError("Invalid embedding response: data array is empty")
     
-    embedding = response.data[0].embedding
-    if not embedding or not isinstance(embedding, list):
-        raise ValueError("Invalid embedding response: invalid embedding field")
+    # Check for embedding in first data item
+    first_item = response.data[0]
+    if not hasattr(first_item, 'embedding'):
+        available_attrs = dir(first_item) if first_item else []
+        raise ValueError(f"Invalid embedding response: no 'embedding' field in data[0]. Available attributes: {available_attrs}")
+    
+    embedding = first_item.embedding
+    if embedding is None:
+        raise ValueError("Invalid embedding response: embedding field is None")
+    
+    if not isinstance(embedding, list):
+        raise ValueError(f"Invalid embedding response: embedding field is not a list, got {type(embedding)}")
+    
+    if len(embedding) == 0:
+        raise ValueError("Invalid embedding response: embedding list is empty")
     
     # Validate embedding dimensions
-    if len(embedding) != config.qdrant['vector_size']:
-        raise ValueError(f"Embedding dimension mismatch: got {len(embedding)}, expected {config.qdrant['vector_size']}")
+    expected_size = config.qdrant.get('vector_size', 1536)
+    if len(embedding) != expected_size:
+        raise ValueError(f"Embedding dimension mismatch: got {len(embedding)}, expected {expected_size}")
+    
+    # Validate embedding values are numbers
+    if not all(isinstance(x, (int, float)) for x in embedding[:10]):  # Check first 10 values
+        raise ValueError("Invalid embedding response: embedding contains non-numeric values")
     
     return embedding
 
@@ -157,11 +183,8 @@ def get_openai_embedding(text: str, model: str = None) -> List[float]:
             model=model
         )
         
-        embedding = response.data[0].embedding
-        
-        # Validate embedding dimensions
-        if len(embedding) != config.qdrant['vector_size']:
-            raise ValueError(f"Embedding dimension mismatch: got {len(embedding)}, expected {config.qdrant['vector_size']}")
+        # Use the validation function for proper error handling
+        embedding = _validate_embedding_response(response)
         
         # Cache the result
         _embedding_cache.set(cache_key, embedding)
@@ -175,12 +198,27 @@ def get_openai_embedding(text: str, model: str = None) -> List[float]:
         logger.debug(f"Generated embedding in {time.time() - start_time:.2f}s")
         return embedding
         
+    except ValueError as e:
+        # Record validation failure
+        if openai_api_calls:
+            openai_api_calls.labels(endpoint='embeddings', status='validation_error').inc()
+        
+        logger.error(f"Embedding validation error for text '{text[:50]}...': {e}")
+        logger.debug(f"Full validation error details: {e}")
+        raise
+        
     except Exception as e:
-        # Record failure
+        # Record general failure
         if openai_api_calls:
             openai_api_calls.labels(endpoint='embeddings', status='error').inc()
         
-        logger.error(f"Failed to generate embedding: {e}")
+        error_details = {
+            'error_type': type(e).__name__,
+            'error_message': str(e),
+            'text_length': len(text),
+            'model': model
+        }
+        logger.error(f"Failed to generate embedding: {error_details}")
         raise
 
 # Async version of embedding function
@@ -207,6 +245,25 @@ def get_openai_client() -> openai.OpenAI:
         raise ValueError("OpenAI API key not configured")
     
     return openai.OpenAI(api_key=config.openai['api_key'])
+
+
+def get_openai_embedding_with_fallback(text: str, model: str = None) -> Optional[List[float]]:
+    """
+    Generate embeddings with fallback handling.
+    Returns None if embedding generation fails after retries.
+    
+    Args:
+        text: Input text to embed
+        model: OpenAI embedding model to use (optional)
+        
+    Returns:
+        List of float values representing the embedding, or None if failed
+    """
+    try:
+        return get_openai_embedding(text, model)
+    except Exception as e:
+        logger.warning(f"Embedding generation failed, returning None: {e}")
+        return None
 
 async def get_openai_stream(prompt: str):
     """

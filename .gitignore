@@ -1,47 +1,17 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Virtual environment
-venv/
+# Environment files
 .env
+.env.local
+.env.production
 
-# Logs
-logs/
-*.log
-
-# Pytest cache
-.pytest_cache/
-coverage/
-
-# Ruff cache
-.ruff_cache/
-
-# VSCode
-.vscode/
-
-# Cursor
-.cursorignore/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Qdrant data
-qdrant_data/
-qdrant_data_staging/
-qdrant_data_production/
-
-# Node.js
+# Dependencies
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.npm
-.yarn-integrity
+__pycache__/
+*.pyc
 
-# Electron build artifacts
-electron/dist/
-electron/build/
-electron/out/
+# Data directories
+data/
+logs/
+
+# IDE
+.vscode/
+.idea/
