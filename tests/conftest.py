@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import app.router as app_router
 from app.main import app
 from app.models import Payload, PayloadType, Priority
-from app.config import Config
+from app.config import config
 
 
 # ===== AUTHENTICATION FIXTURES =====
@@ -25,10 +25,11 @@ def setup_test_auth():
     # Override auth dependency to always allow
     app.dependency_overrides[app_router.verify_token] = always_allow
     # Set test token in config
-    Config.API_TOKENS = ['test-token']
+    config.override_for_testing(api_tokens=['test-token'])
     yield
     # Cleanup
     app.dependency_overrides.clear()
+    config.reset_to_defaults()
 
 
 @pytest.fixture
@@ -328,20 +329,24 @@ def test_config():
     original_config = {}
     
     # Store original values
-    for attr in dir(Config):
+    for attr in dir(config):
         if not attr.startswith('_'):
-            original_config[attr] = getattr(Config, attr)
+            original_config[attr] = getattr(config, attr)
     
     # Set test values
-    Config.API_TOKENS = ['test-token']
-    Config.QDRANT_COLLECTION = 'test_collection'
-    Config.LOG_LEVEL = 'DEBUG'
+    config.override_for_testing(
+        api_tokens=['test-token'],
+        log_level='DEBUG'
+    )
+    # Override qdrant collection for testing
+    original_qdrant_collection = config.qdrant['collection']
+    config.qdrant['collection'] = 'test_collection'
     
-    yield Config
+    yield config
     
     # Restore original values
-    for attr, value in original_config.items():
-        setattr(Config, attr, value)
+    config.qdrant['collection'] = original_qdrant_collection
+    config.reset_to_defaults()
 
 
 # ===== ASYNC TESTING FIXTURES =====

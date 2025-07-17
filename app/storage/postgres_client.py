@@ -202,46 +202,79 @@ class PostgresClient:
             (now - self._last_health_check).total_seconds() < 30):  # 30 second cache
             return self._health_cache.get("status", {"status": "unknown"})
         
+        if not self._initialized:
+            return {
+                "status": "unhealthy",
+                "error": "Database not initialized",
+                "timestamp": now.isoformat()
+            }
+        
         try:
             start_time = time.time()
             
             async with self.session_factory() as session:
                 # Basic connectivity test
-                result = await session.execute(select(func.now()))
-                db_time = result.scalar()
+                try:
+                    result = await session.execute(select(func.now()))
+                    db_time = result.scalar()
+                except Exception as e:
+                    logger.error(f"Database connectivity test failed: {e}")
+                    return {
+                        "status": "unhealthy",
+                        "error": f"Database connectivity failed: {str(e)}",
+                        "timestamp": now.isoformat()
+                    }
                 
-                # Get table counts
-                memory_count = await session.execute(select(func.count(Memory.id)))
-                total_memories = memory_count.scalar()
+                # Get table counts with error handling
+                try:
+                    memory_count = await session.execute(select(func.count(Memory.id)))
+                    total_memories = memory_count.scalar() if memory_count else 0
+                    
+                    active_memory_count = await session.execute(
+                        select(func.count(Memory.id)).where(Memory.is_active == True)
+                    )
+                    active_memories = active_memory_count.scalar() if active_memory_count else 0
+                    
+                    # Get search history count
+                    search_count = await session.execute(select(func.count(SearchHistory.id)))
+                    total_searches = search_count.scalar() if search_count else 0
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to get table counts: {e}")
+                    # Provide basic health status even if table counts fail
+                    total_memories = 0
+                    active_memories = 0
+                    total_searches = 0
                 
-                active_memory_count = await session.execute(
-                    select(func.count(Memory.id)).where(Memory.is_active == True)
-                )
-                active_memories = active_memory_count.scalar()
-                
-                # Get search history count
-                search_count = await session.execute(select(func.count(SearchHistory.id)))
-                total_searches = search_count.scalar()
-                
-                # Connection pool stats
-                pool = self.engine.pool
-                pool_stats = {
-                    "size": pool.size(),
-                    "checked_out": pool.checkedout(),
-                    "overflow": pool.overflow(),
-                    "checked_in": pool.checkedin(),
-                }
-                
-                # Update pool metrics
-                if postgres_connection_pool:
-                    postgres_connection_pool.labels(stat='checked_out').set(pool_stats["checked_out"])
-                    postgres_connection_pool.labels(stat='checked_in').set(pool_stats["checked_in"])
+                # Connection pool stats with error handling
+                try:
+                    pool = self.engine.pool
+                    pool_stats = {
+                        "size": pool.size(),
+                        "checked_out": pool.checkedout(),
+                        "overflow": pool.overflow(),
+                        "checked_in": pool.checkedin(),
+                    }
+                    
+                    # Update pool metrics
+                    if postgres_connection_pool:
+                        postgres_connection_pool.labels(stat='checked_out').set(pool_stats["checked_out"])
+                        postgres_connection_pool.labels(stat='checked_in').set(pool_stats["checked_in"])
+                        
+                except Exception as e:
+                    logger.warning(f"Failed to get pool stats: {e}")
+                    pool_stats = {
+                        "size": 0,
+                        "checked_out": 0,
+                        "overflow": 0,
+                        "checked_in": 0,
+                    }
                 
                 query_time = time.time() - start_time
                 
                 health_status = {
                     "status": "healthy",
-                    "database_time": db_time.isoformat(),
+                    "database_time": db_time.isoformat() if db_time else now.isoformat(),
                     "total_memories": total_memories,
                     "active_memories": active_memories,
                     "total_searches": total_searches,
@@ -269,17 +302,11 @@ class PostgresClient:
             if postgres_operations:
                 postgres_operations.labels(operation='health_check', status='error').inc()
             
-            error_status = {
+            return {
                 "status": "unhealthy",
                 "error": str(e),
                 "timestamp": now.isoformat()
             }
-            
-            # Cache error status for shorter time
-            self._health_cache["status"] = error_status
-            self._last_health_check = now
-            
-            return error_status
     
     # Memory CRUD Operations with caching
     

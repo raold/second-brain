@@ -19,19 +19,26 @@ def always_allow(request: Request):
 @patch("app.storage.qdrant_client.qdrant_search")
 def test_health_check(mock_qdrant_search, mock_qdrant_upsert):
     app.dependency_overrides[app_router.verify_token] = always_allow
-    from app.config import Config
-    Config.API_TOKENS = ['test-token']
     mock_qdrant_search.return_value = []
     mock_qdrant_upsert.return_value = None
 
     response = client.get("/health", headers=AUTH_HEADER)
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    
+    # Check the new detailed health response format
+    health_data = response.json()
+    assert health_data["status"] == "ok"
+    assert "timestamp" in health_data
+    assert "version" in health_data
+    assert "services" in health_data
+    
+    # Check that services are included
+    services = health_data["services"]
+    assert "postgresql" in services
+    assert "qdrant" in services
 
 def test_ws_generate_stream():
     app.dependency_overrides[app_router.verify_token] = always_allow
-    from app.config import Config
-    Config.API_TOKENS = ['test-token']
     token = "test-token"  # Replace with a valid token if needed
     prompt = "Hello world this is a test"
     with client.websocket_connect(f"/ws/generate?token={token}") as ws:
@@ -50,8 +57,6 @@ def test_ws_generate_stream():
 
 def test_models_endpoint():
     app.dependency_overrides[app_router.verify_token] = always_allow
-    from app.config import Config
-    Config.API_TOKENS = ['test-token']
     response = client.get("/models")
     assert response.status_code == 200
     data = response.json()
@@ -80,8 +85,6 @@ def test_models_endpoint():
 )])
 def test_ingest_and_search_versions(mock_search, mock_upsert, mock_embedding):
     app.dependency_overrides[app_router.verify_token] = always_allow
-    from app.config import Config
-    Config.API_TOKENS = ['test-token']
     # Simulate ingestion
     payload = {
         "id": "test-id-123",
@@ -112,8 +115,6 @@ def test_ingest_and_search_versions(mock_search, mock_upsert, mock_embedding):
 ], None, None))
 def test_records_endpoint(mock_scroll):
     app.dependency_overrides[app_router.verify_token] = always_allow
-    from app.config import Config
-    Config.API_TOKENS = ['test-token']
     # Print all registered routes and their endpoint functions
     print("\nRegistered routes:")
     for route in app.routes:

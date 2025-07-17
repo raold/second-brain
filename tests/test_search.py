@@ -5,14 +5,9 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.config import Config
 from app.main import app
 
 client = TestClient(app)
-
-@pytest.fixture(autouse=True)
-def inject_test_token(monkeypatch):
-    monkeypatch.setattr(Config, 'API_TOKENS', ['test-token'])
 
 @pytest.fixture(autouse=True)
 def mock_openai_embedding():

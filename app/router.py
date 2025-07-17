@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, delete, select, update
 
 from app.auth import verify_token
-from app.config import Config
+from app.config import config
 from app.models import Memory, MemoryFeedback, Payload, PayloadType, Priority
 from app.storage.dual_storage import get_dual_storage
 from app.storage.markdown_writer import write_markdown
@@ -447,7 +447,7 @@ async def get_version_history(id: str, _: None = Depends(verify_token)) -> Dict[
     """
     try:
         result = client.retrieve(
-            collection_name=Config.QDRANT_COLLECTION,
+            collection_name=config.qdrant['collection'],
             ids=[str(to_uuid(id))],
             with_payload=True
         )
@@ -477,7 +477,7 @@ async def zzzzzzzzzz_handler(
     try:
         # Qdrant scroll API for pagination
         scroll_result = client.scroll(
-            collection_name=Config.QDRANT_COLLECTION,
+            collection_name=config.qdrant['collection'],
             limit=limit,
             offset=offset,
             with_payload=True
@@ -508,7 +508,7 @@ def get_models():
     """
     Returns the current LLM and embedding model versions in use.
     """
-    return {"model_versions": Config.MODEL_VERSIONS}
+    return {"model_versions": config.model_versions}
 
 @router.get("/memories/search", tags=["Memories"])
 async def memories_search(
@@ -551,7 +551,7 @@ async def delete_memory(id: str, hard: bool = False, session=Depends(get_async_s
     if hard:
         from app.storage.qdrant_client import client, to_uuid
         try:
-            client.delete(collection_name=Config.QDRANT_COLLECTION, points_selector=[str(to_uuid(id))])
+            client.delete(collection_name=config.qdrant['collection'], points_selector=[str(to_uuid(id))])
         except Exception as e:
             logger.warning(f"Qdrant delete failed for {id}: {e}")
     return {"status": "deleted", "id": id, "hard": hard}

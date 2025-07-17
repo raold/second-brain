@@ -215,6 +215,30 @@ class Config:
             "is_ci": self.is_ci
         }
 
+    def override_for_testing(self, **overrides):
+        """
+        Override configuration values for testing purposes.
+        
+        Args:
+            **overrides: Key-value pairs to override in the configuration
+            
+        Example:
+            config.override_for_testing(
+                api_tokens=['test-token'],
+                debug=True,
+                postgres={'host': 'localhost', 'port': 5432}
+            )
+        """
+        for key, value in overrides.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise AttributeError(f"Config has no attribute '{key}'")
+
+    def reset_to_defaults(self):
+        """Reset configuration to default values (useful for test cleanup)."""
+        self.__init__()  # Re-initialize with defaults
+
 # Global configuration instance
 config = Config()
 

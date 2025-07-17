@@ -23,6 +23,20 @@ from app.storage.postgres_client import postgres_client, close_postgres_client
 config.setup_logging()
 logger = logging.getLogger("main")
 
+def safe_log(level, message_with_emoji, message_without_emoji):
+    """
+    Safely log messages with emoji support detection for Windows compatibility.
+    
+    Args:
+        level: logging level function (logger.info, logger.error, etc.)
+        message_with_emoji: message with emoji characters for Unix systems
+        message_without_emoji: plain text message for Windows/CI systems
+    """
+    if config.is_windows or config.is_ci:
+        level(message_without_emoji)
+    else:
+        level(message_with_emoji)
+
 app = FastAPI(
     title="Second Brain - AI Memory Assistant",
     version="1.5.0",
@@ -79,20 +93,13 @@ async def startup_event():
     try:
         # Initialize PostgreSQL client
         await postgres_client.initialize()
-        if config.is_windows or config.is_ci:
-            logger.info("PostgreSQL client initialized")
-            logger.info("Second Brain - AI Memory Assistant ready")
-        else:
-            logger.info("✅ PostgreSQL client initialized")
-            logger.info("🚀 Second Brain - AI Memory Assistant ready")
+        safe_log(logger.info, "✅ PostgreSQL client initialized", "PostgreSQL client initialized")
+        safe_log(logger.info, "🚀 Second Brain - AI Memory Assistant ready", "Second Brain - AI Memory Assistant ready")
         
         logger.info(f"Loaded Config: {config.summary()}")
         
     except Exception as e:
-        if config.is_windows or config.is_ci:
-            logger.error(f"Failed to initialize services: {e}")
-        else:
-            logger.error(f"❌ Failed to initialize services: {e}")
+        safe_log(logger.error, f"❌ Failed to initialize services: {e}", f"Failed to initialize services: {e}")
         raise
 
 
@@ -107,15 +114,8 @@ async def shutdown_event():
     try:
         # Close PostgreSQL connections
         await close_postgres_client()
-        if config.is_windows or config.is_ci:
-            logger.info("PostgreSQL client closed")
-            logger.info("Application shutdown complete")
-        else:
-            logger.info("✅ PostgreSQL client closed")
-            logger.info("👋 Application shutdown complete")
+        safe_log(logger.info, "✅ PostgreSQL client closed", "PostgreSQL client closed")
+        safe_log(logger.info, "👋 Application shutdown complete", "Application shutdown complete")
         
     except Exception as e:
-        if config.is_windows or config.is_ci:
-            logger.error(f"Error during shutdown: {e}")
-        else:
-            logger.error(f"❌ Error during shutdown: {e}")
+        safe_log(logger.error, f"❌ Error during shutdown: {e}", f"Error during shutdown: {e}")

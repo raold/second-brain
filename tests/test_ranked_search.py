@@ -8,11 +8,6 @@ from app.main import app
 client = TestClient(app)
 AUTH_HEADER = {"Authorization": "Bearer test-token"}
 
-@pytest.fixture(autouse=True)
-def inject_test_token(monkeypatch):
-    from app.config import Config
-    monkeypatch.setattr(Config, 'API_TOKENS', ['test-token'])
-
 
 @patch("app.router.qdrant_search")
 def test_ranked_search_vector_only(mock_search):

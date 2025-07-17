@@ -15,7 +15,7 @@ import hashlib
 from cachetools import LRUCache, TTLCache, cached
 from cachetools.keys import hashkey
 
-from app.config import Config
+from app.config import config
 from app.utils.logger import get_logger
 
 logger = get_logger()
