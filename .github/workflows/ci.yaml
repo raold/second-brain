@@ -42,12 +42,12 @@ jobs:
       - name: Generate cache keys
         id: cache-key
         run: |
-          echo "value=${{ hashFiles('requirements-minimal.txt', 'ruff.toml', 'pytest.ini') }}" >> $GITHUB_OUTPUT
+          echo "value=${{ hashFiles('requirements.txt', 'ruff.toml', 'pytest.ini') }}" >> $GITHUB_OUTPUT
 
       - name: Generate Python cache key
         id: python-cache-key
         run: |
-          echo "value=${{ runner.os }}-python-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements-minimal.txt') }}" >> $GITHUB_OUTPUT
+          echo "value=${{ runner.os }}-python-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements.txt') }}" >> $GITHUB_OUTPUT
 
       - name: Cache pip dependencies
         uses: actions/cache@v4
@@ -60,7 +60,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-minimal.txt
+          pip install -r requirements.txt
           pip install pytest pytest-cov pytest-asyncio ruff
 
   lint:
@@ -140,7 +140,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-minimal.txt
+          pip install -r requirements.txt
           pip install pytest pytest-cov pytest-asyncio httpx
 
       - name: Cache pytest cache
@@ -151,8 +151,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pytest-
 
-      - name: Set up environment
+      - name: Set up environment and Python path
         run: |
+          # Set PYTHONPATH to include current directory for app module imports
+          echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
+          
           # Create test environment file
           cat > .env << EOF
           POSTGRES_USER=test_user
@@ -173,26 +176,10 @@ jobs:
             sleep 2
           done
 
-      - name: Initialize test database
-        run: |
-          python setup_db.py
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5432
-          POSTGRES_DB: test_db
-          OPENAI_API_KEY: test_key_for_ci
-
-      - name: Run mock database tests
-        run: |
-          python test_mock_database.py
-
       - name: Run test suite
         run: |
+          export PYTHONPATH=$PWD
           python -m pytest tests/ -v --cov=app --cov-report=term-missing
-        env:
-          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
           OPENAI_API_KEY: test_key_for_ci
@@ -200,7 +187,8 @@ jobs:
 
       - name: Run application health check
         run: |
-          # Start the application in background
+          # Set Python path and start the application in background
+          export PYTHONPATH=$PWD
           python -m app.app &
           APP_PID=$!
           

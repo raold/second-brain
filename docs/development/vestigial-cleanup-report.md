@@ -32,7 +32,7 @@ Moved v1.x documentation from `docs/` to `archive/v1.x/`:
 ## Documentation Updates
 
 ### 📝 **Configuration Files Updated**
-- **`scripts/bump_version.py`**: Removed `setup.py` from VERSION_FILES list
+- **`scripts/version_bump.py`**: Comprehensive version management system
 - **`REPOSITORY_STRUCTURE.md`**: Removed setup.py reference
 - **`.github/workflows/ci.yaml`**: Updated to use new test structure (`python -m pytest tests/`)
 

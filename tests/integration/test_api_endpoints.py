@@ -25,7 +25,7 @@ class TestIntegrationSuite:
     async def test_version_info_integration(self):
         """Test version information system."""
         version_info = get_version_info()
-        assert version_info["version"] == "2.1.0"
+        assert version_info["version"] == "2.1.1"
         assert version_info["codename"] == "Phoenix"
         assert version_info["api_version"] == "v1"
 
@@ -36,7 +36,7 @@ class TestIntegrationSuite:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert data["version"] == "2.1.0"
+        assert data["version"] == "2.1.1"
         assert "timestamp" in data
 
     @pytest.mark.asyncio

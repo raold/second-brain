@@ -233,11 +233,11 @@ Any other relevant information
 
 ### Version Management
 - **Semantic Versioning**: MAJOR.MINOR.PATCH
-- **Automated Bumping**: Use `scripts/bump_version.py`
+- **Automated Bumping**: Use `scripts/version_bump.py`
 - **Changelog**: Update CHANGELOG.md for all releases
 
 ### Release Steps
-1. **Update Version**: `python scripts/bump_version.py [patch|minor|major]`
+1. **Update Version**: `python scripts/version_bump.py [patch|minor|major]`
 2. **Update Changelog**: Document changes in CHANGELOG.md
 3. **Create Tag**: `git tag v2.0.x`
 4. **Push**: `git push origin main --tags`

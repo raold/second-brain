@@ -79,7 +79,7 @@ def should_bump_version(message):
 def bump_version(bump_type):
     """Execute version bump script"""
     try:
-        script_path = Path("scripts/bump_version.py")
+        script_path = Path("scripts/version_bump.py")
         if script_path.exists():
             subprocess.run([
                 sys.executable, str(script_path), bump_type
