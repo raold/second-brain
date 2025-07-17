@@ -15,6 +15,7 @@ from pathlib import Path
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
+
 # Mock external dependencies for testing
 class MockEmbeddings:
     """Mock OpenAI embeddings for testing."""
@@ -23,15 +24,15 @@ class MockEmbeddings:
         """Return a mock embedding response."""
         # Generate deterministic embeddings for testing
         import hashlib
+
         hash_obj = hashlib.md5(input.encode())
         hash_int = int(hash_obj.hexdigest(), 16)
 
         # Create a 1536-dimensional embedding (OpenAI text-embedding-3-small size)
         embedding = [(hash_int >> (i % 32)) % 1000 / 1000.0 for i in range(1536)]
 
-        return type('MockResponse', (), {
-            'data': [type('MockEmbedding', (), {'embedding': embedding})()]
-        })()
+        return type("MockResponse", (), {"data": [type("MockEmbedding", (), {"embedding": embedding})()]})()
+
 
 class MockOpenAI:
     """Mock OpenAI client for testing without API calls."""
@@ -40,30 +41,32 @@ class MockOpenAI:
         self.api_key = api_key
         self.embeddings = MockEmbeddings()
 
+
 async def test_environment_setup():
     """Test that the environment is set up correctly."""
     print("🔧 Testing Environment Setup...")
 
     # Try to load from .env.test first
     from pathlib import Path
+
     env_test_file = Path(__file__).parent / ".env.test"
     if env_test_file.exists():
         with open(env_test_file) as f:
             for line in f:
-                if line.strip() and not line.startswith('#'):
-                    key, value = line.strip().split('=', 1)
+                if line.strip() and not line.startswith("#"):
+                    key, value = line.strip().split("=", 1)
                     os.environ[key] = value
         print("✅ Loaded test environment variables from .env.test")
     else:
         # Check required environment variables
         required_vars = [
-            'POSTGRES_USER',
-            'POSTGRES_PASSWORD',
-            'POSTGRES_HOST',
-            'POSTGRES_PORT',
-            'POSTGRES_DB',
-            'OPENAI_API_KEY',
-            'API_TOKENS'
+            "POSTGRES_USER",
+            "POSTGRES_PASSWORD",
+            "POSTGRES_HOST",
+            "POSTGRES_PORT",
+            "POSTGRES_DB",
+            "OPENAI_API_KEY",
+            "API_TOKENS",
         ]
 
         missing_vars = []
@@ -76,16 +79,17 @@ async def test_environment_setup():
             print("Setting up mock environment variables for testing...")
 
             # Set up mock environment
-            os.environ['POSTGRES_USER'] = 'postgres'
-            os.environ['POSTGRES_PASSWORD'] = 'postgres'
-            os.environ['POSTGRES_HOST'] = 'localhost'
-            os.environ['POSTGRES_PORT'] = '5432'
-            os.environ['POSTGRES_DB'] = 'secondbrain'
-            os.environ['OPENAI_API_KEY'] = 'test-key-mock'
-            os.environ['API_TOKENS'] = 'test-token-1,test-token-2'
+            os.environ["POSTGRES_USER"] = "postgres"
+            os.environ["POSTGRES_PASSWORD"] = "postgres"
+            os.environ["POSTGRES_HOST"] = "localhost"
+            os.environ["POSTGRES_PORT"] = "5432"
+            os.environ["POSTGRES_DB"] = "secondbrain"
+            os.environ["OPENAI_API_KEY"] = "test-key-mock"
+            os.environ["API_TOKENS"] = "test-token-1,test-token-2"
 
     print("✅ Environment setup complete")
     return True
+
 
 async def test_database_connection():
     """Test database connection and schema setup."""
@@ -119,6 +123,7 @@ async def test_database_connection():
 
     return True
 
+
 async def test_mock_database_functionality():
     """Test the mock database functionality."""
     print("\n🔧 Testing Mock Database Functionality...")
@@ -136,7 +141,7 @@ async def test_mock_database_functionality():
         # Retrieve the memory
         memory = await db.get_memory(memory_id)
         assert memory is not None
-        assert memory['content'] == "Test memory content"
+        assert memory["content"] == "Test memory content"
         print("✅ Memory retrieval successful")
 
         # Search memories
@@ -158,6 +163,7 @@ async def test_mock_database_functionality():
 
     return True
 
+
 async def test_real_database_functionality():
     """Test the real database functionality if available."""
     print("\n🔧 Testing Real Database Functionality...")
@@ -165,6 +171,7 @@ async def test_real_database_functionality():
     try:
         # Mock the OpenAI client to avoid API calls
         import app.database
+
         original_openai = app.database.AsyncOpenAI
         app.database.AsyncOpenAI = MockOpenAI
 
@@ -180,7 +187,7 @@ async def test_real_database_functionality():
         # Retrieve the memory
         memory = await db.get_memory(memory_id)
         assert memory is not None
-        assert memory['content'] == "Real database test content"
+        assert memory["content"] == "Real database test content"
         print("✅ Memory retrieval successful")
 
         # Search memories (may return 0 results with mock embeddings)
@@ -203,6 +210,7 @@ async def test_real_database_functionality():
 
     return True
 
+
 async def test_api_endpoints():
     """Test the FastAPI endpoints."""
     print("\n🔧 Testing API Endpoints...")
@@ -213,6 +221,7 @@ async def test_api_endpoints():
         # Mock the OpenAI client to avoid API calls
         import app.database
         from app.app import app as fastapi_app
+
         original_openai = app.database.AsyncOpenAI
         app.database.AsyncOpenAI = MockOpenAI
 
@@ -224,63 +233,40 @@ async def test_api_endpoints():
             print("✅ Health check endpoint working")
 
             # Test API key authentication
-            api_key = os.getenv('API_TOKENS', 'test-token-1').split(',')[0].strip()
+            api_key = os.getenv("API_TOKENS", "test-token-1").split(",")[0].strip()
 
             # Test store memory
-            memory_data = {
-                "content": "API test memory",
-                "metadata": {"type": "api_test"}
-            }
+            memory_data = {"content": "API test memory", "metadata": {"type": "api_test"}}
 
-            response = await client.post(
-                "/memories",
-                json=memory_data,
-                params={"api_key": api_key}
-            )
+            response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
             assert response.status_code == 200
             stored_memory = response.json()
             memory_id = stored_memory["id"]
             print(f"✅ Memory stored via API: {memory_id}")
 
             # Test get memory
-            response = await client.get(
-                f"/memories/{memory_id}",
-                params={"api_key": api_key}
-            )
+            response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
             assert response.status_code == 200
             retrieved_memory = response.json()
             assert retrieved_memory["content"] == "API test memory"
             print("✅ Memory retrieved via API")
 
             # Test search memories (may return 0 results with mock embeddings)
-            search_data = {
-                "query": "API test",
-                "limit": 5
-            }
+            search_data = {"query": "API test", "limit": 5}
 
-            response = await client.post(
-                "/memories/search",
-                json=search_data,
-                params={"api_key": api_key}
-            )
+            response = await client.post("/memories/search", json=search_data, params={"api_key": api_key})
             assert response.status_code == 200
             results = response.json()
             assert isinstance(results, list)  # Just check it's a list, may be empty
             print(f"✅ Search via API returned {len(results)} results")
 
             # Test delete memory
-            response = await client.delete(
-                f"/memories/{memory_id}",
-                params={"api_key": api_key}
-            )
+            response = await client.delete(f"/memories/{memory_id}", params={"api_key": api_key})
             assert response.status_code == 200
             print("✅ Memory deleted via API")
 
             # Test list memories
-            response = await client.get(
-                "/memories",
-                params={"api_key": api_key, "limit": 10}
-            )
+            response = await client.get("/memories", params={"api_key": api_key, "limit": 10})
             assert response.status_code == 200
             memories = response.json()
             assert isinstance(memories, list)
@@ -295,6 +281,7 @@ async def test_api_endpoints():
 
     return True
 
+
 async def test_docker_build():
     """Test Docker build process."""
     print("\n🔧 Testing Docker Build...")
@@ -303,16 +290,19 @@ async def test_docker_build():
         import subprocess
 
         # Check if Docker is available
-        result = subprocess.run(['docker', '--version'], capture_output=True, text=True)
+        result = subprocess.run(["docker", "--version"], capture_output=True, text=True)
         if result.returncode != 0:
             print("⚠️  Docker not available, skipping Docker tests")
             return True
 
         # Build the Docker image
         print("Building Docker image...")
-        result = subprocess.run([
-            'docker', 'build', '-t', 'second-brain-test', '.'
-        ], capture_output=True, text=True, cwd=Path(__file__).parent)
+        result = subprocess.run(
+            ["docker", "build", "-t", "second-brain-test", "."],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent,
+        )
 
         if result.returncode != 0:
             print(f"❌ Docker build failed: {result.stderr}")
@@ -321,14 +311,14 @@ async def test_docker_build():
         print("✅ Docker build successful")
 
         # Clean up the test image
-        subprocess.run(['docker', 'rmi', 'second-brain-test'],
-                      capture_output=True, text=True)
+        subprocess.run(["docker", "rmi", "second-brain-test"], capture_output=True, text=True)
 
     except Exception as e:
         print(f"❌ Docker build test failed: {e}")
         return False
 
     return True
+
 
 async def test_linting_and_formatting():
     """Test code quality with ruff."""
@@ -338,9 +328,7 @@ async def test_linting_and_formatting():
         import subprocess
 
         # Run ruff check
-        result = subprocess.run([
-            'ruff', 'check', '.'
-        ], capture_output=True, text=True, cwd=Path(__file__).parent)
+        result = subprocess.run(["ruff", "check", "."], capture_output=True, text=True, cwd=Path(__file__).parent)
 
         if result.returncode != 0:
             print(f"❌ Linting failed: {result.stdout}")
@@ -353,6 +341,7 @@ async def test_linting_and_formatting():
         return False
 
     return True
+
 
 async def test_requirements_installation():
     """Test that all requirements can be installed."""
@@ -372,24 +361,22 @@ async def test_requirements_installation():
             venv_path = Path(temp_dir) / "test_venv"
 
             # Create virtual environment
-            result = subprocess.run([
-                sys.executable, '-m', 'venv', str(venv_path)
-            ], capture_output=True, text=True)
+            result = subprocess.run([sys.executable, "-m", "venv", str(venv_path)], capture_output=True, text=True)
 
             if result.returncode != 0:
                 print(f"❌ Virtual environment creation failed: {result.stderr}")
                 return False
 
             # Determine pip path
-            if os.name == 'nt':  # Windows
+            if os.name == "nt":  # Windows
                 pip_path = venv_path / "Scripts" / "pip.exe"
             else:  # Unix-like
                 pip_path = venv_path / "bin" / "pip"
 
             # Install requirements
-            result = subprocess.run([
-                str(pip_path), 'install', '-r', str(requirements_file)
-            ], capture_output=True, text=True)
+            result = subprocess.run(
+                [str(pip_path), "install", "-r", str(requirements_file)], capture_output=True, text=True
+            )
 
             if result.returncode != 0:
                 print(f"❌ Requirements installation failed: {result.stderr}")
@@ -402,6 +389,7 @@ async def test_requirements_installation():
         return False
 
     return True
+
 
 async def main():
     """Run all CI pipeline tests."""
@@ -455,6 +443,7 @@ async def main():
     else:
         print(f"\n⚠️  {failed} test(s) failed. CI pipeline needs attention.")
         return 1
+
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

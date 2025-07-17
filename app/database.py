@@ -2,22 +2,24 @@
 Simple PostgreSQL database client with pgvector support.
 Single source of truth for all data operations.
 """
+
 import json
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 import asyncpg
 from openai import AsyncOpenAI
 
 logger = logging.getLogger(__name__)
 
+
 class Database:
     """Simple PostgreSQL database client with pgvector support."""
 
     def __init__(self):
-        self.pool: Optional[asyncpg.Pool] = None
-        self.openai_client: Optional[AsyncOpenAI] = None
+        self.pool: asyncpg.Pool | None = None
+        self.openai_client: AsyncOpenAI | None = None
 
     async def initialize(self):
         """Initialize database connection and OpenAI client."""
@@ -36,7 +38,7 @@ class Database:
             raise
 
         # OpenAI client
-        api_key = os.getenv('OPENAI_API_KEY')
+        api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("OPENAI_API_KEY environment variable is required")
 
@@ -85,15 +87,14 @@ class Database:
 
         try:
             response = await self.openai_client.embeddings.create(
-                model=os.getenv('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small'),
-                input=text
+                model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"), input=text
             )
             return response.data[0].embedding
         except Exception as e:
             logger.error(f"Failed to get embedding: {e}")
             raise
 
-    async def store_memory(self, content: str, metadata: Optional[dict[str, Any]] = None) -> str:
+    async def store_memory(self, content: str, metadata: dict[str, Any] | None = None) -> str:
         """Store a memory with its embedding."""
         if not self.pool:
             raise RuntimeError("Database not initialized")
@@ -106,13 +107,18 @@ class Database:
             # Convert embedding list to string format for pgvector
             embedding_str = f"[{','.join(map(str, embedding))}]"
 
-            result = await conn.fetchrow("""
+            result = await conn.fetchrow(
+                """
                 INSERT INTO memories (content, metadata, embedding)
                 VALUES ($1, $2, $3::vector)
                 RETURNING id
-            """, content, json.dumps(metadata or {}), embedding_str)
+            """,
+                content,
+                json.dumps(metadata or {}),
+                embedding_str,
+            )
 
-            memory_id = str(result['id'])
+            memory_id = str(result["id"])
             logger.info(f"Stored memory with ID: {memory_id}")
             return memory_id
 
@@ -129,7 +135,8 @@ class Database:
             # Convert embedding list to string format for pgvector
             query_embedding_str = f"[{','.join(map(str, query_embedding))}]"
 
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT
                     id,
                     content,
@@ -141,43 +148,51 @@ class Database:
                 WHERE embedding IS NOT NULL
                 ORDER BY embedding <=> $1::vector
                 LIMIT $2
-            """, query_embedding_str, limit)
+            """,
+                query_embedding_str,
+                limit,
+            )
 
             results = []
             for row in rows:
-                results.append({
-                    'id': str(row['id']),
-                    'content': row['content'],
-                    'metadata': json.loads(row['metadata']),
-                    'similarity': float(row['similarity']),
-                    'created_at': row['created_at'].isoformat(),
-                    'updated_at': row['updated_at'].isoformat()
-                })
+                results.append(
+                    {
+                        "id": str(row["id"]),
+                        "content": row["content"],
+                        "metadata": json.loads(row["metadata"]),
+                        "similarity": float(row["similarity"]),
+                        "created_at": row["created_at"].isoformat(),
+                        "updated_at": row["updated_at"].isoformat(),
+                    }
+                )
 
             logger.info(f"Found {len(results)} memories for query")
             return results
 
-    async def get_memory(self, memory_id: str) -> Optional[dict[str, Any]]:
+    async def get_memory(self, memory_id: str) -> dict[str, Any] | None:
         """Get a specific memory by ID."""
         if not self.pool:
             raise RuntimeError("Database not initialized")
 
         async with self.pool.acquire() as conn:
-            row = await conn.fetchrow("""
+            row = await conn.fetchrow(
+                """
                 SELECT id, content, metadata, created_at, updated_at
                 FROM memories
                 WHERE id = $1
-            """, memory_id)
+            """,
+                memory_id,
+            )
 
             if not row:
                 return None
 
             return {
-                'id': str(row['id']),
-                'content': row['content'],
-                'metadata': json.loads(row['metadata']),
-                'created_at': row['created_at'].isoformat(),
-                'updated_at': row['updated_at'].isoformat()
+                "id": str(row["id"]),
+                "content": row["content"],
+                "metadata": json.loads(row["metadata"]),
+                "created_at": row["created_at"].isoformat(),
+                "updated_at": row["updated_at"].isoformat(),
             }
 
     async def delete_memory(self, memory_id: str) -> bool:
@@ -186,11 +201,14 @@ class Database:
             raise RuntimeError("Database not initialized")
 
         async with self.pool.acquire() as conn:
-            result = await conn.execute("""
+            result = await conn.execute(
+                """
                 DELETE FROM memories WHERE id = $1
-            """, memory_id)
+            """,
+                memory_id,
+            )
 
-            deleted = result.split()[-1] == '1'
+            deleted = result.split()[-1] == "1"
             if deleted:
                 logger.info(f"Deleted memory with ID: {memory_id}")
             return deleted
@@ -201,28 +219,35 @@ class Database:
             raise RuntimeError("Database not initialized")
 
         async with self.pool.acquire() as conn:
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT id, content, metadata, created_at, updated_at
                 FROM memories
                 ORDER BY created_at DESC
                 LIMIT $1 OFFSET $2
-            """, limit, offset)
+            """,
+                limit,
+                offset,
+            )
 
             results = []
             for row in rows:
-                results.append({
-                    'id': str(row['id']),
-                    'content': row['content'],
-                    'metadata': json.loads(row['metadata']),
-                    'created_at': row['created_at'].isoformat(),
-                    'updated_at': row['updated_at'].isoformat()
-                })
+                results.append(
+                    {
+                        "id": str(row["id"]),
+                        "content": row["content"],
+                        "metadata": json.loads(row["metadata"]),
+                        "created_at": row["created_at"].isoformat(),
+                        "updated_at": row["updated_at"].isoformat(),
+                    }
+                )
 
             return results
 
 
 # Global database instance
 database = Database()
+
 
 async def get_database() -> Database:
     """Get initialized database instance."""

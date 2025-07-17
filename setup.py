@@ -44,7 +44,6 @@ def check_python_version():
     """Check if Python version is compatible."""
     print_step("Checking Python version...")
 
-
     print(f"✅ Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
 
 
@@ -53,7 +52,7 @@ def check_docker():
     print_step("Checking Docker...")
 
     try:
-        result = subprocess.run(['docker', '--version'], capture_output=True, text=True)
+        result = subprocess.run(["docker", "--version"], capture_output=True, text=True)
         if result.returncode != 0:
             print("❌ Docker is not installed")
             print("Please install Docker from https://www.docker.com/get-started")
@@ -62,7 +61,7 @@ def check_docker():
         print(f"✅ {result.stdout.strip()}")
 
         # Check if Docker is running
-        result = subprocess.run(['docker', 'ps'], capture_output=True, text=True)
+        result = subprocess.run(["docker", "ps"], capture_output=True, text=True)
         if result.returncode != 0:
             print("❌ Docker is not running")
             print("Please start Docker Desktop or Docker service")
@@ -89,7 +88,7 @@ def setup_virtual_environment():
         print("✅ Virtual environment already exists")
 
     # Activate virtual environment
-    if os.name == 'nt':  # Windows
+    if os.name == "nt":  # Windows
         python_exe = venv_path / "Scripts" / "python.exe"
         pip_exe = venv_path / "Scripts" / "pip.exe"
     else:  # Unix-like
@@ -112,8 +111,16 @@ def install_dependencies(pip_exe):
     else:
         print("⚠️  requirements.txt not found, installing essential packages...")
         essential_packages = [
-            "fastapi", "uvicorn", "qdrant-client", "openai", "sqlalchemy",
-            "asyncpg", "pydantic", "python-dotenv", "click", "requests"
+            "fastapi",
+            "uvicorn",
+            "qdrant-client",
+            "openai",
+            "sqlalchemy",
+            "asyncpg",
+            "pydantic",
+            "python-dotenv",
+            "click",
+            "requests",
         ]
         run_command([str(pip_exe), "install"] + essential_packages, "Installing essential packages")
 
@@ -122,7 +129,7 @@ def create_environment_file():
     """Create environment file."""
     print_step("Creating environment file...")
 
-    env_file = Path('.env')
+    env_file = Path(".env")
     if env_file.exists():
         print("✅ Environment file already exists")
         return
@@ -157,7 +164,7 @@ MODEL_VERSION_LLM=gpt-4o
 MODEL_VERSION_EMBEDDING=text-embedding-3-small
 """
 
-    with open(env_file, 'w') as f:
+    with open(env_file, "w") as f:
         f.write(env_content)
 
     print("✅ Created .env file")
@@ -169,10 +176,10 @@ def setup_directories():
     print_step("Creating directories...")
 
     directories = [
-        Path('app/data'),
-        Path('app/data/memories'),
-        Path('logs'),
-        Path('qdrant_data'),
+        Path("app/data"),
+        Path("app/data/memories"),
+        Path("logs"),
+        Path("qdrant_data"),
     ]
 
     for directory in directories:
@@ -185,25 +192,26 @@ def start_database_services():
     print_step("Starting database services...")
 
     # Check if docker-compose.yml exists
-    if not Path('docker-compose.yml').exists():
+    if not Path("docker-compose.yml").exists():
         print("⚠️  docker-compose.yml not found, skipping service startup")
         return
 
     # Check for docker compose command
-    compose_cmd = ['docker', 'compose']
+    compose_cmd = ["docker", "compose"]
     try:
-        result = subprocess.run(compose_cmd + ['--version'], capture_output=True, text=True)
+        result = subprocess.run(compose_cmd + ["--version"], capture_output=True, text=True)
         if result.returncode != 0:
-            compose_cmd = ['docker-compose']
+            compose_cmd = ["docker-compose"]
     except Exception:
-        compose_cmd = ['docker-compose']
+        compose_cmd = ["docker-compose"]
 
     # Start services
-    run_command(compose_cmd + ['up', '-d', 'qdrant', 'postgres'], "Starting database services")
+    run_command(compose_cmd + ["up", "-d", "qdrant", "postgres"], "Starting database services")
 
     # Wait for services to be ready
     print("⏳ Waiting for services to be ready...")
     import time
+
     time.sleep(10)  # Give services time to start
 
     print("✅ Database services started")
@@ -213,8 +221,8 @@ def initialize_databases(python_exe):
     """Initialize databases."""
     print_step("Initializing databases...")
 
-    if Path('init_database.py').exists():
-        result = run_command([str(python_exe), 'init_database.py'], "Initializing databases", check=False)
+    if Path("init_database.py").exists():
+        result = run_command([str(python_exe), "init_database.py"], "Initializing databases", check=False)
         if result.returncode == 0:
             print("✅ Database initialization completed")
         else:

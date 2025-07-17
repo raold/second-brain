@@ -22,7 +22,7 @@ async def test_database_setup():
 
         # Setup engines manually first
         print("Setting up engines...")
-        sync_url = db_setup.config.get_postgres_url().replace('+asyncpg', '')
+        sync_url = db_setup.config.get_postgres_url().replace("+asyncpg", "")
         async_url = db_setup.config.get_postgres_url()
 
         print(f"Sync URL: {sync_url}")
@@ -49,6 +49,7 @@ async def test_database_setup():
             # Manual test
             print("Testing manual connection...")
             from sqlalchemy import text
+
             async with db_setup.postgres_async_engine.begin() as conn:
                 result = await conn.execute(text("SELECT 1"))
                 value = result.scalar()
@@ -61,7 +62,9 @@ async def test_database_setup():
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     asyncio.run(test_database_setup())

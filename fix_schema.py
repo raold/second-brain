@@ -2,6 +2,7 @@
 """
 Fix database schema for v2.0.0.
 """
+
 import asyncio
 import os
 
@@ -43,6 +44,7 @@ async def fix_schema():
 
     await conn.close()
     print("✅ Database schema fixed for v2.0.0")
+
 
 if __name__ == "__main__":
     asyncio.run(fix_schema())

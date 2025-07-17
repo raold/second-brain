@@ -2,6 +2,7 @@
 """
 Check database schema.
 """
+
 import asyncio
 import os
 
@@ -37,6 +38,7 @@ async def check_schema():
     print(f"\nTable exists: {exists}")
 
     await conn.close()
+
 
 if __name__ == "__main__":
     asyncio.run(check_schema())

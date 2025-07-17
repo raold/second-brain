@@ -1,20 +1,22 @@
 """
 Mock version of the database for testing without OpenAI API calls.
 """
+
 import json
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 import asyncpg
 
 logger = logging.getLogger(__name__)
 
+
 class MockDatabase:
     """Mock PostgreSQL database client for testing."""
 
     def __init__(self):
-        self.pool: Optional[asyncpg.Pool] = None
+        self.pool: asyncpg.Pool | None = None
 
     async def initialize(self):
         """Initialize database connection."""
@@ -59,20 +61,24 @@ class MockDatabase:
         text_hash = hash(text)
         return [float((text_hash + i) % 1000) / 1000.0 for i in range(1536)]
 
-    async def store_memory(self, content: str, metadata: Optional[dict[str, Any]] = None) -> str:
+    async def store_memory(self, content: str, metadata: dict[str, Any] | None = None) -> str:
         """Store a memory (mock version)."""
         if not self.pool:
             raise RuntimeError("Database not initialized")
 
         # Store in database
         async with self.pool.acquire() as conn:
-            result = await conn.fetchrow("""
+            result = await conn.fetchrow(
+                """
                 INSERT INTO memories_mock (content, metadata)
                 VALUES ($1, $2)
                 RETURNING id
-            """, content, json.dumps(metadata or {}))
+            """,
+                content,
+                json.dumps(metadata or {}),
+            )
 
-            memory_id = str(result['id'])
+            memory_id = str(result["id"])
             logger.info(f"Stored memory with ID: {memory_id}")
             return memory_id
 
@@ -83,7 +89,8 @@ class MockDatabase:
 
         # Simple text search
         async with self.pool.acquire() as conn:
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT
                     id,
                     content,
@@ -99,43 +106,51 @@ class MockDatabase:
                 WHERE LOWER(content) LIKE LOWER('%' || $1 || '%')
                 ORDER BY similarity DESC
                 LIMIT $2
-            """, query, limit)
+            """,
+                query,
+                limit,
+            )
 
             results = []
             for row in rows:
-                results.append({
-                    'id': str(row['id']),
-                    'content': row['content'],
-                    'metadata': json.loads(row['metadata']),
-                    'similarity': float(row['similarity']),
-                    'created_at': row['created_at'].isoformat(),
-                    'updated_at': row['updated_at'].isoformat()
-                })
+                results.append(
+                    {
+                        "id": str(row["id"]),
+                        "content": row["content"],
+                        "metadata": json.loads(row["metadata"]),
+                        "similarity": float(row["similarity"]),
+                        "created_at": row["created_at"].isoformat(),
+                        "updated_at": row["updated_at"].isoformat(),
+                    }
+                )
 
             logger.info(f"Found {len(results)} memories for query")
             return results
 
-    async def get_memory(self, memory_id: str) -> Optional[dict[str, Any]]:
+    async def get_memory(self, memory_id: str) -> dict[str, Any] | None:
         """Get a specific memory by ID."""
         if not self.pool:
             raise RuntimeError("Database not initialized")
 
         async with self.pool.acquire() as conn:
-            row = await conn.fetchrow("""
+            row = await conn.fetchrow(
+                """
                 SELECT id, content, metadata, created_at, updated_at
                 FROM memories_mock
                 WHERE id = $1
-            """, memory_id)
+            """,
+                memory_id,
+            )
 
             if not row:
                 return None
 
             return {
-                'id': str(row['id']),
-                'content': row['content'],
-                'metadata': json.loads(row['metadata']),
-                'created_at': row['created_at'].isoformat(),
-                'updated_at': row['updated_at'].isoformat()
+                "id": str(row["id"]),
+                "content": row["content"],
+                "metadata": json.loads(row["metadata"]),
+                "created_at": row["created_at"].isoformat(),
+                "updated_at": row["updated_at"].isoformat(),
             }
 
     async def delete_memory(self, memory_id: str) -> bool:
@@ -144,11 +159,14 @@ class MockDatabase:
             raise RuntimeError("Database not initialized")
 
         async with self.pool.acquire() as conn:
-            result = await conn.execute("""
+            result = await conn.execute(
+                """
                 DELETE FROM memories_mock WHERE id = $1
-            """, memory_id)
+            """,
+                memory_id,
+            )
 
-            deleted = result.split()[-1] == '1'
+            deleted = result.split()[-1] == "1"
             if deleted:
                 logger.info(f"Deleted memory with ID: {memory_id}")
             return deleted
@@ -159,28 +177,35 @@ class MockDatabase:
             raise RuntimeError("Database not initialized")
 
         async with self.pool.acquire() as conn:
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT id, content, metadata, created_at, updated_at
                 FROM memories_mock
                 ORDER BY created_at DESC
                 LIMIT $1 OFFSET $2
-            """, limit, offset)
+            """,
+                limit,
+                offset,
+            )
 
             results = []
             for row in rows:
-                results.append({
-                    'id': str(row['id']),
-                    'content': row['content'],
-                    'metadata': json.loads(row['metadata']),
-                    'created_at': row['created_at'].isoformat(),
-                    'updated_at': row['updated_at'].isoformat()
-                })
+                results.append(
+                    {
+                        "id": str(row["id"]),
+                        "content": row["content"],
+                        "metadata": json.loads(row["metadata"]),
+                        "created_at": row["created_at"].isoformat(),
+                        "updated_at": row["updated_at"].isoformat(),
+                    }
+                )
 
             return results
 
 
 # Global mock database instance
 mock_database = MockDatabase()
+
 
 async def get_mock_database() -> MockDatabase:
     """Get initialized mock database instance."""

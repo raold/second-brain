@@ -155,7 +155,11 @@ jobs:
         run: |
           # Create test environment file
           cat > .env << EOF
-          DATABASE_URL=postgresql://test_user:test_password@localhost:5432/test_db
+          POSTGRES_USER=test_user
+          POSTGRES_PASSWORD=test_password
+          POSTGRES_HOST=localhost
+          POSTGRES_PORT=5432
+          POSTGRES_DB=test_db
           OPENAI_API_KEY=test_key_for_ci
           API_TOKENS=test_token_for_ci,another_test_token
           HOST=0.0.0.0
@@ -171,11 +175,13 @@ jobs:
 
       - name: Initialize test database
         run: |
-          export DATABASE_URL=postgresql://test_user:test_password@localhost:5432/test_db
-          export OPENAI_API_KEY=test_key_for_ci
           python setup_db.py
         env:
-          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: test_db
           OPENAI_API_KEY: test_key_for_ci
 
       - name: Run mock database tests

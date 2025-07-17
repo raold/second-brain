@@ -1,6 +1,7 @@
 """
 Test the mock database functionality.
 """
+
 import asyncio
 
 from app.database_mock import get_mock_database
@@ -33,6 +34,7 @@ async def test_mock_database():
     # Clean up
     await db.close()
     print("✅ Mock database test completed successfully!")
+
 
 if __name__ == "__main__":
     asyncio.run(test_mock_database())

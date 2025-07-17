@@ -1,6 +1,7 @@
 """
 Simple test suite for the refactored Second Brain application.
 """
+
 import pytest
 from httpx import AsyncClient
 
@@ -21,7 +22,8 @@ class TestAPI:
     def api_key(self):
         """Get API key for testing."""
         import os
-        tokens = os.getenv('API_TOKENS', '').split(',')
+
+        tokens = os.getenv("API_TOKENS", "").split(",")
         return tokens[0].strip() if tokens else "test-key"
 
     async def test_health_check(self, client):
@@ -32,16 +34,9 @@ class TestAPI:
 
     async def test_store_memory(self, client, api_key):
         """Test storing a memory."""
-        memory_data = {
-            "content": "This is a test memory",
-            "metadata": {"type": "test", "tags": ["example"]}
-        }
+        memory_data = {"content": "This is a test memory", "metadata": {"type": "test", "tags": ["example"]}}
 
-        response = await client.post(
-            "/memories",
-            json=memory_data,
-            params={"api_key": api_key}
-        )
+        response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
 
         assert response.status_code == 200
         data = response.json()
@@ -52,29 +47,15 @@ class TestAPI:
     async def test_search_memories(self, client, api_key):
         """Test searching memories."""
         # First store a memory
-        memory_data = {
-            "content": "Python is a programming language",
-            "metadata": {"type": "fact"}
-        }
+        memory_data = {"content": "Python is a programming language", "metadata": {"type": "fact"}}
 
-        store_response = await client.post(
-            "/memories",
-            json=memory_data,
-            params={"api_key": api_key}
-        )
+        store_response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
         assert store_response.status_code == 200
 
         # Then search for it
-        search_data = {
-            "query": "programming language",
-            "limit": 5
-        }
+        search_data = {"query": "programming language", "limit": 5}
 
-        response = await client.post(
-            "/memories/search",
-            json=search_data,
-            params={"api_key": api_key}
-        )
+        response = await client.post("/memories/search", json=search_data, params={"api_key": api_key})
 
         assert response.status_code == 200
         results = response.json()
@@ -84,24 +65,14 @@ class TestAPI:
     async def test_get_memory(self, client, api_key):
         """Test getting a specific memory."""
         # First store a memory
-        memory_data = {
-            "content": "Test memory for retrieval",
-            "metadata": {"type": "test"}
-        }
+        memory_data = {"content": "Test memory for retrieval", "metadata": {"type": "test"}}
 
-        store_response = await client.post(
-            "/memories",
-            json=memory_data,
-            params={"api_key": api_key}
-        )
+        store_response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
         assert store_response.status_code == 200
         memory_id = store_response.json()["id"]
 
         # Then get it
-        response = await client.get(
-            f"/memories/{memory_id}",
-            params={"api_key": api_key}
-        )
+        response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
 
         assert response.status_code == 200
         data = response.json()
@@ -111,41 +82,25 @@ class TestAPI:
     async def test_delete_memory(self, client, api_key):
         """Test deleting a memory."""
         # First store a memory
-        memory_data = {
-            "content": "Memory to be deleted",
-            "metadata": {"type": "temporary"}
-        }
+        memory_data = {"content": "Memory to be deleted", "metadata": {"type": "temporary"}}
 
-        store_response = await client.post(
-            "/memories",
-            json=memory_data,
-            params={"api_key": api_key}
-        )
+        store_response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
         assert store_response.status_code == 200
         memory_id = store_response.json()["id"]
 
         # Then delete it
-        response = await client.delete(
-            f"/memories/{memory_id}",
-            params={"api_key": api_key}
-        )
+        response = await client.delete(f"/memories/{memory_id}", params={"api_key": api_key})
 
         assert response.status_code == 200
         assert "deleted successfully" in response.json()["message"]
 
         # Verify it's deleted
-        get_response = await client.get(
-            f"/memories/{memory_id}",
-            params={"api_key": api_key}
-        )
+        get_response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
         assert get_response.status_code == 404
 
     async def test_list_memories(self, client, api_key):
         """Test listing memories."""
-        response = await client.get(
-            "/memories",
-            params={"api_key": api_key, "limit": 10}
-        )
+        response = await client.get("/memories", params={"api_key": api_key, "limit": 10})
 
         assert response.status_code == 200
         data = response.json()
