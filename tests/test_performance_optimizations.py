@@ -193,14 +193,13 @@ class PerformanceOptimizationTester:
         if response.status_code != 200:
             raise Exception(f"Memory ingest failed: {response.status_code}")
         
-        ingest_data = response.json()
         print(f"   ✅ Memory ingested in {ingest_time:.2f}s")
         
         # Search for the memory multiple times to test caching
         search_query = "performance optimization testing"
         times = []
         
-        for i in range(3):
+        for _ in range(3):
             start_time = time.time()
             search_response = await self.client.get(
                 f"{self.base_url}/search",

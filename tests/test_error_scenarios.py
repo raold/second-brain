@@ -188,7 +188,7 @@ class TestWebSocketErrors:
         app.dependency_overrides.clear()
         
         try:
-            with test_client.websocket_connect("/ws/generate?token=invalid") as websocket:
+            with test_client.websocket_connect("/ws/generate?token=invalid"):
                 # Connection should be closed immediately
                 assert False, "Should not reach here"
         except Exception:

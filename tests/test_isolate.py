@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.isolate_test import app
+from app.main import app
 
 
 def test_isolate():

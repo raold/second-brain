@@ -243,7 +243,7 @@ class PostgresClient:
                     total_memories = memory_count.scalar() if memory_count else 0
                     
                     active_memory_count = await session.execute(
-                        select(func.count(Memory.id)).where(Memory.is_active == True)
+                        select(func.count(Memory.id)).where(Memory.is_active)
                     )
                     active_memories = active_memory_count.scalar() if active_memory_count else 0
                     
@@ -611,7 +611,7 @@ class PostgresClient:
                 filters = []
                 
                 if not include_inactive:
-                    filters.append(Memory.is_active == True)
+                    filters.append(Memory.is_active)
                 
                 if query_text:
                     # Full-text search on content
@@ -819,27 +819,27 @@ class PostgresClient:
                 # Memory statistics
                 total_memories = await session.execute(select(func.count(Memory.id)))
                 active_memories = await session.execute(
-                    select(func.count(Memory.id)).where(Memory.is_active == True)
+                    select(func.count(Memory.id)).where(Memory.is_active)
                 )
                 
                 # Intent distribution
                 intent_stats = await session.execute(
                     select(Memory.intent_type, func.count(Memory.id))
-                    .where(Memory.is_active == True)
+                    .where(Memory.is_active)
                     .group_by(Memory.intent_type)
                 )
                 
                 # Priority distribution
                 priority_stats = await session.execute(
                     select(Memory.priority, func.count(Memory.id))
-                    .where(Memory.is_active == True)
+                    .where(Memory.is_active)
                     .group_by(Memory.priority)
                 )
                 
                 # Source distribution
                 source_stats = await session.execute(
                     select(Memory.source, func.count(Memory.id))
-                    .where(Memory.is_active == True)
+                    .where(Memory.is_active)
                     .group_by(Memory.source)
                 )
                 
@@ -858,7 +858,7 @@ class PostgresClient:
                 # Top accessed memories
                 top_memories = await session.execute(
                     select(Memory.id, Memory.text_content, Memory.access_count)
-                    .where(Memory.is_active == True)
+                    .where(Memory.is_active)
                     .order_by(Memory.access_count.desc())
                     .limit(5)
                 )
@@ -931,7 +931,8 @@ async def get_async_session():
 
 
 # Compatibility alias for old session factory
-AsyncSessionLocal = lambda: get_postgres_client().session_factory
+def AsyncSessionLocal():
+    return get_postgres_client().session_factory
 
 
 async def close_postgres_client():

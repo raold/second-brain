@@ -937,7 +937,7 @@ async def clear_caches_endpoint(_: None = Depends(verify_token)) -> Dict[str, st
         
         # Also clear specific storage caches
         try:
-            postgres_client = await get_postgres_client()
+            await get_postgres_client()  # Just call without assignment
             # PostgreSQL caches are cleared automatically when records are modified
         except Exception as e:
             logger.warning(f"Failed to access PostgreSQL client for cache clearing: {e}")
@@ -1070,6 +1070,62 @@ async def performance_recommendations_endpoint(_: None = Depends(verify_token)) 
         ) from e
 
 # Helper functions for performance analysis
+
+def _calculate_cache_score(cache_stats):
+    """Calculate cache performance score."""
+    if not cache_stats:
+        return 50.0
+    
+    # Example calculation based on hit rate
+    total_hits = sum(stats.get('hits', 0) for stats in cache_stats.values())
+    total_misses = sum(stats.get('misses', 0) for stats in cache_stats.values())
+    
+    if total_hits + total_misses == 0:
+        return 50.0
+    
+    hit_rate = total_hits / (total_hits + total_misses)
+    return hit_rate * 100
+
+def _calculate_database_score(postgres_stats, qdrant_stats):
+    """Calculate database performance score."""
+    score = 100.0
+    
+    # Deduct points for slow queries
+    if postgres_stats and postgres_stats.get('avg_query_time', 0) > 0.1:
+        score -= 20
+    
+    if qdrant_stats and qdrant_stats.get('avg_search_time', 0) > 0.2:
+        score -= 20
+    
+    return max(score, 0)
+
+def _calculate_storage_score(dual_storage_stats):
+    """Calculate storage performance score."""
+    if not dual_storage_stats:
+        return 50.0
+    
+    # Base score on success rate
+    total_ops = dual_storage_stats.get('total_operations', 0)
+    failed_ops = dual_storage_stats.get('failed_operations', 0)
+    
+    if total_ops == 0:
+        return 50.0
+    
+    success_rate = (total_ops - failed_ops) / total_ops
+    return success_rate * 100
+
+def _calculate_optimization_score(postgres_stats, qdrant_stats):
+    """Calculate optimization effectiveness score."""
+    score = 100.0
+    
+    # Check if optimizations are working
+    if postgres_stats and postgres_stats.get('cache_hit_ratio', 0) < 0.8:
+        score -= 30
+    
+    if qdrant_stats and qdrant_stats.get('collection_size', 0) > 1000000:
+        score -= 20  # Penalize for large unoptimized collections
+    
+    return max(score, 0)
 
 def _calculate_system_health_score(
     cache_stats: Dict[str, Any], 
