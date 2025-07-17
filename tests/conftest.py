@@ -12,6 +12,9 @@ from app.config import config
 from app.main import app
 from app.models import Payload, PayloadType, Priority
 
+# Import comprehensive external service mocks
+from tests.fixtures.external_services import *  # noqa: F403, F401
+
 # ===== AUTHENTICATION FIXTURES =====
 
 def always_allow(request: Request):
@@ -47,56 +50,8 @@ def test_client():
 
 
 # ===== MOCK FIXTURES =====
-
-@pytest.fixture
-def mock_openai_client():
-    """Mock OpenAI client"""
-    client = Mock()
-    client.embeddings.create.return_value = Mock(
-        data=[Mock(embedding=[0.1] * 1536)]
-    )
-    return client
-
-
-@pytest.fixture
-def mock_qdrant_client():
-    """Mock Qdrant client"""
-    client = Mock()
-    client.upsert.return_value = None
-    client.search.return_value = []
-    client.retrieve.return_value = []
-    return client
-
-
-@pytest.fixture
-def mock_embedding():
-    """Mock embedding vector"""
-    return [0.1, 0.2, 0.3] + [0.0] * 1533  # 1536 dimensions total
-
-
-@pytest.fixture(autouse=True)
-def patch_external_services(monkeypatch, mock_embedding):
-    """Auto-patch external services to prevent real API calls"""
-    # Patch OpenAI embedding generation
-    monkeypatch.setattr("app.storage.qdrant_client.get_openai_embedding", 
-                       MagicMock(return_value=mock_embedding))
-    monkeypatch.setattr("app.utils.openai_client.get_openai_embedding",
-                       MagicMock(return_value=mock_embedding))
-    
-    # Patch Qdrant operations
-    monkeypatch.setattr("app.router.qdrant_upsert", MagicMock(return_value=None))
-    monkeypatch.setattr("app.router.qdrant_search", MagicMock(return_value=[]))
-    
-    # Patch file operations
-    monkeypatch.setattr("app.router.write_markdown", MagicMock(return_value=True))
-    
-    # Patch async intent detection
-    async def mock_detect_intent(*args, **kwargs):
-        return "note"
-    monkeypatch.setattr("app.router.detect_intent_via_llm", mock_detect_intent)
-    
-    # Patch background storage
-    monkeypatch.setattr("app.router.store_memory_pg_background", MagicMock(return_value=None))
+# Note: Comprehensive mocks are now imported from tests.fixtures.external_services
+# The mock_external_services fixture automatically patches all external services
 
 
 # ===== DATA FIXTURES =====
