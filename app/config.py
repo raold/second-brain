@@ -1,12 +1,12 @@
 import logging
 import os
-<<<<<<< HEAD
-
-from dotenv import load_dotenv
-=======
 from pathlib import Path
 from typing import Any, Dict
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class Config:
@@ -62,27 +62,6 @@ class Config:
             return 'DEBUG'
         else:
             return os.getenv('LOG_LEVEL', 'INFO')
-
-<<<<<<< HEAD
-    # === Logging ===
-    LOG_PATH = os.getenv("LOG_PATH", "tests/logs/processor.log")
-    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-
-    # === OpenAI Retry Settings ===
-    OPENAI_RETRY_ATTEMPTS = int(os.getenv("OPENAI_RETRY_ATTEMPTS", 3))
-    OPENAI_RETRY_MULTIPLIER = int(os.getenv("OPENAI_RETRY_MULTIPLIER", 1))
-    OPENAI_RETRY_MIN_WAIT = int(os.getenv("OPENAI_RETRY_MIN_WAIT", 2))
-    OPENAI_RETRY_MAX_WAIT = int(os.getenv("OPENAI_RETRY_MAX_WAIT", 10))
-
-    # === Model Version Tracking ===
-    MODEL_VERSIONS = {
-        "llm": os.getenv("MODEL_VERSION_LLM", "gpt-4o"),
-        "embedding": os.getenv("MODEL_VERSION_EMBEDDING", "text-embedding-3-small")
-    }
-
-    @classmethod
-    def summary(cls):
-=======
     def _get_api_tokens(self) -> list:
         """Get API tokens with fallback defaults."""
         tokens_str = os.getenv('API_TOKENS', 'dev-token,test-token')
@@ -96,20 +75,21 @@ class Config:
         else:
             default_host = 'localhost'
             
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
         return {
             'host': os.getenv('POSTGRES_HOST', default_host),
             'port': int(os.getenv('POSTGRES_PORT', '5432')),
-            'database': os.getenv('POSTGRES_DB', 'secondbrain'),
-            'username': os.getenv('POSTGRES_USER', 'postgres'),
+            'database': os.getenv('POSTGRES_DB', 'second_brain'),
+            'user': os.getenv('POSTGRES_USER', 'postgres'),
             'password': os.getenv('POSTGRES_PASSWORD', 'postgres'),
             'pool_size': int(os.getenv('POSTGRES_POOL_SIZE', '10')),
             'max_overflow': int(os.getenv('POSTGRES_MAX_OVERFLOW', '20')),
             'pool_timeout': int(os.getenv('POSTGRES_POOL_TIMEOUT', '30')),
+            'pool_recycle': int(os.getenv('POSTGRES_POOL_RECYCLE', '3600')),
         }
 
     def _get_qdrant_config(self) -> Dict[str, Any]:
         """Get Qdrant configuration with smart defaults."""
+        # Smart hostname detection
         if self.is_docker:
             default_host = 'qdrant'
         else:
@@ -118,41 +98,21 @@ class Config:
         return {
             'host': os.getenv('QDRANT_HOST', default_host),
             'port': int(os.getenv('QDRANT_PORT', '6333')),
+            'collection': os.getenv('QDRANT_COLLECTION', 'memories'),
             'timeout': int(os.getenv('QDRANT_TIMEOUT', '30')),
-            'collection': os.getenv('QDRANT_COLLECTION', 'second_brain'),
-            'vector_size': int(os.getenv('QDRANT_VECTOR_SIZE', '1536')),
-            'distance': os.getenv('QDRANT_DISTANCE', 'Cosine'),
         }
 
     def _get_cache_config(self) -> Dict[str, Any]:
-        """Simplified cache configuration."""
-        # Single cache size setting that scales others
-        base_size = int(os.getenv('CACHE_SIZE', '1000'))
-        
+        """Get caching configuration."""
         return {
-            'enabled': os.getenv('CACHE_ENABLED', 'true').lower() == 'true',
-            'default_ttl': int(os.getenv('CACHE_TTL', '300')),  # 5 minutes default
-            'sizes': {
-                'embeddings': base_size * 2,     # 2000 default
-                'queries': base_size // 2,       # 500 default  
-                'memories': base_size * 5,       # 5000 default
-                'search': base_size,             # 1000 default
-                'analytics': base_size // 10,    # 100 default
-            },
-            'ttls': {
-                'embeddings': 3600,              # 1 hour
-                'queries': 300,                  # 5 minutes
-                'memories': 1800,                # 30 minutes
-                'search': 300,                   # 5 minutes
-                'analytics': 900,                # 15 minutes
-            }
+            'default_ttl': int(os.getenv('CACHE_DEFAULT_TTL', '300')),  # 5 minutes
+            'max_size': int(os.getenv('CACHE_MAX_SIZE', '1000')),
+            'enable_metrics': os.getenv('CACHE_ENABLE_METRICS', 'true').lower() == 'true',
         }
 
     def _get_openai_config(self) -> Dict[str, Any]:
-        """Get OpenAI configuration with smart defaults."""
+        """Get OpenAI configuration."""
         return {
-            'api_key': os.getenv('OPENAI_API_KEY', ''),
-            'embedding_model': os.getenv('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small'),
             'retry_attempts': int(os.getenv('OPENAI_RETRY_ATTEMPTS', '3')),
             'retry_multiplier': int(os.getenv('OPENAI_RETRY_MULTIPLIER', '1')),
             'retry_min_wait': int(os.getenv('OPENAI_RETRY_MIN_WAIT', '2')),
@@ -160,47 +120,85 @@ class Config:
         }
 
     def _get_model_versions(self) -> Dict[str, str]:
-        """Get model version tracking."""
+        """Get model version configuration."""
         return {
-            "llm": os.getenv("MODEL_VERSION_LLM", "gpt-4o"),
-            "embedding": os.getenv("MODEL_VERSION_EMBEDDING", "text-embedding-3-small")
+            'llm': os.getenv('MODEL_VERSION_LLM', 'gpt-4o'),
+            'embedding': os.getenv('MODEL_VERSION_EMBEDDING', 'text-embedding-3-small')
         }
 
     def _get_storage_config(self) -> Dict[str, Any]:
-        """Storage configuration with smart defaults."""
+        """Get storage configuration."""
         return {
-            'data_dir': Path(os.getenv('DATA_DIR', './app/data')),
+            'markdown_dir': os.getenv('MARKDOWN_DIR', 'data/memories'),
             'backup_enabled': os.getenv('BACKUP_ENABLED', 'true').lower() == 'true',
-            'dual_storage': os.getenv('DUAL_STORAGE', 'true').lower() == 'true',
+            'backup_interval': int(os.getenv('BACKUP_INTERVAL', '3600')),  # 1 hour
         }
 
     def get_postgres_url(self) -> str:
         """Get PostgreSQL connection URL."""
         pg = self.postgres
-        return f"postgresql+asyncpg://{pg['username']}:{pg['password']}@{pg['host']}:{pg['port']}/{pg['database']}"
+        return f"postgresql+asyncpg://{pg['user']}:{pg['password']}@{pg['host']}:{pg['port']}/{pg['database']}"
 
-    def get_qdrant_url(self) -> str:
-        """Get Qdrant connection URL."""
-        qd = self.qdrant
-        return f"http://{qd['host']}:{qd['port']}"
-
-    def setup_logging(self) -> None:
-        """Setup logging with Windows-compatible settings."""
-        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    def setup_logging(self):
+        """Set up logging configuration with Windows compatibility."""
+        import logging
+        import sys
         
-        # Use simple text format on Windows to avoid emoji encoding issues
+        # Configure logging based on environment
+        log_level = getattr(logging, self.log_level.upper())
+        
+        # Create formatter
         if self.is_windows or self.is_ci:
-            log_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+            # Plain text format for Windows/CI
+            formatter = logging.Formatter(
+                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            )
+        else:
+            # More detailed format for Unix systems
+            formatter = logging.Formatter(
+                '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s'
+            )
         
-        logging.basicConfig(
-            level=getattr(logging, self.log_level),
-            format=log_format,
-            handlers=[
-                logging.StreamHandler(),
-                logging.FileHandler('logs/app.log') if os.path.exists('logs') else logging.NullHandler()
-            ]
-        )
+        # Configure root logger
+        root_logger = logging.getLogger()
+        root_logger.setLevel(log_level)
+        
+        # Add console handler
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        root_logger.addHandler(console_handler)
 
+    def summary(self):
+        """Return configuration summary."""
+        return {
+            'environment': {
+                'is_docker': self.is_docker,
+                'is_ci': self.is_ci,
+                'is_windows': self.is_windows,
+                'debug': self.debug,
+                'log_level': self.log_level,
+            },
+            'api': {
+                'host': self.host,
+                'port': self.port,
+                'tokens_count': len(self.api_tokens),
+            },
+            'databases': {
+                'postgres': {
+                    'host': self.postgres['host'],
+                    'port': self.postgres['port'],
+                    'database': self.postgres['database'],
+                },
+                'qdrant': {
+                    'host': self.qdrant['host'],
+                    'port': self.qdrant['port'],
+                    'collection': self.qdrant['collection'],
+                },
+            },
+            'models': self.model_versions,
+            'storage': self.storage,
+        }
+        
     def validate(self) -> None:
         """Validate configuration and warn about issues."""
         issues = []
@@ -219,64 +217,6 @@ class Config:
             for issue in issues:
                 print(f"   - {issue}")
 
-    def __str__(self) -> str:
-        """String representation for debugging."""
-        return f"""Configuration:
-  Environment: {'Docker' if self.is_docker else 'Local'} {'(CI)' if self.is_ci else ''}
-  Debug: {self.debug}
-  PostgreSQL: {self.postgres['host']}:{self.postgres['port']}
-  Qdrant: {self.qdrant['host']}:{self.qdrant['port']}
-  Cache: {'Enabled' if self.cache['enabled'] else 'Disabled'}
-  Log Level: {self.log_level}"""
-
-    def summary(self) -> dict:
-        """Get configuration summary for logging."""
-        return {
-            "environment": "Docker" if self.is_docker else "Local",
-            "debug": self.debug,
-            "postgres_host": self.postgres['host'],
-            "qdrant_host": self.qdrant['host'],
-            "cache_enabled": self.cache['enabled'],
-            "log_level": self.log_level,
-            "is_windows": self.is_windows,
-            "is_ci": self.is_ci
-        }
-
-    def override_for_testing(self, **overrides):
-        """
-        Override configuration values for testing purposes.
-        
-        Args:
-            **overrides: Key-value pairs to override in the configuration
-            
-        Example:
-            config.override_for_testing(
-                api_tokens=['test-token'],
-                debug=True,
-                postgres={'host': 'localhost', 'port': 5432}
-            )
-        """
-        for key, value in overrides.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
-            else:
-                raise AttributeError(f"Config has no attribute '{key}'")
-
-    def reset_to_defaults(self):
-        """Reset configuration to default values (useful for test cleanup)."""
-        self.__init__()  # Re-initialize with defaults
 
 # Global configuration instance
 config = Config()
-
-# Legacy compatibility - deprecated, use config object instead
-OPENAI_API_KEY = config.openai_api_key
-API_TOKENS = config.api_tokens
-POSTGRES_HOST = config.postgres['host']
-POSTGRES_PORT = config.postgres['port']
-POSTGRES_DB = config.postgres['database']
-POSTGRES_USER = config.postgres['username']
-POSTGRES_PASSWORD = config.postgres['password']
-QDRANT_HOST = config.qdrant['host']
-QDRANT_PORT = config.qdrant['port']
-DATA_DIR = str(config.storage['data_dir'])

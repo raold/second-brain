@@ -1,11 +1,7 @@
 from fastapi import HTTPException, Request, status
 from fastapi.security.utils import get_authorization_scheme_param
 
-<<<<<<< HEAD
-from app.config import Config
-=======
 from app.config import config
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 from app.utils.logger import logger
 
 
@@ -45,11 +41,7 @@ def verify_token_str(token: str) -> bool:
     """
     if not token:
         return False
-<<<<<<< HEAD
-    tokens = Config.API_TOKENS
-=======
     tokens = config.api_tokens
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     if isinstance(tokens, set):
         tokens = list(tokens)
     return token.strip() in tokens

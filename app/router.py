@@ -1,14 +1,5 @@
 # app/router.py
 
-
-<<<<<<< HEAD
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile, status
-from typing import Any, Dict, List, Optional
-
-from app.models import Memory, MemoryFeedback, Payload, PayloadType, Priority
-from app.storage.postgres import AsyncSessionLocal, get_async_session
-from app.auth import verify_token
-=======
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -24,19 +15,59 @@ from app.storage.markdown_writer import write_markdown
 from app.storage.postgres_client import AsyncSessionLocal, get_async_session, get_postgres_client
 from app.storage.qdrant_client import client, get_qdrant_stats, qdrant_search, qdrant_upsert, to_uuid
 from app.utils.cache import clear_all_caches, get_all_cache_stats
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 from app.utils.logger import logger
-from app.storage.qdrant_client import client, qdrant_search, qdrant_upsert, to_uuid
-from app.config import Config
-from app.storage.markdown_writer import write_markdown
-
-import datetime
 
 router = APIRouter()
 
 # Stub for detect_intent_via_llm if not defined
-async def detect_intent_via_llm(note):
-    return "note"  # TODO: Replace with actual implementation
+async def detect_intent_via_llm(note: str) -> str:
+    """
+    Detect intent using LLM-based classification.
+    
+    Args:
+        note: The text content to analyze
+        
+    Returns:
+        Detected intent: question, reminder, note, todo, command, or other
+    """
+    try:
+        from app.utils.openai_client import detect_intent_via_llm as openai_detect_intent
+        return await openai_detect_intent(note)
+    except Exception as e:
+        logger.warning(f"LLM intent detection failed: {e}, falling back to heuristics")
+        return _detect_intent_heuristics(note)
+
+def _detect_intent_heuristics(note: str) -> str:
+    """
+    Fallback heuristic-based intent detection.
+    
+    Args:
+        note: The text content to analyze
+        
+    Returns:
+        Detected intent based on simple patterns
+    """
+    text_lower = note.lower()
+    
+    # Check for question patterns
+    if any(word in text_lower for word in ["?", "how", "what", "why", "when", "where", "who", "which", "can you", "could you"]):
+        return "question"
+    
+    # Check for todo patterns
+    elif any(word in text_lower for word in ["todo", "task", "need to", "should", "must", "remember to", "don't forget"]):
+        return "todo"
+    
+    # Check for reminder patterns
+    elif any(word in text_lower for word in ["remind", "reminder", "remember", "notify", "alert"]):
+        return "reminder"
+    
+    # Check for command patterns
+    elif any(word in text_lower for word in ["command", "run", "execute", "start", "stop", "create", "delete", "update"]):
+        return "command"
+    
+    # Default to note
+    else:
+        return "note"
 
 # Stub for UnexpectedResponse if not defined
 class UnexpectedResponse(Exception):
@@ -142,11 +173,6 @@ def _build_ingest_response(payload: Payload) -> Dict[str, Any]:
     }
 
 @router.get("/health")
-<<<<<<< HEAD
-async def health_check() -> Dict[str, str]:
-    """Health check endpoint."""
-    return {"status": "ok"}
-=======
 async def health_check() -> Dict[str, Any]:
     """Health check endpoint with PostgreSQL status."""
     from app.storage.postgres_client import postgres_client
@@ -176,7 +202,6 @@ async def health_check() -> Dict[str, Any]:
                 "qdrant": "ok"
             }
         }
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 async def store_memory_pg(payload: Payload, session):
     from sqlalchemy import insert
@@ -198,14 +223,6 @@ async def store_memory_pg_background(payload: Payload):
         await store_memory_pg(payload, session)
 
 @router.post("/ingest")
-<<<<<<< HEAD
-async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, session=Depends(get_async_session), _: None = Depends(verify_token)) -> Dict[str, Any]:
-    """
-    Ingest a payload into the second brain system.
-    
-    Args:
-        payload: The payload to ingest
-=======
 async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, _: None = Depends(verify_token)) -> Dict[str, Any]:
     """
     Ingest a payload into the second brain system using dual storage.
@@ -213,7 +230,6 @@ async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, _
     Args:
         payload: The payload to ingest
         background_tasks: FastAPI background tasks
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
         
     Returns:
         Dict containing status and payload ID
@@ -225,24 +241,6 @@ async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, _
         logger.info(f"Received ingestion request: {payload.id}")
         
         # Auto-detect intent if not provided
-<<<<<<< HEAD
-        if not payload.intent:
-            note = payload.data.get("note") or payload.data.get("text") or ""
-            if note:
-                payload.intent = await detect_intent_via_llm(note)
-                payload.meta["intent"] = payload.intent
-        # Store in markdown file
-        write_markdown(payload)
-        
-        # Store in vector database
-        qdrant_upsert(payload.model_dump())
-        
-        # Store in Postgres (background)
-        background_tasks.add_task(store_memory_pg_background, payload)
-        
-        logger.info(f"Successfully ingested payload: {payload.id}")
-        return {"status": "ingested", "id": payload.id, "intent": payload.intent}
-=======
         intent_type = await _detect_or_assign_intent(payload)
         
         # Get dual storage handler
@@ -291,7 +289,6 @@ async def ingest_endpoint(payload: Payload, background_tasks: BackgroundTasks, _
             "dual_storage": "enabled",
             "embedding_generated": embedding_vector is not None
         }
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
         
     except Exception as e:
         logger.error(f"Failed to ingest payload {payload.id}: {str(e)}")
@@ -347,8 +344,6 @@ async def search_endpoint(
         ) from e
 
 def _build_search_filters(model_version, embedding_model, type, timestamp_from, timestamp_to):
-<<<<<<< HEAD
-=======
     """
     Build search filters dictionary from query parameters.
     
@@ -362,7 +357,6 @@ def _build_search_filters(model_version, embedding_model, type, timestamp_from, 
     Returns:
         Dictionary of filters for search
     """
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     filters = {}
     if model_version:
         filters["model_version"] = model_version
@@ -375,8 +369,6 @@ def _build_search_filters(model_version, embedding_model, type, timestamp_from, 
     return filters
 
 def _score_and_explain_result(r, filters):
-<<<<<<< HEAD
-=======
     """
     Calculate metadata score and explanation for a search result.
     
@@ -387,7 +379,6 @@ def _score_and_explain_result(r, filters):
     Returns:
         Enhanced result with scores and explanation
     """
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     meta_score = 0.0
     explanation = []
     model_version = filters.get("model_version")
@@ -421,8 +412,6 @@ def _score_and_explain_result(r, filters):
         "explanation": ", ".join(explanation) or "vector only"
     }
 
-<<<<<<< HEAD
-=======
 def _rank_and_score_results(results: List[Dict], filters: Dict) -> List[Dict]:
     """
     Apply scoring and ranking to search results.
@@ -451,7 +440,6 @@ def _build_ranked_search_response(query: str, ranked_results: List[Dict]) -> Dic
     """
     return {"query": query, "results": ranked_results}
 
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 @router.get("/ranked-search", tags=["Search"])
 async def ranked_search_endpoint(
     q: str,
@@ -468,14 +456,6 @@ async def ranked_search_endpoint(
     """
     try:
         logger.info(f"Received ranked search query: q={q}, model_version={model_version}, embedding_model={embedding_model}, type={type}, timestamp_from={timestamp_from}, timestamp_to={timestamp_to}")
-<<<<<<< HEAD
-        filters = _build_search_filters(model_version, embedding_model, type, timestamp_from, timestamp_to)
-        results = qdrant_search(q, filters=filters)
-        ranked = [_score_and_explain_result(r, filters) for r in results]
-        ranked.sort(key=lambda x: x["final_score"], reverse=True)
-        logger.info(f"Ranked search completed: q={q}, num_results={len(ranked)}")
-        return {"query": q, "results": ranked}
-=======
         
         # Build search filters
         filters = _build_search_filters(model_version, embedding_model, type, timestamp_from, timestamp_to)
@@ -489,7 +469,6 @@ async def ranked_search_endpoint(
         logger.info(f"Ranked search completed: q={q}, num_results={len(ranked_results)}")
         return _build_ranked_search_response(q, ranked_results)
         
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     except Exception as e:
         logger.error(f"Ranked search failed for query '{q}': {str(e)}")
         raise HTTPException(
@@ -531,11 +510,7 @@ async def get_version_history(id: str, _: None = Depends(verify_token)) -> Dict[
     """
     try:
         result = client.retrieve(
-<<<<<<< HEAD
-            collection_name=Config.QDRANT_COLLECTION,
-=======
             collection_name=config.qdrant['collection'],
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
             ids=[str(to_uuid(id))],
             with_payload=True
         )
@@ -549,11 +524,7 @@ async def get_version_history(id: str, _: None = Depends(verify_token)) -> Dict[
         raise HTTPException(status_code=404, detail="Record not found.")
     except Exception as e:
         logger.error(f"Failed to fetch version history for {id}: {e}")
-<<<<<<< HEAD
-        raise HTTPException(status_code=500, detail=f"Failed to fetch version history: {e}")
-=======
         raise HTTPException(status_code=500, detail=f"Failed to fetch version history: {e}") from e
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 @router.get("/zzzzzzzzzz", tags=["Records"])
 async def zzzzzzzzzz_handler(
@@ -569,11 +540,7 @@ async def zzzzzzzzzz_handler(
     try:
         # Qdrant scroll API for pagination
         scroll_result = client.scroll(
-<<<<<<< HEAD
-            collection_name=Config.QDRANT_COLLECTION,
-=======
             collection_name=config.qdrant['collection'],
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
             limit=limit,
             offset=offset,
             with_payload=True
@@ -597,22 +564,14 @@ async def zzzzzzzzzz_handler(
         return {"records": records, "total": len(records)}
     except Exception as e:
         logger.error(f"Failed to list records: {e}")
-<<<<<<< HEAD
-        raise HTTPException(status_code=500, detail=f"Failed to list records: {e}")
-=======
         raise HTTPException(status_code=500, detail=f"Failed to list records: {e}") from e
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 @router.get("/models", tags=["Models"])
 def get_models():
     """
     Returns the current LLM and embedding model versions in use.
     """
-<<<<<<< HEAD
-    return {"model_versions": Config.MODEL_VERSIONS}
-=======
     return {"model_versions": config.model_versions}
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 @router.get("/memories/search", tags=["Memories"])
 async def memories_search(
@@ -624,6 +583,7 @@ async def memories_search(
     include_deleted: bool = False,
     session=Depends(get_async_session)
 ):
+    """Search memories with optional filtering."""
     filters = []
     if intent:
         filters.append(Memory.intent == intent)
@@ -636,11 +596,36 @@ async def memories_search(
     if date_to:
         filters.append(Memory.timestamp <= date_to)
     if not include_deleted:
-<<<<<<< HEAD
-        filters.append(Memory.deleted == False)
-=======
         filters.append(not Memory.deleted)
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+    stmt = select(Memory).where(and_(*filters)) if filters else select(Memory)
+    result = await session.execute(stmt)
+    memories = [dict(row._mapping["Memory"].__dict__) for row in result.fetchall()]
+    for m in memories:
+        m.pop("_sa_instance_state", None)
+    return {"results": memories}
+async def list_memories(
+    intent: Optional[str] = None,
+    type: Optional[str] = None,
+    note: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    include_deleted: bool = False,
+    session=Depends(get_async_session)
+):
+    """List memories with optional filtering."""
+    filters = []
+    if intent:
+        filters.append(Memory.intent == intent)
+    if type:
+        filters.append(Memory.type == type)
+    if note:
+        filters.append(Memory.note.ilike(f"%{note}%"))
+    if date_from:
+        filters.append(Memory.timestamp >= date_from)
+    if date_to:
+        filters.append(Memory.timestamp <= date_to)
+    if not include_deleted:
+        filters.append(not Memory.deleted)
     stmt = select(Memory).where(and_(*filters)) if filters else select(Memory)
     result = await session.execute(stmt)
     memories = [dict(row._mapping["Memory"].__dict__) for row in result.fetchall()]
@@ -659,11 +644,7 @@ async def delete_memory(id: str, hard: bool = False, session=Depends(get_async_s
     if hard:
         from app.storage.qdrant_client import client, to_uuid
         try:
-<<<<<<< HEAD
-            client.delete(collection_name=Config.QDRANT_COLLECTION, points_selector=[str(to_uuid(id))])
-=======
             client.delete(collection_name=config.qdrant['collection'], points_selector=[str(to_uuid(id))])
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
         except Exception as e:
             logger.warning(f"Qdrant delete failed for {id}: {e}")
     return {"status": "deleted", "id": id, "hard": hard}
@@ -705,17 +686,10 @@ async def summarize_memories(
     # Fetch memories by IDs or query
     memories = []
     if ids:
-<<<<<<< HEAD
-        result = await session.execute(select(Memory).where(Memory.id.in_(ids), Memory.deleted == False))
-        memories = [row._mapping["Memory"] for row in result.fetchall()]
-    elif query:
-        result = await session.execute(select(Memory).where(Memory.note.ilike(f"%{query}%"), Memory.deleted == False))
-=======
         result = await session.execute(select(Memory).where(Memory.id.in_(ids), not Memory.deleted))
         memories = [row._mapping["Memory"] for row in result.fetchall()]
     elif query:
         result = await session.execute(select(Memory).where(Memory.note.ilike(f"%{query}%"), not Memory.deleted))
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
         memories = [row._mapping["Memory"] for row in result.fetchall()]
     if not memories:
         return {"summary": "No memories found."}
@@ -735,13 +709,7 @@ async def memory_feedback(id: str, feedback_type: str, user: Optional[str] = Non
         memory_id=id,
         user=user,
         feedback_type=feedback_type,
-<<<<<<< HEAD
-        timestamp=datetime.datetime.utcnow()
-    ))
-    await session.commit()
-    return {"status": "ok"}
-=======
-        timestamp=datetime.utcnow()
+        timestamp=datetime.now(timezone.utc)
     ))
     await session.commit()
     return {"status": "ok"}

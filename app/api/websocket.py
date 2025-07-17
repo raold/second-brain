@@ -1,8 +1,5 @@
 import asyncio
-<<<<<<< HEAD
-=======
 from typing import Any, Dict, List
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 
@@ -12,8 +9,6 @@ from app.utils.openai_client import elevenlabs_tts_stream, get_openai_stream
 router = APIRouter()
 
 async def websocket_auth(websocket: WebSocket):
-<<<<<<< HEAD
-=======
     """
     Authenticate WebSocket connection using token from query parameters.
     
@@ -23,15 +18,12 @@ async def websocket_auth(websocket: WebSocket):
     Raises:
         WebSocketDisconnect: If authentication fails
     """
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     token = websocket.query_params.get("token")
     if not token or not verify_token_str(token):
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         raise WebSocketDisconnect(code=status.WS_1008_POLICY_VIOLATION)
 
 async def process_llm_item(item, websocket, stream_json):
-<<<<<<< HEAD
-=======
     """
     Process a single LLM item and stream the response.
     
@@ -40,7 +32,6 @@ async def process_llm_item(item, websocket, stream_json):
         websocket: WebSocket connection
         stream_json: Whether to include metadata in JSON response
     """
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     try:
         prompt = item.get("prompt")
         req_id = item.get("id")
@@ -57,10 +48,6 @@ async def process_llm_item(item, websocket, stream_json):
     except Exception as e:
         await websocket.send_json({"id": item.get("id"), "error": str(e), "done": True})
 
-<<<<<<< HEAD
-# Placeholder for TTS processing (to be implemented)
-async def process_tts_item(item, websocket, stream_json):
-=======
 async def process_tts_item(item, websocket, stream_json):
     """
     Process a single TTS item and stream the audio response.
@@ -70,7 +57,6 @@ async def process_tts_item(item, websocket, stream_json):
         websocket: WebSocket connection  
         stream_json: Whether to include metadata in JSON response
     """
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     req_id = item.get("id")
     text = item.get("prompt") or item.get("text")
     if not text or not req_id:
@@ -84,36 +70,6 @@ async def process_tts_item(item, websocket, stream_json):
     except Exception as e:
         await websocket.send_json({"id": req_id, "error": str(e), "done": True, "tts": True})
 
-<<<<<<< HEAD
-@router.websocket("/ws/generate")
-async def ws_generate(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        await websocket_auth(websocket)
-        data = await websocket.receive_json()
-        batch = data.get("batch")
-        stream_json = data.get("json", False)
-        # Backward compatibility: single prompt
-        if not batch:
-            prompt = data.get("prompt")
-            if not prompt:
-                await websocket.send_json({"error": "Missing prompt"})
-                await websocket.close()
-                return
-            # Wrap as batch
-            batch = [{"id": "single", "prompt": prompt, "type": "llm"}]
-        # Process all items in parallel
-        tasks = []
-        for item in batch:
-            item_type = item.get("type", "llm")
-            if item_type == "llm":
-                tasks.append(asyncio.create_task(process_llm_item(item, websocket, stream_json)))
-            elif item_type == "tts":
-                tasks.append(asyncio.create_task(process_tts_item(item, websocket, stream_json)))
-            else:
-                await websocket.send_json({"id": item.get("id"), "error": f"Unknown type: {item_type}", "done": True})
-        await asyncio.gather(*tasks)
-=======
 def _parse_websocket_request(data: Dict[str, Any]) -> tuple[List[Dict], bool]:
     """
     Parse WebSocket request data and extract batch items and settings.
@@ -183,7 +139,6 @@ async def ws_generate(websocket: WebSocket):
         # Process batch items
         await _process_batch_items(batch, websocket, stream_json)
         
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
     except WebSocketDisconnect:
         pass
     except Exception as e:

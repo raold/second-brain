@@ -1,22 +1,33 @@
+"""
+Qdrant Vector Database Client for Second Brain Application.
+
+This module provides a clean, high-performance interface to Qdrant vector database
+with advanced caching, monitoring, and error handling.
+"""
+import asyncio
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from uuid import NAMESPACE_URL, UUID, uuid5
 
-<<<<<<< HEAD
-from cachetools import LRUCache, cached
-from openai import OpenAI
 from qdrant_client import QdrantClient
+from qdrant_client.http.exceptions import UnexpectedResponse
+from qdrant_client.http.models import PointStruct, Filter, FieldCondition, MatchValue
 
-from app.config import Config
+from app.config import config
+from app.utils.cache import get_cache
 from app.utils.logger import logger
 from app.utils.openai_client import get_openai_embedding
 
-# Initialize Qdrant client
-client = QdrantClient(host=Config.QDRANT_HOST, port=Config.QDRANT_PORT)
+# Initialize Qdrant client with connection pooling
+client = QdrantClient(
+    host=config.qdrant['host'], 
+    port=config.qdrant['port'],
+    timeout=config.qdrant['timeout']
+)
 
-# LRU cache for search results (up to 1000 unique queries)
-_search_cache = LRUCache(maxsize=1000)
+# Cache for search results
+search_cache = get_cache('search')
 
 # Prometheus metrics
 try:
@@ -27,12 +38,12 @@ try:
 except ImportError:
     search_cache_hit = search_cache_miss = qdrant_search_latency = None
 
-if TYPE_CHECKING:
-    pass  # type: ignore
 
-def _search_cache_key(query, top_k=5, filters=None):
+def _search_cache_key(query: str, top_k: int = 5, filters: Optional[Dict] = None) -> str:
+    """Create cache key for search results."""
     import json
-    return (query, top_k, json.dumps(filters, sort_keys=True))
+    return f"search:{hash(query)}:{top_k}:{hash(json.dumps(filters, sort_keys=True) if filters else '')}"
+
 
 def to_uuid(text: str) -> UUID:
     """Convert text to deterministic UUID using namespace."""
@@ -40,16 +51,19 @@ def to_uuid(text: str) -> UUID:
         raise ValueError("Text must be a non-empty string")
     return uuid5(NAMESPACE_URL, text)
 
-def get_openai_client() -> 'OpenAI':
+
+def get_openai_client():
     """Get OpenAI client with API key validation."""
     try:
         from openai import OpenAI
     except ImportError:
         raise ImportError("openai package is required for embedding. Please install it.")
-    api_key = Config.OPENAI_API_KEY
+    
+    api_key = config.openai_api_key
     if not api_key:
         raise ValueError("OPENAI_API_KEY environment variable is required")
     return OpenAI(api_key=api_key)
+
 
 def qdrant_upsert(payload: Dict[str, Any]) -> None:
     """
@@ -63,11 +77,6 @@ def qdrant_upsert(payload: Dict[str, Any]) -> None:
         Exception: If upsert operation fails
     """
     try:
-        try:
-            from qdrant_client.http.exceptions import UnexpectedResponse
-            from qdrant_client.http.models import PointStruct
-        except ImportError:
-            raise ImportError("qdrant-client package is required. Please install it.")
         # Validate payload structure
         if not isinstance(payload, dict):
             raise ValueError("Payload must be a dictionary")
@@ -90,20 +99,22 @@ def qdrant_upsert(payload: Dict[str, Any]) -> None:
         if not embedding:
             raise ValueError("Generated embedding is empty")
 
-        # Prepare payload with meta
+        # Prepare payload with metadata
         if "meta" not in payload:
             payload["meta"] = {}
-        # Version info to append
+        
+        # Add version info
         version_info = {
-            "embedding_model": Config.MODEL_VERSIONS["embedding"],
-            "model_version": Config.MODEL_VERSIONS["llm"],
+            "embedding_model": config.model_versions["embedding"],
+            "model_version": config.model_versions["llm"],
             "timestamp": datetime.now().isoformat(),
         }
+        
         # Try to fetch existing record for version history
         version_history = []
         try:
             existing = client.retrieve(
-                collection_name=Config.QDRANT_COLLECTION,
+                collection_name=config.qdrant['collection'],
                 ids=[str(to_uuid(payload["id"]))],
                 with_payload=True
             )
@@ -116,11 +127,15 @@ def qdrant_upsert(payload: Dict[str, Any]) -> None:
             version_history = []
         except Exception as e:
             logger.warning(f"[Qdrant] Could not fetch existing record for version history: {e}")
-        version_history = version_history + [version_info]
-        payload["meta"]["embedding_model"] = version_info["embedding_model"]
-        payload["meta"]["model_version"] = version_info["model_version"]
-        payload["meta"]["timestamp"] = version_info["timestamp"]
-        payload["meta"]["version_history"] = version_history
+        
+        # Update metadata
+        version_history.append(version_info)
+        payload["meta"].update({
+            "embedding_model": version_info["embedding_model"],
+            "model_version": version_info["model_version"],
+            "timestamp": version_info["timestamp"],
+            "version_history": version_history
+        })
         
         # Create point for Qdrant
         point = PointStruct(
@@ -131,657 +146,296 @@ def qdrant_upsert(payload: Dict[str, Any]) -> None:
 
         # Upsert to Qdrant
         client.upsert(
-            collection_name=Config.QDRANT_COLLECTION,
+            collection_name=config.qdrant['collection'],
             points=[point]
         )
         
         logger.info(f"[Qdrant] Successfully upserted vector for ID: {payload['id']}")
-=======
-from qdrant_client import QdrantClient
-
-from app.config import config
-from app.utils.cache import SEARCH_CACHE_CONFIG, CacheConfig, get_cache, get_smart_cache
-from app.utils.logger import logger
-from app.utils.openai_client import get_openai_embedding
-
-# Initialize Qdrant client with connection pooling
-client = QdrantClient(
-    host=config.qdrant['host'], 
-    port=config.qdrant['port'],
-    timeout=config.qdrant['timeout'],  # 30 second timeout
-    grpc_port=6334,  # Enable gRPC for better performance
-    prefer_grpc=True
-)
-
-# Enhanced search cache with TTL and smart eviction
-_search_cache = get_smart_cache("qdrant_search", SEARCH_CACHE_CONFIG)
-
-# Enhanced caches for different operation types
-_vector_cache = get_cache("qdrant_vectors", CacheConfig(
-    max_size=500, 
-    ttl_seconds=1800,  # 30 minutes
-    enable_metrics=True
-))
-
-_collection_info_cache = get_cache("qdrant_collection_info", CacheConfig(
-    max_size=10,
-    ttl_seconds=300,  # 5 minutes
-    enable_metrics=True
-))
-
-# Prometheus metrics
-try:
-    from prometheus_client import Counter, Gauge, Histogram
-    qdrant_search_latency = Histogram('qdrant_search_latency_seconds', 'Qdrant search latency (seconds)')
-    qdrant_operations = Counter('qdrant_operations_total', 'Qdrant operations by type', ['operation', 'status'])
-    qdrant_connection_pool = Gauge('qdrant_connection_pool_size', 'Qdrant connection pool size')
-except ImportError:
-    qdrant_search_latency = qdrant_operations = qdrant_connection_pool = None
-
-if TYPE_CHECKING:
-    pass  # type: ignore
-
-def _search_cache_key(query: str, top_k: int = 5, filters: Optional[dict] = None) -> str:
-    """Generate cache key for search queries."""
-    import json
-    filter_str = json.dumps(filters or {}, sort_keys=True)
-    return f"search:{query}:{top_k}:{filter_str}"
-
-def _get_qdrant_health() -> Dict[str, Any]:
-    """Get Qdrant health status with caching."""
-    cache_key = "health_status"
-    cached_result = _collection_info_cache.get(cache_key)
-    if cached_result is not None:
-        return cached_result
-    
-    try:
-        # Get cluster info
-        cluster_info = client.get_cluster()
-        
-        # Get collection info
-        collections = client.get_collections()
-        collection_count = len(collections.collections) if collections else 0
-        
-        # Check if our collection exists
-        our_collection_exists = False
-        our_collection_info = None
-        try:
-            our_collection_info = client.get_collection(config.qdrant['collection'])
-            our_collection_exists = True
-        except Exception:
-            pass
-        
-        health_data = {
-            "status": "healthy",
-            "cluster_status": "ok" if cluster_info else "unknown",
-            "total_collections": collection_count,
-            "our_collection_exists": our_collection_exists,
-            "our_collection_points": our_collection_info.points_count if our_collection_info else 0,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        # Cache the result
-        _collection_info_cache.set(cache_key, health_data)
-        return health_data
         
     except Exception as e:
-        error_data = {
-            "status": "unhealthy",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-        return error_data
-
-def to_uuid(value: str) -> UUID:
-    """
-    Convert string to deterministic UUID using namespace.
-    
-    Args:
-        value: String to convert
-        
-    Returns:
-        UUID object
-    """
-    return uuid5(NAMESPACE_URL, value)
-
-def _validate_payload_structure(payload: Dict[str, Any]) -> None:
-    """
-    Validate payload structure before processing.
-    
-    Args:
-        payload: Payload dictionary to validate
-        
-    Raises:
-        ValueError: If payload structure is invalid
-    """
-    if not isinstance(payload, dict):
-        raise ValueError("Payload must be a dictionary")
-    
-    if "id" not in payload:
-        raise ValueError("Payload must contain 'id' field")
-    
-    if not payload["id"]:
-        raise ValueError("Payload 'id' cannot be empty")
-
-def _generate_embedding_for_payload(payload: Dict[str, Any]) -> List[float]:
-    """
-    Generate embedding for payload content with caching.
-    
-    Args:
-        payload: Payload dictionary
-        
-    Returns:
-        List of embedding values
-        
-    Raises:
-        ValueError: If embedding generation fails
-    """
-    # Extract text for embedding
-    data = payload.get("data", {})
-    note = data.get("note", "")
-    
-    if not note:
-        # Fallback to other text fields
-        note = str(data) if data else payload.get("id", "")
-    
-    if not note.strip():
-        raise ValueError("No text content found for embedding generation")
-    
-    # Generate embedding (this will use the enhanced caching)
-    from app.utils.openai_client import get_openai_client
-    openai_client = get_openai_client()
-    return get_openai_embedding(note, openai_client)
-
-def _get_version_history(payload_id: str) -> List[Dict[str, Any]]:
-    """
-    Retrieve version history for an existing payload from Qdrant.
-    
-    Args:
-        payload_id: The ID of the payload
-        
-    Returns:
-        List of version history entries
-    """
-    try:
-        from qdrant_client.http.exceptions import UnexpectedResponse
-        
-        existing = client.retrieve(
-            collection_name=config.qdrant['collection'],
-            ids=[str(to_uuid(payload_id))],
-            with_payload=True
-        )
-        if existing and getattr(existing[0], "payload", None):
-            meta = existing[0].payload.get("meta", {}) if isinstance(existing[0].payload, dict) else {}
-            if meta and meta.get("version_history"):
-                return meta["version_history"]
-    except UnexpectedResponse:
-        # Not found, start new history
-        pass
-    except Exception as e:
-        logger.warning(f"[Qdrant] Could not fetch existing record for version history: {e}")
-    
-    return []
-
-def _update_payload_metadata(payload: Dict[str, Any]) -> None:
-    """
-    Update payload metadata with version history and timestamps.
-    
-    Args:
-        payload: Payload dictionary to update
-    """
-    meta = payload.setdefault("meta", {})
-    
-    # Add timestamps
-    meta["timestamp"] = datetime.now().isoformat()
-    meta["embedding_model"] = config.openai['embedding_model']
-    meta["model_version"] = config.model_versions.get("embedding", "unknown")
-    
-    # Version history management
-    version_history = _get_version_history(payload["id"])
-    current_version = {
-        "version": len(version_history) + 1,
-        "timestamp": meta["timestamp"],
-        "changes": "Updated via API"
-    }
-    version_history.append(current_version)
-    meta["version_history"] = version_history[-10:]  # Keep last 10 versions
-
-def _create_qdrant_point(payload: Dict[str, Any], embedding: List[float]):
-    """
-    Create a Qdrant point structure from payload and embedding.
-    
-    Args:
-        payload: Dictionary containing payload data
-        embedding: List of embedding values
-        
-    Returns:
-        PointStruct for Qdrant
-    """
-    from qdrant_client.http.models import PointStruct
-    
-    return PointStruct(
-        id=str(to_uuid(payload["id"])),
-        vector=embedding,
-        payload=payload
-    )
-
-def _perform_upsert(point) -> None:
-    """
-    Perform the actual upsert operation to Qdrant and clear cache.
-    
-    Args:
-        point: PointStruct to upsert
-    """
-    try:
-        client.upsert(
-            collection_name=config.qdrant['collection'],
-            points=[point]
-        )
-        
-        # Record success metric
-        if qdrant_operations:
-            qdrant_operations.labels(operation='upsert', status='success').inc()
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
-        
-        # Invalidate search cache on upsert
-        _search_cache.clear()
-        
-<<<<<<< HEAD
-    except Exception as e:
-        logger.exception(f"[Qdrant ERROR] Failed to upsert vector for ID={payload.get('id', 'unknown')}: {str(e)}")
-        raise  # Re-raise the exception so the router can handle it
-
-def _build_qdrant_filter(filters):
-    from qdrant_client.http import models as qmodels
-    must = []
-    if filters.get("model_version"):
-        must.append(qmodels.FieldCondition(
-            key="meta.model_version",
-            match=qmodels.MatchValue(value=filters["model_version"])
-        ))
-    if filters.get("embedding_model"):
-        must.append(qmodels.FieldCondition(
-            key="meta.embedding_model",
-            match=qmodels.MatchValue(value=filters["embedding_model"])
-        ))
-    if filters.get("type"):
-        must.append(qmodels.FieldCondition(
-            key="type",
-            match=qmodels.MatchValue(value=filters["type"])
-        ))
-    if filters.get("timestamp"):
-        ts = filters["timestamp"]
-        range_args = {}
-        if ts.get("from"):
-            try:
-                from dateutil import parser as date_parser
-                range_args["gte"] = int(date_parser.parse(ts["from"]).timestamp())
-            except Exception:
-                pass
-        if ts.get("to"):
-            try:
-                from dateutil import parser as date_parser
-                range_args["lte"] = int(date_parser.parse(ts["to"]).timestamp())
-            except Exception:
-                pass
-        if range_args:
-            must.append(qmodels.FieldCondition(
-                key="meta.timestamp",
-                range=qmodels.Range(**range_args)
-            ))
-    return qmodels.Filter(must=must) if must else None
-
-def _process_qdrant_results(search_result):
-    results = []
-    for result in search_result:
-        payload = getattr(result, "payload", {})
-        if payload is None:
-            payload = {}
-        meta = payload.get("meta", {})
-        results.append({
-            "id": str(result.id),
-            "score": float(result.score),
-            "note": payload.get("data", {}).get("note", ""),
-            "timestamp": meta.get("timestamp", ""),
-            "source": meta.get("source", ""),
-            "type": payload.get("type", ""),
-            "priority": payload.get("priority", ""),
-            "embedding_model": meta.get("embedding_model", ""),
-            "model_version": meta.get("model_version", "")
-        })
-    return results
-
-@cached(_search_cache, key=lambda query, top_k=5, filters=None: _search_cache_key(query, top_k, filters or {}))
-def qdrant_search(query: str, top_k: int = 5, filters: Optional[dict] = None) -> List[Dict[str, Any]]:
-    """
-    Search for semantically similar content in Qdrant, with optional metadata filtering.
-=======
-    except Exception:
-        # Record failure metric
-        if qdrant_operations:
-            qdrant_operations.labels(operation='upsert', status='error').inc()
+        logger.error(f"[Qdrant] Failed to upsert vector for ID={payload.get('id', 'unknown')}: {str(e)}")
         raise
 
-def qdrant_upsert(payload: Dict[str, Any]) -> None:
-    """
-    Upsert a payload into Qdrant vector database.
-    
-    Args:
-        payload: Dictionary containing payload data
-        
-    Raises:
-        ValueError: If payload is invalid
-        Exception: If upsert operation fails
-    """
-    start_time = time.time()
-    
-    try:
-        # Validate payload structure
-        _validate_payload_structure(payload)
-        
-        # Generate embedding
-        embedding = _generate_embedding_for_payload(payload)
-        
-        # Update metadata with version information
-        _update_payload_metadata(payload)
-        
-        # Create Qdrant point
-        point = _create_qdrant_point(payload, embedding)
-        
-        # Perform upsert
-        _perform_upsert(point)
-        
-        logger.info(f"[Qdrant] Successfully upserted vector for ID: {payload['id']}")
-        
-        # Record latency
-        if qdrant_search_latency:
-            qdrant_search_latency.observe(time.time() - start_time)
-        
-    except Exception as e:
-        logger.exception(f"[Qdrant ERROR] Failed to upsert vector for ID={payload.get('id', 'unknown')}: {str(e)}")
-        raise  # Re-raise the exception so the router can handle it
 
-def _parse_timestamp_to_unix(timestamp: str) -> float:
-    """
-    Parse ISO timestamp string to Unix timestamp.
-    
-    Args:
-        timestamp: ISO timestamp string (e.g., "2023-01-01T00:00:00Z")
-        
-    Returns:
-        Unix timestamp as float
-        
-    Raises:
-        ValueError: If timestamp cannot be parsed
-    """
-    from datetime import datetime
-    
-    try:
-        # Handle various ISO formats
-        if timestamp.endswith('Z'):
-            # UTC timezone
-            dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-        elif '+' in timestamp or timestamp.count('-') > 2:
-            # Has timezone info
-            dt = datetime.fromisoformat(timestamp)
-        else:
-            # Assume UTC if no timezone
-            dt = datetime.fromisoformat(timestamp + '+00:00')
-        
-        return dt.timestamp()
-    except ValueError as e:
-        raise ValueError(f"Unable to parse timestamp '{timestamp}': {e}")
-
-
-def _build_qdrant_filter(filters: dict):
-    """
-    Build Qdrant filter from search filters dictionary.
-    
-    Args:
-        filters: Dictionary of filters to apply
-        
-    Returns:
-        Qdrant filter object or None
-    """
+def _build_qdrant_filter(filters: Optional[Dict[str, Any]]) -> Optional[Filter]:
+    """Build Qdrant filter from filter dictionary."""
     if not filters:
         return None
     
-    from qdrant_client.http.models import FieldCondition, Filter, MatchAny, MatchValue, Range
-    
-    conditions = []
-    
-    # Handle various filter types
-    for key, value in filters.items():
-        if key == "timestamp" and isinstance(value, dict):
-            # Handle timestamp range - convert ISO strings to Unix timestamps
-            from_ts = value.get("from")
-            to_ts = value.get("to")
-            if from_ts or to_ts:
-                range_condition = {}
-                if from_ts:
-                    try:
-                        range_condition["gte"] = _parse_timestamp_to_unix(from_ts)
-                    except ValueError as e:
-                        logger.warning(f"Invalid 'from' timestamp '{from_ts}': {e}")
-                        continue  # Skip this filter if timestamp is invalid
-                if to_ts:
-                    try:
-                        range_condition["lte"] = _parse_timestamp_to_unix(to_ts)
-                    except ValueError as e:
-                        logger.warning(f"Invalid 'to' timestamp '{to_ts}': {e}")
-                        continue  # Skip this filter if timestamp is invalid
-                
-                if range_condition:  # Only add if we have valid timestamps
-                    conditions.append(
-                        FieldCondition(
-                            key="meta.timestamp",
-                            range=Range(**range_condition)
+    try:
+        from qdrant_client.http import models as qmodels
+        
+        must = []
+        
+        # Handle different filter types
+        for key, value in filters.items():
+            if key == "user_id" and value:
+                must.append(
+                    qmodels.FieldCondition(
+                        key=f"meta.{key}",
+                        match=qmodels.MatchValue(value=value)
+                    )
+                )
+            elif key == "tags" and value:
+                # Support both single tag and list of tags
+                if isinstance(value, list):
+                    for tag in value:
+                        must.append(
+                            qmodels.FieldCondition(
+                                key=f"meta.{key}",
+                                match=qmodels.MatchValue(value=tag)
+                            )
+                        )
+                else:
+                    must.append(
+                        qmodels.FieldCondition(
+                            key=f"meta.{key}",
+                            match=qmodels.MatchValue(value=value)
                         )
                     )
-        elif isinstance(value, list):
-            # Handle list values (match any)
-            conditions.append(
-                FieldCondition(
-                    key=f"meta.{key}",
-                    match=MatchAny(any=value)
+            elif key == "created_after" and value:
+                must.append(
+                    qmodels.FieldCondition(
+                        key="meta.timestamp",
+                        range=qmodels.Range(gte=value)
+                    )
                 )
-            )
-        else:
-            # Handle single values
-            conditions.append(
-                FieldCondition(
-                    key=f"meta.{key}" if key != "type" else key,
-                    match=MatchValue(value=value)
+            elif key == "created_before" and value:
+                must.append(
+                    qmodels.FieldCondition(
+                        key="meta.timestamp",
+                        range=qmodels.Range(lte=value)
+                    )
                 )
-            )
-    
-    return Filter(must=conditions) if conditions else None
+        
+        return qmodels.Filter(must=must) if must else None
+        
+    except Exception as e:
+        logger.error(f"[Qdrant] Error building filter: {e}")
+        return None
 
-def _process_qdrant_results(search_result):
+
+def _process_qdrant_results(search_result) -> List[Dict[str, Any]]:
     """Process Qdrant search results into standardized format."""
-    results = []
-    for result in search_result:
-        payload = getattr(result, "payload", {})
-        if payload is None:
-            payload = {}
-        meta = payload.get("meta", {})
-        results.append({
-            "id": str(result.id),
-            "score": float(result.score),
-            "note": payload.get("data", {}).get("note", ""),
-            "timestamp": meta.get("timestamp", ""),
-            "source": meta.get("source", ""),
-            "type": payload.get("type", ""),
-            "priority": payload.get("priority", ""),
-            "embedding_model": meta.get("embedding_model", ""),
-            "model_version": meta.get("model_version", "")
-        })
-    return results
-
-def qdrant_search(query: str, top_k: int = 5, filters: Optional[dict] = None) -> List[Dict[str, Any]]:
-    """
-    Search for semantically similar content in Qdrant, with optional metadata filtering.
-    Uses advanced caching with TTL and smart eviction.
+    processed_results = []
     
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+    for result in search_result:
+        try:
+            # Extract payload
+            payload = result.payload if hasattr(result, 'payload') else {}
+            
+            # Create standardized result
+            processed_result = {
+                "id": payload.get("id", "unknown"),
+                "score": float(result.score) if hasattr(result, 'score') else 0.0,
+                "data": payload.get("data", {}),
+                "meta": payload.get("meta", {}),
+                "vector_id": str(result.id) if hasattr(result, 'id') else None
+            }
+            
+            processed_results.append(processed_result)
+            
+        except Exception as e:
+            logger.error(f"[Qdrant] Error processing result: {e}")
+            continue
+    
+    return processed_results
+
+
+def qdrant_search(query: str, top_k: int = 5, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    """
+    Search Qdrant vector database with caching and monitoring.
+    
     Args:
         query: Search query string
-        top_k: Number of results to return (default: 5)
-        filters: Dict of metadata filters (model_version, embedding_model, type, timestamp)
-<<<<<<< HEAD
+        top_k: Number of results to return
+        filters: Optional filters to apply
+        
     Returns:
-        List of search results with metadata
-    Raises:
-        ValueError: If query is invalid
+        List of search results
     """
-    filters = filters or {}
+    # Create cache key
     cache_key = _search_cache_key(query, top_k, filters)
-    if cache_key in _search_cache:
-        if search_cache_hit:
-            search_cache_hit.inc()
-        return _search_cache[cache_key]
-    if search_cache_miss:
-        search_cache_miss.inc()
-    start = time.time()
-    try:
-        try:
-            from qdrant_client.http.models import SearchParams
-        except ImportError:
-            raise ImportError("qdrant-client package is required. Please install it.")
-=======
-        
-    Returns:
-        List of search results with metadata
-        
-    Raises:
-        ValueError: If query is invalid
-    """
-    # Generate cache key
-    cache_key = _search_cache_key(query, top_k, filters or {})
     
     # Check cache first
-    cached_result = _search_cache.get(cache_key)
-    if cached_result is not None:
-        logger.debug(f"Qdrant search cache hit for query: {query[:50]}...")
-        return cached_result
+    if search_cache:
+        cached_result = search_cache.get(cache_key)
+        if cached_result:
+            if search_cache_hit:
+                search_cache_hit.inc()
+            logger.debug(f"[Qdrant] Cache hit for query: {query[:50]}...")
+            return cached_result
+    
+    # Cache miss
+    if search_cache_miss:
+        search_cache_miss.inc()
     
     start_time = time.time()
     
     try:
-        # Validate inputs
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
-        if not query or not isinstance(query, str):
-            raise ValueError("Query must be a non-empty string")
-        if top_k <= 0 or top_k > 100:
-            raise ValueError("top_k must be between 1 and 100")
-<<<<<<< HEAD
+        # Get OpenAI client and generate embedding
         openai_client = get_openai_client()
-        query_vector = get_openai_embedding(query, openai_client)
-        if not query_vector:
-            raise ValueError("Query embedding is empty")
+        query_embedding = get_openai_embedding(query, openai_client)
+        
+        if not query_embedding:
+            logger.error("[Qdrant] Failed to generate query embedding")
+            return []
+        
+        # Build filter
         qdrant_filter = _build_qdrant_filter(filters)
-        search_result = client.search(
-            collection_name=Config.QDRANT_COLLECTION,
-            query_vector=query_vector,
-            limit=top_k,
-            search_params=SearchParams(hnsw_ef=128, exact=False),
-            query_filter=qdrant_filter
-        )
-        results = _process_qdrant_results(search_result)
-        logger.info(f"[Qdrant] Search for query '{query}' returned {len(results)} results")
-        if qdrant_search_latency:
-            qdrant_search_latency.observe(time.time() - start)
-        return results
-    except Exception as e:
-        logger.exception(f"[Qdrant ERROR] Search failed for query='{query}': {str(e)}")
-        raise  # Re-raise the exception so the router can handle it
-=======
         
-        # Import here to avoid circular imports
-        try:
-            from qdrant_client.http.models import SearchParams
-        except ImportError:
-            raise ImportError("qdrant-client package is required. Please install it.")
-        
-        # Generate query embedding
-        from app.utils.openai_client import get_openai_client
-        openai_client = get_openai_client()
-        query_vector = get_openai_embedding(query, openai_client)
-        
-        if not query_vector:
-            raise ValueError("Query embedding is empty")
-        
-        # Build filters
-        qdrant_filter = _build_qdrant_filter(filters or {})
-        
-        # Perform search with optimized parameters
+        # Search Qdrant
         search_result = client.search(
             collection_name=config.qdrant['collection'],
-            query_vector=query_vector,
-            limit=top_k,
-            search_params=SearchParams(
-                hnsw_ef=128,  # Higher ef for better recall
-                exact=False   # Use approximate search for speed
-            ),
-            query_filter=qdrant_filter
+            query_vector=query_embedding,
+            query_filter=qdrant_filter,
+            limit=top_k
         )
         
         # Process results
-        results = _process_qdrant_results(search_result)
+        processed_results = _process_qdrant_results(search_result)
         
-        # Cache the results
-        _search_cache.set(cache_key, results)
+        # Cache results
+        if search_cache:
+            search_cache.set(cache_key, processed_results)
         
         # Record metrics
+        search_time = time.time() - start_time
         if qdrant_search_latency:
-            qdrant_search_latency.observe(time.time() - start_time)
-        if qdrant_operations:
-            qdrant_operations.labels(operation='search', status='success').inc()
+            qdrant_search_latency.observe(search_time)
         
-        logger.info(f"[Qdrant] Search for query '{query}' returned {len(results)} results")
-        return results
+        logger.info(f"[Qdrant] Search completed in {search_time:.3f}s, {len(processed_results)} results")
+        return processed_results
         
     except Exception as e:
-        # Record failure metric
-        if qdrant_operations:
-            qdrant_operations.labels(operation='search', status='error').inc()
-            
-        logger.exception(f"[Qdrant ERROR] Search failed for query='{query}': {str(e)}")
-        raise  # Re-raise the exception so the router can handle it
+        logger.error(f"[Qdrant] Search failed: {e}")
+        return []
 
-def get_qdrant_stats() -> Dict[str, Any]:
-    """Get comprehensive Qdrant performance statistics."""
-    try:
-        health_data = _get_qdrant_health()
+
+def qdrant_delete(record_id: str) -> bool:
+    """
+    Delete a record from Qdrant by ID.
+    
+    Args:
+        record_id: The ID of the record to delete
         
-        # Add cache statistics
-        cache_stats = {
-            "search_cache": _search_cache.stats(),
-            "vector_cache": _vector_cache.stats(),
-            "collection_info_cache": _collection_info_cache.stats()
-        }
+    Returns:
+        True if deletion was successful, False otherwise
+    """
+    try:
+        # Convert to UUID
+        vector_id = str(to_uuid(record_id))
+        
+        # Delete from Qdrant
+        client.delete(
+            collection_name=config.qdrant['collection'],
+            points_selector=[vector_id]
+        )
+        
+        # Clear cache
+        if search_cache:
+            search_cache.clear()
+        
+        logger.info(f"[Qdrant] Successfully deleted record: {record_id}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"[Qdrant] Failed to delete record {record_id}: {e}")
+        return False
+
+
+def qdrant_get_collection_info() -> Dict[str, Any]:
+    """
+    Get information about the Qdrant collection.
+    
+    Returns:
+        Dictionary containing collection information
+    """
+    try:
+        collection_info = client.get_collection(config.qdrant['collection'])
         
         return {
-            **health_data,
-            "cache_statistics": cache_stats,
-            "performance_optimizations": {
-                "grpc_enabled": True,
-                "connection_timeout": config.qdrant['timeout'],
-                "search_cache_ttl": SEARCH_CACHE_CONFIG.ttl_seconds,
-                "smart_eviction": True
+            "name": config.qdrant['collection'],
+            "status": collection_info.status,
+            "points_count": collection_info.points_count,
+            "segments_count": collection_info.segments_count,
+            "disk_data_size": collection_info.disk_data_size,
+            "ram_data_size": collection_info.ram_data_size,
+            "config": {
+                "params": collection_info.config.params,
+                "hnsw_config": collection_info.config.hnsw_config,
+                "optimizer_config": collection_info.config.optimizer_config,
+                "wal_config": collection_info.config.wal_config
             }
         }
         
     except Exception as e:
-        logger.error(f"Failed to get Qdrant stats: {e}")
-        return {"status": "error", "error": str(e)}
+        logger.error(f"[Qdrant] Failed to get collection info: {e}")
+        return {}
 
-# Async version for better integration with async codebases
-async def qdrant_search_async(query: str, top_k: int = 5, filters: Optional[dict] = None) -> List[Dict[str, Any]]:
+
+def qdrant_health_check() -> Dict[str, Any]:
     """
-    Async version of qdrant_search for better performance in async contexts.
+    Perform a health check on the Qdrant connection.
+    
+    Returns:
+        Dictionary containing health status
     """
-    import asyncio
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, qdrant_search, query, top_k, filters)
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+    health_status = {
+        "healthy": False,
+        "response_time": None,
+        "error": None,
+        "collection_exists": False,
+        "points_count": 0
+    }
+    
+    start_time = time.time()
+    
+    try:
+        # Test basic connection
+        collections = client.get_collections()
+        response_time = time.time() - start_time
+        
+        health_status.update({
+            "healthy": True,
+            "response_time": response_time,
+            "collections_count": len(collections.collections)
+        })
+        
+        # Check if our collection exists
+        try:
+            collection_info = client.get_collection(config.qdrant['collection'])
+            health_status.update({
+                "collection_exists": True,
+                "points_count": collection_info.points_count or 0
+            })
+        except UnexpectedResponse:
+            health_status["collection_exists"] = False
+            
+    except Exception as e:
+        health_status.update({
+            "healthy": False,
+            "error": str(e),
+            "response_time": time.time() - start_time
+        })
+    
+    return health_status
+
+
+def clear_search_cache() -> None:
+    """Clear the search cache."""
+    if search_cache:
+        search_cache.clear()
+        logger.info("[Qdrant] Search cache cleared")
+
+
+# Export main functions
+__all__ = [
+    'qdrant_upsert',
+    'qdrant_search', 
+    'qdrant_delete',
+    'qdrant_get_collection_info',
+    'qdrant_health_check',
+    'clear_search_cache',
+    'to_uuid'
+]

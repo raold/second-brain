@@ -1,10 +1,7 @@
 # app/main.py
 
-<<<<<<< HEAD
-=======
 import logging
 import os
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 import uuid
 
 import sentry_sdk
@@ -18,11 +15,6 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from app.api.websocket import router as ws_router
-<<<<<<< HEAD
-from app.config import Config
-from app.router import router
-from app.utils.logger import logger
-=======
 from app.config import config
 from app.router import router
 from app.storage.postgres_client import close_postgres_client, postgres_client
@@ -44,7 +36,6 @@ def safe_log(level, message_with_emoji, message_without_emoji):
         level(message_without_emoji)
     else:
         level(message_with_emoji)
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
 
 app = FastAPI(
     title="Second Brain - AI Memory Assistant",
@@ -75,11 +66,8 @@ app.add_middleware(
 
 app.include_router(router)
 app.include_router(ws_router)
-<<<<<<< HEAD
 
 # Serve static UI files at /ui
-import os
-
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if not os.path.exists(static_dir):
     os.makedirs(static_dir)
@@ -89,24 +77,9 @@ app.mount("/ui", StaticFiles(directory=static_dir), name="ui")
 Instrumentator().instrument(app).expose(app, include_in_schema=False, should_gzip=True)
 
 # Sentry error monitoring (optional, set SENTRY_DSN env var)
-import os
-
 SENTRY_DSN = os.getenv("SENTRY_DSN")
 if SENTRY_DSN:
     sentry_sdk.init(dsn=SENTRY_DSN, traces_sample_rate=1.0)
-=======
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
-
-# Serve static UI files at /ui
-static_dir = os.path.join(os.path.dirname(__file__), "static")
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir)
-app.mount("/ui", StaticFiles(directory=static_dir), name="ui")
-
-# Prometheus metrics
-Instrumentator().instrument(app).expose(app, include_in_schema=False, should_gzip=True)
-
-# Sentry error monitoring (optional, set SENTRY_DSN env var)
 SENTRY_DSN = os.getenv("SENTRY_DSN")
 if SENTRY_DSN:
     sentry_sdk.init(dsn=SENTRY_DSN, traces_sample_rate=1.0)
