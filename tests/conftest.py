@@ -16,7 +16,7 @@ def setup_test_environment():
     # Set up test environment - Force override any existing values
     os.environ["USE_MOCK_DATABASE"] = "true"
     os.environ["API_TOKENS"] = "test-key-1,test-key-2"
-    
+
     # Ensure the app gets the test values by clearing any cached imports
     modules_to_clear = ["app.app", "app.database", "app.database_mock", "app.security", "app.connection_pool"]
     for module in modules_to_clear:
