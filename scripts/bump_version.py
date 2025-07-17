@@ -106,7 +106,11 @@ def update_readme(new_version):
     """Update version badge in README.md"""
     readme_file = Path("README.md")
     if readme_file.exists():
-        content = readme_file.read_text()
+        try:
+            content = readme_file.read_text(encoding='utf-8')
+        except UnicodeDecodeError:
+            # Try with different encoding if UTF-8 fails
+            content = readme_file.read_text(encoding='latin-1')
         
         # Update version badge
         content = re.sub(
@@ -115,7 +119,7 @@ def update_readme(new_version):
             content
         )
         
-        readme_file.write_text(content)
+        readme_file.write_text(content, encoding='utf-8')
         print(f"✅ Updated {readme_file}")
 
 def main():

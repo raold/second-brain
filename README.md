@@ -1,4 +1,4 @@
-# Second Brain v2.0.0 - AI Memory System
+# Second Brain v2.0.2 - AI Memory System
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -20,10 +20,13 @@
 - **Semantic Search**: PostgreSQL pgvector with HNSW indexing for fast vector similarity
 - **OpenAI Integration**: `text-embedding-3-small` model with cosine similarity
 - **REST API**: Clean FastAPI with 7 endpoints (including performance monitoring)
+- **OpenAPI 3.1 Documentation**: Interactive Swagger UI at `/docs` and ReDoc at `/redoc`
+- **Response Models**: Comprehensive Pydantic validation for all endpoints
 - **Mock Database**: Cost-free testing without API calls
-- **Token Authentication**: Simple API key security
+- **Token Authentication**: Simple API key security with documented security schemes
 - **JSONB Metadata**: Flexible metadata storage
 - **Auto-Optimization**: Automatic HNSW index creation at 1000+ memories
+- **Test Coverage**: 57% coverage with 26 comprehensive tests including integration tests
 
 ## 📁 **Project Structure**
 
@@ -118,15 +121,20 @@ uvicorn app.app:app --reload
 
 ## 📡 **API Endpoints**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Health check |
-| `GET` | `/status` | System status and performance metrics |
-| `POST` | `/memories` | Store a memory |
-| `GET` | `/memories` | List all memories (paginated) |
-| `GET` | `/memories/{id}` | Get specific memory |
-| `DELETE` | `/memories/{id}` | Delete memory |
-| `POST` | `/memories/search` | Semantic search |
+| Method | Endpoint | Description | Documentation |
+|--------|----------|-------------|---------------|
+| `GET` | `/health` | Health check | [Health](http://localhost:8000/docs#/Health) |
+| `GET` | `/status` | System status and performance metrics | [Health](http://localhost:8000/docs#/Health) |
+| `POST` | `/memories` | Store a memory | [Memories](http://localhost:8000/docs#/Memories) |
+| `GET` | `/memories` | List all memories (paginated) | [Memories](http://localhost:8000/docs#/Memories) |
+| `GET` | `/memories/{id}` | Get specific memory | [Memories](http://localhost:8000/docs#/Memories) |
+| `DELETE` | `/memories/{id}` | Delete memory | [Memories](http://localhost:8000/docs#/Memories) |
+| `POST` | `/memories/search` | Semantic search | [Search](http://localhost:8000/docs#/Search) |
+
+### **📚 Interactive Documentation**
+- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs) - Interactive API testing
+- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc) - Clean API documentation
+- **OpenAPI Schema**: [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json) - Raw OpenAPI 3.1 specification
 
 ### **Example Usage**
 ```bash

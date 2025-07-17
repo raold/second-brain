@@ -1,0 +1,334 @@
+"""
+Extended integration tests for Second Brain v2.0.0
+Comprehensive test coverage for all components
+"""
+
+import asyncio
+import os
+import pytest
+from httpx import AsyncClient
+from unittest.mock import patch, AsyncMock
+
+from app.app import app
+from app.database_mock import MockDatabase
+from app.version import get_version_info
+
+# Set up test environment
+os.environ["USE_MOCK_DATABASE"] = "true"
+os.environ["API_TOKENS"] = "test-key-1,test-key-2"
+
+
+class TestIntegrationSuite:
+    """Integration tests for full system functionality."""
+
+    @pytest.fixture
+    async def client(self):
+        """Create test client."""
+        # Reset mock database for each test
+        import app.app as app_module
+        app_module._mock_db_instance = None
+        
+        async with AsyncClient(app=app, base_url="http://test") as ac:
+            yield ac
+
+    @pytest.fixture
+    def api_key(self):
+        """Get API key for testing."""
+        return "test-key-1"
+
+    async def test_version_info_integration(self):
+        """Test version information system."""
+        version_info = get_version_info()
+        assert version_info["version"] == "2.0.0"
+        assert version_info["codename"] == "Phoenix"
+        assert version_info["api_version"] == "v1"
+
+    async def test_health_endpoint_with_version(self, client):
+        """Test health endpoint returns version info."""
+        response = await client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert data["service"] == "second-brain"
+        assert data["version"] == "2.0.0"
+        assert data["api_version"] == "v1"
+
+    async def test_status_endpoint_comprehensive(self, client, api_key):
+        """Test status endpoint with comprehensive data."""
+        response = await client.get("/status", params={"api_key": api_key})
+        assert response.status_code == 200
+        data = response.json()
+        assert "database" in data
+        assert "index_status" in data
+        assert data["database"] == "connected"
+
+    async def test_memory_lifecycle_comprehensive(self, client, api_key):
+        """Test complete memory lifecycle with edge cases."""
+        # Test storing memory with complex metadata
+        complex_memory = {
+            "content": "This is a complex memory with unicode: 🧠 and special chars: @#$%",
+            "metadata": {
+                "type": "test",
+                "tags": ["unicode", "special-chars"],
+                "priority": 1,
+                "nested": {"level": 2, "data": [1, 2, 3]},
+                "timestamp": "2025-07-17T13:00:00Z"
+            }
+        }
+        
+        # Store memory
+        response = await client.post("/memories", json=complex_memory, params={"api_key": api_key})
+        assert response.status_code == 200
+        stored_memory = response.json()
+        memory_id = stored_memory["id"]
+        
+        # Verify stored data
+        assert stored_memory["content"] == complex_memory["content"]
+        assert stored_memory["metadata"]["nested"]["level"] == 2
+        
+        # Retrieve memory
+        response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
+        assert response.status_code == 200
+        retrieved_memory = response.json()
+        assert retrieved_memory["content"] == complex_memory["content"]
+        
+        # Search for memory
+        search_response = await client.post(
+            "/memories/search", 
+            json={"query": "unicode special", "limit": 5}, 
+            params={"api_key": api_key}
+        )
+        assert search_response.status_code == 200
+        search_results = search_response.json()
+        assert len(search_results) > 0
+        assert search_results[0]["id"] == memory_id
+        
+        # Delete memory
+        delete_response = await client.delete(f"/memories/{memory_id}", params={"api_key": api_key})
+        assert delete_response.status_code == 200
+        
+        # Verify deletion
+        get_response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
+        assert get_response.status_code == 404
+
+    async def test_batch_memory_operations(self, client, api_key):
+        """Test batch operations and pagination."""
+        # Store multiple memories
+        memories = []
+        for i in range(15):
+            memory_data = {
+                "content": f"Batch memory {i} with unique content",
+                "metadata": {"batch": i, "type": "batch_test"}
+            }
+            response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
+            assert response.status_code == 200
+            memories.append(response.json())
+        
+        # Test pagination
+        response = await client.get("/memories", params={"api_key": api_key, "limit": 10})
+        assert response.status_code == 200
+        page1 = response.json()
+        assert len(page1) == 10
+        
+        response = await client.get("/memories", params={"api_key": api_key, "limit": 10, "offset": 10})
+        assert response.status_code == 200
+        page2 = response.json()
+        assert len(page2) == 5
+        
+        # Test search with limit
+        search_response = await client.post(
+            "/memories/search", 
+            json={"query": "batch", "limit": 3}, 
+            params={"api_key": api_key}
+        )
+        assert search_response.status_code == 200
+        search_results = search_response.json()
+        assert len(search_results) == 3
+
+    async def test_error_handling_comprehensive(self, client, api_key):
+        """Test comprehensive error handling."""
+        # Test invalid JSON
+        response = await client.post(
+            "/memories", 
+            content="invalid json", 
+            headers={"Content-Type": "application/json"},
+            params={"api_key": api_key}
+        )
+        assert response.status_code == 422
+        
+        # Test missing required fields
+        response = await client.post("/memories", json={}, params={"api_key": api_key})
+        assert response.status_code == 422
+        
+        # Test invalid memory ID
+        response = await client.get("/memories/invalid-id", params={"api_key": api_key})
+        assert response.status_code == 404
+        
+        # Test invalid search query
+        response = await client.post(
+            "/memories/search", 
+            json={"limit": -1}, 
+            params={"api_key": api_key}
+        )
+        assert response.status_code == 422
+
+    async def test_authentication_edge_cases(self, client):
+        """Test authentication edge cases."""
+        # Test missing API key
+        response = await client.get("/memories")
+        assert response.status_code == 422
+        
+        # Test empty API key
+        response = await client.get("/memories", params={"api_key": ""})
+        assert response.status_code == 401
+        
+        # Test invalid API key
+        response = await client.get("/memories", params={"api_key": "invalid-key"})
+        assert response.status_code == 401
+        
+        # Test valid API key from list
+        response = await client.get("/memories", params={"api_key": "test-key-2"})
+        assert response.status_code == 200
+
+    async def test_cors_and_headers(self, client, api_key):
+        """Test CORS and header handling."""
+        # Test CORS headers
+        response = await client.options("/memories", params={"api_key": api_key})
+        # FastAPI handles OPTIONS automatically
+        
+        # Test with custom headers
+        response = await client.get(
+            "/memories", 
+            params={"api_key": api_key},
+            headers={"X-Test-Header": "test-value"}
+        )
+        assert response.status_code == 200
+
+
+class TestMockDatabaseEdgeCases:
+    """Test mock database edge cases for full coverage."""
+
+    @pytest.fixture
+    async def mock_db(self):
+        """Create mock database instance."""
+        db = MockDatabase()
+        await db.initialize()
+        return db
+
+    async def test_uninitialized_database(self):
+        """Test operations on uninitialized database."""
+        db = MockDatabase()
+        
+        with pytest.raises(RuntimeError, match="Database not initialized"):
+            await db.store_memory("test", {})
+        
+        with pytest.raises(RuntimeError, match="Database not initialized"):
+            await db.get_memory("test-id")
+        
+        with pytest.raises(RuntimeError, match="Database not initialized"):
+            await db.search_memories("test")
+
+    async def test_empty_content_handling(self, mock_db):
+        """Test handling of empty and edge case content."""
+        # Empty content
+        memory_id = await mock_db.store_memory("", {})
+        memory = await mock_db.get_memory(memory_id)
+        assert memory["content"] == ""
+        
+        # Very long content
+        long_content = "x" * 10000
+        memory_id = await mock_db.store_memory(long_content, {})
+        memory = await mock_db.get_memory(memory_id)
+        assert memory["content"] == long_content
+
+    async def test_metadata_edge_cases(self, mock_db):
+        """Test metadata edge cases."""
+        # None metadata
+        memory_id = await mock_db.store_memory("test", None)
+        memory = await mock_db.get_memory(memory_id)
+        assert memory["metadata"] == {}
+        
+        # Empty metadata
+        memory_id = await mock_db.store_memory("test", {})
+        memory = await mock_db.get_memory(memory_id)
+        assert memory["metadata"] == {}
+        
+        # Complex nested metadata
+        complex_metadata = {
+            "nested": {"deep": {"value": 42}},
+            "array": [1, 2, 3],
+            "boolean": True,
+            "null": None
+        }
+        memory_id = await mock_db.store_memory("test", complex_metadata)
+        memory = await mock_db.get_memory(memory_id)
+        assert memory["metadata"]["nested"]["deep"]["value"] == 42
+
+    async def test_search_edge_cases(self, mock_db):
+        """Test search edge cases."""
+        # Store some test memories
+        await mock_db.store_memory("Python programming", {"type": "code"})
+        await mock_db.store_memory("Java development", {"type": "code"})
+        await mock_db.store_memory("Database design", {"type": "design"})
+        
+        # Empty query
+        results = await mock_db.search_memories("", limit=10)
+        assert len(results) == 3
+        
+        # Very specific query
+        results = await mock_db.search_memories("Python", limit=1)
+        assert len(results) == 1
+        
+        # Limit of 0
+        results = await mock_db.search_memories("Python", limit=0)
+        assert len(results) == 0
+        
+        # Large limit
+        results = await mock_db.search_memories("code", limit=100)
+        assert len(results) <= 3
+
+    async def test_pagination_edge_cases(self, mock_db):
+        """Test pagination edge cases."""
+        # Store memories
+        for i in range(5):
+            await mock_db.store_memory(f"Memory {i}", {"index": i})
+        
+        # Normal pagination
+        results = await mock_db.get_all_memories(limit=3, offset=0)
+        assert len(results) == 3
+        
+        # Offset beyond data
+        results = await mock_db.get_all_memories(limit=3, offset=10)
+        assert len(results) == 0
+        
+        # Large limit
+        results = await mock_db.get_all_memories(limit=100, offset=0)
+        assert len(results) == 5
+
+    async def test_nonexistent_memory_operations(self, mock_db):
+        """Test operations on nonexistent memories."""
+        # Get nonexistent memory
+        memory = await mock_db.get_memory("nonexistent-id")
+        assert memory is None
+        
+        # Delete nonexistent memory
+        result = await mock_db.delete_memory("nonexistent-id")
+        assert result is False
+
+    async def test_database_cleanup(self, mock_db):
+        """Test database cleanup operations."""
+        # Store and delete memory
+        memory_id = await mock_db.store_memory("test", {})
+        await mock_db.delete_memory(memory_id)
+        
+        # Verify cleanup
+        memory = await mock_db.get_memory(memory_id)
+        assert memory is None
+        
+        # Close database
+        await mock_db.close()
+        assert mock_db.is_initialized is False
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v", "--asyncio-mode=auto"])

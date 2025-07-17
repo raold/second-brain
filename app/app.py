@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from app.database import get_database
 from app.database_mock import MockDatabase
 from app.version import get_version_info
+from app.docs import setup_openapi_documentation, MemoryResponse, SearchResponse, HealthResponse, StatusResponse, MemoryRequest, ErrorResponse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -39,21 +40,7 @@ async def get_db_instance():
         return await get_database()
 
 
-# Pydantic models
-class MemoryRequest(BaseModel):
-    content: str = Field(..., description="Memory content")
-    metadata: dict[str, Any] | None = Field(default=None, description="Optional metadata")
-
-
-class MemoryResponse(BaseModel):
-    id: str
-    content: str
-    metadata: dict[str, Any]
-    created_at: str
-    updated_at: str
-    similarity: float | None = None
-
-
+# Legacy search request model (keeping for backward compatibility)
 class SearchRequest(BaseModel):
     query: str = Field(..., description="Search query")
     limit: int | None = Field(default=10, ge=1, le=100, description="Maximum results")
@@ -92,6 +79,9 @@ app = FastAPI(
     title="Second Brain API", description="Simple memory storage and search system", version="2.0.0", lifespan=lifespan
 )
 
+# Setup OpenAPI documentation
+setup_openapi_documentation(app)
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -103,29 +93,28 @@ app.add_middleware(
 
 
 # Health check
-@app.get("/health")
+@app.get("/health", tags=["Health"], summary="Health Check", description="Check system health and version information", response_model=HealthResponse)
 async def health_check():
     """Health check endpoint."""
+    from datetime import datetime
     version_info = get_version_info()
-    return {
-        "status": "healthy", 
-        "service": "second-brain",
-        "version": version_info["version"],
-        "build": version_info["build"],
-        "api_version": version_info["api_version"]
-    }
+    return HealthResponse(
+        status="healthy",
+        version=version_info["version"],
+        timestamp=datetime.utcnow()
+    )
 
 
 # Database and index status
-@app.get("/status")
+@app.get("/status", tags=["Health"], summary="System Status", description="Get database and performance metrics", response_model=StatusResponse)
 async def get_status(db = Depends(get_db_instance), _: str = Depends(verify_api_key)):
     """Get database and index status for performance monitoring."""
     try:
         stats = await db.get_index_stats()
-        return {
-            "database": "connected",
-            "index_status": stats,
-            "recommendations": {
+        return StatusResponse(
+            database="connected",
+            index_status=stats,
+            recommendations={
                 "create_index": not stats["index_ready"] and stats["memories_with_embeddings"] >= 1000,
                 "index_type": "HNSW (preferred)"
                 if stats["hnsw_index_exists"]
@@ -135,15 +124,15 @@ async def get_status(db = Depends(get_db_instance), _: str = Depends(verify_api_
                 "performance_note": "Index recommended for 1000+ memories"
                 if stats["memories_with_embeddings"] < 1000
                 else "Index should be active for optimal performance",
-            },
-        }
+            }
+        )
     except Exception as e:
         logger.error(f"Failed to get status: {e}")
         raise HTTPException(status_code=500, detail="Failed to get status")
 
 
 # Store memory
-@app.post("/memories", response_model=MemoryResponse)
+@app.post("/memories", response_model=MemoryResponse, tags=["Memories"], summary="Store Memory", description="Store a new memory with optional metadata")
 async def store_memory(request: MemoryRequest, db = Depends(get_db_instance), _: str = Depends(verify_api_key)):
     """Store a new memory."""
     try:
@@ -161,7 +150,7 @@ async def store_memory(request: MemoryRequest, db = Depends(get_db_instance), _:
 
 
 # Search memories
-@app.post("/memories/search", response_model=list[MemoryResponse])
+@app.post("/memories/search", response_model=list[MemoryResponse], tags=["Search"], summary="Search Memories", description="Semantic search across stored memories")
 async def search_memories(
     request: SearchRequest, db = Depends(get_db_instance), _: str = Depends(verify_api_key)
 ):
@@ -178,7 +167,7 @@ async def search_memories(
 
 
 # Get memory by ID
-@app.get("/memories/{memory_id}", response_model=MemoryResponse)
+@app.get("/memories/{memory_id}", response_model=MemoryResponse, tags=["Memories"], summary="Get Memory", description="Retrieve a specific memory by ID")
 async def get_memory(memory_id: str, db = Depends(get_db_instance), _: str = Depends(verify_api_key)):
     """Get a specific memory by ID."""
     try:
@@ -197,7 +186,7 @@ async def get_memory(memory_id: str, db = Depends(get_db_instance), _: str = Dep
 
 
 # Delete memory
-@app.delete("/memories/{memory_id}")
+@app.delete("/memories/{memory_id}", tags=["Memories"], summary="Delete Memory", description="Delete a specific memory by ID")
 async def delete_memory(memory_id: str, db = Depends(get_db_instance), _: str = Depends(verify_api_key)):
     """Delete a memory by ID."""
     try:
@@ -216,7 +205,7 @@ async def delete_memory(memory_id: str, db = Depends(get_db_instance), _: str = 
 
 
 # List all memories
-@app.get("/memories", response_model=list[MemoryResponse])
+@app.get("/memories", response_model=list[MemoryResponse], tags=["Memories"], summary="List All Memories", description="Retrieve all memories with pagination support")
 async def list_memories(
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),

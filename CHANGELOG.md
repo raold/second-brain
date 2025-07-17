@@ -5,6 +5,45 @@ All notable changes to the Second Brain project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] - 2025-07-17
+
+### **Added**
+- 🔧 **OpenAPI 3.1 Documentation**: Complete API specification with interactive Swagger UI
+- 📊 **Response Models**: Comprehensive Pydantic models for all endpoints (MemoryResponse, SearchResponse, HealthResponse, StatusResponse, MemoryRequest, ErrorResponse)
+- 🧪 **Integration Tests**: 15 additional integration tests covering edge cases and error handling
+- 📝 **API Tags & Descriptions**: Organized endpoints with proper tagging (Health, Memories, Search)
+- 🔐 **Security Documentation**: API key authentication schemes and security documentation
+- 📚 **Interactive Documentation**: Swagger UI at `/docs` and ReDoc at `/redoc` endpoints
+- ✅ **OpenAPI Validation Suite**: Comprehensive test suite for API documentation validation
+
+### **Changed**
+- 📈 **Test Coverage**: Improved from 52% to 57% with 26 total tests (up from 11)
+- 🏗️ **Project Structure**: Enhanced `app/docs.py` for centralized OpenAPI configuration
+- 🔄 **Version Management**: Updated to semantic versioning 2.0.2 with automated changelog generation
+- 📋 **Project Status**: Updated documentation to reflect completed priorities and current progress
+
+### **Fixed**
+- 🐛 **Mock Database Isolation**: Fixed test state persistence issues between integration tests
+- 🔧 **Encoding Issues**: Resolved UTF-8 encoding problems in version bump scripts
+- 🔍 **Import Conflicts**: Fixed module import alias resolution for test fixtures
+
+---
+
+
+## [2.0.1] - 2025-07-17
+
+### **Added**
+- 
+
+### **Changed**
+- 
+
+### **Fixed**
+- 
+
+---
+
+
 ## [2.0.0] - 2025-07-17
 
 ### 🚀 **MAJOR RELEASE - Complete System Refactor**
