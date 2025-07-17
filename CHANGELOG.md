@@ -14,26 +14,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### **Added**
 - **PostgreSQL pgvector** for vector similarity search (replacing Qdrant)
 - **FastAPI application** with 165 lines (90% reduction from 1,596 lines)
-- **Mock database** for cost-free testing without OpenAI API
+- **Mock database** for cost-free testing without OpenAI API or database connection
 - **Direct SQL queries** using asyncpg (no ORM overhead)
 - **Environment-only configuration** with simple .env setup
 - **Token-based authentication** for API security
 - **JSONB metadata storage** for flexible data structures
-- **Comprehensive test suite** with 90%+ coverage
+- **Comprehensive test suite** with 90%+ coverage using mock database
 - **Docker deployment** with single database system
+- **Performance optimization** with automatic HNSW indexing
+- **System status endpoint** for monitoring and performance metrics
+- **Automatic index creation** at 1000+ memories for optimal performance
 
 #### **Changed**
 - **Database architecture**: Single PostgreSQL with pgvector (removed Qdrant)
 - **Dependencies**: Reduced from 50+ to 5 core packages
 - **Configuration**: Simplified to environment variables only
-- **API endpoints**: Streamlined to 6 essential endpoints
+- **API endpoints**: Streamlined to 7 essential endpoints (including `/status`)
 - **Documentation**: Complete rewrite for v2.0.0 architecture
+- **Testing**: Full mock database implementation for CI/CD without external dependencies
 
 #### **Removed**
 - **Qdrant vector database** → PostgreSQL pgvector
 - **Complex caching layers** → Direct database access
 - **ORM complexity** → Pure SQL queries
-- **Extensive monitoring** → Basic logging
+- **Extensive monitoring** → Basic logging with performance metrics
 - **Plugin architecture** → Core functionality focus
 - **WebSocket streaming** → REST API only
 - **Background tasks** → Synchronous operations
@@ -47,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configuration**: Replace config files with .env variables
 - **API**: Core endpoints remain compatible
 - **Dependencies**: Update to minimal requirements
+- **Testing**: Use mock database for development and CI/CD
 
 ---
 

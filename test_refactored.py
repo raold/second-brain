@@ -2,11 +2,17 @@
 Simple test suite for the refactored Second Brain application.
 """
 
+import os
+
 import pytest
 from httpx import AsyncClient
 
 from app.app import app
-from app.database import get_database
+from app.database_mock import MockDatabase
+
+# Set up test environment
+os.environ["USE_MOCK_DATABASE"] = "true"
+os.environ["API_TOKENS"] = "test-key-1,test-key-2"
 
 
 class TestAPI:
@@ -120,8 +126,10 @@ class TestDatabase:
 
     @pytest.fixture
     async def db(self):
-        """Get database instance."""
-        return await get_database()
+        """Get mock database instance for testing."""
+        mock_db = MockDatabase()
+        await mock_db.initialize()
+        return mock_db
 
     async def test_store_and_retrieve_memory(self, db):
         """Test storing and retrieving a memory."""

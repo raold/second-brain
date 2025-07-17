@@ -12,11 +12,30 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from app.database import Database, get_database
+from app.database import get_database
+from app.database_mock import MockDatabase
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
+
+# Global mock database instance for testing
+_mock_db_instance = None
+
+# Database dependency with mock support
+async def get_db_instance():
+    """Get database instance, using mock if configured."""
+    global _mock_db_instance
+
+    if os.getenv("USE_MOCK_DATABASE", "false").lower() == "true":
+        if _mock_db_instance is None:
+            logger.info("Creating mock database instance for testing")
+            _mock_db_instance = MockDatabase()
+            await _mock_db_instance.initialize()
+        return _mock_db_instance
+    else:
+        return await get_database()
 
 
 # Pydantic models
@@ -91,7 +110,7 @@ async def health_check():
 
 # Database and index status
 @app.get("/status")
-async def get_status(db: Database = Depends(get_database), _: str = Depends(verify_api_key)):
+async def get_status(db = Depends(get_db_instance), _: str = Depends(verify_api_key)):
     """Get database and index status for performance monitoring."""
     try:
         stats = await db.get_index_stats()
@@ -117,7 +136,7 @@ async def get_status(db: Database = Depends(get_database), _: str = Depends(veri
 
 # Store memory
 @app.post("/memories", response_model=MemoryResponse)
-async def store_memory(request: MemoryRequest, db: Database = Depends(get_database), _: str = Depends(verify_api_key)):
+async def store_memory(request: MemoryRequest, db = Depends(get_db_instance), _: str = Depends(verify_api_key)):
     """Store a new memory."""
     try:
         memory_id = await db.store_memory(request.content, request.metadata)
@@ -136,7 +155,7 @@ async def store_memory(request: MemoryRequest, db: Database = Depends(get_databa
 # Search memories
 @app.post("/memories/search", response_model=list[MemoryResponse])
 async def search_memories(
-    request: SearchRequest, db: Database = Depends(get_database), _: str = Depends(verify_api_key)
+    request: SearchRequest, db = Depends(get_db_instance), _: str = Depends(verify_api_key)
 ):
     """Search memories using vector similarity."""
     try:
@@ -152,7 +171,7 @@ async def search_memories(
 
 # Get memory by ID
 @app.get("/memories/{memory_id}", response_model=MemoryResponse)
-async def get_memory(memory_id: str, db: Database = Depends(get_database), _: str = Depends(verify_api_key)):
+async def get_memory(memory_id: str, db = Depends(get_db_instance), _: str = Depends(verify_api_key)):
     """Get a specific memory by ID."""
     try:
         memory = await db.get_memory(memory_id)
@@ -171,7 +190,7 @@ async def get_memory(memory_id: str, db: Database = Depends(get_database), _: st
 
 # Delete memory
 @app.delete("/memories/{memory_id}")
-async def delete_memory(memory_id: str, db: Database = Depends(get_database), _: str = Depends(verify_api_key)):
+async def delete_memory(memory_id: str, db = Depends(get_db_instance), _: str = Depends(verify_api_key)):
     """Delete a memory by ID."""
     try:
         deleted = await db.delete_memory(memory_id)
@@ -193,7 +212,7 @@ async def delete_memory(memory_id: str, db: Database = Depends(get_database), _:
 async def list_memories(
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    db: Database = Depends(get_database),
+    db = Depends(get_db_instance),
     _: str = Depends(verify_api_key),
 ):
     """List all memories with pagination."""
