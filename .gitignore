@@ -21,6 +21,9 @@ coverage/
 # VSCode
 .vscode/
 
+# Cursor
+.cursorignore/
+
 # OS files
 .DS_Store
 Thumbs.db
