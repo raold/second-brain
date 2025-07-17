@@ -13,7 +13,7 @@ from datetime import datetime
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -34,6 +34,12 @@ from app.docs import (
 )
 from app.security import SecurityConfig, SecurityManager
 from app.version import get_version_info
+
+# Dashboard and conversation processing imports
+from app.dashboard_api import setup_dashboard_routes
+from app.conversation_processor import setup_conversation_monitoring, process_cto_message
+from app.session_api import setup_session_routes
+from app.session_manager import get_session_manager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -216,6 +222,41 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Setup dashboard routes and conversation monitoring
+setup_dashboard_routes(app)
+setup_session_routes(app)
+setup_conversation_monitoring()
+
+# Initialize session management
+session_manager = get_session_manager()
+logger.info("Session management initialized for persistent context continuity")
+
+# Serve static files for dashboard
+from fastapi.staticfiles import StaticFiles
+try:
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+except Exception as e:
+    logger.warning(f"Could not mount static files: {e}")
+
+# Dashboard homepage
+@app.get("/", response_class=HTMLResponse)
+async def dashboard_home():
+    """Serve the project dashboard homepage"""
+    try:
+        with open("static/dashboard.html", "r") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="""
+        <html>
+        <head><title>Project Pipeline Dashboard</title></head>
+        <body>
+        <h1>🎯 Project Pipeline Dashboard</h1>
+        <p>Dashboard is initializing... Please visit <a href="/dashboard/">/dashboard/</a> for API access.</p>
+        <p>Or visit <a href="/docs">/docs</a> for the API documentation.</p>
+        </body>
+        </html>
+        """)
 
 
 # Health check

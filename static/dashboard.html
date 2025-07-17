@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Pipeline Dashboard - CTO Overview</title>
+    
+    <!-- Chart.js for visual charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --dark-bg: #1f2937;
+            --light-bg: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #374151 100%);
+            color: white;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            pointer-events: none;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-title {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .header-title h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .header-subtitle {
+            color: #9ca3af;
+            font-size: 1.1rem;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.on-track { background: var(--success-color); }
+        .status-dot.warning { background: var(--warning-color); }
+        .status-dot.at-risk { background: var(--danger-color); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .overview-card {
+            grid-column: span 3;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+            color: white;
+        }
+
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .metrics-card {
+            grid-column: span 2;
+        }
+
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.high { background: var(--success-color); }
+        .progress-fill.medium { background: var(--warning-color); }
+        .progress-fill.low { background: var(--danger-color); }
+
+        .milestone-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: var(--light-bg);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .milestone-item:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+
+        .milestone-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .milestone-date {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .risk-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .risk-item.high {
+            background: #fef2f2;
+            border-color: var(--danger-color);
+        }
+
+        .risk-item.medium {
+            background: #fffbeb;
+            border-color: var(--warning-color);
+        }
+
+        .risk-item.low {
+            background: #f0fdf4;
+            border-color: var(--success-color);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        .auto-update {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success-color);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .auto-update.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .refresh-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary-color);
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            opacity: 0;
+        }
+
+        .refresh-indicator.active {
+            opacity: 1;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .feature-input {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            width: 350px;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .feature-input.show {
+            transform: translateX(0);
+        }
+
+        .feature-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .feature-toggle:hover {
+            transform: scale(1.1);
+            background: #1d4ed8;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .overview-card {
+                grid-column: span 2;
+            }
+            
+            .metrics-card {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .overview-card,
+            .metrics-card {
+                grid-column: span 1;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .feature-input {
+                width: calc(100vw - 40px);
+                right: 20px;
+                left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>🎯 Project Pipeline Dashboard</h1>
+                    <div class="header-subtitle">CTO Strategic Overview - Real-time Project Intelligence</div>
+                </div>
+                <div class="header-status">
+                    <div class="status-indicator">
+                        <div class="status-dot on-track" id="projectStatusDot"></div>
+                        <span id="projectStatus">Initializing...</span>
+                    </div>
+                    <div class="status-indicator">
+                        <span id="lastUpdated">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Overview Card -->
+            <div class="dashboard-card overview-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="card-icon">📊</span>
+                        Project Overview
+                    </h2>
+                    <div class="refresh-indicator" id="refreshIndicator"></div>
+                </div>
+                <div class="overview-stats" id="overviewStats">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Metrics Chart -->
+            <div class="dashboard-card metrics-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="card-icon">📈</span>
+                        Technical Metrics
+                    </h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="metricsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Timeline/Milestones -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="card-icon">🎯</span>
+                        Upcoming Milestones
+                    </h2>
+                </div>
+                <div id="milestonesContainer">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Sprint Progress -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="card-icon">🏃‍♂️</span>
+                        Current Sprint
+                    </h2>
+                </div>
+                <div id="sprintContainer">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Risk Assessment -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="card-icon">⚠️</span>
+                        Risk Assessment
+                    </h2>
+                </div>
+                <div id="risksContainer">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="card-icon">🔄</span>
+                        Recent Activity
+                    </h2>
+                </div>
+                <div id="activityContainer">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-update notification -->
+    <div class="auto-update" id="autoUpdateNotification">
+        🚀 Dashboard updated with new features!
+    </div>
+
+    <!-- Feature Input Panel -->
+    <div class="feature-input" id="featureInput">
+        <h3>💡 Add New Feature</h3>
+        <input type="text" id="featureName" placeholder="Feature name..." style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+        <textarea id="featureDescription" placeholder="Description..." style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; height: 80px; resize: vertical;"></textarea>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="addFeature()" style="flex: 1; padding: 10px; background: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">Add Feature</button>
+            <button onclick="toggleFeatureInput()" style="padding: 10px 15px; background: #6b7280; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Feature Toggle Button -->
+    <button class="feature-toggle" onclick="toggleFeatureInput()">+</button>
+
+    <script>
+        // Dashboard state
+        let dashboardData = {};
+        let metricsChart = null;
+        let autoUpdateInterval = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboard();
+            startAutoUpdate();
+            
+            // Simulate CTO conversation detection
+            simulateConversationDetection();
+        });
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                showRefreshIndicator(true);
+                
+                const response = await fetch('/dashboard/visual');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    dashboardData = data.visual_data;
+                    updateDashboardUI();
+                }
+                
+                showRefreshIndicator(false);
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showRefreshIndicator(false);
+            }
+        }
+
+        // Update dashboard UI
+        function updateDashboardUI() {
+            updateOverview();
+            updateMetricsChart();
+            updateMilestones();
+            updateSprint();
+            updateRisks();
+            updateActivity();
+            updateStatus();
+        }
+
+        // Update overview stats
+        function updateOverview() {
+            const stats = [
+                { label: 'Project Health', value: dashboardData.overview.health_status.toUpperCase(), icon: '💚' },
+                { label: 'Overall Progress', value: `${dashboardData.overview.progress_percentage}%`, icon: '📊' },
+                { label: 'Milestones', value: dashboardData.overview.milestones_completed, icon: '🎯' },
+                { label: 'Sprint Progress', value: `${dashboardData.overview.sprint_progress}%`, icon: '🏃‍♂️' }
+            ];
+
+            const container = document.getElementById('overviewStats');
+            container.innerHTML = stats.map(stat => `
+                <div class="stat-item">
+                    <div class="stat-value">${stat.icon} ${stat.value}</div>
+                    <div class="stat-label">${stat.label}</div>
+                </div>
+            `).join('');
+        }
+
+        // Update metrics chart
+        function updateMetricsChart() {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+            
+            if (metricsChart) {
+                metricsChart.destroy();
+            }
+
+            const metrics = dashboardData.metrics_chart;
+            
+            metricsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: metrics.map(m => m.name),
+                    datasets: [{
+                        data: metrics.map(m => m.percentage),
+                        backgroundColor: [
+                            '#10b981',
+                            '#3b82f6',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6'
+                        ],
+                        borderWidth: 0,
+                        cutout: '60%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update milestones
+        function updateMilestones() {
+            const container = document.getElementById('milestonesContainer');
+            const milestones = dashboardData.milestones_timeline;
+            
+            container.innerHTML = milestones.map(milestone => {
+                const date = new Date(milestone.target_date).toLocaleDateString();
+                return `
+                    <div class="milestone-item">
+                        <div>
+                            <div class="milestone-name">${milestone.name}</div>
+                            <div class="milestone-date">Target: ${date} (${milestone.days_until} days)</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${milestone.progress > 66 ? 'high' : milestone.progress > 33 ? 'medium' : 'low'}" 
+                                 style="width: ${milestone.progress}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update sprint info
+        function updateSprint() {
+            const container = document.getElementById('sprintContainer');
+            container.innerHTML = `
+                <div class="milestone-item">
+                    <div>
+                        <div class="milestone-name">Current Sprint</div>
+                        <div class="milestone-date">Progress: ${dashboardData.overview.sprint_progress}%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill high" style="width: ${dashboardData.overview.sprint_progress}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Update risks
+        function updateRisks() {
+            const container = document.getElementById('risksContainer');
+            const risks = dashboardData.risk_summary.risk_items;
+            
+            if (risks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #10b981; font-weight: 600;">✅ No current risks detected</div>';
+                return;
+            }
+            
+            container.innerHTML = risks.map(risk => `
+                <div class="risk-item ${risk.level}">
+                    <div>
+                        <strong>${risk.description}</strong>
+                        <div style="font-size: 0.8rem; margin-top: 5px;">${risk.mitigation}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update recent activity
+        function updateActivity() {
+            const container = document.getElementById('activityContainer');
+            const activities = dashboardData.recent_activity;
+            
+            if (activities.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #6b7280;">No recent activity</div>';
+                return;
+            }
+            
+            container.innerHTML = activities.map(activity => {
+                const date = new Date(activity.completed_at).toLocaleDateString();
+                return `
+                    <div class="milestone-item">
+                        <div>
+                            <div class="milestone-name">✅ ${activity.name}</div>
+                            <div class="milestone-date">${date} - ${activity.milestone}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update status indicators
+        function updateStatus() {
+            const statusDot = document.getElementById('projectStatusDot');
+            const statusText = document.getElementById('projectStatus');
+            const lastUpdated = document.getElementById('lastUpdated');
+            
+            const status = dashboardData.overview.health_status;
+            statusDot.className = `status-dot ${status.replace('_', '-')}`;
+            statusText.textContent = status.replace('_', ' ').toUpperCase();
+            
+            const updateTime = new Date(dashboardData.overview.last_updated).toLocaleTimeString();
+            lastUpdated.textContent = `Updated: ${updateTime}`;
+        }
+
+        // Show/hide refresh indicator
+        function showRefreshIndicator(show) {
+            const indicator = document.getElementById('refreshIndicator');
+            indicator.classList.toggle('active', show);
+        }
+
+        // Show auto-update notification
+        function showAutoUpdateNotification() {
+            const notification = document.getElementById('autoUpdateNotification');
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Start auto-update
+        function startAutoUpdate() {
+            autoUpdateInterval = setInterval(() => {
+                loadDashboard();
+            }, 30000); // Update every 30 seconds
+        }
+
+        // Add new feature
+        async function addFeature() {
+            const name = document.getElementById('featureName').value;
+            const description = document.getElementById('featureDescription').value;
+            
+            if (!name.trim()) return;
+            
+            try {
+                const response = await fetch('/dashboard/features', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description,
+                        priority: 'high'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAutoUpdateNotification();
+                    loadDashboard();
+                    toggleFeatureInput();
+                    
+                    // Clear form
+                    document.getElementById('featureName').value = '';
+                    document.getElementById('featureDescription').value = '';
+                }
+            } catch (error) {
+                console.error('Error adding feature:', error);
+            }
+        }
+
+        // Toggle feature input panel
+        function toggleFeatureInput() {
+            const panel = document.getElementById('featureInput');
+            panel.classList.toggle('show');
+        }
+
+        // Simulate conversation detection (for demo)
+        function simulateConversationDetection() {
+            // This would normally be connected to a real conversation system
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'F2') {
+                    // Simulate "lets talk about Automated importance scoring"
+                    simulateFeatureDiscussion('Automated Importance Scoring');
+                }
+            });
+        }
+
+        // Simulate feature discussion detection
+        async function simulateFeatureDiscussion(featureName) {
+            try {
+                const response = await fetch('/dashboard/context', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `lets talk about ${featureName}`,
+                        sender: 'CTO'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.updates.length > 0) {
+                    showAutoUpdateNotification();
+                    loadDashboard();
+                }
+            } catch (error) {
+                console.error('Error processing conversation:', error);
+            }
+        }
+    </script>
+</body>
+</html> 

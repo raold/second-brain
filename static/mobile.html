@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Project Pipeline - Mobile Idea Ingestion</title>
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+        }
+
+        .mobile-container {
+            max-width: 100%;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .header .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 15px;
+            margin: 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .status-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .status-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .main-content {
+            padding: 20px 15px;
+        }
+
+        .idea-form {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 16px; /* Prevent zoom on iOS */
+            background: var(--background);
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: white;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--text-secondary);
+            color: white;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quick-action {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-action:active {
+            transform: scale(0.95);
+        }
+
+        .quick-action-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .quick-action-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .recent-activity {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-text {
+            flex: 1;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 15px;
+            right: 15px;
+            background: var(--success-color);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            transform: translateY(-100px);
+            transition: transform 0.3s ease;
+            z-index: 200;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .notification.show {
+            transform: translateY(0);
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .voice-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .voice-btn:active {
+            transform: scale(0.9);
+        }
+
+        .voice-btn.recording {
+            background: #dc2626;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 360px) {
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* iOS specific styles */
+        @supports (-webkit-touch-callout: none) {
+            .header {
+                padding-top: calc(20px + env(safe-area-inset-top));
+            }
+            
+            .voice-btn {
+                bottom: calc(30px + env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 Project Pipeline</h1>
+            <div class="subtitle">Mobile Idea Ingestion & Session Control</div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-value" id="sessionStatus">--</div>
+                <div class="status-label">Session</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="projectHealth">--</div>
+                <div class="status-label">Health</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="recentFeatures">--</div>
+                <div class="status-label">Features</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <div class="quick-action" onclick="quickIdea()">
+                    <div class="quick-action-icon">💡</div>
+                    <div class="quick-action-label">Quick Idea</div>
+                </div>
+                <div class="quick-action" onclick="pauseSession()">
+                    <div class="quick-action-icon">⏸️</div>
+                    <div class="quick-action-label">Pause Session</div>
+                </div>
+                <div class="quick-action" onclick="resumeSession()">
+                    <div class="quick-action-icon">▶️</div>
+                    <div class="quick-action-label">Resume</div>
+                </div>
+                <div class="quick-action" onclick="syncSession()">
+                    <div class="quick-action-icon">🔄</div>
+                    <div class="quick-action-label">Sync</div>
+                </div>
+            </div>
+
+            <!-- Idea Ingestion Form -->
+            <div class="idea-form">
+                <div class="section-title">💡 Drop Your Idea</div>
+                <div class="form-group">
+                    <label class="form-label" for="ideaText">What's your idea?</label>
+                    <textarea 
+                        id="ideaText" 
+                        class="form-input form-textarea" 
+                        placeholder="Describe your idea... The AI will automatically extract features, update timelines, and integrate it into the project roadmap."
+                        maxlength="1000"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="ideaContext">Context (optional)</label>
+                    <input 
+                        type="text" 
+                        id="ideaContext" 
+                        class="form-input" 
+                        placeholder="e.g., mobile app, backend, UI improvement"
+                        maxlength="100">
+                </div>
+                <button class="btn btn-primary" onclick="submitIdea()">
+                    🌊 Process Through Woodchipper
+                </button>
+            </div>
+
+            <!-- Current Focus -->
+            <div class="recent-activity">
+                <div class="section-title">🎯 Current Focus</div>
+                <div id="currentFocus">Loading session context...</div>
+                
+                <div class="section-title" style="margin-top: 20px;">📋 Next Steps</div>
+                <div id="nextSteps">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <div class="section-title">🔄 Recent Activity</div>
+                <div id="recentActivity">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Recording Button -->
+        <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecording()">
+            🎤
+        </button>
+
+        <!-- Notification -->
+        <div class="notification" id="notification">
+            Notification message
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script>
+        let isRecording = false;
+        let sessionData = {};
+
+        // Initialize mobile interface
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSessionStatus();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(loadSessionStatus, 30000);
+            
+            // Enable pull-to-refresh behavior
+            let startY = 0;
+            document.addEventListener('touchstart', e => {
+                startY = e.touches[0].clientY;
+            });
+            
+            document.addEventListener('touchmove', e => {
+                if (startY < 50 && e.touches[0].clientY > startY + 100) {
+                    loadSessionStatus();
+                }
+            });
+        });
+
+        // Load session status and project context
+        async function loadSessionStatus() {
+            try {
+                const response = await fetch('/session/mobile/status');
+                const data = await response.json();
+                
+                sessionData = data;
+                updateStatusDisplay(data);
+                
+            } catch (error) {
+                console.error('Error loading session status:', error);
+                showNotification('❌ Connection error', 'error');
+            }
+        }
+
+        // Update status display
+        function updateStatusDisplay(data) {
+            document.getElementById('sessionStatus').textContent = data.session_active ? '🟢 Active' : '🔴 Paused';
+            document.getElementById('projectHealth').textContent = data.project_health.toUpperCase();
+            document.getElementById('recentFeatures').textContent = data.recent_features.length;
+            
+            // Update current focus
+            document.getElementById('currentFocus').textContent = data.current_focus;
+            
+            // Update next steps
+            const nextStepsContainer = document.getElementById('nextSteps');
+            nextStepsContainer.innerHTML = data.next_steps.map((step, index) => 
+                `<div class="activity-item">
+                    <div class="activity-text">${index + 1}. ${step}</div>
+                </div>`
+            ).join('');
+            
+            // Update recent activity
+            const recentContainer = document.getElementById('recentActivity');
+            if (data.recent_features.length > 0) {
+                recentContainer.innerHTML = data.recent_features.map(feature => 
+                    `<div class="activity-item">
+                        <div class="activity-text">✅ ${feature.name}</div>
+                        <div class="activity-time">${new Date(feature.completed_at).toLocaleDateString()}</div>
+                    </div>`
+                ).join('');
+            } else {
+                recentContainer.innerHTML = '<div class="activity-item"><div class="activity-text">No recent activity</div></div>';
+            }
+        }
+
+        // Submit idea through the woodchipper
+        async function submitIdea() {
+            const ideaText = document.getElementById('ideaText').value.trim();
+            const ideaContext = document.getElementById('ideaContext').value.trim();
+            
+            if (!ideaText) {
+                showNotification('⚠️ Please enter an idea first', 'warning');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/session/ingest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idea: ideaText,
+                        source: 'mobile_web',
+                        priority: 'medium',
+                        context: ideaContext
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showNotification(`🎉 Idea processed! ${result.features_detected.length} features detected`, 'success');
+                    
+                    // Clear form
+                    document.getElementById('ideaText').value = '';
+                    document.getElementById('ideaContext').value = '';
+                    
+                    // Refresh status
+                    setTimeout(loadSessionStatus, 1000);
+                } else {
+                    showNotification('❌ Processing failed', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting idea:', error);
+                showNotification('❌ Network error', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Quick idea input
+        function quickIdea() {
+            const idea = prompt('Quick idea:');
+            if (idea && idea.trim()) {
+                document.getElementById('ideaText').value = idea.trim();
+                submitIdea();
+            }
+        }
+
+        // Pause current session
+        async function pauseSession() {
+            if (!sessionData.session_active) {
+                showNotification('ℹ️ No active session to pause', 'info');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/session/pause', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reason: 'Mobile pause request',
+                        save_snapshot: true
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showNotification('⏸️ Session paused & context saved', 'success');
+                    loadSessionStatus();
+                } else {
+                    showNotification('❌ Pause failed', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error pausing session:', error);
+                showNotification('❌ Network error', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Resume session
+        async function resumeSession() {
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/session/resume', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        load_full_context: true
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showNotification('▶️ Session resumed with full context', 'success');
+                    loadSessionStatus();
+                } else {
+                    showNotification('❌ Resume failed', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error resuming session:', error);
+                showNotification('❌ Network error', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Sync session across devices
+        async function syncSession() {
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/session/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showNotification('🔄 Session synced to cloud', 'success');
+                } else {
+                    showNotification('❌ Sync failed', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error syncing session:', error);
+                showNotification('❌ Network error', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Voice recording (placeholder - would need Web Speech API)
+        function toggleVoiceRecording() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            
+            if (!isRecording) {
+                // Start recording
+                isRecording = true;
+                voiceBtn.classList.add('recording');
+                voiceBtn.textContent = '⏹️';
+                showNotification('🎤 Voice recording started', 'info');
+                
+                // Placeholder - implement actual voice recording
+                setTimeout(() => {
+                    // Stop recording after 30 seconds max
+                    if (isRecording) {
+                        toggleVoiceRecording();
+                    }
+                }, 30000);
+                
+            } else {
+                // Stop recording
+                isRecording = false;
+                voiceBtn.classList.remove('recording');
+                voiceBtn.textContent = '🎤';
+                showNotification('🎤 Voice recording stopped', 'info');
+                
+                // Placeholder - would process voice to text
+                const voiceText = 'Voice recording feature would be implemented here';
+                document.getElementById('ideaText').value = voiceText;
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Show/hide loading overlay
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            loading.classList.toggle('show', show);
+        }
+
+        // Prevent zoom on input focus (iOS)
+        document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html> 
