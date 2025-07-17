@@ -12,7 +12,6 @@ from pathlib import Path
 VERSION_FILES = [
     "app/version.py",
     "app/__init__.py", 
-    "setup.py",
     "README.md",
     "CHANGELOG.md"
 ]

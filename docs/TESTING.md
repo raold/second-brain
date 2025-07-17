@@ -1,23 +1,37 @@
 # Second Brain v2.0.0 - Testing Guide
 
-## Overview
-Second Brain v2.0.0 includes a comprehensive testing framework with both unit tests and integration tests. This guide covers testing strategies, mock database usage, and development workflows.
+## python -m pytest tests/unit/test_mock_database.py -v
+
+# Run all unit tests
+python -m pytest tests/unit/ -v
+```
+
+### All Tests
+```bash
+# Run complete test suite
+python -m pytest tests/ -v --cov=app --cov-report=term-missingond Brain v2.0.0 includes a comprehensive testing framework with both unit tests and integration tests. This guide covers testing strategies, mock database usage, and development workflows.
 
 ## Testing Framework
 
 ### Test Structure
 ```
 tests/
-├── test_refactored.py      # Main test suite
-├── test_mock_database.py   # Mock database tests
-├── test_db_setup.py        # Database setup tests
-└── test_storage_handler.py # Legacy storage tests
+├── unit/                   # Unit tests
+│   ├── test_core_functionality.py  # Core API and database tests
+│   ├── test_database_basic.py      # Database initialization tests
+│   ├── test_mock_database.py       # Mock database tests
+│   └── test_ci_pipeline.py         # CI pipeline tests
+├── integration/            # Integration tests
+│   ├── test_api_endpoints.py       # API endpoint integration tests
+│   └── test_openapi_validation.py  # OpenAPI validation tests
+└── conftest.py            # Test configuration and fixtures
 ```
 
 ### Core Test Files
-- **`test_refactored.py`**: Complete test suite for v2.0.0
-- **`test_mock_database.py`**: Standalone mock database tests
-- **`test_db_setup.py`**: Database initialization tests
+- **`tests/unit/test_core_functionality.py`**: Complete test suite for API and database
+- **`tests/unit/test_mock_database.py`**: Standalone mock database tests
+- **`tests/unit/test_database_basic.py`**: Database initialization tests
+- **`tests/integration/test_api_endpoints.py`**: End-to-end API testing
 
 ## Running Tests
 

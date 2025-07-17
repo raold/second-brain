@@ -53,12 +53,13 @@ second-brain/
 ├── Makefile                     # Development commands
 ├── pytest.ini                  # Test configuration
 ├── README.md                    # This file
-├── requirements-minimal.txt     # Core dependencies (5 packages)
+├── requirements.txt             # Core dependencies
 ├── ruff.toml                    # Code formatting
-├── setup_db.py                  # Database initialization
-├── test_db_setup.py             # Database setup tests
-├── test_mock_database.py        # Mock database tests
-└── test_refactored.py           # Main test suite
+├── tests/                       # Test suite
+│   ├── unit/                    # Unit tests
+│   ├── integration/             # Integration tests
+│   └── conftest.py              # Test configuration
+└── scripts/                     # Utility scripts
 ```
 
 ## 🚀 **Quick Start**

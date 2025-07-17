@@ -72,7 +72,7 @@ BREAKING CHANGE: → MAJOR bump
 
 ### **Files to Update**
 - `CHANGELOG.md`: Version history
-- `setup.py`: Package version
+- `app/version.py`: Primary version definition
 - `app/__init__.py`: Application version
 - `README.md`: Version badges
 - `docker-compose.yml`: Image tags

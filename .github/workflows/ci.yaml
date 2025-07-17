@@ -188,16 +188,11 @@ jobs:
         run: |
           python test_mock_database.py
 
-      - name: Run database setup tests
+      - name: Run test suite
         run: |
-          python test_db_setup.py
+          python -m pytest tests/ -v --cov=app --cov-report=term-missing
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
-
-      - name: Run main test suite
-        run: |
-          python -m pytest test_refactored.py::TestAPI::test_health_check -v
-          python -m pytest test_refactored.py::TestAPI::test_authentication_required -v
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
           OPENAI_API_KEY: test_key_for_ci

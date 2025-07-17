@@ -50,7 +50,6 @@ second-brain/
 ├── 📄 SECURITY.md                   # Security policy and guidelines
 ├── 📄 CONTRIBUTING.md               # Contribution guidelines
 ├── 📄 requirements.txt              # Python dependencies
-├── 📄 setup.py                      # Package setup configuration
 ├── 📄 .env.example                  # Environment variables template
 ├── 📄 .gitignore                    # Git ignore patterns
 ├── 📄 pytest.ini                    # Pytest configuration
