@@ -202,6 +202,36 @@ class MockDatabase:
 
             return results
 
+    async def get_index_stats(self) -> dict[str, Any]:
+        """Get statistics about vector index performance (mock version)."""
+        if not self.pool:
+            raise RuntimeError("Database not initialized")
+
+        async with self.pool.acquire() as conn:
+            # Get table statistics
+            stats = await conn.fetchrow("""
+                SELECT
+                    COUNT(*) as total_memories,
+                    COUNT(*) as memories_with_embeddings,
+                    AVG(LENGTH(content)) as avg_content_length
+                FROM memories_mock
+            """)
+
+            return {
+                "total_memories": stats["total_memories"],
+                "memories_with_embeddings": stats["memories_with_embeddings"],
+                "avg_content_length": float(stats["avg_content_length"]) if stats["avg_content_length"] else 0,
+                "hnsw_index_exists": False,  # Mock doesn't use real indexes
+                "ivf_index_exists": False,
+                "recommended_index_threshold": 1000,
+                "index_ready": False,  # Mock doesn't need real indexes
+            }
+
+    async def force_create_index(self) -> bool:
+        """Force creation of vector index (mock version - always succeeds)."""
+        logger.info("Mock database: Index creation simulated")
+        return True
+
 
 # Global mock database instance
 mock_database = MockDatabase()

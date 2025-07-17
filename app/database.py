@@ -63,17 +63,69 @@ class Database:
                 )
             """)
 
-            # Create index for vector similarity search (only if table has data)
-            try:
-                await conn.execute("""
-                    CREATE INDEX IF NOT EXISTS memories_embedding_idx
-                    ON memories USING ivfflat (embedding vector_cosine_ops)
-                """)
-                logger.info("Vector similarity index created")
-            except Exception as e:
-                logger.info(f"Index creation skipped (will create when data exists): {e}")
+            # Create metadata index for filtering
+            await conn.execute("""
+                CREATE INDEX IF NOT EXISTS memories_metadata_idx
+                ON memories USING GIN (metadata)
+            """)
+
+            # Create timestamp index for ordering
+            await conn.execute("""
+                CREATE INDEX IF NOT EXISTS memories_created_at_idx
+                ON memories (created_at DESC)
+            """)
 
             logger.info("Database schema setup complete")
+
+    async def _ensure_vector_index(self):
+        """Create HNSW index for vector similarity search after data exists."""
+        if not self.pool:
+            return
+
+        async with self.pool.acquire() as conn:
+            # Check if we have enough data for indexing (recommended minimum: 1000 vectors)
+            result = await conn.fetchval("""
+                SELECT COUNT(*) FROM memories WHERE embedding IS NOT NULL
+            """)
+
+            if result < 1000:
+                logger.info(f"Vector index not created - only {result} embeddings (need 1000+ for optimal performance)")
+                return
+
+            # Check if index already exists
+            index_exists = await conn.fetchval("""
+                SELECT EXISTS (
+                    SELECT 1 FROM pg_indexes
+                    WHERE tablename = 'memories'
+                    AND indexname = 'memories_embedding_hnsw_idx'
+                )
+            """)
+
+            if not index_exists:
+                try:
+                    # Create HNSW index with optimized parameters
+                    # m=16: number of connections (good balance of speed vs accuracy)
+                    # ef_construction=64: controls trade-off between index quality and build time
+                    await conn.execute("""
+                        CREATE INDEX memories_embedding_hnsw_idx
+                        ON memories USING hnsw (embedding vector_cosine_ops)
+                        WITH (m = 16, ef_construction = 64)
+                    """)
+                    logger.info("HNSW vector index created successfully")
+                except Exception as e:
+                    logger.warning(f"Failed to create HNSW index: {e}")
+                    # Fallback to IVFFlat if HNSW fails
+                    try:
+                        await conn.execute("""
+                            CREATE INDEX IF NOT EXISTS memories_embedding_ivf_idx
+                            ON memories USING ivfflat (embedding vector_cosine_ops)
+                            WITH (lists = 100)
+                        """)
+                        logger.info("IVFFlat vector index created as fallback")
+                    except Exception as e2:
+                        logger.error(f"Failed to create fallback index: {e2}")
+            else:
+                logger.info("HNSW vector index already exists")
 
     async def close(self):
         """Close database connections."""
@@ -120,6 +172,11 @@ class Database:
 
             memory_id = str(result["id"])
             logger.info(f"Stored memory with ID: {memory_id}")
+
+            # Check if we should create/update the vector index
+            # This runs periodically to optimize performance as data grows
+            await self._ensure_vector_index()
+
             return memory_id
 
     async def search_memories(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
@@ -243,6 +300,57 @@ class Database:
                 )
 
             return results
+
+    async def get_index_stats(self) -> dict[str, Any]:
+        """Get statistics about vector index performance."""
+        if not self.pool:
+            raise RuntimeError("Database not initialized")
+
+        async with self.pool.acquire() as conn:
+            # Get table statistics
+            stats = await conn.fetchrow("""
+                SELECT
+                    COUNT(*) as total_memories,
+                    COUNT(embedding) as memories_with_embeddings,
+                    AVG(LENGTH(content)) as avg_content_length
+                FROM memories
+            """)
+
+            # Check index existence
+            hnsw_exists = await conn.fetchval("""
+                SELECT EXISTS (
+                    SELECT 1 FROM pg_indexes
+                    WHERE tablename = 'memories'
+                    AND indexname = 'memories_embedding_hnsw_idx'
+                )
+            """)
+
+            ivf_exists = await conn.fetchval("""
+                SELECT EXISTS (
+                    SELECT 1 FROM pg_indexes
+                    WHERE tablename = 'memories'
+                    AND indexname = 'memories_embedding_ivf_idx'
+                )
+            """)
+
+            return {
+                "total_memories": stats["total_memories"],
+                "memories_with_embeddings": stats["memories_with_embeddings"],
+                "avg_content_length": float(stats["avg_content_length"]) if stats["avg_content_length"] else 0,
+                "hnsw_index_exists": hnsw_exists,
+                "ivf_index_exists": ivf_exists,
+                "recommended_index_threshold": 1000,
+                "index_ready": stats["memories_with_embeddings"] >= 1000,
+            }
+
+    async def force_create_index(self) -> bool:
+        """Force creation of vector index regardless of data size."""
+        try:
+            await self._ensure_vector_index()
+            return True
+        except Exception as e:
+            logger.error(f"Failed to force create index: {e}")
+            return False
 
 
 # Global database instance

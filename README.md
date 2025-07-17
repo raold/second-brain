@@ -17,12 +17,13 @@
 - **Environment-Only Config**: Simple .env configuration
 
 ### **🎯 Key Features**
-- **Semantic Search**: PostgreSQL pgvector for fast vector similarity
-- **OpenAI Integration**: `text-embedding-3-small` model
-- **REST API**: Clean FastAPI with 6 endpoints
+- **Semantic Search**: PostgreSQL pgvector with HNSW indexing for fast vector similarity
+- **OpenAI Integration**: `text-embedding-3-small` model with cosine similarity
+- **REST API**: Clean FastAPI with 7 endpoints (including performance monitoring)
 - **Mock Database**: Cost-free testing without API calls
 - **Token Authentication**: Simple API key security
 - **JSONB Metadata**: Flexible metadata storage
+- **Auto-Optimization**: Automatic HNSW index creation at 1000+ memories
 
 ## 📁 **Project Structure**
 
@@ -36,6 +37,7 @@ second-brain/
 ├── docs/                        # Documentation
 │   ├── ARCHITECTURE.md          # System architecture
 │   ├── DEPLOYMENT.md            # Deployment guide
+│   ├── PERFORMANCE.md           # Performance optimization guide
 │   ├── USAGE.md                 # Usage examples
 │   └── TESTING.md               # Testing guide
 ├── archive/                     # Archived v1.x files

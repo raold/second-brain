@@ -89,6 +89,32 @@ async def health_check():
     return {"status": "healthy", "service": "second-brain"}
 
 
+# Database and index status
+@app.get("/status")
+async def get_status(db: Database = Depends(get_database), _: str = Depends(verify_api_key)):
+    """Get database and index status for performance monitoring."""
+    try:
+        stats = await db.get_index_stats()
+        return {
+            "database": "connected",
+            "index_status": stats,
+            "recommendations": {
+                "create_index": not stats["index_ready"] and stats["memories_with_embeddings"] >= 1000,
+                "index_type": "HNSW (preferred)"
+                if stats["hnsw_index_exists"]
+                else "IVFFlat (fallback)"
+                if stats["ivf_index_exists"]
+                else "None",
+                "performance_note": "Index recommended for 1000+ memories"
+                if stats["memories_with_embeddings"] < 1000
+                else "Index should be active for optimal performance",
+            },
+        }
+    except Exception as e:
+        logger.error(f"Failed to get status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get status")
+
+
 # Store memory
 @app.post("/memories", response_model=MemoryResponse)
 async def store_memory(request: MemoryRequest, db: Database = Depends(get_database), _: str = Depends(verify_api_key)):
