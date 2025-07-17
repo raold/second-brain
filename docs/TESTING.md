@@ -1,4 +1,4 @@
-# Second Brain v2.0.0 - Testing Guide
+# Second Brain v2.3.0 - Testing Guide
 
 ## python -m pytest tests/unit/test_mock_database.py -v
 
@@ -9,7 +9,7 @@ python -m pytest tests/unit/ -v
 ### All Tests
 ```bash
 # Run complete test suite
-python -m pytest tests/ -v --cov=app --cov-report=term-missingond Brain v2.0.0 includes a comprehensive testing framework with both unit tests and integration tests. This guide covers testing strategies, mock database usage, and development workflows.
+python -m pytest tests/ -v --cov=app --cov-report=term-missingond Brain v2.3.0 includes a comprehensive testing framework with both unit tests and integration tests. This guide covers testing strategies, mock database usage, and development workflows.
 
 ## Testing Framework
 
@@ -549,4 +549,4 @@ python -m pytest test_refactored.py -s
 
 ---
 
-This testing guide ensures reliable and maintainable code for Second Brain v2.0.0. For questions or issues, please check the GitHub repository or open an issue.
+This testing guide ensures reliable and maintainable code for Second Brain v2.3.0. For questions or issues, please check the GitHub repository or open an issue.

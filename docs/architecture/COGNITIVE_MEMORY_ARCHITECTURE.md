@@ -241,7 +241,7 @@ GET /memories/archived         # View archived memories
 ## 📈 **Success Metrics**
 
 ### **Cognitive Performance KPIs**
-| Metric | Current (v2.1.1) | Target (v2.3.0) |
+| Metric | Current (v2.3.0) | Target (v2.3.0) |
 |--------|-------------------|------------------|
 | **Search Precision** | 75% | 90% |
 | **Memory Type Classification Accuracy** | N/A | 95% |

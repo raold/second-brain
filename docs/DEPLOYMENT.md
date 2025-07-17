@@ -1,8 +1,8 @@
-# Deployment Guide - Second Brain v2.0.0
+# Deployment Guide - Second Brain v2.3.0
 
 ## Overview
 
-Second Brain v2.0.0 is designed for simple, straightforward deployment with minimal infrastructure requirements. The system consists of a single FastAPI application and PostgreSQL database with pgvector extension.
+Second Brain v2.3.0 is designed for simple, straightforward deployment with minimal infrastructure requirements. The system consists of a single FastAPI application and PostgreSQL database with pgvector extension.
 
 ## Prerequisites
 
@@ -158,7 +158,7 @@ pip install -r requirements-minimal.txt
 python setup_db.py
 
 # Run with production server
-uvicorn app.app:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn app.app:app --host v2.3.0.0 --port 8000 --workers 4
 ```
 
 ## Cloud Deployment
@@ -260,7 +260,7 @@ curl http://localhost:8000/health
 INFO:     Started server process [12345]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000
+INFO:     Uvicorn running on http://v2.3.0.0:8000
 ```
 
 ### **Metrics**
@@ -274,7 +274,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 ### **Horizontal Scaling**
 ```bash
 # Multiple application instances
-uvicorn app.app:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn app.app:app --host v2.3.0.0 --port 8000 --workers 4
 
 # Load balancer configuration
 # Route traffic to multiple instances
@@ -424,4 +424,4 @@ systemctl restart secondbrain
 
 ---
 
-**Second Brain v2.0.0** - Simple, Scalable, and Secure Deployment
+**Second Brain v2.3.0** - Simple, Scalable, and Secure Deployment

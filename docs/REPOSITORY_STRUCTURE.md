@@ -137,5 +137,5 @@ tests/
 
 **Maintained by**: Managing Director  
 **Last Updated**: July 17, 2025  
-**Version**: 2.0.2 (Phoenix)  
+**Version**: v2.3.0 (Phoenix)  
 **Next Review**: Sprint 30

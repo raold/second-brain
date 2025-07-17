@@ -10,30 +10,30 @@
 - **Breaking Changes**: API incompatibilities, database schema changes
 - **Architectural Changes**: Complete system refactors
 - **Dependencies**: Major framework/library changes
-- **Examples**: 1.0.0 → 2.0.0 (current refactor)
+- **Examples**: v2.3.0 → v2.3.0 (current refactor)
 
 #### **MINOR (X.Y.0)**
 - **New Features**: New endpoints, major functionality
 - **Performance**: Significant optimizations
 - **Database**: New tables/columns (backward compatible)
-- **Examples**: 2.0.0 → 2.1.0 (new search features)
+- **Examples**: v2.3.0 → v2.3.0 (new search features)
 
 #### **PATCH (X.Y.Z)**
 - **Bug Fixes**: Error corrections, stability improvements
 - **Documentation**: Updates, clarifications
 - **Dependencies**: Minor updates, security patches
-- **Examples**: 2.0.0 → 2.0.1 (bug fixes)
+- **Examples**: v2.3.0 → v2.3.0 (bug fixes)
 
 #### **PRERELEASE (X.Y.Z-alpha/beta/rc)**
 - **Alpha**: Internal testing, unstable features
 - **Beta**: External testing, feature complete
 - **RC**: Release candidate, final testing
-- **Examples**: 2.1.0-alpha.1, 2.1.0-beta.1, 2.1.0-rc.1
+- **Examples**: v2.3.0-alpha.1, v2.3.0-beta.1, v2.3.0-rc.1
 
 #### **BUILD METADATA (+BUILD)**
 - **Commit SHA**: For traceability
 - **Build Info**: CI/CD pipeline identifiers
-- **Examples**: 2.0.1+abc1234, 2.1.0-beta.1+build.123
+- **Examples**: v2.3.0+abc1234, v2.3.0-beta.1+build.123
 
 ## Version Bump Rules
 
@@ -50,8 +50,8 @@ perf: performance → MINOR bump
 BREAKING CHANGE: → MAJOR bump
 ```
 
-### **Current Version**: `2.0.0`
-### **Next Planned**: `2.0.1` (documentation and test improvements)
+### **Current Version**: `v2.3.0`
+### **Next Planned**: `v2.3.0` (documentation and test improvements)
 
 ## Release Cadence
 

@@ -21,9 +21,14 @@ from app.connection_pool import PoolConfig, close_pool, get_pool_manager, initia
 from app.database import get_database
 from app.database_mock import MockDatabase
 from app.docs import (
+    ContextualSearchRequest,
+    EpisodicMemoryRequest,
     HealthResponse,
     MemoryRequest,
     MemoryResponse,
+    MemoryType,
+    ProceduralMemoryRequest,
+    SemanticMemoryRequest,
     StatusResponse,
     setup_openapi_documentation,
 )
@@ -283,7 +288,20 @@ async def store_memory(
         validated_content = validator.validate_memory_content(request.content)
         validated_metadata = validator.validate_metadata(request.metadata or {})
 
-        memory_id = await db.store_memory(validated_content, validated_metadata)
+        # Extract type-specific metadata
+        semantic_metadata = request.semantic_metadata.dict() if request.semantic_metadata else {}
+        episodic_metadata = request.episodic_metadata.dict() if request.episodic_metadata else {}
+        procedural_metadata = request.procedural_metadata.dict() if request.procedural_metadata else {}
+
+        memory_id = await db.store_memory(
+            content=validated_content,
+            memory_type=request.memory_type.value,
+            semantic_metadata=semantic_metadata,
+            episodic_metadata=episodic_metadata,
+            procedural_metadata=procedural_metadata,
+            importance_score=request.importance_score or 0.5,
+            metadata=validated_metadata
+        )
         memory = await db.get_memory(memory_id)
 
         if not memory:
@@ -325,15 +343,6 @@ async def search_memories(
 
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Failed to search memories: {e}")
-        raise HTTPException(status_code=500, detail="Failed to search memories")
-    try:
-        limit = request.limit or 10
-        results = await db.search_memories(request.query, limit)
-
-        return [MemoryResponse(**result) for result in results]
-
     except Exception as e:
         logger.error(f"Failed to search memories: {e}")
         raise HTTPException(status_code=500, detail="Failed to search memories")
@@ -383,6 +392,187 @@ async def delete_memory(memory_id: str, db=Depends(get_db_instance), _: str = De
     except Exception as e:
         logger.error(f"Failed to delete memory: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete memory")
+
+
+# Type-specific memory storage endpoints
+@app.post(
+    "/memories/semantic",
+    response_model=MemoryResponse,
+    tags=["Memory Types"],
+    summary="Store Semantic Memory",
+    description="Store a semantic memory (facts, concepts, general knowledge)",
+)
+async def store_semantic_memory(
+    request: SemanticMemoryRequest, 
+    request_obj: Request, 
+    db=Depends(get_db_instance), 
+    _: str = Depends(verify_api_key)
+):
+    """Store a semantic memory with domain-specific metadata."""
+    try:
+        # Security validation
+        if not security_manager.validate_request(request_obj):
+            raise HTTPException(status_code=429, detail="Rate limit exceeded")
+
+        # Input validation
+        validator = security_manager.input_validator
+        validated_content = validator.validate_memory_content(request.content)
+
+        semantic_metadata = request.semantic_metadata.dict() if request.semantic_metadata else {}
+
+        memory_id = await db.store_memory(
+            content=validated_content,
+            memory_type=MemoryType.SEMANTIC.value,
+            semantic_metadata=semantic_metadata,
+            importance_score=request.importance_score or 0.5,
+        )
+        memory = await db.get_memory(memory_id)
+
+        if not memory:
+            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
+
+        return MemoryResponse(**memory)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to store semantic memory: {e}")
+        raise HTTPException(status_code=500, detail="Failed to store semantic memory")
+
+
+@app.post(
+    "/memories/episodic",
+    response_model=MemoryResponse,
+    tags=["Memory Types"],
+    summary="Store Episodic Memory",
+    description="Store an episodic memory (time-bound experiences, contextual events)",
+)
+async def store_episodic_memory(
+    request: EpisodicMemoryRequest, 
+    request_obj: Request, 
+    db=Depends(get_db_instance), 
+    _: str = Depends(verify_api_key)
+):
+    """Store an episodic memory with temporal and contextual metadata."""
+    try:
+        # Security validation
+        if not security_manager.validate_request(request_obj):
+            raise HTTPException(status_code=429, detail="Rate limit exceeded")
+
+        # Input validation
+        validator = security_manager.input_validator
+        validated_content = validator.validate_memory_content(request.content)
+
+        episodic_metadata = request.episodic_metadata.dict() if request.episodic_metadata else {}
+
+        memory_id = await db.store_memory(
+            content=validated_content,
+            memory_type=MemoryType.EPISODIC.value,
+            episodic_metadata=episodic_metadata,
+            importance_score=request.importance_score or 0.5,
+        )
+        memory = await db.get_memory(memory_id)
+
+        if not memory:
+            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
+
+        return MemoryResponse(**memory)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to store episodic memory: {e}")
+        raise HTTPException(status_code=500, detail="Failed to store episodic memory")
+
+
+@app.post(
+    "/memories/procedural",
+    response_model=MemoryResponse,
+    tags=["Memory Types"],
+    summary="Store Procedural Memory",
+    description="Store a procedural memory (process knowledge, workflows, instructions)",
+)
+async def store_procedural_memory(
+    request: ProceduralMemoryRequest, 
+    request_obj: Request, 
+    db=Depends(get_db_instance), 
+    _: str = Depends(verify_api_key)
+):
+    """Store a procedural memory with skill and process metadata."""
+    try:
+        # Security validation
+        if not security_manager.validate_request(request_obj):
+            raise HTTPException(status_code=429, detail="Rate limit exceeded")
+
+        # Input validation
+        validator = security_manager.input_validator
+        validated_content = validator.validate_memory_content(request.content)
+
+        procedural_metadata = request.procedural_metadata.dict() if request.procedural_metadata else {}
+
+        memory_id = await db.store_memory(
+            content=validated_content,
+            memory_type=MemoryType.PROCEDURAL.value,
+            procedural_metadata=procedural_metadata,
+            importance_score=request.importance_score or 0.5,
+        )
+        memory = await db.get_memory(memory_id)
+
+        if not memory:
+            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
+
+        return MemoryResponse(**memory)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to store procedural memory: {e}")
+        raise HTTPException(status_code=500, detail="Failed to store procedural memory")
+
+
+# Enhanced contextual search endpoint
+@app.post(
+    "/memories/search/contextual",
+    response_model=list[MemoryResponse],
+    tags=["Search"],
+    summary="Contextual Memory Search",
+    description="Advanced search with memory type filtering and multi-dimensional scoring",
+)
+async def contextual_search(
+    request: ContextualSearchRequest, 
+    request_obj: Request, 
+    db=Depends(get_db_instance), 
+    _: str = Depends(verify_api_key)
+):
+    """Perform contextual search with cognitive memory filtering."""
+    try:
+        # Security validation
+        if not security_manager.validate_request(request_obj):
+            raise HTTPException(status_code=429, detail="Rate limit exceeded")
+
+        # Input validation
+        validator = security_manager.input_validator
+        validated_query = validator.validate_search_query(request.query)
+
+        # Convert memory types to string values
+        memory_types = [mt.value for mt in request.memory_types] if request.memory_types else None
+
+        memories = await db.contextual_search(
+            query=validated_query,
+            limit=request.limit,
+            memory_types=memory_types,
+            importance_threshold=request.importance_threshold,
+            timeframe=request.timeframe,
+            include_archived=request.include_archived
+        )
+
+        return [MemoryResponse(**memory) for memory in memories]
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to perform contextual search: {e}")
+        raise HTTPException(status_code=500, detail="Failed to perform contextual search")
 
 
 # Security status endpoint

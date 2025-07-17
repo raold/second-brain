@@ -1,8 +1,8 @@
-# Architecture - Second Brain v2.0.0
+# Architecture - Second Brain v2.3.0
 
 ## Overview
 
-Second Brain v2.0.0 represents a complete architectural overhaul focused on simplicity, performance, and maintainability. The system has been refactored from a complex dual-storage system to a clean, minimal PostgreSQL-based solution.
+Second Brain v2.3.0 represents a complete architectural overhaul focused on simplicity, performance, and maintainability. The system has been refactored from a complex dual-storage system to a clean, minimal PostgreSQL-based solution.
 
 ## Architecture Principles
 
@@ -193,11 +193,11 @@ Client → FastAPI App → PostgreSQL
 ### **Dependencies**
 ```python
 # Core Dependencies (5 packages)
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-asyncpg==0.29.0
-openai==1.3.7
-pydantic==2.5.0
+fastapi==v2.3.0
+uvicorn[standard]==v2.3.0
+asyncpg==v2.3.0
+openai==v2.3.0
+pydantic==v2.3.0
 ```
 
 ## Monitoring
@@ -217,7 +217,7 @@ pydantic==2.5.0
 ## Migration from v1.x
 
 ### **Architecture Changes**
-| Component | v1.x | v2.0.0 |
+| Component | v1.x | v2.3.0 |
 |-----------|------|--------|
 | Storage | PostgreSQL + Qdrant | PostgreSQL only |
 | ORM | SQLAlchemy | Direct asyncpg |
@@ -263,4 +263,4 @@ pydantic==2.5.0
 
 ---
 
-**Second Brain v2.0.0** - Simple, Fast, and Maintainable Architecture
+**Second Brain v2.3.0** - Simple, Fast, and Maintainable Architecture

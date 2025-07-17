@@ -27,8 +27,17 @@ class MockDatabase:
         self.is_initialized = False
         logger.info("Mock database closed")
 
-    async def store_memory(self, content: str, metadata: dict[str, Any] | None = None) -> str:
-        """Store a memory in mock storage."""
+    async def store_memory(
+        self, 
+        content: str, 
+        memory_type: str = "semantic",
+        semantic_metadata: dict[str, Any] | None = None,
+        episodic_metadata: dict[str, Any] | None = None,
+        procedural_metadata: dict[str, Any] | None = None,
+        importance_score: float = 0.5,
+        metadata: dict[str, Any] | None = None
+    ) -> str:
+        """Store a memory in mock storage with cognitive metadata."""
         if not self.is_initialized:
             raise RuntimeError("Database not initialized")
 
@@ -41,25 +50,45 @@ class MockDatabase:
         self.memories[memory_id] = {
             "id": memory_id,
             "content": content,
+            "memory_type": memory_type,
+            "importance_score": importance_score,
+            "access_count": 0,
+            "last_accessed": now,
+            "semantic_metadata": semantic_metadata or {},
+            "episodic_metadata": episodic_metadata or {},
+            "procedural_metadata": procedural_metadata or {},
+            "consolidation_score": 0.5,
             "metadata": metadata or {},
             "embedding": mock_embedding,
             "created_at": now,
             "updated_at": now,
         }
 
-        logger.info(f"Stored memory with ID: {memory_id}")
+        logger.info(f"Stored {memory_type} memory with ID: {memory_id}")
         return memory_id
 
     async def get_memory(self, memory_id: str) -> dict[str, Any] | None:
-        """Get a memory by ID from mock storage."""
+        """Get a memory by ID from mock storage with full cognitive metadata."""
         if not self.is_initialized:
             raise RuntimeError("Database not initialized")
 
         memory = self.memories.get(memory_id)
         if memory:
+            # Update access count
+            memory["access_count"] += 1
+            memory["last_accessed"] = datetime.now().isoformat()
+            
             return {
                 "id": memory["id"],
                 "content": memory["content"],
+                "memory_type": memory["memory_type"],
+                "importance_score": memory["importance_score"],
+                "access_count": memory["access_count"],
+                "last_accessed": memory["last_accessed"],
+                "semantic_metadata": memory["semantic_metadata"],
+                "episodic_metadata": memory["episodic_metadata"],
+                "procedural_metadata": memory["procedural_metadata"],
+                "consolidation_score": memory["consolidation_score"],
                 "metadata": memory["metadata"],
                 "created_at": memory["created_at"],
                 "updated_at": memory["updated_at"],
@@ -67,7 +96,25 @@ class MockDatabase:
         return None
 
     async def search_memories(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
-        """Search memories using mock similarity."""
+        """Search memories using mock similarity (legacy method)."""
+        return await self.contextual_search(
+            query=query,
+            limit=limit,
+            memory_types=None,
+            importance_threshold=None,
+            timeframe=None
+        )
+
+    async def contextual_search(
+        self,
+        query: str,
+        limit: int = 10,
+        memory_types: list[str] | None = None,
+        importance_threshold: float | None = None,
+        timeframe: str | None = None,
+        include_archived: bool = False
+    ) -> list[dict[str, Any]]:
+        """Mock contextual search with memory type filtering."""
         if not self.is_initialized:
             raise RuntimeError("Database not initialized")
 
@@ -75,23 +122,68 @@ class MockDatabase:
         results = []
 
         for memory in self.memories.values():
-            # Calculate mock similarity based on simple text matching
-            similarity = self._calculate_mock_similarity(query_embedding, memory["embedding"])
+            # Apply memory type filtering
+            if memory_types and memory["memory_type"] not in memory_types:
+                continue
+
+            # Apply importance threshold
+            if importance_threshold is not None and memory["importance_score"] < importance_threshold:
+                continue
+
+            # Apply archive filtering
+            if not include_archived and memory["importance_score"] <= 0.1:
+                continue
+
+            # Apply timeframe filtering (simplified for mock)
+            if timeframe and timeframe == "last_week":
+                # Mock: only return memories from last week
+                from datetime import timedelta
+                created_at = datetime.fromisoformat(memory["created_at"])
+                week_ago = datetime.now() - timedelta(days=7)
+                if created_at < week_ago:
+                    continue
+
+            # Calculate mock similarity
+            vector_similarity = self._calculate_mock_similarity(query_embedding, memory["embedding"])
+            
+            # Mock contextual scoring
+            contextual_score = (
+                vector_similarity * 0.4 +
+                memory["importance_score"] * 0.25 +
+                memory["consolidation_score"] * 0.15 +
+                min(memory["access_count"] / 10.0, 1.0) * 0.2
+            )
+
+            # Update access count (mock)
+            memory["access_count"] += 1
+            memory["last_accessed"] = datetime.now().isoformat()
 
             results.append(
                 {
                     "id": memory["id"],
                     "content": memory["content"],
+                    "memory_type": memory["memory_type"],
+                    "importance_score": memory["importance_score"],
+                    "access_count": memory["access_count"],
+                    "last_accessed": memory["last_accessed"],
+                    "semantic_metadata": memory["semantic_metadata"],
+                    "episodic_metadata": memory["episodic_metadata"],
+                    "procedural_metadata": memory["procedural_metadata"],
+                    "consolidation_score": memory["consolidation_score"],
                     "metadata": memory["metadata"],
                     "created_at": memory["created_at"],
                     "updated_at": memory["updated_at"],
-                    "similarity": similarity,
+                    "similarity": vector_similarity,
+                    "contextual_score": contextual_score,
                 }
             )
 
-        # Sort by similarity and return top results
-        results.sort(key=lambda x: x["similarity"], reverse=True)
-        return results[:limit]
+        # Sort by contextual score and limit
+        results.sort(key=lambda x: x["contextual_score"], reverse=True)
+        results = results[:limit]
+
+        logger.info(f"Found {len(results)} memories for contextual query: {query}")
+        return results
 
     async def delete_memory(self, memory_id: str) -> bool:
         """Delete a memory from mock storage."""
@@ -105,13 +197,13 @@ class MockDatabase:
         return False
 
     async def get_all_memories(self, limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
-        """Get all memories with pagination from mock storage."""
+        """Get all memories with pagination and full cognitive metadata from mock storage."""
         if not self.is_initialized:
             raise RuntimeError("Database not initialized")
 
         all_memories = list(self.memories.values())
-        # Sort by created_at descending
-        all_memories.sort(key=lambda x: x["created_at"], reverse=True)
+        # Sort by importance score descending, then created_at descending
+        all_memories.sort(key=lambda x: (x["importance_score"], x["created_at"]), reverse=True)
 
         # Apply pagination
         paginated = all_memories[offset : offset + limit]
@@ -120,6 +212,14 @@ class MockDatabase:
             {
                 "id": memory["id"],
                 "content": memory["content"],
+                "memory_type": memory["memory_type"],
+                "importance_score": memory["importance_score"],
+                "access_count": memory["access_count"],
+                "last_accessed": memory["last_accessed"],
+                "semantic_metadata": memory["semantic_metadata"],
+                "episodic_metadata": memory["episodic_metadata"],
+                "procedural_metadata": memory["procedural_metadata"],
+                "consolidation_score": memory["consolidation_score"],
                 "metadata": memory["metadata"],
                 "created_at": memory["created_at"],
                 "updated_at": memory["updated_at"],

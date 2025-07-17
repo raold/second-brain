@@ -1,7 +1,7 @@
-# Second Brain v2.0.0 - Usage Guide
+# Second Brain v2.3.0 - Usage Guide
 
 ## Overview
-Second Brain v2.0.0 is a simplified AI memory system using PostgreSQL with pgvector for semantic search. This guide covers installation, configuration, and usage.
+Second Brain v2.3.0 is a simplified AI memory system using PostgreSQL with pgvector for semantic search. This guide covers installation, configuration, and usage.
 
 ## Quick Start
 
@@ -31,7 +31,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 AUTH_TOKEN=your_secure_auth_token_here
 
 # Optional
-HOST=0.0.0.0
+HOST=v2.3.0.0
 PORT=8000
 ```
 
@@ -233,7 +233,7 @@ python -c "from app.database import Database; import asyncio; asyncio.run(Databa
 | `DATABASE_URL` | Yes | None | PostgreSQL connection string |
 | `OPENAI_API_KEY` | Yes | None | OpenAI API key for embeddings |
 | `AUTH_TOKEN` | Yes | None | Authentication token |
-| `HOST` | No | `0.0.0.0` | Server host |
+| `HOST` | No | `v2.3.0.0` | Server host |
 | `PORT` | No | `8000` | Server port |
 
 ### Database Configuration

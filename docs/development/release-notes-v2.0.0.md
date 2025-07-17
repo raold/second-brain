@@ -1,4 +1,4 @@
-# Second Brain v2.0.0 - Complete System Refactor
+# Second Brain v2.3.0 - Complete System Refactor
 
 ## 🚀 MAJOR RELEASE - Complete Architectural Overhaul
 
@@ -21,7 +21,7 @@
 - Plugin architecture with extensive monitoring
 - WebSocket streaming and background tasks
 
-#### **After (v2.0.0)**
+#### **After (v2.3.0)**
 - **Single PostgreSQL database** with pgvector extension
 - **Direct SQL queries** using asyncpg (no ORM overhead)
 - **Vector similarity search** built into PostgreSQL
@@ -49,7 +49,7 @@
 
 ### 📚 **Documentation Overhaul**
 
-- **Complete README.md rewrite** for v2.0.0
+- **Complete README.md rewrite** for v2.3.0
 - **Updated CHANGELOG.md** with proper semantic versioning
 - **Architecture documentation** for simplified design
 - **Deployment guides** for Docker and production
@@ -154,7 +154,7 @@ ALTER TABLE memories ADD COLUMN embedding vector(1536);
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-#### **After (v2.0.0)**
+#### **After (v2.3.0)**
 ```
 ┌─────────────────┐    ┌─────────────────┐
 │   FastAPI App   │    │   PostgreSQL    │
@@ -165,7 +165,7 @@ ALTER TABLE memories ADD COLUMN embedding vector(1536);
 
 ### 🌟 **What's Next**
 
-The v2.0.0 architecture provides a solid foundation for:
+The v2.3.0 architecture provides a solid foundation for:
 - **Horizontal scaling** with PostgreSQL clustering
 - **Advanced features** built on simplified architecture
 - **Plugin system** (if needed) on top of core functionality
@@ -209,14 +209,14 @@ Co-authored-by: GitHub Copilot <copilot@github.com>
 # Release Title and Notes
 
 ## Release Title:
-**🚀 Second Brain v2.0.0 - Complete Refactor: 90% Code Reduction with PostgreSQL pgvector**
+**🚀 Second Brain v2.3.0 - Complete Refactor: 90% Code Reduction with PostgreSQL pgvector**
 
 ## Release Notes:
 ```markdown
-# 🚀 Second Brain v2.0.0 - Complete System Refactor
+# 🚀 Second Brain v2.3.0 - Complete System Refactor
 
 ## 🎯 Overview
-Second Brain v2.0.0 represents a **complete architectural overhaul** focused on simplicity, performance, and maintainability. This major release achieves a **90% code reduction** while improving performance and developer experience.
+Second Brain v2.3.0 represents a **complete architectural overhaul** focused on simplicity, performance, and maintainability. This major release achieves a **90% code reduction** while improving performance and developer experience.
 
 ## ✨ What's New
 
@@ -236,7 +236,7 @@ Second Brain v2.0.0 represents a **complete architectural overhaul** focused on 
 - **Mock Database**: Cost-free testing without OpenAI API calls
 
 ### 📊 **Performance Improvements**
-| Metric | v1.x | v2.0.0 | Improvement |
+| Metric | v1.x | v2.3.0 | Improvement |
 |--------|------|--------|-------------|
 | Lines of Code | 1,596 | 165 | **90% reduction** |
 | Dependencies | 50+ | 5 | **90% reduction** |
@@ -337,18 +337,18 @@ uvicorn app.app:app --reload
 
 ---
 
-**Second Brain v2.0.0** - Simplified, Fast, and Maintainable AI Memory System
+**Second Brain v2.3.0** - Simplified, Fast, and Maintainable AI Memory System
 
 ### 📥 **Download**
-- [Source Code (tar.gz)](https://github.com/raold/second-brain/archive/refs/tags/v2.0.0.tar.gz)
-- [Source Code (zip)](https://github.com/raold/second-brain/archive/refs/tags/v2.0.0.zip)
+- [Source Code (tar.gz)](https://github.com/raold/second-brain/archive/refs/tags/v2.3.0.tar.gz)
+- [Source Code (zip)](https://github.com/raold/second-brain/archive/refs/tags/v2.3.0.zip)
 
 ### 🐛 **Known Issues**
 None at this time. Please report any issues in the GitHub issue tracker.
 
 ### 📚 **Documentation**
-- [README](https://github.com/raold/second-brain/blob/v2.0.0/README.md)
-- [Architecture Guide](https://github.com/raold/second-brain/blob/v2.0.0/docs/ARCHITECTURE.md)
-- [Deployment Guide](https://github.com/raold/second-brain/blob/v2.0.0/docs/DEPLOYMENT.md)
-- [Migration Guide](https://github.com/raold/second-brain/blob/v2.0.0/docs/CHANGELOG.md#migration-notes)
+- [README](https://github.com/raold/second-brain/blob/v2.3.0/README.md)
+- [Architecture Guide](https://github.com/raold/second-brain/blob/v2.3.0/docs/ARCHITECTURE.md)
+- [Deployment Guide](https://github.com/raold/second-brain/blob/v2.3.0/docs/DEPLOYMENT.md)
+- [Migration Guide](https://github.com/raold/second-brain/blob/v2.3.0/docs/CHANGELOG.md#migration-notes)
 ```
