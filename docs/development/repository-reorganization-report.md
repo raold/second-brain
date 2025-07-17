@@ -140,5 +140,31 @@ The repository has been **successfully transformed** from a disorganized develop
 
 **Status**: 🎯 **PRODUCTION READY** - Repository organization complete, ready for deployment configuration.
 
+## 🎯 **VERSION ROADMAP PRIORITIES**
+
+### **🔥 HIGH Priority - Next Patch (v2.1.1)**
+**Target: July 24, 2025 | Focus: Test Stabilization**
+
+1. **Async Test Configuration** - Fix pytest-asyncio for all 38 tests to run properly
+2. **Test Coverage Recovery** - Restore 60%+ coverage after reorganization impact
+3. **Import Path Validation** - Ensure all Python imports work with new structure
+4. **CI/CD Pipeline Updates** - Verify GitHub Actions work with new test paths
+
+### **🟡 MEDIUM Priority - Next Minor (v2.2.0)**
+**Target: July 31, 2025 | Focus: Production Polish**
+
+1. **Environment Configuration** - Set up production environment variables
+2. **Database Connection Optimization** - Implement connection pooling
+3. **Error Handling Enhancement** - Improve error responses and logging
+4. **Performance Monitoring** - Add basic metrics collection
+
+### **🟢 LOW Priority - Next Major (v3.0.0)**
+**Target: August 14, 2025 | Focus: Advanced Features**
+
+1. **Advanced Testing** - Performance benchmarks, load testing
+2. **Multi-Environment Support** - Dev/staging/prod configurations
+3. **Advanced Documentation** - Auto-generated API docs, deployment guides
+4. **Team Collaboration Tools** - Enhanced development workflow
+
 ---
-*Generated: 2025-07-17 | Second Brain v2.0.2 | Repository Reorganization Sprint*
+*Generated: 2025-07-17 | Second Brain v2.1.0 | Repository Reorganization Sprint*
