@@ -7,6 +7,35 @@ __version_info__ = (2, 1, 1)
 __build__ = "stable"
 __release_date__ = "2025-07-17"
 
+# Roadmap metadata for cognitive architecture evolution
+COGNITIVE_ROADMAP = {
+    "v2.3.0": {
+        "codename": "Cognitive",
+        "focus": "Memory Type Architecture",
+        "features": [
+            "semantic_memory",
+            "episodic_memory", 
+            "procedural_memory",
+            "contextual_retrieval",
+            "memory_consolidation",
+            "intelligent_aging"
+        ],
+        "target_date": "2025-08-07"
+    },
+    "v3.0.0": {
+        "codename": "Synthesis",
+        "focus": "Unified Intelligence",
+        "features": [
+            "hybrid_search",
+            "advanced_auth",
+            "batch_operations",
+            "analytics_foundation",
+            "api_v2"
+        ],
+        "target_date": "2025-08-14"
+    }
+}
+
 # Version metadata
 VERSION_METADATA = {
     "version": __version__,
@@ -16,6 +45,8 @@ VERSION_METADATA = {
     "codename": "Phoenix",  # Complete refactor/rebirth
     "stability": "stable",
     "api_version": "v1",
+    "next_major_feature": "Cognitive Memory Architecture",
+    "roadmap": COGNITIVE_ROADMAP
 }
 
 

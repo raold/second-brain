@@ -199,11 +199,23 @@
 
 **Success Criteria**: <100ms responses, security audit passed, monitoring active, 38/38 tests passing
 
+### **🧠 MEDIUM Priority - Next Major (v2.3.0)**
+**Target: August 7, 2025 | Focus: Cognitive Memory Architecture**
+
+1. **Memory Type Separation** - Implement semantic/episodic/procedural memory classification
+   - Semantic: Facts, concepts, general knowledge
+   - Episodic: Time-bound experiences, contextual events
+   - Procedural: Process knowledge, workflows, instructions
+2. **Advanced Search with Contextual Retrieval** - Multi-dimensional search combining vector similarity + temporal context + memory type
+3. **Memory Consolidation and Intelligent Aging** - Automated memory importance scoring, decay modeling, and consolidation algorithms
+
+**Success Criteria**: Three-tier memory architecture operational, contextual search functioning, intelligent aging algorithms active
+
 ### **🟢 LOW Priority - Next Major (v3.0.0)**
-**Target: August 14, 2025 | Focus: Advanced Features**
+**Target: August 14, 2025 | Focus: Advanced Features & API Evolution**
 
 1. **Hybrid Search Implementation** - Combine vector + keyword search
-2. **Advanced Authentication** - JWT tokens, token rotation
+2. **Advanced Authentication** - JWT tokens, token rotation  
 3. **Batch Operations** - Bulk memory import/export
 4. **Analytics Foundation** - Usage metrics, search analytics
 5. **API v2 Design** - Breaking changes, improved endpoints

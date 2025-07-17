@@ -55,6 +55,12 @@
 - 📈 **Zero Skipped Tests**: All 38 tests now executable
 - 🚀 **CI/CD Integration**: Automated testing pipeline
 
+### **🧠 Next Major Evolution (v2.3.0 "Cognitive")**
+- **Memory Type Architecture**: Semantic/Episodic/Procedural memory classification
+- **Contextual Retrieval**: Multi-dimensional search with temporal awareness
+- **Intelligent Aging**: Automated memory consolidation and decay modeling
+- **Cognitive Performance**: Human-like memory management algorithms
+
 ## 📁 **Project Structure**
 
 ```
@@ -341,6 +347,7 @@ ON memories USING ivfflat (embedding vector_cosine_ops);
 - **[Repository Structure](REPOSITORY_STRUCTURE.md)** - Directory organization and conventions
 - **[Contributing Guide](CONTRIBUTING.md)** - Development setup and contribution guidelines
 - **[Architecture Guide](docs/architecture/)** - System design and components
+- **[Cognitive Memory Architecture](docs/architecture/COGNITIVE_MEMORY_ARCHITECTURE.md)** - Advanced memory type implementation (v2.3.0)
 - **[API Documentation](docs/api/)** - Complete endpoint reference and examples
 - **[Deployment Guide](docs/deployment/)** - Production setup and Docker configurations
 - **[Development Guide](docs/development/)** - Project status, roadmap, and development notes
