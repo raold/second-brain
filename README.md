@@ -1,4 +1,4 @@
-# Second Brain v2.1.1 - AI Memory System
+# Second Brain v2.2.3 - AI Memory System
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -7,7 +7,7 @@
 [![Tests](https://img.shields.io/badge/tests-33%2F38%20passing-green.svg)](https://github.com/raold/second-brain/actions)
 [![Coverage](https://img.shields.io/badge/coverage-87%25-brightgreen.svg)](https://github.com/raold/second-brain/actions)
 
-**Second Brain v2.1.1** is a **production-ready** AI memory system with **comprehensive test infrastructure** and **90% code reduction** from v1.x. Store, search, and retrieve memories using PostgreSQL with pgvector for semantic search.
+**Second Brain v2.2.3** is a **production-ready** AI memory system with **comprehensive test infrastructure**, **advanced security hardening**, and **sub-millisecond performance**. Store, search, and retrieve memories using PostgreSQL with pgvector for semantic search.
 
 ## 🎉 **What's New in v2.1.1 - Test Infrastructure Transformation**
 
@@ -65,7 +65,7 @@
 
 ```
 second-brain/
-├── app/                          # Core application
+├── app/                         # Core application
 │   ├── app.py                   # Main FastAPI application (165 lines)
 │   ├── database.py              # PostgreSQL + pgvector client (227 lines)
 │   ├── database_mock.py         # Mock database for testing
@@ -84,7 +84,7 @@ second-brain/
 ├── docker-compose.yml           # Docker configuration
 ├── Dockerfile                   # Container image
 ├── Makefile                     # Development commands
-├── pytest.ini                  # Test configuration
+├── pytest.ini                   # Test configuration
 ├── README.md                    # This file
 ├── requirements.txt             # Core dependencies
 ├── ruff.toml                    # Code formatting

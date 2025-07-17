@@ -17,10 +17,10 @@ class MemoryResponse(BaseModel):
 
     id: str = Field(..., description="Unique memory identifier")
     content: str = Field(..., description="Memory content text")
-    metadata: Optional[dict[str, Any]] = Field(default=None, description="Optional metadata")
+    metadata: dict[str, Any] | None = Field(default=None, description="Optional metadata")
     created_at: str = Field(..., description="Memory creation timestamp")
     updated_at: str = Field(..., description="Last update timestamp")
-    similarity: Optional[float] = Field(default=None, description="Similarity score for search results")
+    similarity: float | None = Field(default=None, description="Similarity score for search results")
 
     class Config:
         json_schema_extra = {

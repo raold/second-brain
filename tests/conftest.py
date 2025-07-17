@@ -9,15 +9,20 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
-# Set up test environment - Force override any existing values
-os.environ["USE_MOCK_DATABASE"] = "true"
-os.environ["API_TOKENS"] = "test-key-1,test-key-2"
 
-# Ensure the app gets the test values by clearing any cached imports
-modules_to_clear = ["app.app", "app.database", "app.database_mock"]
-for module in modules_to_clear:
-    if module in sys.modules:
-        del sys.modules[module]
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_environment():
+    """Set up test environment variables before any tests run."""
+    # Set up test environment - Force override any existing values
+    os.environ["USE_MOCK_DATABASE"] = "true"
+    os.environ["API_TOKENS"] = "test-key-1,test-key-2"
+    
+    # Ensure the app gets the test values by clearing any cached imports
+    modules_to_clear = ["app.app", "app.database", "app.database_mock", "app.security", "app.connection_pool"]
+    for module in modules_to_clear:
+        if module in sys.modules:
+            del sys.modules[module]
+
 
 # Import after environment is set (required for test configuration)
 from app.app import app  # noqa: E402

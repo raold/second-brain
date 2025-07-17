@@ -2,13 +2,27 @@
 Second Brain Application Version Information
 """
 
-__version__ = "2.1.1"
-__version_info__ = (2, 1, 1)
+__version__ = "2.2.3"
+__version_info__ = (2, 2, 3)
 __build__ = "stable"
 __release_date__ = "2025-07-17"
 
 # Roadmap metadata for cognitive architecture evolution
 COGNITIVE_ROADMAP = {
+    "v2.2.0": {
+        "codename": "Performance",
+        "focus": "Security & Optimization",
+        "features": [
+            "performance_benchmarking",
+            "security_hardening",
+            "connection_pooling",
+            "rate_limiting",
+            "input_validation",
+            "monitoring_metrics"
+        ],
+        "status": "completed",
+        "release_date": "2025-07-31"
+    },
     "v2.3.0": {
         "codename": "Cognitive",
         "focus": "Memory Type Architecture",
@@ -42,7 +56,7 @@ VERSION_METADATA = {
     "version_info": __version_info__,
     "build": __build__,
     "release_date": __release_date__,
-    "codename": "Phoenix",  # Complete refactor/rebirth
+    "codename": "Performance",  # v2.2.0 Performance & Security focus
     "stability": "stable",
     "api_version": "v1",
     "next_major_feature": "Cognitive Memory Architecture",
