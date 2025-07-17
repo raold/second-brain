@@ -220,7 +220,6 @@ See the [full Deployment Instructions](./docs/DEPLOYMENT.md) for detailed setup 
 
 ## ✅ API Endpoints
 
-<<<<<<< HEAD
 - `GET /health` - Health check
 - `POST /ingest` - Ingest a text payload (with intent detection, versioning, and Postgres persistence)
 - `GET /search?q=text` - Search semantically (Qdrant + hybrid ranking)
@@ -232,7 +231,7 @@ See the [full Deployment Instructions](./docs/DEPLOYMENT.md) for detailed setup 
 - `POST /memories/search` - SQL query for memories/metadata (Postgres)
 - `POST /memories/summarize` - Summarize memories via LLM
 - `POST /plugin/{name}` - Trigger plugin actions (reminder, webhook, file search, etc)
-=======
+
 ### Core Memory Operations
 - `POST /ingest` - Ingest text with OpenAI embeddings and dual storage
 - `GET /search?q=text` - Semantic search with vector similarity
