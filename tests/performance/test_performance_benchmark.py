@@ -479,15 +479,15 @@ async def test_percentile_calculation():
     benchmark = PerformanceBenchmark()
     
     # Test with sample data
-    data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    data = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
     
     p50 = benchmark._percentile(data, 50)
     p95 = benchmark._percentile(data, 95)
     p99 = benchmark._percentile(data, 99)
     
-    assert p50 >= 5  # 50th percentile should be around middle
-    assert p95 >= 9  # 95th percentile should be near top
-    assert p99 >= 9  # 99th percentile should be near top
+    assert p50 >= 5.0  # 50th percentile should be around middle
+    assert p95 >= 9.0  # 95th percentile should be near top
+    assert p99 >= 9.0  # 99th percentile should be near top
 
 
 if __name__ == "__main__":
