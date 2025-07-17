@@ -1,0 +1,455 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types: [completed]
+<<<<<<< HEAD
+  workflow_dispatch: # Allow manual deployment
+
+jobs:
+  deploy-staging:
+    if: github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+=======
+    branches: [main]
+  workflow_dispatch: # Allow manual deployment
+
+permissions:
+  contents: read
+  packages: write
+  actions: read
+
+jobs:
+  check-ci-status:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    outputs:
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+    steps:
+      - name: Check CI status
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "Manual deployment triggered"
+          elif [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "CI passed, proceeding with deployment"
+          else
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "CI failed or conditions not met"
+          fi
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: check-ci-status
+    if: needs.check-ci-status.outputs.should-deploy == 'true'
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+<<<<<<< HEAD
+      - name: Install Docker Compose CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-plugin
+          docker compose version
+=======
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+<<<<<<< HEAD
+      # Cache Docker layers
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_REGISTRY && format('{0}/llm-output-processor:staging-{1}', secrets.DOCKER_REGISTRY, github.sha) || format('llm-output-processor:staging-{0}', github.sha) }}
+            ${{ secrets.DOCKER_REGISTRY && format('{0}/llm-output-processor:staging-latest', secrets.DOCKER_REGISTRY) || 'llm-output-processor:staging-latest' }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+=======
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull latest image
+        run: |
+          docker pull ghcr.io/${{ github.repository }}:${{ github.sha }} || \
+          docker pull ghcr.io/${{ github.repository }}:latest
+
+      - name: Tag image for staging
+        run: |
+          docker tag ghcr.io/${{ github.repository }}:${{ github.sha }} second-brain:staging-latest
+          docker tag ghcr.io/${{ github.repository }}:${{ github.sha }} second-brain:staging-${{ github.sha }}
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+
+      - name: Deploy to staging
+        env:
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          STAGING_API_TOKENS: ${{ secrets.STAGING_API_TOKENS }}
+        run: |
+<<<<<<< HEAD
+          echo "Deploying to staging environment..."
+          docker compose -f docker-compose.staging.yml down || true
+          docker compose -f docker-compose.staging.yml pull
+          docker compose -f docker-compose.staging.yml up -d
+
+      - name: Health check staging
+        run: |
+          echo "Performing health check on staging..."
+          timeout 60 bash -c 'until curl -f http://localhost:8001/health; do sleep 2; done'
+          echo "Staging deployment successful!"
+=======
+          echo "🚀 Deploying to staging environment..."
+          
+          # Stop existing containers gracefully
+          docker compose -f docker-compose.staging.yml down --timeout 30 || true
+          
+          # Remove old images to free space
+          docker image prune -f || true
+          
+          # Pull latest images
+          docker compose -f docker-compose.staging.yml pull || true
+          
+          # Start new containers
+          docker compose -f docker-compose.staging.yml up -d
+
+      - name: Wait for services to start
+        run: |
+          echo "⏳ Waiting for services to start..."
+          sleep 30
+
+      - name: Comprehensive health check
+        run: |
+          echo "🔍 Performing comprehensive health check on staging..."
+          
+          # Define health check function
+          health_check() {
+            local url=$1
+            local max_attempts=24
+            local attempt=1
+            
+            while [ $attempt -le $max_attempts ]; do
+              if curl -f -s "$url" > /dev/null; then
+                echo "✅ Health check passed for $url"
+                return 0
+              fi
+              echo "⏳ Attempt $attempt/$max_attempts failed for $url, retrying in 5 seconds..."
+              sleep 5
+              ((attempt++))
+            done
+            
+            echo "❌ Health check failed for $url after $max_attempts attempts"
+            return 1
+          }
+          
+          # Check multiple endpoints
+          health_check "http://localhost:8001/health"
+          
+          # Additional checks if endpoints exist
+          curl -f -s "http://localhost:8001/api/v1/status" > /dev/null && echo "✅ API status check passed" || echo "ℹ️ API status endpoint not available"
+          
+          echo "🎉 Staging health checks completed!"
+
+      - name: Run staging smoke tests
+        run: |
+          echo "🧪 Running staging smoke tests..."
+          
+          # Basic API tests
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8001/health)
+          if [ "$response" -eq 200 ]; then
+            echo "✅ Health endpoint responding correctly"
+          else
+            echo "❌ Health endpoint returned status: $response"
+            exit 1
+          fi
+          
+          echo "✅ Staging smoke tests passed!"
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+
+      - name: Print logs on failure
+        if: failure()
+        run: |
+<<<<<<< HEAD
+          docker compose logs
+
+  deploy-production:
+    if: github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    needs: deploy-staging
+=======
+          echo "=== 🔍 DEBUGGING INFORMATION ==="
+          echo "=== Docker Compose Logs ==="
+          docker compose -f docker-compose.staging.yml logs --tail=100
+          echo ""
+          echo "=== Container Status ==="
+          docker compose -f docker-compose.staging.yml ps
+          echo ""
+          echo "=== System Resources ==="
+          df -h
+          free -h
+          echo ""
+          echo "=== Network Status ==="
+          docker network ls
+          netstat -tlnp | grep :8001 || echo "Port 8001 not in use"
+
+      - name: Staging deployment success
+        run: |
+          echo "🎉 Staging deployment completed successfully!"
+          echo "📦 Version: ${{ github.sha }}"
+          echo "🌐 Environment: Staging"
+          echo "🔗 URL: http://localhost:8001"
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [check-ci-status, deploy-staging]
+    if: needs.check-ci-status.outputs.should-deploy == 'true'
+    environment: production
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+<<<<<<< HEAD
+      - name: Install Docker Compose CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-plugin
+          docker compose version
+=======
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+<<<<<<< HEAD
+      # Cache Docker layers
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_REGISTRY && format('{0}/llm-output-processor:production-{1}', secrets.DOCKER_REGISTRY, github.sha) || format('llm-output-processor:production-{0}', github.sha) }}
+            ${{ secrets.DOCKER_REGISTRY && format('{0}/llm-output-processor:production-latest', secrets.DOCKER_REGISTRY) || 'llm-output-processor:production-latest' }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+=======
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull latest image
+        run: |
+          docker pull ghcr.io/${{ github.repository }}:${{ github.sha }} || \
+          docker pull ghcr.io/${{ github.repository }}:latest
+
+      - name: Tag image for production
+        run: |
+          docker tag ghcr.io/${{ github.repository }}:${{ github.sha }} second-brain:production-latest
+          docker tag ghcr.io/${{ github.repository }}:${{ github.sha }} second-brain:production-${{ github.sha }}
+
+      - name: Backup current production (if exists)
+        run: |
+          echo "💾 Creating backup of current production..."
+          docker compose -f docker-compose.production.yml ps -q | head -1 | xargs -r docker commit second-brain:backup-$(date +%Y%m%d-%H%M%S) || echo "No existing containers to backup"
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+
+      - name: Deploy to production
+        env:
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PRODUCTION_API_TOKENS: ${{ secrets.PRODUCTION_API_TOKENS }}
+        run: |
+<<<<<<< HEAD
+          echo "Deploying to production environment..."
+          docker compose -f docker-compose.production.yml down || true
+          docker compose -f docker-compose.production.yml pull
+          docker compose -f docker-compose.production.yml up -d
+
+      - name: Health check production
+        run: |
+          echo "Performing health check on production..."
+          timeout 60 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
+          echo "Production deployment successful!"
+=======
+          echo "🚀 Deploying to production environment..."
+          export DEPLOY_START=$(date +%s)
+          
+          # Graceful shutdown of existing containers
+          docker compose -f docker-compose.production.yml down --timeout 60 || true
+          
+          # Clean up old images
+          docker image prune -f || true
+          
+          # Pull latest images
+          docker compose -f docker-compose.production.yml pull || true
+          
+          # Start new containers
+          docker compose -f docker-compose.production.yml up -d
+          
+          export DEPLOY_END=$(date +%s)
+          export DEPLOY_TIME=$((DEPLOY_END - DEPLOY_START))
+          echo "⏱️ Deployment completed in ${DEPLOY_TIME} seconds"
+
+      - name: Wait for services to start
+        run: |
+          echo "⏳ Waiting for production services to start..."
+          sleep 45
+
+      - name: Comprehensive production health check
+        run: |
+          echo "🔍 Performing comprehensive health check on production..."
+          
+          # Define health check function
+          health_check() {
+            local url=$1
+            local max_attempts=30
+            local attempt=1
+            
+            while [ $attempt -le $max_attempts ]; do
+              if curl -f -s "$url" > /dev/null; then
+                echo "✅ Health check passed for $url"
+                return 0
+              fi
+              echo "⏳ Attempt $attempt/$max_attempts failed for $url, retrying in 5 seconds..."
+              sleep 5
+              ((attempt++))
+            done
+            
+            echo "❌ Health check failed for $url after $max_attempts attempts"
+            return 1
+          }
+          
+          # Check multiple endpoints
+          health_check "http://localhost:8000/health"
+          
+          # Additional production checks
+          curl -f -s "http://localhost:8000/api/v1/status" > /dev/null && echo "✅ API status check passed" || echo "ℹ️ API status endpoint not available"
+          
+          echo "🎉 Production health checks completed!"
+
+      - name: Run production smoke tests
+        run: |
+          echo "🧪 Running production smoke tests..."
+          
+          # More comprehensive tests for production
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health)
+          if [ "$response" -eq 200 ]; then
+            echo "✅ Health endpoint responding correctly"
+          else
+            echo "❌ Health endpoint returned status: $response"
+            exit 1
+          fi
+          
+          # Test response time
+          response_time=$(curl -o /dev/null -s -w "%{time_total}" http://localhost:8000/health)
+          echo "📊 Health endpoint response time: ${response_time}s"
+          
+          echo "✅ Production smoke tests passed!"
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
+
+      - name: Print logs on failure
+        if: failure()
+        run: |
+<<<<<<< HEAD
+          docker compose logs
+
+      - name: Notify deployment success
+        run: |
+          echo "🚀 Deployment to production completed successfully!"
+          echo "Version: ${{ github.sha }}"
+          echo "Environment: Production"
+          echo "Docker Image: ${{ secrets.DOCKER_REGISTRY && format('{0}/llm-output-processor:production-{1}', secrets.DOCKER_REGISTRY, github.sha) || format('llm-output-processor:production-{0}', github.sha) }}" 
+=======
+          echo "=== 🚨 PRODUCTION DEPLOYMENT FAILURE ==="
+          echo "=== Docker Compose Logs ==="
+          docker compose -f docker-compose.production.yml logs --tail=100
+          echo ""
+          echo "=== Container Status ==="
+          docker compose -f docker-compose.production.yml ps
+          echo ""
+          echo "=== System Resources ==="
+          df -h
+          free -h
+          echo ""
+          echo "=== Network Status ==="
+          docker network ls
+          netstat -tlnp | grep :8000 || echo "Port 8000 not in use"
+          echo ""
+          echo "=== Recent System Logs ==="
+          journalctl --since "5 minutes ago" --no-pager || echo "Unable to fetch system logs"
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "🔄 Attempting rollback..."
+          
+          # Try to restore backup if it exists
+          backup_image=$(docker images --format "table {{.Repository}}:{{.Tag}}" | grep "second-brain:backup-" | head -1)
+          if [ -n "$backup_image" ]; then
+            echo "📦 Found backup image: $backup_image"
+            docker tag "$backup_image" second-brain:production-latest
+            docker compose -f docker-compose.production.yml up -d
+            echo "✅ Rollback completed"
+          else
+            echo "❌ No backup image found for rollback"
+          fi
+
+      - name: Production deployment success
+        run: |
+          echo "🎉 Production deployment completed successfully!"
+          echo "📦 Version: ${{ github.sha }}"
+          echo "🌐 Environment: Production"
+          echo "🔗 URL: http://localhost:8000"
+          echo "🏷️ Docker Image: ghcr.io/${{ github.repository }}:${{ github.sha }}"
+          echo "⏰ Deployed at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "📢 DEPLOYMENT NOTIFICATION"
+          echo "✅ Production deployment successful"
+          echo "📊 Deployment Details:"
+          echo "   • Repository: ${{ github.repository }}"
+          echo "   • Commit: ${{ github.sha }}"
+          echo "   • Branch: ${{ github.ref_name }}"
+          echo "   • Triggered by: ${{ github.actor }}"
+          echo "   • Workflow: ${{ github.workflow }}"
+>>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01

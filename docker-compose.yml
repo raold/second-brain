@@ -1,71 +1,66 @@
+# Second Brain v2.0.0 - Simplified Docker Compose
+version: '3.8'
+
 services:
-  second-brain:
-    build: .
-    container_name: second_brain
-    env_file: .env
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./:/app
-    depends_on:
-      - qdrant
-      - postgres
-    networks:
-      - app-net
-    restart: unless-stopped
-    environment:
-      APP_ENV: ci
-      API_TOKENS: test-token
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  qdrant:
-    image: qdrant/qdrant:latest
-    container_name: qdrant
-    ports:
-      - "6333:6333"
-      - "6334:6334"  # gRPC port
-    volumes:
-      - ./qdrant_data:/qdrant/storage
-    networks:
-      - app-net
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
+  # PostgreSQL with pgvector extension
   postgres:
-    image: postgres:15
-    restart: always
+    image: ankane/pgvector:latest
+    container_name: second_brain_postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: secondbrain
+      POSTGRES_USER: ${POSTGRES_USER:-brain}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-brain_password}
+      POSTGRES_DB: ${POSTGRES_DB:-brain}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - app-net
+      - brain-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-brain} -d ${POSTGRES_DB:-brain}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Second Brain API
+  api:
+    build: .
+    container_name: second_brain_api
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - brain-net
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-brain}:${POSTGRES_PASSWORD:-brain_password}@postgres:5432/${POSTGRES_DB:-brain}
+      HOST: 0.0.0.0
+      PORT: 8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
-  app-net:
+  brain-net:
     driver: bridge
 
 volumes:
   pgdata:
+    driver: local

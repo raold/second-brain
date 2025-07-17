@@ -1,365 +1,306 @@
-[![CI Pipeline](https://github.com/raold/second-brain/actions/workflows/ci.yaml/badge.svg)](https://github.com/raold/second-brain/actions/workflows/ci.yaml)
-[![Deploy](https://github.com/raold/second-brain/actions/workflows/deploy.yml/badge.svg)](https://github.com/raold/second-brain/actions/workflows/deploy.yml)
+# Second Brain v2.0.0 - AI Memory System
 
-# Second Brain - AI Memory Assistant
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://www.postgresql.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-latest-green.svg)](https://fastapi.tiangolo.com/)
 
-> Ingest, Embed, Search, and Replay Text Semantically using OpenAI Embeddings and Qdrant Vector DB. Real-time processing with comprehensive testing and CI/CD pipeline.
+**Second Brain v2.0.0** is a **completely refactored** AI memory system with **90% code reduction** and simplified architecture. Store, search, and retrieve memories using PostgreSQL with pgvector for semantic search.
 
-## 📦 Project Overview
-This API enables ingestion of text data, which is embedded via OpenAI's `text-embedding-3-small` model and stored in Qdrant for semantic search. Memories are persisted as Markdown files with metadata for advanced querying and replay capabilities.
+## 🚀 **What's New in v2.0.0**
 
-## 🚀 Features
+### **📊 Major Improvements**
+- **90% Code Reduction**: From 1,596 lines to 165 lines in main application
+- **Single Database**: PostgreSQL with pgvector (removed Qdrant)
+- **Minimal Dependencies**: 5 core packages (down from 50+)
+- **Direct Database Access**: No ORM overhead
+- **Environment-Only Config**: Simple .env configuration
 
-### Core Memory System
-- **Semantic vector search** with Qdrant vector database
-- **OpenAI embeddings** with `text-embedding-3-small` model
-- **Dual storage system**: Markdown files + PostgreSQL database
-- **Intent detection**: Automatic classification (questions, todos, reminders, commands, notes)
-- **Version history tracking** with parent-child memory relationships
-- **Structured metadata** with tags, priority levels, and context tracking
+### **🎯 Key Features**
+- **Semantic Search**: PostgreSQL pgvector for fast vector similarity
+- **OpenAI Integration**: `text-embedding-3-small` model
+- **REST API**: Clean FastAPI with 6 endpoints
+- **Mock Database**: Cost-free testing without API calls
+- **Token Authentication**: Simple API key security
+- **JSONB Metadata**: Flexible metadata storage
 
-### Performance & Optimization
-- **Advanced caching system** with TTL, LRU eviction, and hit rate tracking
-- **Connection pooling** for PostgreSQL with health monitoring
-- **Background job processing** for parallel storage operations
-- **Performance monitoring** with comprehensive metrics and recommendations
-- **Smart eviction algorithms** based on access patterns
-- **Query optimization** with 10-12ms average response times
+## 📁 **Project Structure**
 
-### Database & Storage
-- **PostgreSQL integration** with async connection pooling
-- **Database schema** with proper indexing and timezone support
-- **Health checks** for all external dependencies
-- **Graceful degradation** when storage services are unavailable
-- **Migration support** with version-controlled schema changes
-- **Backup and recovery** mechanisms
-
-### API & Authentication
-- **Token-based authentication** with environment-specific tokens
-- **RESTful API** with FastAPI and automatic OpenAPI documentation
-- **Advanced search endpoints** with filtering and ranking
-- **Performance monitoring endpoints** (`/performance`, `/performance/cache`, `/performance/database`)
-- **Health monitoring** with detailed service status
-- **Comprehensive error handling** and validation
-
-### Development & Operations
-- **Production-grade logging** with structured JSON and correlation IDs
-- **Comprehensive test suite** (89 passed tests) with integration and performance testing
-- **CI/CD Pipeline** with advanced caching (50-70% faster builds)
-- **Multi-environment deployment** (staging → production)
-- **Docker layer caching** for 60-80% faster builds
-- **Makefile** for streamlined development workflow
-- **Modular architecture** with refactored, testable components
-
-## ⚙️ Requirements
-- Docker + Docker Compose
-- OpenAI API Key
-- Python 3.11+ (for local dev)
-- GitHub repository (for CI/CD features)
-
-## 🏗️ Project Structure
 ```
 second-brain/
-├── app/
-│   ├── __init__.py
-│   ├── main.py                # FastAPI app entry
-│   ├── router.py              # API endpoints & routing
-│   ├── auth.py                # Auth middleware
-│   ├── config.py              # Config management
-│   ├── models.py              # Pydantic models
-│   ├── handlers.py            # Business logic
-│   ├── static/                # Static UI assets (version history, etc)
-│   ├── api/
-│   │   └── websocket.py       # WebSocket endpoints
-│   ├── utils/
-│   │   ├── logger.py          # structlog config
-│   │   └── openai_client.py   # OpenAI embedding client (with caching)
-│   ├── storage/
-│   │   ├── markdown_writer.py # Markdown file operations
-│   │   └── shell_runner.py    # Shell command execution
-├── data/
-│   └── memories/              # Additional memory storage
-├── tests/
-├── docs/
+├── app/                          # Core application
+│   ├── app.py                   # Main FastAPI application (165 lines)
+│   ├── database.py              # PostgreSQL + pgvector client (227 lines)
+│   ├── database_mock.py         # Mock database for testing
+│   └── __init__.py              # Package initialization
+├── docs/                        # Documentation
+│   ├── ARCHITECTURE.md          # System architecture
+│   ├── DEPLOYMENT.md            # Deployment guide
+│   ├── USAGE.md                 # Usage examples
+│   └── TESTING.md               # Testing guide
+├── archive/                     # Archived v1.x files
+│   └── v1.x/                    # Complete v1.x system archive
+├── .env.example                 # Environment configuration template
+├── .gitignore                   # Git ignore rules
+├── CHANGELOG.md                 # Version history
+├── docker-compose.yml           # Docker configuration
+├── Dockerfile                   # Container image
+├── Makefile                     # Development commands
+├── pytest.ini                  # Test configuration
+├── README.md                    # This file
+├── requirements-minimal.txt     # Core dependencies (5 packages)
+├── ruff.toml                    # Code formatting
+├── setup_db.py                  # Database initialization
+├── test_db_setup.py             # Database setup tests
+├── test_mock_database.py        # Mock database tests
+└── test_refactored.py           # Main test suite
 ```
 
-## 🔧 Setup
+## 🚀 **Quick Start**
 
-### Local Development
+### **1. Prerequisites**
+- Python 3.10+
+- PostgreSQL 15+ with pgvector extension
+- OpenAI API key
 
-1. Clone the repo:
+### **2. Installation**
 ```bash
-git clone <repo-url>
+# Clone repository
+git clone https://github.com/raold/second-brain.git
 cd second-brain
-```
 
-2. Create a `.env` file:
-```bash
+# Install dependencies
+pip install -r requirements-minimal.txt
+
+# Setup environment
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
-3. Build and run:
+### **3. Database Setup**
 ```bash
-make build
-make up
+# Install pgvector extension in PostgreSQL
+psql -d your_database -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+# Initialize database tables
+python setup_db.py
 ```
 
-### Production Deployment
+### **4. Configuration**
+Edit `.env` file:
+```env
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/second_brain
 
-1. **Set up GitHub Secrets**:
-   - `OPENAI_API_KEY`: Your OpenAI API key
-   - `DOCKER_REGISTRY`: Your Docker registry (e.g., `ghcr.io/username`)
-   - `STAGING_API_TOKENS`: Staging environment tokens
-   - `PRODUCTION_API_TOKENS`: Production environment tokens
+# OpenAI
+OPENAI_API_KEY=your_openai_api_key_here
 
-2. **Create GitHub Environments**:
-   - Go to Settings → Environments
-   - Create "staging" and "production" environments
-   - Configure protection rules as needed
+# Authentication
+API_TOKENS=your_secure_api_token_here
 
-3. **Deploy automatically**:
-   - Push to `main` branch triggers CI
-   - Successful CI automatically deploys to staging
-   - Manual approval deploys to production
+# Optional
+HOST=0.0.0.0
+PORT=8000
+```
 
-## 🏁 Getting Started
-
-See the [full Deployment Instructions](./docs/DEPLOYMENT.md) for detailed setup and configuration steps.
-
-### Local Development URLs
-- **API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Qdrant Dashboard**: [http://localhost:6333/dashboard](http://localhost:6333/dashboard)
-
-### Staging Environment URLs
-- **API Docs**: [http://localhost:8001/docs](http://localhost:8001/docs)
-- **Qdrant Dashboard**: [http://localhost:6334/dashboard](http://localhost:6334/dashboard)
-
-## ✅ API Endpoints
-
-### Core Memory Operations
-- `POST /ingest` - Ingest text with OpenAI embeddings and dual storage
-- `GET /search?q=text` - Semantic search with vector similarity
-- `GET /ranked_search?q=text` - Advanced search with ranking and scoring
-- `POST /transcribe` - Audio transcription with file upload support
-
-### Health & Monitoring
-- `GET /health` - Comprehensive health check with service status
-- `GET /performance` - System performance overview with health score
-- `GET /performance/cache` - Cache statistics and hit rates
-- `GET /performance/database` - Database performance metrics
-- `GET /performance/recommendations` - AI-driven optimization suggestions
-- `POST /performance/cache/clear` - Manual cache management
-
-### Advanced Features
-- **Intent Detection**: Automatic memory classification
-- **Version History**: Parent-child memory relationships
-- **Filtering**: Search by intent, tags, priority, date ranges
-- **Analytics**: User feedback and search history tracking
-
-## 🧪 Testing
+### **5. Run Application**
 ```bash
+# Start the server
+python -m app.app
+
+# Or with uvicorn
+uvicorn app.app:app --reload
+
+# Server runs at http://localhost:8000
+```
+
+## 📡 **API Endpoints**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check |
+| `POST` | `/memories` | Store a memory |
+| `GET` | `/memories` | List all memories (paginated) |
+| `GET` | `/memories/{id}` | Get specific memory |
+| `DELETE` | `/memories/{id}` | Delete memory |
+| `POST` | `/memories/search` | Semantic search |
+
+### **Example Usage**
+```bash
+# Store a memory
+curl -X POST "http://localhost:8000/memories?api_key=your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "PostgreSQL pgvector provides excellent semantic search",
+    "metadata": {"category": "database", "importance": "high"}
+  }'
+
+# Search memories
+curl -X POST "http://localhost:8000/memories/search?api_key=your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "database search",
+    "limit": 5
+  }'
+```
+
+## 🧪 **Testing**
+
+### **Quick Test**
+```bash
+# Test with mock database (no OpenAI API required)
+python test_mock_database.py
+
+# Run full test suite
+python -m pytest test_refactored.py -v
+
+# Run with coverage
+python -m pytest test_refactored.py --cov=app --cov-report=html
+```
+
+### **Mock Database**
+The mock database enables cost-free testing:
+```python
+from app.database_mock import MockDatabase
+
+mock_db = MockDatabase()
+memory_id = await mock_db.store_memory("Test content", {"type": "test"})
+results = await mock_db.search_memories("test query")
+```
+
+## 🐳 **Docker Deployment**
+
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Or build manually
+docker build -t second-brain .
+docker run -p 8000:8000 --env-file .env second-brain
+```
+
+## 🔧 **Development**
+
+### **Dependencies**
+```bash
+# Core dependencies (5 packages)
+pip install -r requirements-minimal.txt
+
+# Development tools
+pip install pytest pytest-cov ruff pre-commit
+```
+
+### **Code Quality**
+```bash
+# Format code
+ruff format .
+
+# Lint code
+ruff check .
+
+# Run tests
 make test
-```
-- See [Testing Guide](./docs/TESTING.md) for our approach to mocking OpenAI and Qdrant in integration tests.
 
-## 🧹 Formatting
+# Coverage report
+make coverage
+```
+
+## 📊 **Performance Comparison**
+
+| Metric | v1.x | v2.0.0 | Improvement |
+|--------|------|--------|-------------|
+| **Lines of Code** | 1,596 | 165 | **90% reduction** |
+| **Dependencies** | 50+ | 5 | **90% reduction** |
+| **Database Systems** | 2 (PostgreSQL + Qdrant) | 1 (PostgreSQL) | **Simplified** |
+| **Memory Usage** | High | Low | **Optimized** |
+| **Startup Time** | Slow | Fast | **Improved** |
+
+## 🗑️ **Removed in v2.0.0**
+
+- ❌ **Qdrant** vector database → PostgreSQL pgvector
+- ❌ **Complex caching** → Direct database access
+- ❌ **ORM** → Pure SQL queries
+- ❌ **Extensive monitoring** → Basic logging
+- ❌ **Plugin architecture** → Core functionality focus
+- ❌ **WebSocket streaming** → REST API only
+- ❌ **Background tasks** → Synchronous operations
+- ❌ **Complex configuration** → Environment variables only
+
+## 🔄 **Migration from v1.x**
+
+### **Database Migration**
+```sql
+-- Add pgvector extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Add embedding column (if upgrading)
+ALTER TABLE memories ADD COLUMN IF NOT EXISTS embedding vector(1536);
+
+-- Create vector index
+CREATE INDEX IF NOT EXISTS memories_embedding_idx 
+ON memories USING ivfflat (embedding vector_cosine_ops);
+```
+
+### **Configuration Migration**
+- Replace complex config files with `.env` variables
+- Update database connection strings
+- Set OpenAI API key and auth tokens
+
+## 📚 **Documentation**
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - System design and components
+- **[Usage Guide](docs/USAGE.md)** - API usage and examples
+- **[Testing Guide](docs/TESTING.md)** - Testing strategies and mock database
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment
+- **[Changelog](CHANGELOG.md)** - Version history and breaking changes
+
+## 🤝 **Contributing**
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Run the test suite
+6. Submit a pull request
+
 ```bash
-make lint
+# Development setup
+pip install -r requirements-minimal.txt
+python test_mock_database.py  # Quick test
+python -m pytest test_refactored.py -v  # Full test suite
 ```
 
-## 📝 Logging
-- Structured JSON logs via [structlog](https://www.structlog.org/), compatible with log aggregation tools (Loki, ELK, etc).
-- Each request gets a unique correlation ID (`X-Request-ID`), included in all logs for distributed tracing.
-- Search logs by correlation ID to trace requests end-to-end.
-- See [Architecture Overview](./docs/ARCHITECTURE.md#logging--monitoring-architecture) for a diagram of the logging and monitoring flow.
+## 📜 **License**
 
-## 🚀 CI/CD Features
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### Performance Optimizations
-- **50-70% faster CI builds** through intelligent caching
-- **Docker layer caching** for 60-80% faster builds
-- **Parallel job execution** (setup, docker-build, lint, test)
-- **Smart cache invalidation** based on file changes
+## 🙏 **Acknowledgments**
 
-### Deployment Automation
-- **Automatic deployment** after successful CI
-- **Multi-environment support** (staging → production)
-- **Health checks** and rollback capabilities
-- **Environment protection** with approval gates
+- **OpenAI** for embedding models and API
+- **PostgreSQL** and **pgvector** for robust vector storage
+- **FastAPI** for modern Python web framework
+- **Community** for feedback and contributions
 
-### Environment Management
-- **Environment-specific configurations** with separate Docker Compose files
-- **GitHub Secrets integration** for secure credential management
-- **Resource limits** and production optimizations
-- **Comprehensive documentation** and setup guides
+## 🔗 **Links**
 
-## 📚 Documentation
+- **GitHub Repository**: https://github.com/raold/second-brain
+- **Documentation**: https://github.com/raold/second-brain/tree/main/docs
+- **Issues**: https://github.com/raold/second-brain/issues
+- **Discussions**: https://github.com/raold/second-brain/discussions
 
-- [**Architecture Overview**](./docs/ARCHITECTURE.md) — System design and architecture
-- [**Deployment Guide**](./docs/DEPLOYMENT.md) — How to deploy in production and staging  
-- [**Usage Examples**](./docs/USAGE.md) — Example API requests and usage patterns
+---
 
-## 📋 Resources
+**Second Brain v2.0.0** - *Simplified, Fast, and Maintainable AI Memory System*
 
-### 📖 Documentation
-- [**Architecture Overview**](./docs/ARCHITECTURE.md) - System design and architecture
-- [**Deployment Guide**](./docs/DEPLOYMENT.md) - Production deployment instructions
-- [**Usage Examples**](./docs/USAGE.md) - API usage patterns and examples
+> **Note**: v1.x files are archived in `archive/v1.x/` for reference. The complete v1.x system with all its complexity is preserved but no longer maintained.
 
-### 🛠️ Development
-- [**Makefile**](./Makefile) - Development commands and shortcuts
-- [**Requirements**](./requirements.txt) - Python dependencies
-- [**Docker Configuration**](./Dockerfile) - Container setup
+### 🎯 **Ready to Get Started?**
 
-### 🔒 Security & Legal
-- [**Security Policy**](./SECURITY.md) - Security vulnerabilities and reporting
-- [**License**](./LICENSE) - Project license terms
-- [**Changelog**](./CHANGELOG.md) - Release history and changes
+1. **Clone the repo** → `git clone https://github.com/raold/second-brain.git`
+2. **Install dependencies** → `pip install -r requirements-minimal.txt`
+3. **Configure environment** → Edit `.env` file
+4. **Setup database** → `python setup_db.py`
+5. **Run application** → `python -m app.app`
+6. **Test functionality** → `python test_mock_database.py`
 
-### 🚀 CI/CD & Deployment
-- [**Development Environment**](./docker-compose.yml) - Local development setup
-
-### 📊 Monitoring & Health
-- **API Health Check**: `GET /health` - Service health status
-- **Qdrant Dashboard**: [http://localhost:6333/dashboard](http://localhost:6333/dashboard) - Vector database management
-- **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs) - Interactive API docs
-
-## 📊 Metrics & Monitoring
-- **Prometheus metrics** available at `/metrics` for all API endpoints (request count, latency, errors).
-- **Sentry error monitoring** enabled if `SENTRY_DSN` is set in the environment.
-- See [Architecture Overview](./docs/ARCHITECTURE.md#metrics--monitoring) for details.
-
-## 🆕 Recent Improvements (v1.4.0)
-
-- **Comprehensive Test Suite**: Added unit tests, integration tests, and error scenario testing with 90%+ coverage
-- **Code Refactoring**: Broke down monolithic functions into smaller, testable components
-- **Improved Error Handling**: Enhanced error scenarios and edge case handling
-- **Test Infrastructure**: Shared fixtures, mocking improvements, and parallel test execution
-- **Documentation Updates**: Accurate project structure and API documentation
-
-## 📋 Roadmap
-
-### 🔄 Version 1.5.1 - Performance Monitoring Framework (IN PROGRESS)
-**Focus: Database Integration & Optimization**
-
-- 🔄 **PostgreSQL Integration** (Code Complete, Deployment Pending)
-  - ✅ Added `app/storage/postgres_client.py` with async connection pooling
-  - ✅ Implemented SQL-based memory querying and filtering
-  - ✅ Created comprehensive database schema with proper indexing
-  - ❌ **PostgreSQL not running in production** - container setup needed
-  - ✅ Dual storage: Markdown files + PostgreSQL with graceful degradation
-
-- ✅ **Performance Optimizations**
-  - ✅ Implemented advanced LRU caching with TTL and smart eviction
-  - ✅ Added connection pooling design for PostgreSQL (20 connections, 30 overflow)
-  - ✅ Background job processing for parallel storage operations
-  - ✅ Performance monitoring endpoints and health scoring
-
-- 🔄 **Advanced Search Features** (Partially Complete)
-  - ✅ Intent-based memory classification and filtering (code level)
-  - ✅ Advanced filtering by date ranges, intent types, tags, and priority (code level)
-  - ❌ **Version history and analytics require PostgreSQL to be running**
-  - ❌ Search analytics and user feedback collection (needs DB)
-
-- ✅ **Monitoring & Observability**
-  - ✅ Comprehensive health checks for all external dependencies
-  - ✅ Performance monitoring with system health scoring
-  - ✅ Cache hit rate tracking and optimization recommendations
-  - ⚠️ PostgreSQL metrics show connection failures
-
-**Current Status v1.5.1**: 
-- **Performance Monitoring**: ✅ 85% complete (6/7 endpoints working)
-- **Infrastructure Health**: ❌ Critical failures requiring immediate attention
-- **Code Quality**: ⚠️ Multiple blocking bugs identified and partially fixed
-- **Production Readiness**: ❌ Not ready for production deployment
-
-**Blocking Issues**:
-- PostgreSQL container not running (database features non-functional)
-- Qdrant container unhealthy (semantic search returning 500 errors)  
-- DateTime import conflicts in router.py causing health endpoint failures
-- Unicode emoji logging crashes on Windows console (cp1252 encoding)
-- Search endpoint returns 422 validation errors
-
-### 🎯 Version 1.6.0 - Plugin System & Real-time Features (FUTURE)
-**Focus: Extensibility & Live Processing**
-
-**Priority: Fix v1.5.1 blocking issues before proceeding**
-
-- **Plugin Architecture**
-  - Dynamic plugin loading with hot-reload capabilities
-  - Plugin marketplace and discovery system
-  - Sandboxed execution environment for third-party plugins
-  - Plugin API with standardized interfaces
-
-- **WebSocket Real-time API**
-  - Live memory streaming and updates
-  - Real-time collaboration features
-  - Push notifications for memory events
-  - WebSocket-based search with live results
-
-- **Enhanced Intent Detection**
-  - Machine learning-based intent classification
-  - Custom intent types and user-defined schemas
-  - Intent-based workflow automation
-  - Smart memory categorization and tagging
-
-- **User Feedback System**
-  - Rating and relevance feedback for search results
-  - User preference learning and personalization
-  - Memory quality scoring and auto-improvement
-  - Community-driven memory validation
-
-**Immediate Next Steps for v1.5.1 Completion**:
-1. 🚨 **Critical Bug Fixes**
-   - Fix datetime import conflicts in router.py
-   - Resolve Unicode emoji logging issues on Windows
-   - Fix search endpoint validation errors
-   
-2. 🐳 **Infrastructure Setup**
-   - Start PostgreSQL container and verify connectivity
-   - Fix Qdrant health issues and search functionality
-   - Implement proper environment variable handling
-   
-3. ✅ **Testing & Validation**
-   - Achieve 100% performance test success rate
-   - Validate all database operations end-to-end
-   - Complete integration testing with all services running
-
-### 🚀 Version 1.7.0 - Client Applications & Advanced UI
-**Focus: User Interfaces & Multi-platform Support**
-
-- **Electron Desktop Client**
-  - Create `electron/` directory with voice assistant interface
-  - Real-time speech-to-text and text-to-speech integration
-  - Advanced UI with dark/light themes and accessibility features
-  - Offline mode with local caching and sync capabilities
-
-- **Mobile & PWA Support**
-  - Add `mobile/` Progressive Web App
-  - Touch-optimized interface for mobile devices
-  - Voice commands and audio recording on mobile
-  - Push notifications for reminders and updates
-
-- **Advanced Memory Features**
-  - Memory replay and summarization endpoints
-  - Automated memory consolidation and archiving
-  - Smart memory suggestions based on context
-  - Memory export in multiple formats (PDF, JSON, Markdown)
-
-- **Enterprise Features**
-  - Multi-tenant support with user isolation
-  - Role-based access control (RBAC)
-  - Audit logging and compliance features
-  - Backup and disaster recovery automation
-
-### 🔄 Post-1.7.0 Future Considerations
-- **AI Model Integration**: Support for multiple embedding models and LLM providers
-- **Collaborative Features**: Shared memory spaces and team collaboration
-- **Advanced Analytics**: Memory usage analytics and insights dashboard
-- **API Ecosystem**: GraphQL API, advanced rate limiting, API versioning
-
-## 🔒 Security Vulnerabilities
-
-Please report any security vulnerabilities **privately** via [security@oldham.io](mailto:security@oldham.io).  
-Do **not** open public issues for security concerns — see [SECURITY.md](./docs/SECURITY.md) for full details.
+**Happy memory management!** 🧠✨

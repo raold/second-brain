@@ -1,25 +1,42 @@
+# Second Brain v2.0.0 - Ruff Configuration
+
 line-length = 120
+target-version = "py311"
+
 exclude = [
     ".git",
     "__pycache__",
     "venv",
     ".venv",
     "build",
-    "dist"
+    "dist",
+    "archive"
 ]
 
 [lint]
 select = [
-    "E",  # pycodestyle errors
-    "F",  # pyflakes
-    "B",  # flake8-bugbear
-    "I",  # isort
-    "C90"  # mccabe complexity
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "B",   # flake8-bugbear
+    "I",   # isort
+    "C90", # mccabe complexity
+    "UP",  # pyupgrade
+    "W",   # pycodestyle warnings
 ]
+
 ignore = [
-    "C901",  # function too complex
-    "E501",  # line too long
+    "E501",  # line too long (handled by formatter)
     "B008",  # function call in default argument
     "B904",  # raise ... from err
-    "B011",  # assert False
+    "UP007", # Union syntax (X | Y) - keep for compatibility
 ]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[lint.isort]
+known-first-party = ["app"]
+split-on-trailing-comma = true

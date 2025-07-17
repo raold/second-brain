@@ -1,159 +1,538 @@
-# LLM Output Processor - Testing Guide
+# Second Brain v2.0.0 - Testing Guide
 
 ## Overview
+Second Brain v2.0.0 includes a comprehensive testing framework with both unit tests and integration tests. This guide covers testing strategies, mock database usage, and development workflows.
 
-This document describes how to run, extend, and maintain the test suite for the LLM Output Processor, including our approach to mocking external dependencies (OpenAI, Qdrant) for fast, reliable integration tests.
+## Testing Framework
 
----
+### Test Structure
+```
+tests/
+├── test_refactored.py      # Main test suite
+├── test_mock_database.py   # Mock database tests
+├── test_db_setup.py        # Database setup tests
+└── test_storage_handler.py # Legacy storage tests
+```
+
+### Core Test Files
+- **`test_refactored.py`**: Complete test suite for v2.0.0
+- **`test_mock_database.py`**: Standalone mock database tests
+- **`test_db_setup.py`**: Database initialization tests
 
 ## Running Tests
 
-- **All tests:**
-  ```bash
-  make test
-  # or
-  pytest
-  ```
-- **Linting:**
-  ```bash
-  make lint
-  # or
-  ruff .
-  ```
-- **Test coverage report:**
-  ```bash
-  pytest --cov=app --cov-report=term-missing
-  ```
+### Quick Test
+```bash
+# Run main test suite
+python -m pytest test_refactored.py -v
 
----
+# Run with coverage
+python -m pytest test_refactored.py --cov=app --cov-report=html
 
-## Mocking External Dependencies
-
-### Why Mock?
-- **No real API keys required** (OpenAI)
-- **No running Qdrant instance required**
-- **Tests are fast, reliable, and isolated**
-- **CI/CD is deterministic and secure**
-
-### OpenAI Embedding
-- Patch `get_openai_embedding` in all test files to return a fixed vector:
-  ```python
-  @pytest.fixture(autouse=True)
-  def mock_openai_embedding():
-      with patch("app.utils.openai_client.get_openai_embedding", return_value=[0.1] * 1536):
-          yield
-  ```
-
-### Qdrant Vector DB
-- Patch `QdrantClient.upsert` and `QdrantClient.search` in tests that require Qdrant operations:
-  ```python
-  @patch("app.storage.qdrant_client.client.upsert", return_value=None)
-  @patch("app.storage.qdrant_client.client.search", return_value=[...])
-  def test_something(...):
-      ...
-  ```
-- Patch `to_uuid` to return a string for test compatibility:
-  ```python
-  @patch("app.storage.qdrant_client.to_uuid", lambda x: str(x))
-  ```
-
-### General Best Practice
-- Always patch external API calls at the import path used in the code under test, returning controlled results.
-- Use fixtures for global mocks, and decorators for test-specific mocks.
-
----
-
-## Example: Full Integration Test with Mocks
-```python
-from unittest.mock import patch
-import pytest
-
-@patch("app.storage.qdrant_client.to_uuid", lambda x: str(x))
-@patch("app.storage.qdrant_client.get_openai_embedding", return_value=[0.1] * 1536)
-@patch("app.storage.qdrant_client.client.upsert", return_value=None)
-@patch("app.storage.qdrant_client.client.search", return_value=[type("Result", (), {"id": "test-id-123", "score": 0.99, "payload": {"data": {"note": "Test note for version tracking"}, "metadata": {"embedding_model": "text-embedding-3-small", "model_version": "gpt-4o", "timestamp": "2025-07-14T00:00:00Z"}}, "type": "test", "priority": "low"})()])
-def test_ingest_and_search_versions(mock_search, mock_upsert, mock_embedding):
-    from app.storage.qdrant_client import qdrant_upsert, qdrant_search
-    payload = {"id": "test-id-123", "data": {"note": "Test note for version tracking"}, "type": "test", "priority": "low"}
-    qdrant_upsert(payload)
-    results = qdrant_search("Test note for version tracking", top_k=1)
-    assert results, "No results returned from search"
-    result = results[0]
-    assert result["embedding_model"] == "text-embedding-3-small"
-    assert result["model_version"] == "gpt-4o"
+# Run specific test
+python -m pytest test_refactored.py::test_health_check -v
 ```
 
----
+### Mock Database Testing
+```bash
+# Run mock database tests (no OpenAI API required)
+python test_mock_database.py
 
-## Testing Metrics & Monitoring
+# Run mock database with pytest
+python -m pytest test_mock_database.py -v
+```
 
-### Prometheus Metrics
-- The `/metrics` endpoint is public and returns Prometheus-formatted metrics.
-- Test with:
-  ```python
-  def test_metrics_endpoint():
-      response = client.get("/metrics")
-      assert response.status_code == 200
-      assert "# HELP" in response.text and "# TYPE" in response.text
-  ```
-- No mocking required for Prometheus; metrics are in-memory.
+### Database Setup Testing
+```bash
+# Test database initialization
+python test_db_setup.py
 
-### Sentry Error Monitoring
-- Sentry is only enabled if `SENTRY_DSN` is set in the environment.
-- To test Sentry integration, set a dummy DSN and trigger an error.
-- To mock Sentry in tests:
-  ```python
-  import sentry_sdk
-  from unittest.mock import patch
-  @patch.object(sentry_sdk, 'init')
-  def test_sentry_integration(mock_init):
-      # Your test code here
-      mock_init.assert_called()
-  ```
+# Test with pytest
+python -m pytest test_db_setup.py -v
+```
 
----
+## Test Configuration
 
-## Testing the /records Endpoint
-- The `/records` endpoint lists records with filtering and pagination.
-- Mock Qdrant's `client.scroll` in tests:
-  ```python
-  @patch("app.storage.qdrant_client.client.scroll", return_value=([type("Point", (), {"id": "abc123", "payload": {"data": {"note": "Test note"}, "type": "test", "metadata": {"timestamp": "2025-07-14T00:00:00Z"}}})()], None, None))
-  def test_records_endpoint(mock_scroll):
-      response = client.get("/records", headers=AUTH_HEADER)
-      assert response.status_code == 200
-      # ...
-  ```
+### Environment Setup
+```bash
+# Test environment variables
+export DATABASE_URL="postgresql://test:test@localhost:5432/test_db"
+export OPENAI_API_KEY="test_key"
+export AUTH_TOKEN="test_token"
 
----
+# Or create .env.test
+cp .env.example .env.test
+```
+
+### Test Database
+```sql
+-- Create test database
+CREATE DATABASE test_second_brain;
+
+-- Setup test user
+CREATE USER test_user WITH PASSWORD 'test_password';
+GRANT ALL PRIVILEGES ON DATABASE test_second_brain TO test_user;
+```
+
+## Test Categories
+
+### 1. Unit Tests
+```python
+# Example unit test
+def test_health_check():
+    """Test health check endpoint"""
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+```
+
+### 2. Integration Tests
+```python
+# Example integration test
+def test_store_and_retrieve_memory():
+    """Test full memory lifecycle"""
+    # Store memory
+    memory_data = {
+        "content": "Test memory content",
+        "metadata": {"category": "test"}
+    }
+    response = client.post("/memories", json=memory_data)
+    assert response.status_code == 201
+    
+    # Retrieve memory
+    memory_id = response.json()["id"]
+    response = client.get(f"/memories/{memory_id}")
+    assert response.status_code == 200
+    assert response.json()["content"] == "Test memory content"
+```
+
+### 3. Mock Database Tests
+```python
+# Example mock database test
+async def test_mock_database():
+    """Test mock database operations"""
+    mock_db = MockDatabase()
+    
+    # Store memory
+    memory_id = await mock_db.store_memory(
+        "Test content",
+        {"category": "test"}
+    )
+    
+    # Search memories
+    results = await mock_db.search_memories("test")
+    assert len(results) > 0
+    assert results[0]["content"] == "Test content"
+```
+
+## Test Suite Details
+
+### `test_refactored.py`
+Complete test suite with the following test cases:
+
+#### API Endpoint Tests
+- `test_health_check()` - Health endpoint
+- `test_store_memory()` - Memory creation
+- `test_get_memory()` - Memory retrieval
+- `test_list_memories()` - Memory listing
+- `test_delete_memory()` - Memory deletion
+- `test_search_memories()` - Semantic search
+
+#### Authentication Tests
+- `test_authentication_required()` - Auth validation
+- `test_invalid_token()` - Token validation
+- `test_missing_token()` - Missing auth header
+
+#### Error Handling Tests
+- `test_memory_not_found()` - 404 handling
+- `test_invalid_request_data()` - Validation errors
+- `test_database_connection_error()` - DB error handling
+
+#### Database Integration Tests
+- `test_database_connection()` - Connection testing
+- `test_vector_search()` - pgvector functionality
+- `test_metadata_storage()` - JSONB operations
+
+### `test_mock_database.py`
+Standalone mock database tests:
+
+```python
+#!/usr/bin/env python3
+
+import asyncio
+import uuid
+from app.database_mock import MockDatabase
+
+async def test_mock_database():
+    print("Testing Mock Database...")
+    
+    # Initialize mock database
+    mock_db = MockDatabase()
+    
+    # Test 1: Store memory
+    print("\n1. Testing store_memory...")
+    memory_id = await mock_db.store_memory(
+        "I learned about PostgreSQL pgvector for semantic search",
+        {"category": "learning", "tags": ["database", "AI"]}
+    )
+    print(f"✓ Stored memory with ID: {memory_id}")
+    
+    # Test 2: Get memory
+    print("\n2. Testing get_memory...")
+    memory = await mock_db.get_memory(memory_id)
+    print(f"✓ Retrieved memory: {memory['content'][:50]}...")
+    
+    # Test 3: Search memories
+    print("\n3. Testing search_memories...")
+    results = await mock_db.search_memories("database search", limit=3)
+    print(f"✓ Found {len(results)} matching memories")
+    
+    # Test 4: List all memories
+    print("\n4. Testing list_memories...")
+    all_memories = await mock_db.list_memories(limit=10)
+    print(f"✓ Listed {len(all_memories)} total memories")
+    
+    # Test 5: Delete memory
+    print("\n5. Testing delete_memory...")
+    deleted = await mock_db.delete_memory(memory_id)
+    print(f"✓ Memory deleted: {deleted}")
+    
+    print("\n✅ All mock database tests passed!")
+
+if __name__ == "__main__":
+    asyncio.run(test_mock_database())
+```
+
+## Mock Database Usage
+
+### Purpose
+The mock database allows testing without:
+- OpenAI API costs
+- Real database setup
+- Network dependencies
+- External service dependencies
+
+### Features
+- In-memory storage
+- Simulated embeddings
+- Compatible API interface
+- Deterministic results
+
+### Usage Example
+```python
+from app.database_mock import MockDatabase
+
+# Initialize mock database
+mock_db = MockDatabase()
+
+# Use exactly like real database
+memory_id = await mock_db.store_memory(
+    "Test content",
+    {"category": "test"}
+)
+
+# Search with simulated embeddings
+results = await mock_db.search_memories("query")
+```
+
+## Performance Testing
+
+### Memory Performance
+```python
+import time
+import asyncio
+
+async def test_performance():
+    """Test memory operation performance"""
+    mock_db = MockDatabase()
+    
+    # Test store performance
+    start_time = time.time()
+    for i in range(100):
+        await mock_db.store_memory(f"Test memory {i}", {"index": i})
+    store_time = time.time() - start_time
+    
+    # Test search performance
+    start_time = time.time()
+    for i in range(10):
+        await mock_db.search_memories("test query", limit=5)
+    search_time = time.time() - start_time
+    
+    print(f"Store 100 memories: {store_time:.2f}s")
+    print(f"10 searches: {search_time:.2f}s")
+```
+
+### Load Testing
+```python
+import asyncio
+import aiohttp
+
+async def load_test():
+    """Basic load test for API endpoints"""
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for i in range(50):
+            task = session.get(
+                "http://localhost:8000/health",
+                headers={"Authorization": "Bearer test_token"}
+            )
+            tasks.append(task)
+        
+        responses = await asyncio.gather(*tasks)
+        success_count = sum(1 for r in responses if r.status == 200)
+        print(f"Load test: {success_count}/50 successful requests")
+```
+
+## Test Data Management
+
+### Test Data Setup
+```python
+# Test data fixtures
+TEST_MEMORIES = [
+    {
+        "content": "PostgreSQL is a powerful relational database",
+        "metadata": {"category": "database", "difficulty": "beginner"}
+    },
+    {
+        "content": "pgvector extension enables vector similarity search",
+        "metadata": {"category": "database", "difficulty": "intermediate"}
+    },
+    {
+        "content": "FastAPI provides modern Python web framework",
+        "metadata": {"category": "web", "difficulty": "intermediate"}
+    }
+]
+
+async def setup_test_data(db):
+    """Setup test data for testing"""
+    for memory_data in TEST_MEMORIES:
+        await db.store_memory(
+            memory_data["content"],
+            memory_data["metadata"]
+        )
+```
+
+### Test Data Cleanup
+```python
+async def cleanup_test_data(db):
+    """Clean up test data after testing"""
+    # For mock database, just reinitialize
+    if isinstance(db, MockDatabase):
+        db.memories = {}
+        return
+    
+    # For real database, delete test data
+    await db.execute("DELETE FROM memories WHERE metadata->>'category' = 'test'")
+```
+
+## Continuous Integration
+
+### GitHub Actions Setup
+```yaml
+name: Tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: ankane/pgvector
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements-minimal.txt
+        pip install pytest pytest-cov
+    
+    - name: Run tests
+      run: |
+        python -m pytest test_refactored.py --cov=app --cov-report=xml
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+        OPENAI_API_KEY: test_key
+        AUTH_TOKEN: test_token
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+```
+
+### Pre-commit Hooks
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Setup hooks
+pre-commit install
+
+# Run manually
+pre-commit run --all-files
+```
+
+## Test Coverage
+
+### Coverage Configuration
+```ini
+# .coveragerc
+[run]
+source = app
+omit = 
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */migrations/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+```
+
+### Coverage Reports
+```bash
+# Generate HTML coverage report
+python -m pytest test_refactored.py --cov=app --cov-report=html
+
+# Generate XML coverage report
+python -m pytest test_refactored.py --cov=app --cov-report=xml
+
+# View coverage summary
+python -m pytest test_refactored.py --cov=app --cov-report=term-missing
+```
+
+## Debugging Tests
+
+### Debug Mode
+```python
+# Run tests with debug output
+python -m pytest test_refactored.py -v -s
+
+# Run single test with debug
+python -m pytest test_refactored.py::test_store_memory -v -s
+
+# Run with pdb debugger
+python -m pytest test_refactored.py --pdb
+```
+
+### Test Logging
+```python
+import logging
+import pytest
+
+# Configure logging for tests
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+@pytest.fixture
+def debug_logger():
+    return logging.getLogger(__name__)
+```
 
 ## Best Practices
-- **Isolate all external dependencies** in tests.
-- **Use fixtures** for repeated setup/teardown.
-- **Test both success and failure cases** (e.g., mock exceptions).
-- **Keep tests fast**—avoid real network or disk I/O.
-- **Document new test patterns** in this file.
+
+### Test Organization
+- Group related tests in classes
+- Use descriptive test names
+- Include docstrings for complex tests
+- Use fixtures for common setup
+
+### Mock Usage
+- Use mock database for unit tests
+- Mock external services (OpenAI API)
+- Test error conditions with mocks
+- Validate mock interactions
+
+### Assertions
+- Use specific assertions
+- Test both success and failure cases
+- Validate response structure
+- Check error messages
+
+### Test Data
+- Use realistic test data
+- Test edge cases
+- Clean up after tests
+- Isolate test data
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Errors**
+   ```bash
+   # Check database is running
+   psql $DATABASE_URL -c "SELECT 1"
+   
+   # Check pgvector extension
+   psql $DATABASE_URL -c "SELECT * FROM pg_extension WHERE extname='vector'"
+   ```
+
+2. **OpenAI API Errors**
+   ```python
+   # Use mock database for testing
+   from app.database_mock import MockDatabase
+   mock_db = MockDatabase()
+   ```
+
+3. **Authentication Errors**
+   ```python
+   # Check auth token in tests
+   headers = {"Authorization": "Bearer test_token"}
+   response = client.get("/health", headers=headers)
+   ```
+
+### Debug Commands
+```bash
+# Run tests with verbose output
+python -m pytest test_refactored.py -v
+
+# Run with coverage and debug
+python -m pytest test_refactored.py --cov=app --cov-report=term-missing -v
+
+# Run single test
+python -m pytest test_refactored.py::test_health_check -v
+
+# Run with print statements
+python -m pytest test_refactored.py -s
+```
+
+## Contributing
+
+### Test Requirements
+- All new features must have tests
+- Maintain >90% test coverage
+- Include both unit and integration tests
+- Test error conditions
+- Update documentation
+
+### Test Review Checklist
+- [ ] Tests cover new functionality
+- [ ] Tests cover error conditions
+- [ ] Tests are deterministic
+- [ ] Tests clean up after themselves
+- [ ] Tests have descriptive names
+- [ ] Tests include docstrings
+- [ ] Coverage remains above 90%
 
 ---
 
-## See Also
-- [USAGE.md](./USAGE.md)
-- [ARCHITECTURE.md](./ARCHITECTURE.md)
-- [CI_CACHING.md](./CI_CACHING.md)
-- [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md)
-- [CONTRIBUTING.md](./CONTRIBUTING.md) 
-
-### Postgres Memory Persistence
-- Patch Postgres client methods in tests that require DB operations.
-- Use fixtures to mock SQL queries and responses.
-
-### Plugins & Integrations
-- Patch plugin entrypoints and external API calls.
-- Use fixtures for plugin state and responses.
-
-### Electron/Mobile/PWA
-- Use Jest and Playwright for E2E and UI tests.
-- Mock backend API responses for streaming, TTS, and feedback endpoints.
-
-### Feedback, Replay, Summarization
-- Patch feedback endpoints and replay/summarization logic.
-- Test both API and UI flows for edit, delete, correct, upvote, and replay. 
+This testing guide ensures reliable and maintainable code for Second Brain v2.0.0. For questions or issues, please check the GitHub repository or open an issue.

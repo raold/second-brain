@@ -12,6 +12,57 @@ __pycache__/
 data/
 logs/
 
+# Logs
+*.log
+logs/
+tests/logs/
+
+# Test artifacts  
+htmlcov/
+.coverage
+coverage.xml
+.pytest_cache/
+.ruff_cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+
+# Distribution
+dist/
+build/
+*.egg-info/
+
+# Qdrant data
+qdrant_data*/
+
+# PostgreSQL data
+pgdata/
+
+# Large files
+bfg.jar
+
+# Test outputs
+last-pytest*.log
+pip-list.log
+pytest-trace-config.log
