@@ -2,6 +2,7 @@
 
 from types import SimpleNamespace
 from unittest.mock import Mock
+import os
 
 import pytest
 from fastapi import Request
@@ -11,6 +12,10 @@ import app.router as app_router
 from app.config import config
 from app.main import app
 from app.models import Payload, PayloadType, Priority
+
+# Setup test environment first
+from tests.setup_test_env import setup_test_environment
+setup_test_environment()
 
 # Import comprehensive external service mocks
 from tests.fixtures.external_services import *  # noqa: F403, F401

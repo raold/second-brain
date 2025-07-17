@@ -67,19 +67,23 @@ async def _detect_or_assign_intent(payload: Payload) -> str:
         # Use simple heuristics for now (TODO: implement LLM-based detection)
         text_lower = text_content.lower()
         
+        detected_intent = "note"  # default
         if any(word in text_lower for word in ["?", "how", "what", "why", "when", "where"]):
-            return "question"
+            detected_intent = "question"
         elif any(word in text_lower for word in ["todo", "task", "need to", "should", "must"]):
-            return "todo"
+            detected_intent = "todo"
         elif any(word in text_lower for word in ["remind", "reminder", "remember", "don't forget"]):
-            return "reminder"
+            detected_intent = "reminder"
         elif any(word in text_lower for word in ["command", "run", "execute", "cmd"]):
-            return "command"
-        else:
-            return "note"
+            detected_intent = "command"
+        
+        # Set the intent on the payload
+        payload.intent = detected_intent
+        return detected_intent
             
     except Exception as e:
         logger.warning(f"Intent detection failed for {payload.id}: {e}")
+        payload.intent = "note"
         return "note"
 
 

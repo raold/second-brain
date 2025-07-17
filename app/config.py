@@ -92,6 +92,7 @@ class Config:
         return {
             'host': os.getenv('QDRANT_HOST', default_host),
             'port': int(os.getenv('QDRANT_PORT', '6333')),
+            'grpc_port': int(os.getenv('QDRANT_GRPC_PORT', '6334')),
             'timeout': int(os.getenv('QDRANT_TIMEOUT', '30')),
             'collection': os.getenv('QDRANT_COLLECTION', 'second_brain'),
             'vector_size': int(os.getenv('QDRANT_VECTOR_SIZE', '1536')),

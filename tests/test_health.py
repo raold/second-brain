@@ -115,6 +115,9 @@ def test_ingest_and_search_versions(mock_search, mock_upsert, mock_embedding):
 ], None, None))
 def test_records_endpoint(mock_scroll):
     app.dependency_overrides[app_router.verify_token] = always_allow
+    print(f"\nMock object: {mock_scroll}")
+    print(f"Mock called: {mock_scroll.called}")
+    
     # Print all registered routes and their endpoint functions
     print("\nRegistered routes:")
     for route in app.routes:
@@ -130,6 +133,7 @@ def test_records_endpoint(mock_scroll):
         print(f"\nRESPONSE BODY FOR 422: {response.text}")
     assert response.status_code == 200
     data = response.json()
+    print(f"\nRESPONSE DATA: {data}")
     assert "records" in data
     assert data["records"][0]["id"] == "abc123"
     assert data["records"][0]["note"] == "Test note"

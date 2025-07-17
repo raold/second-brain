@@ -15,7 +15,7 @@ client = QdrantClient(
     host=config.qdrant['host'], 
     port=config.qdrant['port'],
     timeout=config.qdrant['timeout'],  # 30 second timeout
-    grpc_port=6334,  # Enable gRPC for better performance
+    grpc_port=config.qdrant.get('grpc_port', 6334),  # Enable gRPC for better performance
     prefer_grpc=True
 )
 
