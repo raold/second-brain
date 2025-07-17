@@ -1621,4 +1621,3 @@ def _generate_performance_recommendations(cache_stats, postgres_stats, qdrant_st
     except Exception as e:
         logger.warning(f"Failed to generate performance recommendations: {e}")
         return ["Unable to generate recommendations - check system metrics"]
->>>>>>> a7482b9e847b5f65dc4124534881b2b3c3814b01
