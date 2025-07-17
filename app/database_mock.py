@@ -1,231 +1,177 @@
 """
-Mock version of the database for testing without OpenAI API calls.
+Mock version of the database for testing without OpenAI API calls or database connection.
 """
 
-import json
 import logging
-import os
+import uuid
+from datetime import datetime
 from typing import Any
-
-import asyncpg
 
 logger = logging.getLogger(__name__)
 
 
 class MockDatabase:
-    """Mock PostgreSQL database client for testing."""
+    """Mock database client for testing without any external dependencies."""
 
     def __init__(self):
-        self.pool: asyncpg.Pool | None = None
+        self.memories: dict[str, dict[str, Any]] = {}
+        self.is_initialized = False
 
     async def initialize(self):
-        """Initialize database connection."""
-        # Database connection
-        db_url = f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'postgres')}@{os.getenv('POSTGRES_HOST', 'localhost')}:{os.getenv('POSTGRES_PORT', '5432')}/{os.getenv('POSTGRES_DB', 'secondbrain')}"
-
-        try:
-            self.pool = await asyncpg.create_pool(db_url, min_size=1, max_size=10)
-            logger.info("Database connection established")
-
-            # Ensure table exists
-            await self._setup_database()
-
-        except Exception as e:
-            logger.error(f"Failed to initialize database: {e}")
-            raise
-
-    async def _setup_database(self):
-        """Setup database schema."""
-        async with self.pool.acquire() as conn:
-            # Create memories table without vector column for testing
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS memories_mock (
-                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                    content TEXT NOT NULL,
-                    metadata JSONB DEFAULT '{}',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-
-            logger.info("Mock database schema setup complete")
+        """Initialize mock database (no actual connection needed)."""
+        self.is_initialized = True
+        logger.info("Mock database initialized")
 
     async def close(self):
-        """Close database connections."""
-        if self.pool:
-            await self.pool.close()
-
-    def _get_mock_embedding(self, text: str) -> list[float]:
-        """Generate a mock embedding based on text hash."""
-        # Simple hash-based mock embedding
-        text_hash = hash(text)
-        return [float((text_hash + i) % 1000) / 1000.0 for i in range(1536)]
+        """Close mock database (no actual connection to close)."""
+        self.is_initialized = False
+        logger.info("Mock database closed")
 
     async def store_memory(self, content: str, metadata: dict[str, Any] | None = None) -> str:
-        """Store a memory (mock version)."""
-        if not self.pool:
+        """Store a memory in mock storage."""
+        if not self.is_initialized:
             raise RuntimeError("Database not initialized")
 
-        # Store in database
-        async with self.pool.acquire() as conn:
-            result = await conn.fetchrow(
-                """
-                INSERT INTO memories_mock (content, metadata)
-                VALUES ($1, $2)
-                RETURNING id
-            """,
-                content,
-                json.dumps(metadata or {}),
-            )
+        memory_id = str(uuid.uuid4())
+        now = datetime.now().isoformat()
 
-            memory_id = str(result["id"])
-            logger.info(f"Stored memory with ID: {memory_id}")
-            return memory_id
+        # Mock embedding generation (simple text-based similarity)
+        mock_embedding = self._generate_mock_embedding(content)
 
-    async def search_memories(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
-        """Search memories using text search (mock version)."""
-        if not self.pool:
-            raise RuntimeError("Database not initialized")
+        self.memories[memory_id] = {
+            "id": memory_id,
+            "content": content,
+            "metadata": metadata or {},
+            "embedding": mock_embedding,
+            "created_at": now,
+            "updated_at": now,
+        }
 
-        # Simple text search
-        async with self.pool.acquire() as conn:
-            rows = await conn.fetch(
-                """
-                SELECT
-                    id,
-                    content,
-                    metadata,
-                    created_at,
-                    updated_at,
-                    CASE
-                        WHEN LOWER(content) LIKE LOWER($1) THEN 0.9
-                        WHEN LOWER(content) LIKE LOWER('%' || $1 || '%') THEN 0.7
-                        ELSE 0.5
-                    END as similarity
-                FROM memories_mock
-                WHERE LOWER(content) LIKE LOWER('%' || $1 || '%')
-                ORDER BY similarity DESC
-                LIMIT $2
-            """,
-                query,
-                limit,
-            )
-
-            results = []
-            for row in rows:
-                results.append(
-                    {
-                        "id": str(row["id"]),
-                        "content": row["content"],
-                        "metadata": json.loads(row["metadata"]),
-                        "similarity": float(row["similarity"]),
-                        "created_at": row["created_at"].isoformat(),
-                        "updated_at": row["updated_at"].isoformat(),
-                    }
-                )
-
-            logger.info(f"Found {len(results)} memories for query")
-            return results
+        logger.info(f"Stored memory with ID: {memory_id}")
+        return memory_id
 
     async def get_memory(self, memory_id: str) -> dict[str, Any] | None:
-        """Get a specific memory by ID."""
-        if not self.pool:
+        """Get a memory by ID from mock storage."""
+        if not self.is_initialized:
             raise RuntimeError("Database not initialized")
 
-        async with self.pool.acquire() as conn:
-            row = await conn.fetchrow(
-                """
-                SELECT id, content, metadata, created_at, updated_at
-                FROM memories_mock
-                WHERE id = $1
-            """,
-                memory_id,
-            )
-
-            if not row:
-                return None
-
+        memory = self.memories.get(memory_id)
+        if memory:
             return {
-                "id": str(row["id"]),
-                "content": row["content"],
-                "metadata": json.loads(row["metadata"]),
-                "created_at": row["created_at"].isoformat(),
-                "updated_at": row["updated_at"].isoformat(),
+                "id": memory["id"],
+                "content": memory["content"],
+                "metadata": memory["metadata"],
+                "created_at": memory["created_at"],
+                "updated_at": memory["updated_at"],
             }
+        return None
+
+    async def search_memories(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
+        """Search memories using mock similarity."""
+        if not self.is_initialized:
+            raise RuntimeError("Database not initialized")
+
+        query_embedding = self._generate_mock_embedding(query)
+        results = []
+
+        for memory in self.memories.values():
+            # Calculate mock similarity based on simple text matching
+            similarity = self._calculate_mock_similarity(query_embedding, memory["embedding"])
+
+            results.append({
+                "id": memory["id"],
+                "content": memory["content"],
+                "metadata": memory["metadata"],
+                "created_at": memory["created_at"],
+                "updated_at": memory["updated_at"],
+                "similarity": similarity,
+            })
+
+        # Sort by similarity and return top results
+        results.sort(key=lambda x: x["similarity"], reverse=True)
+        return results[:limit]
 
     async def delete_memory(self, memory_id: str) -> bool:
-        """Delete a memory by ID."""
-        if not self.pool:
+        """Delete a memory from mock storage."""
+        if not self.is_initialized:
             raise RuntimeError("Database not initialized")
 
-        async with self.pool.acquire() as conn:
-            result = await conn.execute(
-                """
-                DELETE FROM memories_mock WHERE id = $1
-            """,
-                memory_id,
-            )
-
-            deleted = result.split()[-1] == "1"
-            if deleted:
-                logger.info(f"Deleted memory with ID: {memory_id}")
-            return deleted
+        if memory_id in self.memories:
+            del self.memories[memory_id]
+            logger.info(f"Deleted memory with ID: {memory_id}")
+            return True
+        return False
 
     async def get_all_memories(self, limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
-        """Get all memories with pagination."""
-        if not self.pool:
+        """Get all memories with pagination from mock storage."""
+        if not self.is_initialized:
             raise RuntimeError("Database not initialized")
 
-        async with self.pool.acquire() as conn:
-            rows = await conn.fetch(
-                """
-                SELECT id, content, metadata, created_at, updated_at
-                FROM memories_mock
-                ORDER BY created_at DESC
-                LIMIT $1 OFFSET $2
-            """,
-                limit,
-                offset,
-            )
+        all_memories = list(self.memories.values())
+        # Sort by created_at descending
+        all_memories.sort(key=lambda x: x["created_at"], reverse=True)
 
-            results = []
-            for row in rows:
-                results.append(
-                    {
-                        "id": str(row["id"]),
-                        "content": row["content"],
-                        "metadata": json.loads(row["metadata"]),
-                        "created_at": row["created_at"].isoformat(),
-                        "updated_at": row["updated_at"].isoformat(),
-                    }
-                )
+        # Apply pagination
+        paginated = all_memories[offset : offset + limit]
 
-            return results
+        return [
+            {
+                "id": memory["id"],
+                "content": memory["content"],
+                "metadata": memory["metadata"],
+                "created_at": memory["created_at"],
+                "updated_at": memory["updated_at"],
+            }
+            for memory in paginated
+        ]
+
+    def _generate_mock_embedding(self, text: str) -> list[float]:
+        """Generate a mock embedding based on text content."""
+        # Simple hash-based mock embedding for testing
+        import hashlib
+
+        # Create a deterministic "embedding" based on text content
+        hash_obj = hashlib.md5(text.encode())
+        hash_bytes = hash_obj.digest()
+
+        # Convert to list of floats (mock 1536-dimensional embedding)
+        embedding = []
+        for i in range(1536):
+            # Use hash bytes cyclically to generate pseudo-random floats
+            byte_val = hash_bytes[i % len(hash_bytes)]
+            # Normalize to [-1, 1] range
+            embedding.append((byte_val - 127.5) / 127.5)
+
+        return embedding
+
+    def _calculate_mock_similarity(self, embedding1: list[float], embedding2: list[float]) -> float:
+        """Calculate mock cosine similarity between two embeddings."""
+        # Simple dot product for mock similarity
+        dot_product = sum(a * b for a, b in zip(embedding1, embedding2, strict=False))
+        # Normalize to [0, 1] range for similarity score
+        return max(0, min(1, (dot_product + 1) / 2))
 
     async def get_index_stats(self) -> dict[str, Any]:
-        """Get statistics about vector index performance (mock version)."""
-        if not self.pool:
+        """Get statistics about mock database."""
+        if not self.is_initialized:
             raise RuntimeError("Database not initialized")
 
-        async with self.pool.acquire() as conn:
-            # Get table statistics
-            stats = await conn.fetchrow("""
-                SELECT
-                    COUNT(*) as total_memories,
-                    COUNT(*) as memories_with_embeddings,
-                    AVG(LENGTH(content)) as avg_content_length
-                FROM memories_mock
-            """)
+        total_memories = len(self.memories)
+        avg_content_length = (
+            sum(len(memory["content"]) for memory in self.memories.values()) / total_memories
+            if total_memories > 0
+            else 0
+        )
 
-            return {
-                "total_memories": stats["total_memories"],
-                "memories_with_embeddings": stats["memories_with_embeddings"],
-                "avg_content_length": float(stats["avg_content_length"]) if stats["avg_content_length"] else 0,
-                "hnsw_index_exists": False,  # Mock doesn't use real indexes
-                "ivf_index_exists": False,
-                "recommended_index_threshold": 1000,
-                "index_ready": False,  # Mock doesn't need real indexes
-            }
+        return {
+            "total_memories": total_memories,
+            "memories_with_embeddings": total_memories,
+            "avg_content_length": avg_content_length,
+            "hnsw_index_exists": False,  # Mock doesn't use real indexes
+            "ivf_index_exists": False,
+            "recommended_index_threshold": 1000,
+            "index_ready": False,  # Mock doesn't need real indexes
+        }
 
     async def force_create_index(self) -> bool:
         """Force creation of vector index (mock version - always succeeds)."""
@@ -239,6 +185,6 @@ mock_database = MockDatabase()
 
 async def get_mock_database() -> MockDatabase:
     """Get initialized mock database instance."""
-    if not mock_database.pool:
+    if not mock_database.is_initialized:
         await mock_database.initialize()
     return mock_database
