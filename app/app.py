@@ -109,34 +109,49 @@ async def lifespan(app: FastAPI):
     """Handle application startup and shutdown."""
     logger.info("Starting Second Brain application")
 
-    # Initialize database connection pool
-    database_url = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/secondbrain")
-    pool_config = PoolConfig(min_connections=5, max_connections=20, max_inactive_connection_lifetime=300.0)
+    # Check if using mock database
+    use_mock = os.getenv("USE_MOCK_DATABASE", "false").lower() == "true"
+    
+    if use_mock:
+        logger.info("Using mock database - skipping PostgreSQL initialization")
+        # Initialize mock database
+        from app.database_mock import MockDatabase
+        _mock_db = MockDatabase()
+        logger.info("Mock database initialized")
+    else:
+        # Initialize database connection pool
+        database_url = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/secondbrain")
+        pool_config = PoolConfig(min_connections=5, max_connections=20, max_inactive_connection_lifetime=300.0)
 
-    try:
-        await initialize_pool(database_url, pool_config)
-        logger.info("Database connection pool initialized")
-    except Exception as e:
-        logger.error(f"Failed to initialize database pool: {e}")
-        # Fallback to regular database connection
-        db = await get_database()
-        logger.info("Database initialized (fallback mode)")
+        try:
+            await initialize_pool(database_url, pool_config)
+            logger.info("Database connection pool initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize database pool: {e}")
+            # Fallback to regular database connection
+            db = await get_database()
+            logger.info("Database initialized (fallback mode)")
 
     yield
 
     # Cleanup
-    try:
-        await close_pool()
-        logger.info("Database connection pool closed")
-    except Exception as e:
-        logger.error(f"Error closing database pool: {e}")
-        # Fallback cleanup
+    use_mock = os.getenv("USE_MOCK_DATABASE", "false").lower() == "true"
+    
+    if use_mock:
+        logger.info("Mock database cleanup - no action needed")
+    else:
         try:
-            db = await get_database()
-            await db.close()
-            logger.info("Database closed (fallback mode)")
-        except Exception as cleanup_error:
-            logger.error(f"Error in fallback cleanup: {cleanup_error}")
+            await close_pool()
+            logger.info("Database connection pool closed")
+        except Exception as e:
+            logger.error(f"Error closing database pool: {e}")
+            # Fallback cleanup
+            try:
+                db = await get_database()
+                await db.close()
+                logger.info("Database closed (fallback mode)")
+            except Exception as cleanup_error:
+                logger.error(f"Error in fallback cleanup: {cleanup_error}")
 
     logger.info("Application shutdown complete")
 

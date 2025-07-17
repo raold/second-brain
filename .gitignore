@@ -66,3 +66,7 @@ bfg.jar
 last-pytest*.log
 pip-list.log
 pytest-trace-config.log
+
+# Session and dashboard runtime data
+session_storage/
+dashboard_data/
