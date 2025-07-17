@@ -1,7 +1,5 @@
 # Changelog
 
----
-
 For previous versions, see repository commit history.
 
 ## [1.5.0] - 2025-07-15
