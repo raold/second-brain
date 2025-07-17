@@ -1,9 +1,10 @@
+const { describeIfNotCI } = require('./skip-in-ci');
 jest.setTimeout(20000);
 const { _electron: electron } = require('playwright');
 
 let app, page;
 
-describe('Electron Voice LLM App', () => {
+describeIfNotCI('Electron Voice LLM App', () => {
   beforeAll(async () => {
     app = await electron.launch({ 
       args: ['.', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],

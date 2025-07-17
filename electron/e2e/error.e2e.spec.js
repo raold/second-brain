@@ -1,9 +1,10 @@
+const { describeIfNotCI } = require('./skip-in-ci');
 jest.setTimeout(20000);
 const { _electron: electron } = require('playwright');
 
 let app, page;
 
-describe('Error Handling E2E', () => {
+describeIfNotCI('Error Handling E2E', () => {
   beforeAll(async () => {
     app = await electron.launch({ 
       args: ['.', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],

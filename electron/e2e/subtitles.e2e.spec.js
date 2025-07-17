@@ -1,9 +1,10 @@
+const { describeIfNotCI } = require('./skip-in-ci');
 jest.setTimeout(20000);
 const { _electron: electron } = require('playwright');
 
 let app, page;
 
-describe('Subtitles and Audio E2E', () => {
+describeIfNotCI('Subtitles and Audio E2E', () => {
   beforeAll(async () => {
     // Launch app first
     app = await electron.launch({
