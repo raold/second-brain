@@ -193,9 +193,12 @@ class ProductionTester:
             print("❌ System needs attention before production deployment")
             return False
     
-    def save_results(self, filename: str = "production_test_results.json"):
+    def save_results(self, filename: str = "results/production_test_results.json"):
         """Save test results to file"""
         results_file = Path(filename)
+        
+        # Ensure results directory exists
+        results_file.parent.mkdir(parents=True, exist_ok=True)
         
         summary = {
             "timestamp": datetime.now().isoformat(),

@@ -20,9 +20,14 @@ router = APIRouter(tags=["Health"])
     summary="Health Check",
     description="Check system health and version information"
 )
-async def health_check():
+async def health_check(db=Depends(get_db_instance)):
     """Health check endpoint."""
     try:
+        # Set the database in the service factory before getting the health service
+        from app.services.service_factory import get_service_factory
+        factory = get_service_factory()
+        factory.set_database(db)
+        
         health_service = get_health_service()
         health_status = await health_service.get_health_status()
         
@@ -47,6 +52,11 @@ async def health_check():
 async def get_status(db=Depends(get_db_instance)):
     """Get database and index status for performance monitoring."""
     try:
+        # Set the database in the service factory before getting the health service
+        from app.services.service_factory import get_service_factory
+        factory = get_service_factory()
+        factory.set_database(db)
+        
         health_service = get_health_service()
         system_status = await health_service.get_system_status()
         
@@ -70,6 +80,11 @@ async def get_status(db=Depends(get_db_instance)):
 async def run_diagnostics(db=Depends(get_db_instance)):
     """Run system diagnostics and return results."""
     try:
+        # Set the database in the service factory before getting the health service
+        from app.services.service_factory import get_service_factory
+        factory = get_service_factory()
+        factory.set_database(db)
+        
         health_service = get_health_service()
         diagnostics = await health_service.run_diagnostics()
         
@@ -96,6 +111,11 @@ async def run_diagnostics(db=Depends(get_db_instance)):
 async def get_performance_metrics(db=Depends(get_db_instance)):
     """Get performance metrics."""
     try:
+        # Set the database in the service factory before getting the health service
+        from app.services.service_factory import get_service_factory
+        factory = get_service_factory()
+        factory.set_database(db)
+        
         health_service = get_health_service()
         metrics = await health_service.get_performance_metrics()
         

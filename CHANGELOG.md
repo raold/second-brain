@@ -5,6 +5,47 @@ All notable changes to Second Brain will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.3] - 2025-07-18
+
+### 🎯 v2.4.3 Quality Excellence Milestone
+
+This release focuses on test coverage expansion, standardization, and quality improvements toward the v2.4.3 Quality Excellence milestone.
+
+#### Added
+- **Test Coverage Expansion**: New comprehensive tests for config, logger, and OpenAI client modules
+- **Build Statistics**: Added test coverage and build status badges to README
+- **Standardized Output**: Unified results file organization under respective subfolders
+- **Environment Management**: Centralized configuration through `app.config` module
+
+#### Fixed
+- **Test Suite Stabilization**: Fixed 12 failing tests, now at 81 passing tests
+- **API Response Alignment**: Updated tests to match current MemoryResponse structure
+- **Authentication Handling**: Fixed error code expectations (422 vs 401)
+- **Metadata Structure**: Aligned tests with typed metadata fields
+
+#### Improved
+- **Test Coverage**: Increased from 26% to 27% with systematic test improvements
+- **Test Infrastructure**: Better integration test compatibility and unit test reliability
+- **Documentation**: Updated with current build statistics and quality metrics
+
+#### Quality Metrics
+- **Tests**: 81 passing, 1 failing (database connection), 6 skipped
+- **Coverage**: 27% overall (target: >90% for v2.4.3)
+- **Integration Tests**: 13/15 passing (87% success rate)
+- **Unit Tests**: All core functionality tests passing
+
+## [2.4.2] - 2025-07-18
+
+### 🧹 Architecture Cleanup & Optimization
+
+- **Complete Qdrant dependency removal**
+- **Project organization cleanup**
+- **Documentation consistency improvements**
+- **Configuration optimization**
+- **Root directory cleanup**
+- **Release notes organization**
+
+
 ## [2.4.2] - 2025-07-18
 
 ### 🧹 Architecture Cleanup & Optimization

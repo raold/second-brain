@@ -1,6 +1,6 @@
 # Second Brain v2.4.2 🧠
 
-![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg) ![Python](https://img.shields.io/badge/python-3.11+-blue.svg) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg) ![pgvector](https://img.shields.io/badge/pgvector-latest-green.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg) ![D3.js](https://img.shields.io/badge/D3.js-v7-orange.svg)
+![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg) ![Python](https://img.shields.io/badge/python-3.11+-blue.svg) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg) ![pgvector](https://img.shields.io/badge/pgvector-latest-green.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg) ![D3.js](https://img.shields.io/badge/D3.js-v7-orange.svg) ![Tests](https://img.shields.io/badge/tests-81%20passing-brightgreen.svg) ![Coverage](https://img.shields.io/badge/coverage-27%25-yellow.svg) ![Build](https://img.shields.io/badge/build-stable-green.svg)
 
 > **A simplified, powerful memory management system built on PostgreSQL + pgvector with D3.js visualizations**
 

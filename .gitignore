@@ -47,6 +47,7 @@ __pycache__/
 .Python
 venv/
 .venv/
+.venv-wsl/
 
 # Distribution
 dist/

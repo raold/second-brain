@@ -166,8 +166,10 @@ class HealthService:
     async def _get_database_status(self) -> Dict[str, Any]:
         """Get database connection and health status."""
         try:
-            # Check if using mock database
-            is_mock = isinstance(self.db, MockDatabase)
+            # Check if using mock database - use class name to be more robust
+            is_mock = (isinstance(self.db, MockDatabase) or 
+                      self.db.__class__.__name__ == 'MockDatabase' or
+                      str(type(self.db)).find('MockDatabase') != -1)
             
             if is_mock:
                 return {
