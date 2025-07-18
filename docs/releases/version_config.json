@@ -1,0 +1,195 @@
+{
+  "current_stable": "2.4.1",
+  "current_development": "2.4.2",
+  "branch_strategy": "develop->testing->main",
+  "supported_workflows": [
+    "develop->testing->main",
+    "testing->main",
+    "develop->main"
+  ],
+  "release_workflow": {
+    "development": "develop branch (experimental features)",
+    "integration": "testing branch (feature integration)",
+    "pr_review": "testing -> main PR (release preparation)",
+    "release": "main branch + git tag (production)",
+    "github_release": "optional"
+  },
+  "versions": {
+    "2.4.2": {
+      "status": "development",
+      "title": "Architecture Cleanup & Optimization",
+      "focus": "Cleanup",
+      "release_date": "2025-07-18",
+      "changes": [
+        "Complete Qdrant dependency removal",
+        "Project organization cleanup",
+        "Documentation consistency improvements",
+        "Configuration optimization",
+        "Root directory cleanup",
+        "Release notes organization"
+      ],
+      "breaking_changes": [],
+      "commit_message": "Release v2.4.2: Architecture cleanup and dependency optimization",
+      "pr_testing": true,
+      "git_workflow": "testing->main->release",
+      "deployment_notes": "Clean PostgreSQL-only deployment, no external dependencies",
+      "migration_required": false
+    },
+    "2.4.1": {
+      "status": "stable",
+      "title": "Documentation & Quality Improvements",
+      "focus": "Quality",
+      "release_date": "2025-07-18",
+      "changes": [
+        "Documentation improvements",
+        "Quality enhancements",
+        "Licensing fixes",
+        "Badge accuracy",
+        "Version consistency",
+        "Professional standards"
+      ],
+      "breaking_changes": [],
+      "commit_message": "Release v2.4.1: Documentation and quality improvements",
+      "pr_testing": false,
+      "git_workflow": "direct->main",
+      "deployment_notes": "Standard deployment, no configuration changes",
+      "migration_required": false
+    },
+    "2.4.0": {
+      "status": "released",
+      "title": "Bulk Operations & Performance",
+      "focus": "Performance",
+      "release_date": "2025-07-15",
+      "changes": [
+        "Bulk memory operations",
+        "Performance optimizations",
+        "Advanced analytics",
+        "Batch processing"
+      ],
+      "breaking_changes": [],
+      "commit_message": "Release v2.4.0: Bulk operations and performance improvements",
+      "pr_testing": true,
+      "git_workflow": "testing->main->release",
+      "deployment_notes": "Enhanced performance, backward compatible",
+      "migration_required": false
+    },
+    "2.3.0": {
+      "status": "released",
+      "title": "Organization & Structure",
+      "focus": "Organization",
+      "release_date": "2025-06-20",
+      "changes": [
+        "Code organization improvements",
+        "Project structure refinements",
+        "Development workflow enhancements"
+      ],
+      "breaking_changes": [],
+      "commit_message": "Release v2.3.0: Repository organization and structure improvements",
+      "pr_testing": true,
+      "git_workflow": "testing->main->release",
+      "deployment_notes": "Repository restructure, no runtime changes",
+      "migration_required": false
+    },
+    "2.2.0": {
+      "status": "released",
+      "title": "Visualization & Graphs",
+      "focus": "Visualization",
+      "release_date": "2025-05-15",
+      "changes": [
+        "Interactive memory graphs",
+        "D3.js visualizations",
+        "Relationship mapping"
+      ],
+      "breaking_changes": [],
+      "commit_message": "Release v2.2.0: Visualization and graph features",
+      "pr_testing": true,
+      "git_workflow": "testing->main->release",
+      "deployment_notes": "New dashboard features, enhanced UI",
+      "migration_required": false
+    },
+    "2.1.0": {
+      "status": "released",
+      "title": "Cognitive Classification",
+      "focus": "Cognitive",
+      "release_date": "2024-12-15",
+      "changes": [
+        "Memory type classification",
+        "Cognitive patterns",
+        "Enhanced categorization"
+      ],
+      "breaking_changes": [],
+      "commit_message": "Release v2.1.0: Cognitive classification system",
+      "pr_testing": true,
+      "git_workflow": "testing->main->release",
+      "deployment_notes": "Enhanced memory classification capabilities",
+      "migration_required": false
+    },
+    "2.0.0": {
+      "status": "released",
+      "title": "PostgreSQL Foundation",
+      "focus": "Foundation",
+      "release_date": "2024-11-01",
+      "changes": [
+        "PostgreSQL + pgvector architecture",
+        "Complete system redesign",
+        "Vector similarity search",
+        "Simplified deployment"
+      ],
+      "breaking_changes": [
+        "Complete architecture change from v1.x",
+        "Database migration required",
+        "API endpoints restructured"
+      ],
+      "commit_message": "Release v2.0.0: Major PostgreSQL foundation release",
+      "pr_testing": true,
+      "git_workflow": "testing->main->release",
+      "deployment_notes": "Major release - requires full migration from v1.x",
+      "migration_required": true
+    }
+  },
+  "git_commands": {
+    "testing_to_main": [
+      "git add .",
+      "git commit -m \"{commit_message}\"",
+      "git push origin testing",
+      "gh pr create --title \"Release v{version}\" --body \"See RELEASE_NOTES_v{version}.md\" --base main --head testing"
+    ],
+    "after_pr_merge": [
+      "git checkout main",
+      "git pull origin main",
+      "git tag -a v{version} -m \"Release v{version}: {title}\"",
+      "git push origin v{version}"
+    ],
+    "direct_main": [
+      "git add .",
+      "git commit -m \"{commit_message}\"",
+      "git push origin main",
+      "git tag -a v{version} -m \"Release v{version}: {title}\"",
+      "git push origin v{version}"
+    ],
+    "github_release": [
+      "gh release create v{version} --title \"Second Brain v{version}\" --notes-file docs/releases/RELEASE_NOTES_v{version}.md"
+    ]
+  },
+  "file_templates": {
+    "release_notes": "docs/releases/RELEASE_NOTES_v{version}.md",
+    "migration_guide": "docs/releases/MIGRATION_v{version}.md",
+    "changelog_entry": "CHANGELOG.md"
+  },
+  "files_to_update": [
+    "app/version.py",
+    "README.md",
+    "CHANGELOG.md",
+    "PROJECT_STATUS.md",
+    "docs/releases/README.md"
+  ],
+  "validation_checklist": [
+    "All tests pass",
+    "Documentation links work",
+    "Version consistency across files",
+    "Release notes complete",
+    "Migration guide (if needed)",
+    "Deployment tested",
+    "Performance benchmarks"
+  ]
+}

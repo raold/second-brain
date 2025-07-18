@@ -61,9 +61,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# Global mock database instance for testing
-_mock_db_instance = None
-
 # Security configuration
 security_config = SecurityConfig(
     max_requests_per_minute=100,  # Increased for better UX
@@ -79,40 +76,13 @@ security_config = SecurityConfig(
 security_manager = SecurityManager(security_config)
 
 
-# Database instance getter
-async def get_db_instance():
-    """Get database instance (mock or real)."""
-    global _mock_db_instance
-    
-    if os.getenv("USE_MOCK_DATABASE", "false").lower() == "true":
-        if _mock_db_instance is None:
-            logger.info("Creating mock database instance for testing")
-            _mock_db_instance = MockDatabase()
-            await _mock_db_instance.initialize()
-        return _mock_db_instance
-    else:
-        return await get_database()
-
+# Import shared utilities
+from app.shared import get_db_instance, verify_api_key
 
 # Legacy search request model (keeping for backward compatibility)
 class SearchRequest(BaseModel):
     query: str = Field(..., description="Search query")
     limit: int | None = Field(default=10, ge=1, le=100, description="Maximum results")
-
-
-# Authentication
-async def verify_api_key(api_key: str = Query(..., alias="api_key")):
-    """Simple API key authentication."""
-    # Allow bypassing authentication in test mode
-    if os.getenv("USE_MOCK_DATABASE", "false").lower() == "true":
-        valid_tokens = ["test-key-1", "test-key-2"]
-    else:
-        valid_tokens = os.getenv("API_TOKENS", "").split(",")
-        valid_tokens = [token.strip() for token in valid_tokens if token.strip()]
-
-    if not valid_tokens or api_key not in valid_tokens:
-        raise HTTPException(status_code=401, detail="Invalid API key")
-    return api_key
 
 
 # Lifespan management
@@ -179,8 +149,9 @@ async def lifespan(app: FastAPI):
 
 
 # Create FastAPI app
+from app.version import __version__
 app = FastAPI(
-    title="Second Brain API", description="Simple memory storage and search system", version="2.0.0", lifespan=lifespan
+    title="Second Brain API", description="Simple memory storage and search system", version=__version__, lifespan=lifespan
 )
 
 # Setup OpenAPI documentation

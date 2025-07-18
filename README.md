@@ -1,14 +1,12 @@
-# Second Brain v2.4.1 🧠
+# Second Brain v2.4.2 🧠
 
 ![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg) ![Python](https://img.shields.io/badge/python-3.11+-blue.svg) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg) ![pgvector](https://img.shields.io/badge/pgvector-latest-green.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg) ![D3.js](https://img.shields.io/badge/D3.js-v7-orange.svg)
 
 > **A simplified, powerful memory management system built on PostgreSQL + pgvector with D3.js visualizations**
 
-![System Architecture](docs/system_architecture.png)
-
 ## 🎯 Architecture Overview
 
-Second Brain v2.4.1 represents a **focused, simplified architecture** centered around PostgreSQL with pgvector extension. This design prioritizes:
+Second Brain v2.4.2 represents a **focused, simplified architecture** centered around PostgreSQL with pgvector extension. This design prioritizes:
 
 - **🗄️ PostgreSQL at the Center**: Single, robust database with native vector support
 - **⚡ pgvector Integration**: Built-in semantic similarity search
@@ -45,8 +43,14 @@ Second Brain v2.4.1 represents a **focused, simplified architecture** centered a
 
 ### 1. Clone and Setup
 ```bash
-git clone https://github.com/your-org/second-brain.git
+git clone https://github.com/raold/second-brain.git
 cd second-brain
+
+# For latest features (recommended for development):
+git checkout develop
+
+# For stable release:
+git checkout main
 ```
 
 ### 2. Environment Configuration
@@ -335,10 +339,13 @@ docker-compose pull && docker-compose up -d
 
 ## 📚 Documentation
 
-- **[Architecture Guide](docs/ARCHITECTURE.md)**: Detailed system design
+- **[Architecture Guide](docs/architecture/ARCHITECTURE.md)**: Detailed system design
 - **[API Documentation](http://localhost:8000/docs)**: Interactive OpenAPI docs
 - **[Database Schema](init.sql)**: Complete database setup
 - **[Docker Guide](docker-compose.yml)**: Container configuration
+- **[Release Notes](docs/releases/)**: Version history and changes
+- **[Development Guide](docs/development/)**: Development workflow
+- **[User Guide](docs/user/)**: End-user documentation
 
 ## 🤝 Contributing
 
@@ -368,4 +375,4 @@ This project is licensed under the AGPL v3 License - see the [LICENSE](LICENSE) 
 
 ---
 
-**Second Brain v2.4.1** - Simplified, powerful, and production-ready memory management. 🧠✨
+**Second Brain v2.4.2** - Simplified, powerful, and production-ready memory management. 🧠✨

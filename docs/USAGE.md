@@ -1,7 +1,7 @@
-# Second Brain v2.3.0 - Usage Guide
+# Second Brain v2.4.2 - Usage Guide
 
 ## Overview
-Second Brain v2.3.0 is a simplified AI memory system using PostgreSQL with pgvector for semantic search. This guide covers installation, configuration, and usage.
+Second Brain v2.4.2 is a simplified AI memory system using PostgreSQL with pgvector for semantic search. This guide covers installation, configuration, and usage.
 
 ## Quick Start
 
@@ -10,6 +10,9 @@ Second Brain v2.3.0 is a simplified AI memory system using PostgreSQL with pgvec
 # Clone repository
 git clone https://github.com/raold/second-brain.git
 cd second-brain
+
+# Recommended: Start with develop branch for latest features
+git checkout develop
 
 # Install dependencies
 pip install -r requirements-minimal.txt
@@ -31,7 +34,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 AUTH_TOKEN=your_secure_auth_token_here
 
 # Optional
-HOST=v2.3.0.0
+HOST=0.0.0.0
 PORT=8000
 ```
 
@@ -44,10 +47,13 @@ python setup_db.py
 ### 4. Run Application
 ```bash
 # Start the server
-python -m app.app
+python -m app.main
 
 # Or with uvicorn
-uvicorn app.app:app --reload
+uvicorn app.main:app --reload
+
+# Or using Docker (recommended for production)
+docker-compose up -d
 ```
 
 ## API Usage
@@ -233,7 +239,7 @@ python -c "from app.database import Database; import asyncio; asyncio.run(Databa
 | `DATABASE_URL` | Yes | None | PostgreSQL connection string |
 | `OPENAI_API_KEY` | Yes | None | OpenAI API key for embeddings |
 | `AUTH_TOKEN` | Yes | None | Authentication token |
-| `HOST` | No | `v2.3.0.0` | Server host |
+| `HOST` | No | `0.0.0.0` | Server host |
 | `PORT` | No | `8000` | Server port |
 
 ### Database Configuration

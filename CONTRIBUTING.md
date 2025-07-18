@@ -39,13 +39,76 @@ cp config/environments/env.example .env
 # Edit .env with your configuration
 
 # Initialize database
-python scripts/setup/setup_database.py
+python scripts/setup_database.py
 
-# Run tests
-pytest tests/ -v
+# Run tests using version manager
+python scripts/version_manager.py test all
 
 # Start development server
-uvicorn app.app:app --reload
+uvicorn app.main:app --reload
+```
+
+## 🌿 Development Workflow
+
+### Branch Strategy: develop → testing → main
+
+We use a three-branch development strategy:
+
+- **`develop`**: Experimental features and active development
+- **`testing`**: Feature integration and release preparation  
+- **`main`**: Production-ready code with automated CI/CD
+
+### Contributing Process
+
+#### 1. Start Development
+```bash
+# Get latest develop branch
+git checkout develop
+git pull origin develop
+
+# Create feature branch (optional for larger features)
+git checkout -b feature/your-feature-name
+# OR work directly on develop for smaller changes
+```
+
+#### 2. Development and Testing
+```bash
+# Run tests frequently during development
+python scripts/version_manager.py test unit      # Fast feedback
+python scripts/version_manager.py test integration  # API testing
+
+# Commit changes following conventional commits
+git commit -m "feat: add new memory search algorithm"
+```
+
+#### 3. Integration (develop → testing)
+```bash
+# When feature is ready for integration
+git checkout testing
+git pull origin testing
+git merge develop  # or feature branch
+
+# Run full test suite
+python scripts/version_manager.py test all
+git push origin testing
+```
+
+#### 4. Release (testing → main)
+- Create PR from testing → main
+- Automatic CI/CD runs full test suite
+- Manual review and approval required
+- After merge, automatic deployment to production
+
+### Quick Development Setup
+```bash
+# One-command setup for development
+git clone https://github.com/raold/second-brain.git
+cd second-brain
+git checkout develop
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env with your settings
+docker-compose up postgres -d
 ```
 
 ## 📁 Repository Structure
@@ -78,6 +141,16 @@ second-brain/
 
 ### Running Tests
 ```bash
+# Using the centralized version manager (recommended)
+python scripts/version_manager.py test unit         # Unit tests only
+python scripts/version_manager.py test integration  # Integration tests only
+python scripts/version_manager.py test all          # Full test suite with coverage
+
+# Direct pytest usage
+pytest tests/unit/ -v                    # Unit tests
+pytest tests/integration/ -v             # Integration tests
+pytest tests/ -v --cov=app               # All tests with coverage
+```
 # All tests
 pytest tests/ -v
 
@@ -232,16 +305,15 @@ Any other relevant information
 ## 📋 Release Process
 
 ### Version Management
-- **Semantic Versioning**: MAJOR.MINOR.PATCH
-- **Automated Bumping**: Use `scripts/version_bump.py`
-- **Changelog**: Update CHANGELOG.md for all releases
+- **Configuration-Driven**: Use centralized `docs/releases/version_config.json`
+- **Automated Release Preparation**: Use `scripts/version_manager.py`
+- **Professional Documentation**: Auto-generated release notes
 
 ### Release Steps
-1. **Update Version**: `python scripts/version_bump.py [patch|minor|major]`
-2. **Update Changelog**: Document changes in CHANGELOG.md
-3. **Create Tag**: `git tag v2.0.x`
-4. **Push**: `git push origin main --tags`
-5. **GitHub Release**: Create release notes
+1. **Configure Version**: Add version info to `docs/releases/version_config.json`
+2. **Prepare Release**: `python scripts/version_manager.py prepare X.Y.Z`
+3. **Execute Git Commands**: Follow the generated workflow commands
+4. **GitHub Release**: Use the auto-generated release notes
 
 ## 🎯 Areas for Contribution
 

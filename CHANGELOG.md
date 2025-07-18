@@ -5,6 +5,40 @@ All notable changes to Second Brain will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.2] - 2025-07-18
+
+### 🧹 Architecture Cleanup & Optimization
+
+- **Complete Qdrant dependency removal**
+- **Project organization cleanup**
+- **Documentation consistency improvements**
+- **Configuration optimization**
+- **Root directory cleanup**
+- **Release notes organization**
+
+
+## [2.4.2] - 2025-07-18
+
+### 🧹 Architecture Cleanup & Documentation
+
+This release focuses on finalizing the simplified PostgreSQL-centered architecture by removing vestigial dependencies and organizing documentation.
+
+#### Removed
+- **Qdrant Dependencies**: Complete removal of unused qdrant-client dependency
+- **Legacy Python Files**: Cleaned up empty test files and quick test scripts from root directory
+- **Vestigial Configuration**: Removed unused Qdrant environment variables and configuration
+
+#### Improved
+- **Documentation Organization**: Centralized release notes in `docs/releases/` directory
+- **Directory Structure**: Professional organization with logical grouping
+- **README Quality**: Fixed corruption and ensured all links work correctly
+- **Version Consistency**: Updated all files to reflect v2.4.2
+
+#### Documentation
+- **Release Management**: Complete versioning system with organized release notes
+- **Architecture Documentation**: Consolidated development summaries and structural docs
+- **Link Validation**: Fixed broken documentation links and updated paths
+
 ## [2.4.1] - 2024-01-15
 
 ### 🚀 Major Architecture Simplification

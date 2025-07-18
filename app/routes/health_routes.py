@@ -8,7 +8,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from app.docs import HealthResponse, StatusResponse
 from app.services.service_factory import get_health_service
-from app.app import get_db_instance, verify_api_key
+from app.shared import get_db_instance, verify_api_key
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Health"])

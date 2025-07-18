@@ -21,14 +21,6 @@ We use a multi-environment approach with separate configurations for:
 | `LOG_PATH` | Log file path | ❌ | `logs/processor.log` |
 | `LOG_LEVEL` | Logging level | ❌ | `INFO` |
 
-### Qdrant Configuration
-
-| Variable | Description | Required | Example |
-|----------|-------------|----------|---------|
-| `QDRANT_HOST` | Qdrant server hostname | ❌ | `localhost` |
-| `QDRANT_PORT` | Qdrant server port | ❌ | `6333` |
-| `QDRANT_COLLECTION_NAME` | Collection name | ❌ | `memories` |
-
 ### Environment-Specific Variables
 
 | Variable | Description | Environment | Example |
@@ -80,9 +72,6 @@ API_TOKENS=your_token_here
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 LOG_PATH=logs/processor.log
 LOG_LEVEL=INFO
-QDRANT_HOST=localhost
-QDRANT_PORT=6333
-QDRANT_COLLECTION_NAME=memories
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=memories
@@ -105,9 +94,6 @@ environment:
   OPENAI_EMBEDDING_MODEL: text-embedding-3-small
   LOG_PATH: logs/processor-staging.log
   LOG_LEVEL: INFO
-  QDRANT_HOST: qdrant-staging
-  QDRANT_PORT: 6333
-  QDRANT_COLLECTION_NAME: memories-staging
 ```
 
 ### Production
@@ -121,9 +107,6 @@ environment:
   OPENAI_EMBEDDING_MODEL: text-embedding-3-small
   LOG_PATH: logs/processor-production.log
   LOG_LEVEL: WARNING
-  QDRANT_HOST: qdrant-production
-  QDRANT_PORT: 6333
-  QDRANT_COLLECTION_NAME: memories-production
 ```
 
 ## 🔄 CI/CD Pipeline Integration

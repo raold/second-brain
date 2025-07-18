@@ -30,12 +30,12 @@ class MockDatabase:
     async def store_memory(
         self, 
         content: str, 
-        memory_type: str = "semantic",
+        metadata: dict[str, Any] | None = None,
+        memory_type: str | None = None,
         semantic_metadata: dict[str, Any] | None = None,
         episodic_metadata: dict[str, Any] | None = None,
         procedural_metadata: dict[str, Any] | None = None,
-        importance_score: float = 0.5,
-        metadata: dict[str, Any] | None = None
+        importance_score: float = 0.5
     ) -> str:
         """Store a memory in mock storage with cognitive metadata."""
         if not self.is_initialized:
@@ -43,6 +43,12 @@ class MockDatabase:
 
         memory_id = str(uuid.uuid4())
         now = datetime.now().isoformat()
+
+        # Extract memory type from metadata if not provided
+        if metadata and "type" in metadata:
+            memory_type = metadata["type"]
+        elif memory_type is None:
+            memory_type = "semantic"
 
         # Mock embedding generation (simple text-based similarity)
         mock_embedding = self._generate_mock_embedding(content)
@@ -78,6 +84,11 @@ class MockDatabase:
             memory["access_count"] += 1
             memory["last_accessed"] = datetime.now().isoformat()
             
+            # Merge memory_type into metadata for consistency with expected test structure
+            metadata = memory["metadata"].copy()
+            if "type" not in metadata and memory.get("memory_type"):
+                metadata["type"] = memory["memory_type"]
+            
             return {
                 "id": memory["id"],
                 "content": memory["content"],
@@ -89,20 +100,18 @@ class MockDatabase:
                 "episodic_metadata": memory["episodic_metadata"],
                 "procedural_metadata": memory["procedural_metadata"],
                 "consolidation_score": memory["consolidation_score"],
-                "metadata": memory["metadata"],
+                "metadata": metadata,
                 "created_at": memory["created_at"],
                 "updated_at": memory["updated_at"],
             }
         return None
 
-    async def search_memories(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
-        """Search memories using mock similarity (legacy method)."""
+    async def search_memories(self, query: str, limit: int = 10, memory_types: list[str] | None = None) -> list[dict[str, Any]]:
+        """Search memories using mock similarity with optional memory type filtering."""
         return await self.contextual_search(
-            query=query,
-            limit=limit,
-            memory_types=None,
-            importance_threshold=None,
-            timeframe=None
+            query=query, 
+            limit=limit, 
+            memory_types=memory_types
         )
 
     async def contextual_search(
@@ -158,6 +167,11 @@ class MockDatabase:
             memory["access_count"] += 1
             memory["last_accessed"] = datetime.now().isoformat()
 
+            # Merge memory_type into metadata for consistency
+            metadata = memory["metadata"].copy()
+            if "type" not in metadata and memory.get("memory_type"):
+                metadata["type"] = memory["memory_type"]
+
             results.append(
                 {
                     "id": memory["id"],
@@ -170,7 +184,7 @@ class MockDatabase:
                     "episodic_metadata": memory["episodic_metadata"],
                     "procedural_metadata": memory["procedural_metadata"],
                     "consolidation_score": memory["consolidation_score"],
-                    "metadata": memory["metadata"],
+                    "metadata": metadata,
                     "created_at": memory["created_at"],
                     "updated_at": memory["updated_at"],
                     "similarity": vector_similarity,
@@ -220,7 +234,7 @@ class MockDatabase:
                 "episodic_metadata": memory["episodic_metadata"],
                 "procedural_metadata": memory["procedural_metadata"],
                 "consolidation_score": memory["consolidation_score"],
-                "metadata": memory["metadata"],
+                "metadata": {**memory["metadata"], "type": memory.get("memory_type", "semantic")},
                 "created_at": memory["created_at"],
                 "updated_at": memory["updated_at"],
             }

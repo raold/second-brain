@@ -15,7 +15,6 @@ For local development, create a `.env` file in the project root:
 ```bash
 # .env (DO NOT COMMIT THIS FILE)
 OPENAI_API_KEY=your_actual_api_key_here
-QDRANT_API_KEY=your_qdrant_key_if_needed
 POSTGRES_PASSWORD=your_postgres_password
 ```
 
@@ -44,7 +43,6 @@ The application loads these automatically using `python-dotenv` or similar.
 4. Add each secret with its name and value:
    - `OPENAI_API_KEY`
    - `POSTGRES_PASSWORD`
-   - `QDRANT_API_KEY` (if using cloud Qdrant)
    - Any other sensitive values
 
 ### 2. Reference Secrets in Workflows

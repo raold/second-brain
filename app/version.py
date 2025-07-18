@@ -10,8 +10,8 @@ from typing import Dict, Any, Optional, Tuple
 
 
 # Core version information
-__version__ = "2.4.1"
-__version_info__ = (2, 4, 1)
+__version__ = "2.4.2"
+__version_info__ = (2, 4, 2)
 __build__ = "stable"
 __release_date__ = "2025-07-18"
 
@@ -34,8 +34,8 @@ def get_version_info() -> Dict[str, Any]:
         "build": __build__,
         "release_date": __release_date__,
         "build_timestamp": __build_timestamp__,
-        "git_commit": __git_commit__,
-        "environment": __environment__,
+        "git_commit": os.getenv("GIT_COMMIT", "unknown"),  # Read dynamically for testing
+        "environment": os.getenv("ENVIRONMENT", "development"),  # Read dynamically for testing
         "version_string": f"v{__version__}",
         "display_name": f"Second Brain v{__version__}",
         "codename": get_current_codename(),
@@ -120,7 +120,7 @@ def get_version_for_testing() -> Dict[str, Any]:
         "version": __version__,
         "version_tuple": __version_info__,
         "is_stable": __build__ == "stable",
-        "environment": __environment__,
+        "environment": os.getenv("ENVIRONMENT", "development"),  # Read dynamically for testing
         "build_date": __release_date__
     }
 
@@ -235,8 +235,22 @@ def get_cognitive_roadmap() -> Dict[str, Dict[str, Any]]:
                 "professional_standards",
                 "license_compliance"
             ],
-            "status": "current",
+            "status": "released",
             "release_date": "2025-07-18",
+        },
+        
+        "v2.4.2": {
+            "codename": "Testing",
+            "focus": "Legacy Cleanup & Testing Enhancement",
+            "features": [
+                "legacy_version_bump_removal",
+                "centralized_version_management",
+                "enhanced_testing_framework",
+                "pr_validation_automation",
+                "production_readiness_validation"
+            ],
+            "status": "current",
+            "release_date": "2025-07-19",
         },
         
         "v2.5.0": {

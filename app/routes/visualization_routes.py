@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from app.database import get_database
 from app.memory_visualization import MemoryVisualizationEngine, AdvancedSearchEngine
-from app.security import verify_api_key
+from app.shared import verify_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +26,13 @@ class GraphRequest(BaseModel):
     time_range_days: Optional[int] = Field(None, gt=0, description="Include memories from last N days")
     max_nodes: Optional[int] = Field(500, gt=0, le=2000, description="Maximum number of nodes")
     include_relationships: bool = Field(True, description="Include similarity relationships")
-    cluster_method: str = Field("semantic", regex="^(kmeans|dbscan|semantic)$", description="Clustering algorithm")
+    cluster_method: str = Field("semantic", pattern="^(kmeans|dbscan|semantic)$", description="Clustering algorithm")
 
 
 class AdvancedSearchRequest(BaseModel):
     """Request model for advanced search."""
     query: str = Field(..., min_length=1, max_length=1000, description="Search query")
-    search_type: str = Field("hybrid", regex="^(semantic|temporal|importance|hybrid)$")
+    search_type: str = Field("hybrid", pattern="^(semantic|temporal|importance|hybrid)$")
     memory_types: Optional[List[str]] = Field(None, description="Filter by memory types")
     importance_range: Optional[List[float]] = Field(None, description="Min/max importance scores [min, max]")
     date_range: Optional[List[str]] = Field(None, description="ISO date strings [start, end]")
@@ -480,7 +480,7 @@ async def get_memory_relationships(
 
 @router.get("/clusters")
 async def get_memory_clusters(
-    cluster_method: str = Query("semantic", regex="^(kmeans|dbscan|semantic)$"),
+    cluster_method: str = Query("semantic", pattern="^(kmeans|dbscan|semantic)$"),
     memory_types: Optional[str] = Query(None, description="Comma-separated memory types"),
     min_cluster_size: int = Query(3, gt=1),
     api_key: str = Query(None, description="API key for authentication")

@@ -26,7 +26,7 @@ from ..bulk_memory_operations_advanced import (
     get_advanced_bulk_operations, AdvancedBulkOperations, BulkUpdateOperation,
     BulkDeleteOperation, ExportConfig, ImportConfig, ExportFormat, ImportStrategy
 )
-from ..security import get_api_key
+from ..shared import verify_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ router = APIRouter(prefix="/bulk", tags=["bulk-operations"])
 class BulkMemoryItemRequest(BaseModel):
     """Request model for bulk memory items."""
     content: str = Field(..., min_length=1, max_length=50000, description="Memory content")
-    memory_type: str = Field("semantic", regex="^(semantic|episodic|procedural)$", description="Type of memory")
+    memory_type: str = Field("semantic", pattern="^(semantic|episodic|procedural)$", description="Type of memory")
     importance_score: float = Field(0.5, ge=0.0, le=1.0, description="Importance score between 0 and 1")
     semantic_metadata: Optional[Dict[str, Any]] = Field(None, description="Semantic-specific metadata")
     episodic_metadata: Optional[Dict[str, Any]] = Field(None, description="Episodic-specific metadata")
@@ -52,7 +52,7 @@ class BulkInsertRequest(BaseModel):
     """Request model for bulk insert operations."""
     items: List[BulkMemoryItemRequest] = Field(..., min_items=1, max_items=10000, description="Memory items to insert")
     batch_size: int = Field(1000, ge=1, le=5000, description="Batch size for processing")
-    validation_level: str = Field("standard", regex="^(minimal|standard|strict|paranoid)$", description="Validation strictness")
+    validation_level: str = Field("standard", pattern="^(minimal|standard|strict|paranoid)$", description="Validation strictness")
     enable_rollback: bool = Field(True, description="Enable transaction rollback on failure")
     parallel_workers: int = Field(4, ge=1, le=16, description="Number of parallel workers")
 
@@ -79,7 +79,7 @@ class BulkDeleteRequest(BaseModel):
 class ExportRequest(BaseModel):
     """Request model for export operations."""
     filter_criteria: Optional[Dict[str, Any]] = Field(None, description="Criteria to filter memories for export")
-    format: str = Field("json", regex="^(json|csv|jsonl|pickle|xml)$", description="Export format")
+    format: str = Field("json", pattern="^(json|csv|jsonl|pickle|xml)$", description="Export format")
     include_embeddings: bool = Field(False, description="Include vector embeddings in export")
     include_metadata: bool = Field(True, description="Include metadata in export")
     compress: bool = Field(True, description="Compress the export file")
@@ -88,9 +88,9 @@ class ExportRequest(BaseModel):
 
 class ImportRequest(BaseModel):
     """Request model for import operations."""
-    format: str = Field("json", regex="^(json|csv|jsonl|pickle)$", description="Import format")
-    strategy: str = Field("skip", regex="^(skip|update|replace|append)$", description="Duplicate handling strategy")
-    validation_level: str = Field("standard", regex="^(minimal|standard|strict|paranoid)$", description="Validation strictness")
+    format: str = Field("json", pattern="^(json|csv|jsonl|pickle)$", description="Import format")
+    strategy: str = Field("skip", pattern="^(skip|update|replace|append)$", description="Duplicate handling strategy")
+    validation_level: str = Field("standard", pattern="^(minimal|standard|strict|paranoid)$", description="Validation strictness")
     auto_detect_format: bool = Field(True, description="Auto-detect file format")
     encoding: str = Field("utf-8", description="Text encoding")
     delimiter: str = Field(",", description="CSV delimiter")
@@ -153,7 +153,7 @@ async def bulk_insert_memories(
     request: BulkInsertRequest,
     background_tasks: BackgroundTasks,
     bulk_engine: BulkMemoryEngine = Depends(get_bulk_engine_dependency),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Perform bulk insertion of memories with progress tracking.
@@ -222,7 +222,7 @@ async def bulk_update_memories(
     request: BulkUpdateRequest,
     background_tasks: BackgroundTasks,
     advanced_ops: AdvancedBulkOperations = Depends(get_advanced_bulk_ops_dependency),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Perform bulk updates on memories with conditional filtering.
@@ -280,7 +280,7 @@ async def bulk_delete_memories(
     request: BulkDeleteRequest,
     background_tasks: BackgroundTasks,
     advanced_ops: AdvancedBulkOperations = Depends(get_advanced_bulk_ops_dependency),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Perform safe bulk deletions with confirmation and limits.
@@ -339,7 +339,7 @@ async def export_memories(
     request: ExportRequest,
     background_tasks: BackgroundTasks,
     advanced_ops: AdvancedBulkOperations = Depends(get_advanced_bulk_ops_dependency),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Export memories in various formats with filtering and streaming.
@@ -400,7 +400,7 @@ async def export_memories(
 @router.get("/export/{operation_id}/download")
 async def download_export(
     operation_id: str,
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Download the exported file from a completed export operation.
@@ -424,13 +424,13 @@ async def download_export(
 @router.post("/import", response_model=OperationResultResponse)
 async def import_memories(
     file: UploadFile = File(...),
-    format: str = Query("json", regex="^(json|csv|jsonl|pickle)$"),
-    strategy: str = Query("skip", regex="^(skip|update|replace|append)$"),
-    validation_level: str = Query("standard", regex="^(minimal|standard|strict|paranoid)$"),
+    format: str = Query("json", pattern="^(json|csv|jsonl|pickle)$"),
+    strategy: str = Query("skip", pattern="^(skip|update|replace|append)$"),
+    validation_level: str = Query("standard", pattern="^(minimal|standard|strict|paranoid)$"),
     batch_size: int = Query(1000, ge=1, le=5000),
     background_tasks: BackgroundTasks = None,
     advanced_ops: AdvancedBulkOperations = Depends(get_advanced_bulk_ops_dependency),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Import memories from uploaded files with various format support.
@@ -496,7 +496,7 @@ async def import_memories_from_data(
     data: Union[List[Dict[str, Any]], str],
     background_tasks: BackgroundTasks,
     advanced_ops: AdvancedBulkOperations = Depends(get_advanced_bulk_ops_dependency),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Import memories from JSON data payload.
@@ -547,10 +547,10 @@ async def import_memories_from_data(
 
 @router.get("/operations", response_model=List[OperationStatusResponse])
 async def list_bulk_operations(
-    status: Optional[str] = Query(None, regex="^(pending|running|completed|failed|cancelled)$"),
+    status: Optional[str] = Query(None, pattern="^(pending|running|completed|failed|cancelled)$"),
     limit: int = Query(50, ge=1, le=200),
     bulk_engine: BulkMemoryEngine = Depends(get_bulk_engine_dependency),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     List bulk operations with optional status filtering.
@@ -600,7 +600,7 @@ async def list_bulk_operations(
 async def get_operation_status(
     operation_id: str,
     bulk_engine: BulkMemoryEngine = Depends(get_bulk_engine_dependency),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get real-time status of a specific bulk operation.
@@ -650,7 +650,7 @@ async def get_operation_status(
 async def cancel_operation(
     operation_id: str,
     bulk_engine: BulkMemoryEngine = Depends(get_bulk_engine_dependency),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Cancel a running bulk operation.
@@ -674,7 +674,7 @@ async def cancel_operation(
 async def cleanup_completed_operations(
     older_than_hours: int = Query(24, ge=1, le=168),  # 1 hour to 1 week
     bulk_engine: BulkMemoryEngine = Depends(get_bulk_engine_dependency),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Clean up completed operations older than specified hours.
@@ -693,7 +693,7 @@ async def cleanup_completed_operations(
 @router.get("/analytics/performance")
 async def get_bulk_performance_analytics(
     days: int = Query(7, ge=1, le=90),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get performance analytics for bulk operations over specified time period.
@@ -758,9 +758,9 @@ async def bulk_operations_health():
 @router.post("/validate")
 async def validate_bulk_items(
     items: List[BulkMemoryItemRequest],
-    validation_level: str = Query("standard", regex="^(minimal|standard|strict|paranoid)$"),
+    validation_level: str = Query("standard", pattern="^(minimal|standard|strict|paranoid)$"),
     bulk_engine: BulkMemoryEngine = Depends(get_bulk_engine_dependency),
-    api_key: str = Depends(get_api_key)
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Validate bulk memory items without actually storing them.
