@@ -33,7 +33,7 @@ def create_architecture_diagram():
     # Title
     ax.text(7, 9.5, 'Second Brain - PostgreSQL + pgvector Architecture', 
             fontsize=20, fontweight='bold', ha='center', color=colors['text'])
-    ax.text(7, 9.1, 'v2.4.1 - Simplified & Focused', 
+    ax.text(7, 9.1, 'v2.4.2 - Architecture Cleanup', 
             fontsize=14, ha='center', color=colors['text'], alpha=0.7)
     
     # PostgreSQL Core (Center)

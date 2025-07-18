@@ -70,22 +70,24 @@ def should_bump_version(message):
     return True
 
 
-def bump_version(bump_type):
-    """Execute version bump script"""
+def check_version_manager():
+    """Check if version manager is available"""
     try:
-        script_path = Path("scripts/version_bump.py")
+        script_path = Path("scripts/version_manager.py")
         if script_path.exists():
-            subprocess.run([sys.executable, str(script_path), bump_type], check=True)
+            subprocess.run([sys.executable, str(script_path), "status"], check=True, capture_output=True)
             return True
     except subprocess.CalledProcessError as e:
-        print(f"Error bumping version: {e}")
+        print(f"Version manager not available: {e}")
         return False
 
     return False
 
 
 def main():
-    """Main post-commit hook logic"""
+    """Main post-commit hook execution"""
+    print("🔍 Post-commit hook checking version management...")
+
     commit_message = get_commit_message()
 
     if not commit_message:
@@ -93,25 +95,18 @@ def main():
         return
 
     if not should_bump_version(commit_message):
-        print("Skipping version bump")
+        print("Skipping automatic version management")
         return
 
     bump_type = analyze_commit_message(commit_message)
     print(f"📝 Commit: {commit_message.split()[0]}")
-    print(f"🔄 Detected bump type: {bump_type}")
+    print(f"🔄 Detected change type: {bump_type}")
 
-    if bump_version(bump_type):
-        print("✅ Version bumped successfully")
-
-        # Stage and commit the version changes
-        try:
-            subprocess.run(["git", "add", "-A"], check=True)
-            subprocess.run(["git", "commit", "-m", f"chore: bump version ({bump_type})"], check=True)
-            print("✅ Version bump committed")
-        except subprocess.CalledProcessError as e:
-            print(f"Error committing version bump: {e}")
+    if check_version_manager():
+        print("✅ Version manager available")
+        print("💡 Use 'python scripts/version_manager.py prepare X.Y.Z' for releases")
     else:
-        print("❌ Version bump failed")
+        print("❌ Version manager not available")
 
 
 if __name__ == "__main__":

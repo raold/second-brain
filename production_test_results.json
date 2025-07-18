@@ -1,0 +1,58 @@
+{
+  "timestamp": "2025-07-18T12:53:18.809953",
+  "total_tests": 7,
+  "passed": 0,
+  "failed": 7,
+  "warnings": 0,
+  "results": [
+    {
+      "test": "Health Endpoint",
+      "status": "FAIL",
+      "details": "Status code: 404",
+      "duration": 2.4467365741729736,
+      "timestamp": "2025-07-18T12:53:00.626653"
+    },
+    {
+      "test": "API /api/memories",
+      "status": "FAIL",
+      "details": "GET 404",
+      "duration": 1.2225780487060547,
+      "timestamp": "2025-07-18T12:53:01.849231"
+    },
+    {
+      "test": "API /api/sessions",
+      "status": "FAIL",
+      "details": "GET 404",
+      "duration": 4.152932643890381,
+      "timestamp": "2025-07-18T12:53:06.002686"
+    },
+    {
+      "test": "API /api/docs",
+      "status": "FAIL",
+      "details": "GET 404",
+      "duration": 1.2107126712799072,
+      "timestamp": "2025-07-18T12:53:07.213920"
+    },
+    {
+      "test": "Database Connection",
+      "status": "FAIL",
+      "details": "Status: 404",
+      "duration": 2.9526538848876953,
+      "timestamp": "2025-07-18T12:53:10.167581"
+    },
+    {
+      "test": "Performance Baseline",
+      "status": "FAIL",
+      "details": "Error: HTTPConnectionPool(host='httpbin.org', port=80): Read timed out. (read timeout=5)",
+      "duration": 8.553805112838745,
+      "timestamp": "2025-07-18T12:53:18.721387"
+    },
+    {
+      "test": "Memory Operations",
+      "status": "FAIL",
+      "details": "Create failed: 404",
+      "duration": 0.08756589889526367,
+      "timestamp": "2025-07-18T12:53:18.808952"
+    }
+  ]
+}

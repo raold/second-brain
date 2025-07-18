@@ -232,16 +232,15 @@ Any other relevant information
 ## 📋 Release Process
 
 ### Version Management
-- **Semantic Versioning**: MAJOR.MINOR.PATCH
-- **Automated Bumping**: Use `scripts/version_bump.py`
-- **Changelog**: Update CHANGELOG.md for all releases
+- **Configuration-Driven**: Use centralized `docs/releases/version_config.json`
+- **Automated Release Preparation**: Use `scripts/version_manager.py`
+- **Professional Documentation**: Auto-generated release notes
 
 ### Release Steps
-1. **Update Version**: `python scripts/version_bump.py [patch|minor|major]`
-2. **Update Changelog**: Document changes in CHANGELOG.md
-3. **Create Tag**: `git tag v2.0.x`
-4. **Push**: `git push origin main --tags`
-5. **GitHub Release**: Create release notes
+1. **Configure Version**: Add version info to `docs/releases/version_config.json`
+2. **Prepare Release**: `python scripts/version_manager.py prepare X.Y.Z`
+3. **Execute Git Commands**: Follow the generated workflow commands
+4. **GitHub Release**: Use the auto-generated release notes
 
 ## 🎯 Areas for Contribution
 

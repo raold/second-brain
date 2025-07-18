@@ -2,7 +2,7 @@ name: Second Brain v2.0.0 CI Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, testing ]
     paths-ignore:
       - '*.md'
       - 'docs/**'

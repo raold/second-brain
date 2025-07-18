@@ -4,7 +4,7 @@
 
 ## Overview
 
-Second Brain v2.4.1 represents a **simplified, focused architecture** built around PostgreSQL with pgvector extension as the core storage and retrieval system. This architecture prioritizes simplicity, performance, and maintainability while providing powerful semantic search capabilities.
+Second Brain v2.4.2 represents a **simplified, focused architecture** built around PostgreSQL with pgvector extension as the core storage and retrieval system. This architecture prioritizes simplicity, performance, and maintainability while providing powerful semantic search capabilities.
 
 ## Architecture Philosophy
 

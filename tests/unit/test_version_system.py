@@ -117,9 +117,9 @@ class TestVersionSystem:
     def test_increment_version(self):
         """Test version increment functionality"""
         test_cases = [
-            ("patch", "2.4.2"),
-            ("minor", "2.5.0"),
-            ("major", "3.0.0")
+            ("patch", "2.4.3"),  # Patch increment: 2.4.2 -> 2.4.3
+            ("minor", "2.5.0"),  # Minor increment: 2.4.2 -> 2.5.0
+            ("major", "3.0.0")   # Major increment: 2.4.2 -> 3.0.0
         ]
         
         for bump_type, expected in test_cases:
@@ -230,30 +230,33 @@ class TestVersionEndpoint:
         assert isinstance(expected_response["roadmap"], dict)
 
 
-class TestVersionBumpIntegration:
-    """Test version bump script integration"""
+class TestVersionManagerIntegration:
+    """Test centralized version manager integration"""
 
-    def test_version_patterns(self):
-        """Test that version patterns work with current version"""
-        from scripts.version_bump import ProductionVersionBumper
+    def test_version_manager_functionality(self):
+        """Test that version manager works with current version"""
+        from scripts.version_manager import VersionManager
         
-        bumper = ProductionVersionBumper()
-        current_version = bumper.get_current_version()
+        vm = VersionManager()
+        current_version = vm.get_current_version()
         
         assert current_version == __version__
         
-        # Test version calculations
-        new_patch = bumper.calculate_new_version("patch")
-        new_minor = bumper.calculate_new_version("minor") 
-        new_major = bumper.calculate_new_version("major")
+        # Test version configuration loading
+        assert vm.versions_config is not None
+        assert "current_stable" in vm.versions_config
+        assert "current_development" in vm.versions_config
+        assert "versions" in vm.versions_config
         
-        # Verify proper increments
-        current_parts = __version__.split('.')
-        major, minor, patch = map(int, current_parts)
+        # Test that current version exists in configuration
+        current_dev = vm.versions_config["current_development"]
+        assert current_dev in vm.versions_config["versions"]
         
-        assert new_patch == f"{major}.{minor}.{patch + 1}"
-        assert new_minor == f"{major}.{minor + 1}.0"
-        assert new_major == f"{major + 1}.0.0"
+        # Test version info structure
+        version_info = vm.versions_config["versions"][current_dev]
+        required_fields = ["status", "title", "changes", "commit_message", "git_workflow"]
+        for field in required_fields:
+            assert field in version_info, f"Missing required field: {field}"
 
 
 if __name__ == "__main__":

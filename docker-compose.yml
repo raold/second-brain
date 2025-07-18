@@ -1,4 +1,4 @@
-# Second Brain v2.0.0 - Simplified Docker Compose
+# Second Brain v2.4.2 - Simplified Docker Compose
 version: '3.8'
 
 services:
