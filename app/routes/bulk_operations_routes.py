@@ -31,7 +31,7 @@ from app.memory_deduplication_engine import (
     SimilarityMethod, DuplicateAction, MergeStrategy,
     get_memory_deduplication_engine
 )
-from app.security import verify_api_key
+from app.shared import verify_api_key
 
 # Create router
 bulk_router = APIRouter(prefix="/bulk", tags=["Bulk Operations"])
