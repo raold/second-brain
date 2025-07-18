@@ -21,7 +21,18 @@ from app.docs import (
 )
 from app.services.service_factory import get_memory_service
 from app.security import SecurityManager, get_security_manager
-from app.database import get_database
+from app.shared import get_db_instance
+# For compatibility with existing code, alias the shared instance
+get_database = get_db_instance
+
+
+def setup_memory_service_factory(db, security_manager):
+    """Set up the service factory with database and security manager."""
+    from app.services.service_factory import get_service_factory
+    factory = get_service_factory()
+    factory.set_database(db)
+    factory.set_security_manager(security_manager)
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/memories", tags=["Memories"])
@@ -73,18 +84,23 @@ async def store_memory(
     
     # Delegate to service
     try:
+        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         memory_id = await service.store_memory(
-            db=db,
             content=request.content,
             memory_type=request.memory_type,
             semantic_metadata=convert_metadata_to_dict(request.semantic_metadata),
             episodic_metadata=convert_metadata_to_dict(request.episodic_metadata),
             procedural_metadata=convert_metadata_to_dict(request.procedural_metadata),
-            importance_score=request.importance_score,
-            metadata=request.metadata
+            importance_score=request.importance_score
         )
-        return memory_id
+        
+        # Get the stored memory to return full response
+        memory = await service.get_memory(memory_id)
+        if not memory:
+            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
+        
+        return memory
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -113,9 +129,9 @@ async def search_memories(
     
     # Delegate to service
     try:
+        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         memories = await service.search_memories(
-            db=db,
             query=request.query,
             limit=request.limit or 10
         )
@@ -148,18 +164,23 @@ async def store_semantic_memory(
     
     # Delegate to service
     try:
+        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         memory_id = await service.store_memory(
-            db=db,
             content=request.content,
             memory_type=MemoryType.SEMANTIC,
             semantic_metadata=convert_metadata_to_dict(request.semantic_metadata),
             episodic_metadata=None,
             procedural_metadata=None,
-            importance_score=request.importance_score,
-            metadata=request.metadata
+            importance_score=request.importance_score
         )
-        return memory_id
+        
+        # Get the stored memory to return full response
+        memory = await service.get_memory(memory_id)
+        if not memory:
+            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
+        
+        return memory
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -188,18 +209,23 @@ async def store_episodic_memory(
     
     # Delegate to service
     try:
+        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         memory_id = await service.store_memory(
-            db=db,
             content=request.content,
             memory_type=MemoryType.EPISODIC,
             semantic_metadata=None,
             episodic_metadata=convert_metadata_to_dict(request.episodic_metadata),
             procedural_metadata=None,
-            importance_score=request.importance_score,
-            metadata=request.metadata
+            importance_score=request.importance_score
         )
-        return memory_id
+        
+        # Get the stored memory to return full response
+        memory = await service.get_memory(memory_id)
+        if not memory:
+            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
+        
+        return memory
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -228,18 +254,23 @@ async def store_procedural_memory(
     
     # Delegate to service
     try:
+        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         memory_id = await service.store_memory(
-            db=db,
             content=request.content,
             memory_type=MemoryType.PROCEDURAL,
             semantic_metadata=None,
             episodic_metadata=None,
             procedural_metadata=convert_metadata_to_dict(request.procedural_metadata),
-            importance_score=request.importance_score,
-            metadata=request.metadata
+            importance_score=request.importance_score
         )
-        return memory_id
+        
+        # Get the stored memory to return full response
+        memory = await service.get_memory(memory_id)
+        if not memory:
+            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
+        
+        return memory
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -268,18 +299,17 @@ async def contextual_search(
     
     # Delegate to service
     try:
+        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         
         # Convert string memory types to enums if provided
         memory_types = None
         if request.memory_types:
-            memory_types = [MemoryType(mt) for mt in request.memory_types]
+            memory_types = [str(mt) for mt in request.memory_types]
         
-        results = await service.contextual_search(
-            db=db,
+        results = await service.search_memories(
             query=request.query,
             memory_types=memory_types,
-            temporal_filter=request.temporal_filter,
             importance_threshold=request.importance_threshold,
             limit=request.limit
         )
@@ -305,8 +335,11 @@ async def get_memory(
 ):
     """Get a specific memory by ID."""
     try:
+        # Setup service with dependencies
+        security_manager = get_security_manager()
+        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
-        memory = await service.get_memory(db, memory_id)
+        memory = await service.get_memory(memory_id)
         
         if not memory:
             raise HTTPException(status_code=404, detail="Memory not found")

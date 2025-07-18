@@ -7,6 +7,7 @@ import asyncio
 from typing import List, Optional
 from openai import AsyncOpenAI
 from app.utils.logger import logger
+from app.config import Config
 
 
 class OpenAIClient:
@@ -22,10 +23,15 @@ class OpenAIClient:
     
     def __init__(self):
         if self._client is None:
-            api_key = os.getenv("OPENAI_API_KEY")
+            api_key = Config.OPENAI_API_KEY
             if not api_key:
-                logger.warning("OPENAI_API_KEY not set, OpenAI client will not be available")
-                return
+                env_config = Config.get_environment_config()
+                if env_config.require_openai:
+                    logger.error("OPENAI_API_KEY is required for this environment but not set")
+                    raise ValueError("OPENAI_API_KEY is required but not configured")
+                else:
+                    logger.warning("OPENAI_API_KEY not set, OpenAI client will not be available")
+                    return
             
             self._client = AsyncOpenAI(api_key=api_key)
             logger.info("OpenAI client initialized")

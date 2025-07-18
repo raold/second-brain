@@ -17,6 +17,7 @@ import random
 import time
 from datetime import datetime
 from typing import Dict, List, Any
+import pytest
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -58,6 +59,7 @@ def generate_test_memories(count: int) -> List[Dict[str, Any]]:
     return memories
 
 
+@pytest.mark.asyncio
 async def test_core_bulk_operations():
     """Test core bulk operations functionality."""
     print("\n🔧 Testing Core Bulk Operations...")

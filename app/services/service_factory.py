@@ -4,6 +4,7 @@ Provides a centralized way to create and access service instances.
 """
 
 import logging
+import os
 from typing import Optional
 
 from app.database import Database
@@ -62,8 +63,8 @@ class ServiceFactory:
             if not self._security_manager:
                 raise RuntimeError("Security manager not set. Call set_security_manager() first.")
             
-            input_validator = self._security_manager.input_validator
-            self._memory_service = MemoryService(self._database, input_validator)
+            self._memory_service = MemoryService(database=self._database)
+            # The MemoryService handles its own database initialization
             self.logger.info("Created MemoryService instance")
         
         return self._memory_service

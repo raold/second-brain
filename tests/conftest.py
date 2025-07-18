@@ -65,3 +65,11 @@ async def initialized_mock_db():
     await db.initialize()
     yield db
     await db.close()
+
+@pytest_asyncio.fixture
+async def db():
+    """Database fixture for edge case tests (alias for initialized_mock_db)."""
+    db = MockDatabase()
+    await db.initialize()
+    yield db
+    await db.close()

@@ -17,6 +17,17 @@ from app.database_importance_schema import setup_importance_tracking_schema
 logger = logging.getLogger(__name__)
 
 
+def _is_real_database_with_pool(database: Optional[Union[Database, MockDatabase]]) -> bool:
+    """Check if database is a real Database instance with pool access."""
+    if not database:
+        return False
+    # Check class name to avoid MockDatabase
+    return (hasattr(database, 'pool') and 
+            hasattr(database, '__class__') and 
+            database.__class__.__name__ == 'Database' and
+            getattr(database, 'pool', None) is not None)
+
+
 class MemoryService:
     """
     Enhanced Memory Service with Automated Importance Scoring
@@ -28,8 +39,8 @@ class MemoryService:
     - Calculate content quality scores
     """
 
-    def __init__(self):
-        self.database: Optional[Union[Database, MockDatabase]] = None
+    def __init__(self, database: Optional[Union[Database, MockDatabase]] = None):
+        self.database: Optional[Union[Database, MockDatabase]] = database
         self.importance_engine: Optional[ImportanceEngine] = None
         self._initialized = False
 
@@ -39,12 +50,17 @@ class MemoryService:
             return
             
         try:
-            self.database = await get_database()
+            # Use provided database or get default
+            if not self.database:
+                self.database = await get_database()
+            
             self.importance_engine = get_importance_engine(self.database)
             
             # Set up importance tracking schema if using real database
-            if hasattr(self.database, 'pool') and self.database.pool:
-                schema_setup = await setup_importance_tracking_schema(self.database.pool)
+            if _is_real_database_with_pool(self.database):
+                # Type narrowing: we know this is a Database with pool
+                real_db = self.database  # type: ignore
+                schema_setup = await setup_importance_tracking_schema(real_db.pool)
                 if schema_setup:
                     logger.info("✅ Importance tracking schema initialized")
                 else:
@@ -56,7 +72,8 @@ class MemoryService:
         except Exception as e:
             logger.error(f"Failed to initialize memory service: {e}")
             # Fallback to basic service without importance tracking
-            self.database = await get_database()
+            if not self.database:
+                self.database = await get_database()
             self._initialized = True
 
     async def store_memory(
@@ -193,14 +210,14 @@ class MemoryService:
         relevance_score: float
     ):
         """Log search result appearance for importance tracking"""
-        if not self.importance_engine or not self.database or not hasattr(self.database, 'pool'):
+        if not self.importance_engine or not _is_real_database_with_pool(self.database):
             return
             
         try:
-            if self.database.pool:
-                async with self.database.pool.acquire() as conn:
-                    await conn.execute("""
-                        INSERT INTO search_result_log 
+            real_db = self.database  # type: ignore
+            async with real_db.pool.acquire() as conn:
+                await conn.execute("""
+                    INSERT INTO search_result_log 
                         (memory_id, search_query, position, relevance_score)
                         VALUES ($1, $2, $3, $4)
                     """, memory_id, query, position, relevance_score)
