@@ -23,26 +23,56 @@ For each version, we maintain:
 
 ## 🚀 Release Process
 
-### Current Workflow: `testing -> main -> release`
+### Current Workflow: `develop -> testing -> main -> release`
 
-#### Phase 1: Development (testing branch)
+Our three-branch strategy provides comprehensive quality gates:
+
+- **develop**: Experimental features and active development
+- **testing**: Feature integration and release preparation
+- **main**: Production-ready code with automated deployment
+- **tags**: Immutable release versions
+
+#### Phase 1: Development (develop branch)
 ```bash
 # Check current status
 python scripts/version_manager.py status
 
-# Prepare release 
-python scripts/version_manager.py prepare 2.4.2
+# Active development on develop branch
+git checkout develop
+git pull origin develop
+
+# Make changes and test frequently
+python scripts/version_manager.py test unit integration
+
+# Commit and push to develop
+git commit -m "feat: new search algorithm"
+git push origin develop
 ```
 
-#### Phase 2: Testing & PR
+#### Phase 2: Integration (develop -> testing)
 ```bash
-# Generated commands (from version_manager.py):
-git add .
-git commit -m "Release v2.4.2: Architecture cleanup and dependency optimization"
+# Integrate features for release preparation
+git checkout testing
+git pull origin testing
+git merge develop
+
+# Run full test suite
+python scripts/version_manager.py test all
 git push origin testing
 
-# Create PR for review
-gh pr create --title "Release v2.4.2" --body "See RELEASE_NOTES_v2.4.2.md" --base main --head testing
+# Prepare release version
+python scripts/version_manager.py prepare 2.4.3
+```
+
+#### Phase 3: Testing & PR (testing -> main)
+```bash
+# Generated commands from version_manager.py:
+git add .
+git commit -m "Release v2.4.3: Enhanced search capabilities"
+git push origin testing
+
+# Create PR for review (with automatic CI/CD testing)
+gh pr create --title "Release v2.4.3" --body "See RELEASE_NOTES_v2.4.3.md" --base main --head testing
 ```
 
 #### Phase 3: Release (after PR approval)

@@ -2,15 +2,18 @@
 
 ## Supported Versions
 
-We actively support the latest version of this project. The v2.x series represents a complete architectural rewrite with enhanced security. Legacy v1.x versions are no longer supported.
+We actively support the current stable and development versions. The v2.4.x series represents the current architecture with enhanced security and simplified deployment.
 
-| Version | Supported        | Notes |
-| ------- | ---------------- | ----- |
-| 2.x.x   | ✅ Supported      | Current architecture with PostgreSQL + pgvector |
-| 1.x.x   | ❌ End of Life    | Legacy architecture discontinued |
-| < 1.0   | ❌ Not Supported  | Pre-release versions |
+| Version | Supported        | Security Level | Notes |
+| ------- | ---------------- | -------------- | ----- |
+| 2.4.x   | ✅ **Active**     | ⭐⭐⭐⭐⭐ High | Current development (PostgreSQL + pgvector) |
+| 2.3.x   | ✅ **Maintenance** | ⭐⭐⭐⭐ Good  | Previous stable release |
+| 2.2.x   | ⚠️ **End of Life** | ⭐⭐⭐ Basic | Security patches only |
+| < 2.2   | ❌ **Unsupported** | ⭐ Minimal    | Legacy versions discontinued |
 
-We strongly encourage all users to upgrade to v2.x for improved security and performance.
+**Current Stable**: v2.4.1 | **Development**: v2.4.2
+
+We strongly encourage all users to upgrade to v2.4.x for improved security, performance, and the latest features.
 
 ## Single-User Architecture
 
@@ -46,8 +49,12 @@ We strongly encourage all users to upgrade to v2.x for improved security and per
 - **Input Validation**: Pydantic models for request validation
 - **Mock Database Mode**: Testing without external API dependencies
 
-### 🔄 **In Development** (Sprint 30)
-- **Input Sanitization**: Enhanced validation for memory content
+### 🔄 **In Development** (v2.5.0)
+- **Enhanced Input Sanitization**: Advanced validation for memory content and metadata
+- **Rate Limiting**: Protection against API abuse
+- **Security Headers**: HTTP security headers for web dashboard
+- **Audit Logging**: Security event logging and monitoring
+- **Backup Encryption**: Encrypted backup and restore functionality
 - **Rate Limiting**: API endpoint protection against abuse
 - **Security Headers**: Basic HTTP security headers
 - **Error Handling**: Secure error responses without information leakage
@@ -149,5 +156,5 @@ If you discover a security vulnerability, please report it responsibly:
 
 **Last Updated**: July 17, 2025  
 **Security Model**: Single-User Personal AI System  
-**Current Version**: v2.3.0 (Organization)  
+**Current Stable**: v2.4.1 | **Development**: v2.4.2  
 **Next Security Review**: v2.4.0 (Security Enhancement)

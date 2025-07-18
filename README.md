@@ -43,8 +43,14 @@ Second Brain v2.4.2 represents a **focused, simplified architecture** centered a
 
 ### 1. Clone and Setup
 ```bash
-git clone https://github.com/your-org/second-brain.git
+git clone https://github.com/raold/second-brain.git
 cd second-brain
+
+# For latest features (recommended for development):
+git checkout develop
+
+# For stable release:
+git checkout main
 ```
 
 ### 2. Environment Configuration
