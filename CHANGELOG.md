@@ -19,6 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.4.2] - 2025-07-18
 
+### 🧹 Architecture Cleanup & Optimization
+
+- **Complete Qdrant dependency removal**
+- **Project organization cleanup**
+- **Documentation consistency improvements**
+- **Configuration optimization**
+- **Root directory cleanup**
+- **Release notes organization**
+
+
+## [2.4.2] - 2025-07-18
+
 ### 🧹 Architecture Cleanup & Documentation
 
 This release focuses on finalizing the simplified PostgreSQL-centered architecture by removing vestigial dependencies and organizing documentation.
