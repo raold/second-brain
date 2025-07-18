@@ -18,12 +18,42 @@ Second Brain v2.4.2 represents a **focused, simplified architecture** centered a
 ## ✨ Key Features
 
 ### 🧠 Core Memory System
-- **Semantic Search**: Vector similarity with OpenAI embeddings
-- **Full-text Search**: PostgreSQL's native text search capabilities
-- **Hybrid Search**: Combined vector + text search with ranking
-- **Metadata Storage**: Flexible JSONB for rich memory metadata
-- **Importance Scoring**: 0-10 scale for memory prioritization
-- **Tag System**: Array-based tagging with filtering
+
+<details>
+<summary><strong>🏗️ Memory Architecture (Human Brain-Inspired)</strong></summary>
+
+Our memory system mirrors cognitive neuroscience principles:
+
+| Memory Component | Human Brain Analog | Technical Implementation |
+|-----------------|-------------------|-------------------------|
+| **Hippocampus** | Memory formation & indexing | Vector embeddings + metadata |
+| **Cortical Networks** | Associative connections | Tag relationships + similarity |
+| **Memory Consolidation** | Strength over time | Importance scoring (0-10) |
+| **Episodic Context** | When/where memories formed | JSONB timestamp + metadata |
+| **Semantic Networks** | Meaning relationships | 384-dimensional vector space |
+
+</details>
+
+<details>
+<summary><strong>🔄 Memory Types & Functions</strong></summary>
+
+| Memory Type | Function | Implementation |
+|-------------|----------|----------------|
+| **🔥 Working** | Real-time processing | Immediate relevance scoring |
+| **⚡ Short-term** | Recent accessibility | Recency-based ranking |
+| **💾 Long-term** | Persistent storage | Importance-based retention |
+| **📖 Episodic** | Contextual memories | Rich JSONB metadata |
+| **🧩 Semantic** | Meaning & concepts | Vector embedding relationships |
+| **⚙️ Procedural** | Learned behaviors | Tag patterns & schemas |
+
+</details>
+
+**🚀 Core Capabilities:**
+- **Semantic Search** → Vector similarity (384D OpenAI embeddings)
+- **Full-text Search** → PostgreSQL native text ranking  
+- **Hybrid Search** → Combined vector + text with weighted scoring
+- **Smart Metadata** → Flexible JSONB for rich context
+- **Memory Decay** → Time-based relevance like natural forgetting
 
 ### 🎨 Interactive Dashboard
 - **Memory Network**: D3.js force-directed graph visualization

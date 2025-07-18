@@ -1,11 +1,11 @@
 # Second Brain - Project Status
 
-**Version**: 2.4.2 (Development) on develop branch
+**Version**: 2.4.2 (Development)
 **Last Updated**: 2025-07-18
 **Architecture**: PostgreSQL + pgvector Focused Design
 **Development Branch**: develop → testing → main strategy active  
 
-## 🎯 Current Status: Development Ready (v2.4.2 on develop branch)
+## 🎯 Current Status: Development Ready (v2.4.2 Staging)
 
 ### 🚀 **Architecture Evolution Complete**
 
