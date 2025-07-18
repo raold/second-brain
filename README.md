@@ -241,16 +241,14 @@ uvicorn app.main:app --reload
 ```
 second-brain/
 ├── app/
-│   └── main.py              # FastAPI application
+│   └── main.py                # FastAPI application
 ├── static/
-│   └── dashboard.html       # D3.js dashboard
-├── docs/
-│   ├── ARCHITECTURE.md      # System architecture
-│   └── system_architecture.png
-├── init.sql                 # Database initialization
-├── requirements.txt         # Python dependencies
-├── docker-compose.yml       # Container orchestration
-└── Dockerfile              # Container definition
+│   └── dashboard.html         # D3.js dashboard
+├── docs/                      # Project documentation
+├── init.sql                   # Database initialization
+├── requirements.txt           # Python dependencies
+├── docker-compose.yml         # Container orchestration
+└── Dockerfile                 # Container definition
 ```
 
 ## 🧪 Testing
