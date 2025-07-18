@@ -14,9 +14,9 @@ from app.dashboard import (
     get_dashboard, 
     update_dashboard_for_feature, 
     get_dashboard_summary,
-    Priority,
     Status
 )
+from app.docs import Priority
 
 
 # Create router for dashboard endpoints

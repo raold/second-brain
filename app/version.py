@@ -2,8 +2,8 @@
 Second Brain Application Version Information
 """
 
-__version__ = "2.3.0"
-__version_info__ = (2, 3, 0)
+__version__ = "2.4.0"
+__version_info__ = (2, 4, 0)
 __build__ = "stable"
 __release_date__ = "2025-07-17"
 

@@ -20,6 +20,15 @@ class MemoryType(str, Enum):
     PROCEDURAL = "procedural"  # Process knowledge, workflows, instructions
 
 
+# Priority enumeration for task/todo management
+class Priority(str, Enum):
+    """Priority levels for tasks and todos"""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
 # Type-specific metadata models
 class SemanticMetadata(BaseModel):
     """Metadata specific to semantic memories"""
@@ -255,8 +264,23 @@ class ContextualSearchRequest(BaseModel):
                 "memory_types": ["episodic", "procedural"],
                 "importance_threshold": 0.6,
                 "timeframe": "last_week",
-                "limit": 15,
+                "limit": 5,
                 "include_archived": False
+            }
+        }
+
+
+# Legacy search request model for backward compatibility
+class SearchRequest(BaseModel):
+    """Request model for simple search queries"""
+    query: str = Field(..., description="Search query", min_length=1)
+    limit: int = Field(default=10, ge=1, le=100, description="Maximum results to return")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "query": "database optimization techniques",
+                "limit": 5
             }
         }
 

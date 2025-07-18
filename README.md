@@ -1,13 +1,13 @@
-# Second Brain v2.3.0 - AI Memory System with Project Pipeline Dashboard
+# Second Brain v2.4.0 - AI Memory System with Project Pipeline Dashboard
 
-[![License: AGPL v2.3.0](https://img.shields.io/badge/License-AGPL%20v2.3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![License: AGPL v2.4.0](https://img.shields.io/badge/License-AGPL%20v2.4.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://www.postgresql.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-latest-green.svg)](https://fastapi.tiangolo.com/)
 [![Tests](https://img.shields.io/badge/tests-41%2F41%20passing-green.svg)](https://github.com/raold/second-brain/actions)
 [![Coverage](https://img.shields.io/badge/coverage-87%25-brightgreen.svg)](https://github.com/raold/second-brain/actions)
 
-**Second Brain v2.3.0** is a **production-ready** AI memory system with **cognitive memory architecture**, **human-like memory types**, **contextual retrieval**, and **revolutionary project pipeline dashboard**. Features three distinct memory types: Semantic (facts), Episodic (experiences), and Procedural (processes) with intelligent classification and contextual search.
+**Second Brain v2.4.0** is a **production-ready** AI memory system with **cognitive memory architecture**, **human-like memory types**, **contextual retrieval**, and **revolutionary project pipeline dashboard**. Features three distinct memory types: Semantic (facts), Episodic (experiences), and Procedural (processes) with intelligent classification and contextual search.
 
 ## 🚀 **NEW: Project Pipeline Dashboard with Visual Roadmap**
 

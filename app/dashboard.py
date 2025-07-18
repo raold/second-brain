@@ -22,6 +22,8 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 import uuid
 
+from app.docs import Priority
+
 
 class ProjectPhase(Enum):
     """Project development phases"""
@@ -32,12 +34,7 @@ class ProjectPhase(Enum):
     MAINTENANCE = "maintenance"
 
 
-class Priority(Enum):
-    """Task priority levels"""
-    CRITICAL = "critical"
-    HIGH = "high"
-    MEDIUM = "medium"
-    LOW = "low"
+# Priority enum moved to app.docs for centralized definition
 
 
 class Status(Enum):
@@ -615,7 +612,7 @@ class ProjectDashboard:
                 "name": m.name,
                 "target_date": m.target_date,
                 "progress": m.progress,
-                "status": m.status.value
+                "status": m.status if isinstance(m.status, str) else m.status.value
             }
             for m in upcoming[:limit]
         ]
@@ -634,7 +631,7 @@ class ProjectDashboard:
                 "name": t.name,
                 "type": "task",
                 "completed_at": t.completed_at,
-                "milestone": self.milestones.get(t.milestone_id, {}).name if t.milestone_id in self.milestones else "Unknown"
+                "milestone": self.milestones[t.milestone_id].name if t.milestone_id in self.milestones else "Unknown"
             }
             for t in completed_tasks[:limit]
         ]

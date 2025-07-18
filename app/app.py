@@ -37,12 +37,16 @@ from app.version import get_version_info
 
 # Dashboard and conversation processing imports
 from app.dashboard_api import setup_dashboard_routes
-from app.conversation_processor import setup_conversation_monitoring, process_cto_message
+from app.conversation_processor import setup_conversation_monitoring
 from app.session_api import setup_session_routes
 from app.session_manager import get_session_manager
 
+# Import service factory and refactored routes
+from app.services.service_factory import get_service_factory
+from app.routes import memory_router, health_router, session_router as new_session_router, dashboard_router as new_dashboard_router, todo_router, github_router
+
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -57,21 +61,18 @@ security_config = SecurityConfig(
     enable_rate_limiting=True,
     enable_input_validation=True,
     enable_security_headers=True,
+    allowed_origins=["http://localhost:3000", "http://localhost:8000"],
 )
 
-# Initialize security manager
+# Create security manager
 security_manager = SecurityManager(security_config)
 
 
-# Global mock database instance for testing
-_mock_db_instance = None
-
-
-# Database dependency with mock support
+# Database instance getter
 async def get_db_instance():
-    """Get database instance, using mock if configured."""
+    """Get database instance (mock or real)."""
     global _mock_db_instance
-
+    
     if os.getenv("USE_MOCK_DATABASE", "false").lower() == "true":
         if _mock_db_instance is None:
             logger.info("Creating mock database instance for testing")
@@ -112,11 +113,14 @@ async def lifespan(app: FastAPI):
     # Check if using mock database
     use_mock = os.getenv("USE_MOCK_DATABASE", "false").lower() == "true"
     
+    # Initialize database
+    db = None
     if use_mock:
         logger.info("Using mock database - skipping PostgreSQL initialization")
         # Initialize mock database
         from app.database_mock import MockDatabase
-        _mock_db = MockDatabase()
+        db = MockDatabase()
+        await db.initialize()
         logger.info("Mock database initialized")
     else:
         # Initialize database connection pool
@@ -126,11 +130,18 @@ async def lifespan(app: FastAPI):
         try:
             await initialize_pool(database_url, pool_config)
             logger.info("Database connection pool initialized")
+            db = await get_database()
         except Exception as e:
             logger.error(f"Failed to initialize database pool: {e}")
             # Fallback to regular database connection
             db = await get_database()
             logger.info("Database initialized (fallback mode)")
+    
+    # Initialize service factory with dependencies
+    service_factory = get_service_factory()
+    service_factory.set_database(db)
+    service_factory.set_security_manager(security_manager)
+    logger.info("Service factory initialized")
 
     yield
 
@@ -186,13 +197,13 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Handle request validation errors with detailed information."""
+    """Handle validation errors with detailed feedback."""
     return JSONResponse(
         status_code=422,
         content={
             "error": {
                 "code": 422,
-                "message": "Validation Error",
+                "message": "Validation error",
                 "type": "ValidationError",
                 "timestamp": datetime.utcnow().isoformat(),
                 "path": str(request.url.path),
@@ -238,7 +249,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Setup dashboard routes and conversation monitoring
+# Include refactored routers
+app.include_router(memory_router)
+app.include_router(health_router) 
+app.include_router(new_session_router)
+app.include_router(new_dashboard_router)
+app.include_router(todo_router)
+app.include_router(github_router)
+
+# Setup legacy dashboard and session routes (temporary until full migration)
 setup_dashboard_routes(app)
 setup_session_routes(app)
 setup_conversation_monitoring()
@@ -259,7 +278,7 @@ except Exception as e:
 async def dashboard_home():
     """Serve the project dashboard homepage"""
     try:
-        with open("static/dashboard.html", "r") as f:
+        with open("static/dashboard.html", "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
         return HTMLResponse(content="""
@@ -269,6 +288,28 @@ async def dashboard_home():
         <h1>🎯 Project Pipeline Dashboard</h1>
         <p>Dashboard is initializing... Please visit <a href="/dashboard/">/dashboard/</a> for API access.</p>
         <p>Or visit <a href="/docs">/docs</a> for the API documentation.</p>
+        </body>
+        </html>
+        """)
+
+
+# Mobile interface
+@app.get("/mobile", response_class=HTMLResponse)
+async def mobile_interface():
+    """Serve the mobile-optimized interface"""
+    try:
+        with open("static/mobile.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="""
+        <html>
+        <head>
+            <title>Mobile - Second Brain</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+        </head>
+        <body>
+        <h1>📱 Mobile Interface</h1>
+        <p>Mobile interface is not available. Please check your installation.</p>
         </body>
         </html>
         """)
@@ -320,56 +361,6 @@ async def get_status(db=Depends(get_db_instance), _: str = Depends(verify_api_ke
     except Exception as e:
         logger.error(f"Failed to get status: {e}")
         raise HTTPException(status_code=500, detail="Failed to get status")
-
-
-# Store memory
-@app.post(
-    "/memories",
-    response_model=MemoryResponse,
-    tags=["Memories"],
-    summary="Store Memory",
-    description="Store a new memory with optional metadata",
-)
-async def store_memory(
-    request: MemoryRequest, request_obj: Request, db=Depends(get_db_instance), _: str = Depends(verify_api_key)
-):
-    """Store a new memory."""
-    try:
-        # Security validation
-        if not security_manager.validate_request(request_obj):
-            raise HTTPException(status_code=429, detail="Rate limit exceeded")
-
-        # Input validation
-        validator = security_manager.input_validator
-        validated_content = validator.validate_memory_content(request.content)
-        validated_metadata = validator.validate_metadata(request.metadata or {})
-
-        # Extract type-specific metadata
-        semantic_metadata = request.semantic_metadata.dict() if request.semantic_metadata else {}
-        episodic_metadata = request.episodic_metadata.dict() if request.episodic_metadata else {}
-        procedural_metadata = request.procedural_metadata.dict() if request.procedural_metadata else {}
-
-        memory_id = await db.store_memory(
-            content=validated_content,
-            memory_type=request.memory_type.value,
-            semantic_metadata=semantic_metadata,
-            episodic_metadata=episodic_metadata,
-            procedural_metadata=procedural_metadata,
-            importance_score=request.importance_score or 0.5,
-            metadata=validated_metadata
-        )
-        memory = await db.get_memory(memory_id)
-
-        if not memory:
-            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
-
-        return MemoryResponse(**memory)
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to store memory: {e}")
-        raise HTTPException(status_code=500, detail="Failed to store memory")
 
 
 # Search memories

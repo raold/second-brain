@@ -12,7 +12,8 @@ from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 import asyncio
 
-from app.dashboard import get_dashboard, Priority
+from app.dashboard import get_dashboard
+from app.docs import Priority
 
 
 @dataclass

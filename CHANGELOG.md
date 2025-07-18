@@ -1,12 +1,71 @@
 # Changelog
 
-All notable changes to the Second Brain project will be documented in this file.
+All notable changes to Second Brain will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [v2.4.0] - 2025-07-17 - Project Pipeline Architecture
 
+### **Major Features**
 
-## [2.3.0] - 2025-07-17
+#### **🗺️ Revolutionary Project Pipeline Dashboard**
+- **Interactive Roadmap Timeline**: Beautiful vertical timeline showing all project versions with clickable milestones
+- **Real-time Updates**: Watch roadmap update when processing ideas through the "Woodchipper"
+- **Progress Tracking**: Visual progress bars and completion indicators for all project phases
+- **4 Professional Themes**: Gruvbox Light/Dark, Dracula, Solarized with persistent preferences
+
+#### **🏗️ Service Layer Refactor**
+- **MemoryService**: Centralized memory operations and cognitive processing
+- **SessionService**: Session management and conversation tracking  
+- **DashboardService**: Real-time project metrics and visualization
+- **HealthService**: System monitoring and performance tracking
+- **ServiceFactory**: Centralized dependency injection pattern
+- **Route Refactoring**: Thin controllers in `app/routes/` directory
+
+#### **📊 Enhanced Dashboard Features**
+- **🧠 Animated Brain Favicon**: SVG brain icon with gradient colors
+- **🌳 GitHub Repository Tree**: Real-time repository visualization with interactive folders
+- **✅ TODO Management**: Organized by priority with live statistics
+- **🚀 Prominent Woodchipper**: Animated icon for real-time idea processing
+- **📈 Live Metrics**: Velocity trends, task distribution charts, project statistics
+- **🔍 Modal System**: Detailed information popups with real-time data sync
+
+### **Technical Improvements**
+
+#### **Code Organization**
+- Complete separation of business logic from API routes
+- Repository Pattern, DTO Pattern, Service Layer Pattern implementation
+- Clean Architecture with clear separation of concerns
+- Organized routes into dedicated modules (`app/routes/`)
+
+#### **API Enhancements**
+- **15+ New Endpoints**: Session management, dashboard data, TODO operations, GitHub integration
+- Enhanced error handling with comprehensive error responses
+- Type-safe Pydantic models with validation
+- Complete OpenAPI documentation with interactive testing
+
+#### **Performance & Reliability**
+- Advanced PostgreSQL connection pooling
+- Complete testing infrastructure with mock database parity
+- Multi-layer security protection with API tokens and input validation
+- Real-time metrics and health checks
+
+### **User Experience**
+- **Visual Roadmap**: Interactive timeline showing project evolution (v2.4.0 → v2.5.0 → v3.0.0)
+- **Mobile Optimization**: Responsive design with touch-friendly interactions
+- **Theme Persistence**: User preferences saved across sessions
+- **Real-time Sync**: Live data updates throughout the dashboard
+
+### **Breaking Changes**
+- Priority enum moved from `app.dashboard` to `app.docs` for centralization
+- Service layer refactor requires import updates for business logic
+
+### **Migration Notes**
+- No new external dependencies required
+- No configuration changes required
+- Environment variables remain the same
+
+---
+
+## [v2.3.0] - 2025-07-17 - Cognitive Memory Architecture
 
 ### **🧠 MAJOR RELEASE: Cognitive Memory Architecture**
 
