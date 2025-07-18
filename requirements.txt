@@ -1,26 +1,34 @@
-# Second Brain - Minimal Requirements
-
-# Core dependencies
+# Core FastAPI framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
+
+# Database - PostgreSQL with vector support
 asyncpg==0.29.0
-openai==1.3.7
+psycopg2-binary==2.9.9
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# AI & Embeddings
+openai==1.3.8
+
+# Data validation and serialization
 pydantic==2.5.0
+pydantic-settings==2.1.0
 
-# Performance monitoring
-psutil==5.9.6
+# Async utilities
+asyncio-mqtt==0.13.0
+aiofiles==23.2.1
 
-# Optional development dependencies
+# Environment and configuration
+python-dotenv==1.0.0
+
+# Testing
 pytest==7.4.3
 pytest-asyncio==0.21.1
 httpx==0.25.2
-requests==2.31.0
 
-# Memory Visualization Dependencies
-scikit-learn>=1.3.0
-
-# Bulk Operations Dependencies
-pandas>=2.0.0
-openpyxl>=3.1.0  # Excel support
-pyarrow>=12.0.0  # Parquet support
-lxml>=4.9.0      # XML processing
+# Development tools
+ruff==0.1.6

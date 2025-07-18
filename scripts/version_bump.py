@@ -1,35 +1,48 @@
 #!/usr/bin/env python3
 """
-Version Bump Script for Second Brain
+Production-Ready Version Bump Script for Second Brain
 Handles complete version bumping workflow including:
 - Version updates in app/version.py
-- README.md updates
+- README.md updates with badges and version references
 - CHANGELOG.md updates
-- Recursive docs/ updates
-- Git operations
+- PROJECT_STATUS.md updates
+- Documentation updates across all files
+- Git operations with proper tagging
 - Release notes generation
 """
 
 import re
 import subprocess
 import sys
+import glob
+import json
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 
-class VersionBumper:
+class ProductionVersionBumper:
     def __init__(self, root_dir: Optional[str] = None):
         self.root_dir = Path(root_dir) if root_dir else Path(__file__).parent.parent
         self.version_file = self.root_dir / "app" / "version.py"
         self.readme_file = self.root_dir / "README.md"
         self.changelog_file = self.root_dir / "CHANGELOG.md"
-        self.docs_dir = self.root_dir / "docs"
-
-        # Version patterns
-        self.version_pattern = r'__version__ = "(.*?)"'
-        self.readme_version_pattern = r"# Second Brain v(.*?) - AI Memory System"
-        self.changelog_version_pattern = r"## \[v(.*?)\]"
+        self.project_status_file = self.root_dir / "PROJECT_STATUS.md"
+        self.security_file = self.root_dir / "SECURITY.md"
+        
+        # Version patterns for different file types
+        self.version_patterns = {
+            "python": r'__version__ = "(.*?)"',
+            "readme_header": r"# Second Brain v(.*?) 🧠",
+            "readme_latest": r"## 🚀 Latest in v(.*?):",
+            "changelog_version": r"## \[v(.*?)\]",
+            "project_status": r'"Current Version": `v(.*?)`',
+            "security_version": r'"Current Version": v(.*?) \(',
+            "badge_version": r"Second%20Brain-v(.*?)-",
+            "generic_version": r"v(\d+\.\d+\.\d+)",
+            "version_display": r"Current: v(\d+\.\d+\.\d+)",
+            "next_version": r"Next: v(\d+\.\d+\.\d+)"
+        }
 
         # Current version info
         self.current_version: Optional[str] = None
@@ -43,412 +56,386 @@ class VersionBumper:
             raise FileNotFoundError(f"Version file not found: {self.version_file}")
 
         content = self.version_file.read_text()
-        match = re.search(self.version_pattern, content)
+        match = re.search(self.version_patterns["python"], content)
         if not match:
             raise ValueError("Version not found in version.py")
 
         self.current_version = match.group(1)
-        if not self.current_version:
-            raise ValueError("Empty version found in version.py")
         return self.current_version
 
     def calculate_new_version(self, bump_type: str) -> str:
         """Calculate new version based on bump type"""
         if not self.current_version:
             self.get_current_version()
-
-        if not self.current_version:
-            raise ValueError("Current version not available")
-
-        parts = self.current_version.split(".")
+        
+        parts = self.current_version.split('.')
         if len(parts) != 3:
             raise ValueError(f"Invalid version format: {self.current_version}")
-
+        
         major, minor, patch = map(int, parts)
-
+        
         if bump_type == "major":
-            major += 1
-            minor = 0
-            patch = 0
+            self.new_version = f"{major + 1}.0.0"
         elif bump_type == "minor":
-            minor += 1
-            patch = 0
+            self.new_version = f"{major}.{minor + 1}.0"
         elif bump_type == "patch":
-            patch += 1
+            self.new_version = f"{major}.{minor}.{patch + 1}"
         else:
             raise ValueError(f"Invalid bump type: {bump_type}")
-
-        self.new_version = f"{major}.{minor}.{patch}"
+        
         self.version_type = bump_type
         return self.new_version
 
     def update_version_file(self) -> None:
         """Update app/version.py with new version"""
         content = self.version_file.read_text()
-
+        
         # Update version
-        content = re.sub(self.version_pattern, f'__version__ = "{self.new_version}"', content)
-
+        content = re.sub(
+            self.version_patterns["python"],
+            f'__version__ = "{self.new_version}"',
+            content
+        )
+        
+        # Update version_info tuple
+        parts = self.new_version.split('.')
+        version_tuple = f"({parts[0]}, {parts[1]}, {parts[2]})"
+        content = re.sub(
+            r'__version_info__ = \(.*?\)',
+            f'__version_info__ = {version_tuple}',
+            content
+        )
+        
         # Update release date
-        content = re.sub(r'release_date = "(.*?)"', f'release_date = "{self.release_date}"', content)
-
+        content = re.sub(
+            r'__release_date__ = ".*?"',
+            f'__release_date__ = "{self.release_date}"',
+            content
+        )
+        
         self.version_file.write_text(content)
-        print(f"✅ Updated version.py: {self.current_version} → {self.new_version}")
+        print(f"✅ Updated {self.version_file}: {self.current_version} → {self.new_version}")
 
     def update_readme(self) -> None:
         """Update README.md with new version"""
         content = self.readme_file.read_text()
-
-        # Update main title
-        content = re.sub(self.readme_version_pattern, f"# Second Brain v{self.new_version} - AI Memory System", content)
-
-        # Update version badges
-        content = re.sub(r"Second Brain v[\d\.]+ is a", f"Second Brain v{self.new_version} is a", content)
-
-        # Update project status table
+        
+        # Update header
         content = re.sub(
-            r"\| \*\*Version\*\* \| [\d\.]+ \(Production\)", f"| **Version** | {self.new_version} (Production)", content
+            self.version_patterns["readme_header"],
+            f"# Second Brain v{self.new_version} 🧠",
+            content
         )
-
-        # Update footer
+        
+        # Update "Latest in" section
         content = re.sub(
-            r"Second Brain v[\d\.]+ - \*Production-Ready",
-            f"Second Brain v{self.new_version} - *Production-Ready",
-            content,
+            self.version_patterns["readme_latest"],
+            f"## 🚀 Latest in v{self.new_version}:",
+            content
         )
-
+        
+        # Update badges
+        badge_version = self.new_version.replace(".", "%2E")
+        content = re.sub(
+            r"Second%20Brain-v[\d%2E]+-",
+            f"Second%20Brain-v{badge_version}-",
+            content
+        )
+        
         self.readme_file.write_text(content)
-        print(f"✅ Updated README.md with version {self.new_version}")
+        print(f"✅ Updated {self.readme_file}: version references updated")
 
-    def update_changelog(
-        self,
-        features: Optional[list[str]] = None,
-        fixes: Optional[list[str]] = None,
-        breaking: Optional[list[str]] = None,
-    ) -> None:
+    def update_changelog(self) -> None:
         """Update CHANGELOG.md with new version entry"""
         content = self.changelog_file.read_text()
-
-        # Generate changelog entry
-        changelog_entry = self.generate_changelog_entry(features, fixes, breaking)
-
-        # Insert new entry after the header
-        lines = content.split("\n")
-
-        # Find the position to insert (after the header)
-        insert_pos = 0
-        for i, line in enumerate(lines):
-            if line.startswith("## [v"):
-                insert_pos = i
-                break
-
-        # Insert new entry
-        new_lines = lines[:insert_pos] + changelog_entry.split("\n") + [""] + lines[insert_pos:]
-
-        self.changelog_file.write_text("\n".join(new_lines))
-        print(f"✅ Updated CHANGELOG.md with version {self.new_version}")
-
-    def generate_changelog_entry(
-        self,
-        features: Optional[list[str]] = None,
-        fixes: Optional[list[str]] = None,
-        breaking: Optional[list[str]] = None,
-    ) -> str:
-        """Generate changelog entry for new version"""
-        entry = f"## [v{self.new_version}] - {self.release_date}\n\n"
-
-        if breaking:
-            entry += "### ⚠️ BREAKING CHANGES\n"
-            for item in breaking:
-                entry += f"- {item}\n"
-            entry += "\n"
-
-        if features:
-            entry += "### ✨ New Features\n"
-            for item in features:
-                entry += f"- {item}\n"
-            entry += "\n"
-
-        if fixes:
-            entry += "### 🐛 Bug Fixes\n"
-            for item in fixes:
-                entry += f"- {item}\n"
-            entry += "\n"
-
-        # Default entries based on version type
-        if self.version_type == "major":
-            entry += "### 🎯 Major Release\n"
-            entry += f"- Major version bump to v{self.new_version}\n"
-            entry += "- Significant architecture improvements\n"
-            entry += "- Enhanced performance and stability\n\n"
-        elif self.version_type == "minor":
-            entry += "### 🚀 Minor Release\n"
-            entry += f"- Minor version bump to v{self.new_version}\n"
-            entry += "- New features and improvements\n"
-            entry += "- Enhanced functionality\n\n"
-        else:  # patch
-            entry += "### 🔧 Patch Release\n"
-            entry += f"- Patch version bump to v{self.new_version}\n"
-            entry += "- Bug fixes and minor improvements\n"
-            entry += "- Stability enhancements\n\n"
-
-        return entry
-
-    def update_docs_recursive(self) -> None:
-        """Recursively update version references in docs/"""
-        if not self.docs_dir.exists():
-            print("⚠️ docs/ directory not found, skipping")
-            return
-
-        updated_files = []
-
-        # Pattern to match version references
-        patterns = [
-            (r"v[\d\.]+", f"v{self.new_version}"),
-            (r"version [\d\.]+", f"version {self.new_version}"),
-            (r"Version [\d\.]+", f"Version {self.new_version}"),
-            (r"Second Brain [\d\.]+", f"Second Brain {self.new_version}"),
-        ]
-
-        for file_path in self.docs_dir.rglob("*.md"):
-            content = file_path.read_text()
-            original_content = content
-
-            for pattern, replacement in patterns:
-                content = re.sub(pattern, replacement, content)
-
-            if content != original_content:
-                file_path.write_text(content)
-                updated_files.append(file_path.relative_to(self.root_dir))
-
-        if updated_files:
-            print(f"✅ Updated {len(updated_files)} files in docs/:")
-            for file in updated_files:
-                print(f"   - {file}")
-        else:
-            print("✅ No version references found in docs/")
-
-    def git_add_all(self) -> None:
-        """Add all changes to git"""
-        result = subprocess.run(["git", "add", "-A"], cwd=self.root_dir, capture_output=True, text=True)
-
-        if result.returncode != 0:
-            raise RuntimeError(f"Git add failed: {result.stderr}")
-
-        print("✅ Added all changes to git")
-
-    def generate_commit_message(self) -> str:
-        """Generate git commit message"""
-        if not self.version_type or not self.current_version or not self.new_version:
-            raise ValueError("Version information not available")
-
-        version_emoji = {"major": "🎉", "minor": "🚀", "patch": "🔧"}
-
-        emoji = version_emoji.get(self.version_type, "🔧")
-
-        commit_message = f"""{emoji} Release v{self.new_version}
-
-{self.version_type.title()} version bump from v{self.current_version} to v{self.new_version}
-
-### Changes:
-- Updated app/version.py with new version and release date
-- Updated README.md with version references
-- Updated CHANGELOG.md with release notes
-- Updated documentation files with version references
-
-### Release Info:
-- Version Type: {self.version_type}
-- Release Date: {self.release_date}
-- Production Ready: ✅
-
-[Auto-generated by version_bump.py]"""
-
-        return commit_message
-
-    def git_commit(self) -> None:
-        """Commit changes with generated message"""
-        commit_message = self.generate_commit_message()
-
-        result = subprocess.run(
-            ["git", "commit", "-m", commit_message], cwd=self.root_dir, capture_output=True, text=True
-        )
-
-        if result.returncode != 0:
-            raise RuntimeError(f"Git commit failed: {result.stderr}")
-
-        print("✅ Committed changes with message")
-        print(f"   {commit_message.split(chr(10))[0]}")
-
-    def git_push(self) -> None:
-        """Push changes to remote"""
-        result = subprocess.run(["git", "push", "origin", "main"], cwd=self.root_dir, capture_output=True, text=True)
-
-        if result.returncode != 0:
-            raise RuntimeError(f"Git push failed: {result.stderr}")
-
-        print("✅ Pushed changes to origin/main")
-
-    def create_git_tag(self) -> None:
-        """Create and push git tag"""
-        tag_name = f"v{self.new_version}"
-        tag_message = f"Release v{self.new_version}"
-
-        # Create tag
-        result = subprocess.run(
-            ["git", "tag", "-a", tag_name, "-m", tag_message], cwd=self.root_dir, capture_output=True, text=True
-        )
-
-        if result.returncode != 0:
-            raise RuntimeError(f"Git tag creation failed: {result.stderr}")
-
-        # Push tag
-        result = subprocess.run(["git", "push", "origin", tag_name], cwd=self.root_dir, capture_output=True, text=True)
-
-        if result.returncode != 0:
-            raise RuntimeError(f"Git tag push failed: {result.stderr}")
-
-        print(f"✅ Created and pushed tag {tag_name}")
-
-    def generate_release_title(self) -> str:
-        """Generate GitHub release title"""
-        if not self.version_type or not self.new_version:
-            raise ValueError("Version information not available")
-
-        version_titles = {
-            "major": f"🎉 Second Brain v{self.new_version} - Major Release",
-            "minor": f"🚀 Second Brain v{self.new_version} - Feature Release",
-            "patch": f"🔧 Second Brain v{self.new_version} - Bug Fix Release",
-        }
-
-        return version_titles.get(self.version_type, f"Second Brain v{self.new_version}")
-
-    def generate_release_notes(self) -> str:
-        """Generate GitHub release notes in markdown"""
-        if not self.version_type or not self.new_version or not self.current_version:
-            raise ValueError("Version information not available")
-
-        version_emoji = {"major": "🎉", "minor": "🚀", "patch": "🔧"}
-
-        emoji = version_emoji.get(self.version_type, "🔧")
-        release_notes = f"""## {emoji} Second Brain v{self.new_version}
-
-**Release Date:** {self.release_date}
-**Version Type:** {self.version_type.title()}
-**Previous Version:** v{self.current_version}
-
-### 📋 What's Changed
-
-This release includes the following updates:
-
-- **Version Bump**: Updated from v{self.current_version} to v{self.new_version}
-- **Documentation**: Updated README.md and documentation files
-- **Changelog**: Added comprehensive release notes
-- **Stability**: Continued production-ready quality
-
-### 🔄 Version Details
-
-```
-Previous: v{self.current_version}
-Current:  v{self.new_version}
-Type:     {self.version_type}
-Date:     {self.release_date}
-```
-
-### 🚀 Key Features (Current)
-
-- **87% Test Coverage**: Production-ready test infrastructure
-- **Production-Ready**: Complete pytest-asyncio configuration
-- **PostgreSQL + pgvector**: Semantic search with vector similarity
-- **FastAPI**: Modern REST API with OpenAPI 3.1 documentation
-- **Mock Database**: Cost-free testing without external dependencies
-
-### 📊 Current Status
-
-- **Tests**: 33/38 passing (87% success rate)
-- **Coverage**: 87% (exceeds 60% target)
-- **Performance**: Optimized for production use
-- **Documentation**: Complete and up-to-date
-
-### 🔧 Installation
-
-```bash
-git clone https://github.com/raold/second-brain.git
-cd second-brain
-pip install -r requirements.txt
-python -m app.app
-```
-
-### 🧪 Testing
-
-```bash
-pytest --cov=app --cov-report=html
-```
-
-### 📚 Documentation
-
-- **API Docs**: [Swagger UI](http://localhost:8000/docs)
-- **Architecture**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- **Usage Guide**: [docs/USAGE.md](docs/USAGE.md)
+        
+        # Create new entry
+        new_entry = f"""## [v{self.new_version}] - {self.release_date} - Version Bump
+
+### **🔧 Version Management**
+- **Version Update**: Updated from v{self.current_version} to v{self.new_version}
+- **Release Type**: {self.version_type.title()} release
+- **Build Date**: {self.release_date}
 
 ---
 
-**Full Changelog**: [CHANGELOG.md](CHANGELOG.md)"""
+"""
+        
+        # Insert after the header
+        lines = content.split('\n')
+        insert_index = None
+        for i, line in enumerate(lines):
+            if line.startswith('## [v') and 'changelog' not in line.lower():
+                insert_index = i
+                break
+        
+        if insert_index is not None:
+            lines.insert(insert_index, new_entry.strip())
+            content = '\n'.join(lines)
+        else:
+            # If no previous entries, add after the header
+            header_end = content.find('\n\n')
+            if header_end != -1:
+                content = content[:header_end + 2] + new_entry + content[header_end + 2:]
+        
+        self.changelog_file.write_text(content)
+        print(f"✅ Updated {self.changelog_file}: added v{self.new_version} entry")
 
-        return release_notes
+    def update_project_status(self) -> None:
+        """Update PROJECT_STATUS.md with new version"""
+        content = self.project_status_file.read_text()
+        
+        # Update current version
+        content = re.sub(
+            self.version_patterns["project_status"],
+            f'"Current Version": `v{self.new_version}`',
+            content
+        )
+        
+        # Update release date
+        content = re.sub(
+            r'- \*\*Release Date\*\*: [^\n]+',
+            f'- **Release Date**: {self.release_date}',
+            content
+        )
+        
+        self.project_status_file.write_text(content)
+        print(f"✅ Updated {self.project_status_file}: version updated")
 
-    def execute_version_bump(
-        self,
-        bump_type: str,
-        features: Optional[list[str]] = None,
-        fixes: Optional[list[str]] = None,
-        breaking: Optional[list[str]] = None,
-    ) -> None:
-        """Execute complete version bump workflow"""
+    def update_security_file(self) -> None:
+        """Update SECURITY.md with new version"""
+        if not self.security_file.exists():
+            return
+            
+        content = self.security_file.read_text()
+        
+        # Update current version reference
+        content = re.sub(
+            self.version_patterns["security_version"],
+            f'"Current Version": v{self.new_version} (',
+            content
+        )
+        
+        self.security_file.write_text(content)
+        print(f"✅ Updated {self.security_file}: version updated")
+
+    def update_documentation_files(self) -> None:
+        """Update all documentation files with version references"""
+        doc_files = [
+            *glob.glob(str(self.root_dir / "docs" / "**" / "*.md"), recursive=True),
+            *glob.glob(str(self.root_dir / "examples" / "*.py")),
+        ]
+        
+        updated_files = []
+        
+        for file_path in doc_files:
+            try:
+                file_path = Path(file_path)
+                content = file_path.read_text(encoding='utf-8')
+                original_content = content
+                
+                # Update various version patterns
+                for pattern_name, pattern in self.version_patterns.items():
+                    if pattern_name in ["python"]:  # Skip Python-specific patterns
+                        continue
+                        
+                    content = re.sub(pattern, lambda m: m.group(0).replace(m.group(1), self.new_version), content)
+                
+                # Update generic version references
+                content = re.sub(
+                    r'\bv\d+\.\d+\.\d+\b',
+                    f'v{self.new_version}',
+                    content
+                )
+                
+                if content != original_content:
+                    file_path.write_text(content, encoding='utf-8')
+                    updated_files.append(str(file_path))
+                    
+            except Exception as e:
+                print(f"⚠️ Warning: Could not update {file_path}: {e}")
+        
+        if updated_files:
+            print(f"✅ Updated {len(updated_files)} documentation files")
+            for file in updated_files[:5]:  # Show first 5
+                print(f"   - {file}")
+            if len(updated_files) > 5:
+                print(f"   ... and {len(updated_files) - 5} more")
+
+    def create_release_notes(self) -> None:
+        """Create release notes for the new version"""
+        releases_dir = self.root_dir / "releases"
+        releases_dir.mkdir(exist_ok=True)
+        
+        release_notes_file = releases_dir / f"RELEASE_NOTES_v{self.new_version}.md"
+        
+        release_notes = f"""# 🔧 Second Brain v{self.new_version} - Version Bump
+
+## 📋 Release Information
+
+**Release Date**: {self.release_date}  
+**Version**: v{self.new_version}  
+**Previous Version**: v{self.current_version}  
+**Release Type**: {self.version_type.title()} Release  
+
+---
+
+## 🎯 Release Overview
+
+Second Brain v{self.new_version} is a **{self.version_type} release** that updates the version from v{self.current_version} to v{self.new_version}.
+
+## ✨ Changes
+
+### **🔧 Version Management**
+- **Version Update**: Updated from v{self.current_version} to v{self.new_version}
+- **Documentation**: All version references updated across the project
+- **Build Date**: {self.release_date}
+- **Release Type**: {self.version_type.title()} release
+
+### **📋 Updated Files**
+- **app/version.py**: Core version information updated
+- **README.md**: Header and badge versions updated
+- **CHANGELOG.md**: New release entry added
+- **PROJECT_STATUS.md**: Current version updated
+- **Documentation**: All version references updated
+
+## 🛠️ **Technical Details**
+
+### **No Functional Changes**
+- **API Compatibility**: 100% backward compatible
+- **Database**: No schema changes
+- **Dependencies**: No changes required
+- **Performance**: Same performance characteristics
+
+## 🎯 **Next Steps**
+
+Continue with planned development roadmap for future releases.
+
+---
+
+**Download**: [Second Brain v{self.new_version}](https://github.com/raold/second-brain/releases/tag/v{self.new_version})  
+**Previous Release**: [v{self.current_version}](https://github.com/raold/second-brain/releases/tag/v{self.current_version})
+"""
+        
+        release_notes_file.write_text(release_notes)
+        print(f"✅ Created release notes: {release_notes_file}")
+
+    def git_operations(self, skip_push: bool = False) -> None:
+        """Perform git operations"""
+        try:
+            # Add all changes
+            subprocess.run(["git", "add", "-A"], check=True, cwd=self.root_dir)
+            print("✅ Staged all changes")
+            
+            # Commit
+            commit_message = f"🚀 Release v{self.new_version}\n\nVersion bump from v{self.current_version} to v{self.new_version}\n- {self.version_type.title()} release\n- Updated all version references\n- Generated release notes"
+            subprocess.run(["git", "commit", "-m", commit_message], check=True, cwd=self.root_dir)
+            print(f"✅ Committed changes: v{self.current_version} → v{self.new_version}")
+            
+            # Create tag
+            tag_message = f"Second Brain v{self.new_version}\n\n{self.version_type.title()} release with version updates and documentation improvements."
+            subprocess.run(["git", "tag", "-a", f"v{self.new_version}", "-m", tag_message], check=True, cwd=self.root_dir)
+            print(f"✅ Created tag: v{self.new_version}")
+            
+            if not skip_push:
+                # Push changes
+                subprocess.run(["git", "push", "origin", "main"], check=True, cwd=self.root_dir)
+                print("✅ Pushed changes to origin/main")
+                
+                # Push tag
+                subprocess.run(["git", "push", "origin", f"v{self.new_version}"], check=True, cwd=self.root_dir)
+                print(f"✅ Pushed tag v{self.new_version}")
+                
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Git operation failed: {e}")
+            raise
+
+    def generate_github_release_info(self) -> Dict[str, str]:
+        """Generate GitHub release information"""
+        return {
+            "title": f"🚀 Second Brain v{self.new_version} - {self.version_type.title()} Release",
+            "tag": f"v{self.new_version}",
+            "body": f"""# 🚀 Second Brain v{self.new_version}
+
+**Release Date**: {self.release_date}  
+**Release Type**: {self.version_type.title()} Release  
+**Previous Version**: v{self.current_version}
+
+## 🎯 Changes
+
+Version bump from v{self.current_version} to v{self.new_version} with updated documentation and version references across all files.
+
+### 📋 Updated Components
+- Core version information
+- Documentation and README
+- Release notes and changelog
+- Project status and security files
+
+## 🛠️ Compatibility
+
+- **API**: 100% backward compatible
+- **Database**: No schema changes
+- **Dependencies**: No changes required
+
+**Ready for production deployment!** 🎉
+
+---
+
+**Full Changelog**: https://github.com/raold/second-brain/blob/main/CHANGELOG.md
+"""
+        }
+
+    def run_version_bump(self, bump_type: str, dry_run: bool = False, skip_push: bool = False) -> None:
+        """Run complete version bump workflow"""
         try:
             print(f"🚀 Starting version bump: {bump_type}")
             print(f"📁 Working directory: {self.root_dir}")
-            print()
-
-            # Step 1: Calculate new version
+            
+            if dry_run:
+                print("🧪 DRY RUN MODE - No changes will be made")
+            
+            # Get current version and calculate new version
             self.get_current_version()
             self.calculate_new_version(bump_type)
-            print(f"🔄 Version bump: {self.current_version} → {self.new_version}")
-            print()
-
-            # Step 2: Update files
+            
+            print(f"\n🔄 Version bump: {self.current_version} → {self.new_version}")
+            
+            if dry_run:
+                print(f"📊 Would update:")
+                print(f"   - app/version.py: {self.current_version} → {self.new_version}")
+                print(f"   - README.md with new version and badges")
+                print(f"   - CHANGELOG.md with new entry")
+                print(f"   - PROJECT_STATUS.md with current version")
+                print(f"   - Documentation files with version references")
+                print(f"   - Git commit and tag v{self.new_version}")
+                return
+            
+            # Perform updates
             self.update_version_file()
             self.update_readme()
-            self.update_changelog(features, fixes, breaking)
-            self.update_docs_recursive()
-            print()
-
-            # Step 3: Git operations
-            self.git_add_all()
-            self.git_commit()
-            self.git_push()
-            self.create_git_tag()
-            print()
-
-            # Step 4: Generate release information
-            release_title = self.generate_release_title()
-            release_notes = self.generate_release_notes()
-
-            print("🎉 Version bump completed successfully!")
-            print()
+            self.update_changelog()
+            self.update_project_status()
+            self.update_security_file()
+            self.update_documentation_files()
+            self.create_release_notes()
+            
+            # Git operations
+            self.git_operations(skip_push=skip_push)
+            
+            # Generate GitHub release info
+            release_info = self.generate_github_release_info()
+            
+            print(f"\n🎉 Version bump completed successfully!")
             print("=" * 60)
             print("📋 GITHUB RELEASE INFORMATION")
             print("=" * 60)
-            print()
-            print("🏷️ RELEASE TITLE:")
-            print(release_title)
-            print()
-            print("📝 RELEASE NOTES (Copy-paste ready):")
-            print("-" * 40)
-            print(release_notes)
-            print("-" * 40)
-            print()
-            print("✅ Ready to create GitHub release!")
-
+            print(f"\n🏷️ RELEASE TITLE:")
+            print(release_info["title"])
+            print(f"\n📝 RELEASE NOTES:")
+            print(release_info["body"])
+            print("=" * 60)
+            print("\n✅ Ready to create GitHub release!")
+            
         except Exception as e:
             print(f"❌ Version bump failed: {e}")
             sys.exit(1)
@@ -457,9 +444,10 @@ pytest --cov=app --cov-report=html
 def main():
     """Main entry point"""
     if len(sys.argv) < 2:
-        print("Usage: python version_bump.py [major|minor|patch] [--dry-run]")
+        print("Usage: python version_bump.py [major|minor|patch] [--dry-run] [--skip-push]")
         print("Example: python version_bump.py patch")
-        print("Example: python version_bump.py patch --dry-run")
+        print("Example: python version_bump.py minor --dry-run")
+        print("Example: python version_bump.py patch --skip-push")
         sys.exit(1)
 
     bump_type = sys.argv[1].lower()
@@ -467,63 +455,13 @@ def main():
         print("Error: bump_type must be 'major', 'minor', or 'patch'")
         sys.exit(1)
 
-    # Check for dry-run flag
+    # Check for flags
     dry_run = "--dry-run" in sys.argv
+    skip_push = "--skip-push" in sys.argv
 
     # Initialize version bumper
-    bumper = VersionBumper()
-
-    if dry_run:
-        print("🧪 DRY RUN MODE - No changes will be made")
-        print("=" * 50)
-
-        # Test version calculation
-        current = bumper.get_current_version()
-        new = bumper.calculate_new_version(bump_type)
-
-        print("📊 Version Analysis:")
-        print(f"   Current version: {current}")
-        print(f"   New version: {new}")
-        print(f"   Bump type: {bump_type}")
-        print(f"   Release date: {bumper.release_date}")
-        print()
-
-        print("📝 Would update these files:")
-        print(f"   ✅ {bumper.version_file}")
-        print(f"   ✅ {bumper.readme_file}")
-        print(f"   ✅ {bumper.changelog_file}")
-        print(f"   ✅ Files in {bumper.docs_dir}")
-        print()
-
-        print("🔧 Would perform these Git operations:")
-        print("   ✅ git add -A")
-        print(f"   ✅ git commit -m '🔧 Release v{new}'")
-        print("   ✅ git push origin main")
-        print(f"   ✅ git tag -a v{new}")
-        print(f"   ✅ git push origin v{new}")
-        print()
-
-        # Generate release info
-        commit_msg = bumper.generate_commit_message()
-        release_title = bumper.generate_release_title()
-        release_notes = bumper.generate_release_notes()
-
-        print("📋 Generated Release Information:")
-        print("-" * 40)
-        print(f"Title: {release_title}")
-        print()
-        print("Commit Message:")
-        print(commit_msg.split("\n")[0])
-        print()
-        print("Release Notes Preview:")
-        print(release_notes[:300] + "...")
-        print("-" * 40)
-        print()
-        print("✅ Dry run completed successfully!")
-        print("🚀 Remove --dry-run flag to execute the version bump")
-    else:
-        # Execute actual version bump
-        bumper.execute_version_bump(bump_type)
+    bumper = ProductionVersionBumper()
+    bumper.run_version_bump(bump_type, dry_run=dry_run, skip_push=skip_push)
 
 
 if __name__ == "__main__":

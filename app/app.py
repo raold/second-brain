@@ -743,6 +743,31 @@ async def list_memories(
         raise HTTPException(status_code=500, detail="Failed to list memories")
 
 
+# Version endpoint for dashboard
+@app.get("/version", summary="Get version information", response_model=dict)
+async def get_version_endpoint():
+    """Get comprehensive version information for dashboard and API clients."""
+    from app.version import get_dashboard_version, get_version_info
+    
+    # Get comprehensive version info
+    version_info = get_version_info()
+    dashboard_info = get_dashboard_version()
+    
+    return {
+        "version": version_info["version"],
+        "version_string": version_info["version_string"],
+        "display_name": version_info["display_name"],
+        "codename": version_info["codename"],
+        "release_date": version_info["release_date"],
+        "build": version_info["build"],
+        "environment": version_info["environment"],
+        "git_commit": version_info["git_commit"],
+        "build_timestamp": version_info["build_timestamp"],
+        "dashboard": dashboard_info,
+        "roadmap": version_info["roadmap_info"]
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
 

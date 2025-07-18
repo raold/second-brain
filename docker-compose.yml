@@ -2,65 +2,46 @@
 version: '3.8'
 
 services:
-  # PostgreSQL with pgvector extension
+  # PostgreSQL database with pgvector extension
   postgres:
-    image: ankane/pgvector:latest
-    container_name: second_brain_postgres
+    image: pgvector/pgvector:pg16
+    container_name: second-brain-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-brain}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-brain_password}
-      POSTGRES_DB: ${POSTGRES_DB:-brain}
+      POSTGRES_DB: second_brain
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - brain-net
-    restart: unless-stopped
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-brain} -d ${POSTGRES_DB:-brain}"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Second Brain API
   api:
     build: .
-    container_name: second_brain_api
-    env_file: .env
+    container_name: second-brain-api
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/second_brain
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      API_TOKENS: demo-token,production-token
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - brain-net
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-brain}:${POSTGRES_PASSWORD:-brain_password}@postgres:5432/${POSTGRES_DB:-brain}
-      HOST: 0.0.0.0
-      PORT: 8000
+    volumes:
+      - ./static:/app/static:ro
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-networks:
-  brain-net:
-    driver: bridge
 
 volumes:
-  pgdata:
-    driver: local
+  postgres_data:

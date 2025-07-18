@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Layout Options - Second Brain</title>
+    <style>
+        :root {
+            /* Gruvbox Light Theme */
+            --bg-primary: #fbf1c7;
+            --bg-secondary: #f2e5bc;
+            --bg-tertiary: #ebdbb2;
+            --bg-hover: #d5c4a1;
+            --bg-card: #f9f5d7;
+            --text-primary: #3c3836;
+            --text-secondary: #504945;
+            --text-muted: #665c54;
+            --accent-primary: #b57614;
+            --accent-secondary: #af3a03;
+            --accent-success: #79740e;
+            --border-color: #d5c4a1;
+            --border-light: #ebdbb2;
+            --shadow-sm: 0 1px 3px rgba(60, 56, 54, 0.1);
+            --shadow-md: 0 4px 12px rgba(60, 56, 54, 0.15);
+            --radius: 8px;
+            --radius-sm: 6px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .option-container {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow-md);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .option-container:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(60, 56, 54, 0.2);
+        }
+
+        .option-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .option-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Option 1: Vertical Layered (Current) */
+        .option1-arch {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .arch-layer {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding: 15px;
+        }
+
+        .layer-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .arch-components {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+        }
+
+        .arch-component {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            text-align: center;
+            flex: 1;
+            font-size: 11px;
+        }
+
+        .component-icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .component-title {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .component-desc {
+            color: var(--text-muted);
+            font-size: 10px;
+        }
+
+        .arch-arrow {
+            text-align: center;
+            color: var(--text-muted);
+            margin: -5px 0;
+        }
+
+        /* Option 2: Horizontal Flow */
+        .option2-arch {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: space-between;
+        }
+
+        .option2-component {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding: 15px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .option2-arrow {
+            font-size: 20px;
+            color: var(--text-muted);
+        }
+
+        /* Option 3: Hub Design */
+        .option3-arch {
+            position: relative;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .option3-center {
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-primary);
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            position: absolute;
+        }
+
+        .option3-satellite {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            text-align: center;
+            position: absolute;
+            width: 80px;
+            font-size: 11px;
+        }
+
+        .option3-satellite:nth-child(2) { top: 20px; left: 50%; transform: translateX(-50%); }
+        .option3-satellite:nth-child(3) { right: 20px; top: 50%; transform: translateY(-50%); }
+        .option3-satellite:nth-child(4) { bottom: 20px; left: 50%; transform: translateX(-50%); }
+        .option3-satellite:nth-child(5) { left: 20px; top: 50%; transform: translateY(-50%); }
+
+        /* Option 4: Simplified Boxes */
+        .option4-arch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .option4-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .option4-box.primary {
+            grid-column: 1 / -1;
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .choice-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .choice-btn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .choice-btn:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .choice-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Architecture Layout Options</h1>
+            <p>Choose your preferred system architecture visualization style</p>
+        </div>
+
+        <div class="options-grid">
+            <!-- Option 1: Vertical Layered (Current) -->
+            <div class="option-container" onclick="selectOption(1)">
+                <div class="option-title">Option 1: Vertical Layered</div>
+                <div class="option-description">Clear layer separation with top-down flow (Currently Implemented)</div>
+                
+                <div class="option1-arch">
+                    <div class="arch-layer">
+                        <div class="layer-title">Interface Layer</div>
+                        <div class="arch-components">
+                            <div class="arch-component">
+                                <div class="component-icon">🖥️</div>
+                                <div class="component-title">Dashboard</div>
+                                <div class="component-desc">Web UI</div>
+                            </div>
+                            <div class="arch-component">
+                                <div class="component-icon">📱</div>
+                                <div class="component-title">API Client</div>
+                                <div class="component-desc">REST</div>
+                            </div>
+                            <div class="arch-component">
+                                <div class="component-icon">🎨</div>
+                                <div class="component-title">Visualization</div>
+                                <div class="component-desc">D3.js</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="arch-arrow">▼ HTTP/WS</div>
+                    
+                    <div class="arch-layer">
+                        <div class="layer-title">API Layer</div>
+                        <div class="arch-components">
+                            <div class="arch-component">
+                                <div class="component-icon">⚡</div>
+                                <div class="component-title">FastAPI</div>
+                                <div class="component-desc">165 lines</div>
+                            </div>
+                            <div class="arch-component">
+                                <div class="component-icon">🔐</div>
+                                <div class="component-title">Auth</div>
+                                <div class="component-desc">Token</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="arch-arrow">▼ SQL</div>
+                    
+                    <div class="arch-layer">
+                        <div class="layer-title">Storage Layer</div>
+                        <div class="arch-components">
+                            <div class="arch-component">
+                                <div class="component-icon">🗄️</div>
+                                <div class="component-title">PostgreSQL</div>
+                                <div class="component-desc">+pgvector</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 2: Horizontal Flow -->
+            <div class="option-container" onclick="selectOption(2)">
+                <div class="option-title">Option 2: Horizontal Flow</div>
+                <div class="option-description">Left-to-right data flow, great for understanding request path</div>
+                
+                <div class="option2-arch">
+                    <div class="option2-component">
+                        <div class="component-icon">👤</div>
+                        <div class="component-title">User</div>
+                        <div class="component-desc">Interface</div>
+                    </div>
+                    
+                    <div class="option2-arrow">→</div>
+                    
+                    <div class="option2-component">
+                        <div class="component-icon">⚡</div>
+                        <div class="component-title">API</div>
+                        <div class="component-desc">FastAPI</div>
+                    </div>
+                    
+                    <div class="option2-arrow">→</div>
+                    
+                    <div class="option2-component">
+                        <div class="component-icon">🗄️</div>
+                        <div class="component-title">Database</div>
+                        <div class="component-desc">PostgreSQL</div>
+                    </div>
+                    
+                    <div class="option2-arrow">→</div>
+                    
+                    <div class="option2-component">
+                        <div class="component-icon">🤖</div>
+                        <div class="component-title">AI</div>
+                        <div class="component-desc">OpenAI</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 3: Hub Design -->
+            <div class="option-container" onclick="selectOption(3)">
+                <div class="option-title">Option 3: Database-Centric Hub</div>
+                <div class="option-description">Database at center with services radiating outward</div>
+                
+                <div class="option3-arch">
+                    <div class="option3-center">
+                        <div class="component-icon">🗄️</div>
+                        <div>PostgreSQL</div>
+                        <div style="font-size: 10px;">+pgvector</div>
+                    </div>
+                    
+                    <div class="option3-satellite">
+                        <div class="component-icon">🖥️</div>
+                        <div>Web UI</div>
+                    </div>
+                    
+                    <div class="option3-satellite">
+                        <div class="component-icon">⚡</div>
+                        <div>FastAPI</div>
+                    </div>
+                    
+                    <div class="option3-satellite">
+                        <div class="component-icon">🤖</div>
+                        <div>OpenAI</div>
+                    </div>
+                    
+                    <div class="option3-satellite">
+                        <div class="component-icon">🎨</div>
+                        <div>D3.js</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 4: Simplified Boxes -->
+            <div class="option-container" onclick="selectOption(4)">
+                <div class="option-title">Option 4: Minimal Boxes</div>
+                <div class="option-description">Clean, simple layout with key stats emphasized</div>
+                
+                <div class="option4-arch">
+                    <div class="option4-box primary">
+                        <div class="component-icon">🧠</div>
+                        <div style="font-size: 16px; font-weight: 600;">Second Brain</div>
+                        <div style="font-size: 12px;">165 lines • 1 DB • 90% simpler</div>
+                    </div>
+                    
+                    <div class="option4-box">
+                        <div class="component-icon">⚡</div>
+                        <div>FastAPI Server</div>
+                        <div style="font-size: 11px;">Async, Token Auth</div>
+                    </div>
+                    
+                    <div class="option4-box">
+                        <div class="component-icon">🗄️</div>
+                        <div>PostgreSQL</div>
+                        <div style="font-size: 11px;">pgvector, JSONB</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="choice-buttons">
+            <button class="choice-btn" onclick="implementOption(1)">Use Option 1 (Current)</button>
+            <button class="choice-btn" onclick="implementOption(2)">Use Option 2</button>
+            <button class="choice-btn" onclick="implementOption(3)">Use Option 3</button>
+            <button class="choice-btn" onclick="implementOption(4)">Use Option 4</button>
+        </div>
+    </div>
+
+    <script>
+        function selectOption(num) {
+            // Add visual selection feedback
+            document.querySelectorAll('.option-container').forEach(el => {
+                el.style.borderColor = 'var(--border-color)';
+            });
+            event.currentTarget.style.borderColor = 'var(--accent-primary)';
+            
+            console.log(`Selected Option ${num}`);
+        }
+
+        function implementOption(num) {
+            alert(`Option ${num} selected! This would update the dashboard with the chosen layout.`);
+            // In real implementation, this would call the dashboard update function
+        }
+    </script>
+</body>
+</html> 

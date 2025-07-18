@@ -14,8 +14,15 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uvicorn
 
+# Import version system
+from app.version import get_version, get_dashboard_version, get_version_info
+
 # Set mock database
 os.environ['USE_MOCK_DATABASE'] = 'true'
+
+# Get current version info
+current_version_info = get_version_info()
+dashboard_version_info = get_dashboard_version()
 
 # Simple in-memory storage for demo
 demo_data = {
@@ -23,19 +30,16 @@ demo_data = {
     "ideas": [],
     "dashboard_state": {
         "project_health": "excellent",
-        "milestones": 4,
-        "features_detected": 0,
-        "last_updated": datetime.now().isoformat(),
-        "current_version": "2.3.0",
-        "next_version": "2.4.0"
+        "current_version": dashboard_version_info["current"],
+        "next_version": dashboard_version_info["next_version"]
     },
     # Real project milestones and development status
     "project_milestones": {
         "recently_completed": [
             {
                 "title": "🧠 Cognitive Memory Architecture",
-                "version": "v2.3.0",
-                "date": "2025-07-17",
+                "version": current_version_info["version_string"],
+                "date": current_version_info["release_date"],
                 "status": "completed",
                 "priority": "high",
                 "features": [
@@ -62,8 +66,8 @@ demo_data = {
             },
             {
                 "title": "🧠 Session Persistence & Context Continuity",
-                "version": "v2.3.0",
-                "date": "2025-07-17", 
+                "version": current_version_info["version_string"],
+                "date": current_version_info["release_date"], 
                 "status": "completed",
                 "priority": "critical",
                 "features": [
