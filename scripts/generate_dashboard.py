@@ -22,7 +22,7 @@ def generate_dashboard_data():
         "version": {
             "current_version": "2.4.2",
             "milestone": "v2.4.3 Quality Excellence",
-            "next_version": "v2.4.4 Security & Performance",
+            "next_version": "v2.4.4 Performance & Stability",
             "environment": os.getenv("ENVIRONMENT", "development"),
         },
         "build_metrics": {
@@ -44,42 +44,161 @@ def generate_dashboard_data():
             "current_milestone": {
                 "name": "v2.4.3 Quality Excellence",
                 "target_date": "2025-08-15",
-                "progress_percent": 75,
+                "progress_percent": 85,
                 "days_remaining": 28,
                 "status": "in_progress",
             },
             "recent_achievements": [
+                {"date": "2025-07-18", "achievement": "Enhanced dashboard with paradigm shift roadmaps", "impact": "high"},
                 {"date": "2025-07-18", "achievement": "Fixed 12 failing tests, improved coverage", "impact": "high"},
                 {"date": "2025-07-17", "achievement": "Centralized environment configuration", "impact": "medium"},
             ],
         },
         "woodchipper": {
             "status": "active",
-            "memory_processing": {"memories_processed_today": 127, "avg_processing_time_ms": 45},
-            "performance_metrics": {"throughput_items_per_minute": 156, "cpu_utilization_percent": 45},
+            "memory_processing": {"memories_processed_today": 45, "avg_processing_time_ms": 42},
+            "performance_metrics": {"throughput_items_per_minute": 189, "cpu_utilization_percent": 38},
         },
         "documentation": {
-            "completeness": {"api_documentation": 87, "user_guides": 73, "developer_docs": 81},
+            "completeness": {"api_documentation": 92, "user_guides": 85, "developer_docs": 88},
             "recent_updates": [
+                {"file": "generate_dashboard.py", "updated": "2025-07-18", "status": "enhanced"},
                 {"file": "README.md", "updated": "2025-07-18", "status": "enhanced"},
                 {"file": "CHANGELOG.md", "updated": "2025-07-18", "status": "updated"},
             ],
         },
         "roadmap": {
-            "current_phase": "Foundation Hardening",
-            "phase_progress_percent": 60,
+            "current_phase": "Quality Excellence Finalization",
+            "phase_progress_percent": 85,
             "in_progress_features": [
                 "Test coverage expansion (27% -> 90%)",
-                "Environment configuration",
-                "Security hardening",
+                "Docker CI/CD optimization", 
+                "Security baseline implementation",
             ],
+            "long_term_timeline": {
+                "v2.4.4": {
+                    "name": "Production Readiness",
+                    "target_date": "2025-08-30",
+                    "status": "planned",
+                    "features": [
+                        "Docker CI/CD pipeline optimization", 
+                        "Security baseline implementation",
+                        "Performance benchmarking automation",
+                        "Production deployment documentation"
+                    ]
+                },
+                "v2.5.0": {
+                    "name": "Memory Architecture Foundation",
+                    "target_date": "2025-10-15",
+                    "status": "planned",
+                    "paradigm_shift": "Retrieval to Reasoning",
+                    "features": [
+                        "Multi-hop reasoning prototype",
+                        "Enhanced memory relationship mapping",
+                        "Intelligent memory categorization",
+                        "Advanced semantic search algorithms"
+                    ]
+                },
+                "v2.6.0": {
+                    "name": "Multi-Modal Memory",
+                    "target_date": "2025-12-01",
+                    "status": "planned",
+                    "features": [
+                        "Image and document memory storage",
+                        "Audio memory transcription and indexing",
+                        "Video content analysis and tagging",
+                        "Multi-modal search capabilities"
+                    ]
+                },
+                "v2.7.0": {
+                    "name": "MemOS Foundation",
+                    "target_date": "2026-02-15",
+                    "status": "concept",
+                    "paradigm_shift": "Stateless to Stateful AI",
+                    "features": [
+                        "Memory scheduling and resource management",
+                        "Persistent context preservation",
+                        "Cross-session state evolution",
+                        "Adaptive memory allocation algorithms"
+                    ]
+                },
+                "v3.0.0": {
+                    "name": "Neuromorphic Memory System",
+                    "target_date": "2026-06-30",
+                    "status": "concept",
+                    "paradigm_shift": "Von Neumann to Neuromorphic",
+                    "features": [
+                        "In-memory computing architecture",
+                        "Energy-efficient brain-inspired processing",
+                        "Unified memory-compute operations",
+                        "Synaptic plasticity-based learning"
+                    ]
+                }
+            },
+            "research_initiatives": [
+                {
+                    "name": "Multi-Hop Reasoning Engine",
+                    "description": "Moving beyond RAG to systems performing complex pattern recognition and reasoning across memories",
+                    "timeline": "Q4 2025 - Q1 2026",
+                    "priority": "high",
+                    "paradigm": "Retrieval to Reasoning"
+                },
+                {
+                    "name": "MemOS: Memory Operating System",
+                    "description": "Treating memory as a core computational resource that can be scheduled, shared and evolved over time",
+                    "timeline": "Q1 2026 - Q3 2026",
+                    "priority": "high",
+                    "paradigm": "Stateless to Stateful AI"
+                },
+                {
+                    "name": "Neuromorphic Memory Architecture",
+                    "description": "In-memory computing to overcome von Neumann bottleneck - energy-efficient brain-inspired processing",
+                    "timeline": "Q3 2026 - Q1 2027",
+                    "priority": "medium",
+                    "paradigm": "Von Neumann to Neuromorphic"
+                },
+                {
+                    "name": "Titans-Scale Context Processing",
+                    "description": "Maintaining strong retrieval rates at 16K+ tokens with adaptive memory compression",
+                    "timeline": "Q2 2026",
+                    "priority": "medium",
+                    "paradigm": "Stateless to Stateful AI"
+                }
+            ],
+            "paradigm_shifts": {
+                "retrieval_to_reasoning": {
+                    "name": "From Retrieval to Reasoning", 
+                    "description": "Moving beyond simple RAG to multi-hop reasoning and pattern recognition across memories",
+                    "key_technologies": [
+                        "Multi-hop query processing",
+                        "Complex pattern recognition",
+                        "Deep analytical capabilities",
+                        "Comprehensive reasoning chains"
+                    ],
+                    "target_milestone": "v2.5.0",
+                    "research_source": "Advanced RAG research - Towards Data Science"
+                },
+                "stateless_to_stateful": {
+                    "name": "From Stateless to Stateful AI",
+                    "description": "MemOS treats memory as a core computational resource that can be scheduled, shared and evolved over time",
+                    "key_technologies": [
+                        "Memory scheduling algorithms",
+                        "Persistent context management", 
+                        "Adaptive memory allocation",
+                        "Cross-session state preservation"
+                    ],
+                    "target_milestone": "v2.7.0",
+                    "research_source": "Chinese MemOS research - VentureBeat"
+                },
+            }
         },
         "changelog": {
             "latest_version": "v2.4.3",
             "release_date": "2025-07-18",
             "release_type": "quality_excellence",
             "major_changes": [
-                "Test coverage expansion from 26% to 27%",
+                "Enhanced dashboard with paradigm shift roadmaps",
+                "Test coverage expansion from 26% to 27%", 
                 "Fixed 12 failing tests for stability",
                 "Centralized environment configuration",
             ],
@@ -100,6 +219,86 @@ def save_dashboard_data():
         json.dump(data, f, indent=2, default=str)
 
     return data
+
+
+def generate_roadmap_html(data):
+    """Generate the long-term roadmap HTML section."""
+    html = """
+            <h3>🚀 Long-term Development Timeline</h3>
+            <div class="roadmap-timeline">"""
+    
+    for version, details in data['roadmap']['long_term_timeline'].items():
+        status_color = {
+            'planned': '#4facfe',
+            'concept': '#ffa726',
+            'in_progress': '#66bb6a'
+        }.get(details['status'], '#4facfe')
+        
+        html += f"""
+                <div class="roadmap-item" style="border-left-color: {status_color};">
+                    <div class="roadmap-header">
+                        <strong>{version}: {details['name']}</strong>
+                        <span class="roadmap-date">{details['target_date']}</span>
+                    </div>
+                    <div class="roadmap-status">Status: {details['status'].title()}</div>"""
+        
+        if 'paradigm_shift' in details:
+            html += f"""<div class="paradigm-shift">🔄 Paradigm: {details['paradigm_shift']}</div>"""
+        
+        html += f"""<div class="roadmap-features">"""
+        
+        for feature in details['features']:
+            html += f"<div class='feature-item'>• {feature}</div>"
+        
+        html += """</div>
+                </div>"""
+    
+    html += """
+            </div>
+            
+            <h3>� Paradigm Shifts</h3>"""
+    
+    for shift_key, shift_data in data['roadmap']['paradigm_shifts'].items():
+        html += f"""
+            <div class="paradigm-item">
+                <div class="paradigm-header">
+                    <strong>{shift_data['name']}</strong>
+                    <span class="milestone-badge">Target: {shift_data['target_milestone']}</span>
+                </div>
+                <div class="paradigm-description">{shift_data['description']}</div>
+                <div class="tech-list">
+                    <strong>Key Technologies:</strong>"""
+        
+        for tech in shift_data['key_technologies']:
+            html += f"<span class='tech-tag'>• {tech}</span>"
+        
+        html += f"""</div>
+                <div class="research-source">Research: {shift_data['research_source']}</div>
+            </div>"""
+    
+    html += """
+            
+            <h3>�🔬 Research Initiatives</h3>"""
+    
+    for initiative in data['roadmap']['research_initiatives']:
+        priority_color = {
+            'high': '#e53e3e',
+            'medium': '#ffa726', 
+            'experimental': '#9c27b0'
+        }.get(initiative['priority'], '#4facfe')
+        
+        html += f"""
+            <div class="research-item">
+                <div class="research-header">
+                    <strong>{initiative['name']}</strong>
+                    <span class="priority-badge" style="background-color: {priority_color};">{initiative['priority'].title()}</span>
+                </div>
+                <div class="paradigm-tag">🔄 {initiative['paradigm']}</div>
+                <div class="research-description">{initiative['description']}</div>
+                <div class="research-timeline">Timeline: {initiative['timeline']}</div>
+            </div>"""
+    
+    return html
 
 
 def generate_dashboard_html(data):
@@ -212,6 +411,128 @@ def generate_dashboard_html(data):
             border-radius: 8px;
             border-left: 4px solid #28a745;
         }}
+        .roadmap-timeline {{
+            margin: 20px 0;
+        }}
+        .roadmap-item {{
+            border-left: 4px solid #4facfe;
+            padding: 20px;
+            margin: 15px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }}
+        .roadmap-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }}
+        .roadmap-date {{
+            background: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            color: #6c757d;
+        }}
+        .roadmap-status {{
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }}
+        .roadmap-features {{
+            margin-top: 10px;
+        }}
+        .feature-item {{
+            padding: 5px 0;
+            color: #495057;
+        }}
+        .research-item {{
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #9c27b0;
+        }}
+        .research-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }}
+        .priority-badge {{
+            background: #9c27b0;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }}
+        .research-description {{
+            margin: 10px 0;
+            color: #495057;
+            line-height: 1.5;
+        }}
+        .research-timeline {{
+            font-size: 0.9em;
+            color: #6c757d;
+        }}
+        .paradigm-shift {{
+            font-size: 0.85em;
+            color: #9c27b0;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }}
+        .paradigm-item {{
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #6f42c1;
+        }}
+        .paradigm-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }}
+        .milestone-badge {{
+            background: #6f42c1;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }}
+        .paradigm-description {{
+            margin: 10px 0;
+            color: #495057;
+            line-height: 1.5;
+            font-style: italic;
+        }}
+        .tech-list {{
+            margin: 10px 0;
+        }}
+        .tech-tag {{
+            display: inline-block;
+            background: #e9ecef;
+            color: #495057;
+            padding: 3px 8px;
+            margin: 2px;
+            border-radius: 10px;
+            font-size: 0.8em;
+        }}
+        .research-source {{
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-top: 8px;
+            font-style: italic;
+        }}
+        .paradigm-tag {{
+            font-size: 0.8em;
+            color: #6f42c1;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }}
     </style>
 </head>
 <body>
@@ -316,6 +637,8 @@ def generate_dashboard_html(data):
             <div class="timeline-item"><div>• {data['roadmap']['in_progress_features'][0]}</div></div>
             <div class="timeline-item"><div>• {data['roadmap']['in_progress_features'][1]}</div></div>
             <div class="timeline-item"><div>• {data['roadmap']['in_progress_features'][2]}</div></div>
+            
+            {generate_roadmap_html(data)}
         </div>
         
         <div class="section">
