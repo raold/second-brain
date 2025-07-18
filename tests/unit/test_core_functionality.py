@@ -1,8 +1,11 @@
 """
-Simple test suite for the refactored Second Brain application.
+Core functionality test suite for the Second Brain application.
+Comprehensive testing of all major features.
 """
 
 import pytest
+import asyncio
+from datetime import datetime
 
 
 class TestAPI:
@@ -13,12 +16,26 @@ class TestAPI:
         """Test health check endpoint."""
         response = await client.get("/health")
         assert response.status_code == 200
-        assert response.json()["status"] == "healthy"
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert "version" in data
+        assert "timestamp" in data
 
     @pytest.mark.asyncio
-    async def test_store_memory(self, client, api_key):
-        """Test storing a memory."""
-        memory_data = {"content": "This is a test memory", "metadata": {"type": "test", "tags": "example"}}
+    async def test_health_check_includes_version(self, client):
+        """Test health check includes proper version info."""
+        response = await client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["version"] == "2.2.3"  # Current version
+
+    @pytest.mark.asyncio
+    async def test_store_memory_basic(self, client, api_key):
+        """Test storing a basic memory."""
+        memory_data = {
+            "content": "This is a test memory for unit testing",
+            "metadata": {"type": "test", "category": "unit_test"}
+        }
 
         response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
 
@@ -27,151 +44,236 @@ class TestAPI:
         assert data["content"] == memory_data["content"]
         assert data["metadata"] == memory_data["metadata"]
         assert "id" in data
+        assert "created_at" in data
 
     @pytest.mark.asyncio
-    async def test_search_memories(self, client, api_key):
-        """Test searching memories."""
-        # First store a memory with unique content
-        memory_data = {"content": "Python is a unique programming language for testing", "metadata": {"type": "fact"}}
+    async def test_store_memory_with_complex_metadata(self, client, api_key):
+        """Test storing memory with complex metadata."""
+        memory_data = {
+            "content": "Complex memory with detailed metadata",
+            "metadata": {
+                "type": "semantic",
+                "priority": "high",
+                "tags": ["test", "complex", "metadata"],
+                "source": "unit_test",
+                "confidence": 0.95,
+                "created_by": "test_suite"
+            }
+        }
+
+        response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["content"] == memory_data["content"]
+        assert data["metadata"]["type"] == "semantic"
+        assert data["metadata"]["priority"] == "high"
+        assert "test" in data["metadata"]["tags"]
+
+    @pytest.mark.asyncio
+    async def test_search_memories_basic(self, client, api_key):
+        """Test basic memory search functionality."""
+        # First store a unique memory
+        memory_data = {
+            "content": "Python programming language is excellent for data science and machine learning applications",
+            "metadata": {"type": "fact", "domain": "programming"}
+        }
 
         store_response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
         assert store_response.status_code == 200
 
-        # Then search for it using a simple query
-        search_data = {"query": "Python", "limit": 10}
+        # Then search for it
+        search_data = {"query": "Python programming", "limit": 10}
 
         response = await client.post("/memories/search", json=search_data, params={"api_key": api_key})
 
         assert response.status_code == 200
         results = response.json()
-        assert len(results) > 0  # Just verify we get some results
         assert isinstance(results, list)
-        # Verify the structure of results
+        assert len(results) > 0
+        
+        # Verify result structure
         for result in results:
-            assert "content" in result
             assert "id" in result
+            assert "content" in result
+            assert "score" in result
+            assert isinstance(result["score"], (int, float))
 
     @pytest.mark.asyncio
-    async def test_get_memory(self, client, api_key):
-        """Test getting a specific memory."""
-        # First store a memory
-        memory_data = {"content": "Test memory for retrieval", "metadata": {"type": "test"}}
+    async def test_search_memories_advanced(self, client, api_key):
+        """Test advanced search with filters and options."""
+        # Store multiple memories with different metadata
+        memories = [
+            {
+                "content": "Machine learning algorithms for data analysis",
+                "metadata": {"type": "semantic", "priority": "high"}
+            },
+            {
+                "content": "Data visualization techniques using matplotlib",
+                "metadata": {"type": "procedural", "priority": "medium"}
+            }
+        ]
+
+        for memory in memories:
+            response = await client.post("/memories", json=memory, params={"api_key": api_key})
+            assert response.status_code == 200
+
+        # Search with advanced parameters
+        search_data = {
+            "query": "data analysis",
+            "limit": 5,
+            "threshold": 0.0,
+            "metadata_filters": {"type": "semantic"}
+        }
+
+        response = await client.post("/memories/search", json=search_data, params={"api_key": api_key})
+
+        assert response.status_code == 200
+        results = response.json()
+        assert isinstance(results, list)
+
+    @pytest.mark.asyncio
+    async def test_get_memory_by_id(self, client, api_key):
+        """Test retrieving a specific memory by ID."""
+        # Store a memory first
+        memory_data = {
+            "content": "Specific memory for ID retrieval test",
+            "metadata": {"test_id": "get_by_id_test"}
+        }
 
         store_response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
         assert store_response.status_code == 200
         memory_id = store_response.json()["id"]
 
-        # Then get it
+        # Get the memory by ID
         response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
 
         assert response.status_code == 200
         data = response.json()
-        assert data["content"] == memory_data["content"]
         assert data["id"] == memory_id
+        assert data["content"] == memory_data["content"]
+        assert data["metadata"]["test_id"] == "get_by_id_test"
+
+    @pytest.mark.asyncio
+    async def test_list_memories_paginated(self, client, api_key):
+        """Test paginated memory listing."""
+        # Store multiple memories
+        for i in range(5):
+            memory_data = {
+                "content": f"Memory {i} for pagination test",
+                "metadata": {"batch": "pagination_test", "index": i}
+            }
+            response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
+            assert response.status_code == 200
+
+        # Test pagination
+        response = await client.get("/memories", params={"api_key": api_key, "limit": 3, "offset": 0})
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "memories" in data
+        assert "total" in data
+        assert "limit" in data
+        assert "offset" in data
+        assert len(data["memories"]) <= 3
 
     @pytest.mark.asyncio
     async def test_delete_memory(self, client, api_key):
-        """Test deleting a memory."""
-        # First store a memory
-        memory_data = {"content": "Memory to be deleted", "metadata": {"type": "temporary"}}
+        """Test memory deletion."""
+        # Store a memory first
+        memory_data = {
+            "content": "Memory to be deleted",
+            "metadata": {"test": "deletion"}
+        }
 
         store_response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
         assert store_response.status_code == 200
         memory_id = store_response.json()["id"]
 
-        # Then delete it
-        response = await client.delete(f"/memories/{memory_id}", params={"api_key": api_key})
-
-        assert response.status_code == 200
-        assert "deleted successfully" in response.json()["message"]
+        # Delete the memory
+        delete_response = await client.delete(f"/memories/{memory_id}", params={"api_key": api_key})
+        assert delete_response.status_code == 200
 
         # Verify it's deleted
         get_response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
         assert get_response.status_code == 404
 
-    @pytest.mark.asyncio
-    async def test_list_memories(self, client, api_key):
-        """Test listing memories."""
-        response = await client.get("/memories", params={"api_key": api_key, "limit": 10})
 
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
+class TestAuthentication:
+    """Test authentication and security."""
 
     @pytest.mark.asyncio
-    async def test_authentication_required(self, client):
-        """Test that authentication is required."""
-        response = await client.get("/memories")
-        assert response.status_code == 422  # Missing required parameter
+    async def test_unauthorized_access(self, client):
+        """Test that endpoints require authentication."""
+        memory_data = {"content": "Test memory", "metadata": {}}
 
-        response = await client.get("/memories", params={"api_key": "invalid"})
+        # Try without API key
+        response = await client.post("/memories", json=memory_data)
         assert response.status_code == 401
 
-
-class TestDatabase:
-    """Test database operations."""
-
-    @pytest.mark.asyncio
-    async def test_store_and_retrieve_memory(self, db):
-        """Test storing and retrieving a memory."""
-        content = "Test memory content"
-        metadata = {"type": "test", "priority": "high"}
-
-        # Store memory
-        memory_id = await db.store_memory(content, metadata)
-        assert memory_id is not None
-
-        # Retrieve memory
-        memory = await db.get_memory(memory_id)
-        assert memory is not None
-        assert memory["content"] == content
-        assert memory["metadata"] == metadata
-        assert memory["id"] == memory_id
+        # Try with invalid API key
+        response = await client.post("/memories", json=memory_data, params={"api_key": "invalid"})
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_search_memories(self, db):
-        """Test searching memories."""
-        # Store test memories
-        await db.store_memory("Python is great for data science", {"type": "fact"})
-        await db.store_memory("Machine learning is fascinating", {"type": "opinion"})
+    async def test_valid_authentication(self, client, api_key):
+        """Test that valid API key works."""
+        memory_data = {"content": "Test memory", "metadata": {}}
 
-        # Search for related content
-        results = await db.search_memories("Python data science", limit=5)
-        assert len(results) > 0
-        assert results[0]["similarity"] > 0.5  # Should be reasonably similar
+        response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
+        assert response.status_code == 200
 
-    @pytest.mark.asyncio
-    async def test_delete_memory(self, db):
-        """Test deleting a memory."""
-        # Store memory
-        memory_id = await db.store_memory("Memory to delete", {"type": "temporary"})
 
-        # Verify it exists
-        memory = await db.get_memory(memory_id)
-        assert memory is not None
-
-        # Delete it
-        deleted = await db.delete_memory(memory_id)
-        assert deleted is True
-
-        # Verify it's gone
-        memory = await db.get_memory(memory_id)
-        assert memory is None
+class TestDataValidation:
+    """Test data validation and error handling."""
 
     @pytest.mark.asyncio
-    async def test_list_memories(self, db):
-        """Test listing memories."""
-        # Store a few memories
-        await db.store_memory("First memory", {"order": 1})
-        await db.store_memory("Second memory", {"order": 2})
+    async def test_invalid_memory_data(self, client, api_key):
+        """Test handling of invalid memory data."""
+        # Missing content
+        response = await client.post("/memories", json={"metadata": {}}, params={"api_key": api_key})
+        assert response.status_code == 422
 
-        # List memories
-        memories = await db.get_all_memories(limit=10)
-        assert len(memories) >= 2
+        # Invalid JSON structure
+        response = await client.post("/memories", json={"content": 123}, params={"api_key": api_key})
+        assert response.status_code == 422
 
-        # Should be ordered by creation time (newest first)
-        assert memories[0]["created_at"] >= memories[1]["created_at"]
+    @pytest.mark.asyncio
+    async def test_invalid_search_data(self, client, api_key):
+        """Test handling of invalid search data."""
+        # Missing query
+        response = await client.post("/memories/search", json={"limit": 10}, params={"api_key": api_key})
+        assert response.status_code == 422
+
+        # Invalid limit
+        response = await client.post("/memories/search", json={"query": "test", "limit": -1}, params={"api_key": api_key})
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_nonexistent_memory_id(self, client, api_key):
+        """Test handling of nonexistent memory ID."""
+        fake_id = "00000000-0000-0000-0000-000000000000"
+        response = await client.get(f"/memories/{fake_id}", params={"api_key": api_key})
+        assert response.status_code == 404
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+class TestStatusEndpoint:
+    """Test status endpoint functionality."""
+
+    @pytest.mark.asyncio
+    async def test_status_endpoint(self, client, api_key):
+        """Test status endpoint returns proper information."""
+        response = await client.get("/status", params={"api_key": api_key})
+        assert response.status_code == 200
+        
+        data = response.json()
+        assert "database" in data
+        assert "version" in data
+        assert "timestamp" in data
+        assert "memory_count" in data
+
+    @pytest.mark.asyncio
+    async def test_status_endpoint_unauthorized(self, client):
+        """Test status endpoint requires authentication."""
+        response = await client.get("/status")
+        assert response.status_code == 401

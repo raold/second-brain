@@ -43,7 +43,15 @@ from app.session_manager import get_session_manager
 
 # Import service factory and refactored routes
 from app.services.service_factory import get_service_factory
-from app.routes import memory_router, health_router, session_router as new_session_router, dashboard_router as new_dashboard_router, todo_router, github_router
+from app.routes import memory_router, health_router, session_router as new_session_router, dashboard_router as new_dashboard_router, todo_router, github_router, migration_router, visualization_router
+
+# Import importance routes
+from app.routes.importance_routes import router as importance_router
+
+# Import relationship routes
+from app.routes.relationship_routes import router as relationship_router
+
+from .routes.bulk_routes import get_bulk_routes
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -256,6 +264,13 @@ app.include_router(new_session_router)
 app.include_router(new_dashboard_router)
 app.include_router(todo_router)
 app.include_router(github_router)
+app.include_router(migration_router)
+app.include_router(visualization_router)
+app.include_router(importance_router)
+app.include_router(relationship_router)
+
+# Include bulk operations routes
+app.include_router(get_bulk_routes(), dependencies=[Depends(verify_api_key)])
 
 # Setup legacy dashboard and session routes (temporary until full migration)
 setup_dashboard_routes(app)

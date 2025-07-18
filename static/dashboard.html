@@ -9,7 +9,7 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     
     <!-- Modern fonts and icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <!-- Chart.js and other libraries -->
@@ -20,66 +20,90 @@
     
     <style>
         :root {
-            /* Theme colors */
-            --theme-color: var(--theme-gruvbox-light);
+            /* Cursor-inspired Dark Theme (Default) */
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #252526;
+            --bg-tertiary: #2d2d30;
+            --bg-hover: #37373d;
+            --bg-card: #252526;
+            --bg-elevated: #3c3c3c;
             
-            /* Gruvbox Light */
-            --theme-gruvbox-light: {
-                --bg-primary: #fbf1c7;
-                --bg-secondary: #ebdbb2;
-                --bg-tertiary: #d5c4a1;
-                --text-primary: #3c3836;
-                --text-secondary: #504945;
-                --text-muted: #7c6f64;
-                --accent-primary: #9d0006;
-                --accent-secondary: #076678;
-                --accent-success: #79740e;
-                --accent-warning: #b57614;
-                --accent-danger: #af3a03;
-                --border-color: #bdae93;
-                --shadow-color: rgba(60, 56, 54, 0.1);
-            };
+            --text-primary: #cccccc;
+            --text-secondary: #9d9d9d;
+            --text-muted: #6c6c6c;
+            --text-inverse: #ffffff;
             
-            /* Gruvbox Dark */
-            --theme-gruvbox-dark: {
-                --bg-primary: #282828;
-                --bg-secondary: #3c3836;
-                --bg-tertiary: #504945;
-                --text-primary: #ebdbb2;
-                --text-secondary: #d5c4a1;
-                --text-muted: #a89984;
-                --accent-primary: #fb4934;
-                --accent-secondary: #83a598;
-                --accent-success: #b8bb26;
-                --accent-warning: #fabd2f;
-                --accent-danger: #fe8019;
-                --border-color: #665c54;
-                --shadow-color: rgba(0, 0, 0, 0.3);
-            };
+            --accent-primary: #0078d4;
+            --accent-secondary: #00bcf2;
+            --accent-success: #16c60c;
+            --accent-warning: #ffb900;
+            --accent-danger: #d13438;
+            --accent-info: #0078d4;
             
-            /* Default colors */
-            --bg-primary: #fbf1c7;
-            --bg-secondary: #ebdbb2;
-            --bg-tertiary: #d5c4a1;
-            --text-primary: #3c3836;
-            --text-secondary: #504945;
-            --text-muted: #7c6f64;
-            --accent-primary: #9d0006;
-            --accent-secondary: #076678;
-            --accent-success: #79740e;
-            --accent-warning: #b57614;
-            --accent-danger: #af3a03;
-            --border-color: #bdae93;
-            --shadow-color: rgba(60, 56, 54, 0.1);
+            --border-color: #3c3c3c;
+            --border-light: #2d2d30;
+            --border-focus: #0078d4;
+            
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+            
+            /* Light Theme Variables */
+            --light-bg-primary: #ffffff;
+            --light-bg-secondary: #f8f8f8;
+            --light-bg-tertiary: #f0f0f0;
+            --light-bg-hover: #e8e8e8;
+            --light-bg-card: #ffffff;
+            --light-bg-elevated: #f8f8f8;
+            
+            --light-text-primary: #1e1e1e;
+            --light-text-secondary: #6c6c6c;
+            --light-text-muted: #9d9d9d;
+            --light-text-inverse: #ffffff;
+            
+            --light-border-color: #e0e0e0;
+            --light-border-light: #f0f0f0;
+            --light-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --light-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+            --light-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
             
             /* Layout */
             --sidebar-width: 280px;
-            --header-height: 70px;
-            --radius: 12px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --header-height: 60px;
+            --radius-sm: 6px;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-fast: all 0.1s ease;
+            
+            /* Typography */
+            --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
         
-        /* Reset */
+        /* Light theme class */
+        [data-theme="light"] {
+            --bg-primary: var(--light-bg-primary);
+            --bg-secondary: var(--light-bg-secondary);
+            --bg-tertiary: var(--light-bg-tertiary);
+            --bg-hover: var(--light-bg-hover);
+            --bg-card: var(--light-bg-card);
+            --bg-elevated: var(--light-bg-elevated);
+            
+            --text-primary: var(--light-text-primary);
+            --text-secondary: var(--light-text-secondary);
+            --text-muted: var(--light-text-muted);
+            --text-inverse: var(--light-text-inverse);
+            
+            --border-color: var(--light-border-color);
+            --border-light: var(--light-border-light);
+            
+            --shadow-sm: var(--light-shadow-sm);
+            --shadow-md: var(--light-shadow-md);
+            --shadow-lg: var(--light-shadow-lg);
+        }
+        
+        /* Reset and Base Styles */
         * {
             margin: 0;
             padding: 0;
@@ -87,17 +111,40 @@
         }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: var(--font-sans);
             background: var(--bg-primary);
             color: var(--text-primary);
-            line-height: 1.6;
+            line-height: 1.5;
             overflow-x: hidden;
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
-        /* Layout */
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+        
+        /* Layout Container */
         .app-container {
             display: flex;
             min-height: 100vh;
+            background: var(--bg-primary);
         }
         
         /* Sidebar */
@@ -107,62 +154,158 @@
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            transition: var(--transition);
             position: fixed;
             height: 100vh;
             z-index: 1000;
+            transition: var(--transition);
         }
         
         .sidebar-header {
-            padding: 1.5rem;
+            padding: 20px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 12px;
+            background: var(--bg-secondary);
         }
         
         .logo {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--accent-primary);
-            color: white;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--text-inverse);
             border-radius: var(--radius);
-            font-size: 1.5rem;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .user-info {
+            margin-top: auto;
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-inverse);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .user-details {
+            flex: 1;
+            margin-left: 12px;
+        }
+        
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+        
+        .user-plan {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .pro-badge {
+            background: var(--accent-success);
+            color: var(--text-inverse);
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
         
         .sidebar-nav {
             flex: 1;
-            padding: 1rem 0;
+            padding: 16px 0;
             overflow-y: auto;
+        }
+        
+        .nav-section {
+            margin-bottom: 24px;
+        }
+        
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 0 20px 8px;
+            letter-spacing: 0.5px;
         }
         
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1.5rem;
+            gap: 12px;
+            padding: 8px 20px;
             color: var(--text-secondary);
             text-decoration: none;
-            transition: var(--transition);
+            transition: var(--transition-fast);
             cursor: pointer;
+            font-size: 14px;
+            position: relative;
         }
         
         .nav-item:hover {
-            background: var(--bg-tertiary);
+            background: var(--bg-hover);
             color: var(--text-primary);
         }
         
         .nav-item.active {
-            background: var(--bg-tertiary);
+            background: var(--bg-hover);
             color: var(--accent-primary);
-            border-right: 3px solid var(--accent-primary);
+        }
+        
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent-primary);
         }
         
         .nav-item i {
-            width: 20px;
+            width: 16px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .nav-badge {
+            margin-left: auto;
+            background: var(--accent-danger);
+            color: var(--text-inverse);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            min-width: 18px;
             text-align: center;
         }
         
@@ -173,6 +316,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            background: var(--bg-primary);
         }
         
         /* Header */
@@ -183,438 +327,443 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 2rem;
+            padding: 0 24px;
             position: sticky;
             top: 0;
             z-index: 100;
+            backdrop-filter: blur(8px);
         }
         
-        .header-title {
+        .breadcrumb {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
         }
         
-        .header-title h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
+        .breadcrumb-item {
+            color: var(--text-secondary);
+        }
+        
+        .breadcrumb-item.active {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .breadcrumb-separator {
+            color: var(--text-muted);
         }
         
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 12px;
         }
         
-        .theme-switcher {
+        .action-btn {
             display: flex;
-            gap: 0.5rem;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
             background: var(--bg-tertiary);
-            padding: 0.25rem;
-            border-radius: var(--radius);
-        }
-        
-        .theme-btn {
-            padding: 0.5rem;
-            border: none;
-            background: transparent;
             color: var(--text-secondary);
+            border-radius: var(--radius);
             cursor: pointer;
-            border-radius: calc(var(--radius) - 2px);
-            transition: var(--transition);
+            transition: var(--transition-fast);
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
         }
         
-        .theme-btn:hover {
-            background: var(--bg-primary);
+        .action-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--border-focus);
         }
         
-        .theme-btn.active {
-            background: var(--bg-primary);
-            color: var(--accent-primary);
+        .action-btn.primary {
+            background: var(--accent-primary);
+            color: var(--text-inverse);
+            border-color: var(--accent-primary);
+        }
+        
+        .action-btn.primary:hover {
+            background: var(--accent-secondary);
+            border-color: var(--accent-secondary);
+        }
+        
+        .theme-toggle {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            color: var(--text-secondary);
+        }
+        
+        .theme-toggle:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
         }
         
         /* Page Content */
         .page-content {
             flex: 1;
-            padding: 2rem;
+            padding: 24px;
             max-width: 1400px;
             margin: 0 auto;
             width: 100%;
         }
         
-        /* Woodchipper Section */
-        .woodchipper-section {
-            background: var(--bg-secondary);
-            border-radius: var(--radius);
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px var(--shadow-color);
-        }
-        
-        .woodchipper-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .woodchipper-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--accent-primary);
-            color: white;
-            border-radius: var(--radius);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            animation: rotate 4s linear infinite;
-        }
-        
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .woodchipper-header h2 {
-            font-size: 1.5rem;
-            color: var(--text-primary);
-        }
-        
-        .woodchipper-input-container {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .woodchipper-input {
-            flex: 1;
-            padding: 1rem;
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-size: 1rem;
-            transition: var(--transition);
-        }
-        
-        .woodchipper-input:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-        }
-        
-        .woodchipper-btn {
-            padding: 1rem 2rem;
-            background: var(--accent-primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius);
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .woodchipper-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px var(--shadow-color);
-        }
-        
-        /* Dashboard Grid */
-        .dashboard-grid {
+        /* Stats Grid */
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
         }
         
-        /* Cards */
-        .card {
-            background: var(--bg-secondary);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px var(--shadow-color);
-            transition: var(--transition);
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            transition: var(--transition-fast);
         }
         
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 12px var(--shadow-color);
+        .stat-card:hover {
+            border-color: var(--border-focus);
+            box-shadow: var(--shadow-md);
         }
         
-        .card-header {
+        .stat-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            justify-content: space-between;
+            margin-bottom: 16px;
         }
         
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-primary);
+        .stat-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .card-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--bg-tertiary);
-            border-radius: 8px;
+        .stat-icon {
+            width: 16px;
+            height: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--accent-secondary);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
         }
         
-        /* GitHub Tree */
-        .github-tree {
-            font-family: 'Monaco', 'Consolas', monospace;
-            font-size: 0.9rem;
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1;
         }
         
-        .tree-item {
-            padding: 0.25rem 0;
+        .stat-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        
+        .stat-change {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .tree-item:hover {
-            color: var(--accent-secondary);
-        }
-        
-        .tree-folder { color: var(--accent-secondary); }
-        .tree-file { color: var(--text-secondary); }
-        
-        /* TODOs */
-        .todo-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            background: var(--bg-primary);
-            border-radius: 8px;
-            margin-bottom: 0.75rem;
-            transition: var(--transition);
-        }
-        
-        .todo-item:hover {
-            background: var(--bg-tertiary);
-        }
-        
-        .todo-checkbox {
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--border-color);
-            border-radius: 4px;
-            cursor: pointer;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-        
-        .todo-checkbox.completed {
-            background: var(--accent-success);
-            border-color: var(--accent-success);
-        }
-        
-        .todo-content {
-            flex: 1;
-        }
-        
-        .todo-text {
-            color: var(--text-primary);
-            font-size: 0.95rem;
-        }
-        
-        .todo-text.completed {
-            text-decoration: line-through;
-            color: var(--text-muted);
-        }
-        
-        .todo-meta {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.25rem;
-        }
-        
-        .todo-tag {
-            padding: 0.125rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
+            gap: 4px;
+            font-size: 12px;
             font-weight: 500;
         }
         
-        .todo-tag.critical {
-            background: rgba(239, 68, 68, 0.1);
+        .stat-change.positive {
+            color: var(--accent-success);
+        }
+        
+        .stat-change.negative {
             color: var(--accent-danger);
         }
         
-        .todo-tag.high {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--accent-warning);
-        }
-        
-        .todo-tag.medium {
-            background: rgba(131, 165, 152, 0.1);
-            color: var(--accent-secondary);
-        }
-        
-        .todo-tag.low {
-            background: rgba(168, 153, 132, 0.1);
+        .stat-change.neutral {
             color: var(--text-muted);
         }
         
-        /* Roadmap Timeline */
-        .roadmap-timeline {
-            position: relative;
-            padding: 2rem 0;
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
         }
         
-        .timeline-line {
-            position: absolute;
-            left: 20px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: var(--border-color);
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            transition: width 0.3s ease;
         }
         
-        .timeline-item {
-            position: relative;
-            padding-left: 50px;
-            margin-bottom: 2rem;
+        /* Chart Container */
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 32px;
         }
         
-        .timeline-dot {
-            position: absolute;
-            left: 10px;
-            top: 0;
-            width: 20px;
-            height: 20px;
-            background: var(--bg-secondary);
-            border: 3px solid var(--accent-primary);
-            border-radius: 50%;
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 24px;
+            gap: 16px;
         }
         
-        .timeline-content {
-            background: var(--bg-primary);
-            padding: 1rem;
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+        
+        .time-filter {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-tertiary);
+            padding: 4px;
             border-radius: var(--radius);
             border: 1px solid var(--border-color);
         }
         
-        .timeline-version {
-            font-weight: 600;
-            color: var(--accent-primary);
-            margin-bottom: 0.5rem;
-        }
-        
-        .timeline-features {
-            list-style: none;
-        }
-        
-        .timeline-features li {
-            padding: 0.25rem 0;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            padding: 2rem;
-            overflow-y: auto;
-        }
-        
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background: var(--bg-secondary);
-            border-radius: var(--radius);
-            max-width: 600px;
-            width: 100%;
-            max-height: 90vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-        
-        .modal-close {
-            width: 32px;
-            height: 32px;
-            background: none;
+        .time-filter-btn {
+            padding: 6px 12px;
             border: none;
-            color: var(--text-muted);
+            background: transparent;
+            color: var(--text-secondary);
             cursor: pointer;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
+            border-radius: var(--radius-sm);
+            transition: var(--transition-fast);
+            font-size: 12px;
+            font-weight: 500;
         }
         
-        .modal-close:hover {
+        .time-filter-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        .time-filter-btn.active {
+            background: var(--accent-primary);
+            color: var(--text-inverse);
+        }
+        
+        /* Analytics Table */
+        .analytics-table {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+        
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .table-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        .table-content {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px 24px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
             background: var(--bg-tertiary);
         }
         
-        .modal-body {
-            padding: 1.5rem;
-            overflow-y: auto;
-            flex: 1;
+        td {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-primary);
+            font-size: 14px;
         }
         
-        /* Loading */
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem;
+        tr:hover {
+            background: var(--bg-hover);
+        }
+        
+        /* Code Block */
+        .code-block {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text-secondary);
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        
+        /* Input Components */
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: var(--transition-fast);
+            font-family: var(--font-sans);
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+        }
+        
+        .input-field::placeholder {
             color: var(--text-muted);
         }
         
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--accent-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 1rem;
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            justify-content: center;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-focus);
         }
         
-        /* Responsive */
-        @media (max-width: 768px) {
+        .btn.primary {
+            background: var(--accent-primary);
+            color: var(--text-inverse);
+            border-color: var(--accent-primary);
+        }
+        
+        .btn.primary:hover {
+            background: var(--accent-secondary);
+            border-color: var(--accent-secondary);
+        }
+        
+        .btn.success {
+            background: var(--accent-success);
+            color: var(--text-inverse);
+            border-color: var(--accent-success);
+        }
+        
+        .btn.danger {
+            background: var(--accent-danger);
+            color: var(--text-inverse);
+            border-color: var(--accent-danger);
+        }
+        
+        /* Alert/Notification Styles */
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+        
+        .alert.info {
+            background: rgba(0, 120, 212, 0.1);
+            border: 1px solid rgba(0, 120, 212, 0.3);
+            color: var(--accent-info);
+        }
+        
+        .alert.success {
+            background: rgba(22, 198, 12, 0.1);
+            border: 1px solid rgba(22, 198, 12, 0.3);
+            color: var(--accent-success);
+        }
+        
+        .alert.warning {
+            background: rgba(255, 185, 0, 0.1);
+            border: 1px solid rgba(255, 185, 0, 0.3);
+            color: var(--accent-warning);
+        }
+        
+        .alert.danger {
+            background: rgba(209, 52, 56, 0.1);
+            border: 1px solid rgba(209, 52, 56, 0.3);
+            color: var(--accent-danger);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
             }
@@ -627,1011 +776,697 @@
                 margin-left: 0;
             }
             
-            .dashboard-grid {
+            .stats-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .page-content {
+                padding: 16px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 16px;
+            }
+            
+            .header-actions {
+                gap: 8px;
+            }
+            
+            .action-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            
+            .breadcrumb {
+                display: none;
+            }
+        }
+        
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-hover) 50%, var(--bg-tertiary) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: var(--radius);
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Woodchipper Section - Updated for new theme */
+        .woodchipper-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .woodchipper-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .woodchipper-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--text-inverse);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            animation: rotate 4s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .woodchipper-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .woodchipper-input-container {
+            display: flex;
+            gap: 12px;
+            align-items: stretch;
+        }
+        
+        .woodchipper-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: var(--transition-fast);
+            font-family: var(--font-sans);
+        }
+        
+        .woodchipper-input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+        }
+        
+        .woodchipper-btn {
+            padding: 12px 20px;
+            background: var(--accent-primary);
+            color: var(--text-inverse);
+            border: 1px solid var(--accent-primary);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .woodchipper-btn:hover {
+            background: var(--accent-secondary);
+            border-color: var(--accent-secondary);
+        }
+        
+        .woodchipper-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <nav class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">🧠</div>
-                <div>
-                    <h2 style="font-size: 1.1rem; font-weight: 600;">Second Brain</h2>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">Project Pipeline</p>
+                <div class="sidebar-title">Second Brain</div>
+            </div>
+            
+            <div class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a href="#" class="nav-item active" data-section="dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="analytics">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analytics</span>
+                        <span class="nav-badge">24,983</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <a href="#" class="nav-item" data-section="memories">
+                        <i class="fas fa-brain"></i>
+                        <span>Memories</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="bulk">
+                        <i class="fas fa-database"></i>
+                        <span>Bulk Operations</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Integrations</div>
+                    <a href="#" class="nav-item" data-section="github">
+                        <i class="fab fa-github"></i>
+                        <span>GitHub</span>
+                        <i class="fas fa-external-link-alt" style="margin-left: auto; font-size: 12px; opacity: 0.5;"></i>
+                    </a>
+                    <a href="#" class="nav-item" data-section="slack">
+                        <i class="fab fa-slack"></i>
+                        <span>Slack</span>
+                        <span class="action-btn" style="margin-left: auto; padding: 4px 8px; font-size: 11px;">Connect</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Support</div>
+                    <a href="#" class="nav-item" data-section="docs">
+                        <i class="fas fa-book"></i>
+                        <span>Docs</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="contact">
+                        <i class="fas fa-envelope"></i>
+                        <span>Contact Us</span>
+                    </a>
                 </div>
             </div>
             
-            <nav class="sidebar-nav">
-                <a href="#overview" class="nav-item active" onclick="switchSection('overview')">
-                    <i class="fas fa-dashboard"></i>
-                    <span>Overview</span>
-                </a>
-                <a href="#github" class="nav-item" onclick="switchSection('github')">
-                    <i class="fab fa-github"></i>
-                    <span>GitHub Tree</span>
-                </a>
-                <a href="#todos" class="nav-item" onclick="switchSection('todos')">
-                    <i class="fas fa-check-square"></i>
-                    <span>TODOs</span>
-                </a>
-                <a href="#roadmap" class="nav-item" onclick="switchSection('roadmap')">
-                    <i class="fas fa-road"></i>
-                    <span>Roadmap</span>
-                </a>
-                <a href="#metrics" class="nav-item" onclick="switchSection('metrics')">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Metrics</span>
-                </a>
-                <a href="#docs" class="nav-item" onclick="switchSection('docs')">
-                    <i class="fas fa-book"></i>
-                    <span>Documentation</span>
-                </a>
-            </nav>
-        </aside>
+            <div class="user-info" style="display: flex; align-items: center;">
+                <div class="user-avatar">RO</div>
+                <div class="user-details">
+                    <div class="user-name">Richard Oldham</div>
+                    <div class="user-plan">
+                        <span class="pro-badge">Pro</span>
+                        <span>$61 / $175</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
         
         <!-- Main Content -->
         <main class="main-content">
             <!-- Header -->
             <header class="header">
-                <div class="header-title">
-                    <button class="nav-toggle" onclick="toggleSidebar()" style="display: none;">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h1 id="section-title">Overview</h1>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Agents</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">Dashboard</span>
                 </div>
                 
                 <div class="header-actions">
-                    <div class="theme-switcher">
-                        <button class="theme-btn active" onclick="setTheme('gruvbox-light')" title="Gruvbox Light">
-                            <i class="fas fa-sun"></i>
-                        </button>
-                        <button class="theme-btn" onclick="setTheme('gruvbox-dark')" title="Gruvbox Dark">
-                            <i class="fas fa-moon"></i>
-                        </button>
-                        <button class="theme-btn" onclick="setTheme('dracula')" title="Dracula">
-                            <i class="fas fa-bat"></i>
-                        </button>
-                        <button class="theme-btn" onclick="setTheme('solarized')" title="Solarized">
-                            <i class="fas fa-solar-panel"></i>
-                        </button>
-                    </div>
-                    
-                    <button class="sync-btn" onclick="syncData()" title="Sync Data">
-                        <i class="fas fa-sync"></i>
+                    <button class="theme-toggle" onclick="toggleTheme()">
+                        <i class="fas fa-sun"></i>
                     </button>
+                    <a href="#" class="action-btn">
+                        <i class="fas fa-plus"></i>
+                        <span>Invite Team Members</span>
+                    </a>
+                    <a href="#" class="action-btn primary">
+                        <i class="fas fa-edit"></i>
+                        <span>Edit Limit</span>
+                    </a>
                 </div>
             </header>
             
             <!-- Page Content -->
             <div class="page-content">
-                <!-- Woodchipper Section (always visible) -->
-                <section class="woodchipper-section">
-                    <div class="woodchipper-header">
-                        <div class="woodchipper-icon">
-                            <i class="fas fa-blender"></i>
+                <!-- Usage Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">
+                                <div class="stat-icon" style="background: var(--accent-primary); color: var(--text-inverse);">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+                                Lines of Agent Edits
+                            </div>
                         </div>
-                        <div>
-                            <h2>The Woodchipper</h2>
-                            <p style="color: var(--text-muted);">Drop an idea and watch it transform your project timeline</p>
+                        <div class="stat-value">24,983</div>
+                        <div class="stat-subtitle">Usage-based Spending this Month</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 35%;"></div>
+                        </div>
+                        <div class="stat-change positive" style="margin-top: 8px;">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+12.5% from last month</span>
                         </div>
                     </div>
                     
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">
+                                <div class="stat-icon" style="background: var(--accent-success); color: var(--text-inverse);">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                Tabs Accepted
+                            </div>
+                        </div>
+                        <div class="stat-value">0</div>
+                        <div class="stat-subtitle">This month</div>
+                        <div class="stat-change neutral" style="margin-top: 16px;">
+                            <i class="fas fa-minus"></i>
+                            <span>No change</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">
+                                <div class="stat-icon" style="background: var(--accent-info); color: var(--text-inverse);">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                Response Time
+                            </div>
+                        </div>
+                        <div class="stat-value">89ms</div>
+                        <div class="stat-subtitle">Average response time</div>
+                        <div class="stat-change positive" style="margin-top: 16px;">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>-23ms faster</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">
+                                <div class="stat-icon" style="background: var(--accent-warning); color: var(--text-inverse);">
+                                    <i class="fas fa-database"></i>
+                                </div>
+                                Memory Usage
+                            </div>
+                        </div>
+                        <div class="stat-value">1.2GB</div>
+                        <div class="stat-subtitle">Memory consumed</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 60%; background: var(--accent-warning);"></div>
+                        </div>
+                        <div class="stat-change negative" style="margin-top: 8px;">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+200MB increase</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Woodchipper Section -->
+                <div class="woodchipper-section">
+                    <div class="woodchipper-header">
+                        <div class="woodchipper-icon">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <h2>Memory Woodchipper</h2>
+                    </div>
                     <div class="woodchipper-input-container">
                         <input 
                             type="text" 
                             class="woodchipper-input" 
+                            placeholder="Feed your thoughts to the Second Brain..."
                             id="woodchipper-input"
-                            placeholder="Type your idea here... (e.g., 'Add real-time collaboration features')"
-                            onkeypress="if(event.key === 'Enter') processIdea()"
                         >
-                        <button class="woodchipper-btn" onclick="processIdea()">
-                            <i class="fas fa-magic"></i>
-                            Process Idea
+                        <button class="woodchipper-btn" onclick="processInput()">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Process</span>
                         </button>
                     </div>
-                    
-                    <div id="woodchipper-result" style="margin-top: 1rem;"></div>
-                </section>
+                </div>
                 
-                <!-- Dynamic Content Sections -->
-                <div id="content-area">
-                    <!-- Overview Section -->
-                    <section id="overview-section" class="content-section">
-                        <div class="dashboard-grid">
-                            <!-- Project Status Card -->
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">Project Status</h3>
-                                    <div class="card-icon">
-                                        <i class="fas fa-info-circle"></i>
-                                    </div>
-                                </div>
-                                <div class="card-content">
-                                    <div class="status-items">
-                                        <div class="status-item">
-                                            <span class="status-label">Version:</span>
-                                            <span class="status-value" id="current-version">v2.3.1</span>
-                                        </div>
-                                        <div class="status-item">
-                                            <span class="status-label">Health:</span>
-                                            <span class="status-value health-good">Excellent</span>
-                                        </div>
-                                        <div class="status-item">
-                                            <span class="status-label">Progress:</span>
-                                            <div class="progress-bar">
-                                                <div class="progress-fill" style="width: 73%"></div>
+                <!-- Analytics Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Your Analytics</h3>
+                        <div class="time-filter">
+                            <button class="time-filter-btn" onclick="setTimeFilter('1d')">1d</button>
+                            <button class="time-filter-btn" onclick="setTimeFilter('7d')">7d</button>
+                            <button class="time-filter-btn" onclick="setTimeFilter('30d')">30d</button>
+                            <button class="time-filter-btn active" onclick="setTimeFilter('range')">Jul 10 - Jul 18</button>
+                        </div>
+                    </div>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="analyticsChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Integration Status -->
+                <div class="analytics-table">
+                    <div class="table-header">
+                        <h3 class="table-title">Integration Status</h3>
+                        <p class="table-subtitle">Connected services and background agents</p>
+                    </div>
+                    <div class="table-content">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Status</th>
+                                    <th>Last Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <i class="fab fa-github" style="color: var(--text-primary);"></i>
+                                            <div>
+                                                <div style="font-weight: 500;">GitHub</div>
+                                                <div style="font-size: 12px; color: var(--text-muted);">Connected as 'raold' to repositories in GitHub organizations: raold</div>
                                             </div>
-                                            <span class="status-value">73%</span>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Recent Activity Card -->
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">Recent Activity</h3>
-                                    <div class="card-icon">
-                                        <i class="fas fa-history"></i>
-                                    </div>
-                                </div>
-                                <div class="card-content">
-                                    <div id="recent-activity" class="activity-list">
-                                        <div class="loading">
-                                            <div class="spinner"></div>
-                                            Loading activity...
+                                    </td>
+                                    <td>
+                                        <span class="btn success" style="padding: 4px 8px; font-size: 12px;">Connected</span>
+                                    </td>
+                                    <td style="color: var(--text-muted);">2 hours ago</td>
+                                    <td>
+                                        <a href="#" class="action-btn" style="padding: 6px 12px; font-size: 12px;">
+                                            <span>Manage</span>
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <i class="fab fa-slack" style="color: var(--text-secondary);"></i>
+                                            <div>
+                                                <div style="font-weight: 500;">Slack</div>
+                                                <div style="font-size: 12px; color: var(--text-muted);">Work with Background Agents from Slack</div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Quick Stats Card -->
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">Quick Stats</h3>
-                                    <div class="card-icon">
-                                        <i class="fas fa-chart-pie"></i>
-                                    </div>
-                                </div>
-                                <div class="card-content">
-                                    <div class="stats-grid" id="todo-stats">
-                                        <div class="loading">
-                                            <div class="spinner"></div>
-                                            Loading stats...
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                    
-                    <!-- GitHub Tree Section -->
-                    <section id="github-section" class="content-section" style="display: none;">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Repository Structure</h3>
-                                <div class="card-icon">
-                                    <i class="fab fa-github"></i>
-                                </div>
-                            </div>
-                            <div class="card-content">
-                                <div id="github-tree" class="github-tree">
-                                    <div class="loading">
-                                        <div class="spinner"></div>
-                                        Loading repository structure...
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                    
-                    <!-- TODOs Section -->
-                    <section id="todos-section" class="content-section" style="display: none;">
-                        <div class="dashboard-grid">
-                            <!-- Critical Priority -->
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">Critical Priority</h3>
-                                    <div class="card-icon" style="color: var(--accent-danger);">
-                                        <i class="fas fa-fire"></i>
-                                    </div>
-                                </div>
-                                <div class="card-content">
-                                    <div id="critical-todos" class="todo-list">
-                                        <div class="loading">Loading...</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- High Priority -->
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">High Priority</h3>
-                                    <div class="card-icon" style="color: var(--accent-warning);">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                    </div>
-                                </div>
-                                <div class="card-content">
-                                    <div id="high-todos" class="todo-list">
-                                        <div class="loading">Loading...</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Medium Priority -->
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">Medium Priority</h3>
-                                    <div class="card-icon" style="color: var(--accent-secondary);">
-                                        <i class="fas fa-minus-circle"></i>
-                                    </div>
-                                </div>
-                                <div class="card-content">
-                                    <div id="medium-todos" class="todo-list">
-                                        <div class="loading">Loading...</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Low Priority -->
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">Low Priority</h3>
-                                    <div class="card-icon" style="color: var(--text-muted);">
-                                        <i class="fas fa-info-circle"></i>
-                                    </div>
-                                </div>
-                                <div class="card-content">
-                                    <div id="low-todos" class="todo-list">
-                                        <div class="loading">Loading...</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                    
-                    <!-- Roadmap Section -->
-                    <section id="roadmap-section" class="content-section" style="display: none;">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Project Roadmap</h3>
-                                <div class="card-icon">
-                                    <i class="fas fa-road"></i>
-                                </div>
-                            </div>
-                            <div class="card-content">
-                                <div id="roadmap-timeline" class="roadmap-timeline">
-                                    <div class="loading">
-                                        <div class="spinner"></div>
-                                        Loading roadmap...
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                    
-                    <!-- Metrics Section -->
-                    <section id="metrics-section" class="content-section" style="display: none;">
-                        <div class="dashboard-grid">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">Velocity Trend</h3>
-                                    <div class="card-icon">
-                                        <i class="fas fa-chart-line"></i>
-                                    </div>
-                                </div>
-                                <div class="card-content">
-                                    <canvas id="velocity-chart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">Task Distribution</h3>
-                                    <div class="card-icon">
-                                        <i class="fas fa-chart-pie"></i>
-                                    </div>
-                                </div>
-                                <div class="card-content">
-                                    <canvas id="distribution-chart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+                                    </td>
+                                    <td>
+                                        <span class="btn" style="padding: 4px 8px; font-size: 12px; color: var(--text-muted);">Not Connected</span>
+                                    </td>
+                                    <td style="color: var(--text-muted);">—</td>
+                                    <td>
+                                        <a href="#" class="action-btn primary" style="padding: 6px 12px; font-size: 12px;">
+                                            <span>Connect</span>
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
-    
-    <!-- Info Modal -->
-    <div id="info-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modal-title">Information</h3>
-                <button class="modal-close" onclick="closeModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="modal-body">
-                <!-- Dynamic content -->
-            </div>
-        </div>
-    </div>
-    
+
     <script>
-        // Initialize dashboard
-        let currentSection = 'overview';
-        let dashboardData = {};
+        // Theme Management
+        let currentTheme = 'dark';
         
-        // Theme management
-        function setTheme(theme) {
-            const themes = {
-                'gruvbox-light': {
-                    '--bg-primary': '#fbf1c7',
-                    '--bg-secondary': '#ebdbb2',
-                    '--bg-tertiary': '#d5c4a1',
-                    '--text-primary': '#3c3836',
-                    '--text-secondary': '#504945',
-                    '--text-muted': '#7c6f64',
-                    '--accent-primary': '#9d0006',
-                    '--accent-secondary': '#076678',
-                    '--accent-success': '#79740e',
-                    '--accent-warning': '#b57614',
-                    '--accent-danger': '#af3a03',
-                    '--border-color': '#bdae93',
-                    '--shadow-color': 'rgba(60, 56, 54, 0.1)'
-                },
-                'gruvbox-dark': {
-                    '--bg-primary': '#282828',
-                    '--bg-secondary': '#3c3836',
-                    '--bg-tertiary': '#504945',
-                    '--text-primary': '#ebdbb2',
-                    '--text-secondary': '#d5c4a1',
-                    '--text-muted': '#a89984',
-                    '--accent-primary': '#fb4934',
-                    '--accent-secondary': '#83a598',
-                    '--accent-success': '#b8bb26',
-                    '--accent-warning': '#fabd2f',
-                    '--accent-danger': '#fe8019',
-                    '--border-color': '#665c54',
-                    '--shadow-color': 'rgba(0, 0, 0, 0.3)'
-                },
-                'dracula': {
-                    '--bg-primary': '#282a36',
-                    '--bg-secondary': '#44475a',
-                    '--bg-tertiary': '#6272a4',
-                    '--text-primary': '#f8f8f2',
-                    '--text-secondary': '#e9e9f4',
-                    '--text-muted': '#6272a4',
-                    '--accent-primary': '#ff79c6',
-                    '--accent-secondary': '#8be9fd',
-                    '--accent-success': '#50fa7b',
-                    '--accent-warning': '#ffb86c',
-                    '--accent-danger': '#ff5555',
-                    '--border-color': '#44475a',
-                    '--shadow-color': 'rgba(0, 0, 0, 0.4)'
-                },
-                'solarized': {
-                    '--bg-primary': '#fdf6e3',
-                    '--bg-secondary': '#eee8d5',
-                    '--bg-tertiary': '#93a1a1',
-                    '--text-primary': '#073642',
-                    '--text-secondary': '#586e75',
-                    '--text-muted': '#93a1a1',
-                    '--accent-primary': '#dc322f',
-                    '--accent-secondary': '#268bd2',
-                    '--accent-success': '#859900',
-                    '--accent-warning': '#cb4b16',
-                    '--accent-danger': '#d33682',
-                    '--border-color': '#93a1a1',
-                    '--shadow-color': 'rgba(7, 54, 66, 0.1)'
-                }
-            };
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', currentTheme);
             
-            const root = document.documentElement;
-            const themeColors = themes[theme];
-            
-            for (const [property, value] of Object.entries(themeColors)) {
-                root.style.setProperty(property, value);
-            }
-            
-            // Update active theme button
-            document.querySelectorAll('.theme-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.closest('.theme-btn').classList.add('active');
+            const themeIcon = document.querySelector('.theme-toggle i');
+            themeIcon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
             
             // Save theme preference
-            localStorage.setItem('theme', theme);
-        }
-        
-        // Load saved theme
-        window.onload = function() {
-            const savedTheme = localStorage.getItem('theme') || 'gruvbox-light';
-            const themeBtn = document.querySelector(`.theme-btn[onclick*="${savedTheme}"]`);
-            if (themeBtn) themeBtn.click();
+            localStorage.setItem('dashboard-theme', currentTheme);
             
-            // Load initial data
-            loadDashboardData();
-        };
-        
-        // Section switching
-        function switchSection(section) {
-            currentSection = section;
-            
-            // Update nav
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.closest('.nav-item').classList.add('active');
-            
-            // Update content
-            document.querySelectorAll('.content-section').forEach(sec => {
-                sec.style.display = 'none';
-            });
-            document.getElementById(`${section}-section`).style.display = 'block';
-            
-            // Update title
-            const titles = {
-                'overview': 'Overview',
-                'github': 'GitHub Repository',
-                'todos': 'TODO Management',
-                'roadmap': 'Project Roadmap',
-                'metrics': 'Project Metrics',
-                'docs': 'Documentation'
-            };
-            document.getElementById('section-title').textContent = titles[section];
-            
-            // Load section data
-            loadSectionData(section);
-        }
-        
-        // Load dashboard data
-        async function loadDashboardData() {
-            try {
-                const response = await fetch('/dashboard/');
-                const data = await response.json();
-                dashboardData = data.data;
-                
-                // Update overview
-                updateOverview();
-                
-                // Load current section
-                loadSectionData(currentSection);
-            } catch (error) {
-                console.error('Failed to load dashboard data:', error);
+            // Update chart if it exists
+            if (window.analyticsChart) {
+                updateChartTheme();
             }
         }
         
-        // Load section-specific data
-        async function loadSectionData(section) {
-            switch(section) {
-                case 'github':
-                    loadGitHubTree();
-                    break;
-                case 'todos':
-                    loadTODOs();
-                    break;
-                case 'roadmap':
-                    loadRoadmap();
-                    break;
-                case 'metrics':
-                    loadMetrics();
-                    break;
-            }
+        // Initialize theme from localStorage
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('dashboard-theme') || 'dark';
+            currentTheme = savedTheme;
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            
+            const themeIcon = document.querySelector('.theme-toggle i');
+            themeIcon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         }
         
-        // Update overview
-        async function updateOverview() {
-            // Recent activity
-            const activityHtml = dashboardData.recent_activities?.map(activity => `
-                <div class="activity-item">
-                    <i class="fas fa-${activity.icon || 'circle'}"></i>
-                    <span>${activity.description}</span>
-                    <time>${new Date(activity.timestamp).toRelativeTimeString()}</time>
-                </div>
-            `).join('') || '<p>No recent activity</p>';
-            
-            document.getElementById('recent-activity').innerHTML = activityHtml;
-            
-            // Update current version
-            if (dashboardData.current_version) {
-                document.getElementById('current-version').textContent = dashboardData.current_version;
-            }
-            
-            // Load TODO stats
-            await loadTodoStats();
-        }
-        
-        // Load TODO statistics
-        async function loadTodoStats() {
-            try {
-                const response = await fetch('/todos/stats');
-                const stats = await response.json();
-                
-                const todoStatsHtml = `
-                    <div class="stat-item">
-                        <div class="stat-value">${stats.total}</div>
-                        <div class="stat-label">Total TODOs</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${stats.by_status.in_progress || 0}</div>
-                        <div class="stat-label">In Progress</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${stats.by_status.completed || 0}</div>
-                        <div class="stat-label">Completed</div>
-                    </div>
-                `;
-                
-                document.getElementById('todo-stats').innerHTML = todoStatsHtml;
-            } catch (error) {
-                console.error('Failed to load TODO stats:', error);
-            }
-        }
-        
-        // Load GitHub tree
-        async function loadGitHubTree() {
-            const treeContainer = document.getElementById('github-tree');
-            treeContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Loading repository...</div>';
-            
-            try {
-                const response = await fetch('/github/tree?max_depth=3');
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    const treeHtml = renderTree(data.tree);
-                    treeContainer.innerHTML = treeHtml;
-                } else {
-                    throw new Error('Failed to load tree');
-                }
-            } catch (error) {
-                treeContainer.innerHTML = '<p class="error">Failed to load repository structure</p>';
-            }
-        }
-        
-        // Render tree recursively
-        function renderTree(node, level = 0) {
-            const isFolder = node.type === 'folder';
-            const icon = isFolder ? 'fa-folder' : getFileIcon(node.name);
-            const hasChildren = node.children && node.children.length > 0;
-            
-            let html = `
-                <div class="tree-item tree-${node.type}" style="margin-left: ${level * 1.5}rem" ${isFolder ? 'onclick="toggleFolder(this)"' : ''}>
-                    <i class="fas ${icon}"></i> ${node.name}
-                </div>
-            `;
-            
-            if (hasChildren) {
-                html += `<div class="tree-children" style="${level === 0 ? '' : 'display: none;'}">`;
-                node.children.forEach(child => {
-                    html += renderTree(child, level + 1);
-                });
-                html += '</div>';
-            }
-            
-            return html;
-        }
-        
-        // Get appropriate icon for file type
-        function getFileIcon(filename) {
-            const ext = filename.split('.').pop().toLowerCase();
-            const iconMap = {
-                'py': 'fa-python',
-                'js': 'fa-js',
-                'ts': 'fa-js',
-                'html': 'fa-html5',
-                'css': 'fa-css3',
-                'md': 'fa-markdown',
-                'json': 'fa-code',
-                'yml': 'fa-cog',
-                'yaml': 'fa-cog',
-                'txt': 'fa-file-alt',
-                'pdf': 'fa-file-pdf',
-                'png': 'fa-image',
-                'jpg': 'fa-image',
-                'svg': 'fa-image'
-            };
-            return iconMap[ext] || 'fa-file-code';
-        }
-        
-        // Toggle folder open/close
-        function toggleFolder(element) {
-            const children = element.nextElementSibling;
-            if (children && children.classList.contains('tree-children')) {
-                children.style.display = children.style.display === 'none' ? 'block' : 'none';
-                const icon = element.querySelector('i');
-                if (icon) {
-                    icon.classList.toggle('fa-folder');
-                    icon.classList.toggle('fa-folder-open');
-                }
-            }
-        }
-        
-        // Load TODOs
-        async function loadTODOs() {
-            try {
-                const response = await fetch('/todos');
-                const todos = await response.json();
-                
-                // Group by priority
-                const grouped = {
-                    critical: [],
-                    high: [],
-                    medium: [],
-                    low: []
-                };
-                
-                todos.forEach(todo => {
-                    const priority = todo.priority || 'medium';
-                    grouped[priority].push(todo);
-                });
-                
-                // Render each priority group
-                ['critical', 'high', 'medium', 'low'].forEach(priority => {
-                    const container = document.getElementById(`${priority}-todos`);
-                    const items = grouped[priority];
+        // Navigation
+        function initializeNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
                     
-                    if (items.length === 0) {
-                        container.innerHTML = '<p style="color: var(--text-muted);">No items</p>';
-                    } else {
-                        container.innerHTML = items.map(todo => `
-                            <div class="todo-item">
-                                <div class="todo-checkbox ${todo.status === 'completed' ? 'completed' : ''}" 
-                                     onclick="toggleTodo('${todo.id}')">
-                                    ${todo.status === 'completed' ? '<i class="fas fa-check"></i>' : ''}
-                                </div>
-                                <div class="todo-content">
-                                    <div class="todo-text ${todo.status === 'completed' ? 'completed' : ''}">
-                                        ${todo.content}
-                                    </div>
-                                    <div class="todo-meta">
-                                        <span class="todo-tag ${priority}">${priority}</span>
-                                        ${todo.assignee ? `<span class="todo-tag">${todo.assignee}</span>` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('');
+                    // Remove active class from all items
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    
+                    // Add active class to clicked item
+                    item.classList.add('active');
+                    
+                    // Handle section switching
+                    const section = item.getAttribute('data-section');
+                    switchSection(section);
+                });
+            });
+        }
+        
+        function switchSection(section) {
+            console.log('Switching to section:', section);
+            // Here you would implement section switching logic
+        }
+        
+        // Chart Setup
+        let analyticsChart;
+        
+        function initializeChart() {
+            const ctx = document.getElementById('analyticsChart');
+            if (!ctx) return;
+            
+            const chartData = {
+                labels: ['Jul 16', 'Jul 17', 'Jul 18'],
+                datasets: [{
+                    label: 'Lines',
+                    data: [10000, 2500, 5000],
+                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim(),
+                    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim() + '20',
+                    tension: 0.3,
+                    fill: false,
+                    pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim(),
+                    pointBorderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim(),
+                    pointBorderWidth: 2,
+                    pointRadius: 6
+                }]
+            };
+            
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
                     }
-                });
-            } catch (error) {
-                console.error('Failed to load TODOs:', error);
-            }
-        }
-        
-        // Load roadmap
-        async function loadRoadmap() {
-            const roadmapContainer = document.getElementById('roadmap-timeline');
-            
-            try {
-                const response = await fetch('/dashboard/roadmap/visualization');
-                const data = await response.json();
-                const roadmap = data.roadmap;
-                
-                const timelineHtml = `
-                    <div class="timeline-line"></div>
-                    ${roadmap.versions.map((version, index) => `
-                        <div class="timeline-item">
-                            <div class="timeline-dot"></div>
-                            <div class="timeline-content">
-                                <div class="timeline-version">${version.version}</div>
-                                <div class="timeline-date">${version.target_date}</div>
-                                <ul class="timeline-features">
-                                    ${version.features.map(feature => `
-                                        <li>${feature}</li>
-                                    `).join('')}
-                                </ul>
-                            </div>
-                        </div>
-                    `).join('')}
-                `;
-                
-                roadmapContainer.innerHTML = timelineHtml;
-            } catch (error) {
-                roadmapContainer.innerHTML = '<p class="error">Failed to load roadmap</p>';
-            }
-        }
-        
-        // Load metrics
-        function loadMetrics() {
-            // Velocity chart
-            const velocityCtx = document.getElementById('velocity-chart').getContext('2d');
-            new Chart(velocityCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                    datasets: [{
-                        label: 'Tasks Completed',
-                        data: [12, 19, 15, 25],
-                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary'),
-                        tension: 0.4
-                    }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-            
-            // Distribution chart
-            const distributionCtx = document.getElementById('distribution-chart').getContext('2d');
-            new Chart(distributionCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Completed', 'In Progress', 'TODO'],
-                    datasets: [{
-                        data: [65, 20, 15],
-                        backgroundColor: [
-                            getComputedStyle(document.documentElement).getPropertyValue('--accent-success'),
-                            getComputedStyle(document.documentElement).getPropertyValue('--accent-warning'),
-                            getComputedStyle(document.documentElement).getPropertyValue('--text-muted')
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-        
-        // Process idea through woodchipper
-        async function processIdea() {
-            const input = document.getElementById('woodchipper-input');
-            const resultDiv = document.getElementById('woodchipper-result');
-            const idea = input.value.trim();
-            
-            if (!idea) {
-                resultDiv.innerHTML = '<p style="color: var(--accent-danger);">Please enter an idea!</p>';
-                return;
-            }
-            
-            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Processing your idea...</div>';
-            
-            try {
-                const response = await fetch('/session/ingest', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
+                scales: {
+                    x: {
+                        grid: {
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--border-light').trim(),
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim(),
+                            font: {
+                                size: 12
+                            }
+                        }
                     },
-                    body: JSON.stringify({
-                        idea: idea,
-                        source: 'dashboard',
-                        priority: 'medium'
-                    })
-                });
-                
-                const result = await response.json();
-                
-                // Display result
-                resultDiv.innerHTML = `
-                    <div class="woodchipper-result success">
-                        <h4>✅ Idea Processed Successfully!</h4>
-                        <div class="result-details">
-                            <p><strong>Detected Features:</strong> ${result.detected_features.join(', ') || 'None'}</p>
-                            <p><strong>Impact:</strong> ${result.impact_summary}</p>
-                            <p><strong>Timeline Updated:</strong> ${result.auto_updates.timeline}</p>
-                            <p><strong>Affected Milestones:</strong> ${result.auto_updates.milestones.join(', ') || 'None'}</p>
-                        </div>
-                        <button onclick="loadRoadmap()" class="view-changes-btn">
-                            <i class="fas fa-eye"></i> View Updated Roadmap
-                        </button>
-                    </div>
-                `;
-                
-                // Clear input
+                    y: {
+                        grid: {
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--border-light').trim(),
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim(),
+                            font: {
+                                size: 12
+                            },
+                            callback: function(value) {
+                                if (value >= 1000) {
+                                    return (value / 1000) + 'k';
+                                }
+                                return value;
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            };
+            
+            analyticsChart = new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: chartOptions
+            });
+        }
+        
+        function updateChartTheme() {
+            if (!analyticsChart) return;
+            
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim();
+            const textMuted = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+            const borderLight = getComputedStyle(document.documentElement).getPropertyValue('--border-light').trim();
+            
+            analyticsChart.data.datasets[0].borderColor = primaryColor;
+            analyticsChart.data.datasets[0].backgroundColor = primaryColor + '20';
+            analyticsChart.data.datasets[0].pointBackgroundColor = primaryColor;
+            
+            analyticsChart.options.scales.x.grid.color = borderLight;
+            analyticsChart.options.scales.y.grid.color = borderLight;
+            analyticsChart.options.scales.x.ticks.color = textMuted;
+            analyticsChart.options.scales.y.ticks.color = textMuted;
+            
+            analyticsChart.update();
+        }
+        
+        // Time Filter
+        function setTimeFilter(period) {
+            const buttons = document.querySelectorAll('.time-filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            
+            // Update chart data based on period
+            console.log('Time filter set to:', period);
+        }
+        
+        // Woodchipper functionality
+        function processInput() {
+            const input = document.getElementById('woodchipper-input');
+            const value = input.value.trim();
+            
+            if (!value) return;
+            
+            const btn = document.querySelector('.woodchipper-btn');
+            const originalText = btn.innerHTML;
+            
+            // Show loading state
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Processing...</span>';
+            btn.disabled = true;
+            
+            // Simulate processing
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
                 input.value = '';
                 
-                // Refresh data
+                // Show success message
+                showNotification('Memory processed successfully!', 'success');
+            }, 2000);
+        }
+        
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Position notification
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '10000';
+            notification.style.minWidth = '300px';
+            notification.style.animation = 'slideIn 0.3s ease';
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
                 setTimeout(() => {
-                    loadDashboardData();
-                }, 1000);
-                
-            } catch (error) {
-                resultDiv.innerHTML = `
-                    <div class="woodchipper-result error">
-                        <h4>❌ Processing Failed</h4>
-                        <p>${error.message || 'Failed to process idea'}</p>
-                    </div>
-                `;
-            }
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
         }
         
-        // Helper functions
-        function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('open');
-        }
-        
-        function closeModal() {
-            document.getElementById('info-modal').classList.remove('show');
-        }
-        
-        function showModal(title, content) {
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-body').innerHTML = content;
-            document.getElementById('info-modal').classList.add('show');
-        }
-        
-        function syncData() {
-            loadDashboardData();
-            showModal('Data Synced', '<p>Dashboard data has been refreshed successfully!</p>');
-        }
-        
-        // Date formatting
-        Date.prototype.toRelativeTimeString = function() {
-            const seconds = Math.floor((new Date() - this) / 1000);
-            const intervals = [
-                { label: 'year', seconds: 31536000 },
-                { label: 'month', seconds: 2592000 },
-                { label: 'day', seconds: 86400 },
-                { label: 'hour', seconds: 3600 },
-                { label: 'minute', seconds: 60 },
-                { label: 'second', seconds: 1 }
-            ];
-            
-            for (const interval of intervals) {
-                const count = Math.floor(seconds / interval.seconds);
-                if (count >= 1) {
-                    return count === 1 
-                        ? `${count} ${interval.label} ago`
-                        : `${count} ${interval.label}s ago`;
-                }
+        // Add keyframes for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
             }
-            return 'just now';
-        };
-        
-        // Additional styles for dynamic elements
-        const additionalStyles = document.createElement('style');
-        additionalStyles.textContent = `
-            .woodchipper-result {
-                padding: 1rem;
-                border-radius: 8px;
-                margin-top: 1rem;
-            }
-            
-            .woodchipper-result.success {
-                background: rgba(121, 116, 14, 0.1);
-                border: 1px solid var(--accent-success);
-            }
-            
-            .woodchipper-result.error {
-                background: rgba(175, 58, 3, 0.1);
-                border: 1px solid var(--accent-danger);
-            }
-            
-            .result-details {
-                margin: 1rem 0;
-            }
-            
-            .result-details p {
-                margin: 0.5rem 0;
-                color: var(--text-secondary);
-            }
-            
-            .view-changes-btn {
-                padding: 0.5rem 1rem;
-                background: var(--accent-primary);
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                font-weight: 500;
-                transition: var(--transition);
-            }
-            
-            .view-changes-btn:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 4px 8px var(--shadow-color);
-            }
-            
-            .status-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 0.5rem 0;
-            }
-            
-            .status-label {
-                color: var(--text-muted);
-                font-size: 0.9rem;
-            }
-            
-            .status-value {
-                font-weight: 600;
-                color: var(--text-primary);
-            }
-            
-            .health-good {
-                color: var(--accent-success);
-            }
-            
-            .progress-bar {
-                flex: 1;
-                height: 8px;
-                background: var(--bg-tertiary);
-                border-radius: 4px;
-                margin: 0 1rem;
-                overflow: hidden;
-            }
-            
-            .progress-fill {
-                height: 100%;
-                background: var(--accent-primary);
-                transition: width 0.5s ease;
-            }
-            
-            .stats-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 1rem;
-                text-align: center;
-            }
-            
-            .stat-value {
-                font-size: 2rem;
-                font-weight: 700;
-                color: var(--accent-primary);
-            }
-            
-            .stat-label {
-                font-size: 0.8rem;
-                color: var(--text-muted);
-                text-transform: uppercase;
-            }
-            
-            .activity-item {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                padding: 0.5rem 0;
-                border-bottom: 1px solid var(--border-color);
-            }
-            
-            .activity-item:last-child {
-                border-bottom: none;
-            }
-            
-            .activity-item time {
-                margin-left: auto;
-                font-size: 0.8rem;
-                color: var(--text-muted);
-            }
-            
-            .tree-children {
-                display: block;
-            }
-            
-            .sync-btn {
-                padding: 0.5rem 1rem;
-                background: var(--bg-tertiary);
-                border: none;
-                border-radius: var(--radius);
-                color: var(--text-primary);
-                cursor: pointer;
-                transition: var(--transition);
-            }
-            
-            .sync-btn:hover {
-                background: var(--accent-secondary);
-                color: white;
-            }
-            
-            @media (max-width: 768px) {
-                .nav-toggle {
-                    display: block !important;
-                    background: none;
-                    border: none;
-                    font-size: 1.25rem;
-                    color: var(--text-primary);
-                    cursor: pointer;
-                }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
             }
         `;
-        document.head.appendChild(additionalStyles);
+        document.head.appendChild(style);
+        
+        // Enter key handler for woodchipper
+        document.getElementById('woodchipper-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                processInput();
+            }
+        });
+        
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
+        }
+        
+        // Initialize everything when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTheme();
+            initializeNavigation();
+            initializeChart();
+            
+            // Add mobile menu button for small screens
+            if (window.innerWidth <= 1024) {
+                const header = document.querySelector('.header');
+                const menuBtn = document.createElement('button');
+                menuBtn.className = 'action-btn';
+                menuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                menuBtn.onclick = toggleSidebar;
+                header.querySelector('.breadcrumb').style.display = 'none';
+                header.insertBefore(menuBtn, header.firstChild);
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (analyticsChart) {
+                analyticsChart.resize();
+            }
+        });
     </script>
 </body>
 </html> 

@@ -1,28 +1,56 @@
 """
-Memory Routes - Thin route handlers for memory operations.
-All business logic is delegated to MemoryService.
+Memory Management API Routes
+
+Handles CRUD operations for memories with cognitive type classification
+and advanced search capabilities.
 """
 
+import json
 import logging
-from typing import List
+import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from pydantic import BaseModel, Field
+
 from app.docs import (
-    MemoryRequest,
-    MemoryResponse,
-    SearchRequest,
-    SemanticMemoryRequest,
-    EpisodicMemoryRequest,
-    ProceduralMemoryRequest,
-    ContextualSearchRequest,
-    MemoryType
+    ContextualSearchRequest, EpisodicMemoryRequest, MemoryRequest,
+    MemoryResponse, MemoryType, ProceduralMemoryRequest, SearchRequest,
+    SemanticMemoryRequest
 )
 from app.services.service_factory import get_memory_service
 from app.security import SecurityManager, get_security_manager
-from app.app import get_db_instance, verify_api_key
+from app.database import get_database
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/memories", tags=["Memories"])
+
+
+# Local API key verification to avoid circular imports
+async def verify_api_key(api_key: str = Query(..., alias="api_key")):
+    """Verify API key for memory operations."""
+    import os
+    
+    valid_tokens = os.getenv("API_TOKENS", "").split(",")
+    valid_tokens = [token.strip() for token in valid_tokens if token.strip()]
+    
+    if not valid_tokens:
+        raise HTTPException(status_code=500, detail="No API tokens configured")
+    
+    if api_key not in valid_tokens:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    
+    return api_key
+
+
+def convert_metadata_to_dict(metadata):
+    """Convert Pydantic metadata to dict if needed."""
+    if metadata is None:
+        return None
+    if hasattr(metadata, 'dict'):
+        return metadata.dict()
+    return metadata
 
 
 @router.post(
@@ -34,7 +62,7 @@ router = APIRouter(prefix="/memories", tags=["Memories"])
 async def store_memory(
     request: MemoryRequest,
     request_obj: Request,
-    db=Depends(get_db_instance),
+    db=Depends(get_database),
     _: str = Depends(verify_api_key)
 ):
     """Store a new memory."""
@@ -45,17 +73,18 @@ async def store_memory(
     
     # Delegate to service
     try:
-        memory_service = get_memory_service()
-        memory = await memory_service.store_memory(
+        service = get_memory_service()
+        memory_id = await service.store_memory(
+            db=db,
             content=request.content,
             memory_type=request.memory_type,
-            semantic_metadata=request.semantic_metadata,
-            episodic_metadata=request.episodic_metadata,
-            procedural_metadata=request.procedural_metadata,
+            semantic_metadata=convert_metadata_to_dict(request.semantic_metadata),
+            episodic_metadata=convert_metadata_to_dict(request.episodic_metadata),
+            procedural_metadata=convert_metadata_to_dict(request.procedural_metadata),
             importance_score=request.importance_score,
             metadata=request.metadata
         )
-        return memory
+        return memory_id
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -73,7 +102,7 @@ async def store_memory(
 async def search_memories(
     request: SearchRequest,
     request_obj: Request,
-    db=Depends(get_db_instance),
+    db=Depends(get_database),
     _: str = Depends(verify_api_key)
 ):
     """Search memories using vector similarity."""
@@ -84,8 +113,9 @@ async def search_memories(
     
     # Delegate to service
     try:
-        memory_service = get_memory_service()
-        memories = await memory_service.search_memories(
+        service = get_memory_service()
+        memories = await service.search_memories(
+            db=db,
             query=request.query,
             limit=request.limit or 10
         )
@@ -107,7 +137,7 @@ async def search_memories(
 async def store_semantic_memory(
     request: SemanticMemoryRequest,
     request_obj: Request,
-    db=Depends(get_db_instance),
+    db=Depends(get_database),
     _: str = Depends(verify_api_key)
 ):
     """Store a semantic memory."""
@@ -118,14 +148,18 @@ async def store_semantic_memory(
     
     # Delegate to service
     try:
-        memory_service = get_memory_service()
-        memory = await memory_service.store_memory(
+        service = get_memory_service()
+        memory_id = await service.store_memory(
+            db=db,
             content=request.content,
             memory_type=MemoryType.SEMANTIC,
-            semantic_metadata=request.semantic_metadata,
-            importance_score=request.importance_score
+            semantic_metadata=convert_metadata_to_dict(request.semantic_metadata),
+            episodic_metadata=None,
+            procedural_metadata=None,
+            importance_score=request.importance_score,
+            metadata=request.metadata
         )
-        return memory
+        return memory_id
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -143,7 +177,7 @@ async def store_semantic_memory(
 async def store_episodic_memory(
     request: EpisodicMemoryRequest,
     request_obj: Request,
-    db=Depends(get_db_instance),
+    db=Depends(get_database),
     _: str = Depends(verify_api_key)
 ):
     """Store an episodic memory."""
@@ -154,14 +188,18 @@ async def store_episodic_memory(
     
     # Delegate to service
     try:
-        memory_service = get_memory_service()
-        memory = await memory_service.store_memory(
+        service = get_memory_service()
+        memory_id = await service.store_memory(
+            db=db,
             content=request.content,
             memory_type=MemoryType.EPISODIC,
-            episodic_metadata=request.episodic_metadata,
-            importance_score=request.importance_score
+            semantic_metadata=None,
+            episodic_metadata=convert_metadata_to_dict(request.episodic_metadata),
+            procedural_metadata=None,
+            importance_score=request.importance_score,
+            metadata=request.metadata
         )
-        return memory
+        return memory_id
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -179,7 +217,7 @@ async def store_episodic_memory(
 async def store_procedural_memory(
     request: ProceduralMemoryRequest,
     request_obj: Request,
-    db=Depends(get_db_instance),
+    db=Depends(get_database),
     _: str = Depends(verify_api_key)
 ):
     """Store a procedural memory."""
@@ -190,14 +228,18 @@ async def store_procedural_memory(
     
     # Delegate to service
     try:
-        memory_service = get_memory_service()
-        memory = await memory_service.store_memory(
+        service = get_memory_service()
+        memory_id = await service.store_memory(
+            db=db,
             content=request.content,
             memory_type=MemoryType.PROCEDURAL,
-            procedural_metadata=request.procedural_metadata,
-            importance_score=request.importance_score
+            semantic_metadata=None,
+            episodic_metadata=None,
+            procedural_metadata=convert_metadata_to_dict(request.procedural_metadata),
+            importance_score=request.importance_score,
+            metadata=request.metadata
         )
-        return memory
+        return memory_id
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -215,7 +257,7 @@ async def store_procedural_memory(
 async def contextual_search(
     request: ContextualSearchRequest,
     request_obj: Request,
-    db=Depends(get_db_instance),
+    db=Depends(get_database),
     _: str = Depends(verify_api_key)
 ):
     """Perform contextual search with advanced filtering."""
@@ -226,14 +268,15 @@ async def contextual_search(
     
     # Delegate to service
     try:
-        memory_service = get_memory_service()
+        service = get_memory_service()
         
         # Convert string memory types to enums if provided
         memory_types = None
         if request.memory_types:
             memory_types = [MemoryType(mt) for mt in request.memory_types]
         
-        results = await memory_service.contextual_search(
+        results = await service.contextual_search(
+            db=db,
             query=request.query,
             memory_types=memory_types,
             temporal_filter=request.temporal_filter,
@@ -257,13 +300,13 @@ async def contextual_search(
 )
 async def get_memory(
     memory_id: str,
-    db=Depends(get_db_instance),
+    db=Depends(get_database),
     _: str = Depends(verify_api_key)
 ):
     """Get a specific memory by ID."""
     try:
-        memory_service = get_memory_service()
-        memory = await memory_service.get_memory_by_id(memory_id)
+        service = get_memory_service()
+        memory = await service.get_memory(db, memory_id)
         
         if not memory:
             raise HTTPException(status_code=404, detail="Memory not found")

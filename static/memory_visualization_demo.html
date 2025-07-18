@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Visualization Demo - Second Brain</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .demo-header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .demo-header p {
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .feature-description {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .demo-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .demo-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .api-endpoint {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .sample-graph {
+            width: 100%;
+            height: 300px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .sample-data {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>🧠 Memory Visualization System</h1>
+            <p>Interactive exploration of knowledge graphs with advanced relationship analysis</p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🕸️</div>
+                <div class="feature-title">Memory Relationship Graphs</div>
+                <div class="feature-description">
+                    Visualize complex relationships between memories using semantic similarity, 
+                    temporal proximity, and conceptual hierarchies. Interactive D3.js graphs 
+                    with clustering and filtering.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">Advanced Search Interface</div>
+                <div class="feature-description">
+                    Multi-dimensional search supporting semantic, temporal, importance, and 
+                    hybrid search modes. Real-time filtering with clustering analysis and 
+                    relationship detection.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-title">Smart Clustering</div>
+                <div class="feature-description">
+                    Automatic detection of memory clusters using K-means, DBSCAN, and semantic 
+                    clustering algorithms. Identify topics, patterns, and knowledge domains.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">Analytics & Insights</div>
+                <div class="feature-description">
+                    Comprehensive analytics including network metrics, relationship patterns, 
+                    concept evolution tracking, and knowledge graph statistics.
+                </div>
+            </div>
+        </div>
+
+        <div class="highlight">
+            <h2>🚀 Ready to Explore Your Knowledge Graph?</h2>
+            <p>The Memory Visualization system is now active and ready for use!</p>
+            <a href="/static/memory_visualization.html" class="btn">Launch Visualization Interface</a>
+            <a href="#api-docs" class="btn btn-secondary">View API Documentation</a>
+        </div>
+
+        <div class="demo-section" id="api-docs">
+            <h3>📡 API Endpoints</h3>
+            
+            <div class="api-endpoint">
+                POST /visualization/graph
+            </div>
+            <p>Generate interactive memory graphs with nodes, edges, and clusters</p>
+            <div class="code-block">
+{
+  "memory_types": ["semantic", "episodic", "procedural"],
+  "importance_threshold": 0.3,
+  "max_nodes": 100,
+  "include_relationships": true,
+  "cluster_method": "semantic"
+}
+            </div>
+
+            <div class="api-endpoint">
+                POST /visualization/search/advanced
+            </div>
+            <p>Perform advanced multi-dimensional memory search</p>
+            <div class="code-block">
+{
+  "query": "machine learning concepts",
+  "search_type": "hybrid",
+  "memory_types": ["semantic"],
+  "limit": 50,
+  "include_clusters": true,
+  "include_relationships": true
+}
+            </div>
+
+            <div class="api-endpoint">
+                GET /visualization/relationships/{memory_id}
+            </div>
+            <p>Get detailed relationships for a specific memory</p>
+
+            <div class="api-endpoint">
+                GET /visualization/clusters
+            </div>
+            <p>Get memory clusters using specified algorithms</p>
+
+            <div class="api-endpoint">
+                GET /visualization/analytics/memory-stats
+            </div>
+            <p>Get comprehensive memory analytics and statistics</p>
+        </div>
+
+        <div class="demo-section">
+            <h3>🎨 Sample Visualization</h3>
+            <p>Interactive memory graph showing relationships between different memory types:</p>
+            <svg class="sample-graph" id="sampleGraph"></svg>
+            <button class="btn" onclick="generateSampleGraph()">Generate Sample Graph</button>
+        </div>
+
+        <div class="demo-section">
+            <h3>📋 Sample API Response</h3>
+            <div class="sample-data">
+                <pre id="sampleResponse">
+{
+  "nodes": [
+    {
+      "id": "memory-1",
+      "label": "Machine Learning Fundamentals",
+      "memory_type": "semantic",
+      "importance_score": 0.85,
+      "style": {
+        "color": "#3498db",
+        "size": 15
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "memory-1",
+      "target": "memory-2",
+      "similarity": 0.76,
+      "relationship_type": "conceptual_hierarchy"
+    }
+  ],
+  "clusters": [
+    {
+      "id": "cluster_0",
+      "label": "AI/ML Concepts",
+      "size": 12,
+      "topics": ["machine learning", "neural networks", "algorithms"]
+    }
+  ],
+  "metadata": {
+    "node_count": 85,
+    "edge_count": 142,
+    "cluster_count": 8
+  }
+}
+                </pre>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>🔧 Implementation Features</h3>
+            <ul style="color: #666; line-height: 1.8;">
+                <li><strong>Memory Visualization Engine:</strong> Advanced graph generation with relationship extraction</li>
+                <li><strong>Advanced Search Engine:</strong> Multi-dimensional search with clustering analysis</li>
+                <li><strong>Relationship Analyzer:</strong> Semantic similarity, temporal patterns, causal detection</li>
+                <li><strong>Interactive Frontend:</strong> D3.js-powered visualizations with real-time updates</li>
+                <li><strong>Performance Optimized:</strong> Efficient algorithms with configurable parameters</li>
+                <li><strong>Comprehensive API:</strong> RESTful endpoints with detailed documentation</li>
+            </ul>
+        </div>
+
+        <div class="demo-section">
+            <h3>📈 Relationship Types Detected</h3>
+            <div class="feature-grid">
+                <div>
+                    <strong>🔗 Semantic Similarity</strong><br>
+                    Based on embedding vector similarity
+                </div>
+                <div>
+                    <strong>⏰ Temporal Proximity</strong><br>
+                    Time-based relationship patterns
+                </div>
+                <div>
+                    <strong>📝 Content Overlap</strong><br>
+                    Text-based similarity analysis
+                </div>
+                <div>
+                    <strong>🏗️ Conceptual Hierarchy</strong><br>
+                    Parent-child, general-specific relationships
+                </div>
+                <div>
+                    <strong>🔄 Causal Relationships</strong><br>
+                    Cause-effect pattern detection
+                </div>
+                <div>
+                    <strong>🎯 Contextual Association</strong><br>
+                    Metadata and context-based connections
+                </div>
+            </div>
+        </div>
+
+        <div class="highlight">
+            <h3>🎉 System Ready for Production</h3>
+            <p>All visualization components are implemented and integrated:</p>
+            <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+                <p>✅ Memory Visualization Backend - Graph generation and relationship extraction</p>
+                <p>✅ Interactive Frontend Interface - D3.js visualizations with advanced controls</p>
+                <p>✅ Advanced Search API - Multi-dimensional search with clustering</p>
+                <p>✅ Relationship Analysis System - Comprehensive connection detection</p>
+                <p>✅ API Routes Integration - All endpoints registered and documented</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateSampleGraph() {
+            const svg = d3.select('#sampleGraph');
+            svg.selectAll('*').remove();
+            
+            const width = 800;
+            const height = 300;
+            
+            // Sample data
+            const nodes = [
+                {id: 'ml', label: 'Machine Learning', type: 'semantic', x: 200, y: 150},
+                {id: 'nn', label: 'Neural Networks', type: 'semantic', x: 400, y: 100},
+                {id: 'proj', label: 'ML Project', type: 'episodic', x: 400, y: 200},
+                {id: 'algo', label: 'Algorithms', type: 'procedural', x: 600, y: 150}
+            ];
+            
+            const links = [
+                {source: 'ml', target: 'nn'},
+                {source: 'ml', target: 'proj'},
+                {source: 'nn', target: 'algo'},
+                {source: 'proj', target: 'algo'}
+            ];
+            
+            const colorMap = {
+                semantic: '#3498db',
+                episodic: '#e74c3c',
+                procedural: '#2ecc71'
+            };
+            
+            // Draw links
+            svg.selectAll('.link')
+                .data(links)
+                .enter()
+                .append('line')
+                .attr('class', 'link')
+                .attr('x1', d => nodes.find(n => n.id === d.source).x)
+                .attr('y1', d => nodes.find(n => n.id === d.source).y)
+                .attr('x2', d => nodes.find(n => n.id === d.target).x)
+                .attr('y2', d => nodes.find(n => n.id === d.target).y)
+                .attr('stroke', '#999')
+                .attr('stroke-width', 2)
+                .attr('opacity', 0.6);
+            
+            // Draw nodes
+            svg.selectAll('.node')
+                .data(nodes)
+                .enter()
+                .append('circle')
+                .attr('class', 'node')
+                .attr('cx', d => d.x)
+                .attr('cy', d => d.y)
+                .attr('r', 20)
+                .attr('fill', d => colorMap[d.type])
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 3);
+            
+            // Add labels
+            svg.selectAll('.label')
+                .data(nodes)
+                .enter()
+                .append('text')
+                .attr('class', 'label')
+                .attr('x', d => d.x)
+                .attr('y', d => d.y + 35)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#2c3e50')
+                .attr('font-size', '12px')
+                .attr('font-weight', 'bold')
+                .text(d => d.label);
+        }
+        
+        // Generate initial graph
+        window.addEventListener('load', generateSampleGraph);
+    </script>
+</body>
+</html> 

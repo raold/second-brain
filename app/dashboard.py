@@ -612,7 +612,7 @@ class ProjectDashboard:
                 "name": m.name,
                 "target_date": m.target_date,
                 "progress": m.progress,
-                "status": m.status if isinstance(m.status, str) else m.status.value
+                "status": m.status.value if hasattr(m.status, 'value') else m.status
             }
             for m in upcoming[:limit]
         ]
@@ -691,11 +691,17 @@ class ProjectDashboard:
             with open(dashboard_file, 'r') as f:
                 data = json.load(f)
             
-            # Load milestones
+            # Load milestones with proper status conversion
             if "milestones" in data:
-                self.milestones = {
-                    k: Milestone(**v) for k, v in data["milestones"].items()
-                }
+                self.milestones = {}
+                for k, v in data["milestones"].items():
+                    # Convert string status to Status enum if needed
+                    if "status" in v and isinstance(v["status"], str):
+                        try:
+                            v["status"] = Status(v["status"])
+                        except ValueError:
+                            v["status"] = Status.NOT_STARTED  # Default fallback
+                    self.milestones[k] = Milestone(**v)
             
             # Load tasks
             if "tasks" in data:
