@@ -51,6 +51,9 @@ from app.routes.importance_routes import router as importance_router
 # Import relationship routes
 from app.routes.relationship_routes import router as relationship_router
 
+# Import bulk operations routes
+from app.routes.bulk_operations_routes import bulk_router
+
 from .routes.bulk_routes import get_bulk_routes
 
 # Configure logging
@@ -268,6 +271,7 @@ app.include_router(migration_router)
 app.include_router(visualization_router)
 app.include_router(importance_router)
 app.include_router(relationship_router)
+app.include_router(bulk_router)
 
 # Include bulk operations routes
 app.include_router(get_bulk_routes(), dependencies=[Depends(verify_api_key)])

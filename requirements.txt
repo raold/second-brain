@@ -18,4 +18,9 @@ requests==2.31.0
 
 # Memory Visualization Dependencies
 scikit-learn>=1.3.0
-numpy>=1.24.0
+
+# Bulk Operations Dependencies
+pandas>=2.0.0
+openpyxl>=3.1.0  # Excel support
+pyarrow>=12.0.0  # Parquet support
+lxml>=4.9.0      # XML processing
