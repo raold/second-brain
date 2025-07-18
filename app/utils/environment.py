@@ -3,24 +3,25 @@ Environment configuration validation and testing utilities.
 """
 
 import os
-from typing import List, Dict, Any
+from typing import Any
+
 from app.config import Config
 
 
-def validate_test_environment() -> Dict[str, Any]:
+def validate_test_environment() -> dict[str, Any]:
     """Validate and setup test environment configuration."""
     # Set test environment
     os.environ["ENVIRONMENT"] = "testing"
     os.environ["USE_MOCK_DATABASE"] = "true"
     os.environ["API_TOKENS"] = "test-key-1,test-key-2"
-    
+
     # Clear OpenAI requirement for tests
     if "OPENAI_API_KEY" not in os.environ:
         os.environ["OPENAI_API_KEY"] = ""
-    
+
     # Validate configuration
     issues = Config.validate_configuration()
-    
+
     return {
         "environment": Config.ENVIRONMENT,
         "use_mock_database": Config.should_use_mock_database(),
@@ -28,42 +29,42 @@ def validate_test_environment() -> Dict[str, Any]:
         "debug_mode": Config.is_debug_mode(),
         "log_level": Config.get_effective_log_level(),
         "validation_issues": issues,
-        "api_tokens": Config.get_api_tokens()
+        "api_tokens": Config.get_api_tokens(),
     }
 
 
-def validate_ci_environment() -> Dict[str, Any]:
+def validate_ci_environment() -> dict[str, Any]:
     """Validate and setup CI environment configuration."""
     # Set CI environment
     os.environ["ENVIRONMENT"] = "ci"
     os.environ["USE_MOCK_DATABASE"] = "true"
     os.environ["DEBUG"] = "false"
     os.environ["LOG_LEVEL"] = "WARNING"
-    
+
     # Validate configuration
     issues = Config.validate_configuration()
-    
+
     return {
         "environment": Config.ENVIRONMENT,
         "use_mock_database": Config.should_use_mock_database(),
         "require_openai": Config.should_require_openai(),
         "debug_mode": Config.is_debug_mode(),
         "log_level": Config.get_effective_log_level(),
-        "validation_issues": issues
+        "validation_issues": issues,
     }
 
 
-def validate_production_environment() -> Dict[str, Any]:
+def validate_production_environment() -> dict[str, Any]:
     """Validate production environment configuration."""
     # Validate production configuration without changing environment
     current_env = Config.ENVIRONMENT
     if current_env != "production":
         # Temporarily set to production for validation
         os.environ["ENVIRONMENT"] = "production"
-    
+
     try:
         issues = Config.validate_configuration()
-        
+
         return {
             "environment": "production",
             "use_mock_database": Config.should_use_mock_database(),
@@ -73,7 +74,7 @@ def validate_production_environment() -> Dict[str, Any]:
             "validation_issues": issues,
             "api_tokens_configured": len(Config.get_api_tokens()) > 0,
             "openai_key_configured": bool(Config.OPENAI_API_KEY),
-            "database_url_configured": bool(Config.DATABASE_URL)
+            "database_url_configured": bool(Config.DATABASE_URL),
         }
     finally:
         # Restore original environment
@@ -81,10 +82,10 @@ def validate_production_environment() -> Dict[str, Any]:
             os.environ["ENVIRONMENT"] = current_env
 
 
-def get_environment_summary() -> Dict[str, Any]:
+def get_environment_summary() -> dict[str, Any]:
     """Get a summary of the current environment configuration."""
     env_config = Config.get_environment_config()
-    
+
     return {
         "current_environment": Config.ENVIRONMENT,
         "environment_config": {
@@ -92,18 +93,18 @@ def get_environment_summary() -> Dict[str, Any]:
             "use_mock_database": env_config.use_mock_database,
             "require_openai": env_config.require_openai,
             "debug_mode": env_config.debug_mode,
-            "log_level": env_config.log_level
+            "log_level": env_config.log_level,
         },
         "effective_settings": {
             "use_mock_database": Config.should_use_mock_database(),
             "require_openai": Config.should_require_openai(),
             "debug_mode": Config.is_debug_mode(),
-            "log_level": Config.get_effective_log_level()
+            "log_level": Config.get_effective_log_level(),
         },
         "configuration_status": {
             "openai_configured": bool(Config.OPENAI_API_KEY),
             "api_tokens_count": len(Config.get_api_tokens()),
             "database_url_configured": bool(Config.DATABASE_URL),
-            "validation_issues": Config.validate_configuration()
-        }
+            "validation_issues": Config.validate_configuration(),
+        },
     }

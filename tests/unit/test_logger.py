@@ -3,7 +3,6 @@ Tests for the logger utility.
 """
 
 import logging
-import pytest
 
 from app.utils.logger import logger
 
@@ -29,10 +28,10 @@ class TestLogger:
             logger.info("Test info message")
             logger.warning("Test warning message")
             logger.error("Test error message")
-        
+
         # Check that messages were logged
         assert "Test info message" in caplog.text
-        assert "Test warning message" in caplog.text  
+        assert "Test warning message" in caplog.text
         assert "Test error message" in caplog.text
 
     def test_logger_handlers_configured(self):

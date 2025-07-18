@@ -11,38 +11,24 @@ from pathlib import Path
 def generate_dashboard_data():
     """Generate comprehensive dashboard data."""
     timestamp = datetime.now()
-    
+
     data = {
         "meta": {
             "dashboard_version": "2.4.3-enhanced",
             "generated_at": timestamp.isoformat(),
             "last_updated": timestamp.isoformat(),
-            "update_frequency": "real-time"
+            "update_frequency": "real-time",
         },
         "version": {
             "current_version": "2.4.2",
             "milestone": "v2.4.3 Quality Excellence",
             "next_version": "v2.4.4 Security & Performance",
-            "environment": os.getenv("ENVIRONMENT", "development")
+            "environment": os.getenv("ENVIRONMENT", "development"),
         },
         "build_metrics": {
-            "tests": {
-                "total": 81,
-                "passing": 81,
-                "failing": 0,
-                "skipped": 6,
-                "success_rate_percent": 100.0
-            },
-            "coverage": {
-                "overall_percent": 27,
-                "target_percent": 90,
-                "lines_covered": 2909,
-                "lines_total": 10915
-            },
-            "build": {
-                "status": "passing",
-                "duration_seconds": 45
-            }
+            "tests": {"total": 81, "passing": 81, "failing": 0, "skipped": 6, "success_rate_percent": 100.0},
+            "coverage": {"overall_percent": 27, "target_percent": 90, "lines_covered": 2909, "lines_total": 10915},
+            "build": {"status": "passing", "duration_seconds": 45},
         },
         "api_status": {
             "status": "operational",
@@ -50,13 +36,9 @@ def generate_dashboard_data():
                 "health": {"status": "active", "response_time_ms": 45},
                 "memories": {"status": "active", "response_time_ms": 67},
                 "search": {"status": "active", "response_time_ms": 89},
-                "dashboard": {"status": "active", "response_time_ms": 156}
+                "dashboard": {"status": "active", "response_time_ms": 156},
             },
-            "performance": {
-                "avg_response_time_ms": 64,
-                "requests_per_minute": 45,
-                "error_rate_percent": 0.1
-            }
+            "performance": {"avg_response_time_ms": 64, "requests_per_minute": 45, "error_rate_percent": 0.1},
         },
         "timeline": {
             "current_milestone": {
@@ -64,42 +46,24 @@ def generate_dashboard_data():
                 "target_date": "2025-08-15",
                 "progress_percent": 75,
                 "days_remaining": 28,
-                "status": "in_progress"
+                "status": "in_progress",
             },
             "recent_achievements": [
-                {
-                    "date": "2025-07-18",
-                    "achievement": "Fixed 12 failing tests, improved coverage",
-                    "impact": "high"
-                },
-                {
-                    "date": "2025-07-17",
-                    "achievement": "Centralized environment configuration",
-                    "impact": "medium"
-                }
-            ]
+                {"date": "2025-07-18", "achievement": "Fixed 12 failing tests, improved coverage", "impact": "high"},
+                {"date": "2025-07-17", "achievement": "Centralized environment configuration", "impact": "medium"},
+            ],
         },
         "woodchipper": {
             "status": "active",
-            "memory_processing": {
-                "memories_processed_today": 127,
-                "avg_processing_time_ms": 45
-            },
-            "performance_metrics": {
-                "throughput_items_per_minute": 156,
-                "cpu_utilization_percent": 45
-            }
+            "memory_processing": {"memories_processed_today": 127, "avg_processing_time_ms": 45},
+            "performance_metrics": {"throughput_items_per_minute": 156, "cpu_utilization_percent": 45},
         },
         "documentation": {
-            "completeness": {
-                "api_documentation": 87,
-                "user_guides": 73,
-                "developer_docs": 81
-            },
+            "completeness": {"api_documentation": 87, "user_guides": 73, "developer_docs": 81},
             "recent_updates": [
                 {"file": "README.md", "updated": "2025-07-18", "status": "enhanced"},
-                {"file": "CHANGELOG.md", "updated": "2025-07-18", "status": "updated"}
-            ]
+                {"file": "CHANGELOG.md", "updated": "2025-07-18", "status": "updated"},
+            ],
         },
         "roadmap": {
             "current_phase": "Foundation Hardening",
@@ -107,8 +71,8 @@ def generate_dashboard_data():
             "in_progress_features": [
                 "Test coverage expansion (27% -> 90%)",
                 "Environment configuration",
-                "Security hardening"
-            ]
+                "Security hardening",
+            ],
         },
         "changelog": {
             "latest_version": "v2.4.3",
@@ -117,24 +81,24 @@ def generate_dashboard_data():
             "major_changes": [
                 "Test coverage expansion from 26% to 27%",
                 "Fixed 12 failing tests for stability",
-                "Centralized environment configuration"
-            ]
-        }
+                "Centralized environment configuration",
+            ],
+        },
     }
-    
+
     return data
 
 
 def save_dashboard_data():
     """Save dashboard data to file."""
     data = generate_dashboard_data()
-    
+
     # Ensure directory exists
     Path("dashboard_data").mkdir(exist_ok=True)
-    
-    with open("dashboard_data/dashboard_data.json", 'w') as f:
+
+    with open("dashboard_data/dashboard_data.json", "w") as f:
         json.dump(data, f, indent=2, default=str)
-    
+
     return data
 
 
@@ -374,7 +338,7 @@ def generate_dashboard_html(data):
     </div>
 </body>
 </html>"""
-    
+
     return html
 
 
@@ -382,15 +346,17 @@ if __name__ == "__main__":
     print("Generating dashboard data...")
     data = save_dashboard_data()
     print("✅ Dashboard data saved to dashboard_data/dashboard_data.json")
-    
+
     # Generate HTML
     html = generate_dashboard_html(data)
-    with open("dashboard_data/dashboard.html", "w", encoding='utf-8') as f:
+    with open("dashboard_data/dashboard.html", "w", encoding="utf-8") as f:
         f.write(html)
     print("✅ Dashboard HTML saved to dashboard_data/dashboard.html")
-    
-    print(f"\\n📊 Dashboard Summary:")
+
+    print("\\n📊 Dashboard Summary:")
     print(f"   • Tests: {data['build_metrics']['tests']['passing']}/{data['build_metrics']['tests']['total']} passing")
     print(f"   • Coverage: {data['build_metrics']['coverage']['overall_percent']}%")
-    print(f"   • Milestone: {data['timeline']['current_milestone']['name']} ({data['timeline']['current_milestone']['progress_percent']}%)")
+    print(
+        f"   • Milestone: {data['timeline']['current_milestone']['name']} ({data['timeline']['current_milestone']['progress_percent']}%)"
+    )
     print(f"   • API Status: {data['api_status']['status']}")

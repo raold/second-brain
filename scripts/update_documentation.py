@@ -12,91 +12,92 @@ Features:
 - Version consistency validation
 """
 
-import json
 import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 
 class DocumentationUpdater:
     """Comprehensive documentation update manager."""
-    
+
     def __init__(self, new_version: Optional[str] = None):
         self.root_dir = Path(__file__).parent.parent
         self.new_version = new_version or "2.3.0"  # Default to cognitive release
         self.release_date = datetime.now().strftime("%Y-%m-%d")
-        
+
         # Key files to update
         self.version_file = self.root_dir / "app" / "version.py"
         self.readme_file = self.root_dir / "README.md"
         self.changelog_file = self.root_dir / "CHANGELOG.md"
         self.project_status_file = self.root_dir / "PROJECT_STATUS.md"
         self.docs_dir = self.root_dir / "docs"
-        
+
         # Patterns
         self.version_pattern = r'__version__ = ["\'](.+?)["\']'
-        self.readme_version_pattern = r'# Second Brain v([\d.]+)'
+        self.readme_version_pattern = r"# Second Brain v([\d.]+)"
         self.changelog_version_pattern = r"## \[v?([\d.]+)\]"
 
     def update_all_documentation(self) -> None:
         """Update all documentation with comprehensive changes."""
         print(f"🔄 Starting comprehensive documentation update to v{self.new_version}")
-        print("="*60)
-        
+        print("=" * 60)
+
         try:
             # Step 1: Update version info
             self.update_version_file()
-            
+
             # Step 2: Add new changelog entry
             self.update_changelog_with_cognitive_features()
-            
+
             # Step 3: Update README with cognitive features
             self.update_readme_with_cognitive_features()
-            
+
             # Step 4: Update project status
             self.update_project_status()
-            
+
             # Step 5: Update documentation files
             self.update_docs_recursive()
-            
+
             # Step 6: Validate version consistency
             self.validate_version_consistency()
-            
-            print("\n" + "="*60)
+
+            print("\n" + "=" * 60)
             print(f"✅ Documentation update complete for v{self.new_version}")
-            print(f"📝 Updated files:")
+            print("📝 Updated files:")
             print(f"   ✅ {self.version_file}")
             print(f"   ✅ {self.readme_file}")
             print(f"   ✅ {self.changelog_file}")
             print(f"   ✅ {self.project_status_file}")
             print(f"   ✅ Files in {self.docs_dir}")
-            
+
         except Exception as e:
             print(f"❌ Error updating documentation: {e}")
             sys.exit(1)
 
     def update_version_file(self) -> None:
         """Update app/version.py with new version and cognitive features."""
-        content = self.version_file.read_text(encoding='utf-8')
-        
+        content = self.version_file.read_text(encoding="utf-8")
+
         # Update version
         content = re.sub(self.version_pattern, f'__version__ = "{self.new_version}"', content)
-        
+
         # Update version info tuple
-        version_parts = self.new_version.split('.')
+        version_parts = self.new_version.split(".")
         version_info = f"__version_info__ = ({', '.join(version_parts)})"
-        content = re.sub(r'__version_info__ = \([^)]+\)', version_info, content)
-        
+        content = re.sub(r"__version_info__ = \([^)]+\)", version_info, content)
+
         # Update release date
         content = re.sub(r'__release_date__ = "[^"]*"', f'__release_date__ = "{self.release_date}"', content)
-        
+
         # Update codename for v2.3.0
         content = re.sub(r'"codename": "[^"]*"', '"codename": "Cognitive"', content)
-        
+
         # Update v2.3.0 status in roadmap
-        content = re.sub(r'"v2\.3\.0": \{[^}]+\}', '''
+        content = re.sub(
+            r'"v2\.3\.0": \{[^}]+\}',
+            '''
     "v2.3.0": {
         "codename": "Cognitive",
         "focus": "Memory Type Architecture",
@@ -109,15 +110,19 @@ class DocumentationUpdater:
             "intelligent_metadata",
         ],
         "status": "completed",
-        "release_date": "''' + self.release_date + '''",
-    }'''.strip(), content)
-        
-        self.version_file.write_text(content, encoding='utf-8')
+        "release_date": "'''
+            + self.release_date
+            + """",
+    }""".strip(),
+            content,
+        )
+
+        self.version_file.write_text(content, encoding="utf-8")
         print(f"✅ Updated version file to v{self.new_version}")
 
     def update_changelog_with_cognitive_features(self) -> None:
         """Update CHANGELOG.md with cognitive memory features and reorganize in descending order."""
-        
+
         # Generate comprehensive v2.3.0 changelog entry
         new_entry = f"""## [2.3.0] - {self.release_date}
 
@@ -199,60 +204,60 @@ The **Cognitive Memory Type Separation** system transforms Second Brain from sim
 
 ---
 """
-        
+
         # Read current changelog
-        content = self.changelog_file.read_text(encoding='utf-8')
-        
+        content = self.changelog_file.read_text(encoding="utf-8")
+
         # Find insertion point (after title and before first version)
-        lines = content.split('\n')
+        lines = content.split("\n")
         insert_pos = None
-        
+
         for i, line in enumerate(lines):
-            if line.startswith('## [') or line.startswith('## v'):
+            if line.startswith("## [") or line.startswith("## v"):
                 insert_pos = i
                 break
-        
+
         if insert_pos is None:
             # Find end of header
             for i, line in enumerate(lines):
                 if line.strip() == "" and i > 5:  # After intro
                     insert_pos = i + 1
                     break
-        
+
         if insert_pos is None:
             insert_pos = len(lines)
-        
+
         # Insert new entry
-        new_lines = lines[:insert_pos] + new_entry.split('\n') + [''] + lines[insert_pos:]
-        
+        new_lines = lines[:insert_pos] + new_entry.split("\n") + [""] + lines[insert_pos:]
+
         # Reorganize in descending order
         new_lines = self.reorganize_changelog_descending(new_lines)
-        
-        self.changelog_file.write_text('\n'.join(new_lines), encoding='utf-8')
+
+        self.changelog_file.write_text("\n".join(new_lines), encoding="utf-8")
         print(f"✅ Updated CHANGELOG.md with v{self.new_version} cognitive features")
 
-    def reorganize_changelog_descending(self, lines: List[str]) -> List[str]:
+    def reorganize_changelog_descending(self, lines: list[str]) -> list[str]:
         """Reorganize changelog entries in descending version order."""
         header_lines = []
         version_blocks = []
         current_block = []
         current_version = None
-        
+
         in_header = True
-        
+
         for line in lines:
-            if line.startswith('## [') or line.startswith('## v'):
+            if line.startswith("## [") or line.startswith("## v"):
                 if in_header:
                     in_header = False
-                
+
                 # Save previous block
                 if current_block and current_version:
                     version_blocks.append((current_version, current_block))
-                
+
                 # Start new block
-                version_match = re.search(r'## \[v?([\d.]+)\]', line)
+                version_match = re.search(r"## \[v?([\d.]+)\]", line)
                 if version_match:
-                    current_version = tuple(map(int, version_match.group(1).split('.')))
+                    current_version = tuple(map(int, version_match.group(1).split(".")))
                     current_block = [line]
                 else:
                     current_block = [line]
@@ -261,47 +266,40 @@ The **Cognitive Memory Type Separation** system transforms Second Brain from sim
                 header_lines.append(line)
             else:
                 current_block.append(line)
-        
+
         # Save last block
         if current_block and current_version:
             version_blocks.append((current_version, current_block))
-        
+
         # Sort by version descending
         version_blocks.sort(key=lambda x: x[0], reverse=True)
-        
+
         # Reconstruct
-        result = header_lines + ['']
+        result = header_lines + [""]
         for _, block in version_blocks:
             result.extend(block)
-            result.append('')
-        
+            result.append("")
+
         return result
 
     def update_readme_with_cognitive_features(self) -> None:
         """Update README.md with cognitive memory features."""
-        content = self.readme_file.read_text(encoding='utf-8')
-        
+        content = self.readme_file.read_text(encoding="utf-8")
+
         # Update title version
-        content = re.sub(
-            r'# Second Brain v[\d.]+',
-            f'# Second Brain v{self.new_version}',
-            content
-        )
-        
+        content = re.sub(r"# Second Brain v[\d.]+", f"# Second Brain v{self.new_version}", content)
+
         # Update badges version references
-        content = re.sub(r'v[\d.]+', f'v{self.new_version}', content)
-        
+        content = re.sub(r"v[\d.]+", f"v{self.new_version}", content)
+
         # Update description
         cognitive_description = f"""**Second Brain v{self.new_version}** is a **production-ready** AI memory system with **cognitive memory architecture**, **human-like memory types**, and **contextual retrieval**. Features three distinct memory types: Semantic (facts), Episodic (experiences), and Procedural (processes) with intelligent classification and contextual search."""
-        
+
         # Replace description (find pattern and replace)
         content = re.sub(
-            r'\*\*Second Brain v[\d.]+\*\* is.*?semantic search\.',
-            cognitive_description,
-            content,
-            flags=re.DOTALL
+            r"\*\*Second Brain v[\d.]+\*\* is.*?semantic search\.", cognitive_description, content, flags=re.DOTALL
         )
-        
+
         # Update the "What's New" section
         cognitive_whats_new = f"""## 🧠 **What's New in v{self.new_version} - Cognitive Memory Architecture**
 
@@ -342,38 +340,34 @@ Transform from simple vector storage to **human-like cognitive memory** with thr
 
         # Replace the existing "What's New" section
         content = re.sub(
-            r'## 🚀 \*\*What\'s New in v[\d.]+ - .*?\*\*.*?(?=## |$)',
-            cognitive_whats_new + '\n\n',
+            r"## 🚀 \*\*What\'s New in v[\d.]+ - .*?\*\*.*?(?=## |$)",
+            cognitive_whats_new + "\n\n",
             content,
-            flags=re.DOTALL
+            flags=re.DOTALL,
         )
-        
-        self.readme_file.write_text(content, encoding='utf-8')
+
+        self.readme_file.write_text(content, encoding="utf-8")
         print(f"✅ Updated README.md with v{self.new_version} cognitive features")
 
     def update_project_status(self) -> None:
         """Update PROJECT_STATUS.md with current metrics."""
-        content = self.project_status_file.read_text(encoding='utf-8')
-        
+        content = self.project_status_file.read_text(encoding="utf-8")
+
         # Update version information
         content = re.sub(
-            r'- \*\*Current Version\*\*: `[\d.]+`[^\n]*',
-            f'- **Current Version**: `{self.new_version}` (Cognitive Memory Architecture)',
-            content
+            r"- \*\*Current Version\*\*: `[\d.]+`[^\n]*",
+            f"- **Current Version**: `{self.new_version}` (Cognitive Memory Architecture)",
+            content,
         )
-        
+
+        content = re.sub(r"- \*\*Release Date\*\*: [^\n]*", f"- **Release Date**: {self.release_date}", content)
+
         content = re.sub(
-            r'- \*\*Release Date\*\*: [^\n]*',
-            f'- **Release Date**: {self.release_date}',
-            content
+            r"- \*\*Next Release\*\*: [^\n]*",
+            "- **Next Release**: `2.4.0` (Advanced Analytics & Consolidation)",
+            content,
         )
-        
-        content = re.sub(
-            r'- \*\*Next Release\*\*: [^\n]*',
-            f'- **Next Release**: `2.4.0` (Advanced Analytics & Consolidation)',
-            content
-        )
-        
+
         # Update sprint goals
         new_sprint_section = f"""### **Current Sprint: Week 31 ({self.release_date}) - COMPLETED ✅**
 **Theme**: Cognitive Memory Architecture
@@ -407,13 +401,10 @@ Transform from simple vector storage to **human-like cognitive memory** with thr
 
         # Replace sprint section
         content = re.sub(
-            r'### \*\*Current Sprint:.*?(?=### |\Z)',
-            new_sprint_section + '\n\n### ',
-            content,
-            flags=re.DOTALL
+            r"### \*\*Current Sprint:.*?(?=### |\Z)", new_sprint_section + "\n\n### ", content, flags=re.DOTALL
         )
-        
-        self.project_status_file.write_text(content, encoding='utf-8')
+
+        self.project_status_file.write_text(content, encoding="utf-8")
         print(f"✅ Updated PROJECT_STATUS.md for v{self.new_version}")
 
     def update_docs_recursive(self) -> None:
@@ -423,18 +414,18 @@ Transform from simple vector storage to **human-like cognitive memory** with thr
             return
 
         updated_files = []
-        version_pattern = re.compile(r'v?[\d]+\.[\d]+\.[\d]+')
+        version_pattern = re.compile(r"v?[\d]+\.[\d]+\.[\d]+")
 
         for file_path in self.docs_dir.rglob("*.md"):
             try:
-                content = file_path.read_text(encoding='utf-8')
+                content = file_path.read_text(encoding="utf-8")
                 original_content = content
 
                 # Update version references
-                content = version_pattern.sub(f'v{self.new_version}', content)
+                content = version_pattern.sub(f"v{self.new_version}", content)
 
                 if content != original_content:
-                    file_path.write_text(content, encoding='utf-8')
+                    file_path.write_text(content, encoding="utf-8")
                     updated_files.append(file_path.relative_to(self.root_dir))
 
             except Exception as e:
@@ -450,28 +441,23 @@ Transform from simple vector storage to **human-like cognitive memory** with thr
     def validate_version_consistency(self) -> None:
         """Validate that version numbers are consistent across all files."""
         print("\n🔍 Validating version consistency...")
-        
+
         inconsistencies = []
-        
+
         # Check key files
-        files_to_check = [
-            self.version_file,
-            self.readme_file,
-            self.changelog_file,
-            self.project_status_file
-        ]
-        
+        files_to_check = [self.version_file, self.readme_file, self.changelog_file, self.project_status_file]
+
         for file_path in files_to_check:
             if not file_path.exists():
                 continue
-                
-            content = file_path.read_text(encoding='utf-8')
-            versions_found = re.findall(r'[\d]+\.[\d]+\.[\d]+', content)
-            
+
+            content = file_path.read_text(encoding="utf-8")
+            versions_found = re.findall(r"[\d]+\.[\d]+\.[\d]+", content)
+
             for version in versions_found:
-                if version != self.new_version and version not in ['1.0.0', '2.0.0']:  # Allow historical versions
+                if version != self.new_version and version not in ["1.0.0", "2.0.0"]:  # Allow historical versions
                     inconsistencies.append(f"{file_path.name}: found v{version}")
-        
+
         if inconsistencies:
             print("⚠️ Version inconsistencies found:")
             for inconsistency in inconsistencies:
@@ -483,15 +469,15 @@ Transform from simple vector storage to **human-like cognitive memory** with thr
 def main():
     """Main function to run documentation updates."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Update Second Brain documentation")
     parser.add_argument("--version", help="Version to update to (default: 2.3.0)", default="2.3.0")
     parser.add_argument("--validate-only", action="store_true", help="Only validate version consistency")
-    
+
     args = parser.parse_args()
-    
+
     updater = DocumentationUpdater(args.version)
-    
+
     if args.validate_only:
         updater.validate_version_consistency()
     else:
@@ -499,4 +485,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

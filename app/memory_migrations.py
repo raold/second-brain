@@ -5,21 +5,26 @@ Provides concrete implementations for memory data migrations
 using the unified migration framework with bulk operations integration.
 """
 
-import asyncio
-import json
 import logging
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Callable
+from typing import Any, Optional
 
 import asyncpg
 
-from .migration_framework import (
-    Migration, MigrationConfig, MigrationMetadata, MigrationResult,
-    MigrationStatus, MigrationType
+from .bulk_memory_operations import (
+    BulkMemoryEngine,
+    BulkMemoryItem,
 )
 from .bulk_memory_operations import (
-    BulkMemoryEngine, BulkOperationType, BulkMemoryItem,
-    ValidationLevel as BulkValidationLevel
+    ValidationLevel as BulkValidationLevel,
+)
+from .migration_framework import (
+    Migration,
+    MigrationConfig,
+    MigrationMetadata,
+    MigrationResult,
+    MigrationStatus,
+    MigrationType,
 )
 
 logger = logging.getLogger(__name__)
@@ -27,46 +32,46 @@ logger = logging.getLogger(__name__)
 
 class MemoryDataMigration(Migration):
     """Base class for memory data migrations using bulk operations."""
-    
+
     def __init__(self, connection_pool: asyncpg.Pool):
         self.pool = connection_pool
         self.bulk_engine = BulkMemoryEngine(connection_pool)
         self.processed_memory_ids = set()
         super().__init__(self._get_metadata())
-    
+
     def _get_metadata(self) -> MigrationMetadata:
         """Override to provide migration metadata."""
         raise NotImplementedError
-    
+
     async def validate_preconditions(self) -> bool:
         """Validate migration can be applied."""
         try:
             # Check database connection
-            if hasattr(self.pool, 'fetchval'):
+            if hasattr(self.pool, "fetchval"):
                 await self.pool.fetchval("SELECT 1")
-            
+
             # Custom validation
             return await self._validate_custom_preconditions()
-            
+
         except Exception as e:
             logger.error(f"Precondition validation failed: {e}")
             return False
-    
+
     async def _validate_custom_preconditions(self) -> bool:
         """Override for custom precondition checks."""
         return True
-    
+
     async def apply(self, config: MigrationConfig) -> MigrationResult:
         """Apply memory migration using bulk operations."""
         start_time = datetime.now()
-        
+
         try:
             # Prepare bulk operation config
             bulk_config = self._create_bulk_config(config)
-            
+
             # Get memories to migrate
             memories_to_migrate = await self.get_memories_to_migrate()
-            
+
             if config.dry_run:
                 # Simulate migration
                 result = await self._dry_run_migration(memories_to_migrate)
@@ -78,53 +83,44 @@ class MemoryDataMigration(Migration):
                     affected_items=len(memories_to_migrate),
                     errors=[],
                     rollback_available=False,
-                    performance_metrics={'dry_run': True}
+                    performance_metrics={"dry_run": True},
                 )
-            
+
             # Transform memories
             transformed_memories = []
             errors = []
-            
+
             for memory in memories_to_migrate:
                 try:
                     transformed = await self.transform_memory(memory)
                     if transformed:
                         transformed_memories.append(transformed)
-                        self.processed_memory_ids.add(memory['id'])
+                        self.processed_memory_ids.add(memory["id"])
                 except Exception as e:
-                    errors.append({
-                        "memory_id": str(memory.get('id')),
-                        "error": str(e)
-                    })
+                    errors.append({"memory_id": str(memory.get("id")), "error": str(e)})
                     if not config.continue_on_error:
                         raise
-            
+
             # Apply bulk update
             if transformed_memories:
-                bulk_result = await self.bulk_engine.bulk_insert_memories(
-                    transformed_memories,
-                    bulk_config
-                )
-                
+                bulk_result = await self.bulk_engine.bulk_insert_memories(transformed_memories, bulk_config)
+
                 # Merge results
                 affected_items = bulk_result.successful_items
                 if bulk_result.error_summary:
                     for error_type, count in bulk_result.error_summary.items():
-                        errors.append({
-                            "error_type": error_type,
-                            "count": count
-                        })
+                        errors.append({"error_type": error_type, "count": count})
             else:
                 affected_items = 0
-            
+
             status = MigrationStatus.COMPLETED if not errors else MigrationStatus.FAILED
-            
+
         except Exception as e:
             logger.error(f"Memory migration failed: {e}")
             status = MigrationStatus.FAILED
             errors = [{"error": str(e)}]
             affected_items = 0
-        
+
         return MigrationResult(
             migration_id=self.metadata.id,
             status=status,
@@ -135,47 +131,38 @@ class MemoryDataMigration(Migration):
             rollback_available=self.metadata.reversible,
             performance_metrics={
                 "memories_processed": len(self.processed_memory_ids),
-                "transformation_rate": len(self.processed_memory_ids) / 
-                    (datetime.now() - start_time).total_seconds()
+                "transformation_rate": len(self.processed_memory_ids) / (datetime.now() - start_time).total_seconds(),
             },
-            checkpoint_data={
-                "processed_ids": list(self.processed_memory_ids)
-            }
+            checkpoint_data={"processed_ids": list(self.processed_memory_ids)},
         )
-    
+
     async def rollback(self) -> MigrationResult:
         """Rollback memory changes if possible."""
         if not self.metadata.reversible:
             raise ValueError("Migration is not reversible")
-        
+
         start_time = datetime.now()
         errors = []
-        
+
         try:
             # Get original memories from backup
             original_memories = await self.get_original_memories()
-            
+
             # Restore using bulk operations
             bulk_config = self._create_bulk_config(MigrationConfig())
-            bulk_result = await self.bulk_engine.bulk_insert_memories(
-                original_memories,
-                bulk_config
-            )
-            
+            bulk_result = await self.bulk_engine.bulk_insert_memories(original_memories, bulk_config)
+
             status = MigrationStatus.ROLLED_BACK
             affected_items = bulk_result.successful_items
             if bulk_result.error_summary:
                 for error_type, count in bulk_result.error_summary.items():
-                    errors.append({
-                        "error_type": error_type,
-                        "count": count
-                    })
-            
+                    errors.append({"error_type": error_type, "count": count})
+
         except Exception as e:
             status = MigrationStatus.FAILED
             errors = [{"error": str(e)}]
             affected_items = 0
-        
+
         return MigrationResult(
             migration_id=self.metadata.id,
             status=status,
@@ -184,13 +171,13 @@ class MemoryDataMigration(Migration):
             affected_items=affected_items,
             errors=errors,
             rollback_available=False,
-            performance_metrics={}
+            performance_metrics={},
         )
-    
+
     def _create_bulk_config(self, migration_config: MigrationConfig):
         """Create bulk operation config from migration config."""
         from .bulk_memory_operations import BulkOperationConfig
-        
+
         # Map validation levels
         if migration_config.validate_before and migration_config.validate_after:
             validation_level = BulkValidationLevel.STRICT
@@ -198,62 +185,53 @@ class MemoryDataMigration(Migration):
             validation_level = BulkValidationLevel.STANDARD
         else:
             validation_level = BulkValidationLevel.MINIMAL
-        
+
         return BulkOperationConfig(
             batch_size=migration_config.batch_size,
             validation_level=validation_level,
             enable_rollback=migration_config.enable_rollback,
             parallel_workers=4 if migration_config.parallel_execution else 1,
-            timeout_seconds=migration_config.timeout_seconds
+            timeout_seconds=migration_config.timeout_seconds,
         )
-    
-    async def get_memories_to_migrate(self) -> List[Dict[str, Any]]:
+
+    async def get_memories_to_migrate(self) -> list[dict[str, Any]]:
         """Get list of memories that need migration."""
         raise NotImplementedError
-    
-    async def transform_memory(self, memory: Dict[str, Any]) -> Optional[BulkMemoryItem]:
+
+    async def transform_memory(self, memory: dict[str, Any]) -> Optional[BulkMemoryItem]:
         """Transform a memory according to migration rules."""
         raise NotImplementedError
-    
-    async def get_original_memories(self) -> List[BulkMemoryItem]:
+
+    async def get_original_memories(self) -> list[BulkMemoryItem]:
         """Get original memories for rollback."""
         raise NotImplementedError
-    
-    async def _dry_run_migration(self, memories: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+    async def _dry_run_migration(self, memories: list[dict[str, Any]]) -> dict[str, Any]:
         """Simulate migration without changes."""
         sample_transforms = []
-        
+
         # Transform a sample
         for memory in memories[:5]:  # Sample first 5
             try:
                 transformed = await self.transform_memory(memory)
-                sample_transforms.append({
-                    "original": memory,
-                    "transformed": transformed
-                })
+                sample_transforms.append({"original": memory, "transformed": transformed})
             except Exception as e:
-                sample_transforms.append({
-                    "original": memory,
-                    "error": str(e)
-                })
-        
-        return {
-            "total_memories": len(memories),
-            "sample_transforms": sample_transforms
-        }
+                sample_transforms.append({"original": memory, "error": str(e)})
+
+        return {"total_memories": len(memories), "sample_transforms": sample_transforms}
 
 
 class MemoryStructureMigration(Migration):
     """Base class for memory structure/schema migrations."""
-    
+
     def __init__(self, connection_pool: asyncpg.Pool):
         self.pool = connection_pool
         super().__init__(self._get_metadata())
-    
+
     def _get_metadata(self) -> MigrationMetadata:
         """Override to provide migration metadata."""
         raise NotImplementedError
-    
+
     async def validate_preconditions(self) -> bool:
         """Check if structure changes can be applied."""
         try:
@@ -261,30 +239,23 @@ class MemoryStructureMigration(Migration):
                 # Verify current structure
                 current_structure = await self.get_current_structure(conn)
                 expected_structure = await self.get_expected_structure()
-                
+
                 # Check compatibility
-                return self.check_structure_compatibility(
-                    current_structure, 
-                    expected_structure
-                )
-                
+                return self.check_structure_compatibility(current_structure, expected_structure)
+
         except Exception as e:
             logger.error(f"Structure validation failed: {e}")
             return False
-    
-    async def get_current_structure(self, conn: asyncpg.Connection) -> Dict[str, Any]:
+
+    async def get_current_structure(self, conn: asyncpg.Connection) -> dict[str, Any]:
         """Get current memory structure/schema."""
         raise NotImplementedError
-    
-    async def get_expected_structure(self) -> Dict[str, Any]:
+
+    async def get_expected_structure(self) -> dict[str, Any]:
         """Get expected structure before migration."""
         raise NotImplementedError
-    
-    def check_structure_compatibility(
-        self, 
-        current: Dict[str, Any], 
-        expected: Dict[str, Any]
-    ) -> bool:
+
+    def check_structure_compatibility(self, current: dict[str, Any], expected: dict[str, Any]) -> bool:
         """Check if structures are compatible."""
         return True  # Override for specific checks
 
@@ -292,7 +263,7 @@ class MemoryStructureMigration(Migration):
 # Example concrete migrations
 class AddMemoryTypeClassification(MemoryDataMigration):
     """Migration to classify existing memories by type."""
-    
+
     def _get_metadata(self) -> MigrationMetadata:
         return MigrationMetadata(
             id="classify_memory_types_001",
@@ -304,10 +275,10 @@ class AddMemoryTypeClassification(MemoryDataMigration):
             created_at=datetime.now(),
             dependencies=[],
             reversible=True,
-            checksum="b2c3d4e5f6g7"
+            checksum="b2c3d4e5f6g7",
         )
-    
-    async def get_memories_to_migrate(self) -> List[Dict[str, Any]]:
+
+    async def get_memories_to_migrate(self) -> list[dict[str, Any]]:
         """Get memories without type classification."""
         async with self.pool.acquire() as conn:
             rows = await conn.fetch("""
@@ -318,35 +289,32 @@ class AddMemoryTypeClassification(MemoryDataMigration):
                 ORDER BY created_at
             """)
             return [dict(row) for row in rows]
-    
-    async def transform_memory(self, memory: Dict[str, Any]) -> Optional[BulkMemoryItem]:
+
+    async def transform_memory(self, memory: dict[str, Any]) -> Optional[BulkMemoryItem]:
         """Classify memory type based on content analysis."""
         # Simple classification based on content patterns
-        content = memory['content'].lower()
-        
-        if any(word in content for word in ['remember', 'happened', 'was', 'did']):
-            memory_type = 'episodic'
-        elif any(word in content for word in ['how to', 'steps', 'process', 'procedure']):
-            memory_type = 'procedural'
+        content = memory["content"].lower()
+
+        if any(word in content for word in ["remember", "happened", "was", "did"]):
+            memory_type = "episodic"
+        elif any(word in content for word in ["how to", "steps", "process", "procedure"]):
+            memory_type = "procedural"
         else:
-            memory_type = 'semantic'
-        
+            memory_type = "semantic"
+
         # Update metadata with classification confidence
-        metadata = memory.get('metadata', {})
-        metadata['classification'] = {
-            'type': memory_type,
-            'confidence': 0.85,
-            'migrated_at': datetime.now().isoformat()
+        metadata = memory.get("metadata", {})
+        metadata["classification"] = {
+            "type": memory_type,
+            "confidence": 0.85,
+            "migrated_at": datetime.now().isoformat(),
         }
-        
+
         return BulkMemoryItem(
-            memory_id=memory['id'],
-            content=memory['content'],
-            metadata=metadata,
-            memory_type=memory_type
+            memory_id=memory["id"], content=memory["content"], metadata=metadata, memory_type=memory_type
         )
-    
-    async def get_original_memories(self) -> List[BulkMemoryItem]:
+
+    async def get_original_memories(self) -> list[BulkMemoryItem]:
         """Get original memories for rollback."""
         # In real implementation, would restore from backup
         return []
@@ -354,7 +322,7 @@ class AddMemoryTypeClassification(MemoryDataMigration):
 
 class ConsolidateDuplicateMemories(MemoryDataMigration):
     """Migration to consolidate duplicate or similar memories."""
-    
+
     def _get_metadata(self) -> MigrationMetadata:
         return MigrationMetadata(
             id="consolidate_duplicates_001",
@@ -366,10 +334,10 @@ class ConsolidateDuplicateMemories(MemoryDataMigration):
             created_at=datetime.now(),
             dependencies=["classify_memory_types_001"],
             reversible=True,
-            checksum="c3d4e5f6g7h8"
+            checksum="c3d4e5f6g7h8",
         )
-    
-    async def get_memories_to_migrate(self) -> List[Dict[str, Any]]:
+
+    async def get_memories_to_migrate(self) -> list[dict[str, Any]]:
         """Find potential duplicate memories."""
         async with self.pool.acquire() as conn:
             # Use vector similarity to find potential duplicates
@@ -390,49 +358,45 @@ class ConsolidateDuplicateMemories(MemoryDataMigration):
                 SELECT * FROM similarity_pairs
                 ORDER BY similarity DESC
             """)
-            
+
             # Group duplicates
             duplicate_groups = []
             processed = set()
-            
+
             for row in rows:
-                if row['id1'] not in processed:
+                if row["id1"] not in processed:
                     group = {
-                        'primary_id': row['id1'],
-                        'duplicate_ids': [row['id2']],
-                        'contents': [row['content1'], row['content2']],
-                        'metadatas': [row['metadata1'], row['metadata2']]
+                        "primary_id": row["id1"],
+                        "duplicate_ids": [row["id2"]],
+                        "contents": [row["content1"], row["content2"]],
+                        "metadatas": [row["metadata1"], row["metadata2"]],
                     }
-                    processed.add(row['id1'])
-                    processed.add(row['id2'])
+                    processed.add(row["id1"])
+                    processed.add(row["id2"])
                     duplicate_groups.append(group)
-            
+
             return duplicate_groups
-    
-    async def transform_memory(self, memory_group: Dict[str, Any]) -> Optional[BulkMemoryItem]:
+
+    async def transform_memory(self, memory_group: dict[str, Any]) -> Optional[BulkMemoryItem]:
         """Consolidate duplicate memories into one."""
         # Merge contents intelligently
-        merged_content = self._merge_contents(memory_group['contents'])
-        
+        merged_content = self._merge_contents(memory_group["contents"])
+
         # Merge metadata
         merged_metadata = {}
-        for metadata in memory_group['metadatas']:
+        for metadata in memory_group["metadatas"]:
             if metadata:
                 merged_metadata.update(metadata)
-        
-        merged_metadata['consolidation'] = {
-            'merged_from': memory_group['duplicate_ids'],
-            'migrated_at': datetime.now().isoformat()
+
+        merged_metadata["consolidation"] = {
+            "merged_from": memory_group["duplicate_ids"],
+            "migrated_at": datetime.now().isoformat(),
         }
-        
-        return BulkMemoryItem(
-            memory_id=memory_group['primary_id'],
-            content=merged_content,
-            metadata=merged_metadata
-        )
-    
-    def _merge_contents(self, contents: List[str]) -> str:
+
+        return BulkMemoryItem(memory_id=memory_group["primary_id"], content=merged_content, metadata=merged_metadata)
+
+    def _merge_contents(self, contents: list[str]) -> str:
         """Intelligently merge similar contents."""
         # Simple implementation - take longest content
         # Real implementation would use NLP to merge intelligently
-        return max(contents, key=len) 
+        return max(contents, key=len)

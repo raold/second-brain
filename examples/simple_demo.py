@@ -5,20 +5,18 @@ Demonstrates core session persistence and mobile idea ingestion functionality
 """
 
 import os
-import json
-import asyncio
 from datetime import datetime
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+
 import uvicorn
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 
 # Import version system
-from app.version import get_version, get_dashboard_version, get_version_info
+from app.version import get_dashboard_version, get_version_info
 
 # Set mock database
-os.environ['USE_MOCK_DATABASE'] = 'true'
+os.environ["USE_MOCK_DATABASE"] = "true"
 
 # Get current version info
 current_version_info = get_version_info()
@@ -31,7 +29,7 @@ demo_data = {
     "dashboard_state": {
         "project_health": "excellent",
         "current_version": dashboard_version_info["current"],
-        "next_version": dashboard_version_info["next_version"]
+        "next_version": dashboard_version_info["next_version"],
     },
     # Real project milestones and development status
     "project_milestones": {
@@ -47,12 +45,12 @@ demo_data = {
                     "Intelligent Classification Engine (95% accuracy)",
                     "Type-Specific API Endpoints",
                     "Advanced Contextual Search with Multi-dimensional Scoring",
-                    "Enhanced Database Schema with Cognitive Metadata"
-                ]
+                    "Enhanced Database Schema with Cognitive Metadata",
+                ],
             },
             {
                 "title": "⚡ Performance & Security Hardening",
-                "version": "v2.2.0", 
+                "version": "v2.2.0",
                 "date": "2025-07-31",
                 "status": "completed",
                 "priority": "high",
@@ -61,13 +59,13 @@ demo_data = {
                     "Security Hardening Implementation (100% coverage)",
                     "Database Connection Pooling",
                     "Advanced Rate Limiting & Input Validation",
-                    "100% Test Success Rate (41/41 tests passing)"
-                ]
+                    "100% Test Success Rate (41/41 tests passing)",
+                ],
             },
             {
                 "title": "🧠 Session Persistence & Context Continuity",
                 "version": current_version_info["version_string"],
-                "date": current_version_info["release_date"], 
+                "date": current_version_info["release_date"],
                 "status": "completed",
                 "priority": "critical",
                 "features": [
@@ -75,9 +73,9 @@ demo_data = {
                     "Mobile Idea Ingestion ('Woodchipper')",
                     "Cross-device Synchronization",
                     "Cost Management with Pause/Resume",
-                    "Real-time Project Intelligence Dashboard"
-                ]
-            }
+                    "Real-time Project Intelligence Dashboard",
+                ],
+            },
         ],
         "high_priority_todos": [
             {
@@ -87,23 +85,23 @@ demo_data = {
                 "progress": 15,
                 "tasks": [
                     "Automated importance scoring based on access patterns",
-                    "Memory aging with type-specific decay models", 
+                    "Memory aging with type-specific decay models",
                     "Cross-memory-type relationship discovery",
-                    "Advanced analytics dashboard implementation"
-                ]
+                    "Advanced analytics dashboard implementation",
+                ],
             },
             {
                 "title": "🔄 Batch Memory Operations",
                 "target_version": "v2.4.0",
-                "priority": "high", 
+                "priority": "high",
                 "progress": 5,
                 "tasks": [
                     "Bulk memory import/export functionality",
                     "Memory migration tools",
                     "Batch classification improvements",
-                    "Memory deduplication algorithms"
-                ]
-            }
+                    "Memory deduplication algorithms",
+                ],
+            },
         ],
         "medium_priority_todos": [
             {
@@ -115,21 +113,21 @@ demo_data = {
                     "Enhanced developer dashboard",
                     "Interactive memory type visualization",
                     "Advanced search interface",
-                    "Memory relationship graphs"
-                ]
+                    "Memory relationship graphs",
+                ],
             },
             {
                 "title": "📊 Advanced Project Analytics",
-                "target_version": "v2.5.0", 
+                "target_version": "v2.5.0",
                 "priority": "medium",
                 "progress": 20,
                 "tasks": [
                     "Project momentum tracking",
                     "Development velocity metrics",
                     "Code quality trend analysis",
-                    "Productivity optimization insights"
-                ]
-            }
+                    "Productivity optimization insights",
+                ],
+            },
         ],
         "low_priority_todos": [
             {
@@ -141,39 +139,42 @@ demo_data = {
                     "Plugin framework design",
                     "Third-party integration APIs",
                     "Plugin marketplace concept",
-                    "Security model for plugins"
-                ]
+                    "Security model for plugins",
+                ],
             },
             {
                 "title": "🌐 Multi-User Support Research",
                 "target_version": "v3.0.0",
-                "priority": "low", 
+                "priority": "low",
                 "progress": 0,
                 "tasks": [
                     "Multi-tenant architecture research",
                     "Collaboration features design",
                     "Privacy model development",
-                    "Scalability planning"
-                ]
-            }
-        ]
-    }
+                    "Scalability planning",
+                ],
+            },
+        ],
+    },
 }
 
 app = FastAPI(
     title="Project Pipeline - Session Persistence Demo",
     description="Live updating project dashboard with mobile idea ingestion",
-    version="2.3.0"
+    version="2.3.0",
 )
+
 
 class IdeaRequest(BaseModel):
     idea: str
     source: str = "mobile"
     context: str = ""
 
+
 class SessionAction(BaseModel):
     action: str  # "pause" or "resume"
     reason: str = ""
+
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard_home():
@@ -1168,6 +1169,7 @@ async def dashboard_home():
     </html>
     """
 
+
 @app.get("/mobile", response_class=HTMLResponse)
 async def mobile_interface():
     """Mobile-optimized interface for idea ingestion"""
@@ -1268,25 +1270,26 @@ async def mobile_interface():
     </html>
     """
 
+
 @app.post("/api/ingest-idea")
 async def ingest_idea(request: IdeaRequest):
     """The Woodchipper - Process ideas and integrate into project pipeline"""
-    
+
     # Simple feature extraction (in real version, this would use AI)
     features_detected = []
     idea_lower = request.idea.lower()
-    
-    if any(word in idea_lower for word in ['test', 'testing', 'unit', 'integration']):
+
+    if any(word in idea_lower for word in ["test", "testing", "unit", "integration"]):
         features_detected.append("Testing Framework")
-    if any(word in idea_lower for word in ['ui', 'interface', 'design', 'frontend']):
+    if any(word in idea_lower for word in ["ui", "interface", "design", "frontend"]):
         features_detected.append("UI Enhancement")
-    if any(word in idea_lower for word in ['api', 'endpoint', 'backend', 'server']):
+    if any(word in idea_lower for word in ["api", "endpoint", "backend", "server"]):
         features_detected.append("API Development")
-    if any(word in idea_lower for word in ['mobile', 'app', 'phone', 'tablet']):
+    if any(word in idea_lower for word in ["mobile", "app", "phone", "tablet"]):
         features_detected.append("Mobile Feature")
-    if any(word in idea_lower for word in ['ai', 'machine learning', 'intelligent', 'smart']):
+    if any(word in idea_lower for word in ["ai", "machine learning", "intelligent", "smart"]):
         features_detected.append("AI Enhancement")
-    
+
     # Store the idea
     idea_record = {
         "id": len(demo_data["ideas"]) + 1,
@@ -1294,54 +1297,52 @@ async def ingest_idea(request: IdeaRequest):
         "source": request.source,
         "features_detected": features_detected,
         "timestamp": datetime.now().isoformat(),
-        "status": "processed"
+        "status": "processed",
     }
-    
+
     demo_data["ideas"].append(idea_record)
     demo_data["dashboard_state"]["features_detected"] += len(features_detected)
     demo_data["dashboard_state"]["last_updated"] = datetime.now().isoformat()
-    
+
     return {
         "status": "success",
         "message": f"Idea processed! Detected {len(features_detected)} features",
         "idea_id": idea_record["id"],
         "features_detected": features_detected,
-        "auto_updates": {
-            "roadmap": "updated",
-            "timeline": "adjusted",
-            "documentation": "scheduled"
-        }
+        "auto_updates": {"roadmap": "updated", "timeline": "adjusted", "documentation": "scheduled"},
     }
+
 
 @app.post("/api/session")
 async def session_control(request: SessionAction):
     """Control session state for cost management and context preservation"""
-    
+
     if request.action == "pause":
         # In real version, this would save complete session context
         demo_data["dashboard_state"]["session_status"] = "paused"
         demo_data["dashboard_state"]["pause_reason"] = request.reason
         demo_data["dashboard_state"]["pause_time"] = datetime.now().isoformat()
-        
+
         return {
             "status": "success",
             "message": "Session paused - all context preserved",
             "resume_context": "Full conversation history and project momentum saved",
-            "cost_savings": "AI model usage suspended until resume"
+            "cost_savings": "AI model usage suspended until resume",
         }
-    
+
     elif request.action == "resume":
         demo_data["dashboard_state"]["session_status"] = "active"
         demo_data["dashboard_state"]["resume_time"] = datetime.now().isoformat()
-        
+
         return {
-            "status": "success", 
+            "status": "success",
             "message": "Session resumed with complete context",
             "context_restored": "Full conversation history and momentum restored",
-            "ready_for": "Seamless continuation of development work"
+            "ready_for": "Seamless continuation of development work",
         }
-    
+
     return {"status": "error", "message": "Invalid action"}
+
 
 @app.get("/api/stats")
 async def get_stats():
@@ -1353,8 +1354,9 @@ async def get_stats():
         "project_health": demo_data["dashboard_state"]["project_health"],
         "ideas_processed": len(demo_data["ideas"]),
         "session_status": demo_data["dashboard_state"].get("session_status", "active"),
-        "last_updated": demo_data["dashboard_state"]["last_updated"]
+        "last_updated": demo_data["dashboard_state"]["last_updated"],
     }
+
 
 @app.get("/api/context")
 async def get_session_context():
@@ -1365,26 +1367,27 @@ async def get_session_context():
             "current_focus": "Demonstrating session persistence and mobile idea ingestion",
             "next_steps": [
                 "Test idea ingestion from mobile interface",
-                "Verify session pause/resume functionality", 
+                "Verify session pause/resume functionality",
                 "Confirm context preservation across devices",
-                "Validate cost management features"
+                "Validate cost management features",
             ],
             "technical_context": "Project Pipeline system with full session persistence",
             "conversation_history": f"{len(demo_data['ideas'])} ideas processed through woodchipper",
             "productivity_metrics": {
                 "ideas_captured": len(demo_data["ideas"]),
                 "features_extracted": demo_data["dashboard_state"]["features_detected"],
-                "session_efficiency": "100% context preservation"
-            }
+                "session_efficiency": "100% context preservation",
+            },
         },
         "capabilities": [
             "🧠 Complete session context preservation",
             "🌊 Mobile idea ingestion (woodchipper)",
             "⏸️ Pause/resume with zero context loss",
             "🔄 Cross-device synchronization",
-            "💰 Cost-effective AI usage management"
-        ]
+            "💰 Cost-effective AI usage management",
+        ],
     }
+
 
 @app.get("/api/milestones")
 async def get_project_milestones():
@@ -1395,7 +1398,7 @@ async def get_project_milestones():
             "current_version": demo_data["dashboard_state"]["current_version"],
             "next_version": demo_data["dashboard_state"]["next_version"],
             "project_health": demo_data["dashboard_state"]["project_health"],
-            "last_updated": demo_data["dashboard_state"]["last_updated"]
+            "last_updated": demo_data["dashboard_state"]["last_updated"],
         },
         "milestones": demo_data["project_milestones"],
         "summary": {
@@ -1403,14 +1406,22 @@ async def get_project_milestones():
             "high_priority_count": len(demo_data["project_milestones"]["high_priority_todos"]),
             "medium_priority_count": len(demo_data["project_milestones"]["medium_priority_todos"]),
             "low_priority_count": len(demo_data["project_milestones"]["low_priority_todos"]),
-            "total_features_completed": sum(len(item["features"]) for item in demo_data["project_milestones"]["recently_completed"]),
-            "high_priority_progress": sum(item["progress"] for item in demo_data["project_milestones"]["high_priority_todos"]) / len(demo_data["project_milestones"]["high_priority_todos"]) if demo_data["project_milestones"]["high_priority_todos"] else 0
-        }
+            "total_features_completed": sum(
+                len(item["features"]) for item in demo_data["project_milestones"]["recently_completed"]
+            ),
+            "high_priority_progress": sum(
+                item["progress"] for item in demo_data["project_milestones"]["high_priority_todos"]
+            )
+            / len(demo_data["project_milestones"]["high_priority_todos"])
+            if demo_data["project_milestones"]["high_priority_todos"]
+            else 0,
+        },
     }
+
 
 if __name__ == "__main__":
     print("🚀 Starting Project Pipeline Simple Demo...")
     print("📱 Desktop: http://127.0.0.1:8000/")
     print("📱 Mobile:  http://127.0.0.1:8000/mobile")
     print("🔗 API:     http://127.0.0.1:8000/docs")
-    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info") 
+    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")

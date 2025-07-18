@@ -2,25 +2,27 @@
 OpenAI client utility for embeddings.
 """
 
-import os
 import asyncio
-from typing import List, Optional
+import os
+from typing import Optional
+
 from openai import AsyncOpenAI
-from app.utils.logger import logger
+
 from app.config import Config
+from app.utils.logger import logger
 
 
 class OpenAIClient:
     """Singleton OpenAI client for embeddings."""
-    
-    _instance: Optional['OpenAIClient'] = None
+
+    _instance: Optional["OpenAIClient"] = None
     _client: Optional[AsyncOpenAI] = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     def __init__(self):
         if self._client is None:
             api_key = Config.OPENAI_API_KEY
@@ -32,20 +34,19 @@ class OpenAIClient:
                 else:
                     logger.warning("OPENAI_API_KEY not set, OpenAI client will not be available")
                     return
-            
+
             self._client = AsyncOpenAI(api_key=api_key)
             logger.info("OpenAI client initialized")
-    
-    async def get_embedding(self, text: str) -> Optional[List[float]]:
+
+    async def get_embedding(self, text: str) -> Optional[list[float]]:
         """Get embedding for text using OpenAI API."""
         if not self._client:
             logger.error("OpenAI client not initialized - missing API key")
             return None
-        
+
         try:
             response = await self._client.embeddings.create(
-                model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
-                input=text
+                model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"), input=text
             )
             return response.data[0].embedding
         except Exception as e:
@@ -57,7 +58,7 @@ class OpenAIClient:
 _openai_client = OpenAIClient()
 
 
-def get_openai_embedding(text: str) -> Optional[List[float]]:
+def get_openai_embedding(text: str) -> Optional[list[float]]:
     """
     Synchronous wrapper for getting embeddings.
     This is a temporary solution for backward compatibility.
@@ -85,6 +86,6 @@ def get_openai_embedding(text: str) -> Optional[List[float]]:
         return None
 
 
-async def get_openai_embedding_async(text: str) -> Optional[List[float]]:
+async def get_openai_embedding_async(text: str) -> Optional[list[float]]:
     """Async version of get_openai_embedding."""
     return await _openai_client.get_embedding(text)

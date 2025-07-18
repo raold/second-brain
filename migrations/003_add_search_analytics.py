@@ -6,7 +6,6 @@ them with historical data from existing search patterns.
 """
 
 from datetime import datetime
-from typing import Dict, List, Any
 
 from app.database_migrations import DatabaseSchemaMigration
 from app.migration_framework import MigrationMetadata, MigrationType
@@ -14,7 +13,7 @@ from app.migration_framework import MigrationMetadata, MigrationType
 
 class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
     """Hybrid migration for search analytics system."""
-    
+
     def _get_metadata(self) -> MigrationMetadata:
         return MigrationMetadata(
             id="003_add_search_analytics",
@@ -26,10 +25,10 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
             created_at=datetime(2024, 1, 20),
             dependencies=["002_recalculate_importance"],
             reversible=True,
-            checksum="c3d4e5f6g7h8i9j0"
+            checksum="c3d4e5f6g7h8i9j0",
         )
-    
-    async def get_forward_statements(self) -> List[str]:
+
+    async def get_forward_statements(self) -> list[str]:
         return [
             # 1. Create search queries tracking table
             """
@@ -63,8 +62,7 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
                     CHECK (execution_time_ms IS NULL OR execution_time_ms >= 0)
             )
             """,
-            
-            # 2. Create search results tracking table  
+            # 2. Create search results tracking table
             """
             CREATE TABLE search_results (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -91,7 +89,6 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
                     CHECK (dwell_time_seconds IS NULL OR dwell_time_seconds >= 0)
             )
             """,
-            
             # 3. Create search patterns analysis table
             """
             CREATE TABLE search_patterns (
@@ -116,7 +113,6 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
                 UNIQUE(pattern_type, pattern_data)
             )
             """,
-            
             # 4. Create indexes for performance
             """
             CREATE INDEX idx_search_queries_hash ON search_queries(query_hash)
@@ -142,7 +138,6 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
             """
             CREATE INDEX idx_search_patterns_frequency ON search_patterns(frequency_count DESC)
             """,
-            
             # 5. Create analytics functions
             """
             CREATE OR REPLACE FUNCTION update_search_patterns_updated_at()
@@ -153,14 +148,12 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
             END;
             $$ LANGUAGE plpgsql
             """,
-            
             """
             CREATE TRIGGER trigger_update_search_patterns_updated_at
                 BEFORE UPDATE ON search_patterns
                 FOR EACH ROW
                 EXECUTE FUNCTION update_search_patterns_updated_at()
             """,
-            
             # 6. Create analytics view
             """
             CREATE VIEW search_analytics_summary AS
@@ -179,7 +172,6 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
             GROUP BY DATE(sq.created_at)
             ORDER BY search_date DESC
             """,
-            
             # 7. Populate with sample historical data
             """
             INSERT INTO search_queries (
@@ -192,7 +184,6 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
             ('API design patterns', 'hash_api_001', 'session_001', 6, 6, 28, CURRENT_TIMESTAMP - INTERVAL '4 days'),
             ('memory management', 'hash_mem_001', 'session_004', 9, 9, 35, CURRENT_TIMESTAMP - INTERVAL '3 days')
             """,
-            
             # 8. Initialize search patterns
             """
             INSERT INTO search_patterns (pattern_type, pattern_data, frequency_count, effectiveness_score) VALUES 
@@ -200,16 +191,16 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
             ('technical_terms', '{"contains_tech": true, "domains": ["programming", "database"]}', 12, 0.90),
             ('question_format', '{"is_question": false, "descriptive": true}', 18, 0.75),
             ('memory_type_preference', '{"type": "semantic", "percentage": 70}', 25, 0.80)
-            """
+            """,
         ]
-    
-    async def get_rollback_statements(self) -> List[str]:
+
+    async def get_rollback_statements(self) -> list[str]:
         return [
             "DROP VIEW IF EXISTS search_analytics_summary",
             "DROP TRIGGER IF EXISTS trigger_update_search_patterns_updated_at ON search_patterns",
             "DROP FUNCTION IF EXISTS update_search_patterns_updated_at()",
             "DROP INDEX IF EXISTS idx_search_patterns_frequency",
-            "DROP INDEX IF EXISTS idx_search_patterns_type", 
+            "DROP INDEX IF EXISTS idx_search_patterns_type",
             "DROP INDEX IF EXISTS idx_search_results_rank",
             "DROP INDEX IF EXISTS idx_search_results_memory_id",
             "DROP INDEX IF EXISTS idx_search_results_query_id",
@@ -218,23 +209,26 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
             "DROP INDEX IF EXISTS idx_search_queries_hash",
             "DROP TABLE IF EXISTS search_patterns",
             "DROP TABLE IF EXISTS search_results",
-            "DROP TABLE IF EXISTS search_queries"
+            "DROP TABLE IF EXISTS search_queries",
         ]
-    
+
     async def _validate_custom_postconditions(self, conn) -> bool:
         """Validate search analytics system is properly set up."""
         # Check all tables exist
-        tables = ['search_queries', 'search_results', 'search_patterns']
+        tables = ["search_queries", "search_results", "search_patterns"]
         for table in tables:
-            exists = await conn.fetchval("""
+            exists = await conn.fetchval(
+                """
                 SELECT EXISTS(
                     SELECT 1 FROM information_schema.tables
                     WHERE table_name = $1
                 )
-            """, table)
+            """,
+                table,
+            )
             if not exists:
                 return False
-        
+
         # Check view exists
         view_exists = await conn.fetchval("""
             SELECT EXISTS(
@@ -244,14 +238,14 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
         """)
         if not view_exists:
             return False
-        
+
         # Check sample data was inserted
         query_count = await conn.fetchval("SELECT COUNT(*) FROM search_queries")
         pattern_count = await conn.fetchval("SELECT COUNT(*) FROM search_patterns")
-        
+
         return query_count >= 5 and pattern_count >= 4
-    
-    async def _estimate_changes(self) -> Dict[str, int]:
+
+    async def _estimate_changes(self) -> dict[str, int]:
         """Estimate the scope of this hybrid migration."""
         return {
             "estimated_items": 15,  # Tables, indexes, functions, view, data
@@ -259,5 +253,5 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
             "alter_operations": 0,
             "drop_operations": 0,
             "data_operations": 2,  # 2 INSERT statements
-            "estimated_rows_affected": 9  # Sample data rows
-        } 
+            "estimated_rows_affected": 9,  # Sample data rows
+        }

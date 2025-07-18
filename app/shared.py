@@ -3,8 +3,9 @@ Shared utilities for the Second Brain application.
 Contains commonly used functions that need to be shared across modules.
 """
 
-import os
 import logging
+import os
+
 from fastapi import HTTPException, Query
 
 logger = logging.getLogger(__name__)
@@ -12,19 +13,22 @@ logger = logging.getLogger(__name__)
 # Global mock database instance for testing
 _mock_db_instance = None
 
+
 async def get_db_instance():
     """Get database instance (mock or real)."""
     global _mock_db_instance
-    
+
     if os.getenv("USE_MOCK_DATABASE", "false").lower() == "true":
         if _mock_db_instance is None:
             logger.info("Creating mock database instance for testing")
             from app.database_mock import MockDatabase
+
             _mock_db_instance = MockDatabase()
             await _mock_db_instance.initialize()
         return _mock_db_instance
     else:
         from app.database import get_database
+
         return await get_database()
 
 
