@@ -14,6 +14,7 @@ from app.security import SecurityManager
 from app.session_manager import get_session_manager
 
 from .dashboard_service import DashboardService
+from .git_service import GitService
 from .health_service import HealthService
 from .memory_service import MemoryService
 from .session_service import SessionService
@@ -32,6 +33,7 @@ class ServiceFactory:
         self._session_service: Optional[SessionService] = None
         self._dashboard_service: Optional[DashboardService] = None
         self._health_service: Optional[HealthService] = None
+        self._git_service: Optional[GitService] = None
         self._database: Optional[Database | MockDatabase] = None
         self._security_manager: Optional[SecurityManager] = None
         self.logger = logger
@@ -126,12 +128,26 @@ class ServiceFactory:
 
         return self._health_service
 
+    def get_git_service(self) -> GitService:
+        """
+        Get or create git service instance.
+
+        Returns:
+            GitService instance
+        """
+        if self._git_service is None:
+            self._git_service = GitService()
+            self.logger.info("Created GitService instance")
+
+        return self._git_service
+
     def reset_all_services(self):
         """Reset all service instances. Useful for testing."""
         self._memory_service = None
         self._session_service = None
         self._dashboard_service = None
         self._health_service = None
+        self._git_service = None
         self.logger.info("Reset all service instances")
 
 
@@ -168,3 +184,8 @@ def get_dashboard_service() -> DashboardService:
 def get_health_service() -> HealthService:
     """Get health service instance."""
     return _service_factory.get_health_service()
+
+
+def get_git_service() -> GitService:
+    """Get git service instance."""
+    return _service_factory.get_git_service()

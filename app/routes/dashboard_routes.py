@@ -8,7 +8,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.services.service_factory import get_dashboard_service
+from app.services.service_factory import get_dashboard_service, get_git_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
@@ -147,3 +147,45 @@ async def get_roadmap_visualization():
     except Exception as e:
         logger.error(f"Roadmap visualization error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get roadmap visualization")
+
+
+@router.get("/git/branches")
+async def get_git_branches():
+    """Get all git branches with their status and features."""
+    try:
+        git_service = get_git_service()
+        repo_status = git_service.get_repository_status()
+        
+        return {"status": "success", "branches": [branch.to_dict() for branch in repo_status.branches]}
+
+    except Exception as e:
+        logger.error(f"Git branches error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get git branches")
+
+
+@router.get("/git/repository-status")
+async def get_repository_status():
+    """Get complete repository status information."""
+    try:
+        git_service = get_git_service()
+        status = git_service.get_repository_status()
+        
+        return {"status": "success", "repository": status.to_dict()}
+
+    except Exception as e:
+        logger.error(f"Repository status error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get repository status")
+
+
+@router.get("/git/visualization")
+async def get_git_visualization():
+    """Get git branch visualization data for D3.js."""
+    try:
+        git_service = get_git_service()
+        visualization_data = git_service.get_d3_visualization_data()
+        
+        return {"status": "success", "visualization": visualization_data}
+
+    except Exception as e:
+        logger.error(f"Git visualization error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get git visualization data")
