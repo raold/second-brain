@@ -189,3 +189,17 @@ async def get_git_visualization():
     except Exception as e:
         logger.error(f"Git visualization error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get git visualization data")
+
+
+@router.get("/git/commit-activity")
+async def get_commit_activity():
+    """Get commit activity metrics for all branches across different time periods."""
+    try:
+        git_service = get_git_service()
+        activity_data = git_service.get_commit_activity_summary()
+        
+        return {"status": "success", "activity": activity_data}
+
+    except Exception as e:
+        logger.error(f"Commit activity error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get commit activity data")
