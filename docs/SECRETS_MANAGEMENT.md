@@ -1,53 +1,213 @@
 # Secrets Management Guide
 
-This guide explains how to properly handle sensitive information like API keys in the Second Brain project.
+**Single-User AI Memory System** | Security-first approach | Zero secrets in repository
 
-## Overview
+---
 
-**Never commit secrets to the repository!** All sensitive information should be stored as GitHub Secrets and accessed through environment variables.
+## Critical Security Rule
 
-## Local Development
+**⚠️ NEVER COMMIT SECRETS TO REPOSITORY ⚠️**
 
-### 1. Create a `.env` file
+All sensitive data → GitHub Secrets + Environment Variables only
 
-For local development, create a `.env` file in the project root:
+---
 
+## Secret Storage Matrix
+
+| Environment | Storage Method | Access Pattern | Security Level |
+|-------------|----------------|----------------|----------------|
+| **Local Development** | `.env` file (gitignored) | `os.getenv()` | Medium |
+| **GitHub Actions** | Repository Secrets | `${{ secrets.NAME }}` | High |
+| **Production** | Encrypted vault/secrets manager | Environment injection | Maximum |
+| **Testing** | Mock objects only | No real secrets | N/A |
+
+---
+
+## Local Development Setup
+
+**Step 1: Create `.env` file** (NEVER commit this)
 ```bash
-# .env (DO NOT COMMIT THIS FILE)
-OPENAI_API_KEY=your_actual_api_key_here
-POSTGRES_PASSWORD=your_postgres_password
+# .env - Add to .gitignore immediately
+OPENAI_API_KEY=sk-your_actual_key_here
+DATABASE_URL=postgresql://user:pass@localhost:5432/second_brain  
+AUTH_TOKEN=your_32_char_minimum_token_here
 ```
 
-### 2. Add `.env` to `.gitignore`
-
-Ensure `.env` is in your `.gitignore` file:
-
+**Step 2: Verify `.gitignore` protection**
 ```gitignore
-# Environment variables
+# Environment variables - CRITICAL
 .env
-.env.local
-.env.*.local
+.env.*
+*.env
 ```
 
-### 3. Load environment variables
+**Step 3: Load in application**
+```python
+import os
+from dotenv import load_dotenv
 
-The application loads these automatically using `python-dotenv` or similar.
+load_dotenv()  # Loads .env file
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise ValueError("OPENAI_API_KEY not configured")
+```
 
-## GitHub Actions
+---
 
-### 1. Add Secrets to GitHub
+## GitHub Actions Integration
 
-1. Go to your repository on GitHub
-2. Navigate to **Settings** → **Secrets and variables** → **Actions**
-3. Click **New repository secret**
-4. Add each secret with its name and value:
-   - `OPENAI_API_KEY`
-   - `POSTGRES_PASSWORD`
-   - Any other sensitive values
+**Repository Secrets Configuration**
+1. GitHub Repository → Settings → Secrets and variables → Actions
+2. New repository secret for each sensitive value:
 
-### 2. Reference Secrets in Workflows
+| Secret Name | Purpose | Format | Notes |
+|-------------|---------|--------|--------|
+| `OPENAI_API_KEY` | OpenAI API access | `sk-...` | Required for embeddings |
+| `AUTH_TOKEN` | API authentication | 32+ chars | Strong entropy required |
+| `DATABASE_URL` | Production DB | `postgresql://...` | Connection string |
 
-In your workflow files (`.github/workflows/*.yml`), reference secrets like this:
+**Workflow Implementation**
+```yaml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy with Secrets
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python -m app.main
+```
+
+---
+
+## Testing Strategy Matrix
+
+| Test Type | Secret Usage | Implementation | API Costs |
+|-----------|--------------|----------------|-----------|
+| **Unit Tests** | ❌ None | Mock all external services | $0 |
+| **Integration** | ❌ None | Mock OpenAI + Test DB | $0 |
+| **End-to-End** | ⚠️ Test keys only | Separate test environment | Minimal |
+| **Manual** | ✅ Dev keys | Local `.env` file | Development |
+
+**Mock Implementation Example**
+```python
+# tests/fixtures/external_services.py
+@patch('openai.Client')
+def test_memory_storage(mock_openai):
+    mock_openai.embeddings.create.return_value.data[0].embedding = [0.1] * 1536
+    # Test proceeds with mocked response
+```
+
+---
+
+## Security Validation Checklist
+
+| Category | Requirement | Status | Validation Command |
+|----------|-------------|--------|---------------------|
+| **Code** | No hardcoded secrets | ⬜ | `grep -r "sk-" --exclude-dir=.git .` |
+| | No secrets in logs | ⬜ | Review logging statements |
+| | Environment validation | ⬜ | Required vars check on startup |
+| **Repository** | `.env` in `.gitignore` | ⬜ | `git check-ignore .env` |
+| | No secrets in history | ⬜ | `git log --all -p | grep "sk-"` |
+| **GitHub** | All secrets configured | ⬜ | Settings → Secrets list |
+| | Workflow references correct names | ⬜ | `.github/workflows/*.yml` review |
+
+---
+
+## Common Vulnerabilities & Prevention
+
+| Vulnerability | Risk Level | Prevention | Detection |
+|---------------|------------|------------|-----------|
+| **Hardcoded API keys** | 🔴 Critical | Environment variables only | Code scanning |
+| **Secrets in logs** | 🟡 High | Sanitize log output | Log analysis |
+| **Committed .env files** | 🔴 Critical | Gitignore + pre-commit hooks | History scanning |
+| **Weak auth tokens** | 🟡 High | Minimum 32 chars, high entropy | Token strength validation |
+| **Production keys in dev** | 🟡 High | Separate key sets | Environment tracking |
+
+---
+
+## Error Resolution Decision Tree
+
+**Missing Secret Error**: `KeyError: 'OPENAI_API_KEY'`
+```
+Environment check:
+├─ Local dev? → Verify .env file exists and contains key
+├─ GitHub Actions? → Check repository secrets configuration
+├─ Production? → Verify environment variable injection
+└─ Testing? → Should use mocks, not real secrets
+```
+
+**Secret Not Loading**
+```
+Check sequence:
+1. Spelling: Exact case match (OPENAI_API_KEY vs openai_api_key)
+2. Scope: Secret available in current environment/workflow
+3. Syntax: Proper ${{ secrets.NAME }} format in workflows
+4. Loading: dotenv.load() called before os.getenv()
+```
+
+---
+
+## Implementation Examples
+
+**Environment Validation (Startup)**
+```python
+def validate_secrets():
+    required = ["OPENAI_API_KEY", "DATABASE_URL", "AUTH_TOKEN"]
+    missing = [var for var in required if not os.getenv(var)]
+    if missing:
+        raise EnvironmentError(f"Missing required secrets: {', '.join(missing)}")
+
+# Call on application startup
+validate_secrets()
+```
+
+**Secure Logging Pattern**
+```python
+import logging
+
+def safe_log_config():
+    # Mask sensitive values in logs
+    sensitive_keys = ["OPENAI_API_KEY", "AUTH_TOKEN", "DATABASE_URL"]
+    config = {k: "***MASKED***" if k in sensitive_keys else v 
+              for k, v in os.environ.items()}
+    logging.info(f"Configuration loaded: {config}")
+```
+
+**Production Secret Rotation**
+```python
+# Rotate secrets without downtime
+def rotate_api_key():
+    old_key = os.getenv("OPENAI_API_KEY")
+    new_key = os.getenv("OPENAI_API_KEY_NEW")
+    
+    if new_key and validate_api_key(new_key):
+        # Switch to new key
+        os.environ["OPENAI_API_KEY"] = new_key
+        logging.info("API key rotated successfully")
+        return True
+    return False
+```
+
+---
+
+## Security Metrics & Monitoring
+
+| Metric | Target | Current | Trend |
+|--------|--------|---------|-------|
+| **Secrets in code** | 0 | 0 | ✅ Stable |
+| **Failed auth attempts** | <1% | Monitor | 📊 Tracking |
+| **Secret age (days)** | <90 | Varies | ⏰ Rotation needed |
+| **Environment leaks** | 0 | 0 | ✅ Clean |
+
+**Automated Scanning**
+- GitHub secret scanning: Enabled
+- Pre-commit hooks: Recommended  
+- Regular audits: Monthly
+- Rotation schedule: Quarterly
 
 ```yaml
 jobs:

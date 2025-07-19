@@ -16,6 +16,7 @@ openai==1.3.8
 
 # Vector database support
 numpy==1.24.3
+pandas==2.0.3
 scikit-learn==1.3.2
 
 # System monitoring
