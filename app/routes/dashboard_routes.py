@@ -155,7 +155,7 @@ async def get_git_branches():
     try:
         git_service = get_git_service()
         repo_status = git_service.get_repository_status()
-        
+
         return {"status": "success", "branches": [branch.to_dict() for branch in repo_status.branches]}
 
     except Exception as e:
@@ -169,7 +169,7 @@ async def get_repository_status():
     try:
         git_service = get_git_service()
         status = git_service.get_repository_status()
-        
+
         return {"status": "success", "repository": status.to_dict()}
 
     except Exception as e:
@@ -183,7 +183,7 @@ async def get_git_visualization():
     try:
         git_service = get_git_service()
         visualization_data = git_service.get_d3_visualization_data()
-        
+
         return {"status": "success", "visualization": visualization_data}
 
     except Exception as e:
@@ -197,7 +197,7 @@ async def get_commit_activity():
     try:
         git_service = get_git_service()
         activity_data = git_service.get_commit_activity_summary()
-        
+
         return {"status": "success", "activity": activity_data}
 
     except Exception as e:

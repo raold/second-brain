@@ -12,75 +12,67 @@ Created as part of Phase 1: Emergency Stabilization
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, List, Any
 from datetime import datetime
+from typing import Any, Optional
 
 
 class MemoryDatabaseInterface(ABC):
     """Abstract interface for memory database operations."""
-    
+
     @abstractmethod
-    async def get_memory(self, memory_id: str) -> Optional[Dict[str, Any]]:
+    async def get_memory(self, memory_id: str) -> Optional[dict[str, Any]]:
         """Get a specific memory by ID.
-        
+
         Args:
             memory_id: UUID of the memory to retrieve
-            
+
         Returns:
             Memory data dict or None if not found
         """
         pass
-    
+
     @abstractmethod
     async def get_candidate_memories(
-        self, 
-        exclude_id: str, 
-        limit: int = 50,
-        memory_types: Optional[List[str]] = None
-    ) -> List[Dict[str, Any]]:
+        self, exclude_id: str, limit: int = 50, memory_types: Optional[list[str]] = None
+    ) -> list[dict[str, Any]]:
         """Get candidate memories for relationship analysis.
-        
+
         Args:
             exclude_id: Memory ID to exclude from results
             limit: Maximum number of candidates to return
             memory_types: Optional filter by memory types
-            
+
         Returns:
             List of memory data dictionaries
         """
         pass
-    
+
     @abstractmethod
     async def get_memories_for_clustering(
-        self,
-        memory_types: Optional[List[str]] = None,
-        limit: int = 200
-    ) -> List[Dict[str, Any]]:
+        self, memory_types: Optional[list[str]] = None, limit: int = 200
+    ) -> list[dict[str, Any]]:
         """Get memories for clustering analysis.
-        
+
         Args:
             memory_types: Optional filter by memory types
             limit: Maximum number of memories to return
-            
+
         Returns:
             List of memory data dictionaries
         """
         pass
-    
+
     @abstractmethod
     async def get_concept_memories(
-        self, 
-        concept_pattern: str, 
-        cutoff_date: datetime,
-        limit: int = 100
-    ) -> List[Dict[str, Any]]:
+        self, concept_pattern: str, cutoff_date: datetime, limit: int = 100
+    ) -> list[dict[str, Any]]:
         """Get memories matching concept pattern since cutoff date.
-        
+
         Args:
             concept_pattern: Regex pattern for concept matching
             cutoff_date: Minimum creation date
             limit: Maximum number of memories to return
-            
+
         Returns:
             List of memory data dictionaries sorted by creation date
         """
@@ -89,16 +81,16 @@ class MemoryDatabaseInterface(ABC):
 
 class PostgreSQLMemoryDatabase(MemoryDatabaseInterface):
     """PostgreSQL implementation of memory database interface."""
-    
+
     def __init__(self, database_service):
         """Initialize with database service dependency.
-        
+
         Args:
             database_service: Database service instance (injected)
         """
         self.database_service = database_service
-    
-    async def get_memory(self, memory_id: str) -> Optional[Dict[str, Any]]:
+
+    async def get_memory(self, memory_id: str) -> Optional[dict[str, Any]]:
         """Get memory from PostgreSQL."""
         async with self.database_service.pool.acquire() as conn:
             result = await conn.fetchrow(
@@ -112,24 +104,21 @@ class PostgreSQLMemoryDatabase(MemoryDatabaseInterface):
                 memory_id,
             )
             return dict(result) if result else None
-    
+
     async def get_candidate_memories(
-        self, 
-        exclude_id: str, 
-        limit: int = 50,
-        memory_types: Optional[List[str]] = None
-    ) -> List[Dict[str, Any]]:
+        self, exclude_id: str, limit: int = 50, memory_types: Optional[list[str]] = None
+    ) -> list[dict[str, Any]]:
         """Get candidate memories from PostgreSQL."""
         query_filters = ["id != $1", "embedding IS NOT NULL"]
-        params: List[Any] = [exclude_id]
-        
+        params: list[Any] = [exclude_id]
+
         if memory_types:
             params.append(memory_types)
             query_filters.append(f"memory_type = ANY(${len(params)})")
-        
+
         params.append(limit)
         where_clause = " AND ".join(query_filters)
-        
+
         query = f"""
             SELECT id, content, embedding, memory_type, importance_score,
                    semantic_metadata, episodic_metadata, procedural_metadata,
@@ -139,27 +128,25 @@ class PostgreSQLMemoryDatabase(MemoryDatabaseInterface):
             ORDER BY importance_score DESC, created_at DESC
             LIMIT ${len(params)}
         """
-        
+
         async with self.database_service.pool.acquire() as conn:
             results = await conn.fetch(query, *params)
             return [dict(result) for result in results]
-    
+
     async def get_memories_for_clustering(
-        self,
-        memory_types: Optional[List[str]] = None,
-        limit: int = 200
-    ) -> List[Dict[str, Any]]:
+        self, memory_types: Optional[list[str]] = None, limit: int = 200
+    ) -> list[dict[str, Any]]:
         """Get memories for clustering from PostgreSQL."""
         query_filters = ["embedding IS NOT NULL"]
-        params: List[Any] = []
-        
+        params: list[Any] = []
+
         if memory_types:
             params.append(memory_types)
             query_filters.append(f"memory_type = ANY(${len(params)})")
-        
+
         params.append(limit)
         where_clause = " AND ".join(query_filters)
-        
+
         query = f"""
             SELECT id, content, embedding, memory_type, importance_score,
                    semantic_metadata, episodic_metadata, procedural_metadata,
@@ -169,17 +156,14 @@ class PostgreSQLMemoryDatabase(MemoryDatabaseInterface):
             ORDER BY importance_score DESC
             LIMIT ${len(params)}
         """
-        
+
         async with self.database_service.pool.acquire() as conn:
             results = await conn.fetch(query, *params)
             return [dict(result) for result in results]
-    
+
     async def get_concept_memories(
-        self, 
-        concept_pattern: str, 
-        cutoff_date: datetime,
-        limit: int = 100
-    ) -> List[Dict[str, Any]]:
+        self, concept_pattern: str, cutoff_date: datetime, limit: int = 100
+    ) -> list[dict[str, Any]]:
         """Get concept memories from PostgreSQL."""
         async with self.database_service.pool.acquire() as conn:
             results = await conn.fetch(
@@ -198,108 +182,92 @@ class PostgreSQLMemoryDatabase(MemoryDatabaseInterface):
                 """,
                 concept_pattern,
                 cutoff_date,
-                limit
+                limit,
             )
             return [dict(result) for result in results]
 
 
 class MockMemoryDatabase(MemoryDatabaseInterface):
     """Mock implementation for testing."""
-    
-    def __init__(self, mock_memories: Optional[List[Dict[str, Any]]] = None):
+
+    def __init__(self, mock_memories: Optional[list[dict[str, Any]]] = None):
         """Initialize with optional mock data.
-        
+
         Args:
             mock_memories: Optional list of mock memory data
         """
         self.memories = mock_memories or []
-    
-    async def get_memory(self, memory_id: str) -> Optional[Dict[str, Any]]:
+
+    async def get_memory(self, memory_id: str) -> Optional[dict[str, Any]]:
         """Get memory from mock data."""
         for memory in self.memories:
-            if memory.get('id') == memory_id:
+            if memory.get("id") == memory_id:
                 return memory.copy()
         return None
-    
+
     async def get_candidate_memories(
-        self, 
-        exclude_id: str, 
-        limit: int = 50,
-        memory_types: Optional[List[str]] = None
-    ) -> List[Dict[str, Any]]:
+        self, exclude_id: str, limit: int = 50, memory_types: Optional[list[str]] = None
+    ) -> list[dict[str, Any]]:
         """Get candidate memories from mock data."""
         candidates = []
         for memory in self.memories:
-            if memory.get('id') == exclude_id:
+            if memory.get("id") == exclude_id:
                 continue
-            if not memory.get('embedding'):
+            if not memory.get("embedding"):
                 continue
-            if memory_types and memory.get('memory_type') not in memory_types:
+            if memory_types and memory.get("memory_type") not in memory_types:
                 continue
             candidates.append(memory.copy())
             if len(candidates) >= limit:
                 break
-        
+
         # Sort by importance and creation date
         return sorted(
-            candidates,
-            key=lambda m: (m.get('importance_score', 0), m.get('created_at', datetime.min)),
-            reverse=True
+            candidates, key=lambda m: (m.get("importance_score", 0), m.get("created_at", datetime.min)), reverse=True
         )
-    
+
     async def get_memories_for_clustering(
-        self,
-        memory_types: Optional[List[str]] = None,
-        limit: int = 200
-    ) -> List[Dict[str, Any]]:
+        self, memory_types: Optional[list[str]] = None, limit: int = 200
+    ) -> list[dict[str, Any]]:
         """Get memories for clustering from mock data."""
         candidates = []
         for memory in self.memories:
-            if not memory.get('embedding'):
+            if not memory.get("embedding"):
                 continue
-            if memory_types and memory.get('memory_type') not in memory_types:
+            if memory_types and memory.get("memory_type") not in memory_types:
                 continue
             candidates.append(memory.copy())
             if len(candidates) >= limit:
                 break
-        
-        return sorted(
-            candidates,
-            key=lambda m: m.get('importance_score', 0),
-            reverse=True
-        )
-    
+
+        return sorted(candidates, key=lambda m: m.get("importance_score", 0), reverse=True)
+
     async def get_concept_memories(
-        self, 
-        concept_pattern: str, 
-        cutoff_date: datetime,
-        limit: int = 100
-    ) -> List[Dict[str, Any]]:
+        self, concept_pattern: str, cutoff_date: datetime, limit: int = 100
+    ) -> list[dict[str, Any]]:
         """Get concept memories from mock data."""
         import re
+
         candidates = []
         pattern = re.compile(concept_pattern, re.IGNORECASE)
-        
+
         for memory in self.memories:
-            if not memory.get('embedding'):
+            if not memory.get("embedding"):
                 continue
-            if memory.get('created_at', datetime.min) < cutoff_date:
+            if memory.get("created_at", datetime.min) < cutoff_date:
                 continue
-            
+
             # Check if pattern matches content or metadata
-            content = memory.get('content', '')
+            content = memory.get("content", "")
             if pattern.search(content):
                 candidates.append(memory.copy())
             elif any(
                 pattern.search(str(memory.get(field, {})))
-                for field in ['semantic_metadata', 'episodic_metadata', 'procedural_metadata']
+                for field in ["semantic_metadata", "episodic_metadata", "procedural_metadata"]
             ):
                 candidates.append(memory.copy())
-            
+
             if len(candidates) >= limit:
                 break
-        
-        return sorted(
-            candidates,
-            key=lambda m: m.get('created_at', datetime.min)
-        )
+
+        return sorted(candidates, key=lambda m: m.get("created_at", datetime.min))

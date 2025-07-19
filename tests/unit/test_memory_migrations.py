@@ -69,7 +69,11 @@ class TestAddMemoryTypeClassification:
             {"id": 2, "content": "How to bake a cake", "metadata": {}},
         ]
         
-        mock_pool.acquire.return_value.__aenter__.return_value = mock_conn
+        # Create a proper async context manager mock
+        mock_acquire = AsyncMock()
+        mock_acquire.__aenter__ = AsyncMock(return_value=mock_conn)
+        mock_acquire.__aexit__ = AsyncMock(return_value=None)
+        mock_pool.acquire = AsyncMock(return_value=mock_acquire)
         
         result = await migration.get_memories_to_migrate()
         
@@ -227,7 +231,11 @@ class TestConsolidateDuplicateMemories:
             },
         ]
         
-        mock_pool.acquire.return_value.__aenter__.return_value = mock_conn
+        # Create a proper async context manager mock
+        mock_acquire = AsyncMock()
+        mock_acquire.__aenter__ = AsyncMock(return_value=mock_conn)
+        mock_acquire.__aexit__ = AsyncMock(return_value=None)
+        mock_pool.acquire = AsyncMock(return_value=mock_acquire)
         
         result = await migration.get_memories_to_migrate()
         

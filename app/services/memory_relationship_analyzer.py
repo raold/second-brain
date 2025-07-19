@@ -4,7 +4,7 @@ Memory Relationship Analyzer - Refactored Version
 
 PHASE 1 EMERGENCY STABILIZATION COMPLETE:
 ✅ Fixed database coupling with dependency injection
-✅ Fixed method signatures and error handling  
+✅ Fixed method signatures and error handling
 ✅ Added comprehensive input validation
 ✅ Separated similarity calculations into focused module
 ✅ Made fully testable with mock implementations
@@ -18,13 +18,17 @@ Refactored: ~200 lines, testable, modular
 
 import logging
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
-from typing import Any, Optional, List, Dict
+from datetime import datetime
+from typing import Any, Optional
 
 import numpy as np
 
 from app.interfaces.memory_database_interface import MemoryDatabaseInterface
-from app.services.similarity_analyzers import SimilarityAnalyzers, calculate_composite_score, categorize_relationship_strength
+from app.services.similarity_analyzers import (
+    SimilarityAnalyzers,
+    calculate_composite_score,
+    categorize_relationship_strength,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,13 +37,10 @@ class MemoryRelationshipAnalyzer:
     """Refactored analyzer for detecting and quantifying relationships between memories."""
 
     def __init__(
-        self, 
-        database: MemoryDatabaseInterface,
-        similarity_threshold: float = 0.3,
-        temporal_window_hours: float = 24.0
+        self, database: MemoryDatabaseInterface, similarity_threshold: float = 0.3, temporal_window_hours: float = 24.0
     ):
         """Initialize relationship analyzer with dependency injection.
-        
+
         Args:
             database: Database interface implementation (injected)
             similarity_threshold: Minimum threshold for significant relationships
@@ -48,10 +49,10 @@ class MemoryRelationshipAnalyzer:
         self.database = database
         self.similarity_threshold = similarity_threshold
         self.temporal_window_hours = temporal_window_hours
-        
+
         # Initialize similarity analyzers
         self.similarity_analyzers = SimilarityAnalyzers(temporal_window_hours)
-        
+
         # Available relationship types with their analyzer methods
         self.relationship_types = {
             "semantic_similarity": self._analyze_semantic_similarity,
@@ -63,12 +64,8 @@ class MemoryRelationshipAnalyzer:
         }
 
     async def analyze_memory_relationships(
-        self, 
-        memory_id: str, 
-        relationship_types: Optional[List[str]] = None, 
-        depth: int = 2, 
-        max_connections: int = 50
-    ) -> Dict[str, Any]:
+        self, memory_id: str, relationship_types: Optional[list[str]] = None, depth: int = 2, max_connections: int = 50
+    ) -> dict[str, Any]:
         """
         Perform comprehensive relationship analysis for a specific memory.
 
@@ -90,7 +87,7 @@ class MemoryRelationshipAnalyzer:
             # Get candidate memories for relationship analysis
             candidate_memories = await self.database.get_candidate_memories(
                 exclude_id=memory_id,
-                limit=max_connections * 3  # Get more candidates for filtering
+                limit=max_connections * 3,  # Get more candidates for filtering
             )
 
             if not candidate_memories:
@@ -147,8 +144,8 @@ class MemoryRelationshipAnalyzer:
             }
 
     async def _analyze_relationships_batch(
-        self, target_memory: Dict[str, Any], candidate_memories: List[Dict[str, Any]], relationship_types: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, target_memory: dict[str, Any], candidate_memories: list[dict[str, Any]], relationship_types: list[str]
+    ) -> list[dict[str, Any]]:
         """Analyze relationships between target memory and candidates."""
         relationships = []
 
@@ -188,7 +185,11 @@ class MemoryRelationshipAnalyzer:
                         },
                         "relationship_scores": relationship_scores,
                         "composite_score": composite_score,
-                        "primary_relationship_type": max(relationship_scores.keys(), key=lambda k: relationship_scores[k]) if relationship_scores else "unknown",
+                        "primary_relationship_type": max(
+                            relationship_scores.keys(), key=lambda k: relationship_scores[k]
+                        )
+                        if relationship_scores
+                        else "unknown",
                         "strength": categorize_relationship_strength(composite_score),
                     }
                     relationships.append(relationship)
@@ -201,13 +202,13 @@ class MemoryRelationshipAnalyzer:
 
     # Relationship analysis methods - now properly separated and testable
     async def _analyze_semantic_similarity(
-        self, memory1: Dict, memory2: Dict, embedding1: List[float], embedding2: List[float]
+        self, memory1: dict, memory2: dict, embedding1: list[float], embedding2: list[float]
     ) -> float:
         """Analyze semantic similarity using embeddings."""
         return self.similarity_analyzers.calculate_semantic_similarity(embedding1, embedding2)
 
     async def _analyze_temporal_proximity(
-        self, memory1: Dict, memory2: Dict, embedding1: List[float], embedding2: List[float]
+        self, memory1: dict, memory2: dict, embedding1: list[float], embedding2: list[float]
     ) -> float:
         """Analyze temporal proximity."""
         return self.similarity_analyzers.calculate_temporal_proximity(
@@ -215,41 +216,39 @@ class MemoryRelationshipAnalyzer:
         )
 
     async def _analyze_content_overlap(
-        self, memory1: Dict, memory2: Dict, embedding1: List[float], embedding2: List[float]
+        self, memory1: dict, memory2: dict, embedding1: list[float], embedding2: list[float]
     ) -> float:
         """Analyze content overlap."""
-        return self.similarity_analyzers.calculate_content_overlap(
-            memory1.get("content"), memory2.get("content")
-        )
+        return self.similarity_analyzers.calculate_content_overlap(memory1.get("content"), memory2.get("content"))
 
     async def _analyze_conceptual_hierarchy(
-        self, memory1: Dict, memory2: Dict, embedding1: List[float], embedding2: List[float]
+        self, memory1: dict, memory2: dict, embedding1: list[float], embedding2: list[float]
     ) -> float:
         """Analyze conceptual hierarchy."""
-        return self.similarity_analyzers.calculate_conceptual_hierarchy(
-            memory1.get("content"), memory2.get("content")
-        )
+        return self.similarity_analyzers.calculate_conceptual_hierarchy(memory1.get("content"), memory2.get("content"))
 
     async def _analyze_causal_relationship(
-        self, memory1: Dict, memory2: Dict, embedding1: List[float], embedding2: List[float]
+        self, memory1: dict, memory2: dict, embedding1: list[float], embedding2: list[float]
     ) -> float:
         """Analyze causal relationships."""
         return self.similarity_analyzers.detect_causal_relationship(
-            memory1.get("content"), memory2.get("content"),
-            memory1.get("created_at"), memory2.get("created_at")
+            memory1.get("content"), memory2.get("content"), memory1.get("created_at"), memory2.get("created_at")
         )
 
     async def _analyze_contextual_association(
-        self, memory1: Dict, memory2: Dict, embedding1: List[float], embedding2: List[float]
+        self, memory1: dict, memory2: dict, embedding1: list[float], embedding2: list[float]
     ) -> float:
         """Analyze contextual association."""
         return self.similarity_analyzers.calculate_contextual_association(
-            memory1, memory2,
-            memory1.get("memory_type"), memory2.get("memory_type"),
-            memory1.get("importance_score"), memory2.get("importance_score")
+            memory1,
+            memory2,
+            memory1.get("memory_type"),
+            memory2.get("memory_type"),
+            memory1.get("importance_score"),
+            memory2.get("importance_score"),
         )
 
-    def _filter_significant_relationships(self, relationships: List[Dict], max_connections: int) -> List[Dict]:
+    def _filter_significant_relationships(self, relationships: list[dict], max_connections: int) -> list[dict]:
         """Filter and rank relationships by significance."""
         # Remove relationships below threshold
         filtered = [r for r in relationships if r["composite_score"] > self.similarity_threshold]
@@ -260,8 +259,8 @@ class MemoryRelationshipAnalyzer:
         return filtered[:max_connections]
 
     async def _analyze_extended_network(
-        self, direct_relationships: List[Dict], remaining_depth: int, max_connections: int
-    ) -> Dict[str, Any]:
+        self, direct_relationships: list[dict], remaining_depth: int, max_connections: int
+    ) -> dict[str, Any]:
         """Analyze extended network relationships."""
         if remaining_depth <= 0 or not direct_relationships:
             return {}
@@ -269,7 +268,7 @@ class MemoryRelationshipAnalyzer:
         extended_network = {}
 
         # For each direct relationship, find its relationships (limited to prevent explosion)
-        for relationship in direct_relationships[:min(10, len(direct_relationships))]:
+        for relationship in direct_relationships[: min(10, len(direct_relationships))]:
             related_id = relationship["related_id"]
 
             try:
@@ -289,7 +288,7 @@ class MemoryRelationshipAnalyzer:
 
         return extended_network
 
-    def _generate_relationship_insights(self, relationships: List[Dict], extended_network: Dict) -> Dict[str, Any]:
+    def _generate_relationship_insights(self, relationships: list[dict], extended_network: dict) -> dict[str, Any]:
         """Generate insights from relationship analysis."""
         if not relationships:
             return {"message": "No significant relationships found"}
@@ -334,18 +333,18 @@ class MemoryRelationshipAnalyzer:
             logger.warning(f"Failed to generate relationship insights: {e}")
             return {"error": "Failed to generate insights", "message": str(e)}
 
-    def _parse_embedding(self, embedding: Any) -> Optional[List[float]]:
+    def _parse_embedding(self, embedding: Any) -> Optional[list[float]]:
         """Parse embedding from various formats."""
         # Handle None explicitly
         if embedding is None:
             return None
-            
+
         # Handle numpy arrays first (before general truthiness check)
-        if hasattr(embedding, 'tolist'):  # numpy array
+        if hasattr(embedding, "tolist"):  # numpy array
             return embedding.tolist()
-            
+
         # Handle empty collections
-        if hasattr(embedding, '__len__') and len(embedding) == 0:
+        if hasattr(embedding, "__len__") and len(embedding) == 0:
             return None
 
         try:
@@ -354,6 +353,7 @@ class MemoryRelationshipAnalyzer:
             elif isinstance(embedding, str):
                 # Try to parse as JSON
                 import json
+
                 return json.loads(embedding)
             else:
                 logger.warning(f"Unknown embedding format: {type(embedding)}")
@@ -363,7 +363,7 @@ class MemoryRelationshipAnalyzer:
             logger.warning(f"Failed to parse embedding: {e}")
             return None
 
-    def _empty_relationship_analysis(self, memory_id: str) -> Dict[str, Any]:
+    def _empty_relationship_analysis(self, memory_id: str) -> dict[str, Any]:
         """Return empty analysis structure."""
         return {
             "memory_id": memory_id,
