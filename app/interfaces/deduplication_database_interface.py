@@ -40,6 +40,19 @@ class DeduplicationDatabaseInterface(ABC):
         pass
     
     @abstractmethod
+    async def get_memories_by_ids(self, memory_ids: List[str]) -> List[Dict[str, Any]]:
+        """
+        Retrieve specific memories by their IDs.
+        
+        Args:
+            memory_ids: List of memory IDs to retrieve
+            
+        Returns:
+            List of memory dictionaries for found memories
+        """
+        pass
+    
+    @abstractmethod
     async def merge_memories(
         self, 
         primary_id: str, 
@@ -337,8 +350,12 @@ class MockDeduplicationDatabase(DeduplicationDatabaseInterface):
         
         if limit:
             filtered_memories = filtered_memories[:limit]
-            
+        
         return filtered_memories
+    
+    async def get_memories_by_ids(self, memory_ids: List[str]) -> List[Dict[str, Any]]:
+        """Return memories with matching IDs."""
+        return [m for m in self.memories if m['id'] in memory_ids]
     
     async def merge_memories(
         self, 
