@@ -3,17 +3,15 @@ Second Brain Application Version Information
 Centralized version management system for production deployment
 """
 
-import json
 import os
 from datetime import datetime
-from typing import Dict, Any, Optional, Tuple
-
+from typing import Any
 
 # Core version information
-__version__ = "2.4.2"
-__version_info__ = (2, 4, 2)
+__version__ = "2.4.3"
+__version_info__ = (2, 4, 3)
 __build__ = "stable"
-__release_date__ = "2025-07-18"
+__release_date__ = "2025-07-19"
 
 # Build and environment information
 __build_timestamp__ = datetime.now().isoformat()
@@ -26,7 +24,7 @@ def get_version() -> str:
     return __version__
 
 
-def get_version_info() -> Dict[str, Any]:
+def get_version_info() -> dict[str, Any]:
     """Get comprehensive version information for dashboard and API."""
     return {
         "version": __version__,
@@ -39,11 +37,11 @@ def get_version_info() -> Dict[str, Any]:
         "version_string": f"v{__version__}",
         "display_name": f"Second Brain v{__version__}",
         "codename": get_current_codename(),
-        "roadmap_info": get_current_roadmap_info()
+        "roadmap_info": get_current_roadmap_info(),
     }
 
 
-def get_dashboard_version() -> Dict[str, Any]:
+def get_dashboard_version() -> dict[str, Any]:
     """Get version information specifically formatted for dashboard display."""
     current_info = get_current_roadmap_info()
     return {
@@ -53,7 +51,7 @@ def get_dashboard_version() -> Dict[str, Any]:
         "focus": current_info.get("focus", "Development"),
         "status": current_info.get("status", "current"),
         "release_date": __release_date__,
-        "next_version": get_next_planned_version()
+        "next_version": get_next_planned_version(),
     }
 
 
@@ -64,7 +62,7 @@ def get_current_codename() -> str:
     return roadmap.get(current_key, {}).get("codename", "Unknown")
 
 
-def get_current_roadmap_info() -> Dict[str, Any]:
+def get_current_roadmap_info() -> dict[str, Any]:
     """Get roadmap information for the current version."""
     roadmap = get_cognitive_roadmap()
     current_key = f"v{__version__}"
@@ -74,36 +72,36 @@ def get_current_roadmap_info() -> Dict[str, Any]:
 def get_next_planned_version() -> str:
     """Get the next planned version from roadmap."""
     roadmap = get_cognitive_roadmap()
-    
+
     # Find versions that are planned but not completed
     planned_versions = []
     for version, info in roadmap.items():
         if info.get("status") in ["planned", "future"]:
             planned_versions.append(version)
-    
+
     # Sort and return the first planned version
     if planned_versions:
         # Simple version sorting (assumes v.x.y.z format)
-        planned_versions.sort(key=lambda v: tuple(map(int, v[1:].split('.'))))
+        planned_versions.sort(key=lambda v: tuple(map(int, v[1:].split("."))))
         return planned_versions[0]
-    
+
     # Default increment
     major, minor, patch = __version_info__
     return f"v{major}.{minor + 1}.0"
 
 
-def parse_version(version_string: str) -> Tuple[int, int, int]:
+def parse_version(version_string: str) -> tuple[int, int, int]:
     """Parse version string to tuple."""
     # Remove 'v' prefix if present
-    version = version_string.lstrip('v')
-    parts = version.split('.')
+    version = version_string.lstrip("v")
+    parts = version.split(".")
     return (int(parts[0]), int(parts[1]), int(parts[2]) if len(parts) > 2 else 0)
 
 
 def increment_version(bump_type: str = "patch") -> str:
     """Increment version based on semantic versioning."""
     major, minor, patch = __version_info__
-    
+
     if bump_type == "major":
         return f"{major + 1}.0.0"
     elif bump_type == "minor":
@@ -114,18 +112,18 @@ def increment_version(bump_type: str = "patch") -> str:
         raise ValueError(f"Invalid bump type: {bump_type}")
 
 
-def get_version_for_testing() -> Dict[str, Any]:
+def get_version_for_testing() -> dict[str, Any]:
     """Get version information formatted for testing frameworks."""
     return {
         "version": __version__,
         "version_tuple": __version_info__,
         "is_stable": __build__ == "stable",
         "environment": os.getenv("ENVIRONMENT", "development"),  # Read dynamically for testing
-        "build_date": __release_date__
+        "build_date": __release_date__,
     }
 
 
-def get_version_for_docs() -> Dict[str, Any]:
+def get_version_for_docs() -> dict[str, Any]:
     """Get version information formatted for documentation."""
     current_info = get_current_roadmap_info()
     return {
@@ -136,7 +134,7 @@ def get_version_for_docs() -> Dict[str, Any]:
         "codename": current_info.get("codename", "Unknown"),
         "release_date": __release_date__,
         "status": current_info.get("status", "current"),
-        "badge_version": __version__.replace(".", "%2E")  # URL encoded for badges
+        "badge_version": __version__.replace(".", "%2E"),  # URL encoded for badges
     }
 
 
@@ -144,14 +142,14 @@ def is_version_compatible(required_version: str) -> bool:
     """Check if current version is compatible with required version."""
     current = parse_version(__version__)
     required = parse_version(required_version)
-    
+
     # Major version must match, minor version must be >= required
-    return (current[0] == required[0] and 
-            (current[1] > required[1] or 
-             (current[1] == required[1] and current[2] >= required[2])))
+    return current[0] == required[0] and (
+        current[1] > required[1] or (current[1] == required[1] and current[2] >= required[2])
+    )
 
 
-def get_cognitive_roadmap() -> Dict[str, Dict[str, Any]]:
+def get_cognitive_roadmap() -> dict[str, dict[str, Any]]:
     """Get the cognitive architecture evolution roadmap."""
     return {
         "v2.0.0": {
@@ -163,40 +161,37 @@ def get_cognitive_roadmap() -> Dict[str, Dict[str, Any]]:
                 "pgvector_similarity_search",
                 "simplified_dependencies",
                 "direct_sql_access",
-                "clean_architecture"
+                "clean_architecture",
             ],
             "status": "completed",
             "release_date": "2024-11-30",
         },
-        
         "v2.1.0": {
-            "codename": "Cognitive", 
+            "codename": "Cognitive",
             "focus": "Memory Type Classification",
             "features": [
                 "memory_type_classification",
                 "semantic_episodic_procedural",
                 "intelligent_classification_engine",
                 "contextual_search",
-                "temporal_decay_modeling"
+                "temporal_decay_modeling",
             ],
             "status": "completed",
             "release_date": "2024-12-15",
         },
-        
         "v2.2.0": {
             "codename": "Visualization",
-            "focus": "Interactive Memory Graphs", 
+            "focus": "Interactive Memory Graphs",
             "features": [
                 "memory_relationship_graphs",
                 "d3js_visualizations",
                 "advanced_search_interface",
                 "analytics_insights",
-                "network_analysis"
+                "network_analysis",
             ],
             "status": "completed",
             "release_date": "2025-01-17",
         },
-        
         "v2.3.0": {
             "codename": "Organization",
             "focus": "Repository Structure & Testing",
@@ -205,12 +200,11 @@ def get_cognitive_roadmap() -> Dict[str, Dict[str, Any]]:
                 "folder_structure_optimization",
                 "comprehensive_testing",
                 "vestigial_cleanup",
-                "professional_standards"
+                "professional_standards",
             ],
             "status": "completed",
             "release_date": "2025-07-17",
         },
-        
         "v2.4.0": {
             "codename": "Operations",
             "focus": "Advanced Bulk Operations",
@@ -219,12 +213,11 @@ def get_cognitive_roadmap() -> Dict[str, Dict[str, Any]]:
                 "memory_deduplication",
                 "batch_classification",
                 "migration_tools",
-                "performance_optimization"
+                "performance_optimization",
             ],
             "status": "completed",
             "release_date": "2025-07-17",
         },
-        
         "v2.4.1": {
             "codename": "Quality",
             "focus": "Documentation & Quality Improvements",
@@ -233,12 +226,11 @@ def get_cognitive_roadmap() -> Dict[str, Dict[str, Any]]:
                 "badge_accuracy",
                 "version_consistency",
                 "professional_standards",
-                "license_compliance"
+                "license_compliance",
             ],
             "status": "released",
             "release_date": "2025-07-18",
         },
-        
         "v2.4.2": {
             "codename": "Testing",
             "focus": "Legacy Cleanup & Testing Enhancement",
@@ -247,12 +239,11 @@ def get_cognitive_roadmap() -> Dict[str, Dict[str, Any]]:
                 "centralized_version_management",
                 "enhanced_testing_framework",
                 "pr_validation_automation",
-                "production_readiness_validation"
+                "production_readiness_validation",
             ],
             "status": "current",
             "release_date": "2025-07-19",
         },
-        
         "v2.5.0": {
             "codename": "Analytics",
             "focus": "Advanced Analytics & Performance",
@@ -261,12 +252,11 @@ def get_cognitive_roadmap() -> Dict[str, Dict[str, Any]]:
                 "performance_optimization",
                 "ai_powered_insights",
                 "large_dataset_handling",
-                "caching_strategies"
+                "caching_strategies",
             ],
             "status": "planned",
             "release_date": "2025-08-31",
         },
-        
         "v2.6.0": {
             "codename": "Collaboration",
             "focus": "Multi-user & Mobile Support",
@@ -275,12 +265,11 @@ def get_cognitive_roadmap() -> Dict[str, Dict[str, Any]]:
                 "mobile_interface",
                 "advanced_migration_system",
                 "shared_memory_spaces",
-                "offline_capabilities"
+                "offline_capabilities",
             ],
-            "status": "planned", 
+            "status": "planned",
             "release_date": "2025-10-31",
         },
-        
         "v3.0.0": {
             "codename": "Intelligence",
             "focus": "Next Generation AI",
@@ -289,16 +278,16 @@ def get_cognitive_roadmap() -> Dict[str, Dict[str, Any]]:
                 "federated_learning",
                 "enterprise_features",
                 "natural_language_queries",
-                "automated_memory_consolidation"
+                "automated_memory_consolidation",
             ],
             "status": "future",
             "release_date": "2026-01-31",
-        }
+        },
     }
 
 
 # Legacy compatibility functions
-def get_version_tuple() -> Tuple[int, int, int]:
+def get_version_tuple() -> tuple[int, int, int]:
     """Get version as tuple (legacy compatibility)."""
     return __version_info__
 
@@ -316,7 +305,7 @@ def get_release_date() -> str:
 # Export commonly used functions
 __all__ = [
     "__version__",
-    "__version_info__", 
+    "__version_info__",
     "__build__",
     "__release_date__",
     "get_version",
@@ -326,5 +315,5 @@ __all__ = [
     "get_version_for_docs",
     "get_cognitive_roadmap",
     "increment_version",
-    "is_version_compatible"
+    "is_version_compatible",
 ]

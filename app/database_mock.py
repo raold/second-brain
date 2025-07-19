@@ -28,14 +28,14 @@ class MockDatabase:
         logger.info("Mock database closed")
 
     async def store_memory(
-        self, 
-        content: str, 
+        self,
+        content: str,
         metadata: dict[str, Any] | None = None,
         memory_type: str | None = None,
         semantic_metadata: dict[str, Any] | None = None,
         episodic_metadata: dict[str, Any] | None = None,
         procedural_metadata: dict[str, Any] | None = None,
-        importance_score: float = 0.5
+        importance_score: float = 0.5,
     ) -> str:
         """Store a memory in mock storage with cognitive metadata."""
         if not self.is_initialized:
@@ -83,12 +83,12 @@ class MockDatabase:
             # Update access count
             memory["access_count"] += 1
             memory["last_accessed"] = datetime.now().isoformat()
-            
+
             # Merge memory_type into metadata for consistency with expected test structure
             metadata = memory["metadata"].copy()
             if "type" not in metadata and memory.get("memory_type"):
                 metadata["type"] = memory["memory_type"]
-            
+
             return {
                 "id": memory["id"],
                 "content": memory["content"],
@@ -106,13 +106,11 @@ class MockDatabase:
             }
         return None
 
-    async def search_memories(self, query: str, limit: int = 10, memory_types: list[str] | None = None) -> list[dict[str, Any]]:
+    async def search_memories(
+        self, query: str, limit: int = 10, memory_types: list[str] | None = None
+    ) -> list[dict[str, Any]]:
         """Search memories using mock similarity with optional memory type filtering."""
-        return await self.contextual_search(
-            query=query, 
-            limit=limit, 
-            memory_types=memory_types
-        )
+        return await self.contextual_search(query=query, limit=limit, memory_types=memory_types)
 
     async def contextual_search(
         self,
@@ -121,7 +119,7 @@ class MockDatabase:
         memory_types: list[str] | None = None,
         importance_threshold: float | None = None,
         timeframe: str | None = None,
-        include_archived: bool = False
+        include_archived: bool = False,
     ) -> list[dict[str, Any]]:
         """Mock contextual search with memory type filtering."""
         if not self.is_initialized:
@@ -147,6 +145,7 @@ class MockDatabase:
             if timeframe and timeframe == "last_week":
                 # Mock: only return memories from last week
                 from datetime import timedelta
+
                 created_at = datetime.fromisoformat(memory["created_at"])
                 week_ago = datetime.now() - timedelta(days=7)
                 if created_at < week_ago:
@@ -154,13 +153,13 @@ class MockDatabase:
 
             # Calculate mock similarity
             vector_similarity = self._calculate_mock_similarity(query_embedding, memory["embedding"])
-            
+
             # Mock contextual scoring
             contextual_score = (
-                vector_similarity * 0.4 +
-                memory["importance_score"] * 0.25 +
-                memory["consolidation_score"] * 0.15 +
-                min(memory["access_count"] / 10.0, 1.0) * 0.2
+                vector_similarity * 0.4
+                + memory["importance_score"] * 0.25
+                + memory["consolidation_score"] * 0.15
+                + min(memory["access_count"] / 10.0, 1.0) * 0.2
             )
 
             # Update access count (mock)

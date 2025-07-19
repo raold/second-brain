@@ -7,16 +7,18 @@ Addresses memory_type column issues and validates database functionality
 import asyncio
 import os
 import sys
+
 import pytest
 
 # Add the current directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Set up test environment
-os.environ["USE_MOCK_DATABASE"] = "true"
-os.environ["API_TOKENS"] = "test-key-1,test-key-2"
+# Set up test environment using centralized configuration
+from app.utils.environment import validate_test_environment
 
-from app.database_mock import MockDatabase, get_mock_database
+test_config = validate_test_environment()
+
+from app.database_mock import get_mock_database
 
 
 @pytest.mark.asyncio
@@ -54,7 +56,7 @@ async def test_memory_storage_and_retrieval():
             "type": "semantic",  # Valid memory type
             "priority": "high",
             "tags": ["test", "database", "validation"],
-            "category": "unit_test"
+            "category": "unit_test",
         }
 
         memory_id = await db.store_memory(content, metadata)
@@ -104,11 +106,7 @@ async def test_memory_search_functionality():
         print(f"✅ Search found {len(results)} results")
 
         # Test search with filters
-        results_filtered = await db.search_memories(
-            "learning", 
-            limit=5,
-            memory_types=["semantic"]
-        )
+        results_filtered = await db.search_memories("learning", limit=5, memory_types=["semantic"])
         print(f"✅ Filtered search found {len(results_filtered)} results")
 
         await db.close()
@@ -128,24 +126,24 @@ async def test_memory_type_validation():
 
         # Test valid memory types
         valid_types = ["semantic", "episodic", "procedural"]
-        
+
         for memory_type in valid_types:
             content = f"Test memory of type {memory_type}"
             metadata = {"type": memory_type, "test": True}
-            
+
             memory_id = await db.store_memory(content, metadata)
             retrieved = await db.get_memory(memory_id)
-            
+
             assert retrieved["metadata"]["type"] == memory_type
             print(f"✅ Memory type '{memory_type}' validated")
 
         # Test default type handling
         content_no_type = "Memory without explicit type"
         metadata_no_type = {"category": "test"}
-        
+
         memory_id = await db.store_memory(content_no_type, metadata_no_type)
         retrieved = await db.get_memory(memory_id)
-        
+
         # Should have default type
         print(f"✅ Default memory type handling: {retrieved['metadata'].get('type', 'None')}")
 
@@ -166,16 +164,13 @@ async def test_database_performance():
 
         # Store multiple memories to test performance
         import time
+
         start_time = time.time()
 
         memory_ids = []
         for i in range(10):
             content = f"Performance test memory {i}"
-            metadata = {
-                "type": "semantic",
-                "index": i,
-                "batch": "performance_test"
-            }
+            metadata = {"type": "semantic", "index": i, "batch": "performance_test"}
             memory_id = await db.store_memory(content, metadata)
             memory_ids.append(memory_id)
 
@@ -184,7 +179,7 @@ async def test_database_performance():
 
         # Test batch retrieval performance
         start_time = time.time()
-        
+
         retrieved_memories = []
         for memory_id in memory_ids:
             memory = await db.get_memory(memory_id)
@@ -290,4 +285,4 @@ async def run_all_database_tests():
 
 if __name__ == "__main__":
     result = asyncio.run(run_all_database_tests())
-    sys.exit(0 if result else 1) 
+    sys.exit(0 if result else 1)

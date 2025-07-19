@@ -15,14 +15,16 @@ from app.version import get_version_info
 # Memory type enumeration
 class MemoryType(str, Enum):
     """Memory type classification based on cognitive psychology"""
-    SEMANTIC = "semantic"      # Facts, concepts, general knowledge
-    EPISODIC = "episodic"      # Time-bound experiences, contextual events
+
+    SEMANTIC = "semantic"  # Facts, concepts, general knowledge
+    EPISODIC = "episodic"  # Time-bound experiences, contextual events
     PROCEDURAL = "procedural"  # Process knowledge, workflows, instructions
 
 
 # Priority enumeration for task/todo management
 class Priority(str, Enum):
     """Priority levels for tasks and todos"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -32,30 +34,27 @@ class Priority(str, Enum):
 # Type-specific metadata models
 class SemanticMetadata(BaseModel):
     """Metadata specific to semantic memories"""
+
     category: Optional[str] = Field(default=None, description="Knowledge category")
     domain: Optional[str] = Field(default=None, description="Subject domain")
     confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Confidence level")
     verified: Optional[bool] = Field(default=None, description="Fact verification status")
-    
+
     class Config:
         json_schema_extra = {
-            "example": {
-                "category": "technology",
-                "domain": "database",
-                "confidence": 0.95,
-                "verified": True
-            }
+            "example": {"category": "technology", "domain": "database", "confidence": 0.95, "verified": True}
         }
 
 
 class EpisodicMetadata(BaseModel):
     """Metadata specific to episodic memories"""
+
     timestamp: Optional[str] = Field(default=None, description="Event timestamp")
     context: Optional[str] = Field(default=None, description="Situational context")
     location: Optional[str] = Field(default=None, description="Physical or virtual location")
     outcome: Optional[str] = Field(default=None, description="Event outcome")
     emotional_valence: Optional[str] = Field(default=None, description="Emotional tone")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -63,27 +62,28 @@ class EpisodicMetadata(BaseModel):
                 "context": "debugging_session",
                 "location": "development_environment",
                 "outcome": "resolved",
-                "emotional_valence": "relief"
+                "emotional_valence": "relief",
             }
         }
 
 
 class ProceduralMetadata(BaseModel):
     """Metadata specific to procedural memories"""
+
     skill_level: Optional[str] = Field(default=None, description="Required skill level")
     complexity: Optional[str] = Field(default=None, description="Process complexity")
     success_rate: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Success rate")
     steps: Optional[int] = Field(default=None, ge=1, description="Number of steps")
     domain: Optional[str] = Field(default=None, description="Domain area")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
                 "skill_level": "expert",
-                "complexity": "medium", 
+                "complexity": "medium",
                 "success_rate": 0.98,
                 "steps": 5,
-                "domain": "devops"
+                "domain": "devops",
             }
         }
 
@@ -95,27 +95,27 @@ class MemoryResponse(BaseModel):
     id: str = Field(..., description="Unique memory identifier")
     content: str = Field(..., description="Memory content text")
     memory_type: MemoryType = Field(..., description="Memory type classification")
-    
+
     # Cognitive metadata
     importance_score: float = Field(default=0.5, ge=0.0, le=1.0, description="Memory importance score")
     access_count: int = Field(default=0, description="Number of times accessed")
     last_accessed: str = Field(..., description="Last access timestamp")
-    
+
     # Type-specific metadata
     semantic_metadata: Optional[dict[str, Any]] = Field(default=None, description="Semantic memory metadata")
     episodic_metadata: Optional[dict[str, Any]] = Field(default=None, description="Episodic memory metadata")
     procedural_metadata: Optional[dict[str, Any]] = Field(default=None, description="Procedural memory metadata")
-    
+
     # Consolidation tracking
     consolidation_score: float = Field(default=0.5, ge=0.0, le=1.0, description="Memory consolidation score")
-    
+
     # Legacy compatibility
     metadata: dict[str, Any] | None = Field(default=None, description="General metadata (legacy)")
-    
+
     # Timestamps
     created_at: str = Field(..., description="Memory creation timestamp")
     updated_at: str = Field(..., description="Last update timestamp")
-    
+
     # Search-specific
     similarity: float | None = Field(default=None, description="Similarity score for search results")
 
@@ -132,7 +132,7 @@ class MemoryResponse(BaseModel):
                     "category": "technology",
                     "domain": "database",
                     "confidence": 0.95,
-                    "verified": True
+                    "verified": True,
                 },
                 "consolidation_score": 0.75,
                 "created_at": "2024-01-15T10:30:00Z",
@@ -197,15 +197,15 @@ class MemoryRequest(BaseModel):
 
     content: str = Field(..., description="Memory content to store", min_length=1)
     memory_type: MemoryType = Field(default=MemoryType.SEMANTIC, description="Memory type classification")
-    
+
     # Type-specific metadata
     semantic_metadata: Optional[SemanticMetadata] = Field(default=None, description="Semantic memory metadata")
     episodic_metadata: Optional[EpisodicMetadata] = Field(default=None, description="Episodic memory metadata")
     procedural_metadata: Optional[ProceduralMetadata] = Field(default=None, description="Procedural memory metadata")
-    
+
     # Legacy compatibility
     metadata: Optional[dict[str, Any]] = Field(default=None, description="General metadata (legacy)")
-    
+
     # Optional cognitive parameters
     importance_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Initial importance score")
 
@@ -218,9 +218,9 @@ class MemoryRequest(BaseModel):
                     "category": "technology",
                     "domain": "database",
                     "confidence": 0.95,
-                    "verified": True
+                    "verified": True,
                 },
-                "importance_score": 0.8
+                "importance_score": 0.8,
             }
         }
 
@@ -228,6 +228,7 @@ class MemoryRequest(BaseModel):
 # Type-specific request models
 class SemanticMemoryRequest(BaseModel):
     """Request model for semantic memories"""
+
     content: str = Field(..., description="Semantic memory content", min_length=1)
     semantic_metadata: Optional[SemanticMetadata] = Field(default=None, description="Semantic metadata")
     importance_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Importance score")
@@ -235,6 +236,7 @@ class SemanticMemoryRequest(BaseModel):
 
 class EpisodicMemoryRequest(BaseModel):
     """Request model for episodic memories"""
+
     content: str = Field(..., description="Episodic memory content", min_length=1)
     episodic_metadata: Optional[EpisodicMetadata] = Field(default=None, description="Episodic metadata")
     importance_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Importance score")
@@ -242,6 +244,7 @@ class EpisodicMemoryRequest(BaseModel):
 
 class ProceduralMemoryRequest(BaseModel):
     """Request model for procedural memories"""
+
     content: str = Field(..., description="Procedural memory content", min_length=1)
     procedural_metadata: Optional[ProceduralMetadata] = Field(default=None, description="Procedural metadata")
     importance_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Importance score")
@@ -250,13 +253,14 @@ class ProceduralMemoryRequest(BaseModel):
 # Enhanced search request model
 class ContextualSearchRequest(BaseModel):
     """Request model for contextual search with memory type filtering"""
+
     query: str = Field(..., description="Search query", min_length=1)
     memory_types: Optional[list[MemoryType]] = Field(default=None, description="Filter by memory types")
     importance_threshold: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Minimum importance score")
     timeframe: Optional[str] = Field(default=None, description="Time-based filtering (e.g., 'last_week', 'last_month')")
     limit: int = Field(default=10, ge=1, le=100, description="Maximum results")
     include_archived: bool = Field(default=False, description="Include archived memories")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -265,7 +269,7 @@ class ContextualSearchRequest(BaseModel):
                 "importance_threshold": 0.6,
                 "timeframe": "last_week",
                 "limit": 5,
-                "include_archived": False
+                "include_archived": False,
             }
         }
 
@@ -273,16 +277,12 @@ class ContextualSearchRequest(BaseModel):
 # Legacy search request model for backward compatibility
 class SearchRequest(BaseModel):
     """Request model for simple search queries"""
+
     query: str = Field(..., description="Search query", min_length=1)
     limit: int = Field(default=10, ge=1, le=100, description="Maximum results to return")
-    
+
     class Config:
-        json_schema_extra = {
-            "example": {
-                "query": "database optimization techniques",
-                "limit": 5
-            }
-        }
+        json_schema_extra = {"example": {"query": "database optimization techniques", "limit": 5}}
 
 
 class ErrorResponse(BaseModel):

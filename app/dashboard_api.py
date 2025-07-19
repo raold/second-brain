@@ -4,20 +4,15 @@ Dashboard API Endpoints - Live Project Data Service
 Provides real-time project metrics, visual data, and automatic updates
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
-from pydantic import BaseModel, Field
 import re
+from datetime import datetime
+from typing import Optional
 
-from app.dashboard import (
-    get_dashboard, 
-    update_dashboard_for_feature, 
-    get_dashboard_summary,
-    Status
-)
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pydantic import BaseModel, Field
+
+from app.dashboard import Status, get_dashboard
 from app.docs import Priority
-
 
 # Create router for dashboard endpoints
 dashboard_router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
@@ -25,6 +20,7 @@ dashboard_router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 class FeatureRequest(BaseModel):
     """Request model for adding new features"""
+
     name: str = Field(..., description="Feature name")
     description: str = Field(..., description="Feature description")
     priority: str = Field(default="high", description="Feature priority")
@@ -32,6 +28,7 @@ class FeatureRequest(BaseModel):
 
 class MetricUpdate(BaseModel):
     """Request model for updating technical metrics"""
+
     metric_name: str = Field(..., description="Name of the metric")
     value: float = Field(..., description="Metric value")
     unit: str = Field(..., description="Unit of measurement")
@@ -40,6 +37,7 @@ class MetricUpdate(BaseModel):
 
 class ConversationContext(BaseModel):
     """Model for processing conversation context and extracting project updates"""
+
     message: str = Field(..., description="Conversation message from CTO")
     sender: str = Field(default="CTO", description="Message sender")
 
@@ -50,12 +48,12 @@ async def get_dashboard_overview():
     try:
         dashboard = get_dashboard()
         summary = dashboard.get_dashboard_summary()
-        
+
         return {
             "status": "success",
             "data": summary,
             "visual_report": dashboard.generate_visual_report(),
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Dashboard error: {str(e)}")
@@ -67,26 +65,22 @@ async def get_technical_metrics():
     try:
         dashboard = get_dashboard()
         latest_metrics = dashboard.get_latest_metrics()
-        
+
         # Generate timeseries data for each metric
         timeseries_data = {}
         for metric_name in set(m.metric_name for m in dashboard.metrics):
             metric_history = [
-                {
-                    "timestamp": m.timestamp,
-                    "value": m.value,
-                    "status": m.status
-                }
-                for m in dashboard.metrics 
+                {"timestamp": m.timestamp, "value": m.value, "status": m.status}
+                for m in dashboard.metrics
                 if m.metric_name == metric_name
             ]
             timeseries_data[metric_name] = sorted(metric_history, key=lambda x: x["timestamp"])
-        
+
         return {
             "status": "success",
             "latest_metrics": latest_metrics,
             "timeseries": timeseries_data,
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Metrics error: {str(e)}")
@@ -97,7 +91,7 @@ async def get_project_milestones():
     """Get all project milestones with progress tracking"""
     try:
         dashboard = get_dashboard()
-        
+
         milestones_data = []
         for milestone in dashboard.milestones.values():
             # Get milestone tasks
@@ -106,30 +100,32 @@ async def get_project_milestones():
                     "id": t.id,
                     "name": t.name,
                     "status": t.status.value,
-                    "progress": 1.0 if t.status == Status.COMPLETED else 0.5 if t.status == Status.IN_PROGRESS else 0.0
+                    "progress": 1.0 if t.status == Status.COMPLETED else 0.5 if t.status == Status.IN_PROGRESS else 0.0,
                 }
-                for t in dashboard.tasks.values() 
+                for t in dashboard.tasks.values()
                 if t.milestone_id == milestone.id
             ]
-            
-            milestones_data.append({
-                "id": milestone.id,
-                "name": milestone.name,
-                "description": milestone.description,
-                "target_date": milestone.target_date,
-                "completion_date": milestone.completion_date,
-                "status": milestone.status.value,
-                "progress": milestone.progress,
-                "dependencies": milestone.dependencies,
-                "tasks": milestone_tasks,
-                "created_at": milestone.created_at
-            })
-        
+
+            milestones_data.append(
+                {
+                    "id": milestone.id,
+                    "name": milestone.name,
+                    "description": milestone.description,
+                    "target_date": milestone.target_date,
+                    "completion_date": milestone.completion_date,
+                    "status": milestone.status.value,
+                    "progress": milestone.progress,
+                    "dependencies": milestone.dependencies,
+                    "tasks": milestone_tasks,
+                    "created_at": milestone.created_at,
+                }
+            )
+
         return {
             "status": "success",
             "milestones": milestones_data,
             "total_count": len(milestones_data),
-            "completed_count": sum(1 for m in milestones_data if m["status"] == "completed")
+            "completed_count": sum(1 for m in milestones_data if m["status"] == "completed"),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Milestones error: {str(e)}")
@@ -141,30 +137,32 @@ async def get_sprint_data():
     try:
         dashboard = get_dashboard()
         current_sprint = dashboard.get_current_sprint()
-        
+
         sprints_data = []
         for sprint in dashboard.sprints.values():
             sprint_progress = dashboard.calculate_sprint_progress(sprint.id)
             days_remaining = dashboard.get_sprint_days_remaining(sprint.id)
-            
-            sprints_data.append({
-                "id": sprint.id,
-                "name": sprint.name,
-                "start_date": sprint.start_date,
-                "end_date": sprint.end_date,
-                "goals": sprint.goals,
-                "status": sprint.status.value,
-                "progress": sprint_progress,
-                "days_remaining": days_remaining,
-                "velocity": sprint.velocity,
-                "burn_down_data": sprint.burn_down_data,
-                "is_current": sprint.id == (current_sprint.id if current_sprint else None)
-            })
-        
+
+            sprints_data.append(
+                {
+                    "id": sprint.id,
+                    "name": sprint.name,
+                    "start_date": sprint.start_date,
+                    "end_date": sprint.end_date,
+                    "goals": sprint.goals,
+                    "status": sprint.status.value,
+                    "progress": sprint_progress,
+                    "days_remaining": days_remaining,
+                    "velocity": sprint.velocity,
+                    "burn_down_data": sprint.burn_down_data,
+                    "is_current": sprint.id == (current_sprint.id if current_sprint else None),
+                }
+            )
+
         return {
             "status": "success",
             "sprints": sprints_data,
-            "current_sprint": current_sprint.id if current_sprint else None
+            "current_sprint": current_sprint.id if current_sprint else None,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Sprints error: {str(e)}")
@@ -176,20 +174,20 @@ async def get_project_risks():
     try:
         dashboard = get_dashboard()
         risks = dashboard.assess_project_risks()
-        
+
         # Categorize risks
         risk_categories = {
             "critical": [r for r in risks if r["level"] == "high"],
             "warnings": [r for r in risks if r["level"] == "medium"],
-            "minor": [r for r in risks if r["level"] == "low"]
+            "minor": [r for r in risks if r["level"] == "low"],
         }
-        
+
         return {
             "status": "success",
             "risks": risks,
             "categories": risk_categories,
             "risk_count": len(risks),
-            "critical_count": len(risk_categories["critical"])
+            "critical_count": len(risk_categories["critical"]),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Risks error: {str(e)}")
@@ -203,25 +201,21 @@ async def add_feature(feature_request: FeatureRequest):
             "critical": Priority.CRITICAL,
             "high": Priority.HIGH,
             "medium": Priority.MEDIUM,
-            "low": Priority.LOW
+            "low": Priority.LOW,
         }
-        
+
         priority = priority_map.get(feature_request.priority.lower(), Priority.HIGH)
-        
+
         dashboard = get_dashboard()
-        milestone_id = dashboard.add_new_feature_context(
-            feature_request.name, 
-            feature_request.description, 
-            priority
-        )
-        
+        milestone_id = dashboard.add_new_feature_context(feature_request.name, feature_request.description, priority)
+
         updated_report = dashboard.generate_visual_report()
-        
+
         return {
             "status": "success",
             "message": f"Added feature '{feature_request.name}' to project roadmap",
             "milestone_id": milestone_id,
-            "updated_dashboard": updated_report
+            "updated_dashboard": updated_report,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Feature addition error: {str(e)}")
@@ -233,15 +227,12 @@ async def update_metric(metric_update: MetricUpdate):
     try:
         dashboard = get_dashboard()
         dashboard.record_metric(
-            metric_update.metric_name,
-            metric_update.value,
-            metric_update.unit,
-            metric_update.target
+            metric_update.metric_name, metric_update.value, metric_update.unit, metric_update.target
         )
-        
+
         return {
             "status": "success",
-            "message": f"Updated metric '{metric_update.metric_name}' to {metric_update.value}{metric_update.unit}"
+            "message": f"Updated metric '{metric_update.metric_name}' to {metric_update.value}{metric_update.unit}",
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Metric update error: {str(e)}")
@@ -255,51 +246,47 @@ async def process_conversation_context(context: ConversationContext, background_
     """
     try:
         message = context.message.lower()
-        
+
         # Pattern matching for feature discussions
         feature_patterns = [
             r"(?:let'?s talk about|discuss|implement|add|create) (?:the )?(.+?)(?:\s|$)",
             r"(?:we need|i want|let'?s build) (?:a |an |the )?(.+?)(?:\s|$)",
             r"(?:automated|automatic) (.+?)(?:\s|$)",
-            r"(?:new feature|feature) (?:called |named )?(.+?)(?:\s|$)"
+            r"(?:new feature|feature) (?:called |named )?(.+?)(?:\s|$)",
         ]
-        
+
         detected_features = []
         for pattern in feature_patterns:
             matches = re.findall(pattern, message, re.IGNORECASE)
             for match in matches:
                 # Clean up the match
-                feature_name = match.strip().rstrip('.,!?').title()
+                feature_name = match.strip().rstrip(".,!?").title()
                 if len(feature_name) > 3 and feature_name not in detected_features:
                     detected_features.append(feature_name)
-        
+
         # Process detected features
         updates = []
         dashboard = get_dashboard()
-        
+
         for feature_name in detected_features:
             # Generate description based on context
             description = f"Feature discussed by {context.sender}: {feature_name}"
-            
+
             # Add to dashboard
             milestone_id = dashboard.add_new_feature_context(feature_name, description)
-            updates.append({
-                "feature": feature_name,
-                "milestone_id": milestone_id,
-                "action": "added_to_roadmap"
-            })
-        
+            updates.append({"feature": feature_name, "milestone_id": milestone_id, "action": "added_to_roadmap"})
+
         # Generate updated dashboard view
         updated_report = dashboard.generate_visual_report()
-        
+
         return {
             "status": "success",
             "message": f"Processed conversation context from {context.sender}",
             "detected_features": detected_features,
             "updates": updates,
-            "updated_dashboard": updated_report if updates else None
+            "updated_dashboard": updated_report if updates else None,
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Context processing error: {str(e)}")
 
@@ -310,7 +297,7 @@ async def get_visual_dashboard():
     try:
         dashboard = get_dashboard()
         summary = dashboard.get_dashboard_summary()
-        
+
         # Format data for visual components
         visual_data = {
             "overview": {
@@ -319,7 +306,7 @@ async def get_visual_dashboard():
                 "progress_percentage": round(summary["overall_health"]["progress"] * 100),
                 "milestones_completed": summary["overall_health"]["milestones_completed"],
                 "sprint_progress": round(summary["current_sprint"]["progress"] * 100),
-                "last_updated": summary["last_updated"]
+                "last_updated": summary["last_updated"],
             },
             "metrics_chart": [
                 {
@@ -328,7 +315,7 @@ async def get_visual_dashboard():
                     "target": metric["target"] or 0,
                     "unit": metric["unit"],
                     "status": metric["status"],
-                    "percentage": min(100, (metric["value"] / metric["target"] * 100)) if metric["target"] else 0
+                    "percentage": min(100, (metric["value"] / metric["target"] * 100)) if metric["target"] else 0,
                 }
                 for metric in summary["technical_metrics"]
             ],
@@ -338,18 +325,18 @@ async def get_visual_dashboard():
                     "progress": round(milestone["progress"] * 100),
                     "target_date": milestone["target_date"],
                     "status": milestone["status"],
-                    "days_until": (datetime.fromisoformat(milestone["target_date"]) - datetime.now()).days
+                    "days_until": (datetime.fromisoformat(milestone["target_date"]) - datetime.now()).days,
                 }
                 for milestone in summary["upcoming_milestones"]
             ],
             "risk_summary": {
                 "total_risks": len(summary["risks"]),
                 "high_risk_count": len([r for r in summary["risks"] if r["level"] == "high"]),
-                "risk_items": summary["risks"]
+                "risk_items": summary["risks"],
             },
-            "recent_activity": summary["recent_completions"]
+            "recent_activity": summary["recent_completions"],
         }
-        
+
         return {
             "status": "success",
             "visual_data": visual_data,
@@ -357,10 +344,10 @@ async def get_visual_dashboard():
                 "progress_chart": "donut",
                 "metrics_chart": "bar_horizontal",
                 "timeline_chart": "gantt",
-                "risk_chart": "alert_list"
-            }
+                "risk_chart": "alert_list",
+            },
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Visual dashboard error: {str(e)}")
 
@@ -376,7 +363,7 @@ async def dashboard_health():
             "milestones_count": len(dashboard.milestones),
             "tasks_count": len(dashboard.tasks),
             "metrics_count": len(dashboard.metrics),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Dashboard health check failed: {str(e)}")
@@ -386,4 +373,4 @@ async def dashboard_health():
 def setup_dashboard_routes(app):
     """Setup dashboard routes in main FastAPI app"""
     app.include_router(dashboard_router)
-    return dashboard_router 
+    return dashboard_router

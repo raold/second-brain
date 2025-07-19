@@ -21,6 +21,7 @@ from app.database_mock import MockDatabase
 @dataclass
 class PerformanceMetrics:
     """Performance metrics container"""
+
     response_time: float
     memory_usage: float
     cpu_usage: float
@@ -32,6 +33,7 @@ class PerformanceMetrics:
 @dataclass
 class BenchmarkResult:
     """Benchmark test result"""
+
     test_name: str
     endpoint: str
     method: str
@@ -112,7 +114,7 @@ class PerformanceBenchmark:
                 memory_usage=psutil.Process().memory_info().rss / 1024 / 1024,
                 cpu_usage=psutil.Process().cpu_percent(),
                 total_requests=100,
-                passed=statistics.mean(response_times) < 0.1  # Target: <100ms
+                passed=statistics.mean(response_times) < 0.1,  # Target: <100ms
             )
             self.results.append(result)
 
@@ -132,8 +134,8 @@ class PerformanceBenchmark:
                         params={"api_key": self.api_key},
                         json={
                             "content": f"Performance test memory {i}",
-                            "metadata": {"test": "performance", "index": i}
-                        }
+                            "metadata": {"test": "performance", "index": i},
+                        },
                     )
                     response_time = time.time() - start_time
                     response_times.append(response_time)
@@ -161,7 +163,7 @@ class PerformanceBenchmark:
                 memory_usage=psutil.Process().memory_info().rss / 1024 / 1024,
                 cpu_usage=psutil.Process().cpu_percent(),
                 total_requests=50,
-                passed=statistics.mean(response_times) < 0.5  # Target: <500ms
+                passed=statistics.mean(response_times) < 0.5,  # Target: <500ms
             )
             self.results.append(result)
 
@@ -179,10 +181,7 @@ class PerformanceBenchmark:
                     response = await client.post(
                         f"{self.base_url}/memories/search",
                         params={"api_key": self.api_key},
-                        json={
-                            "query": f"performance test {i % 10}",
-                            "limit": 10
-                        }
+                        json={"query": f"performance test {i % 10}", "limit": 10},
                     )
                     response_time = time.time() - start_time
                     response_times.append(response_time)
@@ -210,7 +209,7 @@ class PerformanceBenchmark:
                 memory_usage=psutil.Process().memory_info().rss / 1024 / 1024,
                 cpu_usage=psutil.Process().cpu_percent(),
                 total_requests=100,
-                passed=statistics.mean(response_times) < 0.1  # Target: <100ms
+                passed=statistics.mean(response_times) < 0.1,  # Target: <100ms
             )
             self.results.append(result)
 
@@ -226,8 +225,7 @@ class PerformanceBenchmark:
                 start_time = time.time()
                 try:
                     response = await client.get(
-                        f"{self.base_url}/memories",
-                        params={"api_key": self.api_key, "limit": 10}
+                        f"{self.base_url}/memories", params={"api_key": self.api_key, "limit": 10}
                     )
                     response_time = time.time() - start_time
                     response_times.append(response_time)
@@ -255,7 +253,7 @@ class PerformanceBenchmark:
                 memory_usage=psutil.Process().memory_info().rss / 1024 / 1024,
                 cpu_usage=psutil.Process().cpu_percent(),
                 total_requests=100,
-                passed=statistics.mean(response_times) < 0.1  # Target: <100ms
+                passed=statistics.mean(response_times) < 0.1,  # Target: <100ms
             )
             self.results.append(result)
 
@@ -295,7 +293,7 @@ class PerformanceBenchmark:
                 memory_usage=psutil.Process().memory_info().rss / 1024 / 1024,
                 cpu_usage=psutil.Process().cpu_percent(),
                 total_requests=50,
-                passed=statistics.mean(response_times) < 0.2  # Target: <200ms under load
+                passed=statistics.mean(response_times) < 0.2,  # Target: <200ms under load
             )
             self.results.append(result)
 
@@ -313,10 +311,7 @@ class PerformanceBenchmark:
         for i in range(100):
             start_time = time.time()
             try:
-                await mock_db.store_memory(
-                    f"Database benchmark test {i}",
-                    {"benchmark": True}
-                )
+                await mock_db.store_memory(f"Database benchmark test {i}", {"benchmark": True})
                 response_time = time.time() - start_time
                 response_times.append(response_time)
             except Exception as e:
@@ -338,7 +333,7 @@ class PerformanceBenchmark:
                 memory_usage=psutil.Process().memory_info().rss / 1024 / 1024,
                 cpu_usage=psutil.Process().cpu_percent(),
                 total_requests=100,
-                passed=statistics.mean(response_times) < 0.05  # Target: <50ms
+                passed=statistics.mean(response_times) < 0.05,  # Target: <50ms
             )
             self.results.append(result)
 
@@ -361,7 +356,7 @@ class PerformanceBenchmark:
                 "passed_tests": passed_tests,
                 "failed_tests": total_tests - passed_tests,
                 "success_rate": passed_tests / total_tests if total_tests > 0 else 0,
-                "overall_performance": "PASS" if passed_tests >= total_tests * 0.8 else "FAIL"
+                "overall_performance": "PASS" if passed_tests >= total_tests * 0.8 else "FAIL",
             },
             "performance_targets": {
                 "health_endpoint": "<100ms",
@@ -369,50 +364,52 @@ class PerformanceBenchmark:
                 "memory_search": "<100ms",
                 "memory_retrieval": "<100ms",
                 "concurrent_requests": "<200ms",
-                "database_operations": "<50ms"
+                "database_operations": "<50ms",
             },
-            "results": []
+            "results": [],
         }
 
         for result in self.results:
-            report["results"].append({
-                "test_name": result.test_name,
-                "endpoint": result.endpoint,
-                "method": result.method,
-                "avg_response_time_ms": result.avg_response_time * 1000,
-                "p95_response_time_ms": result.p95_response_time * 1000,
-                "p99_response_time_ms": result.p99_response_time * 1000,
-                "throughput_rps": result.throughput,
-                "error_rate": result.error_rate,
-                "success_rate": result.success_rate,
-                "memory_usage_mb": result.memory_usage,
-                "cpu_usage_percent": result.cpu_usage,
-                "total_requests": result.total_requests,
-                "status": "PASS" if result.passed else "FAIL"
-            })
+            report["results"].append(
+                {
+                    "test_name": result.test_name,
+                    "endpoint": result.endpoint,
+                    "method": result.method,
+                    "avg_response_time_ms": result.avg_response_time * 1000,
+                    "p95_response_time_ms": result.p95_response_time * 1000,
+                    "p99_response_time_ms": result.p99_response_time * 1000,
+                    "throughput_rps": result.throughput,
+                    "error_rate": result.error_rate,
+                    "success_rate": result.success_rate,
+                    "memory_usage_mb": result.memory_usage,
+                    "cpu_usage_percent": result.cpu_usage,
+                    "total_requests": result.total_requests,
+                    "status": "PASS" if result.passed else "FAIL",
+                }
+            )
 
         return report
 
     def save_report(self, report: dict[str, Any], filepath: str = "performance_report.json"):
         """Save performance report to file"""
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(report, f, indent=2)
         print(f"📊 Performance report saved to {filepath}")
 
     def print_report(self, report: dict[str, Any]):
         """Print performance report to console"""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("🚀 PERFORMANCE BENCHMARK REPORT")
-        print("="*60)
+        print("=" * 60)
         print(f"Overall Performance: {report['summary']['overall_performance']}")
         print(f"Tests Passed: {report['summary']['passed_tests']}/{report['summary']['total_tests']}")
         print(f"Success Rate: {report['summary']['success_rate']:.1%}")
-        print("\n" + "-"*60)
+        print("\n" + "-" * 60)
         print("📊 INDIVIDUAL TEST RESULTS")
-        print("-"*60)
+        print("-" * 60)
 
-        for result in report['results']:
-            status_icon = "✅" if result['status'] == "PASS" else "❌"
+        for result in report["results"]:
+            status_icon = "✅" if result["status"] == "PASS" else "❌"
             print(f"{status_icon} {result['test_name']}")
             print(f"   Avg Response: {result['avg_response_time_ms']:.1f}ms")
             print(f"   P95 Response: {result['p95_response_time_ms']:.1f}ms")
@@ -446,14 +443,14 @@ async def test_performance_benchmarking():
     assert isinstance(benchmark.results, list)
 
 
-@pytest.mark.asyncio 
+@pytest.mark.asyncio
 async def test_benchmark_metrics_structure():
     """Test that benchmark result structure is correct."""
     # Create a test result
     result = BenchmarkResult(
         test_name="Test",
         endpoint="/test",
-        method="GET", 
+        method="GET",
         avg_response_time=0.1,
         min_response_time=0.05,
         max_response_time=0.2,
@@ -465,9 +462,9 @@ async def test_benchmark_metrics_structure():
         memory_usage=50.0,
         cpu_usage=10.0,
         total_requests=100,
-        passed=True
+        passed=True,
     )
-    
+
     assert result.test_name == "Test"
     assert result.avg_response_time == 0.1
     assert result.passed == True
@@ -477,14 +474,14 @@ async def test_benchmark_metrics_structure():
 async def test_percentile_calculation():
     """Test percentile calculation function."""
     benchmark = PerformanceBenchmark()
-    
+
     # Test with sample data
     data = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
-    
+
     p50 = benchmark._percentile(data, 50)
     p95 = benchmark._percentile(data, 95)
     p99 = benchmark._percentile(data, 99)
-    
+
     assert p50 >= 5.0  # 50th percentile should be around middle
     assert p95 >= 9.0  # 95th percentile should be near top
     assert p99 >= 9.0  # 99th percentile should be near top

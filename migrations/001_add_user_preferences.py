@@ -13,7 +13,7 @@ from app.migration_framework import MigrationMetadata, MigrationType
 
 class AddUserPreferencesTable(DatabaseSchemaMigration):
     """Migration to add user preferences functionality."""
-    
+
     def _get_metadata(self) -> MigrationMetadata:
         return MigrationMetadata(
             id="001_add_user_preferences",
@@ -25,13 +25,13 @@ class AddUserPreferencesTable(DatabaseSchemaMigration):
             created_at=datetime(2024, 1, 15),
             dependencies=[],
             reversible=True,
-            checksum="a1b2c3d4e5f6g7h8"
+            checksum="a1b2c3d4e5f6g7h8",
         )
-    
+
     def get_required_extensions(self) -> list[str]:
         """No special extensions required."""
         return []
-    
+
     async def get_forward_statements(self) -> list[str]:
         return [
             """
@@ -87,18 +87,18 @@ class AddUserPreferencesTable(DatabaseSchemaMigration):
                 BEFORE UPDATE ON user_preferences
                 FOR EACH ROW
                 EXECUTE FUNCTION update_user_preferences_updated_at()
-            """
+            """,
         ]
-    
+
     async def get_rollback_statements(self) -> list[str]:
         return [
             "DROP TRIGGER IF EXISTS trigger_update_user_preferences_updated_at ON user_preferences",
             "DROP FUNCTION IF EXISTS update_user_preferences_updated_at()",
             "DROP INDEX IF EXISTS idx_user_preferences_theme",
             "DROP INDEX IF EXISTS idx_user_preferences_user_id",
-            "DROP TABLE IF EXISTS user_preferences"
+            "DROP TABLE IF EXISTS user_preferences",
         ]
-    
+
     async def _validate_custom_postconditions(self, conn) -> bool:
         """Validate the table was created with all expected columns."""
         # Check table exists
@@ -108,38 +108,47 @@ class AddUserPreferencesTable(DatabaseSchemaMigration):
                 WHERE table_name = 'user_preferences'
             )
         """)
-        
+
         if not table_exists:
             return False
-        
+
         # Check required columns exist
         required_columns = [
-            'id', 'user_id', 'theme', 'dashboard_layout', 
-            'notifications_enabled', 'default_memory_type',
-            'search_result_limit', 'importance_threshold',
-            'created_at', 'updated_at'
+            "id",
+            "user_id",
+            "theme",
+            "dashboard_layout",
+            "notifications_enabled",
+            "default_memory_type",
+            "search_result_limit",
+            "importance_threshold",
+            "created_at",
+            "updated_at",
         ]
-        
+
         for column in required_columns:
-            exists = await conn.fetchval("""
+            exists = await conn.fetchval(
+                """
                 SELECT EXISTS(
                     SELECT 1 FROM information_schema.columns
                     WHERE table_name = 'user_preferences' 
                     AND column_name = $1
                 )
-            """, column)
-            
+            """,
+                column,
+            )
+
             if not exists:
                 return False
-        
+
         # Check indexes exist
         index_exists = await conn.fetchval("""
             SELECT COUNT(*) FROM pg_indexes 
             WHERE tablename = 'user_preferences'
         """)
-        
+
         return index_exists >= 2  # Should have at least 2 indexes
-    
+
     async def _estimate_changes(self) -> dict[str, int]:
         """Estimate the impact of this migration."""
         return {
@@ -147,5 +156,5 @@ class AddUserPreferencesTable(DatabaseSchemaMigration):
             "create_operations": 6,  # Table + 2 indexes + function + trigger + constraints
             "alter_operations": 0,
             "drop_operations": 0,
-            "estimated_rows_affected": 0
-        } 
+            "estimated_rows_affected": 0,
+        }

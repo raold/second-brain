@@ -13,18 +13,20 @@ from datetime import datetime
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.connection_pool import PoolConfig, close_pool, get_pool_manager, initialize_pool
+from app.conversation_processor import setup_conversation_monitoring
+
+# Dashboard and conversation processing imports
+from app.dashboard_api import setup_dashboard_routes
 from app.database import get_database
-from app.database_mock import MockDatabase
 from app.docs import (
     ContextualSearchRequest,
     EpisodicMemoryRequest,
     HealthResponse,
-    MemoryRequest,
     MemoryResponse,
     MemoryType,
     ProceduralMemoryRequest,
@@ -32,27 +34,36 @@ from app.docs import (
     StatusResponse,
     setup_openapi_documentation,
 )
-from app.security import SecurityConfig, SecurityManager
-from app.version import get_version_info
+from app.routes import (
+    dashboard_router as new_dashboard_router,
+)
+from app.routes import (
+    github_router,
+    health_router,
+    memory_router,
+    migration_router,
+    todo_router,
+    visualization_router,
+)
+from app.routes import (
+    session_router as new_session_router,
+)
 
-# Dashboard and conversation processing imports
-from app.dashboard_api import setup_dashboard_routes
-from app.conversation_processor import setup_conversation_monitoring
-from app.session_api import setup_session_routes
-from app.session_manager import get_session_manager
-
-# Import service factory and refactored routes
-from app.services.service_factory import get_service_factory
-from app.routes import memory_router, health_router, session_router as new_session_router, dashboard_router as new_dashboard_router, todo_router, github_router, migration_router, visualization_router
+# Import bulk operations routes
+from app.routes.bulk_operations_routes import bulk_router
 
 # Import importance routes
 from app.routes.importance_routes import router as importance_router
 
 # Import relationship routes
 from app.routes.relationship_routes import router as relationship_router
+from app.security import SecurityConfig, SecurityManager
 
-# Import bulk operations routes
-from app.routes.bulk_operations_routes import bulk_router
+# Import service factory and refactored routes
+from app.services.service_factory import get_service_factory
+from app.session_api import setup_session_routes
+from app.session_manager import get_session_manager
+from app.version import get_version_info
 
 from .routes.bulk_routes import get_bulk_routes
 
@@ -79,6 +90,7 @@ security_manager = SecurityManager(security_config)
 # Import shared utilities
 from app.shared import get_db_instance, verify_api_key
 
+
 # Legacy search request model (keeping for backward compatibility)
 class SearchRequest(BaseModel):
     query: str = Field(..., description="Search query")
@@ -93,13 +105,14 @@ async def lifespan(app: FastAPI):
 
     # Check if using mock database
     use_mock = os.getenv("USE_MOCK_DATABASE", "false").lower() == "true"
-    
+
     # Initialize database
     db = None
     if use_mock:
         logger.info("Using mock database - skipping PostgreSQL initialization")
         # Initialize mock database
         from app.database_mock import MockDatabase
+
         db = MockDatabase()
         await db.initialize()
         logger.info("Mock database initialized")
@@ -117,7 +130,7 @@ async def lifespan(app: FastAPI):
             # Fallback to regular database connection
             db = await get_database()
             logger.info("Database initialized (fallback mode)")
-    
+
     # Initialize service factory with dependencies
     service_factory = get_service_factory()
     service_factory.set_database(db)
@@ -128,7 +141,7 @@ async def lifespan(app: FastAPI):
 
     # Cleanup
     use_mock = os.getenv("USE_MOCK_DATABASE", "false").lower() == "true"
-    
+
     if use_mock:
         logger.info("Mock database cleanup - no action needed")
     else:
@@ -150,8 +163,12 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 from app.version import __version__
+
 app = FastAPI(
-    title="Second Brain API", description="Simple memory storage and search system", version=__version__, lifespan=lifespan
+    title="Second Brain API",
+    description="Simple memory storage and search system",
+    version=__version__,
+    lifespan=lifespan,
 )
 
 # Setup OpenAPI documentation
@@ -233,7 +250,7 @@ app.add_middleware(
 
 # Include refactored routers
 app.include_router(memory_router)
-app.include_router(health_router) 
+app.include_router(health_router)
 app.include_router(new_session_router)
 app.include_router(new_dashboard_router)
 app.include_router(todo_router)
@@ -258,20 +275,23 @@ logger.info("Session management initialized for persistent context continuity")
 
 # Serve static files for dashboard
 from fastapi.staticfiles import StaticFiles
+
 try:
     app.mount("/static", StaticFiles(directory="static"), name="static")
 except Exception as e:
     logger.warning(f"Could not mount static files: {e}")
+
 
 # Dashboard homepage
 @app.get("/", response_class=HTMLResponse)
 async def dashboard_home():
     """Serve the project dashboard homepage"""
     try:
-        with open("static/dashboard.html", "r", encoding="utf-8") as f:
+        with open("static/dashboard.html", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
-        return HTMLResponse(content="""
+        return HTMLResponse(
+            content="""
         <html>
         <head><title>Project Pipeline Dashboard</title></head>
         <body>
@@ -280,7 +300,8 @@ async def dashboard_home():
         <p>Or visit <a href="/docs">/docs</a> for the API documentation.</p>
         </body>
         </html>
-        """)
+        """
+        )
 
 
 # Mobile interface
@@ -288,10 +309,11 @@ async def dashboard_home():
 async def mobile_interface():
     """Serve the mobile-optimized interface"""
     try:
-        with open("static/mobile.html", "r", encoding="utf-8") as f:
+        with open("static/mobile.html", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
-        return HTMLResponse(content="""
+        return HTMLResponse(
+            content="""
         <html>
         <head>
             <title>Mobile - Second Brain</title>
@@ -302,7 +324,8 @@ async def mobile_interface():
         <p>Mobile interface is not available. Please check your installation.</p>
         </body>
         </html>
-        """)
+        """
+        )
 
 
 # Health check
@@ -440,10 +463,7 @@ async def delete_memory(memory_id: str, db=Depends(get_db_instance), _: str = De
     description="Store a semantic memory (facts, concepts, general knowledge)",
 )
 async def store_semantic_memory(
-    request: SemanticMemoryRequest, 
-    request_obj: Request, 
-    db=Depends(get_db_instance), 
-    _: str = Depends(verify_api_key)
+    request: SemanticMemoryRequest, request_obj: Request, db=Depends(get_db_instance), _: str = Depends(verify_api_key)
 ):
     """Store a semantic memory with domain-specific metadata."""
     try:
@@ -485,10 +505,7 @@ async def store_semantic_memory(
     description="Store an episodic memory (time-bound experiences, contextual events)",
 )
 async def store_episodic_memory(
-    request: EpisodicMemoryRequest, 
-    request_obj: Request, 
-    db=Depends(get_db_instance), 
-    _: str = Depends(verify_api_key)
+    request: EpisodicMemoryRequest, request_obj: Request, db=Depends(get_db_instance), _: str = Depends(verify_api_key)
 ):
     """Store an episodic memory with temporal and contextual metadata."""
     try:
@@ -530,10 +547,10 @@ async def store_episodic_memory(
     description="Store a procedural memory (process knowledge, workflows, instructions)",
 )
 async def store_procedural_memory(
-    request: ProceduralMemoryRequest, 
-    request_obj: Request, 
-    db=Depends(get_db_instance), 
-    _: str = Depends(verify_api_key)
+    request: ProceduralMemoryRequest,
+    request_obj: Request,
+    db=Depends(get_db_instance),
+    _: str = Depends(verify_api_key),
 ):
     """Store a procedural memory with skill and process metadata."""
     try:
@@ -576,10 +593,10 @@ async def store_procedural_memory(
     description="Advanced search with memory type filtering and multi-dimensional scoring",
 )
 async def contextual_search(
-    request: ContextualSearchRequest, 
-    request_obj: Request, 
-    db=Depends(get_db_instance), 
-    _: str = Depends(verify_api_key)
+    request: ContextualSearchRequest,
+    request_obj: Request,
+    db=Depends(get_db_instance),
+    _: str = Depends(verify_api_key),
 ):
     """Perform contextual search with cognitive memory filtering."""
     try:
@@ -600,7 +617,7 @@ async def contextual_search(
             memory_types=memory_types,
             importance_threshold=request.importance_threshold,
             timeframe=request.timeframe,
-            include_archived=request.include_archived
+            include_archived=request.include_archived,
         )
 
         return [MemoryResponse(**memory) for memory in memories]
@@ -719,11 +736,11 @@ async def list_memories(
 async def get_version_endpoint():
     """Get comprehensive version information for dashboard and API clients."""
     from app.version import get_dashboard_version, get_version_info
-    
+
     # Get comprehensive version info
     version_info = get_version_info()
     dashboard_info = get_dashboard_version()
-    
+
     return {
         "version": version_info["version"],
         "version_string": version_info["version_string"],
@@ -735,7 +752,7 @@ async def get_version_endpoint():
         "git_commit": version_info["git_commit"],
         "build_timestamp": version_info["build_timestamp"],
         "dashboard": dashboard_info,
-        "roadmap": version_info["roadmap_info"]
+        "roadmap": version_info["roadmap_info"],
     }
 
 
