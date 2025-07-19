@@ -319,6 +319,20 @@ class AddMemoryTypeClassification(MemoryDataMigration):
         # In real implementation, would restore from backup
         return []
 
+    async def validate_postconditions(self) -> bool:
+        """Validate that classification migration was applied correctly."""
+        try:
+            # Check that some memories have been classified
+            async with self.pool.acquire() as conn:
+                count = await conn.fetchval("""
+                    SELECT COUNT(*) FROM memories 
+                    WHERE memory_type IN ('episodic', 'procedural', 'semantic')
+                    AND metadata->>'classification' IS NOT NULL
+                """)
+                return count > 0
+        except Exception:
+            return False
+
 
 class ConsolidateDuplicateMemories(MemoryDataMigration):
     """Migration to consolidate duplicate or similar memories."""
@@ -400,3 +414,16 @@ class ConsolidateDuplicateMemories(MemoryDataMigration):
         # Simple implementation - take longest content
         # Real implementation would use NLP to merge intelligently
         return max(contents, key=len)
+
+    async def get_original_memories(self) -> list[BulkMemoryItem]:
+        """Get original memories for rollback."""
+        # In real implementation, would restore from backup
+        return []
+
+    async def validate_postconditions(self) -> bool:
+        """Validate that consolidation migration was applied correctly."""
+        try:
+            # Check that some duplicate groups have been processed
+            return len(self.processed_memory_ids) > 0
+        except Exception:
+            return False
