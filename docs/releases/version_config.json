@@ -1,6 +1,7 @@
 {
-  "current_stable": "2.4.1",
-  "current_development": "2.4.2",
+  "current_stable": "2.4.3",
+  "current_development": "2.6.0",
+  "testing_version": "2.5.0",
   "branch_strategy": "develop->testing->main",
   "supported_workflows": [
     "develop->testing->main",
@@ -145,6 +146,46 @@
       "git_workflow": "testing->main->release",
       "deployment_notes": "Major release - requires full migration from v1.x",
       "migration_required": true
+    },
+    "2.6.0": {
+      "status": "development",
+      "title": "Advanced AI Memory System",
+      "focus": "AI Enhancement",
+      "release_date": "2025-09-01",
+      "changes": [
+        "Advanced AI memory processing",
+        "Enhanced cognitive patterns",
+        "Improved conversation memory",
+        "Machine learning integration",
+        "Advanced analytics dashboard",
+        "Performance optimizations"
+      ],
+      "breaking_changes": [],
+      "commit_message": "Release v2.6.0: Advanced AI memory system enhancements",
+      "pr_testing": true,
+      "git_workflow": "develop->testing->main->release",
+      "deployment_notes": "Major AI enhancements with improved memory processing",
+      "migration_required": false
+    },
+    "2.5.0": {
+      "status": "integration",
+      "title": "Git Visualization & Dashboard Enhancement",
+      "focus": "Visualization",
+      "release_date": "2025-08-01",
+      "changes": [
+        "Complete git branch visualization",
+        "Interactive commit activity metrics",
+        "Enhanced dashboard system",
+        "Time-based analytics",
+        "D3.js integration improvements",
+        "Tufte design principles"
+      ],
+      "breaking_changes": [],
+      "commit_message": "Release v2.5.0: Git visualization and dashboard enhancements",
+      "pr_testing": true,
+      "git_workflow": "testing->main->release",
+      "deployment_notes": "Enhanced visualization capabilities and dashboard improvements",
+      "migration_required": false
     }
   },
   "git_commands": {

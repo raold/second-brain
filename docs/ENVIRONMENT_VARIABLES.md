@@ -1,42 +1,39 @@
 # Environment Variables Management
 
-This document explains how environment variables are managed across different deployment environments in our CI/CD pipeline.
+## Configuration Overview
+```
+Environment    Variables    Secrets    Complexity    Setup Time
+Development    8 core       0 secrets  █░░░░░░░░░    2 min
+Staging        12 vars      4 secrets  ████░░░░░░    8 min  
+Production     15 vars      7 secrets  ████████░░    15 min
+CI/CD          18 vars      10 secrets █████████░    25 min
+```
 
-## 🏗️ Environment Structure
+## Required Variables by Priority
 
-We use a multi-environment approach with separate configurations for:
-- **Development** (local)
-- **Staging** (pre-production testing)
-- **Production** (live environment)
+### 🔴 Critical (System Won't Start)
+```
+Variable              Environment   Example              Status
+OPENAI_API_KEY       All           sk-proj-abc...       Required
+API_TOKENS           All           token1,token2        Required
+DATABASE_URL         Prod/Stage    postgresql://...     Required
+```
 
-## 🔐 Required Environment Variables
+### 🟡 Important (Degraded Performance)
+```
+Variable              Default       Impact               Override
+OPENAI_MODEL         text-embed-3  Search quality       Optional
+LOG_LEVEL            INFO          Debug capability     Optional
+BATCH_SIZE           100           Processing speed     Optional
+```
 
-### Core Application Variables
-
-| Variable | Description | Required | Example |
-|----------|-------------|----------|---------|
-| `OPENAI_API_KEY` | OpenAI API key for embeddings | ✅ | `sk-...` |
-| `API_TOKENS` | Authentication tokens | ✅ | `token1,token2` |
-| `OPENAI_EMBEDDING_MODEL` | OpenAI embedding model | ❌ | `text-embedding-3-small` |
-| `LOG_PATH` | Log file path | ❌ | `logs/processor.log` |
-| `LOG_LEVEL` | Logging level | ❌ | `INFO` |
-
-### Qdrant Configuration
-
-| Variable | Description | Required | Example |
-|----------|-------------|----------|---------|
-| `QDRANT_HOST` | Qdrant server hostname | ❌ | `localhost` |
-| `QDRANT_PORT` | Qdrant server port | ❌ | `6333` |
-| `QDRANT_COLLECTION_NAME` | Collection name | ❌ | `memories` |
-
-### Environment-Specific Variables
-
-| Variable | Description | Environment | Example |
-|----------|-------------|-------------|---------|
-| `APP_ENV` | Application environment | All | `development`, `staging`, `production` |
-| `STAGING_API_TOKENS` | Staging auth tokens | Staging | `staging-token1,staging-token2` |
-| `PRODUCTION_API_TOKENS` | Production auth tokens | Production | `prod-token1,prod-token2` |
-| `DOCKER_REGISTRY` | Docker registry URL | Staging/Production | `ghcr.io/username` |
+### 🟢 Optional (Convenience)
+```
+Variable              Default       Purpose              
+LOG_PATH             stdout        File logging
+QDRANT_HOST          localhost     Legacy fallback
+COLLECTION_NAME      memories      Custom naming
+```
 
 ## 🚀 GitHub Secrets Setup
 
