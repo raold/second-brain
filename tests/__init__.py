@@ -1,1 +1,4 @@
-# Tests for the second-brain application
+"""
+Second Brain Test Suite
+Comprehensive testing framework for multi-modal memory system.
+"""
