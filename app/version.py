@@ -8,10 +8,10 @@ from datetime import datetime
 from typing import Any
 
 # Core version information
-__version__ = "2.5.0-RC"
-__version_info__ = (2, 5, 0)
+__version__ = "2.5.1-RC"
+__version_info__ = (2, 5, 1)
 __build__ = "release-candidate"
-__release_date__ = "2025-07-20"
+__release_date__ = "2025-07-21"
 
 # Build and environment information
 __build_timestamp__ = datetime.now().isoformat()

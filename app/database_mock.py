@@ -308,6 +308,102 @@ class MockDatabase:
         """Force creation of vector index (mock version - always succeeds)."""
         logger.info("Mock database: Index creation simulated")
         return True
+    
+    async def fetch_all(self, query: str, *args) -> list[dict[str, Any]]:
+        """Mock implementation of fetch_all for SQL queries."""
+        # Parse the query to determine what data to return
+        if "SELECT * FROM memories" in query:
+            # Get all memories, filter by date if provided
+            memories = []
+            start_date = args[0] if args else None
+            
+            for memory in self.memories.values():
+                # Convert string date to datetime for comparison
+                if start_date and isinstance(start_date, datetime):
+                    memory_date = datetime.fromisoformat(memory["created_at"])
+                    if memory_date < start_date:
+                        continue
+                
+                # Format memory for SQL-like response with datetime objects
+                # Extract tags from various sources
+                tags = []
+                if memory.get("metadata", {}).get("tags"):
+                    tags.extend(memory["metadata"]["tags"])
+                if memory.get("semantic_metadata", {}).get("category"):
+                    tags.append(memory["semantic_metadata"]["category"])
+                if memory.get("semantic_metadata", {}).get("domain"):
+                    tags.append(memory["semantic_metadata"]["domain"])
+                    
+                memories.append({
+                    "id": memory["id"],
+                    "content": memory["content"],
+                    "memory_type": memory.get("memory_type", "semantic"),
+                    "importance": memory.get("importance_score", 0.5),
+                    "tags": tags,
+                    "created_at": datetime.fromisoformat(memory["created_at"]),
+                    "updated_at": datetime.fromisoformat(memory["updated_at"]),
+                    "access_count": memory.get("access_count", 0),
+                    "embedding": memory.get("embedding", [])
+                })
+            
+            # Sort by created_at DESC as specified in query
+            memories.sort(key=lambda x: x["created_at"], reverse=True)
+            return memories
+            
+        elif "SELECT * FROM access_logs" in query:
+            # Mock access logs - generate from memory access data
+            access_logs = []
+            start_date = args[0] if args else None
+            
+            for memory in self.memories.values():
+                if memory.get("access_count", 0) > 0:
+                    # Generate mock access log entries with datetime objects
+                    log_entry = {
+                        "id": str(uuid.uuid4()),
+                        "memory_id": memory["id"],
+                        "accessed_at": datetime.fromisoformat(memory.get("last_accessed", memory["created_at"])),
+                        "operation": "read",
+                        "user_id": "test-user"
+                    }
+                    
+                    if start_date and isinstance(start_date, datetime):
+                        if log_entry["accessed_at"] < start_date:
+                            continue
+                    
+                    access_logs.append(log_entry)
+            
+            # Sort by accessed_at DESC
+            access_logs.sort(key=lambda x: x["accessed_at"], reverse=True)
+            return access_logs
+            
+        # Default empty result for unknown queries
+        return []
+    
+    async def fetch_one(self, query: str, *args) -> dict[str, Any] | None:
+        """Mock implementation of fetch_one for SQL queries."""
+        # Handle COUNT queries
+        if "SELECT COUNT(*)" in query:
+            count = 0
+            
+            if "FROM memories" in query:
+                # Count memories within date range
+                start_date = args[0] if args and len(args) > 0 else None
+                end_date = args[1] if args and len(args) > 1 else None
+                
+                for memory in self.memories.values():
+                    memory_date = datetime.fromisoformat(memory["created_at"])
+                    
+                    if start_date and memory_date < start_date:
+                        continue
+                    if end_date and memory_date >= end_date:
+                        continue
+                        
+                    count += 1
+                    
+            return {"count": count}
+            
+        # Default None for unknown queries
+        return None
 
 
 # Global mock database instance

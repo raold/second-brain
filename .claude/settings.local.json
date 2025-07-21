@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(set PYTHONPATH=.)",
+      "Bash(set USE_MOCK_DATABASE=true)",
+      "Bash(find:*)",
+      "Bash(true)",
+      "Bash(mv:*)"
+    ],
+    "deny": []
+  }
+}

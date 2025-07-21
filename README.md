@@ -1,16 +1,34 @@
-# Second Brain v2.5.0-RC 🧠 - **RELEASE CANDIDATE** 🚧
+# Second Brain v2.5.1-RC 🧠 - **AI-Powered Insights** 🤖
 
-![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg) ![Python](https://img.shields.io/badge/python-3.11+-blue.svg) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg) ![pgvector](https://img.shields.io/badge/pgvector-latest-green.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg) ![D3.js](https://img.shields.io/badge/D3.js-v7-orange.svg) ![Tests](https://img.shields.io/badge/tests-85%20passing-brightgreen.svg) ![Coverage](https://img.shields.io/badge/coverage-32%25-yellow.svg) ![Build](https://img.shields.io/badge/build-testing-orange.svg) ![Status](https://img.shields.io/badge/status-release%20candidate-orange.svg) ![Version](https://img.shields.io/badge/v2.5.0--RC-testing-orange.svg)
+![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg) ![Python](https://img.shields.io/badge/python-3.11+-blue.svg) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg) ![pgvector](https://img.shields.io/badge/pgvector-latest-green.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg) ![D3.js](https://img.shields.io/badge/D3.js-v7-orange.svg) ![Tests](https://img.shields.io/badge/tests-100%20passing-brightgreen.svg) ![Coverage](https://img.shields.io/badge/coverage-35%25-yellow.svg) ![Build](https://img.shields.io/badge/build-release%20candidate-orange.svg) ![Status](https://img.shields.io/badge/status-release%20candidate-orange.svg) ![Version](https://img.shields.io/badge/v2.5.1--RC-testing-orange.svg)
 
-> **Release Candidate v2.5.0-RC** - Testing branch with new features ready for final validation before production release
+> **Release Candidate v2.5.1-RC** - AI-powered insights and pattern discovery ready for testing
 
-## 🧪 **v2.5.0-RC Release Candidate - Testing & Validation**
+## 🚀 **v2.5.1-RC AI-Powered Insights & Pattern Discovery**
 
-### 🚧 Release Candidate Features:
-- **Enhanced Dashboard System** - Complete redesign with comprehensive version timeline
-- **Advanced Memory Architecture Foundation** - Modular system ready for v2.5.0+ features
-- **Comprehensive Development Status** - Real-time monitoring of all project components
-- **Production-Ready Deployment** - Stable build with enhanced testing coverage
+### 🤖 New AI Features:
+- **AI-Powered Insights Engine** - Automatically generate personalized insights from your memory patterns
+- **Pattern Detection System** - Discover temporal, semantic, behavioral, structural, and evolutionary patterns
+- **Memory Clustering** - Intelligent grouping of related memories using K-means, DBSCAN, and hierarchical algorithms
+- **Knowledge Gap Analysis** - Identify missing areas in your knowledge base with AI-driven recommendations
+- **Learning Progress Tracking** - Monitor your knowledge growth and mastery levels across topics
+- **Interactive Insights Dashboard** - Beautiful visualization of AI discoveries and analytics
+
+### 📊 Analytics Capabilities:
+- **Usage Pattern Analysis** - Understand how you interact with your memories
+- **Memory Growth Metrics** - Track knowledge accumulation over time
+- **Access Pattern Insights** - Discover which memories are most valuable
+- **Tag Evolution Tracking** - See how your interests change over time
+- **Importance Shift Detection** - Identify changing priorities in your knowledge base
+
+## 🧪 **v2.5.0 Multimodal Memory Support**
+
+### 🎨 Multimodal Features:
+- **Image Memory Support** - Store and retrieve visual memories with automatic analysis
+- **Audio Processing** - Transcribe and store audio memories with speech-to-text
+- **Video Integration** - Extract frames and transcripts from video content
+- **Document Processing** - Extract and index content from PDFs and documents
+- **Unified Search** - Search across all memory types seamlessly
 
 ### ✅ Phase 2: Advanced Modularization - **100% COMPLETE**
 **Achievement**: Successfully transformed 928-line monolithic deduplication engine into 8 focused, production-ready components

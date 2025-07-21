@@ -261,6 +261,10 @@ app.include_router(importance_router)
 app.include_router(relationship_router)
 app.include_router(bulk_router)
 
+# Include insights router
+from app.routes.insights import router as insights_router
+app.include_router(insights_router)
+
 # Include bulk operations routes
 app.include_router(get_bulk_routes(), dependencies=[Depends(verify_api_key)])
 
@@ -322,6 +326,29 @@ async def mobile_interface():
         <body>
         <h1>📱 Mobile Interface</h1>
         <p>Mobile interface is not available. Please check your installation.</p>
+        </body>
+        </html>
+        """
+        )
+
+
+# AI Insights Dashboard
+@app.get("/insights", response_class=HTMLResponse)
+async def insights_dashboard():
+    """Serve the AI insights dashboard"""
+    try:
+        with open("static/insights-dashboard.html", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(
+            content="""
+        <html>
+        <head>
+            <title>AI Insights - Second Brain</title>
+        </head>
+        <body>
+        <h1>🧠 AI Insights Dashboard</h1>
+        <p>Insights dashboard is not available. Please check your installation.</p>
         </body>
         </html>
         """
