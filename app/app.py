@@ -264,6 +264,16 @@ app.include_router(bulk_router)
 # Include bulk operations routes
 app.include_router(get_bulk_routes(), dependencies=[Depends(verify_api_key)])
 
+# Include multimodal routes
+try:
+    from multimodal.api import router as multimodal_router
+    app.include_router(multimodal_router, dependencies=[Depends(verify_api_key)])
+    logger.info("Multimodal routes successfully integrated")
+except ImportError as e:
+    logger.warning(f"Could not import multimodal routes: {e}")
+except Exception as e:
+    logger.error(f"Error integrating multimodal routes: {e}")
+
 # Setup legacy dashboard and session routes (temporary until full migration)
 setup_dashboard_routes(app)
 setup_session_routes(app)

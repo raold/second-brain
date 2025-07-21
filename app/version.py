@@ -58,14 +58,18 @@ def get_dashboard_version() -> dict[str, Any]:
 def get_current_codename() -> str:
     """Get the codename for the current version."""
     roadmap = get_cognitive_roadmap()
-    current_key = f"v{__version__}"
+    # Handle development versions
+    version_key = __version__.replace("-dev", "")
+    current_key = f"v{version_key}"
     return roadmap.get(current_key, {}).get("codename", "Unknown")
 
 
 def get_current_roadmap_info() -> dict[str, Any]:
     """Get roadmap information for the current version."""
     roadmap = get_cognitive_roadmap()
-    current_key = f"v{__version__}"
+    # Handle development versions
+    version_key = __version__.replace("-dev", "")
+    current_key = f"v{version_key}"
     return roadmap.get(current_key, {})
 
 
@@ -94,6 +98,9 @@ def parse_version(version_string: str) -> tuple[int, int, int]:
     """Parse version string to tuple."""
     # Remove 'v' prefix if present
     version = version_string.lstrip("v")
+    # Handle development versions (e.g., "2.6.0-dev")
+    if "-" in version:
+        version = version.split("-")[0]
     parts = version.split(".")
     return (int(parts[0]), int(parts[1]), int(parts[2]) if len(parts) > 2 else 0)
 

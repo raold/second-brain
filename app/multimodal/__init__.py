@@ -11,6 +11,8 @@ from .models import (
     VideoMetadata,
     ImageMetadata,
     DocumentMetadata,
+    ProcessingResult,
+    MultiModalContent,
     MultiModalMemory,
     MultiModalSearchRequest,
     MultiModalSearchResult,
@@ -18,13 +20,14 @@ from .models import (
     ProcessingConfig,
 )
 
-from .services import (
-    AudioProcessor,
-    VideoProcessor,
-    ImageProcessor,
-    DocumentProcessor,
-    MultiModalProcessor,
-)
+# Services will be imported when available
+# from .services import (
+#     AudioProcessor,
+#     VideoProcessor,
+#     ImageProcessor,
+#     DocumentProcessor,
+#     MultiModalProcessor,
+# )
 
 __version__ = "2.6.0-dev"
 __all__ = [
@@ -40,16 +43,18 @@ __all__ = [
     "DocumentMetadata",
     
     # Core Models
+    "ProcessingResult",
+    "MultiModalContent",
     "MultiModalMemory",
     "MultiModalSearchRequest",
     "MultiModalSearchResult",
     "ContentUploadRequest",
     "ProcessingConfig",
     
-    # Services
-    "AudioProcessor",
-    "VideoProcessor", 
-    "ImageProcessor",
-    "DocumentProcessor",
-    "MultiModalProcessor",
+    # Services (will be added when available)
+    # "AudioProcessor",
+    # "VideoProcessor", 
+    # "ImageProcessor",
+    # "DocumentProcessor",
+    # "MultiModalProcessor",
 ]

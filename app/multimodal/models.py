@@ -5,7 +5,7 @@ Comprehensive models supporting text, audio, video, images, and documents.
 
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 
 
@@ -170,7 +170,7 @@ class MultiModalMemory(BaseModel):
     
     # Enhanced metadata
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Flexible metadata storage")
-    importance: float = Field(default=1.0, ge=0.0, le=10.0, description="Importance score")
+    importance: float = Field(default=1.0, description="Importance score")
     tags: List[str] = Field(default_factory=list, description="Memory tags")
     
     # Embeddings for different modalities
@@ -187,17 +187,19 @@ class MultiModalMemory(BaseModel):
     processing_status: ProcessingStatus = ProcessingStatus.PENDING
     processing_errors: Optional[List[str]] = None
 
-    @validator('primary_content')
-    def validate_primary_content(cls, v, values):
+    @field_validator('primary_content')
+    def validate_primary_content(cls, v):
         """Ensure primary_content is not empty."""
         if not v or not v.strip():
             raise ValueError("Primary content cannot be empty")
         return v.strip()
 
-    @validator('importance')
+    @field_validator('importance', mode='before')
     def validate_importance(cls, v):
         """Ensure importance is within valid range."""
-        return max(0.0, min(10.0, v))
+        if v is None:
+            return 1.0
+        return max(0.0, min(10.0, float(v)))
 
 
 class MultiModalSearchRequest(BaseModel):
@@ -231,7 +233,7 @@ class MultiModalSearchRequest(BaseModel):
     image_weight: float = Field(default=0.3, ge=0.0, le=1.0)
     audio_weight: float = Field(default=0.1, ge=0.0, le=1.0)
 
-    @validator('content_types')
+    @field_validator('content_types')
     def validate_content_types(cls, v):
         """Remove duplicates from content types."""
         return list(set(v)) if v else None

@@ -109,7 +109,7 @@ class TestAudioMetadata:
         )
         
         # Test that it can be serialized to dict
-        metadata_dict = metadata.dict()
+        metadata_dict = metadata.model_dump()
         assert metadata_dict["duration_seconds"] == 60.0
         assert metadata_dict["sample_rate"] == 22050
         assert metadata_dict["transcription"] == "Hello world"

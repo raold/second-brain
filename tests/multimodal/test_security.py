@@ -13,7 +13,7 @@ import io
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch, MagicMock
 
-from multimodal.models import ContentType
+from app.multimodal.models import ContentType
 from multimodal.api import router
 from multimodal.database import MultiModalDatabase
 

@@ -8,8 +8,8 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 
-from pydantic import BaseModel, Field, validator
-from pydantic.types import conint, confloat
+from pydantic import BaseModel, Field, field_validator
+from typing import Annotated
 
 
 class ContentType(str, Enum):
@@ -45,13 +45,14 @@ class RelationshipType(str, Enum):
 class BaseMemoryModel(BaseModel):
     """Base model for all memory-related models."""
     
-    class Config:
-        use_enum_values = True
-        arbitrary_types_allowed = True
-        json_encoders = {
+    model_config = {
+        "use_enum_values": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {
             datetime: lambda v: v.isoformat(),
             UUID: lambda v: str(v)
         }
+    }
 
 
 # Core Memory Models
@@ -68,7 +69,7 @@ class MultiModalMemoryCreate(BaseMemoryModel):
     
     # Metadata
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
-    importance: confloat(ge=0.0, le=10.0) = Field(1.0, description="Importance score (0-10)")
+    importance: Annotated[float, Field(ge=0.0, le=10.0)] = Field(1.0, description="Importance score (0-10)")
     tags: List[str] = Field(default_factory=list, description="Content tags")
     
     # Content analysis
@@ -77,12 +78,26 @@ class MultiModalMemoryCreate(BaseMemoryModel):
     keywords: List[str] = Field(default_factory=list, description="Extracted keywords")
     entities: Dict[str, Any] = Field(default_factory=dict, description="Named entities")
     sentiment: Dict[str, Any] = Field(default_factory=dict, description="Sentiment analysis")
+    
+    @field_validator('tags', mode='before')
+    @classmethod
+    def validate_tags(cls, v):
+        """Validate and clean tags."""
+        if isinstance(v, str):
+            v = [tag.strip() for tag in v.split(',')]
+        return [tag.lower().strip() for tag in v if tag.strip()]
+    
+    @field_validator('importance')
+    @classmethod
+    def validate_importance(cls, v):
+        """Validate importance score."""
+        return max(0.0, min(10.0, float(v)))
 
 
 class MultiModalMemoryUpdate(BaseMemoryModel):
     """Model for updating multimodal memories."""
     content: Optional[str] = None
-    importance: Optional[confloat(ge=0.0, le=10.0)] = None
+    importance: Optional[Annotated[float, Field(ge=0.0, le=10.0)]] = None
     tags: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
     extracted_text: Optional[str] = None
@@ -155,7 +170,7 @@ class AudioMetadata(BaseMemoryModel):
     language: Optional[str] = None  # Detected language
     speaker_count: Optional[int] = None  # Number of speakers
     transcript: Optional[str] = None  # Full transcript
-    transcript_confidence: Optional[confloat(ge=0.0, le=1.0)] = None
+    transcript_confidence: Optional[Annotated[float, Field(ge=0.0, le=1.0)]] = None
     audio_features: Dict[str, Any] = {}  # Spectral features, tempo, etc.
 
 
@@ -201,7 +216,7 @@ class MultiModalRelationshipCreate(BaseMemoryModel):
     source_memory_id: UUID
     target_memory_id: UUID
     relationship_type: RelationshipType
-    confidence: confloat(ge=0.0, le=1.0) = 0.5
+    confidence: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
     metadata: Dict[str, Any] = {}
 
 
@@ -223,10 +238,10 @@ class ProcessingQueueItem(BaseMemoryModel):
     id: UUID
     memory_id: UUID
     operation_type: str  # extract_text, generate_embedding, analyze_content, etc.
-    priority: conint(ge=1, le=10) = 5
+    priority: Annotated[int, Field(ge=1, le=10)] = 5
     parameters: Dict[str, Any] = {}
     status: ProcessingStatus = ProcessingStatus.PENDING
-    progress: confloat(ge=0.0, le=1.0) = 0.0
+    progress: Annotated[float, Field(ge=0.0, le=1.0)] = 0.0
     error_message: Optional[str] = None
     worker_id: Optional[str] = None
     started_at: Optional[datetime] = None
@@ -240,11 +255,11 @@ class MultiModalSearchRequest(BaseMemoryModel):
     """Model for multimodal search requests."""
     query: str = Field(..., description="Search query")
     content_types: Optional[List[ContentType]] = Field(None, description="Filter by content types")
-    limit: conint(ge=1, le=100) = Field(20, description="Maximum results")
-    offset: conint(ge=0) = Field(0, description="Result offset")
-    threshold: confloat(ge=0.0, le=1.0) = Field(0.7, description="Similarity threshold")
-    importance_min: Optional[confloat(ge=0.0, le=10.0)] = Field(None, description="Minimum importance")
-    importance_max: Optional[confloat(ge=0.0, le=10.0)] = Field(None, description="Maximum importance")
+    limit: Annotated[int, Field(ge=1, le=100)] = Field(20, description="Maximum results")
+    offset: Annotated[int, Field(ge=0)] = Field(0, description="Result offset")
+    threshold: Annotated[float, Field(ge=0.0, le=1.0)] = Field(0.7, description="Similarity threshold")
+    importance_min: Optional[Annotated[float, Field(ge=0.0, le=10.0)]] = Field(None, description="Minimum importance")
+    importance_max: Optional[Annotated[float, Field(ge=0.0, le=10.0)]] = Field(None, description="Maximum importance")
     tags: Optional[List[str]] = Field(None, description="Filter by tags")
     date_from: Optional[datetime] = Field(None, description="Filter by creation date from")
     date_to: Optional[datetime] = Field(None, description="Filter by creation date to")
@@ -286,13 +301,27 @@ class MultiModalStats(BaseMemoryModel):
 class FileUploadRequest(BaseMemoryModel):
     """Model for file upload requests."""
     content: Optional[str] = Field(None, description="Optional content description")
-    importance: confloat(ge=0.0, le=10.0) = Field(5.0, description="Importance score")
+    importance: Annotated[float, Field(ge=0.0, le=10.0)] = Field(5.0, description="Importance score")
     tags: List[str] = Field(default_factory=list, description="Content tags")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
     auto_process: bool = Field(True, description="Auto-process after upload")
     extract_text: bool = Field(True, description="Extract text from content")
     generate_summary: bool = Field(True, description="Generate AI summary")
     analyze_content: bool = Field(True, description="Perform content analysis")
+    
+    @field_validator('tags', mode='before')
+    @classmethod
+    def validate_tags(cls, v):
+        """Validate and clean tags."""
+        if isinstance(v, str):
+            v = [tag.strip() for tag in v.split(',')]
+        return [tag.lower().strip() for tag in v if tag.strip()]
+    
+    @field_validator('importance')
+    @classmethod
+    def validate_importance(cls, v):
+        """Validate importance score."""
+        return max(0.0, min(10.0, float(v)))
 
 
 class FileUploadResponse(BaseMemoryModel):
@@ -305,20 +334,7 @@ class FileUploadResponse(BaseMemoryModel):
     message: str
 
 
-# Validation helpers
-
-@validator('tags', pre=True)
-def validate_tags(cls, v):
-    """Validate and clean tags."""
-    if isinstance(v, str):
-        v = [tag.strip() for tag in v.split(',')]
-    return [tag.lower().strip() for tag in v if tag.strip()]
-
-
-@validator('importance')
-def validate_importance(cls, v):
-    """Validate importance score."""
-    return max(0.0, min(10.0, float(v)))
+# Validation helpers - These need to be inside the model classes that use them
 
 
 # Export all models

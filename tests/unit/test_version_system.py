@@ -123,9 +123,9 @@ class TestVersionSystem:
     def test_increment_version(self):
         """Test version increment functionality"""
         test_cases = [
-            ("patch", "2.4.3"),  # Patch increment: 2.4.2 -> 2.4.3
-            ("minor", "2.5.0"),  # Minor increment: 2.4.2 -> 2.5.0
-            ("major", "3.0.0"),  # Major increment: 2.4.2 -> 3.0.0
+            ("patch", "2.6.1"),  # Patch increment: 2.6.0 -> 2.6.1
+            ("minor", "2.7.0"),  # Minor increment: 2.6.0 -> 2.7.0
+            ("major", "3.0.0"),  # Major increment: 2.6.0 -> 3.0.0
         ]
 
         for bump_type, expected in test_cases:
@@ -140,10 +140,10 @@ class TestVersionSystem:
     def test_is_version_compatible(self):
         """Test version compatibility checking"""
         test_cases = [
-            ("2.4.0", True),  # Same minor, earlier patch
-            ("2.4.1", True),  # Exact match
-            ("2.3.0", True),  # Earlier minor
-            ("2.5.0", False),  # Later minor
+            ("2.6.0", True),   # Exact match (without -dev)
+            ("2.5.0", True),   # Earlier minor
+            ("2.4.0", True),   # Earlier minor
+            ("2.7.0", False),  # Later minor
             ("3.0.0", False),  # Later major
             ("1.9.9", False),  # Earlier major
         ]
@@ -159,8 +159,9 @@ class TestVersionSystem:
         assert isinstance(roadmap, dict)
         assert len(roadmap) > 0
 
-        # Check current version exists in roadmap
-        current_key = f"v{__version__}"
+        # Check current version exists in roadmap (handle dev versions)
+        version_for_roadmap = __version__.replace("-dev", "")
+        current_key = f"v{version_for_roadmap}"
         assert current_key in roadmap, f"Current version {current_key} not in roadmap"
 
         # Check roadmap structure
@@ -256,10 +257,12 @@ class TestVersionManagerIntegration:
 
         # Test that current version exists in configuration
         current_dev = vm.versions_config["current_development"]
-        assert current_dev in vm.versions_config["versions"]
+        # Handle development versions (e.g., "2.6.0-dev" -> "2.6.0")
+        version_key = current_dev.replace("-dev", "")
+        assert version_key in vm.versions_config["versions"], f"Version {version_key} not found in config"
 
         # Test version info structure
-        version_info = vm.versions_config["versions"][current_dev]
+        version_info = vm.versions_config["versions"][version_key]
         required_fields = ["status", "title", "changes", "commit_message", "git_workflow"]
         for field in required_fields:
             assert field in version_info, f"Missing required field: {field}"

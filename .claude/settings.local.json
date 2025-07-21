@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(pytest:*)",
+      "Bash(python -m pytest tests/multimodal/test_performance.py -v --no-cov -x)",
+      "Bash(python -m pytest tests/unit/ -v --no-cov -k \"not database\")",
+      "Bash(python -m pytest tests/unit/test_bulk_monitoring_minimal.py -v --no-cov)",
+      "Bash(python tests/comprehensive/test_runner_comprehensive.py)",
+      "Bash(python -m pytest tests/ -v --no-cov --co -q)",
+      "Bash(python -m pytest tests/unit/ -v --no-cov -k \"not database\" --tb=short -q)",
+      "Bash(python -m pytest tests/multimodal/test_models.py -v --no-cov -k \"TestContentTypeEnum or TestMediaFormatEnum\" --tb=short)",
+      "Bash(python -m pytest tests/performance/ -v --no-cov --tb=short -q)",
+      "Bash(python -m pytest tests/multimodal/test_security.py::TestDataValidationSecurity -v --no-cov --tb=short)",
+      "Bash(python -m pytest tests/integration/ -v --no-cov --tb=short -q)",
+      "Bash(python -m pytest tests/comprehensive/test_bulk_operations_comprehensive.py -v --no-cov --tb=short)",
+      "Bash(python -m pytest tests/ --no-cov -q --tb=no)",
+      "Bash(python -m pytest tests/multimodal/test_models.py -v)",
+      "Bash(python -m pytest tests/multimodal/test_models.py::TestMultiModalMemory::test_memory_validation_importance -v)",
+      "Bash(dir:*)",
+      "Bash(python:*)",
+      "Bash(del test_multimodal_integration.py)",
+      "Bash(rm:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
+}

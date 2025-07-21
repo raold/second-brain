@@ -16,7 +16,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from multimodal.models import ContentType, MultiModalSearchRequest
+from app.multimodal.models import ContentType, MultiModalSearchRequest
 from multimodal.api import router
 from multimodal.database import MultiModalDatabase
 from multimodal.processing import MultiModalProcessingService

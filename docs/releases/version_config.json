@@ -1,6 +1,6 @@
 {
   "current_stable": "2.4.3",
-  "current_development": "2.6.0",
+  "current_development": "2.6.0-dev",
   "testing_version": "2.5.0",
   "branch_strategy": "develop->testing->main",
   "supported_workflows": [

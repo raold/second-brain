@@ -5,6 +5,7 @@ Comprehensive testing of all major features.
 
 
 import pytest
+from app.version import get_version
 
 
 class TestAPI:
@@ -26,7 +27,7 @@ class TestAPI:
         response = await client.get("/health")
         assert response.status_code == 200
         data = response.json()
-        assert data["version"] == "2.4.2"  # Current version
+        assert data["version"] == get_version()  # Dynamic version check
 
     @pytest.mark.asyncio
     async def test_store_memory_basic(self, client, api_key):
