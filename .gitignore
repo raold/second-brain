@@ -31,6 +31,7 @@ coverage.xml
 
 # IDE
 .vscode/
+.cursorignore
 .idea/
 *.swp
 *.swo
