@@ -26,25 +26,48 @@ logger = logging.getLogger(__name__)
 class RelationshipDetector:
     """Detect relationships between entities using dependency parsing and patterns"""
 
-    def __init__(self, model_name: str = "en_core_web_sm", enable_patterns: bool = True):
+    def __init__(self, model_name: str = "en_core_web_trf", enable_patterns: bool = True, use_gpu: bool = False):
         """
         Initialize relationship detector
 
         Args:
-            model_name: SpaCy model to use
+            model_name: SpaCy model to use (defaults to transformer model)
             enable_patterns: Whether to use pattern-based detection
+            use_gpu: Whether to use GPU acceleration if available
         """
         self.model_name = model_name
         self.enable_patterns = enable_patterns
+        self.use_gpu = use_gpu
         self.nlp = None
 
         # Initialize relationship patterns
         self.relationship_patterns = self._initialize_relationship_patterns()
+        
+        # Initialize transformer-enhanced patterns
+        self.transformer_patterns = self._initialize_transformer_patterns()
 
         if SPACY_AVAILABLE:
             try:
-                self.nlp = spacy.load(model_name)
-                logger.info(f"Loaded SpaCy model for relationship detection: {model_name}")
+                # Try to load transformer model first
+                if model_name == "en_core_web_trf":
+                    try:
+                        self.nlp = spacy.load(model_name)
+                        if self.use_gpu and spacy.prefer_gpu():
+                            logger.info("Using GPU for SpaCy transformer model")
+                        logger.info(f"Loaded SpaCy transformer model for relationship detection: {model_name}")
+                    except OSError:
+                        # Fall back to smaller model if transformer not available
+                        logger.warning("Transformer model not found, falling back to en_core_web_lg")
+                        try:
+                            self.nlp = spacy.load("en_core_web_lg")
+                            self.model_name = "en_core_web_lg"
+                        except OSError:
+                            logger.warning("Large model not found, falling back to en_core_web_sm")
+                            self.nlp = spacy.load("en_core_web_sm")
+                            self.model_name = "en_core_web_sm"
+                else:
+                    self.nlp = spacy.load(model_name)
+                    logger.info(f"Loaded SpaCy model for relationship detection: {model_name}")
             except Exception as e:
                 logger.warning(f"Failed to load SpaCy model {model_name}: {e}")
                 logger.info("Relationship detection will use pattern matching only")
@@ -71,8 +94,14 @@ class RelationshipDetector:
 
         # Dependency parsing based detection
         if self.nlp:
+            doc = self.nlp(text)
             dep_relationships = self._detect_dependency_relationships(text, entities)
             relationships.extend(dep_relationships)
+            
+            # Transformer-based detection if using transformer model
+            if self.model_name == "en_core_web_trf" and hasattr(doc, "_.trf_data"):
+                transformer_relationships = self.detect_transformer_relationships(doc, entities)
+                relationships.extend(transformer_relationships)
 
         # Pattern-based detection
         if self.enable_patterns:
@@ -572,6 +601,80 @@ class RelationshipDetector:
                 }
             ]
         }
+
+    def _initialize_transformer_patterns(self) -> dict[str, Any]:
+        """Initialize enhanced patterns for transformer-based detection"""
+        return {
+            "semantic_similarity_threshold": 0.8,
+            "contextual_patterns": {
+                "causation": ["because", "therefore", "thus", "hence", "consequently", "as a result"],
+                "comparison": ["similarly", "likewise", "in contrast", "however", "whereas"],
+                "sequence": ["first", "then", "next", "finally", "subsequently", "afterwards"],
+                "elaboration": ["specifically", "namely", "in particular", "for example", "such as"],
+            },
+            "entity_role_patterns": {
+                "agent": ["performed", "conducted", "executed", "initiated", "completed"],
+                "patient": ["received", "underwent", "experienced", "suffered", "benefited from"],
+                "instrument": ["using", "with", "through", "via", "by means of"],
+            }
+        }
+
+    def detect_transformer_relationships(self, doc: Any, entities: list[Entity]) -> list[Relationship]:
+        """
+        Use transformer embeddings to detect semantic relationships
+        
+        Args:
+            doc: SpaCy document with transformer embeddings
+            entities: List of entities
+            
+        Returns:
+            List of detected relationships
+        """
+        relationships = []
+        
+        if not hasattr(doc, "_.trf_data"):
+            return relationships
+            
+        # Create entity spans
+        entity_spans = self._create_entity_spans(doc, entities)
+        
+        for i, (entity1, span1) in enumerate(entity_spans):
+            for j, (entity2, span2) in enumerate(entity_spans[i+1:], i+1):
+                # Get transformer embeddings for entities
+                if hasattr(span1, "_.trf_data") and hasattr(span2, "_.trf_data"):
+                    # Calculate semantic similarity using transformer embeddings
+                    similarity = span1.similarity(span2)
+                    
+                    if similarity > self.transformer_patterns["semantic_similarity_threshold"]:
+                        # High semantic similarity suggests relationship
+                        rel_type = RelationshipType.SIMILAR_TO
+                        confidence = similarity
+                        
+                        # Check contextual patterns for more specific relationship types
+                        context_between = doc[span1.end:span2.start].text.lower()
+                        
+                        for rel_category, keywords in self.transformer_patterns["contextual_patterns"].items():
+                            if any(keyword in context_between for keyword in keywords):
+                                if rel_category == "causation":
+                                    rel_type = RelationshipType.CAUSAL
+                                elif rel_category == "sequence":
+                                    rel_type = RelationshipType.TEMPORAL_AFTER
+                                confidence = min(0.95, similarity + 0.1)
+                                break
+                        
+                        relationships.append(Relationship(
+                            source=entity1,
+                            target=entity2,
+                            type=rel_type,
+                            confidence=confidence,
+                            evidence=doc[span1.start:span2.end].text,
+                            metadata={
+                                "detection_method": "transformer_similarity",
+                                "similarity_score": float(similarity)
+                            }
+                        ))
+                
+        return relationships
 
     def get_relationship_statistics(self, relationships: list[Relationship]) -> dict[str, Any]:
         """Get statistics about detected relationships"""

@@ -62,14 +62,42 @@ class EmbeddingGenerator:
         """Initialize the embedding model"""
         if self.model_type == "sentence-transformers" and SENTENCE_TRANSFORMERS_AVAILABLE:
             try:
-                self.model = SentenceTransformer(self.model_name)
+                # Try advanced models first
+                advanced_models = [
+                    "all-mpnet-base-v2",  # Best quality
+                    "all-MiniLM-L12-v2",  # Good balance
+                    "all-MiniLM-L6-v2",   # Faster
+                ]
+                
+                model_to_load = self.model_name
+                if self.model_name == "auto":
+                    # Auto-select best available model
+                    for model in advanced_models:
+                        try:
+                            self.model = SentenceTransformer(model)
+                            self.model_name = model
+                            model_to_load = model
+                            break
+                        except Exception:
+                            continue
+                else:
+                    self.model = SentenceTransformer(self.model_name)
+                
                 # Get embedding dimensions
                 dummy_embedding = self.model.encode("test")
                 self.dimensions = len(dummy_embedding)
-                logger.info(f"Loaded sentence-transformers model: {self.model_name} ({self.dimensions}D)")
+                logger.info(f"Loaded sentence-transformers model: {model_to_load} ({self.dimensions}D)")
+                
+                # Set max sequence length for better performance
+                self.model.max_seq_length = 512
+                
             except Exception as e:
                 logger.error(f"Failed to load sentence-transformers model: {e}")
                 self._fallback_to_mock()
+        elif self.model_type == "openai":
+            # OpenAI embeddings
+            self.dimensions = 1536  # text-embedding-ada-002 dimensions
+            logger.info("Configured for OpenAI embeddings (1536D)")
         else:
             self._fallback_to_mock()
 
@@ -161,10 +189,22 @@ class EmbeddingGenerator:
 
     async def _generate_openai_embedding(self, text: str) -> list[float]:
         """Generate embedding using OpenAI API"""
-        # This would require OpenAI API integration
-        # For now, return mock embedding
-        logger.warning("OpenAI embedding generation not implemented, using mock")
-        return self._generate_mock_embedding(text)
+        try:
+            from app.utils.openai_client import get_openai_client
+            
+            client = get_openai_client()
+            if client:
+                response = await client.embeddings.create(
+                    model="text-embedding-ada-002",
+                    input=text
+                )
+                return response.data[0].embedding
+            else:
+                logger.warning("OpenAI client not available, using sentence-transformers")
+                return await self._generate_sentence_transformer_embedding(text)
+        except Exception as e:
+            logger.error(f"Error generating OpenAI embedding: {e}")
+            return self._generate_mock_embedding(text)
 
     def _generate_mock_embedding(self, text: str) -> list[float]:
         """Generate deterministic mock embedding from text"""
