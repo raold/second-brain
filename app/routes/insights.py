@@ -2,23 +2,23 @@
 API routes for AI-powered insights and analytics
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Optional
 
-from app.shared import get_db_instance, verify_api_key
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.insights import (
     AnalyticsEngine,
-    InsightRequest,
-    PatternDetectionRequest,
     ClusteringRequest,
-    GapAnalysisRequest,
-    InsightResponse,
-    PatternResponse,
     ClusterResponse,
+    GapAnalysisRequest,
     GapAnalysisResponse,
+    InsightRequest,
+    InsightResponse,
+    LearningProgress,
+    PatternDetectionRequest,
+    PatternResponse,
     TimeFrame,
-    LearningProgress
 )
+from app.shared import get_db_instance, verify_api_key
 
 router = APIRouter(
     prefix="/insights",
@@ -176,7 +176,7 @@ async def get_quick_insights(
             include_recommendations=True
         )
         response = await engine.generate_insights(request)
-        
+
         # Format for dashboard
         return {
             "insights": [

@@ -2,10 +2,10 @@
 Intent recognition component for understanding user intent in content
 """
 
-import re
-from typing import List, Dict, Any, Optional, Tuple
-from collections import defaultdict
 import logging
+import re
+from collections import defaultdict
+from typing import Any, Optional
 
 try:
     from textblob import TextBlob
@@ -26,26 +26,26 @@ logger = logging.getLogger(__name__)
 
 class IntentRecognizer:
     """Recognize user intent from text content"""
-    
+
     def __init__(self, enable_sentiment: bool = True):
         """
         Initialize intent recognizer
-        
+
         Args:
             enable_sentiment: Whether to perform sentiment analysis
         """
         self.enable_sentiment = enable_sentiment and TEXTBLOB_AVAILABLE
         self.nlp = None
-        
+
         # Initialize intent patterns
         self.intent_patterns = self._initialize_intent_patterns()
-        
+
         # Initialize action item patterns
         self.action_patterns = self._initialize_action_patterns()
-        
+
         # Initialize urgency indicators
         self.urgency_indicators = self._initialize_urgency_indicators()
-        
+
         if SPACY_AVAILABLE:
             try:
                 import spacy
@@ -53,36 +53,36 @@ class IntentRecognizer:
                 logger.info("Loaded SpaCy model for intent recognition")
             except Exception as e:
                 logger.warning(f"Failed to load SpaCy model: {e}")
-    
+
     def recognize_intent(self, text: str) -> Optional[Intent]:
         """
         Recognize the primary intent from text
-        
+
         Args:
             text: Input text
-            
+
         Returns:
             Recognized intent or None
         """
         # Detect intent type
         intent_type, confidence = self._detect_intent_type(text)
-        
+
         if not intent_type:
             # Default to statement if no clear intent
             intent_type = IntentType.STATEMENT
             confidence = 0.5
-        
+
         # Extract action items
         action_items = self._extract_action_items(text)
-        
+
         # Calculate urgency
         urgency = self._calculate_urgency(text)
-        
+
         # Analyze sentiment
         sentiment = None
         if self.enable_sentiment:
             sentiment = self._analyze_sentiment(text)
-        
+
         return Intent(
             type=intent_type,
             confidence=confidence,
@@ -90,20 +90,20 @@ class IntentRecognizer:
             urgency=urgency,
             sentiment=sentiment
         )
-    
-    def _detect_intent_type(self, text: str) -> Tuple[Optional[IntentType], float]:
+
+    def _detect_intent_type(self, text: str) -> tuple[Optional[IntentType], float]:
         """Detect the primary intent type from text"""
         text_lower = text.lower().strip()
-        
+
         # Track scores for each intent type
         intent_scores = defaultdict(float)
-        
+
         # Pattern matching
         for intent_type, patterns in self.intent_patterns.items():
             for pattern_info in patterns:
                 pattern = pattern_info["pattern"]
                 weight = pattern_info.get("weight", 1.0)
-                
+
                 if pattern_info.get("is_regex", True):
                     matches = re.findall(pattern, text_lower)
                     if matches:
@@ -112,56 +112,56 @@ class IntentRecognizer:
                     # Simple string matching
                     if pattern in text_lower:
                         intent_scores[intent_type] += weight
-        
+
         # Analyze sentence structure if SpaCy available
         if self.nlp:
             structure_intent, structure_confidence = self._analyze_sentence_structure(text)
             if structure_intent:
                 intent_scores[structure_intent] += structure_confidence * 2
-        
+
         # Special checks
         if text.strip().endswith("?"):
             intent_scores[IntentType.QUESTION] += 2.0
-        
+
         if any(text.strip().startswith(prefix) for prefix in ["TODO:", "FIXME:", "NOTE:"]):
             intent_scores[IntentType.TODO] += 3.0
-        
+
         # Find highest scoring intent
         if not intent_scores:
             return None, 0.0
-        
+
         best_intent = max(intent_scores.items(), key=lambda x: x[1])
         intent_type = best_intent[0]
-        
+
         # Calculate confidence based on score and uniqueness
         max_score = best_intent[1]
         total_score = sum(intent_scores.values())
-        
+
         # Confidence is higher when one intent dominates
         if total_score > 0:
             confidence = min(0.95, (max_score / total_score) * (max_score / 5))
         else:
             confidence = 0.5
-        
+
         return intent_type, confidence
-    
-    def _analyze_sentence_structure(self, text: str) -> Tuple[Optional[IntentType], float]:
+
+    def _analyze_sentence_structure(self, text: str) -> tuple[Optional[IntentType], float]:
         """Analyze sentence structure using SpaCy"""
         try:
             doc = self.nlp(text[:1000])  # Limit text length
-            
+
             # Analyze each sentence
             sentence_intents = []
-            
+
             for sent in doc.sents:
                 # Check for question structure
                 if any(token.tag_ in ["WDT", "WP", "WP$", "WRB"] for token in sent):
                     sentence_intents.append((IntentType.QUESTION, 0.8))
-                
+
                 # Check for imperative (command) structure
                 if sent[0].pos_ == "VERB" and sent[0].dep_ == "ROOT":
                     sentence_intents.append((IntentType.TODO, 0.7))
-                
+
                 # Check for modal verbs (planning, decision)
                 modal_verbs = [token for token in sent if token.tag_ == "MD"]
                 if modal_verbs:
@@ -169,56 +169,56 @@ class IntentRecognizer:
                         sentence_intents.append((IntentType.DECISION, 0.6))
                     elif any(modal.text.lower() in ["will", "would", "might"] for modal in modal_verbs):
                         sentence_intents.append((IntentType.PLANNING, 0.6))
-            
+
             # Return most common intent
             if sentence_intents:
                 # Count occurrences
                 intent_counts = defaultdict(float)
                 for intent, conf in sentence_intents:
                     intent_counts[intent] += conf
-                
+
                 best_intent = max(intent_counts.items(), key=lambda x: x[1])
                 avg_confidence = best_intent[1] / len(sentence_intents)
                 return best_intent[0], avg_confidence
-        
+
         except Exception as e:
             logger.debug(f"Error in sentence structure analysis: {e}")
-        
+
         return None, 0.0
-    
-    def _extract_action_items(self, text: str) -> List[str]:
+
+    def _extract_action_items(self, text: str) -> list[str]:
         """Extract action items from text"""
         action_items = []
-        
+
         # Split into sentences
         sentences = re.split(r'[.!?]+', text)
-        
+
         for sentence in sentences:
             sentence = sentence.strip()
             if not sentence:
                 continue
-            
+
             # Check against action patterns
             is_action = False
             for pattern in self.action_patterns:
                 if re.search(pattern, sentence, re.IGNORECASE):
                     is_action = True
                     break
-            
+
             if is_action:
                 # Clean up the action item
                 action = sentence
-                
+
                 # Remove common prefixes
                 for prefix in ["TODO:", "FIXME:", "ACTION:", "TASK:", "- ", "* ", "• "]:
                     if action.upper().startswith(prefix.upper()):
                         action = action[len(prefix):].strip()
                         break
-                
+
                 # Add to list if not too long
                 if len(action) < 200:
                     action_items.append(action)
-        
+
         # Also check for bulleted/numbered lists
         list_items = re.findall(r'(?:^|\n)\s*[-*•]\s*(.+)', text)
         for item in list_items:
@@ -227,7 +227,7 @@ class IntentRecognizer:
                 # Check if it looks like an action
                 if any(word in item.lower() for word in ["need", "should", "must", "will", "todo"]):
                     action_items.append(item)
-        
+
         # Deduplicate while preserving order
         seen = set()
         unique_items = []
@@ -235,23 +235,23 @@ class IntentRecognizer:
             if item.lower() not in seen:
                 seen.add(item.lower())
                 unique_items.append(item)
-        
+
         return unique_items[:10]  # Limit to 10 action items
-    
+
     def _calculate_urgency(self, text: str) -> float:
         """Calculate urgency score from text"""
         text_lower = text.lower()
         urgency_score = 0.5  # Default neutral urgency
-        
+
         # Check for urgency indicators
         for indicator, weight in self.urgency_indicators["high"].items():
             if indicator in text_lower:
                 urgency_score += weight
-        
+
         for indicator, weight in self.urgency_indicators["low"].items():
             if indicator in text_lower:
                 urgency_score -= weight
-        
+
         # Check for deadline mentions
         deadline_patterns = [
             r'\b(?:by|before|until)\s+(?:tomorrow|today|tonight|end of day|eod|cob)\b',
@@ -259,25 +259,25 @@ class IntentRecognizer:
             r'\bdue\s+(?:date|by|on)\b',
             r'\b\d+\s*(?:hours?|days?|weeks?)\s+(?:left|remaining)\b'
         ]
-        
+
         for pattern in deadline_patterns:
             if re.search(pattern, text_lower):
                 urgency_score += 0.2
-        
+
         # Check for priority mentions
         if re.search(r'\b(?:high|highest|critical)\s+priority\b', text_lower):
             urgency_score += 0.3
         elif re.search(r'\blow\s+priority\b', text_lower):
             urgency_score -= 0.2
-        
+
         # Normalize to 0-1 range
         return max(0.0, min(1.0, urgency_score))
-    
+
     def _analyze_sentiment(self, text: str) -> float:
         """Analyze sentiment of text"""
         if not TEXTBLOB_AVAILABLE:
             return 0.0
-        
+
         try:
             blob = TextBlob(text)
             # TextBlob returns polarity in range [-1, 1]
@@ -285,8 +285,8 @@ class IntentRecognizer:
         except Exception as e:
             logger.debug(f"Error in sentiment analysis: {e}")
             return 0.0
-    
-    def _initialize_intent_patterns(self) -> Dict[IntentType, List[Dict[str, Any]]]:
+
+    def _initialize_intent_patterns(self) -> dict[IntentType, list[dict[str, Any]]]:
         """Initialize patterns for intent detection"""
         return {
             IntentType.QUESTION: [
@@ -350,8 +350,8 @@ class IntentRecognizer:
                 {"pattern": r'\b(?:recommendation|suggest|advise)\b', "weight": 1.2},
             ],
         }
-    
-    def _initialize_action_patterns(self) -> List[str]:
+
+    def _initialize_action_patterns(self) -> list[str]:
         """Initialize patterns for action item detection"""
         return [
             r'\b(?:todo|task|action|fixme)\s*:',
@@ -362,8 +362,8 @@ class IntentRecognizer:
             r'\b(?:action item|next step|follow up)\b',
             r'\b(?:assign|assigned to|responsible for)\b',
         ]
-    
-    def _initialize_urgency_indicators(self) -> Dict[str, Dict[str, float]]:
+
+    def _initialize_urgency_indicators(self) -> dict[str, dict[str, float]]:
         """Initialize urgency indicators and their weights"""
         return {
             "high": {
@@ -391,8 +391,8 @@ class IntentRecognizer:
                 "back burner": 0.2,
             }
         }
-    
-    def get_intent_statistics(self, intents: List[Intent]) -> Dict[str, Any]:
+
+    def get_intent_statistics(self, intents: list[Intent]) -> dict[str, Any]:
         """Get statistics about recognized intents"""
         if not intents:
             return {
@@ -403,21 +403,21 @@ class IntentRecognizer:
                 "total_action_items": 0,
                 "sentiment_stats": {}
             }
-        
+
         # Intent type distribution
         type_counts = defaultdict(int)
         for intent in intents:
             type_counts[intent.type.value] += 1
-        
+
         # Calculate averages
         avg_confidence = sum(i.confidence for i in intents) / len(intents)
-        
+
         urgencies = [i.urgency for i in intents if i.urgency is not None]
         avg_urgency = sum(urgencies) / len(urgencies) if urgencies else 0
-        
+
         # Action items
         total_actions = sum(len(i.action_items) for i in intents)
-        
+
         # Sentiment statistics
         sentiments = [i.sentiment for i in intents if i.sentiment is not None]
         sentiment_stats = {}
@@ -428,7 +428,7 @@ class IntentRecognizer:
                 "negative": len([s for s in sentiments if s < -0.1]),
                 "neutral": len([s for s in sentiments if -0.1 <= s <= 0.1]),
             }
-        
+
         return {
             "total_intents": len(intents),
             "intent_distribution": dict(type_counts),

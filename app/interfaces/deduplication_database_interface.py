@@ -147,7 +147,7 @@ class PostgreSQLDeduplicationDatabase(DeduplicationDatabaseInterface):
             # Build query based on filter criteria
             query = """
                 SELECT id, content, created_at, updated_at, metadata
-                FROM memories 
+                FROM memories
                 WHERE deleted_at IS NULL
             """
             params = []
@@ -196,9 +196,9 @@ class PostgreSQLDeduplicationDatabase(DeduplicationDatabaseInterface):
                     # Mark duplicates as deleted and reference primary
                     for duplicate_id in duplicate_ids:
                         await conn.execute(
-                            """UPDATE memories 
-                               SET deleted_at = NOW(), 
-                                   metadata = metadata || $1 
+                            """UPDATE memories
+                               SET deleted_at = NOW(),
+                                   metadata = metadata || $1
                                WHERE id = $2""",
                             {
                                 "duplicate_of": primary_id,
@@ -210,7 +210,7 @@ class PostgreSQLDeduplicationDatabase(DeduplicationDatabaseInterface):
 
                     # Log merge operation
                     await conn.execute(
-                        """INSERT INTO memory_operations 
+                        """INSERT INTO memory_operations
                            (operation_type, primary_memory_id, affected_memory_ids, metadata)
                            VALUES ($1, $2, $3, $4)""",
                         "merge",
@@ -230,8 +230,8 @@ class PostgreSQLDeduplicationDatabase(DeduplicationDatabaseInterface):
         try:
             async with self.database_service.pool.acquire() as conn:
                 await conn.execute(
-                    """UPDATE memories 
-                       SET metadata = metadata || $1, updated_at = NOW() 
+                    """UPDATE memories
+                       SET metadata = metadata || $1, updated_at = NOW()
                        WHERE id = $2""",
                     {"is_duplicate": True, "duplicate_of": primary_id, "marked_duplicate_at": str(datetime.now())},
                     memory_id,
@@ -247,9 +247,9 @@ class PostgreSQLDeduplicationDatabase(DeduplicationDatabaseInterface):
         try:
             async with self.database_service.pool.acquire() as conn:
                 await conn.execute(
-                    """UPDATE memories 
-                       SET deleted_at = NOW(), 
-                           metadata = metadata || $1 
+                    """UPDATE memories
+                       SET deleted_at = NOW(),
+                           metadata = metadata || $1
                        WHERE id = $2""",
                     {"deletion_reason": reason, "deleted_by": "deduplication_engine"},
                     memory_id,
@@ -269,9 +269,9 @@ class PostgreSQLDeduplicationDatabase(DeduplicationDatabaseInterface):
                 for memory_id in memory_ids:
                     # Copy memory to backup table
                     await conn.execute(
-                        """INSERT INTO memory_backups 
+                        """INSERT INTO memory_backups
                            (backup_id, original_memory_id, content, metadata, created_at)
-                           SELECT $1, id, content, metadata, created_at 
+                           SELECT $1, id, content, metadata, created_at
                            FROM memories WHERE id = $2""",
                         backup_id,
                         memory_id,

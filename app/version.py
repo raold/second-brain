@@ -8,9 +8,9 @@ from datetime import datetime
 from typing import Any
 
 # Core version information
-__version__ = "2.5.2-RC"
-__version_info__ = (2, 5, 2)
-__build__ = "release-candidate"
+__version__ = "2.5.0"
+__version_info__ = (2, 5, 0)
+__build__ = "stable"
 __release_date__ = "2025-07-21"
 
 # Build and environment information
@@ -65,18 +65,18 @@ def get_current_roadmap_info() -> dict[str, Any]:
     """Get roadmap information for the current version."""
     roadmap = get_cognitive_roadmap()
     current_key = f"v{__version__}"
-    
+
     # Try with full version first
     if current_key in roadmap:
         return roadmap[current_key]
-    
+
     # Try without suffix (e.g., 2.5.2-RC -> 2.5.2)
     if "-" in __version__:
         base_version = __version__.split("-")[0]
         base_key = f"v{base_version}"
         if base_key in roadmap:
             return roadmap[base_key]
-    
+
     return {}
 
 
@@ -105,11 +105,11 @@ def parse_version(version_string: str) -> tuple[int, int, int]:
     """Parse version string to tuple."""
     # Remove 'v' prefix if present
     version = version_string.lstrip("v")
-    
+
     # Remove any suffix like -RC, -dev, etc
     if "-" in version:
         version = version.split("-")[0]
-    
+
     parts = version.split(".")
     return (int(parts[0]), int(parts[1]), int(parts[2]) if len(parts) > 2 else 0)
 
@@ -257,34 +257,23 @@ def get_cognitive_roadmap() -> dict[str, dict[str, Any]]:
                 "pr_validation_automation",
                 "production_readiness_validation",
             ],
-            "status": "current",
+            "status": "completed",
             "release_date": "2025-07-19",
         },
         "v2.5.0": {
-            "codename": "Analytics",
-            "focus": "Advanced Analytics & Performance",
+            "codename": "Intelligence",
+            "focus": "AI-Powered Insights & Sophisticated Ingestion",
             "features": [
-                "real_time_analytics_dashboard",
-                "performance_optimization",
-                "ai_powered_insights",
-                "large_dataset_handling",
-                "caching_strategies",
-            ],
-            "status": "planned",
-            "release_date": "2025-08-31",
-        },
-        "v2.5.2": {
-            "codename": "Ingestion",
-            "focus": "Sophisticated Ingestion Engine",
-            "features": [
+                "ai_powered_insights_engine",
+                "pattern_detection_system",
+                "memory_clustering_algorithms",
+                "knowledge_gap_analysis",
                 "entity_extraction_ner",
                 "topic_modeling_classification",
                 "relationship_detection",
                 "intent_recognition",
                 "automatic_embeddings",
                 "structured_data_extraction",
-                "streaming_architecture",
-                "advanced_validation"
             ],
             "status": "current",
             "release_date": "2025-07-21",

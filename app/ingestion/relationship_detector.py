@@ -2,14 +2,14 @@
 Relationship detection component for identifying connections between entities
 """
 
-import re
-from typing import List, Dict, Any, Optional, Set, Tuple
-from collections import defaultdict
 import logging
+import re
+from collections import defaultdict
+from typing import Any, Optional
 
 try:
     import spacy
-    from spacy.tokens import Doc, Token, Span
+    from spacy.tokens import Doc, Span, Token
     SPACY_AVAILABLE = True
 except ImportError:
     SPACY_AVAILABLE = False
@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 
 class RelationshipDetector:
     """Detect relationships between entities using dependency parsing and patterns"""
-    
+
     def __init__(self, model_name: str = "en_core_web_sm", enable_patterns: bool = True):
         """
         Initialize relationship detector
-        
+
         Args:
             model_name: SpaCy model to use
             enable_patterns: Whether to use pattern-based detection
@@ -37,10 +37,10 @@ class RelationshipDetector:
         self.model_name = model_name
         self.enable_patterns = enable_patterns
         self.nlp = None
-        
+
         # Initialize relationship patterns
         self.relationship_patterns = self._initialize_relationship_patterns()
-        
+
         if SPACY_AVAILABLE:
             try:
                 self.nlp = spacy.load(model_name)
@@ -48,77 +48,77 @@ class RelationshipDetector:
             except Exception as e:
                 logger.warning(f"Failed to load SpaCy model {model_name}: {e}")
                 logger.info("Relationship detection will use pattern matching only")
-    
-    def detect_relationships(self, 
-                           text: str, 
-                           entities: List[Entity],
-                           min_confidence: float = 0.6) -> List[Relationship]:
+
+    def detect_relationships(self,
+                           text: str,
+                           entities: list[Entity],
+                           min_confidence: float = 0.6) -> list[Relationship]:
         """
         Detect relationships between entities
-        
+
         Args:
             text: Input text
             entities: List of extracted entities
             min_confidence: Minimum confidence threshold
-            
+
         Returns:
             List of detected relationships
         """
         if not entities or len(entities) < 2:
             return []
-        
+
         relationships = []
-        
+
         # Dependency parsing based detection
         if self.nlp:
             dep_relationships = self._detect_dependency_relationships(text, entities)
             relationships.extend(dep_relationships)
-        
+
         # Pattern-based detection
         if self.enable_patterns:
             pattern_relationships = self._detect_pattern_relationships(text, entities)
             relationships.extend(pattern_relationships)
-        
+
         # Proximity-based detection
         proximity_relationships = self._detect_proximity_relationships(text, entities)
         relationships.extend(proximity_relationships)
-        
+
         # Coreference-based detection (if entities refer to same thing)
         coref_relationships = self._detect_coreference_relationships(entities)
         relationships.extend(coref_relationships)
-        
+
         # Deduplicate and filter relationships
         relationships = self._deduplicate_relationships(relationships)
         relationships = [r for r in relationships if r.confidence >= min_confidence]
-        
+
         return relationships
-    
-    def _detect_dependency_relationships(self, 
-                                       text: str, 
-                                       entities: List[Entity]) -> List[Relationship]:
+
+    def _detect_dependency_relationships(self,
+                                       text: str,
+                                       entities: list[Entity]) -> list[Relationship]:
         """Detect relationships using dependency parsing"""
         relationships = []
-        
+
         try:
             doc = self.nlp(text)
-            
+
             # Create entity spans in the document
             entity_spans = self._create_entity_spans(doc, entities)
-            
+
             # Analyze dependencies between entities
             for i, (entity1, span1) in enumerate(entity_spans):
                 for j, (entity2, span2) in enumerate(entity_spans[i+1:], i+1):
                     # Find dependency path between entities
                     path = self._find_dependency_path(span1.root, span2.root)
-                    
+
                     if path:
                         # Analyze the path to determine relationship type
                         rel_type, confidence = self._analyze_dependency_path(path)
-                        
+
                         if rel_type:
                             # Extract evidence text
                             evidence = self._extract_evidence(doc, span1, span2)
-                            
+
                             relationships.append(Relationship(
                                 source=entity1,
                                 target=entity2,
@@ -130,37 +130,37 @@ class RelationshipDetector:
                                     "path_length": len(path)
                                 }
                             ))
-        
+
         except Exception as e:
             logger.error(f"Error in dependency relationship detection: {e}")
-        
+
         return relationships
-    
-    def _detect_pattern_relationships(self, 
-                                    text: str, 
-                                    entities: List[Entity]) -> List[Relationship]:
+
+    def _detect_pattern_relationships(self,
+                                    text: str,
+                                    entities: list[Entity]) -> list[Relationship]:
         """Detect relationships using predefined patterns"""
         relationships = []
-        
+
         # Create entity position map
         entity_positions = self._create_entity_position_map(entities)
-        
+
         for pattern_type, patterns in self.relationship_patterns.items():
             for pattern_info in patterns:
                 pattern = pattern_info["pattern"]
                 confidence_boost = pattern_info.get("confidence", 0.8)
-                
+
                 # Find all matches
                 for match in re.finditer(pattern, text, re.IGNORECASE):
                     # Extract entities from capture groups
                     if len(match.groups()) >= 2:
                         entity1_text = match.group(1)
                         entity2_text = match.group(2)
-                        
+
                         # Find matching entities
                         entity1 = self._find_entity_by_text(entities, entity1_text, match.start(1))
                         entity2 = self._find_entity_by_text(entities, entity2_text, match.start(2))
-                        
+
                         if entity1 and entity2 and entity1 != entity2:
                             relationships.append(Relationship(
                                 source=entity1,
@@ -173,39 +173,39 @@ class RelationshipDetector:
                                     "pattern_name": pattern_info.get("name", "unnamed")
                                 }
                             ))
-        
+
         return relationships
-    
-    def _detect_proximity_relationships(self, 
-                                      text: str, 
-                                      entities: List[Entity]) -> List[Relationship]:
+
+    def _detect_proximity_relationships(self,
+                                      text: str,
+                                      entities: list[Entity]) -> list[Relationship]:
         """Detect relationships based on entity proximity"""
         relationships = []
-        
+
         # Sort entities by position
         sorted_entities = sorted(entities, key=lambda e: e.start_pos)
-        
+
         # Check adjacent entities
         for i in range(len(sorted_entities) - 1):
             entity1 = sorted_entities[i]
             entity2 = sorted_entities[i + 1]
-            
+
             # Calculate distance
             distance = entity2.start_pos - entity1.end_pos
-            
+
             # Check if entities are in same sentence
             text_between = text[entity1.end_pos:entity2.start_pos]
-            
+
             # Determine relationship based on context
             if distance < 50 and distance > 0:  # Close proximity
                 # Check for connecting words
                 rel_type, confidence = self._analyze_connecting_text(text_between)
-                
+
                 if not rel_type:
                     # Default to MENTIONED_WITH for close entities
                     rel_type = RelationshipType.MENTIONED_WITH
                     confidence = 0.6 - (distance / 100)  # Closer = higher confidence
-                
+
                 if confidence > 0.5:
                     relationships.append(Relationship(
                         source=entity1,
@@ -218,27 +218,27 @@ class RelationshipDetector:
                             "distance": distance
                         }
                     ))
-        
+
         return relationships
-    
-    def _detect_coreference_relationships(self, entities: List[Entity]) -> List[Relationship]:
+
+    def _detect_coreference_relationships(self, entities: list[Entity]) -> list[Relationship]:
         """Detect when different entities refer to the same thing"""
         relationships = []
-        
+
         # Group entities by normalized form and type
         entity_groups = defaultdict(list)
-        
+
         for entity in entities:
             # Create grouping key
             key = (entity.normalized, entity.type)
             entity_groups[key].append(entity)
-        
+
         # Create relationships within groups
         for (normalized, entity_type), group in entity_groups.items():
             if len(group) > 1:
                 # Sort by position
                 group.sort(key=lambda e: e.start_pos)
-                
+
                 # Create chain of relationships
                 for i in range(len(group) - 1):
                     relationships.append(Relationship(
@@ -252,111 +252,111 @@ class RelationshipDetector:
                             "normalized_form": normalized
                         }
                     ))
-        
+
         return relationships
-    
-    def _create_entity_spans(self, doc: Doc, entities: List[Entity]) -> List[Tuple[Entity, Any]]:
+
+    def _create_entity_spans(self, doc: Doc, entities: list[Entity]) -> list[tuple[Entity, Any]]:
         """Create spaCy spans for entities"""
         entity_spans = []
-        
+
         for entity in entities:
             # Find token indices for entity
             start_token = None
             end_token = None
-            
+
             for token in doc:
                 if token.idx == entity.start_pos:
                     start_token = token.i
                 if token.idx + len(token.text) == entity.end_pos:
                     end_token = token.i + 1
                     break
-            
+
             if start_token is not None and end_token is not None:
                 span = doc[start_token:end_token]
                 entity_spans.append((entity, span))
-        
+
         return entity_spans
-    
-    def _find_dependency_path(self, token1: Any, token2: Any) -> Optional[List[Any]]:
+
+    def _find_dependency_path(self, token1: Any, token2: Any) -> Optional[list[Any]]:
         """Find dependency path between two tokens"""
         if not token1 or not token2:
             return None
-        
+
         # Find common ancestor
         ancestors1 = set(token1.ancestors)
         ancestors2 = set(token2.ancestors)
-        
+
         # Include the tokens themselves
         ancestors1.add(token1)
         ancestors2.add(token2)
-        
+
         common_ancestors = ancestors1 & ancestors2
-        
+
         if not common_ancestors:
             return None
-        
+
         # Find lowest common ancestor (closest to tokens)
-        lca = min(common_ancestors, key=lambda t: 
+        lca = min(common_ancestors, key=lambda t:
                  min(abs(t.i - token1.i), abs(t.i - token2.i)))
-        
+
         # Build path from token1 to lca to token2
         path1 = self._path_to_ancestor(token1, lca)
         path2 = self._path_to_ancestor(token2, lca)
-        
+
         # Combine paths (reverse path1 and append path2)
         full_path = list(reversed(path1[:-1])) + path2
-        
+
         return full_path if len(full_path) <= 5 else None  # Limit path length
-    
-    def _path_to_ancestor(self, token: Any, ancestor: Any) -> List[Any]:
+
+    def _path_to_ancestor(self, token: Any, ancestor: Any) -> list[Any]:
         """Build path from token to ancestor"""
         path = [token]
         current = token
-        
+
         while current != ancestor and current.head != current:
             current = current.head
             path.append(current)
-            
+
             if len(path) > 10:  # Prevent infinite loops
                 break
-        
+
         return path
-    
-    def _analyze_dependency_path(self, path: List[Any]) -> Tuple[Optional[RelationshipType], float]:
+
+    def _analyze_dependency_path(self, path: list[Any]) -> tuple[Optional[RelationshipType], float]:
         """Analyze dependency path to determine relationship type"""
         if not path:
             return None, 0.0
-        
+
         # Extract dependency labels and POS tags
         deps = [token.dep_ for token in path]
         pos_tags = [token.pos_ for token in path]
         lemmas = [token.lemma_.lower() for token in path]
-        
+
         # Check for specific patterns
-        
+
         # WORKS_FOR pattern
         if any(lemma in ["work", "employ", "job"] for lemma in lemmas):
             if "VERB" in pos_tags:
                 return RelationshipType.WORKS_FOR, 0.8
-        
+
         # LOCATED_IN pattern
         if any(lemma in ["locate", "in", "at", "near"] for lemma in lemmas):
             if any(dep in ["prep", "pobj"] for dep in deps):
                 return RelationshipType.LOCATED_IN, 0.75
-        
+
         # CREATED_BY pattern
         if any(lemma in ["create", "make", "build", "develop", "write"] for lemma in lemmas):
             if "VERB" in pos_tags:
                 return RelationshipType.CREATED_BY, 0.8
-        
+
         # PART_OF pattern
         if any(lemma in ["part", "member", "component", "belong"] for lemma in lemmas):
             return RelationshipType.PART_OF, 0.7
-        
+
         # DEPENDS_ON pattern
         if any(lemma in ["depend", "require", "need", "rely"] for lemma in lemmas):
             return RelationshipType.DEPENDS_ON, 0.75
-        
+
         # Temporal relationships
         if any(lemma in ["before", "after", "during", "while"] for lemma in lemmas):
             if "before" in lemmas:
@@ -365,17 +365,17 @@ class RelationshipDetector:
                 return RelationshipType.TEMPORAL_AFTER, 0.8
             else:
                 return RelationshipType.TEMPORAL_DURING, 0.75
-        
+
         # Default to RELATED_TO with lower confidence
         if len(path) <= 3:
             return RelationshipType.RELATED_TO, 0.6
-        
+
         return None, 0.0
-    
-    def _analyze_connecting_text(self, text: str) -> Tuple[Optional[RelationshipType], float]:
+
+    def _analyze_connecting_text(self, text: str) -> tuple[Optional[RelationshipType], float]:
         """Analyze text between entities to determine relationship"""
         text_lower = text.lower().strip()
-        
+
         # Check for specific connecting phrases
         patterns = {
             RelationshipType.WORKS_FOR: [
@@ -407,24 +407,24 @@ class RelationshipDetector:
                 r"\bfollowing\b"
             ]
         }
-        
+
         for rel_type, pattern_list in patterns.items():
             for pattern in pattern_list:
                 if re.search(pattern, text_lower):
                     return rel_type, 0.8
-        
+
         # Check for simple connectors
         if text_lower in [",", "and", "&", "with"]:
             return RelationshipType.MENTIONED_WITH, 0.6
-        
+
         return None, 0.0
-    
+
     def _extract_evidence(self, doc: Doc, span1: Any, span2: Any) -> str:
         """Extract evidence text for relationship"""
         # Get sentence(s) containing both entities
         start_sent = span1.sent
         end_sent = span2.sent
-        
+
         if start_sent == end_sent:
             # Same sentence
             return start_sent.text.strip()
@@ -433,55 +433,55 @@ class RelationshipDetector:
             start_idx = start_sent.start
             end_idx = end_sent.end
             evidence = doc[start_idx:end_idx].text.strip()
-            
+
             # Limit evidence length
             if len(evidence) > 200:
                 # Extract more focused evidence
                 focus_start = max(start_idx, span1.start - 10)
                 focus_end = min(end_idx, span2.end + 10)
                 evidence = "..." + doc[focus_start:focus_end].text.strip() + "..."
-            
+
             return evidence
-    
-    def _find_entity_by_text(self, 
-                           entities: List[Entity], 
-                           text: str, 
+
+    def _find_entity_by_text(self,
+                           entities: list[Entity],
+                           text: str,
                            position: int) -> Optional[Entity]:
         """Find entity matching text near position"""
         text_lower = text.lower().strip()
-        
+
         # First try exact position match
         for entity in entities:
             if entity.start_pos <= position <= entity.end_pos:
                 return entity
-        
+
         # Then try text match within reasonable distance
         for entity in entities:
             if entity.text.lower() == text_lower:
                 if abs(entity.start_pos - position) < 50:
                     return entity
-        
+
         # Try normalized form match
         for entity in entities:
             if entity.normalized == text_lower:
                 if abs(entity.start_pos - position) < 100:
                     return entity
-        
+
         return None
-    
-    def _create_entity_position_map(self, entities: List[Entity]) -> Dict[int, Entity]:
+
+    def _create_entity_position_map(self, entities: list[Entity]) -> dict[int, Entity]:
         """Create a map of positions to entities"""
         position_map = {}
         for entity in entities:
             for pos in range(entity.start_pos, entity.end_pos):
                 position_map[pos] = entity
         return position_map
-    
-    def _deduplicate_relationships(self, relationships: List[Relationship]) -> List[Relationship]:
+
+    def _deduplicate_relationships(self, relationships: list[Relationship]) -> list[Relationship]:
         """Remove duplicate relationships"""
         seen = set()
         unique = []
-        
+
         for rel in relationships:
             # Create a key for the relationship
             key = (
@@ -491,7 +491,7 @@ class RelationshipDetector:
                 rel.source.start_pos,
                 rel.target.start_pos
             )
-            
+
             # Also check reverse for bidirectional relationships
             reverse_key = (
                 rel.target.normalized,
@@ -500,7 +500,7 @@ class RelationshipDetector:
                 rel.target.start_pos,
                 rel.source.start_pos
             )
-            
+
             if key not in seen and reverse_key not in seen:
                 seen.add(key)
                 unique.append(rel)
@@ -517,10 +517,10 @@ class RelationshipDetector:
                     if existing_key == key and rel.confidence > existing.confidence:
                         unique[i] = rel
                         break
-        
+
         return unique
-    
-    def _initialize_relationship_patterns(self) -> Dict[RelationshipType, List[Dict[str, Any]]]:
+
+    def _initialize_relationship_patterns(self) -> dict[RelationshipType, list[dict[str, Any]]]:
         """Initialize regex patterns for relationship detection"""
         return {
             RelationshipType.WORKS_FOR: [
@@ -572,8 +572,8 @@ class RelationshipDetector:
                 }
             ]
         }
-    
-    def get_relationship_statistics(self, relationships: List[Relationship]) -> Dict[str, Any]:
+
+    def get_relationship_statistics(self, relationships: list[Relationship]) -> dict[str, Any]:
         """Get statistics about detected relationships"""
         if not relationships:
             return {
@@ -582,12 +582,12 @@ class RelationshipDetector:
                 "confidence_stats": {},
                 "detection_methods": {}
             }
-        
+
         # Count by type
         type_counts = defaultdict(int)
         for rel in relationships:
             type_counts[rel.type.value] += 1
-        
+
         # Confidence statistics
         confidences = [r.confidence for r in relationships]
         confidence_stats = {
@@ -596,13 +596,13 @@ class RelationshipDetector:
             "max": max(confidences),
             "high_confidence": len([c for c in confidences if c >= 0.8])
         }
-        
+
         # Detection method statistics
         method_counts = defaultdict(int)
         for rel in relationships:
             method = rel.metadata.get("detection_method", "unknown")
             method_counts[method] += 1
-        
+
         return {
             "total_relationships": len(relationships),
             "relationship_types": dict(type_counts),

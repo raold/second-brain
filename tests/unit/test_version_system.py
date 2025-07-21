@@ -124,9 +124,9 @@ class TestVersionSystem:
     def test_increment_version(self):
         """Test version increment functionality"""
         test_cases = [
-            ("patch", "2.5.3"),  # Patch increment: 2.5.2 -> 2.5.3
-            ("minor", "2.6.0"),  # Minor increment: 2.5.2 -> 2.6.0
-            ("major", "3.0.0"),  # Major increment: 2.5.2 -> 3.0.0
+            ("patch", "2.5.1"),  # Patch increment: 2.5.0 -> 2.5.1
+            ("minor", "2.6.0"),  # Minor increment: 2.5.0 -> 2.6.0
+            ("major", "3.0.0"),  # Major increment: 2.5.0 -> 3.0.0
         ]
 
         for bump_type, expected in test_cases:
@@ -141,9 +141,10 @@ class TestVersionSystem:
     def test_is_version_compatible(self):
         """Test version compatibility checking"""
         test_cases = [
-            ("2.5.0", True),  # Same minor, earlier patch
-            ("2.5.1", True),  # Same minor, earlier patch
+            ("2.5.0", True),  # Same version
+            ("2.4.9", True),  # Earlier patch
             ("2.4.0", True),  # Earlier minor
+            ("2.5.1", False),  # Later patch (incompatible)
             ("2.6.0", False),  # Later minor
             ("3.0.0", False),  # Later major
             ("1.9.9", False),  # Earlier major

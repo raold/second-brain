@@ -263,6 +263,7 @@ app.include_router(bulk_router)
 
 # Include insights router
 from app.routes.insights import router as insights_router
+
 app.include_router(insights_router)
 
 # Include bulk operations routes

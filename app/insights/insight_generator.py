@@ -5,45 +5,42 @@ AI-powered insight generation from memory patterns and statistics
 import asyncio
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
-from uuid import UUID, uuid4
+from typing import Any
+from uuid import uuid4
 
 import numpy as np
 
-from .models import (
-    Insight, InsightType, TimeFrame, InsightRequest,
-    UsageStatistics, LearningProgress
-)
+from .models import Insight, InsightRequest, InsightType, TimeFrame, UsageStatistics
 
 
 class InsightGenerator:
     """Generates actionable insights from memory analysis"""
-    
+
     def __init__(self, database):
         self.db = database
-        
+
     async def generate_insights(
         self,
         request: InsightRequest
-    ) -> Tuple[List[Insight], UsageStatistics]:
+    ) -> tuple[list[Insight], UsageStatistics]:
         """Generate insights based on request parameters"""
         # Get memories and usage data
         memories, access_logs = await self._get_data_for_timeframe(request.time_frame)
-        
+
         if not memories:
             return [], self._empty_statistics(request.time_frame)
-            
+
         # Calculate usage statistics
         statistics = await self._calculate_usage_statistics(
             memories,
             access_logs,
             request.time_frame
         )
-        
+
         # Generate insights based on requested types
         insight_types = request.insight_types or list(InsightType)
         insights = []
-        
+
         generation_tasks = []
         for insight_type in insight_types:
             if insight_type == InsightType.USAGE_PATTERN:
@@ -74,34 +71,34 @@ class InsightGenerator:
                 generation_tasks.append(
                     self._generate_importance_shift_insights(memories)
                 )
-                
+
         # Run all generation tasks concurrently
         insight_results = await asyncio.gather(*generation_tasks)
-        
+
         # Flatten and filter results
         for insight_list in insight_results:
             for insight in insight_list:
                 if insight.confidence >= request.min_confidence:
                     insights.append(insight)
-                    
+
         # Sort by impact score and limit
         insights.sort(key=lambda i: i.impact_score, reverse=True)
         insights = insights[:request.limit]
-        
+
         # Add recommendations if requested
         if request.include_recommendations:
             for insight in insights:
                 insight.recommendations = self._generate_recommendations(insight)
-                
+
         return insights, statistics
-    
+
     async def _get_data_for_timeframe(
         self,
         time_frame: TimeFrame
-    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Get memories and access logs for specified timeframe"""
         now = datetime.utcnow()
-        
+
         if time_frame == TimeFrame.DAILY:
             start_date = now - timedelta(days=1)
         elif time_frame == TimeFrame.WEEKLY:
@@ -114,7 +111,7 @@ class InsightGenerator:
             start_date = now - timedelta(days=365)
         else:  # ALL_TIME
             start_date = datetime.min
-            
+
         # Get memories
         memories_query = """
         SELECT * FROM memories
@@ -122,7 +119,7 @@ class InsightGenerator:
         ORDER BY created_at DESC
         """
         memories = await self.db.fetch_all(memories_query, start_date)
-        
+
         # Get access logs
         access_query = """
         SELECT * FROM access_logs
@@ -130,30 +127,30 @@ class InsightGenerator:
         ORDER BY accessed_at DESC
         """
         access_logs = await self.db.fetch_all(access_query, start_date)
-        
+
         return memories, access_logs
-    
+
     async def _calculate_usage_statistics(
         self,
-        memories: List[Dict[str, Any]],
-        access_logs: List[Dict[str, Any]],
+        memories: list[dict[str, Any]],
+        access_logs: list[dict[str, Any]],
         time_frame: TimeFrame
     ) -> UsageStatistics:
         """Calculate comprehensive usage statistics"""
         # Basic counts
         total_memories = len(memories)
         total_accesses = len(access_logs)
-        
+
         # Unique accessed memories
         accessed_memory_ids = set(log['memory_id'] for log in access_logs)
         unique_accessed = len(accessed_memory_ids)
-        
+
         # Most accessed memories
         access_counts = Counter(log['memory_id'] for log in access_logs)
         most_accessed = [
             memory_id for memory_id, _ in access_counts.most_common(10)
         ]
-        
+
         # Access frequency by hour/day
         access_frequency = defaultdict(int)
         for log in access_logs:
@@ -162,7 +159,7 @@ class InsightGenerator:
             else:
                 key = log['accessed_at'].strftime('%Y-%m-%d')
             access_frequency[key] += 1
-            
+
         # Peak usage times
         peak_times = sorted(
             access_frequency.items(),
@@ -170,33 +167,33 @@ class InsightGenerator:
             reverse=True
         )[:5]
         peak_usage_times = [time for time, _ in peak_times]
-        
+
         # Average importance
         avg_importance = np.mean([
             m.get('importance', 0) for m in memories
         ]) if memories else 0.0
-        
+
         # Growth rate
         if time_frame != TimeFrame.ALL_TIME and memories:
             # Compare to previous period
             period_days = self._get_period_days(time_frame)
             prev_start = memories[0]['created_at'] - timedelta(days=period_days * 2)
             prev_end = memories[0]['created_at'] - timedelta(days=period_days)
-            
+
             prev_query = """
             SELECT COUNT(*) as count FROM memories
             WHERE created_at >= $1 AND created_at < $2
             """
             prev_result = await self.db.fetch_one(prev_query, prev_start, prev_end)
             prev_count = prev_result['count'] if prev_result else 0
-            
+
             if prev_count > 0:
                 growth_rate = ((total_memories - prev_count) / prev_count) * 100
             else:
                 growth_rate = 100.0 if total_memories > 0 else 0.0
         else:
             growth_rate = 0.0
-            
+
         return UsageStatistics(
             time_frame=time_frame,
             total_memories=total_memories,
@@ -208,20 +205,20 @@ class InsightGenerator:
             peak_usage_times=peak_usage_times,
             growth_rate=growth_rate
         )
-    
+
     async def _generate_usage_pattern_insights(
         self,
-        memories: List[Dict[str, Any]],
-        access_logs: List[Dict[str, Any]],
+        memories: list[dict[str, Any]],
+        access_logs: list[dict[str, Any]],
         statistics: UsageStatistics
-    ) -> List[Insight]:
+    ) -> list[Insight]:
         """Generate insights about usage patterns"""
         insights = []
-        
+
         # Insight: Memory access concentration
         if statistics.unique_accessed > 0:
             access_ratio = statistics.unique_accessed / statistics.total_memories
-            
+
             if access_ratio < 0.3:
                 insight = Insight(
                     id=uuid4(),
@@ -240,15 +237,15 @@ class InsightGenerator:
                     affected_memories=[]
                 )
                 insights.append(insight)
-                
+
         # Insight: Access time patterns
         if statistics.peak_usage_times:
             peak_hour = statistics.peak_usage_times[0]
             peak_accesses = statistics.access_frequency[peak_hour]
-            
+
             if statistics.total_accesses > 0:
                 peak_concentration = peak_accesses / statistics.total_accesses
-                
+
                 if peak_concentration > 0.3:
                     insight = Insight(
                         id=uuid4(),
@@ -267,17 +264,17 @@ class InsightGenerator:
                         affected_memories=[]
                     )
                     insights.append(insight)
-                    
+
         return insights
-    
+
     async def _generate_knowledge_growth_insights(
         self,
-        memories: List[Dict[str, Any]],
+        memories: list[dict[str, Any]],
         statistics: UsageStatistics
-    ) -> List[Insight]:
+    ) -> list[Insight]:
         """Generate insights about knowledge growth"""
         insights = []
-        
+
         # Insight: Growth acceleration/deceleration
         if statistics.growth_rate != 0:
             if statistics.growth_rate > 50:
@@ -298,7 +295,7 @@ class InsightGenerator:
                     affected_memories=[m['id'] for m in memories[:5]]
                 )
                 insights.append(insight)
-                
+
             elif statistics.growth_rate < -20:
                 insight = Insight(
                     id=uuid4(),
@@ -316,15 +313,15 @@ class InsightGenerator:
                     affected_memories=[]
                 )
                 insights.append(insight)
-                
+
         # Insight: Knowledge diversity
         if memories:
             unique_tags = set()
             for memory in memories:
                 unique_tags.update(memory.get('tags', []))
-                
+
             diversity_score = len(unique_tags) / len(memories)
-            
+
             if diversity_score > 0.7:
                 insight = Insight(
                     id=uuid4(),
@@ -343,32 +340,32 @@ class InsightGenerator:
                     affected_memories=[]
                 )
                 insights.append(insight)
-                
+
         return insights
-    
+
     async def _generate_cluster_insights(
         self,
-        memories: List[Dict[str, Any]]
-    ) -> List[Insight]:
+        memories: list[dict[str, Any]]
+    ) -> list[Insight]:
         """Generate insights about memory clusters"""
         insights = []
-        
+
         # Simple clustering by tags
         tag_clusters = defaultdict(list)
         for memory in memories:
             for tag in memory.get('tags', []):
                 tag_clusters[tag].append(memory)
-                
+
         # Find significant clusters
         significant_clusters = [
             (tag, mems) for tag, mems in tag_clusters.items()
             if len(mems) >= 5
         ]
-        
+
         if significant_clusters:
             # Sort by size
             significant_clusters.sort(key=lambda x: len(x[1]), reverse=True)
-            
+
             top_cluster = significant_clusters[0]
             insight = Insight(
                 id=uuid4(),
@@ -390,32 +387,32 @@ class InsightGenerator:
                 affected_memories=[m['id'] for m in top_cluster[1][:10]]
             )
             insights.append(insight)
-            
+
         return insights
-    
+
     async def _generate_learning_trend_insights(
         self,
-        memories: List[Dict[str, Any]],
+        memories: list[dict[str, Any]],
         statistics: UsageStatistics
-    ) -> List[Insight]:
+    ) -> list[Insight]:
         """Generate insights about learning trends"""
         insights = []
-        
+
         # Analyze importance trends
         if len(memories) >= 10:
             # Split into time buckets
             sorted_memories = sorted(memories, key=lambda m: m['created_at'])
-            
+
             # Compare first half vs second half
             mid_point = len(sorted_memories) // 2
             first_half = sorted_memories[:mid_point]
             second_half = sorted_memories[mid_point:]
-            
+
             first_avg_importance = np.mean([m.get('importance', 0) for m in first_half])
             second_avg_importance = np.mean([m.get('importance', 0) for m in second_half])
-            
+
             importance_change = second_avg_importance - first_avg_importance
-            
+
             if abs(importance_change) > 1.0:
                 trend = "increasing" if importance_change > 0 else "decreasing"
                 insight = Insight(
@@ -435,38 +432,38 @@ class InsightGenerator:
                     affected_memories=[]
                 )
                 insights.append(insight)
-                
+
         return insights
-    
+
     async def _generate_access_pattern_insights(
         self,
-        access_logs: List[Dict[str, Any]],
-        memories: List[Dict[str, Any]]
-    ) -> List[Insight]:
+        access_logs: list[dict[str, Any]],
+        memories: list[dict[str, Any]]
+    ) -> list[Insight]:
         """Generate insights about memory access patterns"""
         insights = []
-        
+
         if not access_logs:
             return insights
-            
+
         # Analyze recency bias
         memory_dict = {m['id']: m for m in memories}
         accessed_memories = []
-        
+
         for log in access_logs:
             if log['memory_id'] in memory_dict:
                 accessed_memories.append(memory_dict[log['memory_id']])
-                
+
         if accessed_memories:
             # Calculate average age of accessed memories
             now = datetime.utcnow()
             ages = [(now - m['created_at']).days for m in accessed_memories]
             avg_age = np.mean(ages)
-            
+
             # Compare to overall average
             all_ages = [(now - m['created_at']).days for m in memories]
             overall_avg_age = np.mean(all_ages)
-            
+
             if avg_age < overall_avg_age * 0.5:
                 insight = Insight(
                     id=uuid4(),
@@ -485,23 +482,23 @@ class InsightGenerator:
                     affected_memories=[]
                 )
                 insights.append(insight)
-                
+
         return insights
-    
+
     async def _generate_tag_evolution_insights(
         self,
-        memories: List[Dict[str, Any]]
-    ) -> List[Insight]:
+        memories: list[dict[str, Any]]
+    ) -> list[Insight]:
         """Generate insights about tag evolution"""
         insights = []
-        
+
         # Group memories by time period
         time_buckets = defaultdict(list)
-        
+
         for memory in memories:
             month_key = memory['created_at'].strftime('%Y-%m')
             time_buckets[month_key].append(memory)
-            
+
         if len(time_buckets) >= 3:
             # Analyze tag changes over time
             monthly_tags = {}
@@ -510,21 +507,21 @@ class InsightGenerator:
                 for mem in month_memories:
                     tags.extend(mem.get('tags', []))
                 monthly_tags[month] = Counter(tags)
-                
+
             # Find emerging tags
             recent_months = sorted(monthly_tags.keys())[-3:]
             older_months = sorted(monthly_tags.keys())[:-3]
-            
+
             recent_tags = set()
             for month in recent_months:
                 recent_tags.update(monthly_tags[month].keys())
-                
+
             older_tags = set()
             for month in older_months:
                 older_tags.update(monthly_tags[month].keys())
-                
+
             new_tags = recent_tags - older_tags
-            
+
             if new_tags:
                 insight = Insight(
                     id=uuid4(),
@@ -545,39 +542,39 @@ class InsightGenerator:
                     affected_memories=[]
                 )
                 insights.append(insight)
-                
+
         return insights
-    
+
     async def _generate_importance_shift_insights(
         self,
-        memories: List[Dict[str, Any]]
-    ) -> List[Insight]:
+        memories: list[dict[str, Any]]
+    ) -> list[Insight]:
         """Generate insights about importance shifts"""
         insights = []
-        
+
         # Group by tags and analyze importance changes
         tag_importance = defaultdict(list)
-        
+
         for memory in memories:
             importance = memory.get('importance', 0)
             for tag in memory.get('tags', []):
                 tag_importance[tag].append((memory['created_at'], importance))
-                
+
         # Find tags with significant importance shifts
         for tag, importance_list in tag_importance.items():
             if len(importance_list) >= 5:
                 # Sort by date
                 importance_list.sort(key=lambda x: x[0])
-                
+
                 # Compare early vs late importance
                 early_imp = [imp for _, imp in importance_list[:len(importance_list)//2]]
                 late_imp = [imp for _, imp in importance_list[len(importance_list)//2:]]
-                
+
                 early_avg = np.mean(early_imp)
                 late_avg = np.mean(late_imp)
-                
+
                 change = late_avg - early_avg
-                
+
                 if abs(change) > 2.0:
                     direction = "increased" if change > 0 else "decreased"
                     insight = Insight(
@@ -599,13 +596,13 @@ class InsightGenerator:
                         affected_memories=[]
                     )
                     insights.append(insight)
-                    
+
         return insights
-    
-    def _generate_recommendations(self, insight: Insight) -> List[str]:
+
+    def _generate_recommendations(self, insight: Insight) -> list[str]:
         """Generate recommendations based on insight type"""
         recommendations = []
-        
+
         if insight.type == InsightType.USAGE_PATTERN:
             if "Low Memory Utilization" in insight.title:
                 recommendations.extend([
@@ -619,7 +616,7 @@ class InsightGenerator:
                     "Diversify your learning schedule",
                     "Set reminders for off-peak learning times"
                 ])
-                
+
         elif insight.type == InsightType.KNOWLEDGE_GROWTH:
             if "Rapid Knowledge Expansion" in insight.title:
                 recommendations.extend([
@@ -633,14 +630,14 @@ class InsightGenerator:
                     "Explore new topics to reignite interest",
                     "Schedule dedicated learning time"
                 ])
-                
+
         elif insight.type == InsightType.MEMORY_CLUSTER:
             recommendations.extend([
                 f"Deepen knowledge in '{insight.data.get('cluster_topic', 'this area')}'",
                 "Connect this cluster with other knowledge areas",
                 "Create summary memories for this topic"
             ])
-            
+
         elif insight.type == InsightType.TAG_EVOLUTION:
             if "Emerging Topics" in insight.title:
                 recommendations.extend([
@@ -648,7 +645,7 @@ class InsightGenerator:
                     "Connect new topics with existing knowledge",
                     "Create foundational memories for new topics"
                 ])
-                
+
         # Default recommendations
         if not recommendations:
             recommendations = [
@@ -656,9 +653,9 @@ class InsightGenerator:
                 "Review insights regularly",
                 "Adjust based on your goals"
             ]
-            
+
         return recommendations[:3]
-    
+
     def _empty_statistics(self, time_frame: TimeFrame) -> UsageStatistics:
         """Return empty statistics object"""
         return UsageStatistics(
@@ -672,7 +669,7 @@ class InsightGenerator:
             peak_usage_times=[],
             growth_rate=0.0
         )
-    
+
     def _get_period_days(self, time_frame: TimeFrame) -> int:
         """Get number of days in time frame"""
         mapping = {

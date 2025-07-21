@@ -204,7 +204,7 @@ class MemoryService:
             async with real_db.pool.acquire() as conn:
                 await conn.execute(
                     """
-                    INSERT INTO search_result_log 
+                    INSERT INTO search_result_log
                         (memory_id, search_query, position, relevance_score)
                         VALUES ($1, $2, $3, $4)
                     """,
@@ -234,7 +234,7 @@ class MemoryService:
                     async with self.database.pool.acquire() as conn:
                         await conn.execute(
                             """
-                            UPDATE search_result_log 
+                            UPDATE search_result_log
                             SET clicked = TRUE, click_timestamp = NOW()
                             WHERE memory_id = $1 AND search_query = $2
                               AND clicked = FALSE
@@ -272,7 +272,7 @@ class MemoryService:
                 async with self.database.pool.acquire() as conn:
                     await conn.execute(
                         """
-                        INSERT INTO user_feedback_log 
+                        INSERT INTO user_feedback_log
                         (memory_id, feedback_type, feedback_value, feedback_text)
                         VALUES ($1, $2, $3, $4)
                     """,

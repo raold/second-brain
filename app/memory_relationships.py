@@ -60,7 +60,7 @@ class MemoryRelationshipAnalyzer:
                 SELECT id, content, embedding, memory_type, importance_score,
                        semantic_metadata, episodic_metadata, procedural_metadata,
                        created_at, updated_at
-                FROM memories 
+                FROM memories
                 WHERE id = $1
             """,
                 memory_id,
@@ -75,7 +75,7 @@ class MemoryRelationshipAnalyzer:
                 SELECT id, content, embedding, memory_type, importance_score,
                        semantic_metadata, episodic_metadata, procedural_metadata,
                        created_at, updated_at
-                FROM memories 
+                FROM memories
                 WHERE id != $1 AND embedding IS NOT NULL
                 ORDER BY importance_score DESC, created_at DESC
                 LIMIT $2
@@ -164,7 +164,7 @@ class MemoryRelationshipAnalyzer:
             SELECT id, content, embedding, memory_type, importance_score,
                    semantic_metadata, episodic_metadata, procedural_metadata,
                    created_at
-            FROM memories 
+            FROM memories
             WHERE {where_clause}
             ORDER BY importance_score DESC
             LIMIT 200
@@ -228,10 +228,10 @@ class MemoryRelationshipAnalyzer:
                 """
                 SELECT id, content, embedding, memory_type, importance_score,
                        created_at, updated_at
-                FROM memories 
-                WHERE (content ~* $1 OR 
+                FROM memories
+                WHERE (content ~* $1 OR
                        semantic_metadata::text ~* $1 OR
-                       episodic_metadata::text ~* $1 OR 
+                       episodic_metadata::text ~* $1 OR
                        procedural_metadata::text ~* $1)
                 AND created_at >= $2
                 AND embedding IS NOT NULL

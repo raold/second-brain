@@ -70,30 +70,30 @@ class Database:
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     content TEXT NOT NULL,
                     embedding vector(1536),
-                    
+
                     -- Memory type classification
                     memory_type memory_type_enum NOT NULL DEFAULT 'semantic',
-                    
+
                     -- Cognitive metadata
                     importance_score DECIMAL(5,4) DEFAULT 0.5000,
                     access_count INTEGER DEFAULT 0,
                     last_accessed TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                    
+
                     -- Type-specific metadata
                     semantic_metadata JSONB DEFAULT '{}',
                     episodic_metadata JSONB DEFAULT '{}',
                     procedural_metadata JSONB DEFAULT '{}',
-                    
+
                     -- Consolidation tracking
                     consolidation_score DECIMAL(5,4) DEFAULT 0.5000,
                     last_consolidated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                     decay_applied BOOLEAN DEFAULT FALSE,
-                    
+
                     -- General metadata (legacy compatibility)
                     metadata JSONB DEFAULT '{}',
-                    
+
                     -- Constraints
                     CONSTRAINT valid_importance CHECK (importance_score >= 0.0000 AND importance_score <= 1.0000),
                     CONSTRAINT valid_consolidation CHECK (consolidation_score >= 0.0000 AND consolidation_score <= 1.0000)
@@ -102,22 +102,22 @@ class Database:
 
             # Create specialized indices for memory types
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_memories_memory_type 
+                CREATE INDEX IF NOT EXISTS idx_memories_memory_type
                 ON memories(memory_type)
             """)
 
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_memories_importance 
+                CREATE INDEX IF NOT EXISTS idx_memories_importance
                 ON memories(importance_score DESC)
             """)
 
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_memories_consolidation 
+                CREATE INDEX IF NOT EXISTS idx_memories_consolidation
                 ON memories(consolidation_score DESC)
             """)
 
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_memories_last_accessed 
+                CREATE INDEX IF NOT EXISTS idx_memories_last_accessed
                 ON memories(last_accessed DESC)
             """)
 
@@ -135,8 +135,8 @@ class Database:
 
             # Vector index with importance weighting
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_memories_embedding_weighted 
-                ON memories USING ivfflat (embedding vector_cosine_ops) 
+                CREATE INDEX IF NOT EXISTS idx_memories_embedding_weighted
+                ON memories USING ivfflat (embedding vector_cosine_ops)
                 WHERE importance_score > 0.1000
             """)
 
@@ -315,15 +315,15 @@ class Database:
         async with self.pool.acquire() as conn:
             query_sql = f"""
                 SELECT
-                    id, content, memory_type, 
+                    id, content, memory_type,
                     importance_score, access_count, last_accessed,
                     semantic_metadata, episodic_metadata, procedural_metadata,
                     consolidation_score, metadata, created_at, updated_at,
-                    
+
                     -- Multi-dimensional scoring
                     (1 - (embedding <=> $1::vector)) as vector_similarity,
                     importance_score as importance_weight,
-                    
+
                     -- Combined contextual score
                     (
                         (1 - (embedding <=> $1::vector)) * 0.4 +
@@ -331,7 +331,7 @@ class Database:
                         consolidation_score * 0.15 +
                         LEAST(access_count / 10.0, 1.0) * 0.2
                     ) as contextual_score
-                    
+
                 FROM memories
                 WHERE {where_clause}
                 ORDER BY contextual_score DESC, vector_similarity DESC
@@ -346,7 +346,7 @@ class Database:
             if memory_ids:
                 await conn.execute(
                     """
-                    UPDATE memories 
+                    UPDATE memories
                     SET access_count = access_count + 1, last_accessed = NOW()
                     WHERE id = ANY($1)
                     """,
@@ -611,7 +611,7 @@ class Database:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
                 """
-                SELECT 
+                SELECT
                     id, content, memory_type, importance_score, access_count, last_accessed,
                     semantic_metadata, episodic_metadata, procedural_metadata,
                     consolidation_score, metadata, created_at, updated_at
@@ -627,7 +627,7 @@ class Database:
             # Update access count
             await conn.execute(
                 """
-                UPDATE memories 
+                UPDATE memories
                 SET access_count = access_count + 1, last_accessed = NOW()
                 WHERE id = $1
                 """,
@@ -676,7 +676,7 @@ class Database:
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
                 """
-                SELECT 
+                SELECT
                     id, content, memory_type, importance_score, access_count, last_accessed,
                     semantic_metadata, episodic_metadata, procedural_metadata,
                     consolidation_score, metadata, created_at, updated_at

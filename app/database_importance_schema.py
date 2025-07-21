@@ -92,49 +92,49 @@ async def setup_importance_tracking_schema(pool: asyncpg.Pool) -> bool:
 
             # Performance indexes for access patterns
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_memory_access_log_memory_id 
+                CREATE INDEX IF NOT EXISTS idx_memory_access_log_memory_id
                 ON memory_access_log(memory_id);
             """)
 
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_memory_access_log_accessed_at 
+                CREATE INDEX IF NOT EXISTS idx_memory_access_log_accessed_at
                 ON memory_access_log(accessed_at);
             """)
 
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_memory_access_log_recent 
-                ON memory_access_log(memory_id, accessed_at) 
+                CREATE INDEX IF NOT EXISTS idx_memory_access_log_recent
+                ON memory_access_log(memory_id, accessed_at)
                 WHERE accessed_at > NOW() - INTERVAL '30 days';
             """)
 
             # Search result indexes
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_search_result_log_memory_id 
+                CREATE INDEX IF NOT EXISTS idx_search_result_log_memory_id
                 ON search_result_log(memory_id);
             """)
 
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_search_result_log_clicked 
-                ON search_result_log(memory_id, clicked, click_timestamp) 
+                CREATE INDEX IF NOT EXISTS idx_search_result_log_clicked
+                ON search_result_log(memory_id, clicked, click_timestamp)
                 WHERE clicked = TRUE;
             """)
 
             # User feedback indexes
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_user_feedback_log_memory_id 
+                CREATE INDEX IF NOT EXISTS idx_user_feedback_log_memory_id
                 ON user_feedback_log(memory_id, feedback_type);
             """)
 
             # Importance calculation indexes
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_importance_calculation_log_memory_id 
+                CREATE INDEX IF NOT EXISTS idx_importance_calculation_log_memory_id
                 ON importance_calculation_log(memory_id, calculated_at);
             """)
 
             # Memory-specific performance views
             await conn.execute("""
                 CREATE OR REPLACE VIEW memory_access_summary AS
-                SELECT 
+                SELECT
                     m.id,
                     m.content[1:100] as content_preview,
                     m.memory_type,
@@ -149,15 +149,15 @@ async def setup_importance_tracking_schema(pool: asyncpg.Pool) -> bool:
                     COALESCE(feedback.negative_feedback, 0) as negative_feedback
                 FROM memories m
                 LEFT JOIN (
-                    SELECT 
-                        memory_id, 
+                    SELECT
+                        memory_id,
                         COUNT(*) as recent_accesses
-                    FROM memory_access_log 
+                    FROM memory_access_log
                     WHERE accessed_at > NOW() - INTERVAL '7 days'
                     GROUP BY memory_id
                 ) recent ON m.id = recent.memory_id
                 LEFT JOIN (
-                    SELECT 
+                    SELECT
                         memory_id,
                         COUNT(*) as search_appearances,
                         AVG(position) as avg_position,
@@ -166,7 +166,7 @@ async def setup_importance_tracking_schema(pool: asyncpg.Pool) -> bool:
                     GROUP BY memory_id
                 ) search ON m.id = search.memory_id
                 LEFT JOIN (
-                    SELECT 
+                    SELECT
                         memory_id,
                         SUM(CASE WHEN feedback_type IN ('upvote', 'save', 'share') THEN 1 ELSE 0 END) as positive_feedback,
                         SUM(CASE WHEN feedback_type IN ('downvote') THEN 1 ELSE 0 END) as negative_feedback
@@ -180,7 +180,7 @@ async def setup_importance_tracking_schema(pool: asyncpg.Pool) -> bool:
                 CREATE OR REPLACE FUNCTION update_memory_access_count()
                 RETURNS TRIGGER AS $$
                 BEGIN
-                    UPDATE memories 
+                    UPDATE memories
                     SET access_count = access_count + 1,
                         last_accessed = NEW.accessed_at
                     WHERE id = NEW.memory_id;
@@ -213,7 +213,7 @@ async def setup_importance_tracking_schema(pool: asyncpg.Pool) -> bool:
                 ) AS $$
                 BEGIN
                     RETURN QUERY
-                    SELECT 
+                    SELECT
                         COUNT(*) as total_memories,
                         AVG(importance_score) as avg_importance,
                         COUNT(*) FILTER (WHERE importance_score >= 0.8) as high_importance_count,
@@ -244,7 +244,7 @@ async def create_sample_access_data(pool: asyncpg.Pool, memory_id: str) -> None:
             for i in range(10):
                 await conn.execute(
                     """
-                    INSERT INTO memory_access_log 
+                    INSERT INTO memory_access_log
                     (memory_id, access_type, search_position, accessed_at)
                     VALUES ($1, $2, $3, NOW() - INTERVAL '%s days')
                 """,
@@ -259,7 +259,7 @@ async def create_sample_access_data(pool: asyncpg.Pool, memory_id: str) -> None:
             for i, query in enumerate(queries):
                 await conn.execute(
                     """
-                    INSERT INTO search_result_log 
+                    INSERT INTO search_result_log
                     (memory_id, search_query, position, relevance_score, clicked)
                     VALUES ($1, $2, $3, $4, $5)
                 """,
@@ -273,7 +273,7 @@ async def create_sample_access_data(pool: asyncpg.Pool, memory_id: str) -> None:
             # Add user feedback
             await conn.execute(
                 """
-                INSERT INTO user_feedback_log 
+                INSERT INTO user_feedback_log
                 (memory_id, feedback_type, feedback_value)
                 VALUES ($1, 'upvote', 1), ($1, 'save', 1)
             """,
@@ -297,35 +297,35 @@ async def cleanup_old_access_logs(pool: asyncpg.Pool, days_to_keep: Any) -> dict
 
             # Count records to be cleaned
             old_access_count = await conn.fetchval(f"""
-                SELECT COUNT(*) FROM memory_access_log 
+                SELECT COUNT(*) FROM memory_access_log
                 WHERE accessed_at < {cutoff_date}
             """)
 
             old_search_count = await conn.fetchval(f"""
-                SELECT COUNT(*) FROM search_result_log 
+                SELECT COUNT(*) FROM search_result_log
                 WHERE search_timestamp < {cutoff_date}
             """)
 
             # Clean up old access logs (keep summary in memories table)
             await conn.execute(f"""
-                DELETE FROM memory_access_log 
+                DELETE FROM memory_access_log
                 WHERE accessed_at < {cutoff_date}
             """)
 
             # Clean up old search logs (keep summary data)
             await conn.execute(f"""
-                DELETE FROM search_result_log 
+                DELETE FROM search_result_log
                 WHERE search_timestamp < {cutoff_date}
             """)
 
             # Clean up old importance calculation logs (keep recent ones for analysis)
             old_calc_count = await conn.fetchval(f"""
-                SELECT COUNT(*) FROM importance_calculation_log 
+                SELECT COUNT(*) FROM importance_calculation_log
                 WHERE calculated_at < {cutoff_date}
             """)
 
             await conn.execute(f"""
-                DELETE FROM importance_calculation_log 
+                DELETE FROM importance_calculation_log
                 WHERE calculated_at < {cutoff_date}
             """)
 
@@ -351,7 +351,7 @@ async def get_memory_importance_history(pool: asyncpg.Pool, memory_id: str, limi
         async with pool.acquire() as conn:
             history = await conn.fetch(
                 """
-                SELECT 
+                SELECT
                     old_score,
                     new_score,
                     frequency_score,

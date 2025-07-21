@@ -191,7 +191,7 @@ async def add_user_feedback(feedback: UserFeedbackRequest):
                 async with database.pool.acquire() as conn:
                     await conn.execute(
                         """
-                        INSERT INTO user_feedback_log 
+                        INSERT INTO user_feedback_log
                         (memory_id, feedback_type, feedback_value, feedback_text)
                         VALUES ($1, $2, $3, $4)
                     """,

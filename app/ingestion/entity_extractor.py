@@ -2,10 +2,9 @@
 Entity extraction component for the sophisticated ingestion engine
 """
 
-import re
-from typing import List, Dict, Any, Optional, Set, Tuple
-from datetime import datetime
 import logging
+import re
+from typing import Any, Optional
 
 try:
     import spacy
@@ -21,11 +20,11 @@ logger = logging.getLogger(__name__)
 
 class EntityExtractor:
     """Sophisticated entity extraction using SpaCy and custom patterns"""
-    
+
     def __init__(self, model_name: str = "en_core_web_sm", enable_custom: bool = True):
         """
         Initialize entity extractor
-        
+
         Args:
             model_name: SpaCy model to use
             enable_custom: Whether to enable custom entity patterns
@@ -34,7 +33,7 @@ class EntityExtractor:
         self.enable_custom = enable_custom
         self.nlp = None
         self.custom_patterns = self._initialize_custom_patterns()
-        
+
         if SPACY_AVAILABLE:
             try:
                 self.nlp = spacy.load(model_name)
@@ -42,50 +41,50 @@ class EntityExtractor:
             except Exception as e:
                 logger.warning(f"Failed to load SpaCy model {model_name}: {e}")
                 logger.info("Entity extraction will use pattern matching only")
-    
-    def extract_entities(self, text: str, min_confidence: float = 0.7) -> List[Entity]:
+
+    def extract_entities(self, text: str, min_confidence: float = 0.7) -> list[Entity]:
         """
         Extract entities from text using NER and custom patterns
-        
+
         Args:
             text: Input text to extract entities from
             min_confidence: Minimum confidence threshold
-            
+
         Returns:
             List of extracted entities
         """
         entities = []
-        
+
         # SpaCy NER extraction
         if self.nlp:
             entities.extend(self._extract_spacy_entities(text, min_confidence))
-        
+
         # Custom pattern extraction
         if self.enable_custom:
             entities.extend(self._extract_custom_entities(text))
-        
+
         # Deduplicate and merge overlapping entities
         entities = self._deduplicate_entities(entities)
-        
+
         # Normalize entities
         entities = self._normalize_entities(entities)
-        
+
         return entities
-    
-    def _extract_spacy_entities(self, text: str, min_confidence: float) -> List[Entity]:
+
+    def _extract_spacy_entities(self, text: str, min_confidence: float) -> list[Entity]:
         """Extract entities using SpaCy NER"""
         entities = []
-        
+
         try:
             doc = self.nlp(text)
-            
+
             # Standard NER entities
             for ent in doc.ents:
                 entity_type = self._map_spacy_to_entity_type(ent.label_)
                 if entity_type:
                     # SpaCy doesn't provide confidence scores, so we use heuristics
                     confidence = self._calculate_entity_confidence(ent)
-                    
+
                     if confidence >= min_confidence:
                         entities.append(Entity(
                             text=ent.text,
@@ -99,14 +98,14 @@ class EntityExtractor:
                                 "source": "spacy_ner"
                             }
                         ))
-            
+
             # Extract additional entities from noun phrases
             for chunk in doc.noun_chunks:
                 if self._is_potential_entity(chunk):
                     entity_type = self._classify_noun_chunk(chunk)
                     if entity_type:
                         confidence = self._calculate_chunk_confidence(chunk)
-                        
+
                         if confidence >= min_confidence:
                             entities.append(Entity(
                                 text=chunk.text,
@@ -120,25 +119,25 @@ class EntityExtractor:
                                     "root": chunk.root.text
                                 }
                             ))
-        
+
         except Exception as e:
             logger.error(f"Error in SpaCy entity extraction: {e}")
-        
+
         return entities
-    
-    def _extract_custom_entities(self, text: str) -> List[Entity]:
+
+    def _extract_custom_entities(self, text: str) -> list[Entity]:
         """Extract entities using custom regex patterns"""
         entities = []
-        
+
         for pattern_type, patterns in self.custom_patterns.items():
             for pattern_info in patterns:
                 pattern = pattern_info["pattern"]
                 confidence = pattern_info.get("confidence", 0.9)
-                
+
                 for match in re.finditer(pattern, text, re.IGNORECASE):
                     # Extract the main group or full match
                     entity_text = match.group(1) if len(match.groups()) > 0 else match.group(0)
-                    
+
                     entities.append(Entity(
                         text=entity_text,
                         type=pattern_type,
@@ -151,10 +150,10 @@ class EntityExtractor:
                             "pattern_name": pattern_info.get("name", "unnamed")
                         }
                     ))
-        
+
         return entities
-    
-    def _initialize_custom_patterns(self) -> Dict[EntityType, List[Dict[str, Any]]]:
+
+    def _initialize_custom_patterns(self) -> dict[EntityType, list[dict[str, Any]]]:
         """Initialize custom regex patterns for entity extraction"""
         return {
             EntityType.EMAIL: [
@@ -242,7 +241,7 @@ class EntityExtractor:
                 }
             ]
         }
-    
+
     def _map_spacy_to_entity_type(self, spacy_label: str) -> Optional[EntityType]:
         """Map SpaCy NER labels to our entity types"""
         mapping = {
@@ -257,7 +256,7 @@ class EntityExtractor:
             "PRODUCT": EntityType.TECHNOLOGY,
         }
         return mapping.get(spacy_label)
-    
+
     def _calculate_entity_confidence(self, ent: Any) -> float:
         """Calculate confidence score for SpaCy entity"""
         # Base confidence on entity label
@@ -269,140 +268,140 @@ class EntityExtractor:
             "DATE": 0.90,
             "TIME": 0.85,
         }.get(ent.label_, 0.70)
-        
+
         # Adjust based on entity length and context
         length_factor = min(1.0, len(ent.text.split()) / 3)
-        
+
         # Check if entity is in sentence start (often more reliable)
         position_factor = 1.1 if ent.start == ent.sent.start else 1.0
-        
+
         return min(0.95, label_confidence * length_factor * position_factor)
-    
+
     def _calculate_chunk_confidence(self, chunk: Any) -> float:
         """Calculate confidence for noun chunk as entity"""
         # Base confidence on chunk properties
         base_confidence = 0.60
-        
+
         # Boost for proper nouns
         if any(token.pos_ == "PROPN" for token in chunk):
             base_confidence += 0.15
-        
+
         # Boost for capitalized chunks
         if chunk.text[0].isupper():
             base_confidence += 0.10
-        
+
         # Penalty for very short or very long chunks
         word_count = len(chunk.text.split())
         if word_count == 1:
             base_confidence -= 0.10
         elif word_count > 5:
             base_confidence -= 0.15
-        
+
         return min(0.90, max(0.30, base_confidence))
-    
+
     def _is_potential_entity(self, chunk: Any) -> bool:
         """Check if noun chunk could be an entity"""
         # Skip chunks that are too short or too long
         word_count = len(chunk.text.split())
         if word_count < 1 or word_count > 6:
             return False
-        
+
         # Skip common words
         if chunk.text.lower() in {"it", "this", "that", "these", "those", "something", "someone"}:
             return False
-        
+
         # Check for at least one proper noun or capitalized word
         has_proper = any(token.pos_ == "PROPN" for token in chunk)
         is_capitalized = chunk.text[0].isupper()
-        
+
         return has_proper or is_capitalized
-    
+
     def _classify_noun_chunk(self, chunk: Any) -> Optional[EntityType]:
         """Classify noun chunk into entity type"""
         text_lower = chunk.text.lower()
-        
+
         # Check for technology indicators
         tech_keywords = {"system", "software", "application", "platform", "framework", "library", "api", "sdk"}
         if any(keyword in text_lower for keyword in tech_keywords):
             return EntityType.TECHNOLOGY
-        
+
         # Check for project indicators
         project_keywords = {"project", "initiative", "program", "campaign", "effort"}
         if any(keyword in text_lower for keyword in project_keywords):
             return EntityType.PROJECT
-        
+
         # Check for concept indicators
         if chunk.root.pos_ in {"NOUN", "PROPN"} and len(chunk.text.split()) > 1:
             return EntityType.CONCEPT
-        
+
         # Default to concept for other proper nouns
         if any(token.pos_ == "PROPN" for token in chunk):
             return EntityType.CONCEPT
-        
+
         return None
-    
-    def _deduplicate_entities(self, entities: List[Entity]) -> List[Entity]:
+
+    def _deduplicate_entities(self, entities: list[Entity]) -> list[Entity]:
         """Remove duplicate and overlapping entities"""
         if not entities:
             return []
-        
+
         # Sort by start position and confidence
         sorted_entities = sorted(entities, key=lambda e: (e.start_pos, -e.confidence))
-        
+
         deduplicated = []
         last_end = -1
-        
+
         for entity in sorted_entities:
             # Skip if this entity overlaps with a previous one
             if entity.start_pos < last_end:
                 continue
-            
+
             # Check for exact duplicates in different positions
             is_duplicate = False
             for existing in deduplicated:
-                if (entity.normalized == existing.normalized and 
+                if (entity.normalized == existing.normalized and
                     entity.type == existing.type and
                     abs(entity.start_pos - existing.start_pos) < 50):
                     is_duplicate = True
                     break
-            
+
             if not is_duplicate:
                 deduplicated.append(entity)
                 last_end = entity.end_pos
-        
+
         return deduplicated
-    
-    def _normalize_entities(self, entities: List[Entity]) -> List[Entity]:
+
+    def _normalize_entities(self, entities: list[Entity]) -> list[Entity]:
         """Normalize entity text and add additional metadata"""
         normalized = []
-        
+
         for entity in entities:
             # Update normalized form if not already set
             if not entity.normalized:
                 entity.normalized = self._normalize_text(entity.text)
-            
+
             # Add additional metadata
             entity.metadata["length"] = len(entity.text)
             entity.metadata["word_count"] = len(entity.text.split())
-            
+
             normalized.append(entity)
-        
+
         return normalized
-    
+
     def _normalize_text(self, text: str) -> str:
         """Normalize entity text for comparison"""
         # Remove extra whitespace
         normalized = " ".join(text.split())
-        
+
         # Convert to lowercase for comparison
         normalized = normalized.lower()
-        
+
         # Remove common punctuation from edges
         normalized = normalized.strip(".,;:!?'\"")
-        
+
         return normalized
-    
-    def get_entity_statistics(self, entities: List[Entity]) -> Dict[str, Any]:
+
+    def get_entity_statistics(self, entities: list[Entity]) -> dict[str, Any]:
         """Get statistics about extracted entities"""
         if not entities:
             return {
@@ -411,12 +410,12 @@ class EntityExtractor:
                 "confidence_stats": {},
                 "extraction_sources": {}
             }
-        
+
         # Count by type
         type_counts = {}
         for entity in entities:
             type_counts[entity.type.value] = type_counts.get(entity.type.value, 0) + 1
-        
+
         # Confidence statistics
         confidences = [e.confidence for e in entities]
         confidence_stats = {
@@ -425,13 +424,13 @@ class EntityExtractor:
             "max": max(confidences),
             "high_confidence": len([c for c in confidences if c >= 0.8])
         }
-        
+
         # Source statistics
         source_counts = {}
         for entity in entities:
             source = entity.metadata.get("source", "unknown")
             source_counts[source] = source_counts.get(source, 0) + 1
-        
+
         return {
             "total_entities": len(entities),
             "entity_types": type_counts,

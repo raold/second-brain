@@ -325,7 +325,7 @@ class AddMemoryTypeClassification(MemoryDataMigration):
             # Check that some memories have been classified
             async with self.pool.acquire() as conn:
                 count = await conn.fetchval("""
-                    SELECT COUNT(*) FROM memories 
+                    SELECT COUNT(*) FROM memories
                     WHERE memory_type IN ('episodic', 'procedural', 'semantic')
                     AND metadata->>'classification' IS NOT NULL
                 """)
@@ -357,7 +357,7 @@ class ConsolidateDuplicateMemories(MemoryDataMigration):
             # Use vector similarity to find potential duplicates
             rows = await conn.fetch("""
                 WITH similarity_pairs AS (
-                    SELECT 
+                    SELECT
                         m1.id as id1,
                         m2.id as id2,
                         m1.content as content1,

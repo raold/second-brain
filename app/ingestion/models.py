@@ -4,7 +4,7 @@ Data models for the sophisticated ingestion engine
 
 from datetime import datetime
 from enum import Enum
-from typing import List, Dict, Any, Optional, Set
+from typing import Any, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -73,8 +73,8 @@ class Entity(BaseModel):
     start_pos: int = Field(..., description="Start position in text")
     end_pos: int = Field(..., description="End position in text")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Extraction confidence")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional entity metadata")
-    
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional entity metadata")
+
     @field_validator('confidence')
     @classmethod
     def validate_confidence(cls, v: float) -> float:
@@ -88,34 +88,34 @@ class Relationship(BaseModel):
     type: RelationshipType = Field(..., description="Type of relationship")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Relationship confidence")
     evidence: Optional[str] = Field(None, description="Text evidence for relationship")
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class Topic(BaseModel):
     """Represents an extracted topic"""
     name: str = Field(..., description="Topic name")
-    keywords: List[str] = Field(..., description="Associated keywords")
+    keywords: list[str] = Field(..., description="Associated keywords")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Topic confidence")
     relevance: float = Field(..., ge=0.0, le=1.0, description="Relevance to content")
-    hierarchy: Optional[List[str]] = Field(None, description="Topic hierarchy path")
+    hierarchy: Optional[list[str]] = Field(None, description="Topic hierarchy path")
 
 
 class Intent(BaseModel):
     """Represents extracted user intent"""
     type: IntentType = Field(..., description="Primary intent type")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Intent confidence")
-    action_items: List[str] = Field(default_factory=list, description="Extracted action items")
+    action_items: list[str] = Field(default_factory=list, description="Extracted action items")
     urgency: Optional[float] = Field(None, ge=0.0, le=1.0, description="Urgency score")
     sentiment: Optional[float] = Field(None, ge=-1.0, le=1.0, description="Sentiment score")
 
 
 class StructuredData(BaseModel):
     """Represents extracted structured data"""
-    key_value_pairs: Dict[str, Any] = Field(default_factory=dict)
-    lists: Dict[str, List[str]] = Field(default_factory=dict)
-    tables: List[Dict[str, Any]] = Field(default_factory=list)
-    code_snippets: List[Dict[str, str]] = Field(default_factory=list)
-    metadata_fields: Dict[str, Any] = Field(default_factory=dict)
+    key_value_pairs: dict[str, Any] = Field(default_factory=dict)
+    lists: dict[str, list[str]] = Field(default_factory=dict)
+    tables: list[dict[str, Any]] = Field(default_factory=list)
+    code_snippets: list[dict[str, str]] = Field(default_factory=list)
+    metadata_fields: dict[str, Any] = Field(default_factory=dict)
 
 
 class EmbeddingMetadata(BaseModel):
@@ -132,35 +132,35 @@ class ProcessedContent(BaseModel):
     # Original content
     original_content: str = Field(..., description="Original input content")
     content_hash: str = Field(..., description="Hash of original content")
-    
+
     # Extracted entities and relationships
-    entities: List[Entity] = Field(default_factory=list)
-    relationships: List[Relationship] = Field(default_factory=list)
-    
+    entities: list[Entity] = Field(default_factory=list)
+    relationships: list[Relationship] = Field(default_factory=list)
+
     # Topics and classification
-    topics: List[Topic] = Field(default_factory=list)
+    topics: list[Topic] = Field(default_factory=list)
     primary_topic: Optional[Topic] = None
     domain: Optional[str] = Field(None, description="Content domain")
-    
+
     # Intent and metadata
     intent: Optional[Intent] = None
     quality: ContentQuality = Field(default=ContentQuality.MEDIUM)
     completeness_score: float = Field(default=0.5, ge=0.0, le=1.0)
-    
+
     # Structured data
     structured_data: Optional[StructuredData] = None
-    
+
     # Embeddings
-    embeddings: Dict[str, List[float]] = Field(default_factory=dict)
+    embeddings: dict[str, list[float]] = Field(default_factory=dict)
     embedding_metadata: Optional[EmbeddingMetadata] = None
-    
+
     # Processing metadata
     processed_at: datetime = Field(default_factory=datetime.utcnow)
     processing_time_ms: Optional[int] = None
     processor_version: str = Field(default="1.0.0")
-    
+
     # Suggested metadata for storage
-    suggested_tags: List[str] = Field(default_factory=list)
+    suggested_tags: list[str] = Field(default_factory=list)
     suggested_memory_type: Optional[str] = None
     suggested_importance: float = Field(default=0.5, ge=0.0, le=1.0)
 
@@ -168,12 +168,12 @@ class ProcessedContent(BaseModel):
 class IngestionRequest(BaseModel):
     """Request model for content ingestion"""
     content: str = Field(..., description="Content to ingest", min_length=1)
-    
+
     # Optional context
-    user_context: Optional[Dict[str, Any]] = Field(None, description="User context for personalization")
+    user_context: Optional[dict[str, Any]] = Field(None, description="User context for personalization")
     domain_hint: Optional[str] = Field(None, description="Hint about content domain")
     language: Optional[str] = Field(default="en", description="Content language")
-    
+
     # Processing options
     extract_entities: bool = Field(default=True)
     extract_relationships: bool = Field(default=True)
@@ -181,7 +181,7 @@ class IngestionRequest(BaseModel):
     detect_intent: bool = Field(default=True)
     extract_structured: bool = Field(default=True)
     generate_embeddings: bool = Field(default=True)
-    
+
     # Performance options
     fast_mode: bool = Field(default=False, description="Use faster, less accurate models")
     max_processing_time: Optional[int] = Field(None, description="Max processing time in ms")
@@ -193,9 +193,9 @@ class IngestionResponse(BaseModel):
     status: str = Field(..., description="Processing status")
     processed_content: Optional[ProcessedContent] = None
     memory_id: Optional[str] = Field(None, description="ID of created memory if stored")
-    errors: List[str] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
-    processing_stats: Dict[str, Any] = Field(default_factory=dict)
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    processing_stats: dict[str, Any] = Field(default_factory=dict)
 
 
 class IngestionConfig(BaseModel):
@@ -204,21 +204,21 @@ class IngestionConfig(BaseModel):
     entity_model: str = Field(default="en_core_web_sm", description="SpaCy model for NER")
     embedding_model: str = Field(default="text-embedding-ada-002", description="OpenAI embedding model")
     classification_model: str = Field(default="bert-base-uncased", description="Classification model")
-    
+
     # Processing thresholds
     min_entity_confidence: float = Field(default=0.7, ge=0.0, le=1.0)
     min_relationship_confidence: float = Field(default=0.6, ge=0.0, le=1.0)
     min_topic_relevance: float = Field(default=0.5, ge=0.0, le=1.0)
-    
+
     # Performance settings
     max_entities_per_content: int = Field(default=100, ge=1)
     max_relationships_per_content: int = Field(default=50, ge=1)
     max_topics_per_content: int = Field(default=10, ge=1)
-    
+
     # Chunking settings
     chunk_size: int = Field(default=1000, ge=100)
     chunk_overlap: int = Field(default=200, ge=0)
-    
+
     # Feature flags
     enable_coreference_resolution: bool = Field(default=True)
     enable_dependency_parsing: bool = Field(default=True)

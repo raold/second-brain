@@ -336,11 +336,11 @@ class AddImportanceScoreToMemories(DatabaseSchemaMigration):
     async def get_forward_statements(self) -> list[str]:
         return [
             """
-            ALTER TABLE memories 
+            ALTER TABLE memories
             ADD COLUMN IF NOT EXISTS importance_score DECIMAL(5,4) DEFAULT 0.5
             """,
             """
-            CREATE INDEX IF NOT EXISTS idx_memories_importance 
+            CREATE INDEX IF NOT EXISTS idx_memories_importance
             ON memories(importance_score DESC)
             """,
         ]
@@ -356,7 +356,7 @@ class AddImportanceScoreToMemories(DatabaseSchemaMigration):
         exists = await conn.fetchval("""
             SELECT EXISTS(
                 SELECT 1 FROM information_schema.columns
-                WHERE table_name = 'memories' 
+                WHERE table_name = 'memories'
                 AND column_name = 'importance_score'
             )
         """)
