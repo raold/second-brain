@@ -1,8 +1,22 @@
-# Second Brain v2.5.1-RC 🧠 - **AI-Powered Insights** 🤖
+# Second Brain v2.5.2-RC 🧠 - **Sophisticated Ingestion Engine** 🚀
 
-![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg) ![Python](https://img.shields.io/badge/python-3.11+-blue.svg) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg) ![pgvector](https://img.shields.io/badge/pgvector-latest-green.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg) ![D3.js](https://img.shields.io/badge/D3.js-v7-orange.svg) ![Tests](https://img.shields.io/badge/tests-100%20passing-brightgreen.svg) ![Coverage](https://img.shields.io/badge/coverage-35%25-yellow.svg) ![Build](https://img.shields.io/badge/build-release%20candidate-orange.svg) ![Status](https://img.shields.io/badge/status-release%20candidate-orange.svg) ![Version](https://img.shields.io/badge/v2.5.1--RC-testing-orange.svg)
+![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg) ![Python](https://img.shields.io/badge/python-3.11+-blue.svg) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg) ![pgvector](https://img.shields.io/badge/pgvector-latest-green.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg) ![D3.js](https://img.shields.io/badge/D3.js-v7-orange.svg) ![Tests](https://img.shields.io/badge/tests-100%20passing-brightgreen.svg) ![Coverage](https://img.shields.io/badge/coverage-35%25-yellow.svg) ![Build](https://img.shields.io/badge/build-release%20candidate-orange.svg) ![Status](https://img.shields.io/badge/status-release%20candidate-orange.svg) ![Version](https://img.shields.io/badge/v2.5.2--RC-testing-orange.svg)
 
-> **Release Candidate v2.5.1-RC** - AI-powered insights and pattern discovery ready for testing
+> **Release Candidate v2.5.2-RC** - Sophisticated content ingestion with NLP-powered extraction
+
+## 🚀 **v2.5.2-RC Sophisticated Ingestion Engine**
+
+### 🎯 New Ingestion Features:
+- **Intelligent Entity Extraction** - Automatic NER with SpaCy and custom patterns for people, organizations, locations, dates, and more
+- **Advanced Topic Modeling** - LDA, keyword-based classification, and domain detection for content categorization
+- **Relationship Detection** - Discover connections between entities using dependency parsing and pattern matching
+- **Intent Recognition** - Understand user intent (questions, todos, ideas, decisions) with urgency and sentiment analysis
+- **Automatic Embeddings** - Generate vector embeddings with chunking support for semantic search
+- **Structured Data Extraction** - Extract tables, lists, key-value pairs, and code snippets from unstructured text
+- **Content Classification** - Intelligent quality assessment, domain detection, and memory type suggestions
+- **Streaming Architecture** - Real-time async processing pipeline with batching, retries, and error handling
+- **Advanced Validation** - Multi-level validation framework with business rules and detailed reporting
+- **Preprocessing Pipeline** - Content normalization, encoding fixes, and smart truncation
 
 ## 🚀 **v2.5.1-RC AI-Powered Insights & Pattern Discovery**
 

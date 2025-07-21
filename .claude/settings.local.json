@@ -7,7 +7,8 @@
       "Bash(set USE_MOCK_DATABASE=true)",
       "Bash(find:*)",
       "Bash(true)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

@@ -8,8 +8,8 @@ from datetime import datetime
 from typing import Any
 
 # Core version information
-__version__ = "2.5.1-RC"
-__version_info__ = (2, 5, 1)
+__version__ = "2.5.2-RC"
+__version_info__ = (2, 5, 2)
 __build__ = "release-candidate"
 __release_date__ = "2025-07-21"
 
