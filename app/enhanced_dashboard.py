@@ -1,5 +1,5 @@
 """
-Enhanced Dashboard Data Generator for v2.4.3
+Enhanced Dashboard Data Generator for v2.5.2-RC
 Provides comprehensive project information including timeline, API status, and documentation.
 """
 
@@ -14,14 +14,14 @@ from app.version import get_version_info
 
 
 class EnhancedDashboardData:
-    """Enhanced dashboard data provider for v2.4.3 Quality Excellence."""
+    """Enhanced dashboard data provider for v2.5.2-RC Release Candidate."""
 
     def __init__(self):
         self.project_root = Path(__file__).parent.parent
         self.timestamp = datetime.now()
 
     def get_comprehensive_dashboard_data(self) -> dict[str, Any]:
-        """Get all dashboard data for v2.4.3."""
+        """Get all dashboard data for v2.5.2-RC."""
         return {
             "meta": self._get_meta_info(),
             "version": self._get_version_info(),
@@ -39,7 +39,7 @@ class EnhancedDashboardData:
     def _get_meta_info(self) -> dict[str, Any]:
         """Get dashboard metadata."""
         return {
-            "dashboard_version": "2.4.3-enhanced",
+            "dashboard_version": "2.5.2-RC-enhanced",
             "generated_at": self.timestamp.isoformat(),
             "last_updated": self.timestamp.isoformat(),
             "update_frequency": "real-time",
@@ -475,7 +475,7 @@ class EnhancedDashboardData:
             <h1>🧠 Second Brain v{data['version']['current_version']}</h1>
             <div class="subtitle">Quality Excellence Dashboard - {data['meta']['generated_at'][:19]}</div>
         </div>
-        
+
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value">{data['build_metrics']['tests']['passing']}</div>
@@ -494,7 +494,7 @@ class EnhancedDashboardData:
                 <div class="stat-label">Quality Score</div>
             </div>
         </div>
-        
+
         <div class="section">
             <h2>📊 Timeline & Milestones</h2>
             <div class="timeline-item">
@@ -507,18 +507,18 @@ class EnhancedDashboardData:
                     <small>{data['timeline']['current_milestone']['progress_percent']}% complete - {data['timeline']['current_milestone']['days_remaining']} days remaining</small>
                 </div>
             </div>
-            
+
             <h3>Recent Achievements</h3>
             {' '.join([f'<div class="timeline-item"><div class="timeline-date">{item["date"]}</div><div><strong>{item["achievement"]}</strong><br><small>Impact: {item["impact"]}</small></div></div>' for item in data['timeline']['recent_achievements']])}
         </div>
-        
+
         <div class="section">
             <h2>🔗 API Status</h2>
             <div class="api-status">
                 {' '.join([f'<div class="endpoint-status"><strong>/{name}</strong><br>Status: {info["status"]}<br>Response: {info["response_time_ms"]}ms</div>' for name, info in data['api_status']['endpoints'].items()])}
             </div>
         </div>
-        
+
         <div class="section">
             <h2>⚙️ Woodchipper Processing</h2>
             <div class="stats-grid">
@@ -540,23 +540,23 @@ class EnhancedDashboardData:
                 </div>
             </div>
         </div>
-        
+
         <div class="section">
             <h2>📚 Documentation Status</h2>
             <div>API Documentation: {data['documentation']['completeness']['api_documentation']}%</div>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {data['documentation']['completeness']['api_documentation']}%"></div>
             </div>
-            
+
             <div>User Guides: {data['documentation']['completeness']['user_guides']}%</div>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {data['documentation']['completeness']['user_guides']}%"></div>
             </div>
-            
+
             <h3>Recent Updates</h3>
             {' '.join([f'<div class="timeline-item"><div class="timeline-date">{item["updated"]}</div><div><strong>{item["file"]}</strong><br><small>Status: {item["status"]}</small></div></div>' for item in data['documentation']['recent_updates']])}
         </div>
-        
+
         <div class="section">
             <h2>🗺️ Roadmap Progress</h2>
             <div><strong>Current Phase:</strong> {data['roadmap']['current_phase']}</div>
@@ -564,20 +564,20 @@ class EnhancedDashboardData:
                 <div class="progress-fill" style="width: {data['roadmap']['phase_progress_percent']}%"></div>
             </div>
             <small>{data['roadmap']['phase_progress_percent']}% complete</small>
-            
+
             <h3>In Progress</h3>
             {' '.join([f'<div class="timeline-item"><div>• {feature}</div></div>' for feature in data['roadmap']['in_progress_features']])}
         </div>
-        
+
         <div class="section">
             <h2>📝 Changelog</h2>
             <div><strong>Latest:</strong> {data['changelog']['latest_version']} - {data['changelog']['release_date']}</div>
             <div><strong>Type:</strong> {data['changelog']['release_type'].replace('_', ' ').title()}</div>
-            
+
             <h3>Major Changes</h3>
             {' '.join([f'<div class="timeline-item"><div>• {change}</div></div>' for change in data['changelog']['major_changes']])}
         </div>
-        
+
         <div class="section">
             <h2>🔍 Raw Dashboard Data</h2>
             <div class="json-data">

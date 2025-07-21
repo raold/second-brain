@@ -157,28 +157,28 @@ async def initialize_database():
 
         # Create indexes for performance
         await conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_memories_vector 
-            ON memories USING ivfflat (content_vector vector_cosine_ops) 
+            CREATE INDEX IF NOT EXISTS idx_memories_vector
+            ON memories USING ivfflat (content_vector vector_cosine_ops)
             WITH (lists = 100)
         """)
 
         await conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_memories_search 
+            CREATE INDEX IF NOT EXISTS idx_memories_search
             ON memories USING GIN (search_vector)
         """)
 
         await conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_memories_tags 
+            CREATE INDEX IF NOT EXISTS idx_memories_tags
             ON memories USING GIN (tags)
         """)
 
         await conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_memories_importance 
+            CREATE INDEX IF NOT EXISTS idx_memories_importance
             ON memories (importance DESC)
         """)
 
         await conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_memories_created_at 
+            CREATE INDEX IF NOT EXISTS idx_memories_created_at
             ON memories (created_at DESC)
         """)
 
@@ -305,7 +305,7 @@ async def list_memories(
 
         query = f"""
             SELECT id, content, metadata, importance, tags, created_at, updated_at
-            FROM memories 
+            FROM memories
             WHERE {where_clause}
             ORDER BY importance DESC, created_at DESC
             {limit_clause} {offset_clause}
@@ -363,32 +363,32 @@ async def search_memories(
         # Combined vector and text search
         query = f"""
             WITH vector_search AS (
-                SELECT 
+                SELECT
                     id, content, metadata, importance, tags, created_at, updated_at,
                     1 - (content_vector <=> $1) as similarity,
                     'vector' as search_type
-                FROM memories 
+                FROM memories
                 WHERE (1 - (content_vector <=> $1)) > $2 AND {where_clause}
             ),
             text_search AS (
-                SELECT 
+                SELECT
                     id, content, metadata, importance, tags, created_at, updated_at,
                     ts_rank(search_vector, plainto_tsquery('english', %s)) as similarity,
                     'text' as search_type
-                FROM memories 
+                FROM memories
                 WHERE search_vector @@ plainto_tsquery('english', %s) AND {where_clause}
             ),
             combined AS (
                 SELECT *, ROW_NUMBER() OVER (PARTITION BY id ORDER BY similarity DESC) as rn
                 FROM (
                     SELECT * FROM vector_search
-                    UNION ALL 
+                    UNION ALL
                     SELECT * FROM text_search
                 ) combined_results
             )
-            SELECT id, content, metadata, importance, tags, created_at, updated_at, 
+            SELECT id, content, metadata, importance, tags, created_at, updated_at,
                    MAX(similarity) as similarity
-            FROM combined 
+            FROM combined
             WHERE rn = 1
             ORDER BY similarity DESC, importance DESC
             LIMIT $3
@@ -425,7 +425,7 @@ async def get_memory(memory_id: str, token: str = Depends(verify_token), db_pool
             row = await conn.fetchrow(
                 """
                 SELECT id, content, metadata, importance, tags, created_at, updated_at
-                FROM memories 
+                FROM memories
                 WHERE id = $1
             """,
                 memory_id,

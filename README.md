@@ -6,6 +6,35 @@
 
 ## 🚀 **v2.6.0-dev Multimodal Memory System - COMPLETED**
 
+### 🎯 New Ingestion Features (from v2.5.0):
+- **Intelligent Entity Extraction** - Automatic NER with SpaCy and custom patterns for people, organizations, locations, dates, and more
+- **Advanced Topic Modeling** - LDA, keyword-based classification, and domain detection for content categorization
+- **Relationship Detection** - Discover connections between entities using dependency parsing and pattern matching
+- **Intent Recognition** - Understand user intent (questions, todos, ideas, decisions) with urgency and sentiment analysis
+- **Automatic Embeddings** - Generate vector embeddings with chunking support for semantic search
+- **Structured Data Extraction** - Extract tables, lists, key-value pairs, and code snippets from unstructured text
+- **Content Classification** - Intelligent quality assessment, domain detection, and memory type suggestions
+- **Streaming Architecture** - Real-time async processing pipeline with batching, retries, and error handling
+- **Advanced Validation** - Multi-level validation framework with business rules and detailed reporting
+- **Preprocessing Pipeline** - Content normalization, encoding fixes, and smart truncation
+
+## 🤖 **AI-Powered Insights & Pattern Discovery**
+
+### 🤖 New AI Features:
+- **AI-Powered Insights Engine** - Automatically generate personalized insights from your memory patterns
+- **Pattern Detection System** - Discover temporal, semantic, behavioral, structural, and evolutionary patterns
+- **Memory Clustering** - Intelligent grouping of related memories using K-means, DBSCAN, and hierarchical algorithms
+- **Knowledge Gap Analysis** - Identify missing areas in your knowledge base with AI-driven recommendations
+- **Learning Progress Tracking** - Monitor your knowledge growth and mastery levels across topics
+- **Interactive Insights Dashboard** - Beautiful visualization of AI discoveries and analytics
+
+### 📊 Analytics Capabilities:
+- **Usage Pattern Analysis** - Understand how you interact with your memories
+- **Memory Growth Metrics** - Track knowledge accumulation over time
+- **Access Pattern Insights** - Discover which memories are most valuable
+- **Tag Evolution Tracking** - See how your interests change over time
+- **Importance Shift Detection** - Identify changing priorities in your knowledge base
+
 ### 🎯 Major Achievement: Full Multimodal Support
 **Achievement**: Complete multimodal memory system with support for text, images, audio, video, and documents
 

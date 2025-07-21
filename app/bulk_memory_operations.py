@@ -227,7 +227,7 @@ class BulkMemoryEngine:
                         status VARCHAR(20) NOT NULL,
                         error_message TEXT,
                         processed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                        
+
                         INDEX (operation_id),
                         INDEX (operation_id, batch_number),
                         INDEX (memory_id)
@@ -242,7 +242,7 @@ class BulkMemoryEngine:
                         metric_name VARCHAR(50) NOT NULL,
                         metric_value DECIMAL(12,4) NOT NULL,
                         recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                        
+
                         INDEX (operation_id),
                         INDEX (metric_name),
                         INDEX (recorded_at)
@@ -534,7 +534,7 @@ class BulkMemoryEngine:
                 content, memory_type, embedding, importance_score,
                 semantic_metadata, episodic_metadata, procedural_metadata, metadata
             )
-            SELECT * FROM UNNEST($1::text[], $2::memory_type_enum[], $3::vector[], 
+            SELECT * FROM UNNEST($1::text[], $2::memory_type_enum[], $3::vector[],
                                  $4::decimal[], $5::jsonb[], $6::jsonb[], $7::jsonb[], $8::jsonb[])
             RETURNING id
         """,
@@ -555,7 +555,7 @@ class BulkMemoryEngine:
                 async with self.database.pool.acquire() as conn:
                     await conn.execute(
                         """
-                        UPDATE bulk_operations 
+                        UPDATE bulk_operations
                         SET result = $1, completed_at = NOW(), updated_at = NOW()
                         WHERE operation_id = $2
                     """,

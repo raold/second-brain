@@ -116,19 +116,19 @@ class SessionManager:
 
     def initialize_session_system(self):
         """Initialize session management system"""
-        print("🔄 Initializing Session State Management...")
+        print("Initializing Session State Management...")
 
         # Try to resume the last active session
         last_session = self.find_last_active_session()
 
         if last_session:
-            print(f"📂 Found previous session: {last_session.session_id}")
+            print(f"Found previous session: {last_session.session_id}")
             self.resume_session(last_session.session_id)
         else:
-            print("🆕 Starting new session")
+            print("Starting new session")
             self.start_new_session()
 
-        print("✅ Session system ready for persistent context continuity")
+        print("Session system ready for persistent context continuity")
 
     def start_new_session(self) -> str:
         """Start a new coding session"""
@@ -172,7 +172,7 @@ class SessionManager:
         )
 
         self.save_session_state()
-        print(f"🚀 Started new session: {session_id}")
+        print(f"Started new session: {session_id}")
         return session_id
 
     def resume_session(self, session_id: str) -> bool:
@@ -181,7 +181,7 @@ class SessionManager:
             session_file = self.sessions_dir / f"{session_id}.json.gz"
 
             if not session_file.exists():
-                print(f"❌ Session {session_id} not found")
+                print(f"Error: Session {session_id} not found")
                 return False
 
             # Load compressed session data
@@ -197,15 +197,15 @@ class SessionManager:
             self.restore_project_momentum()
             self.restore_technical_context()
 
-            print(f"📂 Resumed session: {session_id}")
-            print(f"🎯 Current focus: {self.current_session.project_momentum.current_focus}")
-            print(f"💬 Conversation history: {len(self.current_session.conversation_history)} messages")
-            print(f"📈 Productivity: {self.current_session.productivity_metrics}")
+            print(f"Resumed session: {session_id}")
+            print(f"Current focus: {self.current_session.project_momentum.current_focus}")
+            print(f"Conversation history: {len(self.current_session.conversation_history)} messages")
+            print(f"Productivity: {self.current_session.productivity_metrics}")
 
             return True
 
         except Exception as e:
-            print(f"❌ Error resuming session {session_id}: {e}")
+            print(f"Error resuming session {session_id}: {e}")
             return False
 
     def pause_session(self, reason: str = "Manual pause") -> str:
@@ -227,9 +227,9 @@ class SessionManager:
         # Create resume instructions
         resume_context = self.generate_resume_context()
 
-        print(f"⏸️ Session paused: {self.current_session.session_id}")
-        print(f"📋 Reason: {reason}")
-        print("🎯 Resume context ready")
+        print(f"Session paused: {self.current_session.session_id}")
+        print(f"Reason: {reason}")
+        print("Resume context ready")
 
         return resume_context
 
@@ -270,21 +270,21 @@ class SessionManager:
             return "No session context available"
 
         context = f"""
-🔄 SESSION RESUME CONTEXT - {self.current_session.session_id}
+SESSION RESUME CONTEXT - {self.current_session.session_id}
 {'=' * 60}
 
-🎯 WHERE WE LEFT OFF:
+WHERE WE LEFT OFF:
    Focus: {self.current_session.project_momentum.current_focus}
    Energy Level: {self.current_session.project_momentum.energy_level}
    Last Achievement: {self.current_session.project_momentum.last_major_achievement}
 
-📋 IMMEDIATE NEXT STEPS:
+IMMEDIATE NEXT STEPS:
 """
         for i, step in enumerate(self.current_session.project_momentum.next_logical_steps, 1):
             context += f"   {i}. {step}\n"
 
         context += """
-🚧 ACTIVE DECISIONS IN PROGRESS:
+ACTIVE DECISIONS IN PROGRESS:
 """
         for decision in self.current_session.project_momentum.active_decisions:
             context += f"   • {decision}\n"
@@ -297,21 +297,21 @@ class SessionManager:
                 context += f"   • {item}\n"
 
         context += f"""
-📈 SESSION PRODUCTIVITY:
+SESSION PRODUCTIVITY:
    • Messages: {self.current_session.productivity_metrics['messages_processed']}
    • Features: {self.current_session.productivity_metrics['features_added']}
    • Files: {self.current_session.productivity_metrics['files_modified']}
    • Decisions: {self.current_session.productivity_metrics['decisions_made']}
 
-🧠 TECHNICAL CONTEXT:
+TECHNICAL CONTEXT:
    {self.current_session.project_momentum.technical_context}
 
-💬 CONVERSATION VIBE:
+CONVERSATION VIBE:
    Recent tone: {self.get_recent_emotional_tone()}
    Communication style: Collaborative technical discussion
    CTO-Principal Engineer pair programming dynamic
 
-🎯 TO RESUME SEAMLESSLY:
+TO RESUME SEAMLESSLY:
    1. Load this context into memory
    2. Review current dashboard state
    3. Continue from: "{self.current_session.project_momentum.current_focus}"
@@ -450,8 +450,8 @@ class SessionManager:
         The "woodchipper" function - automatically process ideas from mobile/remote
         and integrate them into the project pipeline
         """
-        print(f"🌊 IDEA INGESTION: Processing idea from {source}")
-        print(f"💡 Idea: {idea}")
+        print(f"IDEA INGESTION: Processing idea from {source}")
+        print(f"Idea: {idea}")
 
         # Process the idea through conversation processor
         processor = get_conversation_processor()
@@ -492,7 +492,7 @@ class SessionManager:
         updated_dashboard = dashboard.generate_visual_report()
         result["updated_dashboard"] = updated_dashboard
 
-        print("🔄 AUTOMATIC UPDATES COMPLETED:")
+        print("AUTOMATIC UPDATES COMPLETED:")
         print(f"   • Features detected: {len(conv_message.detected_features)}")
         print(f"   • Roadmap updates: {len(result['auto_updates'])}")
         print("   • Session momentum updated")
@@ -530,7 +530,7 @@ class SessionManager:
                 json.dump(resume_data, f, indent=2)
 
         except Exception as e:
-            print(f"❌ Error saving session state: {e}")
+            print(f"Error saving session state: {e}")
 
     def find_last_active_session(self) -> Optional[CodingSession]:
         """Find the last active session for resumption"""
@@ -554,7 +554,7 @@ class SessionManager:
             return CodingSession(**session_data)
 
         except Exception as e:
-            print(f"⚠️ Could not load last session: {e}")
+            print(f"Warning: Could not load last session: {e}")
             return None
 
     def generate_sync_hash(self) -> str:
@@ -593,7 +593,7 @@ class SessionManager:
         for msg in self.current_session.conversation_history[-100:]:  # Last 100 messages
             self.session_buffer.append(msg)
 
-        print(f"💬 Restored {len(self.session_buffer)} conversation messages")
+        print(f"Restored {len(self.session_buffer)} conversation messages")
 
     def restore_project_momentum(self):
         """Restore project momentum and focus"""
@@ -601,7 +601,7 @@ class SessionManager:
             return
 
         momentum = self.current_session.project_momentum
-        print("🎯 Restored project momentum:")
+        print("Restored project momentum:")
         print(f"   Current focus: {momentum.current_focus}")
         print(f"   Energy level: {momentum.energy_level}")
         print(f"   Next steps: {len(momentum.next_logical_steps)}")
@@ -612,7 +612,7 @@ class SessionManager:
             return
 
         context = self.current_session.architectural_context
-        print(f"🏗️ Restored technical context: {len(context)} items")
+        print(f"Restored technical context: {len(context)} items")
 
     def update_project_momentum(self):
         """Update project momentum before pausing"""
@@ -696,7 +696,7 @@ def resume_coding_session(session_id: Optional[str] = None) -> bool:
 
 if __name__ == "__main__":
     # Demo session management
-    print("🔄 Session Management Demo")
+    print("Session Management Demo")
     print("=" * 50)
 
     # Initialize session manager
@@ -714,18 +714,18 @@ if __name__ == "__main__":
         "Add real-time collaboration features with live cursor tracking", "mobile_app"
     )
 
-    print("\n💡 Idea ingestion result:")
+    print("\nIdea ingestion result:")
     print(f"   Features detected: {len(idea_result['detected_features'])}")
     print(f"   Auto updates: {len(idea_result['auto_updates'])}")
 
     # Pause session and generate resume context
     resume_context = session_manager.pause_session("Demo complete")
-    print("\n⏸️ Session paused. Resume context:")
+    print("\nSession paused. Resume context:")
     print(resume_context[:500] + "...")
 
     # Show session analytics
     analytics = session_manager.get_session_analytics()
-    print("\n📊 Session Analytics:")
+    print("\nSession Analytics:")
     print(f"   Duration: {analytics['duration']}")
     print(f"   Messages: {analytics['conversation_summary']['total_messages']}")
     print(f"   Productivity: {analytics['productivity_metrics']}")

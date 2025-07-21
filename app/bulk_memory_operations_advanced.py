@@ -561,7 +561,7 @@ class AdvancedBulkOperations:
                     params.append(ids)
 
                     query = f"""
-                        UPDATE memories 
+                        UPDATE memories
                         SET {update_clause}, updated_at = NOW()
                         WHERE id = ANY(${len(params)}::uuid[])
                         RETURNING id
@@ -614,7 +614,7 @@ class AdvancedBulkOperations:
                 ids = [str(record["id"]) for record in batch]
 
                 query = """
-                    DELETE FROM memories 
+                    DELETE FROM memories
                     WHERE id = ANY($1::uuid[])
                     RETURNING id
                 """

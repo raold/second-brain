@@ -11,6 +11,7 @@ from app.version import (
     __version_info__,
     get_cognitive_roadmap,
     get_current_codename,
+    get_current_roadmap_info,
     get_dashboard_version,
     get_next_planned_version,
     get_version,
@@ -123,9 +124,15 @@ class TestVersionSystem:
     def test_increment_version(self):
         """Test version increment functionality"""
         test_cases = [
+<<<<<<< HEAD
             ("patch", "2.6.1"),  # Patch increment: 2.6.0 -> 2.6.1
             ("minor", "2.7.0"),  # Minor increment: 2.6.0 -> 2.7.0
             ("major", "3.0.0"),  # Major increment: 2.6.0 -> 3.0.0
+=======
+            ("patch", "2.5.1"),  # Patch increment: 2.5.0 -> 2.5.1
+            ("minor", "2.6.0"),  # Minor increment: 2.5.0 -> 2.6.0
+            ("major", "3.0.0"),  # Major increment: 2.5.0 -> 3.0.0
+>>>>>>> feature/advanced-analysis
         ]
 
         for bump_type, expected in test_cases:
@@ -140,10 +147,18 @@ class TestVersionSystem:
     def test_is_version_compatible(self):
         """Test version compatibility checking"""
         test_cases = [
+<<<<<<< HEAD
             ("2.6.0", True),   # Exact match (without -dev)
             ("2.5.0", True),   # Earlier minor
             ("2.4.0", True),   # Earlier minor
             ("2.7.0", False),  # Later minor
+=======
+            ("2.5.0", True),  # Same version
+            ("2.4.9", True),  # Earlier patch
+            ("2.4.0", True),  # Earlier minor
+            ("2.5.1", False),  # Later patch (incompatible)
+            ("2.6.0", False),  # Later minor
+>>>>>>> feature/advanced-analysis
             ("3.0.0", False),  # Later major
             ("1.9.9", False),  # Earlier major
         ]

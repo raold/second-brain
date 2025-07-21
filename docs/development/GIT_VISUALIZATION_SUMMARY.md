@@ -62,15 +62,19 @@
 #### 5. **Real Repository Analysis** (Live Data)
 Successfully analyzed current repository showing:
 - **📈 Commit Activity Metrics**:
-  - **24h**: 105 total commits, 148,678+ lines added across all branches
-  - **7d**: 3,864 total commits, 4,885,695+ lines added
-  - **30d**: 3,864 total commits, 4,885,695+ lines added
-- **🔥 Most Active Branch**: `testing` with 24 commits, 35,000+ lines in 24h
-- **👥 Active Contributors**: mahdlo, Rich Oldham, raold, dependabot[bot]
-- **17 Total Branches** including main, testing, feature, and development branches
-- **Current Branch**: testing (Phase 2 completion branch)
-- **Branch Features**: Detected feature/, cursor/, origin/, alpha, testing branches
+  - **24h**: 56 total commits, 78,852+ lines added across all branches
+  - **7d**: 3,580 total commits, 4,528,138+ lines added
+  - **30d**: 3,580 total commits, 4,528,138+ lines added
+- **🔥 Most Active Branch**: `main` with 18 commits, 25,446+ lines in 24h
+- **👥 Active Contributors**: mahdlo, Rich Oldham, raold
+- **16 Total Branches** including main, testing, develop, feature, and alpha branches
+- **Current Branch**: testing (v2.5.0 Integration Testing)
+- **Branch Features**: Detected feature/, develop, testing, alpha branches
 - **Git Status**: Shows uncommitted changes and repository state
+- **🆕 Version Structure**:
+  - **main**: v2.4.3 (Stable Production)
+  - **testing**: v2.5.0 (Integration Testing)
+  - **develop**: v2.6.0 (Active Development)
 
 ### 🌟 **Key Technical Features**
 
@@ -93,6 +97,7 @@ The dashboard at `localhost:8000` now displays:
 - ✅ **🆕 Branch activity comparison** with color-coded intensity levels
 - ✅ **🆕 Repository-wide activity summaries** with contributor tracking
 - ✅ **🆕 Interactive period switching** for different time windows
+- ✅ **🆕 Version-based branch structure** (main: v2.4.3, testing: v2.5.0, develop: v2.6.0)
 
 ### 🎨 **Visualization Features**
 

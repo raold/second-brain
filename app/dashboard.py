@@ -148,7 +148,7 @@ class ProjectDashboard:
 
     def initialize_project_pipeline(self):
         """Initialize Project Pipeline with baseline milestones and structure"""
-        print("🚀 Initializing Project Pipeline Dashboard...")
+        print("Initializing Project Pipeline Dashboard...")
 
         # Phase 1: Pipeline Foundation
         milestone_1 = Milestone(
@@ -340,7 +340,7 @@ class ProjectDashboard:
         Automatically add new feature/goal based on conversation context
         This method is called when CTO discusses new architectural features
         """
-        print(f"🎯 Adding new feature context: {feature_name}")
+        print(f"Adding new feature context: {feature_name}")
 
         # Create new milestone for the feature
         feature_milestone = Milestone(
@@ -735,7 +735,7 @@ class ProjectDashboard:
                 self.adrs = {k: ArchitecturalDecision(**v) for k, v in data["adrs"].items()}
 
         except Exception as e:
-            print(f"⚠️ Error loading dashboard data: {e}")
+            print(f"Warning: Error loading dashboard data: {e}")
 
     def generate_visual_report(self) -> str:
         """Generate visual dashboard report for CTO overview"""

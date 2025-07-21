@@ -42,7 +42,7 @@ def test_openapi_endpoints():
         assert "version" in data, "Missing version field"
         assert "timestamp" in data, "Missing timestamp field"
         assert data["status"] == "healthy", "Incorrect status"
-        assert data["version"] == "2.0.0", "Incorrect version"
+        assert data["version"] == "2.5.2-RC", "Incorrect version"
         print("✅ Health endpoint response model working")
     except Exception as e:
         print(f"❌ Health endpoint test failed: {e}")

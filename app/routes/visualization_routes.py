@@ -243,10 +243,10 @@ async def get_search_suggestions(
             # Get memories that contain the query term
             suggestions = await conn.fetch(
                 """
-                SELECT DISTINCT content, memory_type 
-                FROM memories 
-                WHERE content ILIKE $1 
-                ORDER BY importance_score DESC 
+                SELECT DISTINCT content, memory_type
+                FROM memories
+                WHERE content ILIKE $1
+                ORDER BY importance_score DESC
                 LIMIT $2
             """,
                 f"%{query}%",
@@ -296,7 +296,7 @@ async def get_memory_analytics(api_key: str = Query(None, description="API key f
         async with db.pool.acquire() as conn:
             # Basic memory statistics
             stats = await conn.fetchrow("""
-                SELECT 
+                SELECT
                     COUNT(*) as total_memories,
                     AVG(importance_score) as avg_importance,
                     MAX(importance_score) as max_importance,
@@ -315,7 +315,7 @@ async def get_memory_analytics(api_key: str = Query(None, description="API key f
 
             # Temporal distribution (memories per day over last 30 days)
             temporal_stats = await conn.fetch("""
-                SELECT 
+                SELECT
                     DATE(created_at) as date,
                     COUNT(*) as count,
                     AVG(importance_score) as avg_importance
@@ -395,7 +395,7 @@ async def get_memory_relationships(
             target_memory = await conn.fetchrow(
                 """
                 SELECT id, content, embedding, memory_type, importance_score
-                FROM memories 
+                FROM memories
                 WHERE id = $1
             """,
                 memory_id,
@@ -407,9 +407,9 @@ async def get_memory_relationships(
             # Get potential related memories
             related_memories = await conn.fetch(
                 """
-                SELECT id, content, embedding, memory_type, importance_score, 
+                SELECT id, content, embedding, memory_type, importance_score,
                        created_at
-                FROM memories 
+                FROM memories
                 WHERE id != $1 AND embedding IS NOT NULL
                 ORDER BY importance_score DESC
                 LIMIT 100

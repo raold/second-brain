@@ -58,12 +58,12 @@ class MigrationHistory:
             """)
 
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_migration_history_status 
+                CREATE INDEX IF NOT EXISTS idx_migration_history_status
                 ON migration_history(status)
             """)
 
             await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_migration_history_version 
+                CREATE INDEX IF NOT EXISTS idx_migration_history_version
                 ON migration_history(version)
             """)
 
@@ -338,7 +338,7 @@ class MigrationEngine:
             async with self.pool.acquire() as conn:
                 await conn.execute(
                     """
-                    UPDATE migration_history 
+                    UPDATE migration_history
                     SET status = 'rolled_back', rolled_back_at = $1
                     WHERE migration_id = $2
                 """,

@@ -42,7 +42,11 @@ class TestIntegrationSuite:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
+<<<<<<< HEAD
         assert data["version"] == get_version()
+=======
+        assert data["version"] == "2.5.2-RC"
+>>>>>>> feature/advanced-analysis
         assert "timestamp" in data
 
     @pytest.mark.asyncio

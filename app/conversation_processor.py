@@ -376,12 +376,12 @@ def setup_conversation_monitoring():
     # - Email parsing
     # - Chat application hooks
 
-    print("🎯 Conversation monitoring setup complete")
-    print("📝 Dashboard will auto-update when CTO discusses:")
-    print("   • New features and capabilities")
-    print("   • Architectural challenges")
-    print("   • Project priorities and timelines")
-    print("   • Technical improvements")
+    print("Conversation monitoring setup complete")
+    print("Dashboard will auto-update when CTO discusses:")
+    print("   - New features and capabilities")
+    print("   - Architectural challenges")
+    print("   - Project priorities and timelines")
+    print("   - Technical improvements")
 
     return processor
 

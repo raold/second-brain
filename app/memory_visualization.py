@@ -79,10 +79,10 @@ class MemoryVisualizationEngine:
 
         # Fetch memories with embeddings
         query = f"""
-            SELECT id, content, memory_type, importance_score, 
+            SELECT id, content, memory_type, importance_score,
                    semantic_metadata, episodic_metadata, procedural_metadata,
                    embedding, created_at, updated_at
-            FROM memories 
+            FROM memories
             WHERE {where_clause}
             ORDER BY importance_score DESC, created_at DESC
             LIMIT ${len(params) + 1}

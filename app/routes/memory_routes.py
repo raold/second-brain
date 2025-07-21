@@ -92,6 +92,7 @@ async def store_memory(
             episodic_metadata=convert_metadata_to_dict(request.episodic_metadata),
             procedural_metadata=convert_metadata_to_dict(request.procedural_metadata),
             importance_score=request.importance_score,
+            metadata=request.metadata,
         )
 
         # Get the stored memory to return full response

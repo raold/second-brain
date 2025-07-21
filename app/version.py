@@ -57,20 +57,27 @@ def get_dashboard_version() -> dict[str, Any]:
 
 def get_current_codename() -> str:
     """Get the codename for the current version."""
-    roadmap = get_cognitive_roadmap()
-    # Handle development versions
-    version_key = __version__.replace("-dev", "")
-    current_key = f"v{version_key}"
-    return roadmap.get(current_key, {}).get("codename", "Unknown")
+    info = get_current_roadmap_info()
+    return info.get("codename", "Unknown")
 
 
 def get_current_roadmap_info() -> dict[str, Any]:
     """Get roadmap information for the current version."""
     roadmap = get_cognitive_roadmap()
-    # Handle development versions
-    version_key = __version__.replace("-dev", "")
-    current_key = f"v{version_key}"
-    return roadmap.get(current_key, {})
+    current_key = f"v{__version__}"
+
+    # Try with full version first
+    if current_key in roadmap:
+        return roadmap[current_key]
+
+    # Try without suffix (e.g., 2.5.2-RC -> 2.5.2, 2.6.0-dev -> 2.6.0)
+    if "-" in __version__:
+        base_version = __version__.split("-")[0]
+        base_key = f"v{base_version}"
+        if base_key in roadmap:
+            return roadmap[base_key]
+
+    return {}
 
 
 def get_next_planned_version() -> str:
@@ -98,9 +105,11 @@ def parse_version(version_string: str) -> tuple[int, int, int]:
     """Parse version string to tuple."""
     # Remove 'v' prefix if present
     version = version_string.lstrip("v")
-    # Handle development versions (e.g., "2.6.0-dev")
+
+    # Remove any suffix like -RC, -dev, etc
     if "-" in version:
         version = version.split("-")[0]
+
     parts = version.split(".")
     return (int(parts[0]), int(parts[1]), int(parts[2]) if len(parts) > 2 else 0)
 
@@ -248,21 +257,26 @@ def get_cognitive_roadmap() -> dict[str, dict[str, Any]]:
                 "pr_validation_automation",
                 "production_readiness_validation",
             ],
-            "status": "current",
+            "status": "completed",
             "release_date": "2025-07-19",
         },
         "v2.5.0": {
-            "codename": "Analytics",
-            "focus": "Advanced Analytics & Performance",
+            "codename": "Intelligence",
+            "focus": "AI-Powered Insights & Sophisticated Ingestion",
             "features": [
-                "real_time_analytics_dashboard",
-                "performance_optimization",
-                "ai_powered_insights",
-                "large_dataset_handling",
-                "caching_strategies",
+                "ai_powered_insights_engine",
+                "pattern_detection_system",
+                "memory_clustering_algorithms",
+                "knowledge_gap_analysis",
+                "entity_extraction_ner",
+                "topic_modeling_classification",
+                "relationship_detection",
+                "intent_recognition",
+                "automatic_embeddings",
+                "structured_data_extraction",
             ],
-            "status": "planned",
-            "release_date": "2025-08-31",
+            "status": "current",
+            "release_date": "2025-07-21",
         },
         "v2.6.0": {
             "codename": "Collaboration",

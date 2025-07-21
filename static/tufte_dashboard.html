@@ -858,7 +858,9 @@
             try {
                 // HIGH PRIORITY: Load development status first
                 console.log('📊 Fetching development status...');
-                const devResponse = await fetch('/dashboard/development/status');
+                
+                // TEMPORARY: Use static JSON file for testing
+                const devResponse = await fetch('/test_dashboard_data.json');
                 console.log('📊 Dev response status:', devResponse.status);
                 
                 if (devResponse.ok) {
@@ -983,7 +985,8 @@
 
         // HIGH PRIORITY: Update development status display
         function updateDevelopmentStatus(data) {
-            console.log('[DEBUG] Development status received:', data);
+            console.log('[DEBUG] Development status received:', JSON.stringify(data, null, 2));
+            console.log('[DEBUG] Data keys:', Object.keys(data));
             console.log('[DEBUG] PR status data:', data.pr_status);
             console.log('[DEBUG] Version roadmap:', data.version_roadmap);
             
@@ -993,6 +996,8 @@
                 if (data.pr_status.length > 0) {
                     console.log('[DEBUG] First PR status item:', data.pr_status[0]);
                 }
+            } else {
+                console.log('[ERROR] No PR status data found!');
             }
             
             // Debug: Check if version roadmap exists and has data
@@ -1002,6 +1007,8 @@
                 if (firstKey) {
                     console.log('[DEBUG] First roadmap item:', firstKey, data.version_roadmap[firstKey]);
                 }
+            } else {
+                console.log('[ERROR] No version roadmap data found!');
             }
             
             // Update current sprint information
@@ -1080,10 +1087,13 @@
             // Update development status table
             const devTbody = document.getElementById('dev-status-data');
             console.log('🔧 Updating dev status table, tbody found:', !!devTbody);
+            console.log('🔧 Dev tbody element:', devTbody);
             
-            if (data.pr_status && data.pr_status.length > 0) {
+            if (devTbody && data.pr_status && data.pr_status.length > 0) {
                 console.log(`📈 Processing ${data.pr_status.length} PR status items`);
-                devTbody.innerHTML = data.pr_status.map(item => {
+                
+                const tableRows = data.pr_status.map(item => {
+                    console.log('📝 Processing PR item:', item);
                     const progressBar = '█'.repeat(Math.floor(item.progress / 10)) + 
                                       '░'.repeat(Math.max(0, 10 - Math.floor(item.progress / 10)));
                     
@@ -1103,20 +1113,33 @@
                             <td class="${priorityClass}">${item.pr_ready}</td>
                         </tr>
                     `;
-                }).join('');
-                console.log('✅ Dev status table updated');
+                });
+                
+                devTbody.innerHTML = tableRows.join('');
+                console.log('✅ Dev status table updated with', tableRows.length, 'rows');
+                console.log('✅ Table HTML:', devTbody.innerHTML.substring(0, 200) + '...');
             } else {
-                console.log('❌ No PR status data found');
-                devTbody.innerHTML = '<tr><td colspan="6">No development status data available</td></tr>';
+                console.log('❌ Cannot update dev status table:');
+                console.log('  - tbody found:', !!devTbody);
+                console.log('  - pr_status exists:', !!data.pr_status);
+                console.log('  - pr_status length:', data.pr_status ? data.pr_status.length : 'N/A');
+                
+                if (devTbody) {
+                    devTbody.innerHTML = '<tr><td colspan="6">No development status data available</td></tr>';
+                }
             }
 
             // Update version roadmap table
             const roadmapTbody = document.getElementById('roadmap-data');
             console.log('🗺️ Updating roadmap table, tbody found:', !!roadmapTbody);
+            console.log('🗺️ Roadmap tbody element:', roadmapTbody);
             
-            if (data.version_roadmap) {
-                console.log(`📋 Processing ${Object.keys(data.version_roadmap).length} roadmap versions`);
+            if (roadmapTbody && data.version_roadmap) {
+                const roadmapKeys = Object.keys(data.version_roadmap);
+                console.log(`📋 Processing ${roadmapKeys.length} roadmap versions:`, roadmapKeys);
+                
                 const roadmapEntries = Object.entries(data.version_roadmap).map(([version, info]) => {
+                    console.log(`📋 Processing roadmap version ${version}:`, info);
                     const progressBar = '█'.repeat(Math.floor(info.completion / 10)) + 
                                       '░'.repeat(Math.max(0, 10 - Math.floor(info.completion / 10)));
                     
@@ -1146,10 +1169,17 @@
                 });
                 
                 roadmapTbody.innerHTML = roadmapEntries.join('');
-                console.log('✅ Roadmap table updated');
+                console.log('✅ Roadmap table updated with', roadmapEntries.length, 'rows');
+                console.log('✅ Roadmap HTML:', roadmapTbody.innerHTML.substring(0, 200) + '...');
             } else {
-                console.log('❌ No roadmap data found');
-                roadmapTbody.innerHTML = '<tr><td colspan="6">No roadmap data available</td></tr>';
+                console.log('❌ Cannot update roadmap table:');
+                console.log('  - tbody found:', !!roadmapTbody);
+                console.log('  - version_roadmap exists:', !!data.version_roadmap);
+                console.log('  - version_roadmap keys:', data.version_roadmap ? Object.keys(data.version_roadmap) : 'N/A');
+                
+                if (roadmapTbody) {
+                    roadmapTbody.innerHTML = '<tr><td colspan="6">No roadmap data available</td></tr>';
+                }
             }
             
             // Update development timeline

@@ -210,7 +210,7 @@ class ImportanceEngine:
             recent_accesses = (
                 await conn.fetchval(
                     """
-                SELECT COUNT(*) FROM memory_access_log 
+                SELECT COUNT(*) FROM memory_access_log
                 WHERE memory_id = $1 AND accessed_at > $2
             """,
                     memory_id,
@@ -223,7 +223,7 @@ class ImportanceEngine:
             search_data = await conn.fetchrow(
                 """
                 SELECT COUNT(*) as appearances, AVG(position) as avg_position
-                FROM search_result_log 
+                FROM search_result_log
                 WHERE memory_id = $1
             """,
                 memory_id,
@@ -584,7 +584,7 @@ class ImportanceEngine:
                 # Update database
                 await conn.execute(
                     """
-                    UPDATE memories 
+                    UPDATE memories
                     SET importance_score = $2, updated_at = NOW()
                     WHERE id = $1
                 """,
@@ -613,12 +613,12 @@ class ImportanceEngine:
                 # Prioritize: old scores, high access counts, recent activity
                 memories = await conn.fetch(
                     """
-                    SELECT id, content, memory_type, importance_score, 
+                    SELECT id, content, memory_type, importance_score,
                            access_count, last_accessed, updated_at
-                    FROM memories 
-                    WHERE access_count > 0 
+                    FROM memories
+                    WHERE access_count > 0
                        OR last_accessed > NOW() - INTERVAL '30 days'
-                    ORDER BY 
+                    ORDER BY
                         (access_count > 5) DESC,
                         (updated_at < NOW() - INTERVAL '7 days') DESC,
                         last_accessed DESC NULLS LAST
@@ -643,7 +643,7 @@ class ImportanceEngine:
                     if score_change > 0.05:  # Only update if change > 5%
                         await conn.execute(
                             """
-                            UPDATE memories 
+                            UPDATE memories
                             SET importance_score = $2, updated_at = NOW()
                             WHERE id = $1
                         """,
@@ -686,7 +686,7 @@ class ImportanceEngine:
                 # Update access count and timestamp
                 await conn.execute(
                     """
-                    UPDATE memories 
+                    UPDATE memories
                     SET access_count = access_count + 1,
                         last_accessed = NOW()
                     WHERE id = $1
@@ -697,7 +697,7 @@ class ImportanceEngine:
                 # Log detailed access information
                 await conn.execute(
                     """
-                    INSERT INTO memory_access_log 
+                    INSERT INTO memory_access_log
                     (memory_id, access_type, search_position, user_action, accessed_at)
                     VALUES ($1, $2, $3, $4, NOW())
                     ON CONFLICT DO NOTHING
@@ -732,8 +732,8 @@ class ImportanceEngine:
             async with self.database.pool.acquire() as conn:
                 # Importance score distribution
                 distribution = await conn.fetch("""
-                    SELECT 
-                        CASE 
+                    SELECT
+                        CASE
                             WHEN importance_score >= 0.8 THEN 'high'
                             WHEN importance_score >= 0.5 THEN 'medium'
                             ELSE 'low'
@@ -747,7 +747,7 @@ class ImportanceEngine:
 
                 # Top important memories
                 top_memories = await conn.fetch("""
-                    SELECT id, content[1:100] as content_preview, 
+                    SELECT id, content[1:100] as content_preview,
                            importance_score, memory_type, access_count
                     FROM memories
                     ORDER BY importance_score DESC
@@ -756,7 +756,7 @@ class ImportanceEngine:
 
                 # Memory type analysis
                 type_analysis = await conn.fetch("""
-                    SELECT memory_type, 
+                    SELECT memory_type,
                            COUNT(*) as count,
                            AVG(importance_score) as avg_importance,
                            AVG(access_count) as avg_accesses
