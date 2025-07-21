@@ -26,7 +26,7 @@ class TestAPI:
         response = await client.get("/health")
         assert response.status_code == 200
         data = response.json()
-        assert data["version"] == "2.4.2"  # Current version
+        assert data["version"] == "2.5.2-RC"  # Current version
 
     @pytest.mark.asyncio
     async def test_store_memory_basic(self, client, api_key):

@@ -8,7 +8,8 @@
       "Bash(find:*)",
       "Bash(true)",
       "Bash(mv:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(del \"C:\\Users\\dro\\second-brain\\verify_version_tests.py\")"
     ],
     "deny": []
   }

@@ -13,6 +13,10 @@ try:
     SPACY_AVAILABLE = True
 except ImportError:
     SPACY_AVAILABLE = False
+    # Define dummy types for when SpaCy is not available
+    Doc = Any
+    Token = Any
+    Span = Any
 
 from app.ingestion.models import Entity, Relationship, RelationshipType
 

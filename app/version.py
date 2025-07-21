@@ -57,16 +57,27 @@ def get_dashboard_version() -> dict[str, Any]:
 
 def get_current_codename() -> str:
     """Get the codename for the current version."""
-    roadmap = get_cognitive_roadmap()
-    current_key = f"v{__version__}"
-    return roadmap.get(current_key, {}).get("codename", "Unknown")
+    info = get_current_roadmap_info()
+    return info.get("codename", "Unknown")
 
 
 def get_current_roadmap_info() -> dict[str, Any]:
     """Get roadmap information for the current version."""
     roadmap = get_cognitive_roadmap()
     current_key = f"v{__version__}"
-    return roadmap.get(current_key, {})
+    
+    # Try with full version first
+    if current_key in roadmap:
+        return roadmap[current_key]
+    
+    # Try without suffix (e.g., 2.5.2-RC -> 2.5.2)
+    if "-" in __version__:
+        base_version = __version__.split("-")[0]
+        base_key = f"v{base_version}"
+        if base_key in roadmap:
+            return roadmap[base_key]
+    
+    return {}
 
 
 def get_next_planned_version() -> str:
@@ -94,6 +105,11 @@ def parse_version(version_string: str) -> tuple[int, int, int]:
     """Parse version string to tuple."""
     # Remove 'v' prefix if present
     version = version_string.lstrip("v")
+    
+    # Remove any suffix like -RC, -dev, etc
+    if "-" in version:
+        version = version.split("-")[0]
+    
     parts = version.split(".")
     return (int(parts[0]), int(parts[1]), int(parts[2]) if len(parts) > 2 else 0)
 
@@ -256,6 +272,22 @@ def get_cognitive_roadmap() -> dict[str, dict[str, Any]]:
             ],
             "status": "planned",
             "release_date": "2025-08-31",
+        },
+        "v2.5.2": {
+            "codename": "Ingestion",
+            "focus": "Sophisticated Ingestion Engine",
+            "features": [
+                "entity_extraction_ner",
+                "topic_modeling_classification",
+                "relationship_detection",
+                "intent_recognition",
+                "automatic_embeddings",
+                "structured_data_extraction",
+                "streaming_architecture",
+                "advanced_validation"
+            ],
+            "status": "current",
+            "release_date": "2025-07-21",
         },
         "v2.6.0": {
             "codename": "Collaboration",

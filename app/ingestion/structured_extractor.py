@@ -151,7 +151,7 @@ class StructuredDataExtractor:
                 "language": language,
                 "code": code,
                 "type": "fenced",
-                "lines": len(code.splitlines())
+                "lines": str(len(code.splitlines()))
             })
         
         # Extract indented code blocks

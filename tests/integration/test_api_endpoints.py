@@ -23,14 +23,14 @@ class TestIntegrationSuite:
         """Test version info integration across app, API, and docs."""
         # Get version from version module
         version_info = get_version_info()
-        assert version_info["version"] == "2.4.2"
-        assert version_info["build"] == "stable"
+        assert version_info["version"] == "2.5.2-RC"
+        assert version_info["build"] == "release-candidate"
 
         # Get version from API endpoint
         response = await client.get("/health")
         assert response.status_code == 200
         api_data = response.json()
-        assert api_data["version"] == "2.4.2"
+        assert api_data["version"] == "2.5.2-RC"
 
         # Ensure consistency across sources
         assert version_info["version"] == api_data["version"]
@@ -42,7 +42,7 @@ class TestIntegrationSuite:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert data["version"] == "2.4.2"
+        assert data["version"] == "2.5.2-RC"
         assert "timestamp" in data
 
     @pytest.mark.asyncio

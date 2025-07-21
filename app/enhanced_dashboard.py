@@ -1,5 +1,5 @@
 """
-Enhanced Dashboard Data Generator for v2.4.3
+Enhanced Dashboard Data Generator for v2.5.2-RC
 Provides comprehensive project information including timeline, API status, and documentation.
 """
 
@@ -14,14 +14,14 @@ from app.version import get_version_info
 
 
 class EnhancedDashboardData:
-    """Enhanced dashboard data provider for v2.4.3 Quality Excellence."""
+    """Enhanced dashboard data provider for v2.5.2-RC Release Candidate."""
 
     def __init__(self):
         self.project_root = Path(__file__).parent.parent
         self.timestamp = datetime.now()
 
     def get_comprehensive_dashboard_data(self) -> dict[str, Any]:
-        """Get all dashboard data for v2.4.3."""
+        """Get all dashboard data for v2.5.2-RC."""
         return {
             "meta": self._get_meta_info(),
             "version": self._get_version_info(),
@@ -39,7 +39,7 @@ class EnhancedDashboardData:
     def _get_meta_info(self) -> dict[str, Any]:
         """Get dashboard metadata."""
         return {
-            "dashboard_version": "2.4.3-enhanced",
+            "dashboard_version": "2.5.2-RC-enhanced",
             "generated_at": self.timestamp.isoformat(),
             "last_updated": self.timestamp.isoformat(),
             "update_frequency": "real-time",
