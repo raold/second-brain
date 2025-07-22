@@ -5,7 +5,7 @@ Topic modeling and classification component for the ingestion engine
 import logging
 import re
 from collections import Counter, defaultdict
-from typing import Any
+from typing import Any, Union
 
 try:
     import numpy as np
@@ -28,6 +28,7 @@ class TopicClassifier:
                  enable_lda: bool = True,
                  enable_keyword: bool = True,
                  enable_domain: bool = True,
+                 enable_advanced: bool = True,
                  n_topics: int = 10):
         """
         Initialize topic classifier
@@ -36,11 +37,13 @@ class TopicClassifier:
             enable_lda: Use Latent Dirichlet Allocation
             enable_keyword: Use keyword-based classification
             enable_domain: Use domain detection
+            enable_advanced: Use advanced topic modeling (BERTopic)
             n_topics: Number of topics for LDA
         """
         self.enable_lda = enable_lda and SKLEARN_AVAILABLE
         self.enable_keyword = enable_keyword
         self.enable_domain = enable_domain
+        self.enable_advanced = enable_advanced
         self.n_topics = n_topics
 
         # Initialize domain patterns
@@ -53,6 +56,9 @@ class TopicClassifier:
         self.vectorizer = None
         self.lda_model = None
         self.feature_names = None
+        
+        # Advanced topic modeling (lazy loaded)
+        self._advanced_model = None
 
     def extract_topics(self,
                       text: str,
@@ -549,3 +555,45 @@ class TopicClassifier:
             "avg_keywords_per_topic": sum(len(t.keywords) for t in topics) / total_topics,
             "domain_distribution": dict(domain_counts)
         }
+    
+    def extract_advanced_topics(self, 
+                               texts: Union[str, list[str]], 
+                               use_hierarchy: bool = True,
+                               **kwargs) -> list[Topic]:
+        """
+        Extract topics using advanced transformer-based models
+        
+        Args:
+            texts: Input text(s)
+            use_hierarchy: Include hierarchical clustering
+            **kwargs: Additional arguments for advanced modeling
+            
+        Returns:
+            List of advanced topics
+        """
+        # Lazy load advanced model
+        if self._advanced_model is None and self.enable_advanced:
+            try:
+                from app.ingestion.advanced_topic_modeling import AdvancedTopicModeling
+                self._advanced_model = AdvancedTopicModeling()
+            except ImportError:
+                logger.warning("Advanced topic modeling not available")
+                self.enable_advanced = False
+                return self.extract_topics(texts[0] if isinstance(texts, list) else texts)
+        
+        if self._advanced_model:
+            return self._advanced_model.extract_advanced_topics(
+                texts, 
+                include_hierarchy=use_hierarchy,
+                **kwargs
+            )
+        else:
+            # Fallback to standard extraction
+            if isinstance(texts, list):
+                all_topics = []
+                for text in texts:
+                    topics = self.extract_topics(text, **kwargs)
+                    all_topics.extend(topics)
+                return all_topics[:kwargs.get('max_topics', 10)]
+            else:
+                return self.extract_topics(texts, **kwargs)

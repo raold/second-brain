@@ -678,3 +678,23 @@ class StructuredDataExtractor:
         }
 
         return stats
+    
+    def extract_advanced_structured_data(self, text: str, **kwargs) -> StructuredData:
+        """
+        Extract structured data using advanced techniques
+        
+        Args:
+            text: Input text
+            **kwargs: Additional arguments for advanced extraction
+            
+        Returns:
+            Advanced structured data
+        """
+        # Use advanced extractor if available
+        try:
+            from app.ingestion.advanced_structured_extractor import AdvancedStructuredExtractor
+            advanced_extractor = AdvancedStructuredExtractor(**kwargs)
+            return advanced_extractor.extract_structured_data(text)
+        except ImportError:
+            logger.warning("Advanced structured extraction not available, using basic extraction")
+            return self.extract_structured_data(text)
