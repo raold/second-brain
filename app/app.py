@@ -48,6 +48,8 @@ from app.routes import (
 from app.routes import (
     session_router as new_session_router,
 )
+from app.routes.graph_routes import router as graph_router
+from app.routes.analysis_routes import router as analysis_router
 
 # Import bulk operations routes
 from app.routes.bulk_operations_routes import bulk_router
@@ -260,6 +262,8 @@ app.include_router(visualization_router)
 app.include_router(importance_router)
 app.include_router(relationship_router)
 app.include_router(bulk_router)
+app.include_router(graph_router)
+app.include_router(analysis_router)
 
 # Include insights router
 from app.routes.insights import router as insights_router

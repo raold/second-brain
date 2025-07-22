@@ -46,13 +46,42 @@ class IntentRecognizer:
         # Initialize urgency indicators
         self.urgency_indicators = self._initialize_urgency_indicators()
 
+        # Initialize transformer model for better intent classification
+        self.transformer_model = None
+        self.use_transformer = False
+        
         if SPACY_AVAILABLE:
             try:
-                import spacy
-                self.nlp = spacy.load("en_core_web_sm")
-                logger.info("Loaded SpaCy model for intent recognition")
+                # Try to load transformer model first
+                try:
+                    self.nlp = spacy.load("en_core_web_trf")
+                    self.use_transformer = True
+                    logger.info("Loaded SpaCy transformer model for intent recognition")
+                except OSError:
+                    # Fall back to large model
+                    try:
+                        self.nlp = spacy.load("en_core_web_lg")
+                        logger.info("Loaded SpaCy large model for intent recognition")
+                    except OSError:
+                        # Fall back to small model
+                        self.nlp = spacy.load("en_core_web_sm")
+                        logger.info("Loaded SpaCy small model for intent recognition")
             except Exception as e:
                 logger.warning(f"Failed to load SpaCy model: {e}")
+                
+        # Try to load transformer-based classifier
+        try:
+            from transformers import pipeline
+            self.transformer_classifier = pipeline(
+                "zero-shot-classification",
+                model="facebook/bart-large-mnli",
+                device=-1  # CPU, set to 0 for GPU
+            )
+            self.intent_labels = [intent.value for intent in IntentType]
+            logger.info("Loaded transformer classifier for intent recognition")
+        except Exception as e:
+            logger.warning(f"Failed to load transformer classifier: {e}")
+            self.transformer_classifier = None
 
     def recognize_intent(self, text: str) -> Optional[Intent]:
         """
@@ -95,6 +124,39 @@ class IntentRecognizer:
         """Detect the primary intent type from text"""
         text_lower = text.lower().strip()
 
+        # Use transformer classifier if available
+        if self.transformer_classifier:
+            try:
+                result = self.transformer_classifier(
+                    text[:512],  # Limit text length
+                    candidate_labels=self.intent_labels,
+                    multi_label=False
+                )
+                
+                # Get top prediction
+                top_label = result["labels"][0]
+                top_score = result["scores"][0]
+                
+                # Map to IntentType
+                for intent_type in IntentType:
+                    if intent_type.value == top_label:
+                        # Combine with pattern matching for better accuracy
+                        pattern_intent, pattern_conf = self._detect_intent_pattern_based(text_lower)
+                        if pattern_intent == intent_type:
+                            # Boost confidence when both methods agree
+                            return intent_type, min(0.95, top_score * 1.2)
+                        else:
+                            # Average when they disagree
+                            return intent_type, top_score * 0.8
+                            
+            except Exception as e:
+                logger.debug(f"Transformer classification failed: {e}")
+
+        # Fall back to pattern-based detection
+        return self._detect_intent_pattern_based(text_lower)
+
+    def _detect_intent_pattern_based(self, text_lower: str) -> tuple[Optional[IntentType], float]:
+        """Pattern-based intent detection (original method)"""
         # Track scores for each intent type
         intent_scores = defaultdict(float)
 
@@ -115,15 +177,15 @@ class IntentRecognizer:
 
         # Analyze sentence structure if SpaCy available
         if self.nlp:
-            structure_intent, structure_confidence = self._analyze_sentence_structure(text)
+            structure_intent, structure_confidence = self._analyze_sentence_structure(text_lower)
             if structure_intent:
                 intent_scores[structure_intent] += structure_confidence * 2
 
         # Special checks
-        if text.strip().endswith("?"):
+        if text_lower.strip().endswith("?"):
             intent_scores[IntentType.QUESTION] += 2.0
 
-        if any(text.strip().startswith(prefix) for prefix in ["TODO:", "FIXME:", "NOTE:"]):
+        if any(text_lower.strip().startswith(prefix.lower()) for prefix in ["TODO:", "FIXME:", "NOTE:"]):
             intent_scores[IntentType.TODO] += 3.0
 
         # Find highest scoring intent

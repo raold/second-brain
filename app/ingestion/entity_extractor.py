@@ -21,23 +21,49 @@ logger = logging.getLogger(__name__)
 class EntityExtractor:
     """Sophisticated entity extraction using SpaCy and custom patterns"""
 
-    def __init__(self, model_name: str = "en_core_web_sm", enable_custom: bool = True):
+    def __init__(self, model_name: str = "en_core_web_trf", enable_custom: bool = True, use_gpu: bool = False):
         """
         Initialize entity extractor
 
         Args:
-            model_name: SpaCy model to use
+            model_name: SpaCy model to use (defaults to transformer model)
             enable_custom: Whether to enable custom entity patterns
+            use_gpu: Whether to use GPU acceleration if available
         """
         self.model_name = model_name
         self.enable_custom = enable_custom
+        self.use_gpu = use_gpu
         self.nlp = None
         self.custom_patterns = self._initialize_custom_patterns()
 
         if SPACY_AVAILABLE:
             try:
-                self.nlp = spacy.load(model_name)
-                logger.info(f"Loaded SpaCy model: {model_name}")
+                # Try to load transformer model first
+                if model_name == "en_core_web_trf":
+                    try:
+                        self.nlp = spacy.load(model_name)
+                        if self.use_gpu and spacy.prefer_gpu():
+                            logger.info("Using GPU for SpaCy transformer model")
+                        logger.info(f"Loaded SpaCy transformer model: {model_name}")
+                    except OSError:
+                        # Fall back to smaller model if transformer not available
+                        logger.warning("Transformer model not found, falling back to en_core_web_lg")
+                        try:
+                            self.nlp = spacy.load("en_core_web_lg")
+                            self.model_name = "en_core_web_lg"
+                        except OSError:
+                            logger.warning("Large model not found, falling back to en_core_web_sm")
+                            self.nlp = spacy.load("en_core_web_sm")
+                            self.model_name = "en_core_web_sm"
+                else:
+                    self.nlp = spacy.load(model_name)
+                    logger.info(f"Loaded SpaCy model: {model_name}")
+                
+                # Add custom entity ruler for domain-specific entities
+                if "entity_ruler" not in self.nlp.pipe_names:
+                    ruler = self.nlp.add_pipe("entity_ruler", before="ner")
+                    ruler.add_patterns(self._get_entity_ruler_patterns())
+                    
             except Exception as e:
                 logger.warning(f"Failed to load SpaCy model {model_name}: {e}")
                 logger.info("Entity extraction will use pattern matching only")
@@ -400,6 +426,67 @@ class EntityExtractor:
         normalized = normalized.strip(".,;:!?'\"")
 
         return normalized
+
+    def _get_entity_ruler_patterns(self) -> list[dict[str, Any]]:
+        """Get patterns for SpaCy entity ruler to improve domain-specific recognition"""
+        patterns = [
+            # Technology patterns
+            {"label": "TECHNOLOGY", "pattern": [{"LOWER": "python"}]},
+            {"label": "TECHNOLOGY", "pattern": [{"LOWER": "javascript"}]},
+            {"label": "TECHNOLOGY", "pattern": [{"LOWER": "react"}]},
+            {"label": "TECHNOLOGY", "pattern": [{"LOWER": "docker"}]},
+            {"label": "TECHNOLOGY", "pattern": [{"LOWER": "kubernetes"}]},
+            {"label": "TECHNOLOGY", "pattern": [{"LOWER": "tensorflow"}]},
+            {"label": "TECHNOLOGY", "pattern": [{"LOWER": "pytorch"}]},
+            {"label": "TECHNOLOGY", "pattern": [{"LOWER": "spacy"}]},
+            {"label": "TECHNOLOGY", "pattern": [{"LOWER": "transformers"}]},
+            
+            # Framework patterns
+            {"label": "TECHNOLOGY", "pattern": [{"LOWER": {"IN": ["django", "flask", "fastapi"]}}]},
+            
+            # AI/ML concepts
+            {"label": "CONCEPT", "pattern": [{"LOWER": "machine"}, {"LOWER": "learning"}]},
+            {"label": "CONCEPT", "pattern": [{"LOWER": "deep"}, {"LOWER": "learning"}]},
+            {"label": "CONCEPT", "pattern": [{"LOWER": "neural"}, {"LOWER": "network"}]},
+            {"label": "CONCEPT", "pattern": [{"LOWER": "natural"}, {"LOWER": "language"}, {"LOWER": "processing"}]},
+            
+            # Project management
+            {"label": "PROJECT", "pattern": [{"TEXT": {"REGEX": "[A-Z]{2,}-\\d+"}}]},  # JIRA-style
+            
+            # Version patterns
+            {"label": "VERSION", "pattern": [{"TEXT": {"REGEX": "v?\\d+\\.\\d+(\\.\\d+)?"}}]},
+        ]
+        return patterns
+
+    def extract_entities_with_context(self, text: str, context_window: int = 50) -> list[dict[str, Any]]:
+        """
+        Extract entities with surrounding context for better understanding
+        
+        Args:
+            text: Input text
+            context_window: Number of characters to include before/after entity
+            
+        Returns:
+            List of entities with context
+        """
+        entities = self.extract_entities(text)
+        entities_with_context = []
+        
+        for entity in entities:
+            start = max(0, entity.start_pos - context_window)
+            end = min(len(text), entity.end_pos + context_window)
+            
+            context = {
+                "entity": entity.dict(),
+                "context": {
+                    "before": text[start:entity.start_pos],
+                    "after": text[entity.end_pos:end],
+                    "full": text[start:end]
+                }
+            }
+            entities_with_context.append(context)
+            
+        return entities_with_context
 
     def get_entity_statistics(self, entities: list[Entity]) -> dict[str, Any]:
         """Get statistics about extracted entities"""

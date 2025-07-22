@@ -11,7 +11,21 @@
       "Bash(git commit:*)",
       "Bash(del \"C:\\Users\\dro\\second-brain\\verify_version_tests.py\")",
       "Bash(set PYTHONIOENCODING=utf-8)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(PYTHONPATH=. python -m pytest test_integration_features.py -v --tb=short)",
+      "Bash(PYTHONPATH=. python -m pytest tests/ -v --tb=short -x)",
+      "Bash(PYTHONPATH=. python -c \"from app.routes.graph_routes import router; print(''graph_routes import successful'')\")",
+      "Bash(PYTHONPATH=. python -c \"from app.routes.graph_routes import router; print(''graph_routes import successful'')\")",
+      "Bash(PYTHONPATH=. python -c \"from app.routes.analysis_routes import router; print(''analysis_routes import successful'')\")",
+      "Bash(PYTHONPATH=. python -m pytest test_integration_features.py test_knowledge_graph_minimal.py test_reasoning_minimal.py -v)",
+      "Bash(USE_MOCK_DATABASE=true PYTHONPATH=. python -m pytest test_integration_features.py test_knowledge_graph_minimal.py test_reasoning_minimal.py -v)",
+      "Bash(USE_MOCK_DATABASE=true PYTHONPATH=. python test_integration_features.py)",
+      "Bash(USE_MOCK_DATABASE=true PYTHONPATH=. python -c \"from app.app import app; print(''✅ App imports successfully with advanced-analysis features'')\")",
+      "Bash(USE_MOCK_DATABASE=true PYTHONPATH=. python -c \"from app.app import app; print(''✅ App imports successfully with advanced-analysis features'')\")"
     ],
     "deny": []
   }
