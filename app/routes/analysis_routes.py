@@ -5,16 +5,13 @@ API routes for advanced analysis features including domain classification
 import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 
-from app.core.database import get_db
-from app.services.memory_service import MemoryService
+from app.shared import get_db_instance, verify_api_key
 from app.ingestion.topic_classifier import TopicClassifier
 from app.ingestion.structured_extractor import StructuredDataExtractor
 from app.ingestion.domain_classifier import DomainClassifier
-from app.auth.dependencies import get_current_user
-from app.models.user import User
+# Authentication handled by shared verify_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +52,7 @@ class DomainClassificationRequest(BaseModel):
 @router.post("/analyze")
 async def analyze_content(
     request: AnalysisRequest,
-    current_user: User = Depends(get_current_user)
+    _: str = Depends(verify_api_key)
 ):
     """
     Perform comprehensive content analysis
@@ -128,8 +125,8 @@ async def analyze_content(
 @router.post("/batch")
 async def batch_analyze(
     request: BatchAnalysisRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    _: str = Depends(verify_api_key),
+    db=Depends(get_db_instance)
 ):
     """
     Perform batch analysis on multiple memories
@@ -223,7 +220,7 @@ async def batch_analyze(
 @router.post("/classify-domain")
 async def classify_domain(
     request: DomainClassificationRequest,
-    current_user: User = Depends(get_current_user)
+    _: str = Depends(verify_api_key)
 ):
     """
     Classify content into knowledge domains
@@ -253,8 +250,8 @@ async def classify_domain(
 async def get_trending_topics(
     days: int = Query(7, description="Number of days to analyze"),
     limit: int = Query(10, description="Number of top topics"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    _: str = Depends(verify_api_key),
+    db=Depends(get_db_instance)
 ):
     """
     Get trending topics from recent memories
@@ -321,8 +318,8 @@ async def get_trending_topics(
 
 @router.get("/domains/distribution")
 async def get_domain_distribution(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    _: str = Depends(verify_api_key),
+    db=Depends(get_db_instance)
 ):
     """
     Get distribution of content across domains

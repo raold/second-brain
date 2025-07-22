@@ -5,17 +5,15 @@ API routes for advanced relationship graph functionality
 import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+# Database imports handled by shared module
 from pydantic import BaseModel, Field
 
-from app.core.database import get_db
-from app.services.memory_service import MemoryService
+from app.shared import get_db_instance, verify_api_key
 from app.ingestion.entity_extractor import EntityExtractor
 from app.ingestion.relationship_detector import RelationshipDetector
 from app.visualization.relationship_graph import RelationshipGraph
 from app.ingestion.models import Entity, Relationship
-from app.auth.dependencies import get_current_user
-from app.models.user import User
+# Authentication handled by shared verify_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +51,8 @@ class NeighborhoodRequest(BaseModel):
 @router.post("/build")
 async def build_relationship_graph(
     request: GraphRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    _: str = Depends(verify_api_key),
+    db=Depends(get_db_instance)
 ):
     """
     Build a relationship graph from memories
@@ -142,8 +140,8 @@ async def build_relationship_graph(
 @router.post("/paths")
 async def find_relationship_paths(
     request: PathRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    _: str = Depends(verify_api_key),
+    db=Depends(get_db_instance)
 ):
     """
     Find paths between two entities in the relationship graph
@@ -203,8 +201,8 @@ async def find_relationship_paths(
 @router.post("/neighborhood")
 async def get_entity_neighborhood(
     request: NeighborhoodRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    _: str = Depends(verify_api_key),
+    db=Depends(get_db_instance)
 ):
     """
     Get the neighborhood of an entity
@@ -258,8 +256,8 @@ async def get_entity_neighborhood(
 @router.get("/centrality")
 async def get_central_entities(
     top_n: int = Query(10, description="Number of top entities"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    _: str = Depends(verify_api_key),
+    db=Depends(get_db_instance)
 ):
     """
     Get the most central entities in the knowledge graph
@@ -313,8 +311,8 @@ async def get_central_entities(
 @router.get("/communities")
 async def detect_communities(
     algorithm: str = Query("spectral", description="Community detection algorithm"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    _: str = Depends(verify_api_key),
+    db=Depends(get_db_instance)
 ):
     """
     Detect communities in the knowledge graph
@@ -369,8 +367,8 @@ async def detect_communities(
 @router.get("/export/{format}")
 async def export_graph(
     format: str = "json",
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    _: str = Depends(verify_api_key),
+    db=Depends(get_db_instance)
 ):
     """
     Export the knowledge graph in various formats
