@@ -304,7 +304,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
             if all(v.is_integer() for v in numeric_values):
                 return "integer"
             return "float"
-        except:
+        except (ValueError, TypeError):
             pass
 
         # Check if all values are dates

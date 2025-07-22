@@ -60,7 +60,7 @@ jobs:
       run: |
         psql -h localhost -U postgres -d test_migrations -c "CREATE EXTENSION IF NOT EXISTS vector;"
         psql -h localhost -U postgres -d test_migrations -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
-        psql -h localhost -U postgres -d test_migrations -c "CREATE EXTENSION IF NOT EXISTS uuid-ossp;"
+        psql -h localhost -U postgres -d test_migrations -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
     
     - name: Set up test environment
       run: |

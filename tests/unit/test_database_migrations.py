@@ -20,7 +20,7 @@ class TestDatabaseMigrationsWorking:
         assert migration.metadata.name == "Add importance score to memories"
         assert migration.metadata.reversible is True
         assert migration.metadata.author == "system"
-        assert migration.metadata.version == "2.5.0"
+        assert migration.metadata.version == "2.8.1"
 
     @pytest.mark.asyncio
     async def test_get_forward_statements(self):

@@ -196,7 +196,7 @@ class TestConsolidateDuplicateMemories:
         assert metadata.migration_type == MigrationType.MEMORY_DATA
         assert metadata.dependencies == ["classify_memory_types_001"]
         assert metadata.reversible is True
-        assert metadata.version == "2.5.1"
+        assert metadata.version == "2.8.1"
 
     @patch('app.memory_migrations.BulkMemoryEngine')
     @pytest.mark.asyncio

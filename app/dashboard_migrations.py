@@ -234,7 +234,7 @@ class MigrationDashboard:
                             applied_time = datetime.fromisoformat(applied_at.replace("Z", "+00:00"))
                             if applied_time > cutoff:
                                 recent_failures += 1
-                        except:
+                        except (ValueError, TypeError):
                             pass
 
             return recent_failures

@@ -202,7 +202,7 @@ jobs:
           psql -h localhost -U test_user -d test_secondbrain << EOF
           CREATE EXTENSION IF NOT EXISTS vector;
           CREATE EXTENSION IF NOT EXISTS pg_trgm;
-          CREATE EXTENSION IF NOT EXISTS uuid-ossp;
+          CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
           
           -- Create test tables
           CREATE TABLE IF NOT EXISTS test_setup (
