@@ -33,6 +33,14 @@
       "Bash(python:*)",
       "Bash(del test_multimodal_integration.py)",
       "Bash(rm:*)",
+      "Bash(git add:*)",
+      "Bash(diff:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"Checking $file.md\")",
+      "Bash(done)",
+      "Bash(rm:*)",
+      "Bash(grep:*)",
+      "Bash(chmod:*)",
       "Bash(git add:*)"
     ],
     "deny": []

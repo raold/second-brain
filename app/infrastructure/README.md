@@ -354,3 +354,19 @@ await ws_manager.start()
 5. **Use priority queues** for time-sensitive operations
 6. **Batch operations** when possible for efficiency
 7. **Clean up resources** properly on shutdown
+
+## 📌 Version Compatibility
+
+This infrastructure module is compatible with Second Brain v2.5.0 and above.
+
+### Version History:
+- **v2.6.0**: Current version with full multimodal support
+- **v2.5.0**: Initial infrastructure implementation
+- **v2.4.x**: Not compatible (infrastructure module didn't exist)
+
+### Migration Notes:
+If upgrading from v2.5.x to v2.6.0:
+- No breaking changes in infrastructure APIs
+- New features are backward compatible
+- Enhanced performance in streaming operations
+- Additional validation capabilities added

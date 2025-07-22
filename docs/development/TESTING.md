@@ -1,552 +1,359 @@
-# Second Brain v2.3.0 - Testing Guide
+# Testing Guide for Second Brain v2.6.0-dev
 
-## python -m pytest tests/unit/test_mock_database.py -v
+## Overview
 
-# Run all unit tests
-python -m pytest tests/unit/ -v
+Second Brain uses a comprehensive testing strategy with 85% minimum coverage requirement. This guide covers testing practices, tools, and workflows.
+
+## Quick Start
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage (enforces 85% minimum)
+pytest --cov=app --cov-fail-under=85
+
+# Run specific test types
+pytest -m unit          # Unit tests only
+pytest -m integration   # Integration tests only
+pytest -m performance   # Performance tests only
+
+# Run tests and generate HTML report
+pytest --cov=app --cov-report=html
+open htmlcov/index.html
 ```
 
-### All Tests
-```bash
-# Run complete test suite
-python -m pytest tests/ -v --cov=app --cov-report=term-missingond Brain v2.3.0 includes a comprehensive testing framework with both unit tests and integration tests. This guide covers testing strategies, mock database usage, and development workflows.
+## Test Structure
 
-## Testing Framework
-
-### Test Structure
 ```
 tests/
-├── unit/                   # Unit tests
-│   ├── test_core_functionality.py  # Core API and database tests
-│   ├── test_database_basic.py      # Database initialization tests
-│   ├── test_mock_database.py       # Mock database tests
-│   └── test_ci_pipeline.py         # CI pipeline tests
-├── integration/            # Integration tests
-│   ├── test_api_endpoints.py       # API endpoint integration tests
-│   └── test_openapi_validation.py  # OpenAPI validation tests
-└── conftest.py            # Test configuration and fixtures
-```
-
-### Core Test Files
-- **`tests/unit/test_core_functionality.py`**: Complete test suite for API and database
-- **`tests/unit/test_mock_database.py`**: Standalone mock database tests
-- **`tests/unit/test_database_basic.py`**: Database initialization tests
-- **`tests/integration/test_api_endpoints.py`**: End-to-end API testing
-
-## Running Tests
-
-### Quick Test
-```bash
-# Run main test suite
-python -m pytest test_refactored.py -v
-
-# Run with coverage
-python -m pytest test_refactored.py --cov=app --cov-report=html
-
-# Run specific test
-python -m pytest test_refactored.py::test_health_check -v
-```
-
-### Mock Database Testing
-```bash
-# Run mock database tests (no OpenAI API required)
-python test_mock_database.py
-
-# Run mock database with pytest
-python -m pytest test_mock_database.py -v
-```
-
-### Database Setup Testing
-```bash
-# Test database initialization
-python test_db_setup.py
-
-# Test with pytest
-python -m pytest test_db_setup.py -v
+├── unit/                    # Unit tests for individual components
+│   ├── test_batch_processing.py      # Batch processing tests
+│   ├── test_security_comprehensive.py # Security tests
+│   ├── test_routes_comprehensive.py   # Route tests
+│   └── test_core_modules.py          # Core functionality tests
+├── integration/             # Integration tests
+│   ├── test_api_endpoints.py         # API integration tests
+│   └── test_insights_api.py          # Insights API tests
+├── performance/             # Performance tests
+│   └── test_performance_benchmark.py # Performance benchmarks
+├── comprehensive/           # End-to-end tests
+├── multimodal/             # Multimodal feature tests
+├── manual/                 # Manual test scripts
+├── conftest.py             # Shared fixtures
+├── test_template.py        # Template for new tests
+└── TESTING_GUIDELINES.md   # Detailed guidelines
 ```
 
 ## Test Configuration
 
-### Environment Setup
+### pytest.ini
+The project uses pytest with the following configuration:
+- **Coverage requirement**: 85% minimum (`--cov-fail-under=85`)
+- **Async support**: Enabled with `asyncio_mode = auto`
+- **Mock database**: Uses `USE_MOCK_DATABASE=true` for testing
+- **Test markers**: unit, integration, performance, asyncio, slow
+
+### Environment Variables
 ```bash
-# Test environment variables
-export DATABASE_URL="postgresql://test:test@localhost:5432/test_db"
-export OPENAI_API_KEY="test_key"
-export AUTH_TOKEN="test_token"
-
-# Or create .env.test
-cp .env.example .env.test
+USE_MOCK_DATABASE=true     # Use mock database for tests
+API_TOKENS=test-key-1,test-key-2  # Test API tokens
 ```
 
-### Test Database
-```sql
--- Create test database
-CREATE DATABASE test_second_brain;
+## Writing Tests
 
--- Setup test user
-CREATE USER test_user WITH PASSWORD 'test_password';
-GRANT ALL PRIVILEGES ON DATABASE test_second_brain TO test_user;
+### Use the Template
+Start with the test template for consistency:
+```bash
+cp tests/test_template.py tests/unit/test_new_feature.py
 ```
 
-## Test Categories
+### Test Categories
 
-### 1. Unit Tests
+#### 1. Unit Tests
+Test individual components in isolation:
 ```python
-# Example unit test
-def test_health_check():
-    """Test health check endpoint"""
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+@pytest.mark.unit
+def test_memory_validation():
+    """Test memory validation logic."""
+    memory = Memory(content="test", importance=7.5)
+    assert memory.is_valid()
 ```
 
-### 2. Integration Tests
+#### 2. Integration Tests
+Test component interactions:
 ```python
-# Example integration test
-def test_store_and_retrieve_memory():
-    """Test full memory lifecycle"""
-    # Store memory
-    memory_data = {
-        "content": "Test memory content",
-        "metadata": {"category": "test"}
-    }
-    response = client.post("/memories", json=memory_data)
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_api_workflow(client, api_key):
+    """Test complete API workflow."""
+    response = await client.post("/memories", json=data, headers=auth)
     assert response.status_code == 201
-    
-    # Retrieve memory
-    memory_id = response.json()["id"]
-    response = client.get(f"/memories/{memory_id}")
-    assert response.status_code == 200
-    assert response.json()["content"] == "Test memory content"
 ```
 
-### 3. Mock Database Tests
+#### 3. Performance Tests
+Test performance requirements:
 ```python
-# Example mock database test
-async def test_mock_database():
-    """Test mock database operations"""
-    mock_db = MockDatabase()
-    
-    # Store memory
-    memory_id = await mock_db.store_memory(
-        "Test content",
-        {"category": "test"}
-    )
-    
-    # Search memories
-    results = await mock_db.search_memories("test")
-    assert len(results) > 0
-    assert results[0]["content"] == "Test content"
+@pytest.mark.performance
+def test_search_speed():
+    """Test search performance."""
+    start = time.time()
+    results = search_memories(query, large_dataset)
+    elapsed = time.time() - start
+    assert elapsed < 1.0  # Under 1 second
 ```
 
-## Test Suite Details
-
-### `test_refactored.py`
-Complete test suite with the following test cases:
-
-#### API Endpoint Tests
-- `test_health_check()` - Health endpoint
-- `test_store_memory()` - Memory creation
-- `test_get_memory()` - Memory retrieval
-- `test_list_memories()` - Memory listing
-- `test_delete_memory()` - Memory deletion
-- `test_search_memories()` - Semantic search
-
-#### Authentication Tests
-- `test_authentication_required()` - Auth validation
-- `test_invalid_token()` - Token validation
-- `test_missing_token()` - Missing auth header
-
-#### Error Handling Tests
-- `test_memory_not_found()` - 404 handling
-- `test_invalid_request_data()` - Validation errors
-- `test_database_connection_error()` - DB error handling
-
-#### Database Integration Tests
-- `test_database_connection()` - Connection testing
-- `test_vector_search()` - pgvector functionality
-- `test_metadata_storage()` - JSONB operations
-
-### `test_mock_database.py`
-Standalone mock database tests:
-
+### Async Testing
+Always use `@pytest.mark.asyncio` for async tests:
 ```python
-#!/usr/bin/env python3
-
-import asyncio
-import uuid
-from app.database_mock import MockDatabase
-
-async def test_mock_database():
-    print("Testing Mock Database...")
-    
-    # Initialize mock database
-    mock_db = MockDatabase()
-    
-    # Test 1: Store memory
-    print("\n1. Testing store_memory...")
-    memory_id = await mock_db.store_memory(
-        "I learned about PostgreSQL pgvector for semantic search",
-        {"category": "learning", "tags": ["database", "AI"]}
-    )
-    print(f"✓ Stored memory with ID: {memory_id}")
-    
-    # Test 2: Get memory
-    print("\n2. Testing get_memory...")
-    memory = await mock_db.get_memory(memory_id)
-    print(f"✓ Retrieved memory: {memory['content'][:50]}...")
-    
-    # Test 3: Search memories
-    print("\n3. Testing search_memories...")
-    results = await mock_db.search_memories("database search", limit=3)
-    print(f"✓ Found {len(results)} matching memories")
-    
-    # Test 4: List all memories
-    print("\n4. Testing list_memories...")
-    all_memories = await mock_db.list_memories(limit=10)
-    print(f"✓ Listed {len(all_memories)} total memories")
-    
-    # Test 5: Delete memory
-    print("\n5. Testing delete_memory...")
-    deleted = await mock_db.delete_memory(memory_id)
-    print(f"✓ Memory deleted: {deleted}")
-    
-    print("\n✅ All mock database tests passed!")
-
-if __name__ == "__main__":
-    asyncio.run(test_mock_database())
+@pytest.mark.asyncio
+async def test_async_function():
+    result = await async_function()
+    assert result is not None
 ```
 
-## Mock Database Usage
+### Mocking Patterns
 
-### Purpose
-The mock database allows testing without:
-- OpenAI API costs
-- Real database setup
-- Network dependencies
-- External service dependencies
-
-### Features
-- In-memory storage
-- Simulated embeddings
-- Compatible API interface
-- Deterministic results
-
-### Usage Example
+#### Database Mocking
 ```python
-from app.database_mock import MockDatabase
-
-# Initialize mock database
-mock_db = MockDatabase()
-
-# Use exactly like real database
-memory_id = await mock_db.store_memory(
-    "Test content",
-    {"category": "test"}
-)
-
-# Search with simulated embeddings
-results = await mock_db.search_memories("query")
-```
-
-## Performance Testing
-
-### Memory Performance
-```python
-import time
-import asyncio
-
-async def test_performance():
-    """Test memory operation performance"""
-    mock_db = MockDatabase()
-    
-    # Test store performance
-    start_time = time.time()
-    for i in range(100):
-        await mock_db.store_memory(f"Test memory {i}", {"index": i})
-    store_time = time.time() - start_time
-    
-    # Test search performance
-    start_time = time.time()
-    for i in range(10):
-        await mock_db.search_memories("test query", limit=5)
-    search_time = time.time() - start_time
-    
-    print(f"Store 100 memories: {store_time:.2f}s")
-    print(f"10 searches: {search_time:.2f}s")
-```
-
-### Load Testing
-```python
-import asyncio
-import aiohttp
-
-async def load_test():
-    """Basic load test for API endpoints"""
-    async with aiohttp.ClientSession() as session:
-        tasks = []
-        for i in range(50):
-            task = session.get(
-                "http://localhost:8000/health",
-                headers={"Authorization": "Bearer test_token"}
-            )
-            tasks.append(task)
+def test_with_database_mock():
+    with patch('app.database.get_db') as mock_db:
+        mock_conn = AsyncMock()
+        mock_db.return_value.__aenter__.return_value = mock_conn
+        mock_conn.fetchrow.return_value = {"id": "123"}
         
-        responses = await asyncio.gather(*tasks)
-        success_count = sum(1 for r in responses if r.status == 200)
-        print(f"Load test: {success_count}/50 successful requests")
+        # Test code here
 ```
 
-## Test Data Management
-
-### Test Data Setup
+#### External Service Mocking
 ```python
-# Test data fixtures
-TEST_MEMORIES = [
-    {
-        "content": "PostgreSQL is a powerful relational database",
-        "metadata": {"category": "database", "difficulty": "beginner"}
-    },
-    {
-        "content": "pgvector extension enables vector similarity search",
-        "metadata": {"category": "database", "difficulty": "intermediate"}
-    },
-    {
-        "content": "FastAPI provides modern Python web framework",
-        "metadata": {"category": "web", "difficulty": "intermediate"}
-    }
-]
-
-async def setup_test_data(db):
-    """Setup test data for testing"""
-    for memory_data in TEST_MEMORIES:
-        await db.store_memory(
-            memory_data["content"],
-            memory_data["metadata"]
-        )
+def test_with_service_mock():
+    with patch('app.services.openai_client') as mock_openai:
+        mock_openai.embed.return_value = [0.1] * 1536
+        
+        # Test code here
 ```
 
-### Test Data Cleanup
+## Test Quality Standards
+
+### Coverage Requirements
+- **Overall Coverage**: 85% minimum (enforced)
+- **Critical Paths**: 95% (auth, core operations)
+- **New Code**: 90% coverage requirement
+- **Complex Logic**: 100% branch coverage
+
+### Quality Metrics
+- Test execution time: <5 minutes for full suite
+- Flaky test rate: <1%
+- Test maintenance: <10% of development time
+
+### Code Quality
+- Use descriptive test names
+- Include docstrings for complex tests
+- Follow Arrange-Act-Assert pattern
+- One assertion per concept
+- Mock external dependencies
+
+## Test Infrastructure
+
+### Mock Database
+The project uses a mock database for testing:
 ```python
-async def cleanup_test_data(db):
-    """Clean up test data after testing"""
-    # For mock database, just reinitialize
-    if isinstance(db, MockDatabase):
-        db.memories = {}
-        return
-    
-    # For real database, delete test data
-    await db.execute("DELETE FROM memories WHERE metadata->>'category' = 'test'")
+from app.database_mock import MockDatabase
+
+# Automatically used when USE_MOCK_DATABASE=true
 ```
 
-## Continuous Integration
+### Fixtures
+Common fixtures are defined in `conftest.py`:
+- `client`: HTTP test client
+- `api_key`: Test API key
+- `sample_memory`: Sample memory data
 
-### GitHub Actions Setup
-```yaml
-name: Tests
-on: [push, pull_request]
+### Test Data Factories
+Use factories for generating test data:
+```python
+from tests.factories import MemoryFactory
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: ankane/pgvector
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Install dependencies
-      run: |
-        pip install -r requirements-minimal.txt
-        pip install pytest pytest-cov
-    
-    - name: Run tests
-      run: |
-        python -m pytest test_refactored.py --cov=app --cov-report=xml
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
-        OPENAI_API_KEY: test_key
-        AUTH_TOKEN: test_token
-    
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
+memory = MemoryFactory.create(importance=8.0)
+memories = MemoryFactory.create_batch(10)
 ```
 
-### Pre-commit Hooks
+## Running Tests
+
+### Local Development
 ```bash
-# Install pre-commit
-pip install pre-commit
+# Run all tests
+pytest
 
-# Setup hooks
-pre-commit install
+# Run specific file
+pytest tests/unit/test_batch_processing.py
 
-# Run manually
-pre-commit run --all-files
+# Run with coverage
+pytest --cov=app --cov-report=html
+
+# Run fast tests only
+pytest -m "not slow"
+
+# Run with verbose output
+pytest -v
+
+# Stop on first failure
+pytest -x
 ```
 
-## Test Coverage
+### CI/CD Pipeline
+Tests run automatically on:
+- Every push to `develop` branch
+- Pull requests to `main` branch
+- Weekly quality reviews (Sundays 2 AM UTC)
 
-### Coverage Configuration
-```ini
-# .coveragerc
-[run]
-source = app
-omit = 
-    */tests/*
-    */test_*
-    */__pycache__/*
-    */migrations/*
-
-[report]
-exclude_lines =
-    pragma: no cover
-    def __repr__
-    raise AssertionError
-    raise NotImplementedError
-```
-
-### Coverage Reports
+### Performance Testing
 ```bash
-# Generate HTML coverage report
-python -m pytest test_refactored.py --cov=app --cov-report=html
+# Run performance tests
+pytest -m performance
 
-# Generate XML coverage report
-python -m pytest test_refactored.py --cov=app --cov-report=xml
-
-# View coverage summary
-python -m pytest test_refactored.py --cov=app --cov-report=term-missing
+# Run with performance profiling
+pytest --profile tests/performance/
 ```
+
+## Test Quality Review
+
+### Automated Analysis
+The project includes automated test quality analysis:
+```bash
+# Run quality analyzer
+python scripts/test-quality-analyzer.py
+
+# Generates:
+# - test-quality-report.md
+# - test-quality-data.json
+# - coverage reports
+```
+
+### Weekly Reviews
+- Automated quality reports generated weekly
+- Coverage trend analysis
+- Performance regression detection
+- Test maintenance recommendations
+
+### Metrics Tracked
+- Coverage percentages by module
+- Test execution times
+- Flaky test detection
+- Test code quality metrics
 
 ## Debugging Tests
 
-### Debug Mode
-```python
-# Run tests with debug output
-python -m pytest test_refactored.py -v -s
+### Debug Failed Tests
+```bash
+# Run with detailed output
+pytest -vvv --tb=long
 
-# Run single test with debug
-python -m pytest test_refactored.py::test_store_memory -v -s
+# Drop into debugger on failure
+pytest --pdb
 
-# Run with pdb debugger
-python -m pytest test_refactored.py --pdb
+# Run specific failing test
+pytest tests/unit/test_feature.py::test_specific_case -vvv
 ```
 
-### Test Logging
-```python
-import logging
-import pytest
+### Debug Performance Issues
+```bash
+# Profile test execution
+pytest --durations=20
 
-# Configure logging for tests
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
-@pytest.fixture
-def debug_logger():
-    return logging.getLogger(__name__)
+# Memory profiling
+pytest --profile-mem
 ```
+
+### Common Issues
+1. **Async test failures**: Ensure `@pytest.mark.asyncio` is used
+2. **Mock issues**: Patch at the right import level
+3. **Database conflicts**: Use test database or mocks
+4. **Flaky tests**: Check for race conditions or external dependencies
 
 ## Best Practices
 
-### Test Organization
-- Group related tests in classes
-- Use descriptive test names
-- Include docstrings for complex tests
-- Use fixtures for common setup
+### Do's
+✅ Use descriptive test names
+✅ Mock external dependencies
+✅ Test both success and error paths
+✅ Use fixtures for setup/teardown
+✅ Keep tests focused and isolated
+✅ Include performance tests for critical paths
+✅ Document complex test scenarios
 
-### Mock Usage
-- Use mock database for unit tests
-- Mock external services (OpenAI API)
-- Test error conditions with mocks
-- Validate mock interactions
-
-### Assertions
-- Use specific assertions
-- Test both success and failure cases
-- Validate response structure
-- Check error messages
-
-### Test Data
-- Use realistic test data
-- Test edge cases
-- Clean up after tests
-- Isolate test data
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Errors**
-   ```bash
-   # Check database is running
-   psql $DATABASE_URL -c "SELECT 1"
-   
-   # Check pgvector extension
-   psql $DATABASE_URL -c "SELECT * FROM pg_extension WHERE extname='vector'"
-   ```
-
-2. **OpenAI API Errors**
-   ```python
-   # Use mock database for testing
-   from app.database_mock import MockDatabase
-   mock_db = MockDatabase()
-   ```
-
-3. **Authentication Errors**
-   ```python
-   # Check auth token in tests
-   headers = {"Authorization": "Bearer test_token"}
-   response = client.get("/health", headers=headers)
-   ```
-
-### Debug Commands
-```bash
-# Run tests with verbose output
-python -m pytest test_refactored.py -v
-
-# Run with coverage and debug
-python -m pytest test_refactored.py --cov=app --cov-report=term-missing -v
-
-# Run single test
-python -m pytest test_refactored.py::test_health_check -v
-
-# Run with print statements
-python -m pytest test_refactored.py -s
-```
+### Don'ts
+❌ Test implementation details
+❌ Create overly complex test setup
+❌ Skip error case testing
+❌ Use real external services in tests
+❌ Write tests that depend on each other
+❌ Ignore test execution time
+❌ Forget to clean up resources
 
 ## Contributing
 
-### Test Requirements
-- All new features must have tests
-- Maintain >90% test coverage
-- Include both unit and integration tests
-- Test error conditions
-- Update documentation
+### Before Submitting PRs
+1. Ensure all tests pass: `pytest`
+2. Check coverage: `pytest --cov=app --cov-fail-under=85`
+3. Run quality analyzer: `python scripts/test-quality-analyzer.py`
+4. Follow testing guidelines
+5. Add tests for new functionality
 
 ### Test Review Checklist
-- [ ] Tests cover new functionality
-- [ ] Tests cover error conditions
-- [ ] Tests are deterministic
-- [ ] Tests clean up after themselves
-- [ ] Tests have descriptive names
-- [ ] Tests include docstrings
-- [ ] Coverage remains above 90%
+- [ ] Tests cover happy path and edge cases
+- [ ] Error conditions are tested
+- [ ] Mocks are used appropriately
+- [ ] Test names are descriptive
+- [ ] No test dependencies
+- [ ] Performance requirements tested
+- [ ] Documentation updated
+
+## Resources
+
+- [Testing Guidelines](../tests/TESTING_GUIDELINES.md) - Detailed patterns and practices
+- [Test Template](../tests/test_template.py) - Template for new tests
+- [pytest Documentation](https://docs.pytest.org/) - Official pytest docs
+- [Test Quality Reports](../../test-quality-report.md) - Generated quality reports
+
+## Troubleshooting
+
+### Common Errors
+
+**ImportError during tests**:
+```bash
+# Install test dependencies
+pip install -r requirements.txt
+```
+
+**Coverage fails to reach 85%**:
+```bash
+# Generate coverage report to see gaps
+pytest --cov=app --cov-report=html
+open htmlcov/index.html
+```
+
+**Async tests failing**:
+```python
+# Ensure proper async test decoration
+@pytest.mark.asyncio
+async def test_async_function():
+    pass
+```
+
+**Database connection errors**:
+```bash
+# Ensure mock database is enabled
+export USE_MOCK_DATABASE=true
+```
+
+### Getting Help
+- Check existing tests for patterns
+- Review testing guidelines
+- Run test quality analyzer for insights
+- Consult the test template for structure
 
 ---
 
-This testing guide ensures reliable and maintainable code for Second Brain v2.3.0. For questions or issues, please check the GitHub repository or open an issue.
+**Remember**: Good tests are an investment in code quality and development velocity. Follow the guidelines and maintain high standards.

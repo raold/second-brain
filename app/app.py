@@ -267,8 +267,10 @@ app.include_router(analysis_router)
 
 # Include insights router
 from app.routes.insights import router as insights_router
+from app.routes.batch_routes import router as batch_router
 
 app.include_router(insights_router)
+app.include_router(batch_router, dependencies=[Depends(verify_api_key)])
 
 # Include bulk operations routes
 app.include_router(get_bulk_routes(), dependencies=[Depends(verify_api_key)])

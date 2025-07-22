@@ -108,13 +108,13 @@ The version manager automatically updates:
 ### Virtual Environment Setup
 ```bash
 # Activate virtual environment
-.venv\Scripts\activate
+.venv/Scripts/activate
 
 # Check current status
-python scripts\version_manager.py status
+python scripts/version_manager.py status
 
 # Prepare release
-python scripts\version_manager.py prepare 2.4.2
+python scripts/version_manager.py prepare 2.4.2
 ```
 
 ### Manual Process (if Python issues)
@@ -139,10 +139,10 @@ If the Python script has issues, you can follow the manual process:
 ### Automated Commands
 ```bash
 # Check current status
-python scripts\version_manager.py status
+python scripts/version_manager.py status
 
 # Prepare release 
-python scripts\version_manager.py prepare 2.4.3
+python scripts/version_manager.py prepare 2.4.3
 
 ## 📋 Version Configuration Structure
 

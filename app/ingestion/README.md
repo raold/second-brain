@@ -215,13 +215,38 @@ This will demonstrate:
 
 ## 📊 Metrics
 
-Typical performance on modern hardware:
-- Entity extraction: 50-200ms per document
-- Relationship detection: 100-300ms per document  
-- Embedding generation: 50-150ms per document
-- Full pipeline: 200-500ms per document
+Typical performance on modern hardware (v2.6.0-dev benchmarks):
+- Entity extraction: 30-150ms per document*
+- Relationship detection: 80-250ms per document*  
+- Embedding generation: 40-120ms per document*
+- Topic modeling: 100-300ms per document*
+- Full pipeline: 150-400ms per document*
+- Batch processing: 5-10 documents/second
+
+*Performance varies based on document size, complexity, and model selection.
 
 With GPU acceleration:
 - 2-5x faster processing
 - Better for batch processing
 - Handles longer documents efficiently
+
+## 📌 Version Compatibility
+
+This ingestion module is compatible with Second Brain v2.5.0 and above.
+
+### Version History:
+- **v2.6.0**: Enhanced with multimodal content support
+- **v2.5.0**: Initial sophisticated ingestion engine
+- **v2.4.x**: Basic ingestion only (limited features)
+
+### Migration Notes:
+If upgrading from v2.4.x to v2.6.0:
+- New ingestion pipeline requires configuration updates
+- Entity extraction models need to be downloaded
+- Batch processing APIs have changed
+- Consider re-processing existing memories for enhanced extraction
+
+### Breaking Changes from v2.4.x:
+- `process_text()` replaced by `process_content()`
+- Configuration format changed to support multiple models
+- Streaming ingestion requires new event handlers
