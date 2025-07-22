@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 def test_integrated_features():
     """Test that all three features can work together"""
-    print("🔗 Testing Integrated Features v2.6.3-integrated")
+    print("🔗 Testing Integrated Features v2.8.0")
     print("=" * 60)
     
     # Test 1: Reasoning Engine Core Functionality
@@ -145,7 +145,7 @@ def test_integrated_features():
     print("\n📝 Testing Version Consistency...")
     try:
         # All features should be at consolidated version
-        expected_version = "2.6.3-integrated"
+        expected_version = "2.8.0"
         
         # Check version file
         version_file = Path("app/version.py")

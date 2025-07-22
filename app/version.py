@@ -8,10 +8,10 @@ from datetime import datetime
 from typing import Any
 
 # Core version information
-__version__ = "2.6.3-integrated"
-__version_info__ = (2, 6, 3)
-__build__ = "testing"
-__release_date__ = "2025-08-01"
+__version__ = "2.8.0"
+__version_info__ = (2, 8, 0)
+__build__ = "stable"
+__release_date__ = "2025-01-22"
 
 # Build and environment information
 __build_timestamp__ = datetime.now().isoformat()
@@ -275,8 +275,22 @@ def get_cognitive_roadmap() -> dict[str, dict[str, Any]]:
                 "automatic_embeddings",
                 "structured_data_extraction",
             ],
-            "status": "current",
+            "status": "completed",
             "release_date": "2025-07-21",
+        },
+        "v2.8.0": {
+            "codename": "Reasoning",
+            "focus": "AI-Powered Reasoning & Graph Intelligence",
+            "features": [
+                "multi_hop_reasoning_engine",
+                "knowledge_graph_builder",
+                "d3js_graph_visualization",
+                "natural_language_queries",
+                "entity_relationship_extraction",
+                "interactive_graph_exploration",
+            ],
+            "status": "current",
+            "release_date": "2025-01-22",
         },
         "v2.6.0": {
             "codename": "Collaboration",
