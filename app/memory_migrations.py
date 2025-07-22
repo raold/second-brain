@@ -7,7 +7,7 @@ using the unified migration framework with bulk operations integration.
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import asyncpg
 
@@ -198,7 +198,7 @@ class MemoryDataMigration(Migration):
         """Get list of memories that need migration."""
         raise NotImplementedError
 
-    async def transform_memory(self, memory: dict[str, Any]) -> Optional[BulkMemoryItem]:
+    async def transform_memory(self, memory: dict[str, Any]) -> BulkMemoryItem | None:
         """Transform a memory according to migration rules."""
         raise NotImplementedError
 
@@ -290,7 +290,7 @@ class AddMemoryTypeClassification(MemoryDataMigration):
             """)
             return [dict(row) for row in rows]
 
-    async def transform_memory(self, memory: dict[str, Any]) -> Optional[BulkMemoryItem]:
+    async def transform_memory(self, memory: dict[str, Any]) -> BulkMemoryItem | None:
         """Classify memory type based on content analysis."""
         # Simple classification based on content patterns
         content = memory["content"].lower()
@@ -391,7 +391,7 @@ class ConsolidateDuplicateMemories(MemoryDataMigration):
 
             return duplicate_groups
 
-    async def transform_memory(self, memory_group: dict[str, Any]) -> Optional[BulkMemoryItem]:
+    async def transform_memory(self, memory_group: dict[str, Any]) -> BulkMemoryItem | None:
         """Consolidate duplicate memories into one."""
         # Merge contents intelligently
         merged_content = self._merge_contents(memory_group["contents"])

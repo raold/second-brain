@@ -3,22 +3,21 @@ Tests for bulk validation safety module.
 Simple tests focusing on import, instantiation, and basic functionality.
 """
 
-import pytest
 from datetime import datetime
+
 from app.bulk_validation_safety import (
-    ValidationError,
-    SafetyViolation,
-    RollbackType,
-    SafetyLevel,
-    ValidationResult,
-    SafetyCheck,
-    RollbackPoint,
-    SafetyConfiguration,
-    ContentValidator,
-    SafetyEnforcer,
     BulkValidationOrchestrator,
+    ContentValidator,
+    RollbackPoint,
+    RollbackType,
+    SafetyCheck,
+    SafetyConfiguration,
+    SafetyEnforcer,
+    SafetyLevel,
+    SafetyViolation,
+    ValidationError,
+    ValidationResult,
 )
-from app.bulk_memory_operations import ValidationLevel
 
 
 class TestExceptions:
@@ -59,7 +58,7 @@ class TestValidationResult:
             warnings=["Test warning"],
             metadata={"test": "data"}
         )
-        
+
         assert result.is_valid is True
         assert result.errors == []
         assert result.warnings == ["Test warning"]
@@ -74,7 +73,7 @@ class TestValidationResult:
             metadata={},
             severity="error"
         )
-        
+
         assert result.is_valid is False
         assert len(result.errors) == 2
         assert result.severity == "error"
@@ -91,7 +90,7 @@ class TestSafetyCheck:
             threshold=100.0,
             action="warn"
         )
-        
+
         assert check.name == "test_check"
         assert check.description == "Test safety check"
         assert check.enabled is True
@@ -103,7 +102,7 @@ class TestSafetyCheck:
             name="minimal_check",
             description="Minimal check"
         )
-        
+
         assert check.enabled is True
         assert check.threshold is None
         assert check.action == "warn"
@@ -122,7 +121,7 @@ class TestRollbackPoint:
             affected_records=["record1", "record2"],
             rollback_type=RollbackType.PARTIAL
         )
-        
+
         assert point.checkpoint_id == "cp123"
         assert point.operation_id == "op456"
         assert point.timestamp == now
@@ -136,7 +135,7 @@ class TestSafetyConfiguration:
 
     def test_default_configuration(self):
         config = SafetyConfiguration()
-        
+
         assert config.safety_level == SafetyLevel.STANDARD
         assert config.max_items_per_operation == 50000
         assert config.max_operations_per_hour == 100
@@ -147,7 +146,7 @@ class TestSafetyConfiguration:
             max_items_per_operation=10000,
             max_operations_per_hour=50
         )
-        
+
         assert config.safety_level == SafetyLevel.STRICT
         assert config.max_items_per_operation == 10000
         assert config.max_operations_per_hour == 50
@@ -159,13 +158,13 @@ class TestContentValidator:
     def test_initialization(self):
         config = SafetyConfiguration()
         validator = ContentValidator(config)
-        
+
         assert validator.config == config
 
     def test_initialization_with_custom_config(self):
         config = SafetyConfiguration(safety_level=SafetyLevel.STRICT)
         validator = ContentValidator(config)
-        
+
         assert validator.config.safety_level == SafetyLevel.STRICT
 
 
@@ -175,13 +174,13 @@ class TestSafetyEnforcer:
     def test_initialization(self):
         config = SafetyConfiguration()
         enforcer = SafetyEnforcer(config)
-        
+
         assert enforcer.config == config
 
     def test_initialization_with_safety_level(self):
         config = SafetyConfiguration(safety_level=SafetyLevel.MAXIMUM)
         enforcer = SafetyEnforcer(config)
-        
+
         assert enforcer.config.safety_level == SafetyLevel.MAXIMUM
 
 
@@ -190,7 +189,7 @@ class TestBulkValidationOrchestrator:
 
     def test_initialization_default(self):
         orchestrator = BulkValidationOrchestrator()
-        
+
         assert orchestrator.content_validator is not None
         assert orchestrator.safety_enforcer is not None
         assert orchestrator.safety_config is not None
@@ -198,5 +197,5 @@ class TestBulkValidationOrchestrator:
     def test_initialization_with_config(self):
         config = SafetyConfiguration(safety_level=SafetyLevel.STRICT)
         orchestrator = BulkValidationOrchestrator(config)
-        
+
         assert orchestrator.safety_config.safety_level == SafetyLevel.STRICT

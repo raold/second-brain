@@ -9,7 +9,7 @@ import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import asyncpg
 from asyncpg import Pool
@@ -25,7 +25,7 @@ class PoolConfig:
     max_queries: int = 50000
     command_timeout: float = 60.0
     connection_timeout: float = 30.0
-    server_settings: Optional[dict[str, str]] = None
+    server_settings: dict[str, str] | None = None
 
     def __post_init__(self):
         if self.server_settings is None:
@@ -52,7 +52,7 @@ class ConnectionStats:
     pool_acquisitions: int = 0
     pool_releases: int = 0
     connection_errors: int = 0
-    last_reset: Optional[datetime] = None
+    last_reset: datetime | None = None
 
     def __post_init__(self):
         if self.last_reset is None:
@@ -67,7 +67,7 @@ class ConnectionMonitor:
         self.stats = ConnectionStats()
         self.query_times: list[float] = []
         self.max_query_history = 1000
-        self.monitoring_task: Optional[asyncio.Task] = None
+        self.monitoring_task: asyncio.Task | None = None
         self.is_monitoring = False
 
     async def start_monitoring(self):
@@ -188,10 +188,10 @@ class ConnectionMonitor:
 class DatabasePoolManager:
     """Advanced database connection pool manager"""
 
-    def __init__(self, database_url: str, config: Optional[PoolConfig] = None):
+    def __init__(self, database_url: str, config: PoolConfig | None = None):
         self.database_url = database_url
         self.config = config or PoolConfig()
-        self.pool: Optional[Pool] = None
+        self.pool: Pool | None = None
         self.monitor = ConnectionMonitor(self)
         self.is_connected = False
         self.connection_lock = asyncio.Lock()
@@ -379,10 +379,10 @@ class DatabasePoolManager:
 
 
 # Global pool manager instance
-_pool_manager: Optional[DatabasePoolManager] = None
+_pool_manager: DatabasePoolManager | None = None
 
 
-async def initialize_pool(database_url: str, config: Optional[PoolConfig] = None):
+async def initialize_pool(database_url: str, config: PoolConfig | None = None):
     """Initialize global database pool"""
     global _pool_manager
 
@@ -402,7 +402,7 @@ async def close_pool():
         _pool_manager = None
 
 
-def get_pool_manager() -> Optional[DatabasePoolManager]:
+def get_pool_manager() -> DatabasePoolManager | None:
     """Get global pool manager"""
     return _pool_manager
 

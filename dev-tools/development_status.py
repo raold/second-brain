@@ -4,21 +4,20 @@ Provides detailed information about versions, branches, features, and CI/CD stat
 """
 
 import json
-import subprocess
 import os
+import subprocess
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
-import re
+
 
 def get_git_branch_status():
     """Get detailed status of all git branches"""
     try:
         # Get all branches with commit info - fix Windows encoding
-        result = subprocess.run(['git', 'branch', '-a', '-v'], 
+        result = subprocess.run(['git', 'branch', '-a', '-v'],
                               capture_output=True, text=True, cwd=os.getcwd(),
                               encoding='utf-8', errors='ignore')
         branches = []
-        
+
         if result.stdout:
             for line in result.stdout.strip().split('\n'):
                 if line.strip():
@@ -29,11 +28,11 @@ def get_git_branch_status():
                         branch_name = parts[1] if is_current else parts[0]
                         commit_hash = parts[2] if is_current else parts[1]
                         commit_msg = ' '.join(parts[3:] if is_current else parts[2:])
-                        
+
                         # Skip remote tracking branches for cleaner display
                         if branch_name.startswith('remotes/origin/'):
                             continue
-                            
+
                         branches.append({
                             'name': branch_name,
                             'current': is_current,
@@ -41,7 +40,7 @@ def get_git_branch_status():
                             'message': commit_msg[:60] + ('...' if len(commit_msg) > 60 else ''),
                             'status': get_branch_feature_status(branch_name)
                         })
-        
+
         return branches
     except Exception as e:
         print(f"Error getting branch status: {e}")
@@ -56,15 +55,15 @@ def get_branch_feature_status(branch_name):
         'feature/project-pipeline': {'feature': 'Project Pipeline', 'version': '2.5.0', 'status': 'In Progress', 'progress': 60},
         'alpha': {'feature': 'Alpha Testing', 'version': '2.5.0-alpha', 'status': 'Testing', 'progress': 45}
     }
-    
+
     return feature_map.get(branch_name, {'feature': 'Unknown', 'version': 'TBD', 'status': 'Unknown', 'progress': 0})
 
 def get_version_status():
     """Get version information from version_config.json"""
     try:
-        with open('docs/releases/version_config.json', 'r') as f:
+        with open('docs/releases/version_config.json') as f:
             version_config = json.load(f)
-        
+
         return {
             'current_stable': version_config.get('current_stable', '2.4.3'),
             'current_development': version_config.get('current_development', '2.6.0'),
@@ -83,19 +82,19 @@ def get_version_status():
 def get_ci_cd_status():
     """Get CI/CD pipeline status with realistic current data"""
     current_time = datetime.now()
-    
+
     # Get git status to determine if we have uncommitted changes
     try:
-        git_status = subprocess.run(['git', 'status', '--porcelain'], 
+        git_status = subprocess.run(['git', 'status', '--porcelain'],
                                   capture_output=True, text=True, cwd=os.getcwd())
         has_changes = bool(git_status.stdout.strip())
     except:
         has_changes = False
-    
+
     # Determine deployment readiness based on branch and changes
     deployment_status = 'Ready' if not has_changes else 'Pending'
     build_status = 'Success' if not has_changes else 'Pending'
-    
+
     return {
         'last_build': current_time.strftime('%Y-%m-%d %H:%M:%S'),
         'status': build_status,
@@ -105,20 +104,20 @@ def get_ci_cd_status():
         'has_uncommitted_changes': has_changes,
         'workflows': [
             {
-                'name': 'Migration Tests', 
-                'status': 'Passing', 
+                'name': 'Migration Tests',
+                'status': 'Passing',
                 'last_run': (current_time - timedelta(minutes=30)).strftime('%Y-%m-%d %H:%M:%S'),
                 'duration': '2m 15s'
             },
             {
-                'name': 'Integration Tests', 
-                'status': 'Passing', 
+                'name': 'Integration Tests',
+                'status': 'Passing',
                 'last_run': (current_time - timedelta(minutes=45)).strftime('%Y-%m-%d %H:%M:%S'),
                 'duration': '4m 32s'
             },
             {
-                'name': 'Deploy v2.5.0', 
-                'status': deployment_status, 
+                'name': 'Deploy v2.5.0',
+                'status': deployment_status,
                 'last_run': (current_time.replace(hour=current_time.hour-1)).strftime('%Y-%m-%d %H:%M:%S'),
                 'duration': '1m 08s'
             }
@@ -139,25 +138,25 @@ def get_feature_completion():
         {'name': 'Git Branch Visualization', 'version': '2.4.3', 'progress': 100, 'status': 'Complete', 'branch': 'main', 'goal': 'Visual git dashboard', 'success_criteria': 'Real-time branch tracking'},
         {'name': 'Gruvbox Dashboard Theme', 'version': '2.4.3', 'progress': 100, 'status': 'Complete', 'branch': 'main', 'goal': 'Tufte-compliant design', 'success_criteria': 'Edward Tufte principles'},
         {'name': 'Documentation Standardization', 'version': '2.4.3', 'progress': 100, 'status': 'Complete', 'branch': 'main', 'goal': 'Consistent docs', 'success_criteria': 'DATA_VIZ.md compliance'},
-        
+
         # v2.5.0 Development Features
         {'name': 'Project Pipeline Architecture', 'version': '2.5.0', 'progress': 60, 'status': 'In Progress', 'branch': 'feature/project-pipeline', 'goal': 'Modular pipeline system', 'success_criteria': 'Plugin architecture'},
         {'name': 'Voice Input & Memory Management', 'version': '2.5.0', 'progress': 30, 'status': 'Development', 'branch': 'cursor/process-voice-input-and-manage-memories-2e8d', 'goal': 'Voice-to-memory system', 'success_criteria': 'Speech recognition integration'},
         {'name': 'GitHub Repository Sync', 'version': '2.5.0', 'progress': 25, 'status': 'Development', 'branch': 'cursor/sync-with-github-repository-3d3a', 'goal': 'Auto-sync with GitHub', 'success_criteria': 'Real-time repository mirroring'},
         {'name': 'Alpha Testing Framework', 'version': '2.5.0', 'progress': 45, 'status': 'Testing', 'branch': 'alpha', 'goal': 'Comprehensive testing suite', 'success_criteria': '>95% test coverage'},
-        
+
         # v2.6.0 Memory Architecture Foundation
         {'name': 'Multi-Hop Reasoning Engine', 'version': '2.6.0', 'progress': 15, 'status': 'Planned', 'branch': 'TBD', 'goal': 'Complex reasoning chains', 'success_criteria': '3+ step reasoning accuracy >80%'},
         {'name': 'Memory Relationship Mapping', 'version': '2.6.0', 'progress': 10, 'status': 'Planned', 'branch': 'TBD', 'goal': 'Enhanced memory connections', 'success_criteria': 'Semantic relationship graph'},
         {'name': 'Intelligent Memory Categorization', 'version': '2.6.0', 'progress': 5, 'status': 'Planned', 'branch': 'TBD', 'goal': 'Auto-categorization system', 'success_criteria': '>90% categorization accuracy'},
         {'name': 'Advanced Semantic Search', 'version': '2.6.0', 'progress': 8, 'status': 'Planned', 'branch': 'TBD', 'goal': 'Context-aware search', 'success_criteria': '<100ms search latency'},
-        
-        # v2.7.0 Multi-Modal Memory 
+
+        # v2.7.0 Multi-Modal Memory
         {'name': 'Image & Document Memory', 'version': '2.7.0', 'progress': 0, 'status': 'Concept', 'branch': 'TBD', 'goal': 'Visual memory storage', 'success_criteria': 'Image-text association'},
         {'name': 'Audio Memory Transcription', 'version': '2.7.0', 'progress': 0, 'status': 'Concept', 'branch': 'TBD', 'goal': 'Audio-to-text memory', 'success_criteria': 'Real-time transcription'},
         {'name': 'Video Content Analysis', 'version': '2.7.0', 'progress': 0, 'status': 'Concept', 'branch': 'TBD', 'goal': 'Video memory extraction', 'success_criteria': 'Scene understanding'},
         {'name': 'Multi-Modal Search', 'version': '2.7.0', 'progress': 0, 'status': 'Concept', 'branch': 'TBD', 'goal': 'Cross-modal search', 'success_criteria': 'Image-text-audio search'},
-        
+
         # v3.0.0 Neuromorphic Memory System
         {'name': 'In-Memory Computing Architecture', 'version': '3.0.0', 'progress': 0, 'status': 'Concept', 'branch': 'TBD', 'goal': 'Brain-inspired processing', 'success_criteria': 'Neuromorphic efficiency'},
         {'name': 'Energy-Efficient Processing', 'version': '3.0.0', 'progress': 0, 'status': 'Concept', 'branch': 'TBD', 'goal': 'Low-power operations', 'success_criteria': '10x energy efficiency'},
@@ -176,7 +175,7 @@ def get_version_roadmap():
             'focus': 'Quality Excellence & Git Visualization',
             'goals': [
                 'Complete Tufte-compliant dashboard design',
-                'Implement Edward Tufte data visualization principles', 
+                'Implement Edward Tufte data visualization principles',
                 'Git branch visualization with commit activity metrics',
                 'Memory deduplication engine optimization',
                 'Documentation standardization across all files'
@@ -195,7 +194,7 @@ def get_version_roadmap():
             'status': 'Integration Testing',
             'release_date': '2025-08-01',
             'branch': 'testing',
-            'focus': 'Git Visualization & Dashboard Enhancement',  
+            'focus': 'Git Visualization & Dashboard Enhancement',
             'goals': [
                 'Complete git branch visualization system',
                 'Interactive commit activity metrics with time periods',
@@ -252,7 +251,7 @@ def get_version_roadmap():
             ],
             'success_criteria': {
                 'Memory scheduling': 'Efficient memory resource management',
-                'Context persistence': 'Cross-session state preservation', 
+                'Context persistence': 'Cross-session state preservation',
                 'State evolution': 'Dynamic memory adaptation',
                 'Resource allocation': 'Adaptive memory distribution',
                 'Computational efficiency': 'Memory-as-compute paradigm'
@@ -264,7 +263,7 @@ def get_version_roadmap():
         'v3.0.0': {
             'status': 'Concept',
             'release_date': '2026-06-30',
-            'focus': 'Neuromorphic Memory System', 
+            'focus': 'Neuromorphic Memory System',
             'goals': [
                 'Paradigm: Von Neumann to Neuromorphic transition',
                 'In-memory computing architecture implementation',
@@ -298,7 +297,7 @@ def get_research_initiatives():
             'research_source': 'Advanced RAG research → Towards Data Science'
         },
         {
-            'name': 'MemOS: Memory Operating System', 
+            'name': 'MemOS: Memory Operating System',
             'status': 'High Priority',
             'paradigm': 'Stateless to Stateful AI',
             'timeline': 'Q1 2026 - Q3 2026',
@@ -308,7 +307,7 @@ def get_research_initiatives():
         },
         {
             'name': 'Neuromorphic Memory Architecture',
-            'status': 'Medium Priority', 
+            'status': 'Medium Priority',
             'paradigm': 'Von Neumann to Neuromorphic',
             'timeline': 'Q4 2026 - Q1 2027',
             'description': 'In-memory computing to overcome von Neumann bottleneck - energy-efficient brain-inspired processing',
@@ -318,7 +317,7 @@ def get_research_initiatives():
         {
             'name': 'Titans-Scale Context Processing',
             'status': 'Medium Priority',
-            'paradigm': 'Stateless to Stateful AI', 
+            'paradigm': 'Stateless to Stateful AI',
             'timeline': 'Q2 2026',
             'description': 'Maintaining strong retrieval rates at 10K+ tokens with adaptive memory compression',
             'key_technologies': ['Large context processing', 'Memory compression', 'Retrieval optimization'],
@@ -330,11 +329,11 @@ def get_pr_readiness():
     """Check PR readiness for each feature branch"""
     pr_status = []
     branches = get_git_branch_status()
-    
+
     for branch in branches:
         if branch['name'] not in ['main', 'remotes/origin/HEAD']:
             feature_info = branch['status']
-            
+
             # Determine PR readiness based on progress
             if feature_info['progress'] >= 90:
                 pr_ready = 'Ready for PR'
@@ -348,7 +347,7 @@ def get_pr_readiness():
             else:
                 pr_ready = 'Not Ready'
                 priority = 'Low'
-            
+
             pr_status.append({
                 'branch': branch['name'],
                 'feature': feature_info['feature'],
@@ -357,14 +356,14 @@ def get_pr_readiness():
                 'pr_ready': pr_ready,
                 'priority': priority
             })
-    
+
     return sorted(pr_status, key=lambda x: x['progress'], reverse=True)
 
 def get_development_status():
     """Get comprehensive development status"""
     version_roadmap = get_version_roadmap()
     research_initiatives = get_research_initiatives()
-    
+
     return {
         'timestamp': datetime.now().isoformat(),
         'branches': get_git_branch_status(),

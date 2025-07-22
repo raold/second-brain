@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from io import BytesIO, StringIO
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -67,8 +67,8 @@ class ExportResult:
     file_size_bytes: int
     processing_time: float
     export_format: str
-    file_path: Optional[str] = None
-    file_content: Optional[bytes] = None
+    file_path: str | None = None
+    file_content: bytes | None = None
 
 
 class MemoryImportModel(BaseModel):
@@ -76,11 +76,11 @@ class MemoryImportModel(BaseModel):
 
     content: str = Field(..., description="Memory content")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Memory metadata")
-    memory_type: Optional[str] = Field("semantic", description="Memory type")
-    importance_score: Optional[float] = Field(0.5, ge=0.0, le=1.0, description="Importance score")
-    tags: Optional[list[str]] = Field(default_factory=list, description="Memory tags")
-    created_at: Optional[str] = Field(None, description="Creation timestamp")
-    source: Optional[str] = Field("bulk_import", description="Import source")
+    memory_type: str | None = Field("semantic", description="Memory type")
+    importance_score: float | None = Field(0.5, ge=0.0, le=1.0, description="Importance score")
+    tags: list[str] | None = Field(default_factory=list, description="Memory tags")
+    created_at: str | None = Field(None, description="Creation timestamp")
+    source: str | None = Field("bulk_import", description="Import source")
 
 
 class BulkMemoryManager:
@@ -95,7 +95,7 @@ class BulkMemoryManager:
         self,
         data: Union[str, bytes, list[dict], pd.DataFrame],
         format_type: ImportFormat,
-        options: Optional[dict[str, Any]] = None,
+        options: dict[str, Any] | None = None,
     ) -> ImportResult:
         """
         Import memories from various formats
@@ -137,9 +137,9 @@ class BulkMemoryManager:
 
     async def export_memories(
         self,
-        filter_criteria: Optional[dict[str, Any]] = None,
+        filter_criteria: dict[str, Any] | None = None,
         format_type: ExportFormat = ExportFormat.JSON,
-        options: Optional[dict[str, Any]] = None,
+        options: dict[str, Any] | None = None,
     ) -> ExportResult:
         """
         Export memories to various formats
@@ -455,7 +455,7 @@ class BulkMemoryManager:
 
         return False
 
-    async def _get_memories_for_export(self, db, filter_criteria: Optional[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def _get_memories_for_export(self, db, filter_criteria: dict[str, Any] | None) -> list[dict[str, Any]]:
         """Get memories for export based on filter criteria"""
         if not filter_criteria:
             # Export all memories

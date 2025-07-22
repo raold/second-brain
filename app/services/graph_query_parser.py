@@ -6,7 +6,7 @@ Converts natural language queries into graph operations
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any
 
 
 class QueryType(Enum):
@@ -25,10 +25,10 @@ class QueryType(Enum):
 class ParsedQuery:
     """Represents a parsed natural language query"""
     query_type: QueryType
-    entities: List[str]
-    entity_types: List[str]
-    filters: Dict[str, Any]
-    temporal_context: Optional[str] = None
+    entities: list[str]
+    entity_types: list[str]
+    filters: dict[str, Any]
+    temporal_context: str | None = None
     depth: int = 2
     original_query: str = ""
 
@@ -37,44 +37,44 @@ class GraphQueryParser:
     """
     Parses natural language queries for knowledge graph operations
     """
-    
+
     def __init__(self):
         self.connection_patterns = [
             r"(?:show|find|what are) (?:the )?(?:connections?|paths?|links?) (?:between|from) (.+?) (?:and|to) (.+)",
             r"how (?:is|are) (.+?) (?:connected|related|linked) to (.+)",
             r"(?:trace|show) (?:the )?path from (.+?) to (.+)",
         ]
-        
+
         self.related_patterns = [
             r"what (?:is|are) (?:related|connected|linked) to (.+)",
             r"(?:show|find) (?:all )?(?:things|entities|nodes) (?:related|connected) to (.+)",
             r"(.+?) (?:connections|relationships|relations)",
         ]
-        
+
         self.filter_patterns = [
             r"(?:show|find|list) all (\w+)",  # e.g., "show all people"
             r"(?:filter|only show) (\w+)",
             r"(?:what|which) (\w+) (?:are|is) in the graph",
         ]
-        
+
         self.analyze_patterns = [
             r"(?:analyze|tell me about|describe) (.+)",
             r"what (?:do you know|can you tell me) about (.+)",
             r"(?:show|give) (?:me )?(?:details|information) (?:about|on) (.+)",
         ]
-        
+
         self.compare_patterns = [
             r"(?:compare|difference between) (.+?) and (.+)",
             r"how (?:do|does) (.+?) (?:compare|differ) (?:to|from) (.+)",
             r"(?:similarities|differences) between (.+?) and (.+)",
         ]
-        
+
         self.temporal_patterns = [
             r"(.+?) (?:before|after|during) (.+)",
             r"(?:evolution|history|timeline) of (.+)",
             r"how (?:did|has) (.+?) (?:evolve|change)",
         ]
-        
+
         self.entity_type_map = {
             "people": "person",
             "persons": "person",
@@ -94,7 +94,7 @@ class GraphQueryParser:
             "places": "location",
             "events": "event",
         }
-    
+
     def parse(self, query: str) -> ParsedQuery:
         """
         Parse a natural language query into structured format
@@ -107,14 +107,14 @@ class GraphQueryParser:
         """
         query = query.strip()
         query_lower = query.lower()
-        
+
         # Try to match against different query patterns
-        
+
         # Connection queries
         for pattern in self.connection_patterns:
             match = re.search(pattern, query, re.IGNORECASE)
             if match:
-                entities = [self._clean_entity(match.group(1)), 
+                entities = [self._clean_entity(match.group(1)),
                            self._clean_entity(match.group(2))]
                 return ParsedQuery(
                     query_type=QueryType.FIND_CONNECTIONS,
@@ -123,7 +123,7 @@ class GraphQueryParser:
                     filters={},
                     original_query=query
                 )
-        
+
         # Related entity queries
         for pattern in self.related_patterns:
             match = re.search(pattern, query, re.IGNORECASE)
@@ -136,7 +136,7 @@ class GraphQueryParser:
                     filters={},
                     original_query=query
                 )
-        
+
         # Filter by type queries
         for pattern in self.filter_patterns:
             match = re.search(pattern, query, re.IGNORECASE)
@@ -150,7 +150,7 @@ class GraphQueryParser:
                     filters={"type": entity_type},
                     original_query=query
                 )
-        
+
         # Analyze entity queries
         for pattern in self.analyze_patterns:
             match = re.search(pattern, query, re.IGNORECASE)
@@ -163,12 +163,12 @@ class GraphQueryParser:
                     filters={},
                     original_query=query
                 )
-        
+
         # Compare entities queries
         for pattern in self.compare_patterns:
             match = re.search(pattern, query, re.IGNORECASE)
             if match:
-                entities = [self._clean_entity(match.group(1)), 
+                entities = [self._clean_entity(match.group(1)),
                            self._clean_entity(match.group(2))]
                 return ParsedQuery(
                     query_type=QueryType.COMPARE_ENTITIES,
@@ -177,7 +177,7 @@ class GraphQueryParser:
                     filters={},
                     original_query=query
                 )
-        
+
         # Temporal queries
         for pattern in self.temporal_patterns:
             match = re.search(pattern, query, re.IGNORECASE)
@@ -192,7 +192,7 @@ class GraphQueryParser:
                         temporal_context="evolution",
                         original_query=query
                     )
-        
+
         # Pattern search (catch-all for complex queries)
         if "cluster" in query_lower or "group" in query_lower:
             return ParsedQuery(
@@ -202,7 +202,7 @@ class GraphQueryParser:
                 filters={},
                 original_query=query
             )
-        
+
         # Default to pattern search
         return ParsedQuery(
             query_type=QueryType.PATTERN_SEARCH,
@@ -211,7 +211,7 @@ class GraphQueryParser:
             filters={},
             original_query=query
         )
-    
+
     def _clean_entity(self, entity: str) -> str:
         """Clean and normalize entity name"""
         # Remove articles and common words
@@ -219,23 +219,23 @@ class GraphQueryParser:
         words = entity.strip().split()
         cleaned_words = [w for w in words if w.lower() not in stop_words]
         return " ".join(cleaned_words)
-    
-    def _extract_potential_entities(self, query: str) -> List[str]:
+
+    def _extract_potential_entities(self, query: str) -> list[str]:
         """Extract potential entity names from query"""
         # Look for capitalized words or quoted phrases
         entities = []
-        
+
         # Find quoted phrases
         quoted = re.findall(r'"([^"]+)"', query)
         entities.extend(quoted)
-        
+
         # Find capitalized sequences (potential proper nouns)
         capitalized = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b', query)
         entities.extend(capitalized)
-        
+
         return [self._clean_entity(e) for e in entities]
-    
-    def suggest_query(self, partial_query: str) -> List[str]:
+
+    def suggest_query(self, partial_query: str) -> list[str]:
         """
         Suggest query completions based on partial input
         
@@ -247,7 +247,7 @@ class GraphQueryParser:
         """
         suggestions = []
         partial_lower = partial_query.lower()
-        
+
         # Connection suggestions
         if "connection" in partial_lower or "path" in partial_lower:
             suggestions.extend([
@@ -255,7 +255,7 @@ class GraphQueryParser:
                 "find path from [entity1] to [entity2]",
                 "how is [entity1] connected to [entity2]"
             ])
-        
+
         # Related suggestions
         if "related" in partial_lower or "connected" in partial_lower:
             suggestions.extend([
@@ -263,7 +263,7 @@ class GraphQueryParser:
                 "show all things connected to [entity]",
                 "find entities related to [entity]"
             ])
-        
+
         # Filter suggestions
         if "show all" in partial_lower or "list" in partial_lower:
             suggestions.extend([
@@ -272,7 +272,7 @@ class GraphQueryParser:
                 "show all concepts",
                 "list all organizations"
             ])
-        
+
         # Analyze suggestions
         if "about" in partial_lower or "tell" in partial_lower:
             suggestions.extend([
@@ -280,10 +280,10 @@ class GraphQueryParser:
                 "analyze [entity]",
                 "what do you know about [entity]"
             ])
-        
+
         return suggestions
-    
-    def get_query_examples(self) -> Dict[str, List[str]]:
+
+    def get_query_examples(self) -> dict[str, list[str]]:
         """Get example queries organized by type"""
         return {
             "Connections": [

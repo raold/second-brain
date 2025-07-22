@@ -10,7 +10,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import asyncpg
 
@@ -110,7 +110,7 @@ class MigrationHistory:
             """)
             return [row["migration_id"] for row in rows]
 
-    async def get_migration_status(self, migration_id: str) -> Optional[dict[str, Any]]:
+    async def get_migration_status(self, migration_id: str) -> dict[str, Any] | None:
         """Get status of a specific migration."""
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
@@ -296,7 +296,7 @@ class MigrationEngine:
                 del self.running_migrations[migration_id]
 
     async def execute_pending_migrations(
-        self, config: MigrationConfig = None, migration_type: Optional[MigrationType] = None
+        self, config: MigrationConfig = None, migration_type: MigrationType | None = None
     ) -> list[MigrationResult]:
         """Execute all pending migrations in order."""
         pending = await self.get_pending_migrations()
@@ -365,7 +365,7 @@ class MigrationEngine:
         """Get list of currently running migrations."""
         return list(self.running_migrations.keys())
 
-    async def get_migration_progress(self, migration_id: str) -> Optional[dict[str, Any]]:
+    async def get_migration_progress(self, migration_id: str) -> dict[str, Any] | None:
         """Get progress of a running migration."""
         if migration_id in self.running_migrations:
             migration = self.running_migrations[migration_id]

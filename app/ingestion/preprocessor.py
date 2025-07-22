@@ -6,7 +6,7 @@ import hashlib
 import logging
 import re
 import unicodedata
-from typing import Any, Optional
+from typing import Any
 
 try:
     import ftfy
@@ -33,7 +33,7 @@ class ContentPreprocessor:
                  expand_contractions: bool = True,
                  remove_urls: bool = False,
                  remove_emails: bool = False,
-                 max_length: Optional[int] = None):
+                 max_length: int | None = None):
         """
         Initialize preprocessor
 
@@ -60,7 +60,7 @@ class ContentPreprocessor:
         # Initialize normalization patterns
         self.normalization_patterns = self._initialize_normalization_patterns()
 
-    def preprocess(self, text: str, metadata: Optional[dict[str, Any]] = None) -> tuple[str, dict[str, Any]]:
+    def preprocess(self, text: str, metadata: dict[str, Any] | None = None) -> tuple[str, dict[str, Any]]:
         """
         Preprocess text with all configured steps
 

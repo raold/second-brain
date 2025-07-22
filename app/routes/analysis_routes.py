@@ -3,14 +3,15 @@ API routes for advanced analysis features including domain classification
 """
 
 import logging
-from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from app.shared import get_db_instance, verify_api_key
-from app.ingestion.topic_classifier import TopicClassifier
-from app.ingestion.structured_extractor import StructuredDataExtractor
 from app.ingestion.domain_classifier import DomainClassifier
+from app.ingestion.structured_extractor import StructuredDataExtractor
+from app.ingestion.topic_classifier import TopicClassifier
+from app.shared import get_db_instance, verify_api_key
+
 # Authentication handled by shared verify_api_key
 
 logger = logging.getLogger(__name__)
@@ -33,8 +34,8 @@ class AnalysisRequest(BaseModel):
 
 class BatchAnalysisRequest(BaseModel):
     """Request model for batch analysis"""
-    memory_ids: Optional[List[str]] = Field(None, description="Memory IDs to analyze")
-    tags: Optional[List[str]] = Field(None, description="Filter by tags")
+    memory_ids: list[str] | None = Field(None, description="Memory IDs to analyze")
+    tags: list[str] | None = Field(None, description="Filter by tags")
     limit: int = Field(50, description="Maximum memories to analyze")
     include_topics: bool = Field(True, description="Include topic analysis")
     include_structure: bool = Field(True, description="Include structured data extraction")
@@ -62,16 +63,16 @@ async def analyze_content(
             "status": "success",
             "analysis": {}
         }
-        
+
         # Topic analysis
         if request.include_topics:
             topic_classifier = TopicClassifier(enable_advanced=request.advanced_features)
-            
+
             if request.advanced_features:
                 topics = topic_classifier.extract_advanced_topics(request.content)
             else:
                 topics = topic_classifier.extract_topics(request.content)
-            
+
             results["analysis"]["topics"] = {
                 "extracted_topics": [
                     {
@@ -85,16 +86,16 @@ async def analyze_content(
                 ],
                 "statistics": topic_classifier.get_topic_statistics(topics)
             }
-        
+
         # Structured data extraction
         if request.include_structure:
             extractor = StructuredDataExtractor()
-            
+
             if request.advanced_features:
                 structured_data = extractor.extract_advanced_structured_data(request.content)
             else:
                 structured_data = extractor.extract_structured_data(request.content)
-            
+
             results["analysis"]["structured_data"] = {
                 "key_value_pairs": structured_data.key_value_pairs,
                 "lists": structured_data.lists,
@@ -103,7 +104,7 @@ async def analyze_content(
                 "metadata": structured_data.metadata_fields,
                 "statistics": extractor.get_extraction_statistics(structured_data)
             }
-        
+
         # Domain classification
         if request.include_domain:
             domain_classifier = DomainClassifier()
@@ -112,11 +113,11 @@ async def analyze_content(
                 multi_label=True,
                 include_hierarchy=True
             )
-            
+
             results["analysis"]["domains"] = domain_results
-        
+
         return results
-        
+
     except Exception as e:
         logger.error(f"Error analyzing content: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -133,7 +134,7 @@ async def batch_analyze(
     """
     try:
         memory_service = MemoryService(db)
-        
+
         # Get memories based on filters
         if request.memory_ids:
             memories = []
@@ -147,35 +148,35 @@ async def batch_analyze(
                 tags=request.tags,
                 limit=request.limit
             )
-        
+
         if not memories:
             return {
                 "status": "no_data",
                 "message": "No memories found with specified filters"
             }
-        
+
         # Initialize analyzers
         topic_classifier = TopicClassifier() if request.include_topics else None
         extractor = StructuredDataExtractor() if request.include_structure else None
         domain_classifier = DomainClassifier() if request.include_domain else None
-        
+
         # Analyze each memory
         analyzed_memories = []
         all_topics = []
         all_domains = []
-        
+
         for memory in memories:
             analysis = {
                 "memory_id": memory.id,
                 "title": memory.title
             }
-            
+
             # Topic analysis
             if topic_classifier:
                 topics = topic_classifier.extract_topics(memory.content)
                 analysis["topics"] = [topic.name for topic in topics[:3]]
                 all_topics.extend(topics)
-            
+
             # Structured data extraction
             if extractor:
                 structured_data = extractor.extract_structured_data(memory.content)
@@ -185,33 +186,33 @@ async def batch_analyze(
                     "tables": len(structured_data.tables),
                     "code_snippets": len(structured_data.code_snippets)
                 }
-            
+
             # Domain classification
             if domain_classifier:
                 domain_results = domain_classifier.classify_domain(memory.content)
                 analysis["domains"] = domain_results["domains"][:2]
                 all_domains.append(domain_results)
-            
+
             analyzed_memories.append(analysis)
-        
+
         # Aggregate statistics
         statistics = {
             "total_memories": len(memories),
             "memories_analyzed": len(analyzed_memories)
         }
-        
+
         if topic_classifier and all_topics:
             statistics["topic_statistics"] = topic_classifier.get_topic_statistics(all_topics)
-        
+
         if domain_classifier and all_domains:
             statistics["domain_statistics"] = domain_classifier.get_domain_statistics(all_domains)
-        
+
         return {
             "status": "success",
             "analyzed_memories": analyzed_memories,
             "statistics": statistics
         }
-        
+
     except Exception as e:
         logger.error(f"Error in batch analysis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -229,18 +230,18 @@ async def classify_domain(
         classifier = DomainClassifier(
             confidence_threshold=request.confidence_threshold
         )
-        
+
         results = classifier.classify_domain(
             request.content,
             multi_label=request.multi_label,
             include_hierarchy=request.include_hierarchy
         )
-        
+
         return {
             "status": "success",
             "classification": results
         }
-        
+
     except Exception as e:
         logger.error(f"Error classifying domain: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -258,42 +259,42 @@ async def get_trending_topics(
     """
     try:
         memory_service = MemoryService(db)
-        
+
         # Get recent memories
         from datetime import datetime, timedelta
         since = datetime.utcnow() - timedelta(days=days)
-        
+
         memories = await memory_service.search_memories(
             user_id=current_user.id,
             created_after=since,
             limit=100
         )
-        
+
         if not memories:
             return {
                 "status": "no_data",
                 "message": "No recent memories found"
             }
-        
+
         # Extract topics from all memories
         topic_classifier = TopicClassifier()
         all_topics = []
-        
+
         for memory in memories:
             topics = topic_classifier.extract_topics(memory.content)
             all_topics.extend(topics)
-        
+
         # Count topic occurrences
         from collections import Counter
         topic_counts = Counter()
         topic_keywords = {}
-        
+
         for topic in all_topics:
             topic_counts[topic.name] += 1
             if topic.name not in topic_keywords:
                 topic_keywords[topic.name] = set()
             topic_keywords[topic.name].update(topic.keywords[:3])
-        
+
         # Get top trending topics
         trending = []
         for topic_name, count in topic_counts.most_common(limit):
@@ -303,14 +304,14 @@ async def get_trending_topics(
                 "keywords": list(topic_keywords[topic_name])[:5],
                 "trend_score": count / len(memories)
             })
-        
+
         return {
             "status": "success",
             "period_days": days,
             "memories_analyzed": len(memories),
             "trending_topics": trending
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting trending topics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -330,32 +331,32 @@ async def get_domain_distribution(
             user_id=current_user.id,
             limit=200
         )
-        
+
         if not memories:
             return {
                 "status": "no_data",
                 "message": "No memories found"
             }
-        
+
         # Classify all memories
         domain_classifier = DomainClassifier()
         domain_counts = Counter()
         domain_confidence = defaultdict(list)
         cross_domain_count = 0
-        
+
         for memory in memories:
             results = domain_classifier.classify_domain(memory.content)
             domains = results["domains"]
             scores = results["confidence_scores"]
-            
+
             if len(domains) > 1:
                 cross_domain_count += 1
-            
+
             for domain in domains:
                 domain_counts[domain] += 1
                 if domain in scores:
                     domain_confidence[domain].append(scores[domain])
-        
+
         # Calculate statistics
         distribution = []
         for domain, count in domain_counts.most_common():
@@ -366,7 +367,7 @@ async def get_domain_distribution(
                 "percentage": (count / len(memories)) * 100,
                 "avg_confidence": avg_confidence
             })
-        
+
         return {
             "status": "success",
             "total_memories": len(memories),
@@ -374,7 +375,7 @@ async def get_domain_distribution(
             "cross_domain_percentage": (cross_domain_count / len(memories)) * 100,
             "unique_domains": len(domain_counts)
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting domain distribution: {e}")
         raise HTTPException(status_code=500, detail=str(e))

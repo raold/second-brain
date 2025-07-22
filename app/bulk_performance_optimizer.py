@@ -20,7 +20,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 import asyncpg
 import psutil
@@ -55,7 +55,7 @@ class PerformanceMetrics:
 
     operation_id: str
     start_time: datetime
-    end_time: Optional[datetime] = None
+    end_time: datetime | None = None
     total_items: int = 0
     processed_items: int = 0
     items_per_second: float = 0.0
@@ -127,7 +127,7 @@ class ConnectionPoolManager:
     def __init__(self, config: OptimizationConfig, database_url: str):
         self.config = config
         self.database_url = database_url
-        self.pool: Optional[asyncpg.Pool] = None
+        self.pool: asyncpg.Pool | None = None
         self.connection_metrics = {}
         self.pool_created_at = None
         self.active_connections = 0
@@ -377,7 +377,7 @@ class MemoryManager:
         return self.current_batch_size
 
     async def stream_process_items(
-        self, items: list[BulkMemoryItem], processor: Callable, chunk_size: Optional[int] = None
+        self, items: list[BulkMemoryItem], processor: Callable, chunk_size: int | None = None
     ) -> AsyncGenerator[Any, None]:
         """Stream process items in memory-efficient chunks."""
         chunk_size = chunk_size or self.current_batch_size
@@ -425,7 +425,7 @@ class CacheManager:
         self.cache_stats = {"hits": 0, "misses": 0}
         self.prefetch_queue = asyncio.Queue()
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """Get item from cache with LRU and TTL."""
         if not self.config.enable_caching:
             return None
@@ -605,7 +605,7 @@ class BulkPerformanceOptimizer:
     Provides unified interface for all performance optimization features.
     """
 
-    def __init__(self, config: Optional[OptimizationConfig] = None, database_url: str = None):
+    def __init__(self, config: OptimizationConfig | None = None, database_url: str = None):
         self.config = config or OptimizationConfig()
         self.database_url = database_url or "postgresql://user:password@localhost/secondbrain"
 
@@ -629,7 +629,7 @@ class BulkPerformanceOptimizer:
         logger.info("Bulk performance optimizer initialized")
 
     async def optimize_operation(
-        self, operation_type: str, item_count: int, current_performance: Optional[PerformanceMetrics] = None
+        self, operation_type: str, item_count: int, current_performance: PerformanceMetrics | None = None
     ) -> dict[str, Any]:
         """Apply optimizations for a specific operation."""
         optimizations = {}
@@ -735,11 +735,11 @@ class BulkPerformanceOptimizer:
 
 
 # Global instance
-_performance_optimizer_instance: Optional[BulkPerformanceOptimizer] = None
+_performance_optimizer_instance: BulkPerformanceOptimizer | None = None
 
 
 async def get_performance_optimizer(
-    config: Optional[OptimizationConfig] = None, database_url: Optional[str] = None
+    config: OptimizationConfig | None = None, database_url: str | None = None
 ) -> BulkPerformanceOptimizer:
     """Get or create the global performance optimizer instance."""
     global _performance_optimizer_instance

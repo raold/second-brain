@@ -24,7 +24,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 # For now, we'll create local definitions to avoid import issues
 # In production, these would be imported from the proper modules
@@ -70,7 +70,7 @@ class DeduplicationDatabaseInterface(ABC):
         primary_id: str,
         duplicate_ids: list[str],
         merge_strategy: str,
-        merged_metadata: Optional[dict[str, Any]] = None,
+        merged_metadata: dict[str, Any] | None = None,
     ) -> bool:
         pass
 
@@ -94,7 +94,7 @@ class MergeStatistics:
     conflicts_resolved: int = 0
     errors_encountered: int = 0
     processing_time_seconds: float = 0.0
-    merge_strategy_counts: Optional[dict[str, int]] = None
+    merge_strategy_counts: dict[str, int] | None = None
 
     def __post_init__(self):
         if self.merge_strategy_counts is None:
@@ -110,8 +110,8 @@ class MergeOperation:
     merge_strategy_used: MergeStrategy
     conflicts_resolved: list[str]
     metadata_changes: dict[str, Any]
-    content_changes: Optional[str] = None
-    created_at: Optional[datetime] = None
+    content_changes: str | None = None
+    created_at: datetime | None = None
 
     def __post_init__(self):
         if self.created_at is None:
@@ -126,7 +126,7 @@ class MemoryMerger:
     strategies, preserving important information and handling conflicts intelligently.
     """
 
-    def __init__(self, database: DeduplicationDatabaseInterface, logger: Optional[logging.Logger] = None):
+    def __init__(self, database: DeduplicationDatabaseInterface, logger: logging.Logger | None = None):
         self.database = database
         self.logger = logger or logging.getLogger(__name__)
 
@@ -202,7 +202,7 @@ class MemoryMerger:
             self.logger.error(f"Fatal error during merge process: {str(e)}")
             raise
 
-    async def _merge_single_group(self, group: DuplicateGroup, config: DeduplicationConfig) -> Optional[MergeOperation]:
+    async def _merge_single_group(self, group: DuplicateGroup, config: DeduplicationConfig) -> MergeOperation | None:
         """
         Merge a single group of duplicate memories.
 
@@ -250,7 +250,7 @@ class MemoryMerger:
 
     async def _merge_keep_oldest(
         self, memories: list[dict[str, Any]], group: DuplicateGroup, config: DeduplicationConfig
-    ) -> Optional[MergeOperation]:
+    ) -> MergeOperation | None:
         """Merge strategy: keep the oldest memory as primary."""
         # Sort by creation date (oldest first)
         sorted_memories = sorted(memories, key=lambda m: datetime.fromisoformat(m["created_at"].replace("Z", "+00:00")))
@@ -274,7 +274,7 @@ class MemoryMerger:
 
     async def _merge_keep_newest(
         self, memories: list[dict[str, Any]], group: DuplicateGroup, config: DeduplicationConfig
-    ) -> Optional[MergeOperation]:
+    ) -> MergeOperation | None:
         """Merge strategy: keep the newest memory as primary."""
         # Sort by creation date (newest first)
         sorted_memories = sorted(
@@ -300,7 +300,7 @@ class MemoryMerger:
 
     async def _merge_keep_highest_importance(
         self, memories: list[dict[str, Any]], group: DuplicateGroup, config: DeduplicationConfig
-    ) -> Optional[MergeOperation]:
+    ) -> MergeOperation | None:
         """Merge strategy: keep the memory with highest importance score."""
 
         # Sort by importance score (highest first)
@@ -329,7 +329,7 @@ class MemoryMerger:
 
     async def _merge_smart_merge(
         self, memories: list[dict[str, Any]], group: DuplicateGroup, config: DeduplicationConfig
-    ) -> Optional[MergeOperation]:
+    ) -> MergeOperation | None:
         """
         Smart merge strategy: intelligently combine information from all memories.
 
@@ -487,7 +487,7 @@ class MemoryMerger:
 
         return consolidated
 
-    async def _smart_merge_content(self, primary: dict[str, Any], duplicates: list[dict[str, Any]]) -> Optional[str]:
+    async def _smart_merge_content(self, primary: dict[str, Any], duplicates: list[dict[str, Any]]) -> str | None:
         """
         Intelligently merge content from multiple memories.
 
@@ -558,7 +558,7 @@ class MemoryMerger:
         """Get current merge statistics."""
         return self.current_statistics
 
-    def get_merge_history(self, limit: Optional[int] = None) -> list[MergeOperation]:
+    def get_merge_history(self, limit: int | None = None) -> list[MergeOperation]:
         """
         Get merge operation history.
 

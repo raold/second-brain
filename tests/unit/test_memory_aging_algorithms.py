@@ -3,17 +3,15 @@ Test suite for memory aging algorithms module.
 Tests the sophisticated memory aging system with multiple cognitive science models.
 """
 
-import pytest
 from datetime import datetime, timedelta
-import math
 
 from app.algorithms.memory_aging_algorithms import (
-    AgingModel,
-    MemoryStrength,
-    AgingParameters,
-    MemoryAccess,
-    AgingResult,
     AdvancedMemoryAging,
+    AgingModel,
+    AgingParameters,
+    AgingResult,
+    MemoryAccess,
+    MemoryStrength,
 )
 
 
@@ -57,7 +55,7 @@ class TestAgingParameters:
             interference_factor=0.1,
             consolidation_period_days=14
         )
-        
+
         assert params.model == AgingModel.EBBINGHAUS
         assert params.half_life_days == 20.0
         assert params.decay_rate == 0.15
@@ -71,7 +69,7 @@ class TestAgingParameters:
             half_life_days=30.0,
             decay_rate=0.1
         )
-        
+
         assert params.model == AgingModel.POWER_LAW
         assert params.half_life_days == 30.0
         assert params.decay_rate == 0.1
@@ -92,7 +90,7 @@ class TestMemoryAccess:
             retrieval_time_ms=150,
             context_similarity=0.8
         )
-        
+
         assert access.timestamp == now
         assert access.access_type == "retrieval"
         assert access.success_rate == 0.9
@@ -104,7 +102,7 @@ class TestMemoryAccess:
             timestamp=datetime.now(),
             access_type="review"
         )
-        
+
         assert access.success_rate == 1.0
         assert access.retrieval_time_ms is None
         assert access.context_similarity == 0.5
@@ -124,7 +122,7 @@ class TestAgingResult:
             confidence=0.85,
             explanation="Memory aging calculated using Ebbinghaus curve"
         )
-        
+
         assert result.current_strength == 0.75
         assert result.decay_factor == 0.1
         assert result.model_used == AgingModel.EBBINGHAUS
@@ -145,7 +143,7 @@ class TestAgingResult:
             confidence=0.7,
             explanation="Power law decay model applied"
         )
-        
+
         assert result.current_strength == 0.4
         assert result.strength_category == MemoryStrength.WEAK
         assert result.next_optimal_review is None
@@ -188,13 +186,13 @@ class TestAdvancedMemoryAging:
                 context_similarity=0.8
             )
         ]
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="test1",
             creation_date=creation_date,
             access_history=access_history
         )
-        
+
         assert isinstance(result, AgingResult)
         assert 0 <= result.current_strength <= 1
         assert isinstance(result.decay_factor, float)
@@ -212,14 +210,14 @@ class TestAdvancedMemoryAging:
                 retrieval_time_ms=120
             )
         ]
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="test2",
             creation_date=creation_date,
             access_history=access_history,
             current_importance=0.8
         )
-        
+
         assert result.current_strength > 0.5  # Recent access should boost strength
 
     def test_calculate_memory_aging_with_specific_model(self):
@@ -232,26 +230,26 @@ class TestAdvancedMemoryAging:
                 success_rate=0.8
             )
         ]
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="test3",
             creation_date=creation_date,
             access_history=access_history,
             model=AgingModel.POWER_LAW
         )
-        
+
         assert result.model_used == AgingModel.POWER_LAW
 
     def test_calculate_memory_aging_empty_history(self):
         now = datetime.now()
         creation_date = now - timedelta(days=15)
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="test4",
             creation_date=creation_date,
             access_history=[]
         )
-        
+
         assert isinstance(result, AgingResult)
         assert result.current_strength < 0.8  # Should decay without access
 
@@ -264,14 +262,14 @@ class TestAdvancedMemoryAging:
                 access_type="review"
             )
         ]
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="test5",
             creation_date=creation_date,
             access_history=access_history,
             memory_type="procedural"
         )
-        
+
         assert isinstance(result, AgingResult)
 
     def test_calculate_memory_aging_complex_content(self):
@@ -284,14 +282,14 @@ class TestAdvancedMemoryAging:
                 success_rate=0.7
             )
         ]
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="test6",
             creation_date=creation_date,
             access_history=access_history,
             content_complexity=0.9
         )
-        
+
         assert isinstance(result, AgingResult)
         # Complex content might use consolidation model
 
@@ -299,7 +297,7 @@ class TestAdvancedMemoryAging:
         """Test automatic model selection for procedural memories with high access"""
         now = datetime.now()
         creation_date = now - timedelta(days=30)
-        
+
         # Create high-frequency access history
         access_history = []
         for i in range(15):
@@ -309,14 +307,14 @@ class TestAdvancedMemoryAging:
                     access_type="practice"
                 )
             )
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="procedural_test",
             creation_date=creation_date,
             access_history=access_history,
             memory_type="procedural"
         )
-        
+
         # Should select SPACING_EFFECT model for high-frequency procedural
         assert result.model_used == AgingModel.SPACING_EFFECT
 
@@ -327,14 +325,14 @@ class TestAdvancedMemoryAging:
         access_history = [
             MemoryAccess(timestamp=now - timedelta(days=3), access_type="study")
         ]
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="complex_test",
             creation_date=creation_date,
             access_history=access_history,
             content_complexity=0.8
         )
-        
+
         # Should select CONSOLIDATION for complex content
         assert result.model_used == AgingModel.CONSOLIDATION
 
@@ -342,7 +340,7 @@ class TestAdvancedMemoryAging:
         """Test automatic model selection for episodic memories with interference"""
         now = datetime.now()
         creation_date = now - timedelta(days=20)
-        
+
         # Create moderate access history
         access_history = []
         for i in range(8):
@@ -352,14 +350,14 @@ class TestAdvancedMemoryAging:
                     access_type="recall"
                 )
             )
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="episodic_test",
             creation_date=creation_date,
             access_history=access_history,
             memory_type="episodic"
         )
-        
+
         # Should select INTERFERENCE for episodic with many accesses
         assert result.model_used == AgingModel.INTERFERENCE
 
@@ -370,14 +368,14 @@ class TestAdvancedMemoryAging:
         access_history = [
             MemoryAccess(timestamp=now - timedelta(days=2), access_type="review")
         ]
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="semantic_test",
             creation_date=creation_date,
             access_history=access_history,
             memory_type="semantic"
         )
-        
+
         # Should select EBBINGHAUS for semantic memories
         assert result.model_used == AgingModel.EBBINGHAUS
 
@@ -388,14 +386,14 @@ class TestAdvancedMemoryAging:
         access_history = [
             MemoryAccess(timestamp=now - timedelta(days=7), access_type="view")
         ]
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="few_access_test",
             creation_date=creation_date,
             access_history=access_history,
             memory_type="episodic"  # Non-semantic to trigger access count logic
         )
-        
+
         # Should select POWER_LAW for few accesses (< 3)
         assert result.model_used == AgingModel.POWER_LAW
 
@@ -410,7 +408,7 @@ class TestAdvancedMemoryAging:
                 success_rate=0.8
             )
         ]
-        
+
         for model in AgingModel:
             result = self.aging.calculate_memory_aging(
                 memory_id=f"test_{model.value}",
@@ -418,7 +416,7 @@ class TestAdvancedMemoryAging:
                 access_history=access_history,
                 model=model
             )
-            
+
             assert isinstance(result, AgingResult)
             assert result.model_used == model
             assert 0 <= result.current_strength <= 1
@@ -428,7 +426,7 @@ class TestAdvancedMemoryAging:
     def test_aging_parameters_initialization(self):
         """Test that aging parameters are properly initialized for all models"""
         aging = AdvancedMemoryAging()
-        
+
         for model in AgingModel:
             assert model in aging.aging_parameters
             params = aging.aging_parameters[model]
@@ -447,13 +445,13 @@ class TestAdvancedMemoryAging:
                 access_type="initial_review"
             )
         ]
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="old_memory",
             creation_date=creation_date,
             access_history=access_history
         )
-        
+
         assert isinstance(result, AgingResult)
         assert result.current_strength < 0.5  # Should be significantly decayed
 
@@ -461,13 +459,13 @@ class TestAdvancedMemoryAging:
         """Test aging calculation for very new memories with no access"""
         now = datetime.now()
         creation_date = now - timedelta(hours=1)  # 1 hour old
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="new_memory",
             creation_date=creation_date,
             access_history=[]
         )
-        
+
         assert isinstance(result, AgingResult)
         assert result.current_strength > 0.8  # Should still be strong
 
@@ -475,7 +473,7 @@ class TestAdvancedMemoryAging:
         """Test aging calculation for memories with very high access frequency"""
         now = datetime.now()
         creation_date = now - timedelta(days=30)
-        
+
         # Create very high-frequency access pattern
         access_history = []
         for i in range(50):  # 50 accesses
@@ -486,12 +484,12 @@ class TestAdvancedMemoryAging:
                     success_rate=0.95
                 )
             )
-        
+
         result = self.aging.calculate_memory_aging(
             memory_id="frequent_memory",
             creation_date=creation_date,
             access_history=access_history
         )
-        
+
         assert isinstance(result, AgingResult)
         assert result.current_strength > 0.7  # Should be well-maintained

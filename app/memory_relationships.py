@@ -8,7 +8,7 @@ import logging
 import math
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
@@ -37,7 +37,7 @@ class MemoryRelationshipAnalyzer:
         self.temporal_window_hours = 24
 
     async def analyze_memory_relationships(
-        self, memory_id: str, relationship_types: Optional[list[str]] = None, depth: int = 2, max_connections: int = 50
+        self, memory_id: str, relationship_types: list[str] | None = None, depth: int = 2, max_connections: int = 50
     ) -> dict[str, Any]:
         """
         Perform comprehensive relationship analysis for a specific memory.
@@ -130,7 +130,7 @@ class MemoryRelationshipAnalyzer:
 
     async def discover_memory_clusters(
         self,
-        memory_types: Optional[list[str]] = None,
+        memory_types: list[str] | None = None,
         clustering_method: str = "hierarchical",
         min_cluster_size: int = 3,
         max_clusters: int = 20,
@@ -809,7 +809,7 @@ class MemoryRelationshipAnalyzer:
 
         return float(np.mean(similarities)) if similarities else 0.0
 
-    def _parse_embedding(self, embedding_data: Any) -> Optional[list[float]]:
+    def _parse_embedding(self, embedding_data: Any) -> list[float] | None:
         """Parse embedding from database format."""
         if not embedding_data:
             return None

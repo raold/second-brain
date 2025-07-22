@@ -13,7 +13,7 @@ def test_integrated_features():
     """Test that all three features can work together"""
     print("🔗 Testing Integrated Features v2.8.0")
     print("=" * 60)
-    
+
     # Test 1: Reasoning Engine Core Functionality
     print("\n🧠 Testing Reasoning Engine...")
     try:
@@ -24,35 +24,35 @@ def test_integrated_features():
             "beam_width": 5,
             "confidence_threshold": 0.7
         }
-        
+
         # Validate query structure
         assert "query" in reasoning_query
         assert "max_hops" in reasoning_query
         assert reasoning_query["max_hops"] <= 10
         assert reasoning_query["confidence_threshold"] <= 1.0
         print("✅ Reasoning engine data structures valid")
-        
+
     except Exception as e:
         print(f"❌ Reasoning engine test failed: {e}")
         return False
-    
+
     # Test 2: Knowledge Graph Builder
     print("\n📊 Testing Knowledge Graph Builder...")
     try:
         # Test entity types and relationships
-        entity_types = ["person", "organization", "technology", "concept", 
+        entity_types = ["person", "organization", "technology", "concept",
                        "location", "event", "skill", "topic", "other"]
-        
-        relationship_types = ["works_at", "located_in", "uses", "part_of", 
-                            "related_to", "taught_by", "developed_by", 
-                            "applies_to", "derived_from", "connects_to", 
+
+        relationship_types = ["works_at", "located_in", "uses", "part_of",
+                            "related_to", "taught_by", "developed_by",
+                            "applies_to", "derived_from", "connects_to",
                             "influences", "depends_on", "contains", "mentions"]
-        
+
         # Validate knowledge graph structure
         assert len(entity_types) == 9
         assert len(relationship_types) == 14
         print("✅ Knowledge graph entity/relationship types valid")
-        
+
         # Test graph validation
         sample_graph = {
             "nodes": [
@@ -63,15 +63,15 @@ def test_integrated_features():
                 {"source": "1", "target": "2", "type": "used_in", "weight": 0.8}
             ]
         }
-        
+
         assert len(sample_graph["nodes"]) > 0
         assert len(sample_graph["edges"]) > 0
         print("✅ Knowledge graph structure validation works")
-        
+
     except Exception as e:
         print(f"❌ Knowledge graph test failed: {e}")
         return False
-    
+
     # Test 3: Visualization Integration
     print("\n🎨 Testing Visualization Integration...")
     try:
@@ -83,7 +83,7 @@ def test_integrated_features():
             "linkDistance": 100,
             "chargeStrength": -300
         }
-        
+
         # Test color mapping
         color_map = {
             "person": "#FF6B6B",
@@ -96,57 +96,57 @@ def test_integrated_features():
             "topic": "#6C5CE7",
             "other": "#95A5A6"
         }
-        
+
         assert len(color_map) == len(entity_types)
         assert all(color.startswith("#") for color in color_map.values())
         print("✅ Visualization configuration valid")
-        
+
     except Exception as e:
         print(f"❌ Visualization test failed: {e}")
         return False
-    
+
     # Test 4: Cross-Feature Integration
     print("\n🔗 Testing Cross-Feature Integration...")
     try:
         # Simulate workflow: Reasoning -> Knowledge Graph -> Visualization
-        
+
         # Step 1: Reasoning produces entities
         reasoning_output = {
             "entities": ["Python", "machine learning", "data science"],
             "relationships": [("Python", "used_in", "machine learning")],
             "confidence": 0.85
         }
-        
+
         # Step 2: Knowledge graph processes entities
         graph_data = {
             "nodes": [
-                {"id": f"entity_{i}", "label": entity, "type": "concept"} 
+                {"id": f"entity_{i}", "label": entity, "type": "concept"}
                 for i, entity in enumerate(reasoning_output["entities"])
             ],
             "edges": [
                 {"source": "entity_0", "target": "entity_1", "type": "used_in", "weight": 0.85}
             ]
         }
-        
+
         # Step 3: Visualization renders graph
         visualization_ready = len(graph_data["nodes"]) > 0 and len(graph_data["edges"]) >= 0
-        
+
         assert reasoning_output["confidence"] > 0.7
         assert len(graph_data["nodes"]) == 3
         assert len(graph_data["edges"]) == 1
         assert visualization_ready
         print("✅ Cross-feature integration workflow works")
-        
+
     except Exception as e:
         print(f"❌ Cross-feature integration test failed: {e}")
         return False
-    
+
     # Test 5: Version Consistency
     print("\n📝 Testing Version Consistency...")
     try:
         # All features should be at consolidated version
         expected_version = "2.8.0"
-        
+
         # Check version file
         version_file = Path("app/version.py")
         if version_file.exists():
@@ -155,11 +155,11 @@ def test_integrated_features():
             print(f"✅ Version consistency confirmed: {expected_version}")
         else:
             print("⚠️  Version file not found")
-            
+
     except Exception as e:
         print(f"❌ Version consistency test failed: {e}")
         return False
-    
+
     print("\n🎉 All Integration Tests: PASSED")
     print("🚀 Ready for PR to main branch!")
     return True

@@ -7,7 +7,7 @@ import json
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
@@ -34,10 +34,10 @@ class MemoryVisualizationEngine:
 
     async def generate_memory_graph(
         self,
-        memory_types: Optional[list[str]] = None,
+        memory_types: list[str] | None = None,
         importance_threshold: float = 0.3,
-        time_range_days: Optional[int] = None,
-        max_nodes: Optional[int] = None,
+        time_range_days: int | None = None,
+        max_nodes: int | None = None,
         include_relationships: bool = True,
         cluster_method: str = "semantic",
     ) -> dict[str, Any]:
@@ -562,10 +562,10 @@ class AdvancedSearchEngine:
         self,
         query: str,
         search_type: str = "hybrid",  # semantic, temporal, importance, hybrid
-        memory_types: Optional[list[str]] = None,
-        importance_range: Optional[tuple[float, float]] = None,
-        date_range: Optional[tuple[str, str]] = None,
-        topic_filters: Optional[list[str]] = None,
+        memory_types: list[str] | None = None,
+        importance_range: tuple[float, float] | None = None,
+        date_range: tuple[str, str] | None = None,
+        topic_filters: list[str] | None = None,
         limit: int = 50,
         include_clusters: bool = True,
         include_relationships: bool = True,
@@ -643,11 +643,11 @@ class AdvancedSearchEngine:
             },
         }
 
-    async def _semantic_search(self, db, query: str, memory_types: Optional[list[str]], limit: int) -> list[dict]:
+    async def _semantic_search(self, db, query: str, memory_types: list[str] | None, limit: int) -> list[dict]:
         """Semantic similarity search using embeddings."""
         return await db.contextual_search(query=query, limit=limit, memory_types=memory_types)
 
-    async def _temporal_search(self, db, query: str, date_range: Optional[tuple[str, str]], limit: int) -> list[dict]:
+    async def _temporal_search(self, db, query: str, date_range: tuple[str, str] | None, limit: int) -> list[dict]:
         """Temporal search focusing on time-based patterns."""
         timeframe = None
         if date_range:
@@ -660,7 +660,7 @@ class AdvancedSearchEngine:
         return await db.contextual_search(query=query, limit=limit, timeframe=timeframe)
 
     async def _importance_search(
-        self, db, query: str, importance_range: Optional[tuple[float, float]], limit: int
+        self, db, query: str, importance_range: tuple[float, float] | None, limit: int
     ) -> list[dict]:
         """Search focusing on importance-weighted results."""
         importance_threshold = importance_range[0] if importance_range else 0.5
@@ -671,9 +671,9 @@ class AdvancedSearchEngine:
         self,
         db,
         query: str,
-        memory_types: Optional[list[str]],
-        importance_range: Optional[tuple[float, float]],
-        date_range: Optional[tuple[str, str]],
+        memory_types: list[str] | None,
+        importance_range: tuple[float, float] | None,
+        date_range: tuple[str, str] | None,
         limit: int,
     ) -> list[dict]:
         """Hybrid search combining multiple dimensions."""

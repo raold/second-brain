@@ -9,7 +9,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from app.ingestion.models import (
     ContentQuality,
@@ -45,8 +45,8 @@ class ValidationIssue:
     type: ValidationType
     field: str
     message: str
-    details: Optional[dict[str, Any]] = None
-    suggestion: Optional[str] = None
+    details: dict[str, Any] | None = None
+    suggestion: str | None = None
 
 
 @dataclass

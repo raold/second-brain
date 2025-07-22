@@ -9,7 +9,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class DeduplicationDatabaseInterface(ABC):
 
     @abstractmethod
     async def get_memories_for_deduplication(
-        self, filter_criteria: Optional[dict[str, Any]] = None, limit: Optional[int] = None
+        self, filter_criteria: dict[str, Any] | None = None, limit: int | None = None
     ) -> list[dict[str, Any]]:
         """
         Retrieve memories for deduplication analysis.
@@ -56,7 +56,7 @@ class DeduplicationDatabaseInterface(ABC):
         primary_id: str,
         duplicate_ids: list[str],
         merge_strategy: str,
-        merged_metadata: Optional[dict[str, Any]] = None,
+        merged_metadata: dict[str, Any] | None = None,
     ) -> bool:
         """
         Merge duplicate memories into a primary memory.
@@ -101,7 +101,7 @@ class DeduplicationDatabaseInterface(ABC):
         pass
 
     @abstractmethod
-    async def backup_memories(self, memory_ids: list[str]) -> Optional[str]:
+    async def backup_memories(self, memory_ids: list[str]) -> str | None:
         """
         Create a backup of memories before deduplication.
 
@@ -140,7 +140,7 @@ class PostgreSQLDeduplicationDatabase(DeduplicationDatabaseInterface):
         self.database_service = database_service
 
     async def get_memories_for_deduplication(
-        self, filter_criteria: Optional[dict[str, Any]] = None, limit: Optional[int] = None
+        self, filter_criteria: dict[str, Any] | None = None, limit: int | None = None
     ) -> list[dict[str, Any]]:
         """Get memories from PostgreSQL database."""
         try:
@@ -179,7 +179,7 @@ class PostgreSQLDeduplicationDatabase(DeduplicationDatabaseInterface):
         primary_id: str,
         duplicate_ids: list[str],
         merge_strategy: str,
-        merged_metadata: Optional[dict[str, Any]] = None,
+        merged_metadata: dict[str, Any] | None = None,
     ) -> bool:
         """Merge memories in PostgreSQL."""
         try:
@@ -260,7 +260,7 @@ class PostgreSQLDeduplicationDatabase(DeduplicationDatabaseInterface):
             logger.error(f"Failed to delete memory {memory_id}: {e}")
             return False
 
-    async def backup_memories(self, memory_ids: list[str]) -> Optional[str]:
+    async def backup_memories(self, memory_ids: list[str]) -> str | None:
         """Create backup of memories in PostgreSQL."""
         try:
             backup_id = f"dedup_backup_{int(time.time())}"
@@ -331,7 +331,7 @@ class MockDeduplicationDatabase(DeduplicationDatabaseInterface):
         self.backups = {}
 
     async def get_memories_for_deduplication(
-        self, filter_criteria: Optional[dict[str, Any]] = None, limit: Optional[int] = None
+        self, filter_criteria: dict[str, Any] | None = None, limit: int | None = None
     ) -> list[dict[str, Any]]:
         """Return mock memories."""
         filtered_memories = self.memories.copy()
@@ -355,7 +355,7 @@ class MockDeduplicationDatabase(DeduplicationDatabaseInterface):
         primary_id: str,
         duplicate_ids: list[str],
         merge_strategy: str,
-        merged_metadata: Optional[dict[str, Any]] = None,
+        merged_metadata: dict[str, Any] | None = None,
     ) -> bool:
         """Mock memory merging."""
         operation = {
@@ -380,7 +380,7 @@ class MockDeduplicationDatabase(DeduplicationDatabaseInterface):
         self.operations.append(operation)
         return True
 
-    async def backup_memories(self, memory_ids: list[str]) -> Optional[str]:
+    async def backup_memories(self, memory_ids: list[str]) -> str | None:
         """Mock backup creation."""
         backup_id = f"mock_backup_{len(self.backups)}"
         self.backups[backup_id] = {"memory_ids": memory_ids, "created_at": str(datetime.now())}

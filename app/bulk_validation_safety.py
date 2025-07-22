@@ -20,7 +20,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from .bulk_memory_operations import BulkMemoryItem, ValidationLevel
 
@@ -75,7 +75,7 @@ class SafetyCheck:
     name: str
     description: str
     enabled: bool = True
-    threshold: Optional[float] = None
+    threshold: float | None = None
     action: str = "warn"  # warn, block, rollback
 
 
@@ -570,7 +570,7 @@ class SafetyEnforcer:
         self.content_hashes = set()
 
     async def check_operation_safety(
-        self, operation_type: str, item_count: int, user_id: Optional[str] = None
+        self, operation_type: str, item_count: int, user_id: str | None = None
     ) -> ValidationResult:
         """Check if operation meets safety requirements."""
         errors = []
@@ -705,7 +705,7 @@ class BulkValidationOrchestrator:
     Coordinates between content validation, safety enforcement, and error handling.
     """
 
-    def __init__(self, safety_config: Optional[SafetyConfiguration] = None):
+    def __init__(self, safety_config: SafetyConfiguration | None = None):
         self.safety_config = safety_config or SafetyConfiguration()
         self.content_validator = ContentValidator(self.safety_config)
         self.safety_enforcer = SafetyEnforcer(self.safety_config)
@@ -716,7 +716,7 @@ class BulkValidationOrchestrator:
         items: list[BulkMemoryItem],
         operation_type: str,
         validation_level: ValidationLevel = ValidationLevel.STANDARD,
-        user_id: Optional[str] = None,
+        user_id: str | None = None,
     ) -> tuple[list[BulkMemoryItem], list[BulkMemoryItem], dict[str, Any]]:
         """
         Comprehensive validation for bulk operations.
@@ -828,11 +828,11 @@ class BulkValidationOrchestrator:
 
 
 # Global instances
-_validation_orchestrator_instance: Optional[BulkValidationOrchestrator] = None
+_validation_orchestrator_instance: BulkValidationOrchestrator | None = None
 
 
 async def get_validation_orchestrator(
-    safety_config: Optional[SafetyConfiguration] = None,
+    safety_config: SafetyConfiguration | None = None,
 ) -> BulkValidationOrchestrator:
     """Get or create the global validation orchestrator instance."""
     global _validation_orchestrator_instance

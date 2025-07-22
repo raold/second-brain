@@ -56,7 +56,7 @@ class TopicClassifier:
         self.vectorizer = None
         self.lda_model = None
         self.feature_names = None
-        
+
         # Advanced topic modeling (lazy loaded)
         self._advanced_model = None
 
@@ -555,9 +555,9 @@ class TopicClassifier:
             "avg_keywords_per_topic": sum(len(t.keywords) for t in topics) / total_topics,
             "domain_distribution": dict(domain_counts)
         }
-    
-    def extract_advanced_topics(self, 
-                               texts: Union[str, list[str]], 
+
+    def extract_advanced_topics(self,
+                               texts: Union[str, list[str]],
                                use_hierarchy: bool = True,
                                **kwargs) -> list[Topic]:
         """
@@ -580,10 +580,10 @@ class TopicClassifier:
                 logger.warning("Advanced topic modeling not available")
                 self.enable_advanced = False
                 return self.extract_topics(texts[0] if isinstance(texts, list) else texts)
-        
+
         if self._advanced_model:
             return self._advanced_model.extract_advanced_topics(
-                texts, 
+                texts,
                 include_hierarchy=use_hierarchy,
                 **kwargs
             )

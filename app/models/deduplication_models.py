@@ -8,7 +8,7 @@ including enums, configurations, and result structures.
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -57,7 +57,7 @@ class SimilarityScore:
     method_used: SimilarityMethod
     confidence: float
     reasoning: str
-    calculation_time: Optional[float] = None
+    calculation_time: float | None = None
 
     def __post_init__(self):
         """Validate similarity scores are within valid range."""
@@ -81,9 +81,9 @@ class DuplicateGroup:
     primary_memory_id: str
     similarity_scores: list[SimilarityScore]
     merge_strategy: MergeStrategy
-    confidence_score: Optional[float] = None
-    detected_by: Optional[str] = None
-    detection_time: Optional[datetime] = None
+    confidence_score: float | None = None
+    detected_by: str | None = None
+    detection_time: datetime | None = None
 
     def __post_init__(self):
         """Validate duplicate group consistency."""
@@ -113,10 +113,10 @@ class MergeResult:
     primary_memory_id: str
     merged_memory_ids: list[str]
     merge_strategy: MergeStrategy
-    merged_metadata: Optional[dict[str, Any]] = None
-    merge_time: Optional[datetime] = None
-    error_message: Optional[str] = None
-    backup_id: Optional[str] = None
+    merged_metadata: dict[str, Any] | None = None
+    merge_time: datetime | None = None
+    error_message: str | None = None
+    backup_id: str | None = None
 
 
 @dataclass
@@ -135,7 +135,7 @@ class DeduplicationResult:
     performance_metrics: dict[str, Any] = None
     errors: list[str] = None
     warnings: list[str] = None
-    backup_created: Optional[str] = None
+    backup_created: str | None = None
 
     def __post_init__(self):
         """Initialize optional fields."""
@@ -189,7 +189,7 @@ class DeduplicationConfig(BaseModel):
 
     # Processing settings
     batch_size: int = Field(default=100, gt=0, description="Batch size for processing")
-    max_comparisons: Optional[int] = Field(default=10000, gt=0, description="Maximum number of pairwise comparisons")
+    max_comparisons: int | None = Field(default=10000, gt=0, description="Maximum number of pairwise comparisons")
 
     # Fuzzy matching settings
     enable_fuzzy_matching: bool = Field(default=True, description="Enable fuzzy string matching")
@@ -262,9 +262,9 @@ class PerformanceMetrics:
 
     total_processing_time: float
     detection_stats: list[DetectionStats]
-    memory_usage_mb: Optional[float] = None
-    comparisons_per_second: Optional[float] = None
-    duplicates_per_second: Optional[float] = None
+    memory_usage_mb: float | None = None
+    comparisons_per_second: float | None = None
+    duplicates_per_second: float | None = None
 
     @property
     def total_comparisons(self) -> int:

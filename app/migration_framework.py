@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class MigrationMetadata:
     dependencies: list[str]
     reversible: bool
     checksum: str
-    estimated_duration: Optional[int] = None
+    estimated_duration: int | None = None
 
 
 @dataclass
@@ -75,12 +75,12 @@ class MigrationResult:
     migration_id: str
     status: MigrationStatus
     start_time: datetime
-    end_time: Optional[datetime]
+    end_time: datetime | None
     affected_items: int
     errors: list[dict[str, Any]]
     rollback_available: bool
     performance_metrics: dict[str, float]
-    checkpoint_data: Optional[dict[str, Any]] = None
+    checkpoint_data: dict[str, Any] | None = None
 
 
 class Migration(ABC):

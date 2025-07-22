@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -57,7 +57,7 @@ class ClassificationResult:
     """Result of classification operation"""
 
     memory_id: str
-    original_type: Optional[str]
+    original_type: str | None
     predicted_type: str
     confidence: float
     method_used: ClassificationMethod

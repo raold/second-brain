@@ -3,8 +3,10 @@
 Test script for GitService
 """
 
-from app.services.git_service import GitService
 import json
+
+from app.services.git_service import GitService
+
 
 def main():
     print('Testing GitService...')

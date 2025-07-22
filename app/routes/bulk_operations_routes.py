@@ -6,7 +6,7 @@ Advanced endpoints for import/export, migration, classification, and deduplicati
 
 import json
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
@@ -53,7 +53,7 @@ class ImportRequest(BaseModel):
 
     format_type: ImportFormat = Field(..., description="Import format")
     data: Union[str, list[dict[str, Any]]] = Field(..., description="Data to import")
-    options: Optional[dict[str, Any]] = Field(default_factory=dict, description="Import options")
+    options: dict[str, Any] | None = Field(default_factory=dict, description="Import options")
     check_duplicates: bool = Field(True, description="Check for duplicates during import")
     import_duplicates: bool = Field(False, description="Import duplicates anyway")
 
@@ -62,30 +62,30 @@ class ExportRequest(BaseModel):
     """Request model for bulk export"""
 
     format_type: ExportFormat = Field(ExportFormat.JSON, description="Export format")
-    filter_criteria: Optional[dict[str, Any]] = Field(None, description="Filter criteria")
-    options: Optional[dict[str, Any]] = Field(default_factory=dict, description="Export options")
+    filter_criteria: dict[str, Any] | None = Field(None, description="Filter criteria")
+    options: dict[str, Any] | None = Field(default_factory=dict, description="Export options")
 
 
 class MigrationRequest(BaseModel):
     """Request model for migration operations"""
 
     migration_type: str = Field(..., description="Type of migration")
-    config: Optional[MigrationConfig] = Field(None, description="Migration configuration")
-    parameters: Optional[dict[str, Any]] = Field(default_factory=dict, description="Migration parameters")
+    config: MigrationConfig | None = Field(None, description="Migration configuration")
+    parameters: dict[str, Any] | None = Field(default_factory=dict, description="Migration parameters")
 
 
 class ClassificationRequest(BaseModel):
     """Request model for batch classification"""
 
     config: ClassificationConfig = Field(..., description="Classification configuration")
-    filter_criteria: Optional[dict[str, Any]] = Field(None, description="Memory filter criteria")
+    filter_criteria: dict[str, Any] | None = Field(None, description="Memory filter criteria")
 
 
 class DeduplicationRequest(BaseModel):
     """Request model for deduplication"""
 
     config: DeduplicationConfig = Field(..., description="Deduplication configuration")
-    filter_criteria: Optional[dict[str, Any]] = Field(None, description="Memory filter criteria")
+    filter_criteria: dict[str, Any] | None = Field(None, description="Memory filter criteria")
 
 
 # Import/Export Endpoints

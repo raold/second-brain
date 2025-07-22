@@ -3,21 +3,22 @@ Tests for bulk monitoring analytics module.
 Simple tests focusing on import, instantiation, and basic functionality.
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
+
+from app.bulk_memory_operations import BulkOperationProgress, BulkOperationStatus, BulkOperationType
 from app.bulk_monitoring_analytics import (
-    MetricsCollector,
-    OperationTracker,
     AlertManager,
-    AnalyticsEngine,
-    BulkMonitoringDashboard,
-    MetricType,
     AlertSeverity,
+    AnalyticsEngine,
     AnalyticsTimeframe,
+    BulkMonitoringDashboard,
     MetricPoint,
-    Alert,
+    MetricsCollector,
+    MetricType,
+    OperationTracker,
 )
-from app.bulk_memory_operations import BulkOperationProgress, BulkOperationType, BulkOperationStatus
 
 
 class TestMetricTypes:
@@ -52,7 +53,7 @@ class TestMetricPoint:
             tags={"env": "test"},
             operation_id="op123"
         )
-        
+
         assert point.timestamp == now
         assert point.metric_name == "test_metric"
         assert point.metric_type == MetricType.GAUGE
@@ -77,12 +78,12 @@ class TestMetricsCollector:
     @pytest.mark.asyncio
     async def test_record_metric_basic(self):
         collector = MetricsCollector()
-        
+
         await collector.record_metric("test_metric", 100.0)
-        
+
         assert len(collector.metrics_buffer) == 1
         assert collector.collection_stats["total_points"] == 1
-        
+
         metric = collector.metrics_buffer[0]
         assert metric.metric_name == "test_metric"
         assert metric.value == 100.0
@@ -91,15 +92,15 @@ class TestMetricsCollector:
     @pytest.mark.asyncio
     async def test_record_metric_with_options(self):
         collector = MetricsCollector()
-        
+
         await collector.record_metric(
-            "counter_metric", 
-            1.0, 
+            "counter_metric",
+            1.0,
             MetricType.COUNTER,
             tags={"service": "test"},
             operation_id="op456"
         )
-        
+
         metric = collector.metrics_buffer[0]
         assert metric.metric_type == MetricType.COUNTER
         assert metric.tags == {"service": "test"}
@@ -118,7 +119,7 @@ class TestOperationTracker:
     @pytest.mark.asyncio
     async def test_start_tracking(self):
         tracker = OperationTracker()
-        
+
         now = datetime.now()
         operation = BulkOperationProgress(
             operation_id="test_op",
@@ -132,9 +133,9 @@ class TestOperationTracker:
             start_time=now,
             last_update=now
         )
-        
+
         await tracker.start_tracking(operation)
-        
+
         assert len(tracker.active_operations) == 1
         assert "test_op" in tracker.active_operations
         assert tracker.tracking_stats["total_operations"] == 1
@@ -143,7 +144,7 @@ class TestOperationTracker:
     @pytest.mark.asyncio
     async def test_update_progress(self):
         tracker = OperationTracker()
-        
+
         # Use a time that's not exactly now to avoid division by zero
         start_time = datetime.now() - timedelta(seconds=1)
         operation = BulkOperationProgress(
@@ -158,10 +159,10 @@ class TestOperationTracker:
             start_time=start_time,
             last_update=start_time
         )
-        
+
         await tracker.start_tracking(operation)
         await tracker.update_progress("test_op", {"processed_items": 50})
-        
+
         updated_op = tracker.active_operations["test_op"]
         assert updated_op.processed_items == 50
 
@@ -178,7 +179,7 @@ class TestAlertManager:
     @pytest.mark.asyncio
     async def test_define_alert(self):
         manager = AlertManager()
-        
+
         alert_id = await manager.define_alert(
             name="test_alert",
             description="Test alert",
@@ -186,11 +187,11 @@ class TestAlertManager:
             threshold=80.0,
             severity=AlertSeverity.WARNING
         )
-        
+
         assert alert_id is not None
         assert len(manager.alerts) == 1
         assert alert_id in manager.alerts
-        
+
         alert = manager.alerts[alert_id]
         assert alert.name == "test_alert"
         assert alert.threshold == 80.0
@@ -199,7 +200,7 @@ class TestAlertManager:
     @pytest.mark.asyncio
     async def test_check_alerts_no_alerts(self):
         manager = AlertManager()
-        
+
         # Should not raise any errors
         await manager.check_alerts({}, {})
 
@@ -210,9 +211,9 @@ class TestAnalyticsEngine:
     def test_initialization(self):
         collector = MetricsCollector()
         tracker = OperationTracker()
-        
+
         engine = AnalyticsEngine(collector, tracker)
-        
+
         assert engine.metrics_collector == collector
         assert engine.operation_tracker == tracker
 
@@ -222,7 +223,7 @@ class TestBulkMonitoringDashboard:
 
     def test_initialization(self):
         dashboard = BulkMonitoringDashboard()
-        
+
         assert dashboard.metrics_collector is not None
         assert dashboard.operation_tracker is not None
         assert dashboard.alert_manager is not None
@@ -231,9 +232,9 @@ class TestBulkMonitoringDashboard:
     @pytest.mark.asyncio
     async def test_get_dashboard_data(self):
         dashboard = BulkMonitoringDashboard()
-        
+
         data = await dashboard.get_dashboard_data()
-        
+
         # Should return a dictionary with expected keys
         assert isinstance(data, dict)
         assert "current_metrics" in data

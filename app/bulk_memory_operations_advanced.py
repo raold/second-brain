@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from io import StringIO
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 from .bulk_memory_operations import (
     BulkMemoryEngine,
@@ -62,8 +62,8 @@ class BulkUpdateOperation:
 
     filter_criteria: dict[str, Any]
     update_fields: dict[str, Any]
-    where_clause: Optional[str] = None
-    update_function: Optional[Callable] = None
+    where_clause: str | None = None
+    update_function: Callable | None = None
 
 
 @dataclass
@@ -71,7 +71,7 @@ class BulkDeleteOperation:
     """Defines a bulk delete operation."""
 
     filter_criteria: dict[str, Any]
-    where_clause: Optional[str] = None
+    where_clause: str | None = None
     safety_limit: int = 10000  # Maximum items to delete
     require_confirmation: bool = True
 
@@ -117,7 +117,7 @@ class AdvancedBulkOperations:
         self.database = bulk_engine.database
 
     async def bulk_update_memories(
-        self, update_operation: BulkUpdateOperation, config: Optional[BulkOperationConfig] = None
+        self, update_operation: BulkUpdateOperation, config: BulkOperationConfig | None = None
     ) -> BulkOperationResult:
         """
         Perform bulk updates on memories with conditional logic.
@@ -204,7 +204,7 @@ class AdvancedBulkOperations:
             raise
 
     async def bulk_delete_memories(
-        self, delete_operation: BulkDeleteOperation, config: Optional[BulkOperationConfig] = None
+        self, delete_operation: BulkDeleteOperation, config: BulkOperationConfig | None = None
     ) -> BulkOperationResult:
         """
         Perform safe bulk deletions with confirmation and limits.
@@ -301,9 +301,9 @@ class AdvancedBulkOperations:
 
     async def export_memories(
         self,
-        filter_criteria: Optional[dict[str, Any]] = None,
-        export_config: Optional[ExportConfig] = None,
-        config: Optional[BulkOperationConfig] = None,
+        filter_criteria: dict[str, Any] | None = None,
+        export_config: ExportConfig | None = None,
+        config: BulkOperationConfig | None = None,
     ) -> BulkOperationResult:
         """
         Export memories in various formats with streaming support.
@@ -388,8 +388,8 @@ class AdvancedBulkOperations:
     async def import_memories(
         self,
         data_source: Union[str, bytes, list[dict[str, Any]]],
-        import_config: Optional[ImportConfig] = None,
-        config: Optional[BulkOperationConfig] = None,
+        import_config: ImportConfig | None = None,
+        config: BulkOperationConfig | None = None,
     ) -> BulkOperationResult:
         """
         Import memories from various sources and formats.
@@ -654,7 +654,7 @@ class AdvancedBulkOperations:
 
         return deleted_ids
 
-    async def _get_memories_for_export(self, filter_criteria: Optional[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def _get_memories_for_export(self, filter_criteria: dict[str, Any] | None) -> list[dict[str, Any]]:
         """Get memories for export based on filter criteria."""
         if hasattr(self.database, "pool") and self.database.pool:
             async with self.database.pool.acquire() as conn:
@@ -815,7 +815,7 @@ class AdvancedBulkOperations:
 
 
 # Global instance
-_advanced_bulk_ops_instance: Optional[AdvancedBulkOperations] = None
+_advanced_bulk_ops_instance: AdvancedBulkOperations | None = None
 
 
 async def get_advanced_bulk_operations(bulk_engine: BulkMemoryEngine = None) -> AdvancedBulkOperations:

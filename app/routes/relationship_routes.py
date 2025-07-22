@@ -4,7 +4,7 @@ Provides endpoints for analyzing relationships between different memory types
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -20,8 +20,8 @@ router = APIRouter(prefix="/api/relationships", tags=["relationships"])
 class RelationshipAnalysisRequest(BaseModel):
     """Request for relationship analysis"""
 
-    memory_ids: Optional[list[str]] = Field(None, description="Specific memory IDs to analyze")
-    memory_types: Optional[list[str]] = Field(None, description="Memory types to include")
+    memory_ids: list[str] | None = Field(None, description="Specific memory IDs to analyze")
+    memory_types: list[str] | None = Field(None, description="Memory types to include")
     min_strength: float = Field(0.3, description="Minimum relationship strength", ge=0.0, le=1.0)
     include_clusters: bool = Field(True, description="Include knowledge cluster analysis")
 
@@ -39,7 +39,7 @@ class RelationshipResponse(BaseModel):
 
 
 @router.post("/analyze")
-async def analyze_cross_memory_relationships(request: Optional[RelationshipAnalysisRequest] = None):
+async def analyze_cross_memory_relationships(request: RelationshipAnalysisRequest | None = None):
     """
     Comprehensive analysis of cross-memory-type relationships
     Identifies patterns, clusters, and network structure in knowledge base

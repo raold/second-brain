@@ -19,7 +19,7 @@ Refactored: ~200 lines, testable, modular
 import logging
 from collections import Counter, defaultdict
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -64,7 +64,7 @@ class MemoryRelationshipAnalyzer:
         }
 
     async def analyze_memory_relationships(
-        self, memory_id: str, relationship_types: Optional[list[str]] = None, depth: int = 2, max_connections: int = 50
+        self, memory_id: str, relationship_types: list[str] | None = None, depth: int = 2, max_connections: int = 50
     ) -> dict[str, Any]:
         """
         Perform comprehensive relationship analysis for a specific memory.
@@ -333,7 +333,7 @@ class MemoryRelationshipAnalyzer:
             logger.warning(f"Failed to generate relationship insights: {e}")
             return {"error": "Failed to generate insights", "message": str(e)}
 
-    def _parse_embedding(self, embedding: Any) -> Optional[list[float]]:
+    def _parse_embedding(self, embedding: Any) -> list[float] | None:
         """Parse embedding from various formats."""
         # Handle None explicitly
         if embedding is None:

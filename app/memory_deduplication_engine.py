@@ -11,7 +11,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -73,9 +73,9 @@ class DuplicateGroup:
     primary_memory_id: str
     similarity_scores: list[SimilarityScore]
     merge_strategy: MergeStrategy
-    action_taken: Optional[DuplicateAction] = None
-    merged_content: Optional[str] = None
-    merged_metadata: Optional[dict[str, Any]] = None
+    action_taken: DuplicateAction | None = None
+    merged_content: str | None = None
+    merged_metadata: dict[str, Any] | None = None
 
 
 @dataclass
@@ -473,7 +473,7 @@ class FuzzyMatchDetector:
 
         return (length_similarity + word_similarity) / 2
 
-    def _find_existing_group(self, groups: list[DuplicateGroup], memory_ids: list[str]) -> Optional[DuplicateGroup]:
+    def _find_existing_group(self, groups: list[DuplicateGroup], memory_ids: list[str]) -> DuplicateGroup | None:
         """Find existing group containing any of the memory IDs"""
         for group in groups:
             if any(memory_id in group.memory_ids for memory_id in memory_ids):
@@ -636,7 +636,7 @@ class MemoryDeduplicationEngine:
         self.deduplication_history = []
 
     async def deduplicate_memories(
-        self, config: DeduplicationConfig, memory_filter: Optional[dict[str, Any]] = None
+        self, config: DeduplicationConfig, memory_filter: dict[str, Any] | None = None
     ) -> DeduplicationResult:
         """Perform memory deduplication"""
         start_time = time.time()
@@ -695,7 +695,7 @@ class MemoryDeduplicationEngine:
         return result
 
     async def _get_memories_for_deduplication(
-        self, db, memory_filter: Optional[dict[str, Any]]
+        self, db, memory_filter: dict[str, Any] | None
     ) -> list[dict[str, Any]]:
         """Get memories for deduplication based on filter"""
         all_memories = await db.get_all_memories(limit=10000)

@@ -6,7 +6,7 @@ import json
 import logging
 import re
 from collections import defaultdict
-from typing import Any, Optional
+from typing import Any
 
 try:
     import yaml
@@ -354,7 +354,7 @@ class StructuredDataExtractor:
 
         return tables
 
-    def _parse_markdown_table(self, lines: list[str]) -> Optional[dict[str, Any]]:
+    def _parse_markdown_table(self, lines: list[str]) -> dict[str, Any] | None:
         """Parse a markdown table from lines"""
         if len(lines) < 2:
             return None
@@ -379,7 +379,7 @@ class StructuredDataExtractor:
             cells = [cell.strip() for cell in line.split('|') if cell.strip()]
 
             if len(cells) == len(headers):
-                row_dict = dict(zip(headers, cells))
+                row_dict = dict(zip(headers, cells, strict=False))
                 rows.append(row_dict)
                 raw_lines.append(lines[i])
             else:
@@ -423,7 +423,7 @@ class StructuredDataExtractor:
 
         return tables
 
-    def _parse_ascii_table(self, lines: list[str]) -> Optional[dict[str, Any]]:
+    def _parse_ascii_table(self, lines: list[str]) -> dict[str, Any] | None:
         """Parse an ASCII table from lines"""
         # Simple implementation - could be enhanced
         # This is a basic parser that handles simple ASCII tables
@@ -545,7 +545,7 @@ class StructuredDataExtractor:
 
         return "unknown"
 
-    def _extract_json_data(self, text: str) -> Optional[dict[str, Any]]:
+    def _extract_json_data(self, text: str) -> dict[str, Any] | None:
         """Extract JSON data from text"""
         # Look for JSON blocks
         json_pattern = r'\{[^{}]*\{[^{}]*\}[^{}]*\}|\{[^{}]+\}'
@@ -560,7 +560,7 @@ class StructuredDataExtractor:
 
         return None
 
-    def _extract_yaml_data(self, text: str) -> Optional[dict[str, Any]]:
+    def _extract_yaml_data(self, text: str) -> dict[str, Any] | None:
         """Extract YAML data from text"""
         if not YAML_AVAILABLE:
             return None
@@ -678,7 +678,7 @@ class StructuredDataExtractor:
         }
 
         return stats
-    
+
     def extract_advanced_structured_data(self, text: str, **kwargs) -> StructuredData:
         """
         Extract structured data using advanced techniques

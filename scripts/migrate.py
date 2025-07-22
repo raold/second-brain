@@ -9,7 +9,6 @@ import argparse
 import asyncio
 import sys
 from pathlib import Path
-from typing import Optional
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -45,7 +44,7 @@ async def initialize_engine() -> MigrationEngine:
     return engine
 
 
-async def list_migrations(engine: MigrationEngine, migration_type: Optional[str] = None):
+async def list_migrations(engine: MigrationEngine, migration_type: str | None = None):
     """List pending migrations."""
     pending = await engine.get_pending_migrations()
 
@@ -107,7 +106,7 @@ async def run_migration(engine: MigrationEngine, migration_id: str, dry_run: boo
         sys.exit(1)
 
 
-async def run_all_migrations(engine: MigrationEngine, migration_type: Optional[str] = None, dry_run: bool = False):
+async def run_all_migrations(engine: MigrationEngine, migration_type: str | None = None, dry_run: bool = False):
     """Execute all pending migrations."""
     type_enum = MigrationType[migration_type.upper()] if migration_type else None
 

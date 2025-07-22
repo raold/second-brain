@@ -4,7 +4,7 @@ Entity extraction component for the sophisticated ingestion engine
 
 import logging
 import re
-from typing import Any, Optional
+from typing import Any
 
 try:
     import spacy
@@ -58,12 +58,12 @@ class EntityExtractor:
                 else:
                     self.nlp = spacy.load(model_name)
                     logger.info(f"Loaded SpaCy model: {model_name}")
-                
+
                 # Add custom entity ruler for domain-specific entities
                 if "entity_ruler" not in self.nlp.pipe_names:
                     ruler = self.nlp.add_pipe("entity_ruler", before="ner")
                     ruler.add_patterns(self._get_entity_ruler_patterns())
-                    
+
             except Exception as e:
                 logger.warning(f"Failed to load SpaCy model {model_name}: {e}")
                 logger.info("Entity extraction will use pattern matching only")
@@ -268,7 +268,7 @@ class EntityExtractor:
             ]
         }
 
-    def _map_spacy_to_entity_type(self, spacy_label: str) -> Optional[EntityType]:
+    def _map_spacy_to_entity_type(self, spacy_label: str) -> EntityType | None:
         """Map SpaCy NER labels to our entity types"""
         mapping = {
             "PERSON": EntityType.PERSON,
@@ -342,7 +342,7 @@ class EntityExtractor:
 
         return has_proper or is_capitalized
 
-    def _classify_noun_chunk(self, chunk: Any) -> Optional[EntityType]:
+    def _classify_noun_chunk(self, chunk: Any) -> EntityType | None:
         """Classify noun chunk into entity type"""
         text_lower = chunk.text.lower()
 
@@ -440,19 +440,19 @@ class EntityExtractor:
             {"label": "TECHNOLOGY", "pattern": [{"LOWER": "pytorch"}]},
             {"label": "TECHNOLOGY", "pattern": [{"LOWER": "spacy"}]},
             {"label": "TECHNOLOGY", "pattern": [{"LOWER": "transformers"}]},
-            
+
             # Framework patterns
             {"label": "TECHNOLOGY", "pattern": [{"LOWER": {"IN": ["django", "flask", "fastapi"]}}]},
-            
+
             # AI/ML concepts
             {"label": "CONCEPT", "pattern": [{"LOWER": "machine"}, {"LOWER": "learning"}]},
             {"label": "CONCEPT", "pattern": [{"LOWER": "deep"}, {"LOWER": "learning"}]},
             {"label": "CONCEPT", "pattern": [{"LOWER": "neural"}, {"LOWER": "network"}]},
             {"label": "CONCEPT", "pattern": [{"LOWER": "natural"}, {"LOWER": "language"}, {"LOWER": "processing"}]},
-            
+
             # Project management
             {"label": "PROJECT", "pattern": [{"TEXT": {"REGEX": "[A-Z]{2,}-\\d+"}}]},  # JIRA-style
-            
+
             # Version patterns
             {"label": "VERSION", "pattern": [{"TEXT": {"REGEX": "v?\\d+\\.\\d+(\\.\\d+)?"}}]},
         ]
@@ -471,11 +471,11 @@ class EntityExtractor:
         """
         entities = self.extract_entities(text)
         entities_with_context = []
-        
+
         for entity in entities:
             start = max(0, entity.start_pos - context_window)
             end = min(len(text), entity.end_pos + context_window)
-            
+
             context = {
                 "entity": entity.dict(),
                 "context": {
@@ -485,7 +485,7 @@ class EntityExtractor:
                 }
             }
             entities_with_context.append(context)
-            
+
         return entities_with_context
 
     def get_entity_statistics(self, entities: list[Entity]) -> dict[str, Any]:

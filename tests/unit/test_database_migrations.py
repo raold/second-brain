@@ -1,8 +1,9 @@
 """Test database migrations - working version."""
 
-import pytest
-from unittest.mock import AsyncMock
 from datetime import datetime
+from unittest.mock import AsyncMock
+
+import pytest
 
 from app.database_migrations import AddImportanceScoreToMemories
 
@@ -14,7 +15,7 @@ class TestDatabaseMigrationsWorking:
         """Test migration metadata is properly configured."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         assert migration.metadata.id == "add_importance_score_001"
         assert migration.metadata.name == "Add importance score to memories"
         assert migration.metadata.reversible is True
@@ -26,9 +27,9 @@ class TestDatabaseMigrationsWorking:
         """Test forward migration statements."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         statements = await migration.get_forward_statements()
-        
+
         assert len(statements) == 2
         assert any("importance_score" in stmt and "ADD COLUMN" in stmt for stmt in statements)
         assert any("idx_memories_importance" in stmt and "CREATE INDEX" in stmt for stmt in statements)
@@ -38,9 +39,9 @@ class TestDatabaseMigrationsWorking:
         """Test rollback migration statements."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         statements = await migration.get_rollback_statements()
-        
+
         assert len(statements) == 2
         assert any("DROP INDEX" in stmt for stmt in statements)
         assert any("DROP COLUMN" in stmt for stmt in statements)
@@ -49,7 +50,7 @@ class TestDatabaseMigrationsWorking:
         """Test all migration metadata properties."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         # Test all required metadata fields are present
         assert hasattr(migration.metadata, 'id')
         assert hasattr(migration.metadata, 'name')
@@ -66,7 +67,7 @@ class TestDatabaseMigrationsWorking:
         """Test required extensions check."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         extensions = migration.get_required_extensions()
         assert isinstance(extensions, list)
         assert len(extensions) == 0  # No special extensions required
@@ -75,11 +76,11 @@ class TestDatabaseMigrationsWorking:
         """Test migration inheritance structure."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         # Test inheritance
         from app.database_migrations import DatabaseSchemaMigration
         assert isinstance(migration, DatabaseSchemaMigration)
-        
+
         # Test metadata type
         from app.migration_framework import MigrationMetadata, MigrationType
         assert isinstance(migration.metadata, MigrationMetadata)
@@ -89,7 +90,7 @@ class TestDatabaseMigrationsWorking:
         """Test applied statements tracking functionality."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         # Test initial state
         assert hasattr(migration, 'applied_statements')
         assert isinstance(migration.applied_statements, list)
@@ -100,13 +101,13 @@ class TestDatabaseMigrationsWorking:
         """Test the actual content of migration statements."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         # Test forward statements
         forward_statements = await migration.get_forward_statements()
         assert "DECIMAL(5,4)" in forward_statements[0]
         assert "DEFAULT 0.5" in forward_statements[0]
         assert "importance_score DESC" in forward_statements[1]
-        
+
         # Test rollback statements
         rollback_statements = await migration.get_rollback_statements()
         assert "idx_memories_importance" in rollback_statements[0]
@@ -116,7 +117,7 @@ class TestDatabaseMigrationsWorking:
         """Test migration checksum is properly set."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         assert migration.metadata.checksum == "a1b2c3d4e5f6"
         assert len(migration.metadata.checksum) > 0
 
@@ -124,7 +125,7 @@ class TestDatabaseMigrationsWorking:
         """Test migration dependencies configuration."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         assert isinstance(migration.metadata.dependencies, list)
         assert len(migration.metadata.dependencies) == 0  # No dependencies for this migration
 
@@ -132,7 +133,7 @@ class TestDatabaseMigrationsWorking:
         """Test migration description is informative."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         description = migration.metadata.description
         assert "importance_score" in description
         assert "column" in description
@@ -142,7 +143,7 @@ class TestDatabaseMigrationsWorking:
         """Test migration created_at timestamp."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         assert isinstance(migration.metadata.created_at, datetime)
         # Should be recent (within last day)
         assert (datetime.now() - migration.metadata.created_at).days < 1
@@ -151,18 +152,18 @@ class TestDatabaseMigrationsWorking:
         """Test database pool assignment."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         assert migration.pool is mock_pool
 
-    @pytest.mark.asyncio  
+    @pytest.mark.asyncio
     async def test_custom_precondition_validation(self):
         """Test custom precondition validation."""
         mock_pool = AsyncMock()
         migration = AddImportanceScoreToMemories(mock_pool)
-        
+
         # Test method exists
         assert hasattr(migration, '_validate_custom_preconditions')
-        
+
         # Mock connection
         mock_conn = AsyncMock()
         result = await migration._validate_custom_preconditions(mock_conn)

@@ -7,7 +7,6 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
-from typing import Optional
 
 import asyncpg
 from fastapi import Depends, FastAPI, HTTPException, Query, Security
@@ -27,7 +26,7 @@ security = HTTPBearer()
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/second_brain")
 
 # Global database pool
-db_pool: Optional[asyncpg.Pool] = None
+db_pool: asyncpg.Pool | None = None
 
 
 @asynccontextmanager
@@ -90,13 +89,13 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 class Memory(BaseModel):
     """Memory model for storage and retrieval."""
 
-    id: Optional[str] = None
+    id: str | None = None
     content: str = Field(..., description="The memory content")
     metadata: dict = Field(default_factory=dict, description="Additional metadata")
     importance: float = Field(default=1.0, ge=0.0, le=10.0, description="Importance score")
     tags: list[str] = Field(default_factory=list, description="Memory tags")
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: str | None = None
+    updated_at: str | None = None
 
 
 class SearchRequest(BaseModel):
@@ -105,8 +104,8 @@ class SearchRequest(BaseModel):
     query: str = Field(..., description="Search query")
     limit: int = Field(default=10, ge=1, le=100, description="Number of results")
     threshold: float = Field(default=0.7, ge=0.0, le=1.0, description="Similarity threshold")
-    tags: Optional[list[str]] = Field(default=None, description="Filter by tags")
-    importance_min: Optional[float] = Field(default=None, description="Minimum importance")
+    tags: list[str] | None = Field(default=None, description="Filter by tags")
+    importance_min: float | None = Field(default=None, description="Minimum importance")
 
 
 class SearchResult(BaseModel):
@@ -269,8 +268,8 @@ async def create_memory(memory: Memory, token: str = Depends(verify_token), db_p
 async def list_memories(
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    tags: Optional[str] = Query(default=None, description="Comma-separated tags"),
-    importance_min: Optional[float] = Query(default=None, ge=0.0, le=10.0),
+    tags: str | None = Query(default=None, description="Comma-separated tags"),
+    importance_min: float | None = Query(default=None, ge=0.0, le=10.0),
     token: str = Depends(verify_token),
     db_pool=Depends(get_db_connection),
 ):

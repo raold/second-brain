@@ -5,7 +5,7 @@ Manages session persistence, context continuity, and idea processing.
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from app.conversation_processor import ConversationProcessor
@@ -33,7 +33,7 @@ class SessionService:
         self.logger = logger
 
     async def ingest_idea(
-        self, idea: str, source: str = "mobile", priority: str = "medium", context: Optional[str] = None
+        self, idea: str, source: str = "mobile", priority: str = "medium", context: str | None = None
     ) -> dict[str, Any]:
         """
         Process an idea through the woodchipper.
@@ -125,7 +125,7 @@ class SessionService:
             raise
 
     async def resume_session(
-        self, session_id: Optional[str] = None, device_context: Optional[str] = None
+        self, session_id: str | None = None, device_context: str | None = None
     ) -> dict[str, Any]:
         """
         Resume a previously paused session.

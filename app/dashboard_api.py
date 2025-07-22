@@ -6,7 +6,6 @@ Provides real-time project metrics, visual data, and automatic updates
 
 import re
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
@@ -32,7 +31,7 @@ class MetricUpdate(BaseModel):
     metric_name: str = Field(..., description="Name of the metric")
     value: float = Field(..., description="Metric value")
     unit: str = Field(..., description="Unit of measurement")
-    target: Optional[float] = Field(default=None, description="Target value")
+    target: float | None = Field(default=None, description="Target value")
 
 
 class ConversationContext(BaseModel):

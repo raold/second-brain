@@ -14,7 +14,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from app.conversation_processor import get_conversation_processor
 from app.dashboard import get_dashboard
@@ -76,7 +76,7 @@ class CodingSession:
 
     session_id: str
     start_time: str
-    end_time: Optional[str]
+    end_time: str | None
     state: SessionState
     conversation_history: list[ConversationMessage]
     project_momentum: ProjectMomentum
@@ -99,7 +99,7 @@ class SessionManager:
         self.sessions_dir.mkdir(exist_ok=True)
 
         # Current session state
-        self.current_session: Optional[CodingSession] = None
+        self.current_session: CodingSession | None = None
         self.session_buffer = deque(maxlen=1000)  # Rolling conversation buffer
 
         # Context preservation
@@ -532,7 +532,7 @@ TO RESUME SEAMLESSLY:
         except Exception as e:
             print(f"Error saving session state: {e}")
 
-    def find_last_active_session(self) -> Optional[CodingSession]:
+    def find_last_active_session(self) -> CodingSession | None:
         """Find the last active session for resumption"""
         try:
             resume_file = self.sessions_dir / "last_session.json"
@@ -681,7 +681,7 @@ def pause_and_preserve_context(reason: str = "Manual pause") -> str:
     return session_manager.pause_session(reason)
 
 
-def resume_coding_session(session_id: Optional[str] = None) -> bool:
+def resume_coding_session(session_id: str | None = None) -> bool:
     """Resume coding session with full context"""
     session_manager = get_session_manager()
     if session_id:

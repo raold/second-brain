@@ -6,7 +6,7 @@ Provides dashboard widgets and monitoring for the unified migration system.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from .database import get_database
 from .migration_engine import MigrationEngine
@@ -18,7 +18,7 @@ class MigrationDashboard:
     """Dashboard component for migration monitoring and management."""
 
     def __init__(self):
-        self.migration_engine: Optional[MigrationEngine] = None
+        self.migration_engine: MigrationEngine | None = None
         self._last_refresh = None
         self._cache_duration = timedelta(minutes=5)
         self._cached_data = {}

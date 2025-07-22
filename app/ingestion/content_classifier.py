@@ -5,7 +5,7 @@ Intelligent content classifier for automatic categorization and quality assessme
 import logging
 import re
 from collections import Counter, defaultdict
-from typing import Any, Optional
+from typing import Any
 
 from app.ingestion.models import ContentQuality, IntentType, ProcessedContent
 
@@ -69,7 +69,7 @@ class ContentClassifier:
             "metadata": self._generate_metadata_suggestions(processed_content)
         }
 
-    def _classify_domain(self, content: ProcessedContent) -> Optional[str]:
+    def _classify_domain(self, content: ProcessedContent) -> str | None:
         """Classify content domain based on multiple signals"""
         domain_scores = defaultdict(float)
 
@@ -231,7 +231,7 @@ class ContentClassifier:
         # Calculate average completeness
         return sum(completeness_factors) / len(completeness_factors)
 
-    def _suggest_memory_type(self, content: ProcessedContent) -> Optional[str]:
+    def _suggest_memory_type(self, content: ProcessedContent) -> str | None:
         """Suggest appropriate memory type based on content"""
         type_scores = defaultdict(float)
 

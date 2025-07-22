@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -46,9 +46,9 @@ class MigrationStep:
     name: str
     description: str
     function: Callable
-    rollback_function: Optional[Callable] = None
+    rollback_function: Callable | None = None
     dependencies: list[str] = None
-    estimated_duration: Optional[int] = None  # seconds
+    estimated_duration: int | None = None  # seconds
     critical: bool = False
 
 
@@ -59,7 +59,7 @@ class MigrationResult:
     migration_id: str
     status: MigrationStatus
     start_time: datetime
-    end_time: Optional[datetime]
+    end_time: datetime | None
     total_records: int
     processed_records: int
     successful_records: int
@@ -236,7 +236,7 @@ class MemoryMigration:
 class MemoryTypeMigration(MemoryMigration):
     """Migration for updating memory types"""
 
-    def __init__(self, from_type: str, to_type: str, filter_criteria: Optional[dict] = None):
+    def __init__(self, from_type: str, to_type: str, filter_criteria: dict | None = None):
         super().__init__(
             migration_id=f"memory_type_{from_type}_to_{to_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             name=f"Memory Type Migration: {from_type} → {to_type}",
@@ -386,7 +386,7 @@ class MemoryTypeMigration(MemoryMigration):
 class MetadataEnrichmentMigration(MemoryMigration):
     """Migration for enriching memory metadata"""
 
-    def __init__(self, enrichment_function: Callable, filter_criteria: Optional[dict] = None):
+    def __init__(self, enrichment_function: Callable, filter_criteria: dict | None = None):
         super().__init__(
             migration_id=f"metadata_enrichment_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             name="Metadata Enrichment Migration",
@@ -506,7 +506,7 @@ class MigrationManager:
         """Register a migration"""
         self.migrations[migration.migration_id] = migration
 
-    async def execute_migration(self, migration_id: str, config: Optional[MigrationConfig] = None) -> MigrationResult:
+    async def execute_migration(self, migration_id: str, config: MigrationConfig | None = None) -> MigrationResult:
         """Execute a specific migration"""
         if migration_id not in self.migrations:
             raise ValueError(f"Migration {migration_id} not found")
@@ -519,7 +519,7 @@ class MigrationManager:
 
         return result
 
-    async def get_migration_status(self, migration_id: str) -> Optional[MigrationResult]:
+    async def get_migration_status(self, migration_id: str) -> MigrationResult | None:
         """Get status of a migration"""
         for result in reversed(self.migration_history):
             if result.migration_id == migration_id:
@@ -547,14 +547,14 @@ class MigrationManager:
         migration = self.migrations[migration_id]
         return await migration.validate(self.config)
 
-    def create_memory_type_migration(self, from_type: str, to_type: str, filter_criteria: Optional[dict] = None) -> str:
+    def create_memory_type_migration(self, from_type: str, to_type: str, filter_criteria: dict | None = None) -> str:
         """Create and register a memory type migration"""
         migration = MemoryTypeMigration(from_type, to_type, filter_criteria)
         self.register_migration(migration)
         return migration.migration_id
 
     def create_metadata_enrichment_migration(
-        self, enrichment_function: Callable, filter_criteria: Optional[dict] = None
+        self, enrichment_function: Callable, filter_criteria: dict | None = None
     ) -> str:
         """Create and register a metadata enrichment migration"""
         migration = MetadataEnrichmentMigration(enrichment_function, filter_criteria)

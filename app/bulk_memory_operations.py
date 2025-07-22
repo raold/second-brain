@@ -17,7 +17,7 @@ import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 import asyncpg
 
@@ -88,7 +88,7 @@ class BulkOperationProgress:
     skipped_items: int
     start_time: datetime
     last_update: datetime
-    estimated_completion: Optional[datetime] = None
+    estimated_completion: datetime | None = None
     current_batch: int = 0
     total_batches: int = 0
     error_details: list[dict[str, Any]] = None
@@ -115,7 +115,7 @@ class BulkOperationProgress:
         return (self.successful_items / self.processed_items) * 100
 
     @property
-    def estimated_time_remaining(self) -> Optional[timedelta]:
+    def estimated_time_remaining(self) -> timedelta | None:
         """Estimate time remaining based on current progress."""
         if self.processed_items == 0 or self.status != BulkOperationStatus.RUNNING:
             return None
@@ -138,16 +138,16 @@ class BulkMemoryItem:
     content: str
     memory_type: str = "semantic"
     importance_score: float = 0.5
-    semantic_metadata: Optional[dict[str, Any]] = None
-    episodic_metadata: Optional[dict[str, Any]] = None
-    procedural_metadata: Optional[dict[str, Any]] = None
-    metadata: Optional[dict[str, Any]] = None
+    semantic_metadata: dict[str, Any] | None = None
+    episodic_metadata: dict[str, Any] | None = None
+    procedural_metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = None
 
     # For updates/deletes
-    memory_id: Optional[str] = None
+    memory_id: str | None = None
 
     # Internal tracking
-    batch_id: Optional[str] = None
+    batch_id: str | None = None
     validation_errors: list[str] = None
 
     def __post_init__(self):
@@ -170,7 +170,7 @@ class BulkOperationResult:
     memory_ids: list[str]
     error_summary: dict[str, int]
     performance_metrics: dict[str, float]
-    rollback_info: Optional[dict[str, Any]] = None
+    rollback_info: dict[str, Any] | None = None
 
 
 class BulkMemoryEngine:
@@ -186,7 +186,7 @@ class BulkMemoryEngine:
     - Memory-efficient processing for large datasets
     """
 
-    def __init__(self, database, config: Optional[BulkOperationConfig] = None):
+    def __init__(self, database, config: BulkOperationConfig | None = None):
         self.database = database
         self.config = config or BulkOperationConfig()
         self.active_operations: dict[str, BulkOperationProgress] = {}
@@ -329,7 +329,7 @@ class BulkMemoryEngine:
         return valid_items, invalid_items
 
     async def bulk_insert_memories(
-        self, items: list[BulkMemoryItem], config: Optional[BulkOperationConfig] = None
+        self, items: list[BulkMemoryItem], config: BulkOperationConfig | None = None
     ) -> BulkOperationResult:
         """
         Bulk insert memories with transactional safety and progress tracking.
@@ -565,7 +565,7 @@ class BulkMemoryEngine:
             except Exception as e:
                 logger.error(f"Failed to store operation result: {e}")
 
-    async def get_operation_progress(self, operation_id: str) -> Optional[BulkOperationProgress]:
+    async def get_operation_progress(self, operation_id: str) -> BulkOperationProgress | None:
         """Get real-time progress for an operation."""
         return self.active_operations.get(operation_id)
 
@@ -580,7 +580,7 @@ class BulkMemoryEngine:
         return False
 
     async def list_operations(
-        self, status_filter: Optional[BulkOperationStatus] = None, limit: int = 50
+        self, status_filter: BulkOperationStatus | None = None, limit: int = 50
     ) -> list[BulkOperationProgress]:
         """List bulk operations with optional filtering."""
         operations = []
@@ -628,7 +628,7 @@ class BulkMemoryEngine:
 
 
 # Global instance
-_bulk_engine_instance: Optional[BulkMemoryEngine] = None
+_bulk_engine_instance: BulkMemoryEngine | None = None
 
 
 async def get_bulk_engine(database=None) -> BulkMemoryEngine:

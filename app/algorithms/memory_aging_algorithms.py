@@ -10,7 +10,7 @@ import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class MemoryAccess:
     timestamp: datetime
     access_type: str
     success_rate: float = 1.0
-    retrieval_time_ms: Optional[int] = None
+    retrieval_time_ms: int | None = None
     context_similarity: float = 0.5
 
 
@@ -74,7 +74,7 @@ class AgingResult:
     model_used: AgingModel
     strength_category: MemoryStrength
     predicted_half_life: float
-    next_optimal_review: Optional[datetime]
+    next_optimal_review: datetime | None
     confidence: float
     explanation: str
 
@@ -131,7 +131,7 @@ class AdvancedMemoryAging:
         current_importance: float = 0.5,
         memory_type: str = "semantic",
         content_complexity: float = 0.5,
-        model: Optional[AgingModel] = None,
+        model: AgingModel | None = None,
     ) -> AgingResult:
         """
         Calculate comprehensive memory aging using specified or adaptive model.
@@ -319,7 +319,7 @@ class AdvancedMemoryAging:
         current_level = 0
         last_access = access_times[-1]
 
-        for i, interval in enumerate(intervals):
+        for i, _interval in enumerate(intervals):
             expected_time = access_times[0] + timedelta(days=sum(intervals[: i + 1]))
             if last_access >= expected_time:
                 current_level = i + 1
@@ -506,7 +506,7 @@ class AdvancedMemoryAging:
 
     def _predict_optimal_review_time(
         self, result: AgingResult, access_history: list[MemoryAccess], params: AgingParameters
-    ) -> Optional[datetime]:
+    ) -> datetime | None:
         """Predict when memory should be reviewed next for optimal retention"""
         if result.model_used == AgingModel.SPACING_EFFECT:
             # Use spacing intervals
@@ -566,7 +566,7 @@ class AdvancedMemoryAging:
         model_usage = {}
         avg_half_life_by_model = {}
 
-        for memory_id, aging_result in memory_aging_data:
+        for _memory_id, aging_result in memory_aging_data:
             # Strength distribution
             strength = aging_result.strength_category.value
             strength_distribution[strength] = strength_distribution.get(strength, 0) + 1

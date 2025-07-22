@@ -72,7 +72,7 @@ def generate_dashboard_data():
             "phase_progress_percent": 85,
             "in_progress_features": [
                 "Test coverage expansion (27% -> 90%)",
-                "Docker CI/CD optimization", 
+                "Docker CI/CD optimization",
                 "Security baseline implementation",
             ],
             "long_term_timeline": {
@@ -81,7 +81,7 @@ def generate_dashboard_data():
                     "target_date": "2025-08-30",
                     "status": "planned",
                     "features": [
-                        "Docker CI/CD pipeline optimization", 
+                        "Docker CI/CD pipeline optimization",
                         "Security baseline implementation",
                         "Performance benchmarking automation",
                         "Production deployment documentation"
@@ -167,7 +167,7 @@ def generate_dashboard_data():
             ],
             "paradigm_shifts": {
                 "retrieval_to_reasoning": {
-                    "name": "From Retrieval to Reasoning", 
+                    "name": "From Retrieval to Reasoning",
                     "description": "Moving beyond simple RAG to multi-hop reasoning and pattern recognition across memories",
                     "key_technologies": [
                         "Multi-hop query processing",
@@ -183,7 +183,7 @@ def generate_dashboard_data():
                     "description": "MemOS treats memory as a core computational resource that can be scheduled, shared and evolved over time",
                     "key_technologies": [
                         "Memory scheduling algorithms",
-                        "Persistent context management", 
+                        "Persistent context management",
                         "Adaptive memory allocation",
                         "Cross-session state preservation"
                     ],
@@ -198,7 +198,7 @@ def generate_dashboard_data():
             "release_type": "quality_excellence",
             "major_changes": [
                 "Enhanced dashboard with paradigm shift roadmaps",
-                "Test coverage expansion from 26% to 27%", 
+                "Test coverage expansion from 26% to 27%",
                 "Fixed 12 failing tests for stability",
                 "Centralized environment configuration",
             ],
@@ -226,14 +226,14 @@ def generate_roadmap_html(data):
     html = """
             <h3>🚀 Long-term Development Timeline</h3>
             <div class="roadmap-timeline">"""
-    
+
     for version, details in data['roadmap']['long_term_timeline'].items():
         status_color = {
             'planned': '#4facfe',
             'concept': '#ffa726',
             'in_progress': '#66bb6a'
         }.get(details['status'], '#4facfe')
-        
+
         html += f"""
                 <div class="roadmap-item" style="border-left-color: {status_color};">
                     <div class="roadmap-header">
@@ -241,23 +241,23 @@ def generate_roadmap_html(data):
                         <span class="roadmap-date">{details['target_date']}</span>
                     </div>
                     <div class="roadmap-status">Status: {details['status'].title()}</div>"""
-        
+
         if 'paradigm_shift' in details:
             html += f"""<div class="paradigm-shift">🔄 Paradigm: {details['paradigm_shift']}</div>"""
-        
-        html += f"""<div class="roadmap-features">"""
-        
+
+        html += """<div class="roadmap-features">"""
+
         for feature in details['features']:
             html += f"<div class='feature-item'>• {feature}</div>"
-        
+
         html += """</div>
                 </div>"""
-    
+
     html += """
             </div>
             
             <h3>� Paradigm Shifts</h3>"""
-    
+
     for shift_key, shift_data in data['roadmap']['paradigm_shifts'].items():
         html += f"""
             <div class="paradigm-item">
@@ -268,25 +268,25 @@ def generate_roadmap_html(data):
                 <div class="paradigm-description">{shift_data['description']}</div>
                 <div class="tech-list">
                     <strong>Key Technologies:</strong>"""
-        
+
         for tech in shift_data['key_technologies']:
             html += f"<span class='tech-tag'>• {tech}</span>"
-        
+
         html += f"""</div>
                 <div class="research-source">Research: {shift_data['research_source']}</div>
             </div>"""
-    
+
     html += """
             
             <h3>�🔬 Research Initiatives</h3>"""
-    
+
     for initiative in data['roadmap']['research_initiatives']:
         priority_color = {
             'high': '#e53e3e',
-            'medium': '#ffa726', 
+            'medium': '#ffa726',
             'experimental': '#9c27b0'
         }.get(initiative['priority'], '#4facfe')
-        
+
         html += f"""
             <div class="research-item">
                 <div class="research-header">
@@ -297,7 +297,7 @@ def generate_roadmap_html(data):
                 <div class="research-description">{initiative['description']}</div>
                 <div class="research-timeline">Timeline: {initiative['timeline']}</div>
             </div>"""
-    
+
     return html
 
 

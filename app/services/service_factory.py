@@ -4,7 +4,6 @@ Provides a centralized way to create and access service instances.
 """
 
 import logging
-from typing import Optional
 
 from app.conversation_processor import ConversationProcessor
 from app.dashboard import ProjectDashboard
@@ -29,13 +28,13 @@ class ServiceFactory:
     """
 
     def __init__(self):
-        self._memory_service: Optional[MemoryService] = None
-        self._session_service: Optional[SessionService] = None
-        self._dashboard_service: Optional[DashboardService] = None
-        self._health_service: Optional[HealthService] = None
-        self._git_service: Optional[GitService] = None
-        self._database: Optional[Database | MockDatabase] = None
-        self._security_manager: Optional[SecurityManager] = None
+        self._memory_service: MemoryService | None = None
+        self._session_service: SessionService | None = None
+        self._dashboard_service: DashboardService | None = None
+        self._health_service: HealthService | None = None
+        self._git_service: GitService | None = None
+        self._database: Database | MockDatabase | None = None
+        self._security_manager: SecurityManager | None = None
         self.logger = logger
 
     def set_database(self, database: Database | MockDatabase):

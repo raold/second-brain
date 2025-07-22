@@ -4,7 +4,6 @@ All business logic is delegated to SessionService.
 """
 
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
@@ -21,7 +20,7 @@ class IdeaIngestionRequest(BaseModel):
     idea: str = Field(..., description="The idea to process")
     source: str = Field(default="mobile", description="Source of the idea")
     priority: str = Field(default="medium", description="Priority level")
-    context: Optional[str] = Field(default=None, description="Additional context")
+    context: str | None = Field(default=None, description="Additional context")
 
 
 class SessionPauseRequest(BaseModel):
@@ -33,8 +32,8 @@ class SessionPauseRequest(BaseModel):
 class SessionResumeRequest(BaseModel):
     """Request model for resuming a session"""
 
-    session_id: Optional[str] = Field(default=None, description="Session ID to resume")
-    device_context: Optional[str] = Field(default=None, description="Device/platform context")
+    session_id: str | None = Field(default=None, description="Session ID to resume")
+    device_context: str | None = Field(default=None, description="Device/platform context")
 
 
 class ConversationMessage(BaseModel):

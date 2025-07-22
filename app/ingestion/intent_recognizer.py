@@ -5,7 +5,7 @@ Intent recognition component for understanding user intent in content
 import logging
 import re
 from collections import defaultdict
-from typing import Any, Optional
+from typing import Any
 
 try:
     from textblob import TextBlob
@@ -49,7 +49,7 @@ class IntentRecognizer:
         # Initialize transformer model for better intent classification
         self.transformer_model = None
         self.use_transformer = False
-        
+
         if SPACY_AVAILABLE:
             try:
                 # Try to load transformer model first
@@ -68,7 +68,7 @@ class IntentRecognizer:
                         logger.info("Loaded SpaCy small model for intent recognition")
             except Exception as e:
                 logger.warning(f"Failed to load SpaCy model: {e}")
-                
+
         # Try to load transformer-based classifier
         try:
             from transformers import pipeline
@@ -83,7 +83,7 @@ class IntentRecognizer:
             logger.warning(f"Failed to load transformer classifier: {e}")
             self.transformer_classifier = None
 
-    def recognize_intent(self, text: str) -> Optional[Intent]:
+    def recognize_intent(self, text: str) -> Intent | None:
         """
         Recognize the primary intent from text
 
@@ -120,7 +120,7 @@ class IntentRecognizer:
             sentiment=sentiment
         )
 
-    def _detect_intent_type(self, text: str) -> tuple[Optional[IntentType], float]:
+    def _detect_intent_type(self, text: str) -> tuple[IntentType | None, float]:
         """Detect the primary intent type from text"""
         text_lower = text.lower().strip()
 
@@ -132,11 +132,11 @@ class IntentRecognizer:
                     candidate_labels=self.intent_labels,
                     multi_label=False
                 )
-                
+
                 # Get top prediction
                 top_label = result["labels"][0]
                 top_score = result["scores"][0]
-                
+
                 # Map to IntentType
                 for intent_type in IntentType:
                     if intent_type.value == top_label:
@@ -148,14 +148,14 @@ class IntentRecognizer:
                         else:
                             # Average when they disagree
                             return intent_type, top_score * 0.8
-                            
+
             except Exception as e:
                 logger.debug(f"Transformer classification failed: {e}")
 
         # Fall back to pattern-based detection
         return self._detect_intent_pattern_based(text_lower)
 
-    def _detect_intent_pattern_based(self, text_lower: str) -> tuple[Optional[IntentType], float]:
+    def _detect_intent_pattern_based(self, text_lower: str) -> tuple[IntentType | None, float]:
         """Pattern-based intent detection (original method)"""
         # Track scores for each intent type
         intent_scores = defaultdict(float)
@@ -207,7 +207,7 @@ class IntentRecognizer:
 
         return intent_type, confidence
 
-    def _analyze_sentence_structure(self, text: str) -> tuple[Optional[IntentType], float]:
+    def _analyze_sentence_structure(self, text: str) -> tuple[IntentType | None, float]:
         """Analyze sentence structure using SpaCy"""
         try:
             doc = self.nlp(text[:1000])  # Limit text length

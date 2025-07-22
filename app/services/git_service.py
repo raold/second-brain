@@ -8,7 +8,7 @@ import os
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ class GitCommitMetrics:
     lines_deleted: int
     files_changed: int
     authors: list[str]
-    first_commit_date: Optional[datetime] = None
-    last_commit_date: Optional[datetime] = None
+    first_commit_date: datetime | None = None
+    last_commit_date: datetime | None = None
 
 
 @dataclass
@@ -35,20 +35,20 @@ class GitBranchInfo:
     name: str
     is_current: bool = False
     is_remote: bool = False
-    last_commit_hash: Optional[str] = None
-    last_commit_message: Optional[str] = None
-    last_commit_author: Optional[str] = None
-    last_commit_date: Optional[datetime] = None
-    ahead: Optional[int] = None
-    behind: Optional[int] = None
+    last_commit_hash: str | None = None
+    last_commit_message: str | None = None
+    last_commit_author: str | None = None
+    last_commit_date: datetime | None = None
+    ahead: int | None = None
+    behind: int | None = None
     status: str = "active"  # active, merged, stale
-    features: Optional[list[str]] = None
-    version: Optional[str] = None
+    features: list[str] | None = None
+    version: str | None = None
 
     # New commit metrics
-    metrics_24h: Optional[GitCommitMetrics] = None
-    metrics_7d: Optional[GitCommitMetrics] = None
-    metrics_30d: Optional[GitCommitMetrics] = None
+    metrics_24h: GitCommitMetrics | None = None
+    metrics_7d: GitCommitMetrics | None = None
+    metrics_30d: GitCommitMetrics | None = None
 
     def __post_init__(self):
         if self.features is None:
@@ -121,12 +121,12 @@ class GitRepositoryStatus:
 class GitService:
     """Service for git repository operations with commit activity tracking."""
 
-    def __init__(self, repo_path: Optional[str] = None):
+    def __init__(self, repo_path: str | None = None):
         """Initialize GitService."""
         self.repo_path = repo_path or os.getcwd()
         self.logger = logger
 
-    def _run_git_command(self, command: list[str]) -> Optional[str]:
+    def _run_git_command(self, command: list[str]) -> str | None:
         """Run a git command and return output."""
         try:
             result = subprocess.run(
@@ -147,7 +147,7 @@ class GitService:
             self.logger.error(f"Error running git command {command}: {e}")
             return None
 
-    def get_commit_metrics(self, branch_name: str, days: int) -> Optional[GitCommitMetrics]:
+    def get_commit_metrics(self, branch_name: str, days: int) -> GitCommitMetrics | None:
         """Get commit metrics for a branch within specified days."""
         try:
             # Calculate date threshold
@@ -307,7 +307,7 @@ class GitService:
                 "most_active_branches": {"24h": None, "7d": None, "30d": None},
             }
 
-    def get_current_branch(self) -> Optional[str]:
+    def get_current_branch(self) -> str | None:
         """Get the current branch name."""
         return self._run_git_command(["branch", "--show-current"])
 

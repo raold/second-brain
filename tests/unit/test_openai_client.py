@@ -37,11 +37,11 @@ class TestOpenAIClient:
         # Clear any existing instance
         OpenAIClient._instance = None
         OpenAIClient._client = None
-        
+
         # Mock the environment variable
         with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
             client = OpenAIClient()
-            
+
             # If client was created, the AsyncOpenAI should have been called
             if client._client is not None:
                 mock_openai.assert_called_once_with(api_key="test-key")

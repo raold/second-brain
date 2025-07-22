@@ -4,7 +4,7 @@ Provides endpoints for automated importance scoring features
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -23,8 +23,8 @@ class UserFeedbackRequest(BaseModel):
 
     memory_id: str = Field(..., description="Memory ID")
     feedback_type: str = Field(..., description="Type of feedback: upvote, downvote, save, share")
-    feedback_value: Optional[int] = Field(None, description="Numeric feedback value")
-    feedback_text: Optional[str] = Field(None, description="Text feedback")
+    feedback_value: int | None = Field(None, description="Numeric feedback value")
+    feedback_text: str | None = Field(None, description="Text feedback")
 
 
 class ImportanceBreakdownResponse(BaseModel):
@@ -312,8 +312,8 @@ async def get_high_importance_memories(
 async def log_memory_access(
     memory_id: str,
     access_type: str = Query(default="api_access", description="Type of access"),
-    search_position: Optional[int] = Query(default=None, description="Position in search results"),
-    user_action: Optional[str] = Query(default=None, description="User action performed"),
+    search_position: int | None = Query(default=None, description="Position in search results"),
+    user_action: str | None = Query(default=None, description="User action performed"),
 ):
     """
     Manually log memory access for importance tracking

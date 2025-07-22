@@ -11,7 +11,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
@@ -71,7 +71,7 @@ class MemoryNode:
     keywords: set[str] = field(default_factory=set)
     concepts: set[str] = field(default_factory=set)
     entities: set[str] = field(default_factory=set)
-    embedding: Optional[list[float]] = None
+    embedding: list[float] | None = None
     importance_score: float = 0.5
     created_at: datetime = field(default_factory=datetime.now)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -323,7 +323,7 @@ class CrossMemoryRelationshipEngine:
 
         return len(intersection) / len(union) if union else 0.0
 
-    def _detect_cross_type_relationship(self, source: MemoryNode, target: MemoryNode) -> Optional[MemoryRelationship]:
+    def _detect_cross_type_relationship(self, source: MemoryNode, target: MemoryNode) -> MemoryRelationship | None:
         """Detect cross-memory-type relationships"""
         source_type = source.memory_type
         target_type = target.memory_type
@@ -397,7 +397,7 @@ class CrossMemoryRelationshipEngine:
         )
         return min(1.0, total_strength)
 
-    def _detect_temporal_relationship(self, source: MemoryNode, target: MemoryNode) -> Optional[MemoryRelationship]:
+    def _detect_temporal_relationship(self, source: MemoryNode, target: MemoryNode) -> MemoryRelationship | None:
         """Detect temporal relationships between memories"""
         # Look for temporal indicators in content
         temporal_patterns = [
@@ -428,7 +428,7 @@ class CrossMemoryRelationshipEngine:
 
         return None
 
-    def _detect_causal_relationship(self, source: MemoryNode, target: MemoryNode) -> Optional[MemoryRelationship]:
+    def _detect_causal_relationship(self, source: MemoryNode, target: MemoryNode) -> MemoryRelationship | None:
         """Detect causal relationships between memories"""
         causal_patterns = [
             r"\b(because|since|due to|caused by|results in|leads to)\b",

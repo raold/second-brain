@@ -19,7 +19,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from app.docs import Priority
 
@@ -56,7 +56,7 @@ class Milestone:
     name: str
     description: str
     target_date: str
-    completion_date: Optional[str]
+    completion_date: str | None
     status: Status
     progress: float  # 0.0 to 1.0
     dependencies: list[str]
@@ -77,7 +77,7 @@ class Task:
     actual_hours: int
     milestone_id: str
     created_at: str
-    completed_at: Optional[str]
+    completed_at: str | None
     tags: list[str]
 
 
@@ -104,7 +104,7 @@ class TechnicalMetric:
     metric_name: str
     value: float
     unit: str
-    target: Optional[float]
+    target: float | None
     status: str  # "on_track", "warning", "critical"
 
 
@@ -561,7 +561,7 @@ class ProjectDashboard:
 
         return risks
 
-    def get_current_sprint(self) -> Optional[Sprint]:
+    def get_current_sprint(self) -> Sprint | None:
         """Get currently active sprint"""
         now = datetime.now()
         for sprint in self.sprints.values():
@@ -648,7 +648,7 @@ class ProjectDashboard:
             for t in completed_tasks[:limit]
         ]
 
-    def record_metric(self, metric_name: str, value: float, unit: str, target: Optional[float] = None):
+    def record_metric(self, metric_name: str, value: float, unit: str, target: float | None = None):
         """Record a new technical metric"""
         # Determine status based on target
         status = "on_track"

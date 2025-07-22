@@ -6,7 +6,7 @@ importance engine with cognitive factors and temporal decay.
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from app.bulk_memory_operations import BulkMemoryItem
 from app.memory_migrations import MemoryDataMigration
@@ -52,7 +52,7 @@ class RecalculateMemoryImportance(MemoryDataMigration):
             """)
             return [dict(row) for row in rows]
 
-    async def transform_memory(self, memory: dict[str, Any]) -> Optional[BulkMemoryItem]:
+    async def transform_memory(self, memory: dict[str, Any]) -> BulkMemoryItem | None:
         """Recalculate importance score using cognitive factors."""
 
         # Simulate importance calculation (would use real importance engine)
@@ -86,7 +86,7 @@ class RecalculateMemoryImportance(MemoryDataMigration):
         )
 
     async def _calculate_importance(
-        self, content: str, metadata: dict, created_at: datetime, last_accessed: Optional[datetime]
+        self, content: str, metadata: dict, created_at: datetime, last_accessed: datetime | None
     ) -> float:
         """Calculate importance score using multiple cognitive factors."""
 
@@ -162,7 +162,7 @@ class RecalculateMemoryImportance(MemoryDataMigration):
 
         return max(0.1, decay_factor)
 
-    def _calculate_access_frequency(self, last_accessed: Optional[datetime]) -> float:
+    def _calculate_access_frequency(self, last_accessed: datetime | None) -> float:
         """Calculate score based on access patterns."""
         if not last_accessed:
             return 0.3  # Never accessed

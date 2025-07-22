@@ -8,7 +8,7 @@ enabling modular, testable, and extensible detection methods.
 import logging
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 from app.models.deduplication_models import DeduplicationConfig, DetectionStats, DuplicateGroup, SimilarityMethod
 
@@ -72,7 +72,7 @@ class DuplicateDetectorInterface(ABC):
         """
         return ["id", "content"]
 
-    def get_optimal_batch_size(self) -> Optional[int]:
+    def get_optimal_batch_size(self) -> int | None:
         """
         Get optimal batch size for this detector.
 
@@ -135,7 +135,7 @@ class BaseDuplicateDetector(DuplicateDetectorInterface):
         ids = sorted([memory_id_1, memory_id_2])
         return f"{ids[0]}:{ids[1]}:{self.get_similarity_method().value}"
 
-    def _get_cached_similarity(self, memory_id_1: str, memory_id_2: str) -> Optional[float]:
+    def _get_cached_similarity(self, memory_id_1: str, memory_id_2: str) -> float | None:
         """
         Get cached similarity score.
 

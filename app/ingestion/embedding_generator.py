@@ -6,7 +6,7 @@ import asyncio
 import hashlib
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 try:
     import numpy as np
@@ -68,7 +68,7 @@ class EmbeddingGenerator:
                     "all-MiniLM-L12-v2",  # Good balance
                     "all-MiniLM-L6-v2",   # Faster
                 ]
-                
+
                 model_to_load = self.model_name
                 if self.model_name == "auto":
                     # Auto-select best available model
@@ -82,15 +82,15 @@ class EmbeddingGenerator:
                             continue
                 else:
                     self.model = SentenceTransformer(self.model_name)
-                
+
                 # Get embedding dimensions
                 dummy_embedding = self.model.encode("test")
                 self.dimensions = len(dummy_embedding)
                 logger.info(f"Loaded sentence-transformers model: {model_to_load} ({self.dimensions}D)")
-                
+
                 # Set max sequence length for better performance
                 self.model.max_seq_length = 512
-                
+
             except Exception as e:
                 logger.error(f"Failed to load sentence-transformers model: {e}")
                 self._fallback_to_mock()
@@ -191,7 +191,7 @@ class EmbeddingGenerator:
         """Generate embedding using OpenAI API"""
         try:
             from app.utils.openai_client import get_openai_client
-            
+
             client = get_openai_client()
             if client:
                 response = await client.embeddings.create(
@@ -296,7 +296,7 @@ class EmbeddingGenerator:
         """Calculate cosine similarity between two embeddings"""
         if not NUMPY_AVAILABLE:
             # Simple dot product for similarity
-            return sum(a * b for a, b in zip(embedding1, embedding2))
+            return sum(a * b for a, b in zip(embedding1, embedding2, strict=False))
 
         # Cosine similarity
         emb1 = np.array(embedding1)
@@ -358,7 +358,7 @@ class EmbeddingGenerator:
 
     def combine_embeddings(self,
                          embeddings: list[list[float]],
-                         weights: Optional[list[float]] = None) -> list[float]:
+                         weights: list[float] | None = None) -> list[float]:
         """Combine multiple embeddings with optional weights"""
         if not embeddings:
             return []

@@ -5,7 +5,7 @@ Manages project intelligence, milestones, and analytics.
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from app.dashboard import ProjectDashboard
 
@@ -150,7 +150,7 @@ class DashboardService:
             raise
 
     async def update_milestone_progress(
-        self, milestone_id: str, progress: float, notes: Optional[str] = None
+        self, milestone_id: str, progress: float, notes: str | None = None
     ) -> dict[str, Any]:
         """
         Update progress for a specific milestone.

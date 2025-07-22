@@ -16,13 +16,12 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 
 class DocumentationUpdater:
     """Comprehensive documentation update manager."""
 
-    def __init__(self, new_version: Optional[str] = None):
+    def __init__(self, new_version: str | None = None):
         self.root_dir = Path(__file__).parent.parent
         self.new_version = new_version or "2.3.0"  # Default to cognitive release
         self.release_date = datetime.now().strftime("%Y-%m-%d")

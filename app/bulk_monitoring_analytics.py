@@ -19,7 +19,7 @@ from collections import defaultdict, deque
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from .bulk_memory_operations import BulkOperationProgress, BulkOperationResult, BulkOperationStatus, BulkOperationType
 
@@ -64,7 +64,7 @@ class MetricPoint:
     metric_type: MetricType
     value: float
     tags: dict[str, str]
-    operation_id: Optional[str] = None
+    operation_id: str | None = None
 
 
 @dataclass
@@ -77,8 +77,8 @@ class Alert:
     severity: AlertSeverity
     condition: str
     threshold: float
-    triggered_at: Optional[datetime] = None
-    resolved_at: Optional[datetime] = None
+    triggered_at: datetime | None = None
+    resolved_at: datetime | None = None
     is_active: bool = False
     trigger_count: int = 0
 
@@ -145,8 +145,8 @@ class MetricsCollector:
         name: str,
         value: float,
         metric_type: MetricType = MetricType.GAUGE,
-        tags: Optional[dict[str, str]] = None,
-        operation_id: Optional[str] = None,
+        tags: dict[str, str] | None = None,
+        operation_id: str | None = None,
     ):
         """Record a metric point."""
         metric_point = MetricPoint(
@@ -300,7 +300,7 @@ class OperationTracker:
 
             logger.info(f"Completed tracking operation: {operation_id}")
 
-    async def get_operation_status(self, operation_id: str) -> Optional[BulkOperationProgress]:
+    async def get_operation_status(self, operation_id: str) -> BulkOperationProgress | None:
         """Get current status of an operation."""
         return self.active_operations.get(operation_id)
 
@@ -878,7 +878,7 @@ class BulkMonitoringDashboard:
 
 
 # Global instance
-_monitoring_dashboard_instance: Optional[BulkMonitoringDashboard] = None
+_monitoring_dashboard_instance: BulkMonitoringDashboard | None = None
 
 
 async def get_monitoring_dashboard() -> BulkMonitoringDashboard:

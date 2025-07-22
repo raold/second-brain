@@ -4,7 +4,7 @@ Data models for AI insights and pattern discovery
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -88,7 +88,7 @@ class MemoryCluster(BaseModel):
     name: str
     description: str
     size: int
-    centroid_memory_id: Optional[UUID] = None
+    centroid_memory_id: UUID | None = None
     memory_ids: list[UUID]
     common_tags: list[str]
     average_importance: float
@@ -147,7 +147,7 @@ class LearningProgress(BaseModel):
 class InsightRequest(BaseModel):
     """Request for generating insights"""
     time_frame: TimeFrame = TimeFrame.WEEKLY
-    insight_types: Optional[list[InsightType]] = None
+    insight_types: list[InsightType] | None = None
     limit: int = Field(default=10, ge=1, le=50)
     min_confidence: float = Field(default=0.7, ge=0.0, le=1.0)
     include_recommendations: bool = True
@@ -155,7 +155,7 @@ class InsightRequest(BaseModel):
 
 class PatternDetectionRequest(BaseModel):
     """Request for pattern detection"""
-    pattern_types: Optional[list[PatternType]] = None
+    pattern_types: list[PatternType] | None = None
     time_frame: TimeFrame = TimeFrame.MONTHLY
     min_occurrences: int = Field(default=3, ge=1)
     min_strength: float = Field(default=0.5, ge=0.0, le=1.0)
@@ -164,14 +164,14 @@ class PatternDetectionRequest(BaseModel):
 class ClusteringRequest(BaseModel):
     """Request for memory clustering"""
     algorithm: Literal["kmeans", "dbscan", "hierarchical"] = "kmeans"
-    num_clusters: Optional[int] = Field(None, ge=2, le=50)
+    num_clusters: int | None = Field(None, ge=2, le=50)
     min_cluster_size: int = Field(default=3, ge=2)
     similarity_threshold: float = Field(default=0.7, ge=0.0, le=1.0)
 
 
 class GapAnalysisRequest(BaseModel):
     """Request for knowledge gap analysis"""
-    domains: Optional[list[str]] = None
+    domains: list[str] | None = None
     min_severity: float = Field(default=0.5, ge=0.0, le=1.0)
     include_suggestions: bool = True
     limit: int = Field(default=10, ge=1, le=50)

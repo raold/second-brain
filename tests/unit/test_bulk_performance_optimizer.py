@@ -3,19 +3,21 @@ Tests for bulk performance optimizer module.
 Simple tests focusing on import, instantiation, and basic functionality.
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
+
 from app.bulk_performance_optimizer import (
-    OptimizationLevel,
-    ResourceType,
-    PerformanceMetrics,
-    OptimizationConfig,
-    ConnectionPoolManager,
-    ParallelWorkerManager,
-    MemoryManager,
-    CacheManager,
-    PerformanceMonitor,
     BulkPerformanceOptimizer,
+    CacheManager,
+    ConnectionPoolManager,
+    MemoryManager,
+    OptimizationConfig,
+    OptimizationLevel,
+    ParallelWorkerManager,
+    PerformanceMetrics,
+    PerformanceMonitor,
+    ResourceType,
 )
 
 
@@ -47,7 +49,7 @@ class TestPerformanceMetrics:
             total_items=100,
             processed_items=50
         )
-        
+
         assert metrics.operation_id == "test_op"
         assert metrics.start_time == now
         assert metrics.total_items == 100
@@ -57,7 +59,7 @@ class TestPerformanceMetrics:
     def test_performance_metrics_with_end_time(self):
         start = datetime.now()
         end = datetime.now()
-        
+
         metrics = PerformanceMetrics(
             operation_id="test_op",
             start_time=start,
@@ -65,7 +67,7 @@ class TestPerformanceMetrics:
             items_per_second=10.5,
             cpu_usage_percent=25.0
         )
-        
+
         assert metrics.end_time == end
         assert metrics.items_per_second == 10.5
         assert metrics.cpu_usage_percent == 25.0
@@ -76,7 +78,7 @@ class TestOptimizationConfig:
 
     def test_default_config(self):
         config = OptimizationConfig()
-        
+
         assert config.optimization_level == OptimizationLevel.BALANCED
         assert config.min_connections == 5
         assert config.max_connections == 50
@@ -90,7 +92,7 @@ class TestOptimizationConfig:
             max_connections=100,
             max_workers=32
         )
-        
+
         assert config.optimization_level == OptimizationLevel.AGGRESSIVE
         assert config.max_connections == 100
         assert config.max_workers == 32
@@ -102,7 +104,7 @@ class TestConnectionPoolManager:
     def test_initialization(self):
         config = OptimizationConfig()
         manager = ConnectionPoolManager(config, "postgresql://test")
-        
+
         assert manager.config == config
         assert manager.database_url == "postgresql://test"
         assert manager.pool is None
@@ -110,7 +112,7 @@ class TestConnectionPoolManager:
     def test_initialization_with_custom_config(self):
         config = OptimizationConfig(max_connections=20)
         manager = ConnectionPoolManager(config, "postgresql://test")
-        
+
         assert manager.config.max_connections == 20
 
 
@@ -120,13 +122,13 @@ class TestParallelWorkerManager:
     def test_initialization(self):
         config = OptimizationConfig()
         manager = ParallelWorkerManager(config)
-        
+
         assert manager.config == config
 
     def test_initialization_with_custom_workers(self):
         config = OptimizationConfig(max_workers=8)
         manager = ParallelWorkerManager(config)
-        
+
         assert manager.config.max_workers == 8
 
 
@@ -136,13 +138,13 @@ class TestMemoryManager:
     def test_initialization(self):
         config = OptimizationConfig()
         manager = MemoryManager(config)
-        
+
         assert manager.config == config
 
     def test_initialization_with_memory_limit(self):
         config = OptimizationConfig(max_memory_usage_mb=4096)
         manager = MemoryManager(config)
-        
+
         assert manager.config.max_memory_usage_mb == 4096
 
 
@@ -152,13 +154,13 @@ class TestCacheManager:
     def test_initialization(self):
         config = OptimizationConfig()
         manager = CacheManager(config)
-        
+
         assert manager.config == config
 
     def test_initialization_with_caching_disabled(self):
         config = OptimizationConfig(enable_caching=False)
         manager = CacheManager(config)
-        
+
         assert manager.config.enable_caching is False
 
 
@@ -168,7 +170,7 @@ class TestPerformanceMonitor:
     def test_initialization(self):
         config = OptimizationConfig()
         monitor = PerformanceMonitor(config)
-        
+
         assert monitor.config == config
 
 
@@ -177,7 +179,7 @@ class TestBulkPerformanceOptimizer:
 
     def test_initialization_default(self):
         optimizer = BulkPerformanceOptimizer()
-        
+
         assert optimizer.config is not None
         assert optimizer.connection_manager is not None
         assert optimizer.worker_manager is not None
@@ -188,20 +190,20 @@ class TestBulkPerformanceOptimizer:
     def test_initialization_with_config(self):
         config = OptimizationConfig(optimization_level=OptimizationLevel.AGGRESSIVE)
         optimizer = BulkPerformanceOptimizer(config)
-        
+
         assert optimizer.config.optimization_level == OptimizationLevel.AGGRESSIVE
 
     @pytest.mark.asyncio
     async def test_get_optimization_recommendations(self):
         optimizer = BulkPerformanceOptimizer()
-        
+
         # Create dummy metrics
         metrics = PerformanceMetrics(
             operation_id="test",
             start_time=datetime.now(),
             total_items=100
         )
-        
+
         recommendations = await optimizer.get_optimization_recommendations(metrics)
-        
+
         assert isinstance(recommendations, list)

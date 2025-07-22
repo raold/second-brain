@@ -7,7 +7,6 @@ with unified interface for all migration types.
 
 import logging
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -21,7 +20,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/migrations", tags=["migrations"])
 
 # Global migration engine instance
-_migration_engine: Optional[MigrationEngine] = None
+_migration_engine: MigrationEngine | None = None
 
 
 async def get_migration_engine() -> MigrationEngine:
@@ -63,8 +62,8 @@ class MigrationInfo(BaseModel):
     created_at: datetime
     dependencies: list[str]
     reversible: bool
-    status: Optional[str] = None
-    applied_at: Optional[datetime] = None
+    status: str | None = None
+    applied_at: datetime | None = None
 
 
 class MigrationResultResponse(BaseModel):
@@ -73,7 +72,7 @@ class MigrationResultResponse(BaseModel):
     migration_id: str
     status: str
     start_time: datetime
-    end_time: Optional[datetime]
+    end_time: datetime | None
     affected_items: int
     errors: list[dict]
     rollback_available: bool
@@ -85,15 +84,15 @@ class MigrationProgressResponse(BaseModel):
 
     migration_id: str
     status: str
-    progress_percentage: Optional[float]
-    estimated_completion: Optional[datetime]
-    checkpoint: Optional[dict]
+    progress_percentage: float | None
+    estimated_completion: datetime | None
+    checkpoint: dict | None
 
 
 # API Endpoints
 @router.get("/pending", response_model=list[MigrationInfo])
 async def get_pending_migrations(
-    migration_type: Optional[MigrationType] = Query(None, description="Filter by migration type"),
+    migration_type: MigrationType | None = Query(None, description="Filter by migration type"),
     engine: MigrationEngine = Depends(get_migration_engine),
 ):
     """Get list of pending migrations."""
@@ -136,7 +135,7 @@ async def get_pending_migrations(
 
 @router.get("/history", response_model=list[MigrationInfo])
 async def get_migration_history(
-    status: Optional[MigrationStatus] = Query(None, description="Filter by status"),
+    status: MigrationStatus | None = Query(None, description="Filter by status"),
     limit: int = Query(50, description="Maximum results"),
     engine: MigrationEngine = Depends(get_migration_engine),
 ):
@@ -219,7 +218,7 @@ async def execute_migration(
 @router.post("/execute-all", response_model=list[MigrationResultResponse])
 async def execute_all_pending(
     config: MigrationConfigRequest = MigrationConfigRequest(),
-    migration_type: Optional[MigrationType] = Query(None, description="Filter by type"),
+    migration_type: MigrationType | None = Query(None, description="Filter by type"),
     engine: MigrationEngine = Depends(get_migration_engine),
 ):
     """Execute all pending migrations."""

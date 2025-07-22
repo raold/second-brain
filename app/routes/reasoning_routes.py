@@ -3,15 +3,14 @@ API routes for multi-hop reasoning engine
 """
 
 import logging
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from app.database import Database, get_database
-from app.services.reasoning_engine import (
-    ReasoningEngine, ReasoningPath, ReasoningType, ReasoningNode
-)
 from app.security import verify_token
+from app.services.reasoning_engine import ReasoningEngine, ReasoningType
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +21,10 @@ class ReasoningQueryRequest(BaseModel):
     """Request model for reasoning queries"""
     query: str = Field(..., min_length=3, max_length=500, description="Natural language reasoning query")
     max_hops: int = Field(3, ge=1, le=5, description="Maximum reasoning hops")
-    reasoning_type: Optional[str] = Field(None, description="Type of reasoning: causal, temporal, semantic, evolutionary, comparative")
+    reasoning_type: str | None = Field(None, description="Type of reasoning: causal, temporal, semantic, evolutionary, comparative")
     min_relevance: float = Field(0.5, ge=0.0, le=1.0, description="Minimum relevance threshold")
-    beam_width: Optional[int] = Field(None, ge=1, le=20, description="Beam search width")
-    
+    beam_width: int | None = Field(None, ge=1, le=20, description="Beam search width")
+
     class Config:
         schema_extra = {
             "example": {
@@ -50,10 +49,10 @@ class ReasoningNodeResponse(BaseModel):
 class ReasoningPathResponse(BaseModel):
     """Response model for reasoning paths"""
     query: str
-    nodes: List[ReasoningNodeResponse]
+    nodes: list[ReasoningNodeResponse]
     total_score: float
     reasoning_type: str
-    insights: List[str]
+    insights: list[str]
     execution_time_ms: float
 
 
@@ -71,7 +70,7 @@ class CausalChainRequest(BaseModel):
     max_depth: int = Field(3, ge=1, le=5, description="Maximum causal depth")
 
 
-@router.post("/query", response_model=List[ReasoningPathResponse])
+@router.post("/query", response_model=list[ReasoningPathResponse])
 async def multi_hop_reasoning(
     request: ReasoningQueryRequest,
     _: str = Depends(verify_token),
@@ -88,7 +87,7 @@ async def multi_hop_reasoning(
     try:
         # Initialize reasoning engine
         engine = ReasoningEngine(db)
-        
+
         # Convert string reasoning type to enum if provided
         reasoning_type = None
         if request.reasoning_type:
@@ -99,14 +98,14 @@ async def multi_hop_reasoning(
                     status_code=400,
                     detail=f"Invalid reasoning type: {request.reasoning_type}"
                 )
-        
+
         # Execute multi-hop query
         paths = await engine.multi_hop_query(
             query=request.query,
             max_hops=request.max_hops,
             reasoning_type=reasoning_type
         )
-        
+
         # Convert to response format
         response_paths = []
         for path in paths:
@@ -128,10 +127,10 @@ async def multi_hop_reasoning(
                 insights=path.insights,
                 execution_time_ms=path.execution_time_ms
             ))
-        
+
         logger.info(f"Reasoning query completed: {request.query} - Found {len(response_paths)} paths")
         return response_paths
-        
+
     except ValueError as e:
         logger.error(f"Invalid reasoning query parameters: {str(e)}")
         raise HTTPException(
@@ -177,16 +176,16 @@ async def trace_path(
     """
     try:
         engine = ReasoningEngine(db)
-        
+
         path = await engine.trace_reasoning_path(
             start_memory_id=request.start_memory_id,
             end_memory_id=request.end_memory_id,
             max_hops=request.max_hops
         )
-        
+
         if not path:
             return None
-        
+
         return ReasoningPathResponse(
             query=path.query,
             nodes=[
@@ -205,13 +204,13 @@ async def trace_path(
             insights=path.insights,
             execution_time_ms=path.execution_time_ms
         )
-        
+
     except Exception as e:
         logger.error(f"Path trace failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/causal", response_model=List[ReasoningPathResponse])
+@router.post("/causal", response_model=list[ReasoningPathResponse])
 async def find_causal_chains(
     request: CausalChainRequest,
     _: str = Depends(verify_token),
@@ -226,13 +225,13 @@ async def find_causal_chains(
     """
     try:
         engine = ReasoningEngine(db)
-        
+
         paths = await engine.find_causal_chains(
             event_memory_id=request.memory_id,
             direction=request.direction,
             max_depth=request.max_depth
         )
-        
+
         # Convert to response format
         response_paths = []
         for path in paths:
@@ -254,9 +253,9 @@ async def find_causal_chains(
                 insights=path.insights,
                 execution_time_ms=path.execution_time_ms
             ))
-        
+
         return response_paths
-        
+
     except Exception as e:
         logger.error(f"Causal chain analysis failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

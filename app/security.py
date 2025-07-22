@@ -9,7 +9,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -28,7 +28,7 @@ class SecurityConfig:
     enable_rate_limiting: bool = True
     enable_input_validation: bool = True
     enable_security_headers: bool = True
-    allowed_origins: Optional[list[str]] = None
+    allowed_origins: list[str] | None = None
     token_min_length: int = 16
 
     def __post_init__(self):
@@ -363,7 +363,7 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
 class SecurityManager:
     """Main security management class"""
 
-    def __init__(self, config: Optional[SecurityConfig] = None):
+    def __init__(self, config: SecurityConfig | None = None):
         self.config = config or SecurityConfig()
         self.rate_limiter = RateLimiter(self.config)
         self.input_validator = InputValidator(self.config)
@@ -392,7 +392,7 @@ class SecurityManager:
             (RateLimitingMiddleware, {"rate_limiter": self.rate_limiter}),
         ]
 
-    def _log_security_event(self, event_type: str, request: Request, details: Optional[dict[str, Any]] = None):
+    def _log_security_event(self, event_type: str, request: Request, details: dict[str, Any] | None = None):
         """Log security event"""
         event = {
             "timestamp": datetime.now().isoformat(),

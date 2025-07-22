@@ -14,6 +14,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -48,14 +49,15 @@ from app.routes import (
 from app.routes import (
     session_router as new_session_router,
 )
-from app.routes.graph_routes import router as graph_router
 from app.routes.analysis_routes import router as analysis_router
 
 # Import bulk operations routes
 from app.routes.bulk_operations_routes import bulk_router
+from app.routes.graph_routes import router as graph_router
 
 # Import importance routes
 from app.routes.importance_routes import router as importance_router
+from app.routes.insights import router as insights_router
 
 # Import relationship routes
 from app.routes.relationship_routes import router as relationship_router
@@ -65,7 +67,8 @@ from app.security import SecurityConfig, SecurityManager
 from app.services.service_factory import get_service_factory
 from app.session_api import setup_session_routes
 from app.session_manager import get_session_manager
-from app.version import get_version_info
+from app.shared import get_db_instance, verify_api_key
+from app.version import __version__, get_version_info
 
 from .routes.bulk_routes import get_bulk_routes
 
@@ -87,10 +90,6 @@ security_config = SecurityConfig(
 
 # Create security manager
 security_manager = SecurityManager(security_config)
-
-
-# Import shared utilities
-from app.shared import get_db_instance, verify_api_key
 
 
 # Legacy search request model (keeping for backward compatibility)
@@ -164,8 +163,6 @@ async def lifespan(app: FastAPI):
 
 
 # Create FastAPI app
-from app.version import __version__
-
 app = FastAPI(
     title="Second Brain API",
     description="Simple memory storage and search system",
@@ -266,8 +263,6 @@ app.include_router(graph_router)
 app.include_router(analysis_router)
 
 # Include insights router
-from app.routes.insights import router as insights_router
-
 app.include_router(insights_router)
 
 # Include bulk operations routes
@@ -283,8 +278,6 @@ session_manager = get_session_manager()
 logger.info("Session management initialized for persistent context continuity")
 
 # Serve static files for dashboard
-from fastapi.staticfiles import StaticFiles
-
 try:
     app.mount("/static", StaticFiles(directory="static"), name="static")
 except Exception as e:

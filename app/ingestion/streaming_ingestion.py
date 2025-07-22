@@ -9,7 +9,7 @@ from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +146,7 @@ class StreamingIngestionPipeline:
         self._pause_event.set()
         self.status = StreamStatus.PROCESSING
 
-    async def ingest(self, content: Union[str, StreamMessage], metadata: Optional[dict[str, Any]] = None) -> str:
+    async def ingest(self, content: Union[str, StreamMessage], metadata: dict[str, Any] | None = None) -> str:
         """
         Add content to the ingestion pipeline
 
@@ -240,7 +240,7 @@ class StreamingIngestionPipeline:
                 # Process batch
                 await self._process_batch(batch, worker_id)
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except Exception as e:
                 logger.error(f"Worker {worker_id} error: {e}")
@@ -270,7 +270,7 @@ class StreamingIngestionPipeline:
                             timeout=timeout
                         )
                         batch.append(message)
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         break
 
                 # Send batch if not empty
@@ -355,7 +355,7 @@ class StreamingIngestionPipeline:
                 for handler in self.completion_handlers:
                     await self._apply_processor(handler, (message, processed_content))
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except Exception as e:
                 logger.error(f"Output processor error: {e}")

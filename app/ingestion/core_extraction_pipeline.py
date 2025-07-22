@@ -6,21 +6,18 @@ import asyncio
 import hashlib
 import logging
 import time
-from datetime import datetime
-from typing import Any, Optional
-from uuid import UUID, uuid4
+from typing import Any
+from uuid import uuid4
 
 from app.ingestion.embedding_generator import EmbeddingGenerator
 from app.ingestion.entity_extractor import EntityExtractor
 from app.ingestion.intent_recognizer import IntentRecognizer
 from app.ingestion.models import (
     ContentQuality,
-    Entity,
     IngestionConfig,
     IngestionRequest,
     IngestionResponse,
     ProcessedContent,
-    Relationship,
 )
 from app.ingestion.relationship_detector import RelationshipDetector
 from app.ingestion.structured_extractor import StructuredDataExtractor
@@ -34,7 +31,7 @@ class CoreExtractionPipeline:
     Main pipeline for sophisticated content extraction using transformers
     """
 
-    def __init__(self, config: Optional[IngestionConfig] = None, use_gpu: bool = False):
+    def __init__(self, config: IngestionConfig | None = None, use_gpu: bool = False):
         """
         Initialize the core extraction pipeline
 
@@ -117,13 +114,13 @@ class CoreExtractionPipeline:
                         request.content,
                         min_confidence=self.config.min_entity_confidence
                     )
-                    
+
                     # Limit entities if configured
                     if len(entities) > self.config.max_entities_per_content:
                         entities = sorted(entities, key=lambda e: e.confidence, reverse=True)
                         entities = entities[:self.config.max_entities_per_content]
                         warnings.append(f"Entity count limited to {self.config.max_entities_per_content}")
-                    
+
                     processed_content.entities = entities
                 except Exception as e:
                     logger.error(f"Entity extraction failed: {e}")
@@ -137,13 +134,13 @@ class CoreExtractionPipeline:
                         processed_content.entities,
                         min_confidence=self.config.min_relationship_confidence
                     )
-                    
+
                     # Limit relationships if configured
                     if len(relationships) > self.config.max_relationships_per_content:
                         relationships = sorted(relationships, key=lambda r: r.confidence, reverse=True)
                         relationships = relationships[:self.config.max_relationships_per_content]
                         warnings.append(f"Relationship count limited to {self.config.max_relationships_per_content}")
-                    
+
                     processed_content.relationships = relationships
                 except Exception as e:
                     logger.error(f"Relationship detection failed: {e}")
@@ -165,15 +162,15 @@ class CoreExtractionPipeline:
                         request.content,
                         domain_hint=request.domain_hint
                     )
-                    
+
                     # Filter by relevance
                     topics = [t for t in topics if t.relevance >= self.config.min_topic_relevance]
-                    
+
                     # Limit topics if configured
                     if len(topics) > self.config.max_topics_per_content:
                         topics = sorted(topics, key=lambda t: t.relevance, reverse=True)
                         topics = topics[:self.config.max_topics_per_content]
-                    
+
                     processed_content.topics = topics
                     if topics:
                         processed_content.primary_topic = topics[0]
@@ -251,31 +248,31 @@ class CoreExtractionPipeline:
         """Assess the quality of processed content"""
         # Calculate quality based on extraction success
         quality_score = 0.0
-        
+
         # Entity quality
         if content.entities:
             avg_entity_confidence = sum(e.confidence for e in content.entities) / len(content.entities)
             quality_score += avg_entity_confidence * 0.3
-        
+
         # Relationship quality
         if content.relationships:
             avg_rel_confidence = sum(r.confidence for r in content.relationships) / len(content.relationships)
             quality_score += avg_rel_confidence * 0.2
-        
+
         # Intent clarity
         if content.intent and content.intent.confidence > 0.7:
             quality_score += 0.2
-        
+
         # Topic relevance
         if content.topics:
             avg_relevance = sum(t.relevance for t in content.topics) / len(content.topics)
             quality_score += avg_relevance * 0.2
-        
+
         # Content length factor
         word_count = len(content.original_content.split())
         if word_count > 50:
             quality_score += 0.1
-        
+
         # Map score to quality level
         if quality_score >= 0.8:
             return ContentQuality.HIGH
@@ -289,86 +286,86 @@ class CoreExtractionPipeline:
     def _calculate_completeness(self, content: ProcessedContent) -> float:
         """Calculate completeness score of extraction"""
         completeness = 0.0
-        
+
         # Check for entities
         if content.entities:
             completeness += 0.25
-        
+
         # Check for relationships
         if content.relationships and len(content.relationships) >= 2:
             completeness += 0.2
-        
+
         # Check for intent
         if content.intent:
             completeness += 0.15
-        
+
         # Check for topics
         if content.topics:
             completeness += 0.2
-        
+
         # Check for embeddings
         if content.embeddings:
             completeness += 0.2
-        
+
         return min(1.0, completeness)
 
     def _calculate_importance(self, content: ProcessedContent) -> float:
         """Calculate suggested importance score"""
         importance = 0.5  # Base importance
-        
+
         # Boost for high-quality content
         if content.quality == ContentQuality.HIGH:
             importance += 0.2
-        
+
         # Boost for actionable content
         if content.intent and content.intent.type.value in ["todo", "decision", "problem"]:
             importance += 0.15
-        
+
         # Boost for high urgency
         if content.intent and content.intent.urgency and content.intent.urgency > 0.7:
             importance += 0.15
-        
+
         # Boost for rich entity/relationship networks
         if len(content.entities) > 5 and len(content.relationships) > 3:
             importance += 0.1
-        
+
         # Penalty for low quality
         if content.quality == ContentQuality.LOW:
             importance -= 0.2
-        
+
         return max(0.0, min(1.0, importance))
 
     def _generate_tags(self, content: ProcessedContent) -> list[str]:
         """Generate suggested tags for content"""
         tags = []
-        
+
         # Add intent-based tags
         if content.intent:
             tags.append(content.intent.type.value)
             if content.intent.urgency and content.intent.urgency > 0.7:
                 tags.append("urgent")
-        
+
         # Add topic-based tags
         for topic in content.topics[:3]:  # Top 3 topics
             tags.append(topic.name.lower().replace(" ", "-"))
-        
+
         # Add entity type tags
         entity_types = set(e.type.value for e in content.entities)
         for entity_type in entity_types:
             if entity_type not in ["date", "time"]:  # Skip common types
                 tags.append(f"has-{entity_type}")
-        
+
         # Add quality tag
         if content.quality == ContentQuality.HIGH:
             tags.append("high-quality")
-        
+
         return list(set(tags))[:10]  # Limit to 10 unique tags
 
     def _suggest_memory_type(self, content: ProcessedContent) -> str:
         """Suggest appropriate memory type based on content"""
         if content.intent:
             intent_type = content.intent.type.value
-            
+
             # Map intent to memory type
             if intent_type in ["todo", "planning"]:
                 return "task"
@@ -382,7 +379,7 @@ class CoreExtractionPipeline:
                 return "reference"
             elif intent_type == "learning":
                 return "knowledge"
-        
+
         # Default based on content characteristics
         if content.structured_data and (content.structured_data.code_snippets or content.structured_data.tables):
             return "technical"
@@ -403,11 +400,11 @@ class CoreExtractionPipeline:
         """
         # Process in parallel with controlled concurrency
         semaphore = asyncio.Semaphore(5)  # Limit concurrent processing
-        
+
         async def process_with_semaphore(request):
             async with semaphore:
                 return await self.process(request)
-        
+
         tasks = [process_with_semaphore(request) for request in requests]
         return await asyncio.gather(*tasks)
 

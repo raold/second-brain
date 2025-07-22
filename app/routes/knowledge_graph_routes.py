@@ -3,16 +3,15 @@ API routes for knowledge graph functionality
 """
 
 import logging
-from typing import List, Optional, Dict, Any
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from app.database import Database, get_database
-from app.services.knowledge_graph_builder import (
-    KnowledgeGraphBuilder, EntityType, RelationshipType
-)
-from app.services.graph_query_parser import GraphQueryParser, QueryType
 from app.security import verify_token
+from app.services.graph_query_parser import GraphQueryParser, QueryType
+from app.services.knowledge_graph_builder import EntityType, KnowledgeGraphBuilder, RelationshipType
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +20,12 @@ router = APIRouter(prefix="/graph", tags=["knowledge-graph"])
 
 class BuildGraphRequest(BaseModel):
     """Request model for building a knowledge graph"""
-    memory_ids: List[str] = Field(..., min_items=1, max_items=1000, description="List of memory IDs to build graph from")
+    memory_ids: list[str] = Field(..., min_items=1, max_items=1000, description="List of memory IDs to build graph from")
     extract_entities: bool = Field(True, description="Whether to extract entities")
     extract_relationships: bool = Field(True, description="Whether to extract relationships")
     min_confidence: float = Field(0.7, ge=0.0, le=1.0, description="Minimum confidence threshold")
     include_stats: bool = Field(True, description="Include graph statistics")
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -40,9 +39,9 @@ class BuildGraphRequest(BaseModel):
 
 class GraphResponse(BaseModel):
     """Response model for graph data"""
-    nodes: List[Dict[str, Any]]
-    edges: List[Dict[str, Any]]
-    stats: Dict[str, Any]
+    nodes: list[dict[str, Any]]
+    edges: list[dict[str, Any]]
+    stats: dict[str, Any]
     entity_count: int
     relationship_count: int
 
@@ -56,7 +55,7 @@ class EntityGraphRequest(BaseModel):
 class EntitySearchRequest(BaseModel):
     """Request model for entity search"""
     query: str = Field(..., description="Search query for entities")
-    entity_types: Optional[List[str]] = Field(None, description="Filter by entity types")
+    entity_types: list[str] | None = Field(None, description="Filter by entity types")
     limit: int = Field(20, ge=1, le=100, description="Maximum results")
 
 
@@ -73,21 +72,21 @@ async def build_knowledge_graph(
     """
     try:
         builder = KnowledgeGraphBuilder(db)
-        
+
         graph_data = await builder.build_graph_from_memories(
             memory_ids=request.memory_ids,
             extract_entities=request.extract_entities,
             extract_relationships=request.extract_relationships,
             min_confidence=request.min_confidence
         )
-        
+
         logger.info(
             f"Built graph with {graph_data['entity_count']} entities "
             f"and {graph_data['relationship_count']} relationships"
         )
-        
+
         return GraphResponse(**graph_data)
-        
+
     except ValueError as e:
         logger.error(f"Invalid graph parameters: {str(e)}")
         raise HTTPException(
@@ -132,29 +131,29 @@ async def get_memory_graph(
     """
     try:
         builder = KnowledgeGraphBuilder(db)
-        
+
         # First, get all related memories through reasoning paths
         # For now, we'll just use the single memory
         memory_ids = [memory_id]
-        
+
         # TODO: Use reasoning engine to find related memories
         # related_memories = await get_related_memories(memory_id, depth)
         # memory_ids.extend(related_memories)
-        
+
         graph_data = await builder.build_graph_from_memories(
             memory_ids=memory_ids,
             extract_entities=True,
             extract_relationships=True
         )
-        
+
         return GraphResponse(**graph_data)
-        
+
     except Exception as e:
         logger.error(f"Failed to get memory graph: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/entity", response_model=Dict[str, Any])
+@router.post("/entity", response_model=dict[str, Any])
 async def get_entity_graph(
     request: EntityGraphRequest,
     _: str = Depends(verify_token),
@@ -167,14 +166,14 @@ async def get_entity_graph(
     """
     try:
         builder = KnowledgeGraphBuilder(db)
-        
+
         graph_data = await builder.get_entity_graph(
             entity_id=request.entity_id,
             depth=request.depth
         )
-        
+
         return graph_data
-        
+
     except Exception as e:
         logger.error(f"Failed to get entity graph: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -192,7 +191,7 @@ async def search_entities(
     try:
         if not db.pool:
             raise HTTPException(status_code=503, detail="Database not available")
-        
+
         async with db.pool.acquire() as conn:
             # Build query
             query = """
@@ -204,27 +203,27 @@ async def search_entities(
             """
             params = []
             param_count = 0
-            
+
             # Text search
             if request.query:
                 param_count += 1
                 query += f" AND (name ILIKE ${param_count} OR description ILIKE ${param_count})"
                 params.append(f"%{request.query}%")
-            
+
             # Entity type filter
             if request.entity_types:
                 param_count += 1
                 query += f" AND entity_type = ANY(${param_count})"
                 params.append(request.entity_types)
-            
+
             # Order and limit
             query += " ORDER BY importance_score DESC, occurrence_count DESC"
             param_count += 1
             query += f" LIMIT ${param_count}"
             params.append(request.limit)
-            
+
             rows = await conn.fetch(query, *params)
-            
+
             entities = []
             for row in rows:
                 entities.append({
@@ -236,9 +235,9 @@ async def search_entities(
                     "importance_score": float(row["importance_score"]),
                     "metadata": row["metadata"]
                 })
-            
+
             return {"entities": entities, "count": len(entities)}
-            
+
     except Exception as e:
         logger.error(f"Entity search failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -255,7 +254,7 @@ async def get_graph_statistics(
     try:
         if not db.pool:
             raise HTTPException(status_code=503, detail="Database not available")
-        
+
         async with db.pool.acquire() as conn:
             # Get entity stats
             entity_stats = await conn.fetchrow("""
@@ -267,7 +266,7 @@ async def get_graph_statistics(
                     AVG(importance_score) as avg_importance
                 FROM entities
             """)
-            
+
             # Get relationship stats
             rel_stats = await conn.fetchrow("""
                 SELECT 
@@ -277,7 +276,7 @@ async def get_graph_statistics(
                     AVG(confidence) as avg_confidence
                 FROM entity_relationships
             """)
-            
+
             # Get memory relationship stats
             mem_rel_stats = await conn.fetchrow("""
                 SELECT 
@@ -285,7 +284,7 @@ async def get_graph_statistics(
                     COUNT(DISTINCT relationship_type) as memory_relationship_types
                 FROM memory_relationships
             """)
-            
+
             # Get entity type distribution
             type_dist = await conn.fetch("""
                 SELECT entity_type, COUNT(*) as count
@@ -293,7 +292,7 @@ async def get_graph_statistics(
                 GROUP BY entity_type
                 ORDER BY count DESC
             """)
-            
+
             return {
                 "entities": {
                     "total": entity_stats["total_entities"],
@@ -318,7 +317,7 @@ async def get_graph_statistics(
                     row["entity_type"]: row["count"] for row in type_dist
                 }
             }
-            
+
     except Exception as e:
         logger.error(f"Failed to get graph statistics: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -345,7 +344,7 @@ async def get_graph_types(
 
 @router.post("/analyze")
 async def analyze_graph_patterns(
-    memory_ids: List[str],
+    memory_ids: list[str],
     _: str = Depends(verify_token),
     db: Database = Depends(get_database)
 ):
@@ -356,30 +355,30 @@ async def analyze_graph_patterns(
     """
     try:
         builder = KnowledgeGraphBuilder(db)
-        
+
         # Build graph
         graph_data = await builder.build_graph_from_memories(
             memory_ids=memory_ids,
             extract_entities=True,
             extract_relationships=True
         )
-        
+
         nodes = graph_data["nodes"]
         edges = graph_data["edges"]
-        
+
         # Find most connected entities (hubs)
         degree_counts = {}
         for edge in edges:
             degree_counts[edge["source"]] = degree_counts.get(edge["source"], 0) + 1
             degree_counts[edge["target"]] = degree_counts.get(edge["target"], 0) + 1
-        
+
         # Get top hubs
         top_hubs = sorted(
             [(node_id, count) for node_id, count in degree_counts.items()],
             key=lambda x: x[1],
             reverse=True
         )[:10]
-        
+
         # Find entity names for hubs
         hub_info = []
         node_lookup = {node["id"]: node for node in nodes}
@@ -390,13 +389,13 @@ async def analyze_graph_patterns(
                     "type": node_lookup[node_id]["type"],
                     "connections": degree
                 })
-        
+
         # Analyze relationship patterns
         rel_patterns = {}
         for edge in edges:
             rel_type = edge["type"]
             rel_patterns[rel_type] = rel_patterns.get(rel_type, 0) + 1
-        
+
         return {
             "graph_summary": graph_data["stats"],
             "top_entities": hub_info,
@@ -408,7 +407,7 @@ async def analyze_graph_patterns(
                 "connected_components": graph_data["stats"]["connected_components"]
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Graph analysis failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -417,9 +416,9 @@ async def analyze_graph_patterns(
 class NaturalLanguageQueryRequest(BaseModel):
     """Request model for natural language graph queries"""
     query: str = Field(..., min_length=3, max_length=500, description="Natural language query about the graph")
-    memory_ids: Optional[List[str]] = Field(None, max_items=100, description="Specific memories to query (optional)")
+    memory_ids: list[str] | None = Field(None, max_items=100, description="Specific memories to query (optional)")
     max_results: int = Field(20, ge=1, le=100, description="Maximum results to return")
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -432,10 +431,10 @@ class NaturalLanguageQueryRequest(BaseModel):
 class NaturalLanguageQueryResponse(BaseModel):
     """Response model for natural language graph queries"""
     query_type: str
-    entities_found: List[Dict[str, Any]]
-    relationships_found: List[Dict[str, Any]]
-    insights: List[str]
-    visualization_data: Optional[Dict[str, Any]] = None
+    entities_found: list[dict[str, Any]]
+    relationships_found: list[dict[str, Any]]
+    insights: list[str]
+    visualization_data: dict[str, Any] | None = None
 
 
 @router.post("/query/natural", response_model=NaturalLanguageQueryResponse)
@@ -455,10 +454,10 @@ async def natural_language_query(
     try:
         parser = GraphQueryParser()
         builder = KnowledgeGraphBuilder(db)
-        
+
         # Parse the query
         parsed = parser.parse(request.query)
-        
+
         # Build or get graph data
         if request.memory_ids:
             graph_data = await builder.build_graph_from_memories(
@@ -470,25 +469,25 @@ async def natural_language_query(
             # Get recent memories for graph
             # This is simplified - in production, you'd have a cached graph
             graph_data = {"nodes": [], "edges": []}
-        
+
         entities_found = []
         relationships_found = []
         insights = []
         visualization_data = None
-        
+
         # Process based on query type
         if parsed.query_type == QueryType.FIND_CONNECTIONS:
             # Find path between two entities
             if len(parsed.entities) >= 2:
                 entity1_name = parsed.entities[0]
                 entity2_name = parsed.entities[1]
-                
+
                 # Find matching nodes
-                node1 = next((n for n in graph_data["nodes"] 
+                node1 = next((n for n in graph_data["nodes"]
                              if entity1_name.lower() in n["label"].lower()), None)
-                node2 = next((n for n in graph_data["nodes"] 
+                node2 = next((n for n in graph_data["nodes"]
                              if entity2_name.lower() in n["label"].lower()), None)
-                
+
                 if node1 and node2:
                     entities_found = [node1, node2]
                     # Find relationships between them
@@ -496,19 +495,19 @@ async def natural_language_query(
                         if ((edge["source"] == node1["id"] and edge["target"] == node2["id"]) or
                             (edge["source"] == node2["id"] and edge["target"] == node1["id"])):
                             relationships_found.append(edge)
-                    
+
                     insights.append(f"Found {len(relationships_found)} direct connections between {node1['label']} and {node2['label']}")
-        
+
         elif parsed.query_type == QueryType.FIND_RELATED:
             # Find entities related to a given entity
             if parsed.entities:
                 entity_name = parsed.entities[0]
-                central_node = next((n for n in graph_data["nodes"] 
+                central_node = next((n for n in graph_data["nodes"]
                                    if entity_name.lower() in n["label"].lower()), None)
-                
+
                 if central_node:
                     entities_found.append(central_node)
-                    
+
                     # Find all connected entities
                     connected_ids = set()
                     for edge in graph_data["edges"]:
@@ -518,41 +517,41 @@ async def natural_language_query(
                         elif edge["target"] == central_node["id"]:
                             connected_ids.add(edge["source"])
                             relationships_found.append(edge)
-                    
+
                     # Get connected nodes
                     for node in graph_data["nodes"]:
                         if node["id"] in connected_ids:
                             entities_found.append(node)
-                    
+
                     insights.append(f"Found {len(connected_ids)} entities connected to {central_node['label']}")
-        
+
         elif parsed.query_type == QueryType.FILTER_BY_TYPE:
             # Filter entities by type
             if parsed.entity_types:
                 entity_type = parsed.entity_types[0]
-                entities_found = [n for n in graph_data["nodes"] 
+                entities_found = [n for n in graph_data["nodes"]
                                 if n["type"] == entity_type]
-                
+
                 insights.append(f"Found {len(entities_found)} entities of type '{entity_type}'")
-        
+
         elif parsed.query_type == QueryType.ANALYZE_ENTITY:
             # Analyze specific entity
             if parsed.entities:
                 entity_name = parsed.entities[0]
-                node = next((n for n in graph_data["nodes"] 
+                node = next((n for n in graph_data["nodes"]
                            if entity_name.lower() in n["label"].lower()), None)
-                
+
                 if node:
                     entities_found = [node]
-                    
+
                     # Count connections
-                    connection_count = sum(1 for e in graph_data["edges"] 
+                    connection_count = sum(1 for e in graph_data["edges"]
                                          if e["source"] == node["id"] or e["target"] == node["id"])
-                    
+
                     insights.append(f"{node['label']} is a {node['type']} with {connection_count} connections")
                     if node.get("metadata"):
                         insights.append(f"Additional info: {node['metadata']}")
-        
+
         # Prepare visualization data if we have results
         if entities_found or relationships_found:
             # Get all relevant node IDs
@@ -560,15 +559,15 @@ async def natural_language_query(
             for rel in relationships_found:
                 relevant_ids.add(rel["source"])
                 relevant_ids.add(rel["target"])
-            
+
             # Get all relevant nodes
             vis_nodes = [n for n in graph_data["nodes"] if n["id"] in relevant_ids]
-            
+
             visualization_data = {
                 "nodes": vis_nodes,
                 "edges": relationships_found
             }
-        
+
         return NaturalLanguageQueryResponse(
             query_type=parsed.query_type.value,
             entities_found=entities_found[:request.max_results],
@@ -576,7 +575,7 @@ async def natural_language_query(
             insights=insights,
             visualization_data=visualization_data
         )
-        
+
     except Exception as e:
         logger.error(f"Natural language query failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

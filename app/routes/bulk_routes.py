@@ -10,7 +10,7 @@ Provides comprehensive RESTful endpoints for:
 
 import logging
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
@@ -50,11 +50,11 @@ class BulkMemoryItemRequest(BaseModel):
     content: str = Field(..., min_length=1, max_length=50000, description="Memory content")
     memory_type: str = Field("semantic", pattern="^(semantic|episodic|procedural)$", description="Type of memory")
     importance_score: float = Field(0.5, ge=0.0, le=1.0, description="Importance score between 0 and 1")
-    semantic_metadata: Optional[dict[str, Any]] = Field(None, description="Semantic-specific metadata")
-    episodic_metadata: Optional[dict[str, Any]] = Field(None, description="Episodic-specific metadata")
-    procedural_metadata: Optional[dict[str, Any]] = Field(None, description="Procedural-specific metadata")
-    metadata: Optional[dict[str, Any]] = Field(None, description="General metadata")
-    memory_id: Optional[str] = Field(None, description="Memory ID for updates")
+    semantic_metadata: dict[str, Any] | None = Field(None, description="Semantic-specific metadata")
+    episodic_metadata: dict[str, Any] | None = Field(None, description="Episodic-specific metadata")
+    procedural_metadata: dict[str, Any] | None = Field(None, description="Procedural-specific metadata")
+    metadata: dict[str, Any] | None = Field(None, description="General metadata")
+    memory_id: str | None = Field(None, description="Memory ID for updates")
 
 
 class BulkInsertRequest(BaseModel):
@@ -74,7 +74,7 @@ class BulkUpdateRequest(BaseModel):
 
     filter_criteria: dict[str, Any] = Field(..., description="Criteria to filter memories for update")
     update_fields: dict[str, Any] = Field(..., description="Fields to update")
-    where_clause: Optional[str] = Field(None, description="Additional SQL WHERE clause")
+    where_clause: str | None = Field(None, description="Additional SQL WHERE clause")
     batch_size: int = Field(1000, ge=1, le=5000, description="Batch size for processing")
     enable_rollback: bool = Field(True, description="Enable transaction rollback on failure")
 
@@ -83,7 +83,7 @@ class BulkDeleteRequest(BaseModel):
     """Request model for bulk delete operations."""
 
     filter_criteria: dict[str, Any] = Field(..., description="Criteria to filter memories for deletion")
-    where_clause: Optional[str] = Field(None, description="Additional SQL WHERE clause")
+    where_clause: str | None = Field(None, description="Additional SQL WHERE clause")
     safety_limit: int = Field(10000, ge=1, le=100000, description="Maximum number of items to delete")
     require_confirmation: bool = Field(True, description="Require explicit confirmation")
     batch_size: int = Field(1000, ge=1, le=5000, description="Batch size for processing")
@@ -93,7 +93,7 @@ class BulkDeleteRequest(BaseModel):
 class ExportRequest(BaseModel):
     """Request model for export operations."""
 
-    filter_criteria: Optional[dict[str, Any]] = Field(None, description="Criteria to filter memories for export")
+    filter_criteria: dict[str, Any] | None = Field(None, description="Criteria to filter memories for export")
     format: str = Field("json", pattern="^(json|csv|jsonl|pickle|xml)$", description="Export format")
     include_embeddings: bool = Field(False, description="Include vector embeddings in export")
     include_metadata: bool = Field(True, description="Include metadata in export")
@@ -129,13 +129,13 @@ class OperationStatusResponse(BaseModel):
     skipped_items: int
     start_time: datetime
     last_update: datetime
-    estimated_completion: Optional[datetime]
-    estimated_time_remaining: Optional[str]
+    estimated_completion: datetime | None
+    estimated_time_remaining: str | None
     current_batch: int
     total_batches: int
     success_rate: float
-    error_summary: Optional[dict[str, int]]
-    performance_metrics: Optional[dict[str, float]]
+    error_summary: dict[str, int] | None
+    performance_metrics: dict[str, float] | None
 
 
 class OperationResultResponse(BaseModel):
@@ -152,7 +152,7 @@ class OperationResultResponse(BaseModel):
     memory_ids: list[str]
     error_summary: dict[str, int]
     performance_metrics: dict[str, float]
-    export_info: Optional[dict[str, Any]] = None
+    export_info: dict[str, Any] | None = None
 
 
 # Dependency injection
@@ -559,7 +559,7 @@ async def import_memories_from_data(
 
 @router.get("/operations", response_model=list[OperationStatusResponse])
 async def list_bulk_operations(
-    status: Optional[str] = Query(None, pattern="^(pending|running|completed|failed|cancelled)$"),
+    status: str | None = Query(None, pattern="^(pending|running|completed|failed|cancelled)$"),
     limit: int = Query(50, ge=1, le=200),
     bulk_engine: BulkMemoryEngine = Depends(get_bulk_engine_dependency),
     api_key: str = Depends(verify_api_key),

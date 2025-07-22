@@ -27,7 +27,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 # Local type definitions (in production these would be proper imports)
@@ -102,8 +102,8 @@ class DeduplicationProgress:
     memories_merged: int = 0
     errors_encountered: int = 0
     current_stage: str = "initializing"
-    started_at: Optional[datetime] = None
-    estimated_completion: Optional[datetime] = None
+    started_at: datetime | None = None
+    estimated_completion: datetime | None = None
 
     @property
     def progress_percentage(self) -> float:
@@ -113,7 +113,7 @@ class DeduplicationProgress:
         return min(100.0, (self.memories_processed / self.total_memories) * 100.0)
 
     @property
-    def elapsed_time(self) -> Optional[timedelta]:
+    def elapsed_time(self) -> timedelta | None:
         """Calculate elapsed time since start."""
         if not self.started_at:
             return None
@@ -129,7 +129,7 @@ class OrchestrationResult:
     statistics: dict[str, Any] = field(default_factory=dict)
     progress: DeduplicationProgress = field(default_factory=DeduplicationProgress)
     errors: list[str] = field(default_factory=list)
-    config_used: Optional[DeduplicationConfig] = None
+    config_used: DeduplicationConfig | None = None
     total_time_seconds: float = 0.0
     success: bool = True
 
@@ -140,7 +140,7 @@ class DeduplicationDatabaseInterface(ABC):
 
     @abstractmethod
     async def get_memories_for_deduplication(
-        self, filter_criteria: Optional[dict[str, Any]] = None, limit: Optional[int] = None
+        self, filter_criteria: dict[str, Any] | None = None, limit: int | None = None
     ) -> list[dict[str, Any]]:
         pass
 
@@ -154,7 +154,7 @@ class DeduplicationDatabaseInterface(ABC):
         primary_id: str,
         duplicate_ids: list[str],
         merge_strategy: str,
-        merged_metadata: Optional[dict[str, Any]] = None,
+        merged_metadata: dict[str, Any] | None = None,
     ) -> bool:
         pass
 
@@ -199,7 +199,7 @@ class DeduplicationOrchestrator:
         database: DeduplicationDatabaseInterface,
         detectors: dict[DetectionMethod, BaseDuplicateDetector],
         memory_merger: MemoryMerger,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize the orchestrator.
@@ -229,7 +229,7 @@ class DeduplicationOrchestrator:
         }
 
     async def deduplicate_memories(
-        self, config: Optional[DeduplicationConfig] = None, filter_criteria: Optional[dict[str, Any]] = None
+        self, config: DeduplicationConfig | None = None, filter_criteria: dict[str, Any] | None = None
     ) -> OrchestrationResult:
         """
         Execute the complete deduplication process.
@@ -334,7 +334,7 @@ class DeduplicationOrchestrator:
             return result
 
     async def _load_memories_for_deduplication(
-        self, filter_criteria: Optional[dict[str, Any]], config: DeduplicationConfig
+        self, filter_criteria: dict[str, Any] | None, config: DeduplicationConfig
     ) -> list[dict[str, Any]]:
         """
         Load memories from the database for deduplication analysis.
@@ -679,7 +679,7 @@ class DeduplicationOrchestrator:
         """Get current deduplication progress."""
         return self.current_progress
 
-    def get_operation_history(self, limit: Optional[int] = None) -> list[OrchestrationResult]:
+    def get_operation_history(self, limit: int | None = None) -> list[OrchestrationResult]:
         """
         Get history of deduplication operations.
 
@@ -743,7 +743,7 @@ class DeduplicationOrchestrator:
         return health_status
 
     async def estimate_processing_time(
-        self, memory_count: int, config: Optional[DeduplicationConfig] = None
+        self, memory_count: int, config: DeduplicationConfig | None = None
     ) -> dict[str, Any]:
         """
         Estimate processing time for a given number of memories.

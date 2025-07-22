@@ -4,7 +4,7 @@ Data models for the sophisticated ingestion engine
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -69,7 +69,7 @@ class Entity(BaseModel):
     """Represents an extracted entity"""
     text: str = Field(..., description="The entity text as it appears")
     type: EntityType = Field(..., description="Type of entity")
-    normalized: Optional[str] = Field(None, description="Normalized form of entity")
+    normalized: str | None = Field(None, description="Normalized form of entity")
     start_pos: int = Field(..., description="Start position in text")
     end_pos: int = Field(..., description="End position in text")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Extraction confidence")
@@ -87,7 +87,7 @@ class Relationship(BaseModel):
     target: Entity = Field(..., description="Target entity")
     type: RelationshipType = Field(..., description="Type of relationship")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Relationship confidence")
-    evidence: Optional[str] = Field(None, description="Text evidence for relationship")
+    evidence: str | None = Field(None, description="Text evidence for relationship")
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -97,7 +97,7 @@ class Topic(BaseModel):
     keywords: list[str] = Field(..., description="Associated keywords")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Topic confidence")
     relevance: float = Field(..., ge=0.0, le=1.0, description="Relevance to content")
-    hierarchy: Optional[list[str]] = Field(None, description="Topic hierarchy path")
+    hierarchy: list[str] | None = Field(None, description="Topic hierarchy path")
 
 
 class Intent(BaseModel):
@@ -105,8 +105,8 @@ class Intent(BaseModel):
     type: IntentType = Field(..., description="Primary intent type")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Intent confidence")
     action_items: list[str] = Field(default_factory=list, description="Extracted action items")
-    urgency: Optional[float] = Field(None, ge=0.0, le=1.0, description="Urgency score")
-    sentiment: Optional[float] = Field(None, ge=-1.0, le=1.0, description="Sentiment score")
+    urgency: float | None = Field(None, ge=0.0, le=1.0, description="Urgency score")
+    sentiment: float | None = Field(None, ge=-1.0, le=1.0, description="Sentiment score")
 
 
 class StructuredData(BaseModel):
@@ -122,8 +122,8 @@ class EmbeddingMetadata(BaseModel):
     """Metadata for generated embeddings"""
     model: str = Field(..., description="Model used for embedding")
     dimensions: int = Field(..., description="Embedding dimensions")
-    chunk_id: Optional[int] = Field(None, description="Chunk ID if content was chunked")
-    chunk_overlap: Optional[int] = Field(None, description="Overlap between chunks")
+    chunk_id: int | None = Field(None, description="Chunk ID if content was chunked")
+    chunk_overlap: int | None = Field(None, description="Overlap between chunks")
     generated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -139,29 +139,29 @@ class ProcessedContent(BaseModel):
 
     # Topics and classification
     topics: list[Topic] = Field(default_factory=list)
-    primary_topic: Optional[Topic] = None
-    domain: Optional[str] = Field(None, description="Content domain")
+    primary_topic: Topic | None = None
+    domain: str | None = Field(None, description="Content domain")
 
     # Intent and metadata
-    intent: Optional[Intent] = None
+    intent: Intent | None = None
     quality: ContentQuality = Field(default=ContentQuality.MEDIUM)
     completeness_score: float = Field(default=0.5, ge=0.0, le=1.0)
 
     # Structured data
-    structured_data: Optional[StructuredData] = None
+    structured_data: StructuredData | None = None
 
     # Embeddings
     embeddings: dict[str, list[float]] = Field(default_factory=dict)
-    embedding_metadata: Optional[EmbeddingMetadata] = None
+    embedding_metadata: EmbeddingMetadata | None = None
 
     # Processing metadata
     processed_at: datetime = Field(default_factory=datetime.utcnow)
-    processing_time_ms: Optional[int] = None
+    processing_time_ms: int | None = None
     processor_version: str = Field(default="1.0.0")
 
     # Suggested metadata for storage
     suggested_tags: list[str] = Field(default_factory=list)
-    suggested_memory_type: Optional[str] = None
+    suggested_memory_type: str | None = None
     suggested_importance: float = Field(default=0.5, ge=0.0, le=1.0)
 
 
@@ -170,9 +170,9 @@ class IngestionRequest(BaseModel):
     content: str = Field(..., description="Content to ingest", min_length=1)
 
     # Optional context
-    user_context: Optional[dict[str, Any]] = Field(None, description="User context for personalization")
-    domain_hint: Optional[str] = Field(None, description="Hint about content domain")
-    language: Optional[str] = Field(default="en", description="Content language")
+    user_context: dict[str, Any] | None = Field(None, description="User context for personalization")
+    domain_hint: str | None = Field(None, description="Hint about content domain")
+    language: str | None = Field(default="en", description="Content language")
 
     # Processing options
     extract_entities: bool = Field(default=True)
@@ -184,15 +184,15 @@ class IngestionRequest(BaseModel):
 
     # Performance options
     fast_mode: bool = Field(default=False, description="Use faster, less accurate models")
-    max_processing_time: Optional[int] = Field(None, description="Max processing time in ms")
+    max_processing_time: int | None = Field(None, description="Max processing time in ms")
 
 
 class IngestionResponse(BaseModel):
     """Response model for content ingestion"""
     request_id: UUID = Field(..., description="Unique request ID")
     status: str = Field(..., description="Processing status")
-    processed_content: Optional[ProcessedContent] = None
-    memory_id: Optional[str] = Field(None, description="ID of created memory if stored")
+    processed_content: ProcessedContent | None = None
+    memory_id: str | None = Field(None, description="ID of created memory if stored")
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     processing_stats: dict[str, Any] = Field(default_factory=dict)

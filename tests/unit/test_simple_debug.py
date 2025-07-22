@@ -1,6 +1,5 @@
 """Simple test to verify pytest discovery is working."""
 
-import pytest
 
 def test_simple():
     """A simple test to verify pytest is working."""

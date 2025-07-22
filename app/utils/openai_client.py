@@ -16,7 +16,7 @@ class OpenAIClient:
     """Singleton OpenAI client for embeddings."""
 
     _instance: Optional["OpenAIClient"] = None
-    _client: Optional[AsyncOpenAI] = None
+    _client: AsyncOpenAI | None = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -38,7 +38,7 @@ class OpenAIClient:
             self._client = AsyncOpenAI(api_key=api_key)
             logger.info("OpenAI client initialized")
 
-    async def get_embedding(self, text: str) -> Optional[list[float]]:
+    async def get_embedding(self, text: str) -> list[float] | None:
         """Get embedding for text using OpenAI API."""
         if not self._client:
             logger.error("OpenAI client not initialized - missing API key")
@@ -58,7 +58,7 @@ class OpenAIClient:
 _openai_client = OpenAIClient()
 
 
-def get_openai_embedding(text: str) -> Optional[list[float]]:
+def get_openai_embedding(text: str) -> list[float] | None:
     """
     Synchronous wrapper for getting embeddings.
     This is a temporary solution for backward compatibility.
@@ -86,6 +86,6 @@ def get_openai_embedding(text: str) -> Optional[list[float]]:
         return None
 
 
-async def get_openai_embedding_async(text: str) -> Optional[list[float]]:
+async def get_openai_embedding_async(text: str) -> list[float] | None:
     """Async version of get_openai_embedding."""
     return await _openai_client.get_embedding(text)

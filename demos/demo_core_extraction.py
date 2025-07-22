@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 async def demo_extraction():
     """Demonstrate the core extraction pipeline capabilities"""
-    
+
     # Initialize pipeline with transformer models
     print("🚀 Initializing Core Extraction Pipeline with Transformers...")
     config = IngestionConfig(
@@ -29,10 +29,10 @@ async def demo_extraction():
         enable_dependency_parsing=True,
         enable_sentiment_analysis=True
     )
-    
+
     pipeline = CoreExtractionPipeline(config=config, use_gpu=False)
     print("✅ Pipeline initialized\n")
-    
+
     # Example texts to process
     test_texts = [
         {
@@ -86,13 +86,13 @@ async def demo_extraction():
             """
         }
     ]
-    
+
     # Process each text
     for test_case in test_texts:
         print(f"{'='*80}")
         print(f"📝 Processing: {test_case['name']}")
         print(f"{'='*80}\n")
-        
+
         # Create ingestion request
         request = IngestionRequest(
             content=test_case['content'],
@@ -103,14 +103,14 @@ async def demo_extraction():
             extract_structured=True,
             generate_embeddings=True
         )
-        
+
         # Process the content
         response = await pipeline.process(request)
-        
+
         # Display results
         if response.status == "completed" and response.processed_content:
             content = response.processed_content
-            
+
             # Entities
             print(f"🔍 Extracted Entities ({len(content.entities)}):")
             for entity in content.entities[:10]:  # Show first 10
@@ -118,7 +118,7 @@ async def demo_extraction():
             if len(content.entities) > 10:
                 print(f"  ... and {len(content.entities) - 10} more entities")
             print()
-            
+
             # Relationships
             print(f"🔗 Detected Relationships ({len(content.relationships)}):")
             for rel in content.relationships[:5]:  # Show first 5
@@ -126,7 +126,7 @@ async def demo_extraction():
             if len(content.relationships) > 5:
                 print(f"  ... and {len(content.relationships) - 5} more relationships")
             print()
-            
+
             # Intent
             if content.intent:
                 print(f"🎯 Intent: {content.intent.type.value} [confidence: {content.intent.confidence:.2f}]")
@@ -135,11 +135,11 @@ async def demo_extraction():
                 if content.intent.sentiment is not None:
                     print(f"  - Sentiment: {content.intent.sentiment:.2f}")
                 if content.intent.action_items:
-                    print(f"  - Action Items:")
+                    print("  - Action Items:")
                     for item in content.intent.action_items:
                         print(f"    • {item}")
             print()
-            
+
             # Topics
             if content.topics:
                 print(f"📊 Topics ({len(content.topics)}):")
@@ -148,24 +148,24 @@ async def demo_extraction():
                     if topic.keywords:
                         print(f"    Keywords: {', '.join(topic.keywords[:5])}")
             print()
-            
+
             # Quality Assessment
-            print(f"✨ Quality Assessment:")
+            print("✨ Quality Assessment:")
             print(f"  - Content Quality: {content.quality.value}")
             print(f"  - Completeness: {content.completeness_score:.2f}")
             print(f"  - Suggested Importance: {content.suggested_importance:.2f}")
             print(f"  - Suggested Memory Type: {content.suggested_memory_type}")
             print()
-            
+
             # Embeddings
             if content.embeddings:
-                print(f"🧮 Embeddings Generated:")
+                print("🧮 Embeddings Generated:")
                 for emb_type in content.embeddings:
                     print(f"  - {emb_type}: {len(content.embeddings[emb_type])} dimensions")
             print()
-            
+
             # Processing Stats
-            print(f"⚡ Processing Stats:")
+            print("⚡ Processing Stats:")
             for key, value in response.processing_stats.items():
                 if isinstance(value, dict):
                     print(f"  - {key}:")
@@ -174,11 +174,11 @@ async def demo_extraction():
                 else:
                     print(f"  - {key}: {value}")
             print()
-        
+
         else:
             print(f"❌ Processing failed: {response.errors}")
             print()
-    
+
     # Show pipeline info
     print(f"\n{'='*80}")
     print("🔧 Pipeline Configuration:")
@@ -192,10 +192,10 @@ async def demo_batch_processing():
     print("\n" + "="*80)
     print("📦 Batch Processing Demo")
     print("="*80 + "\n")
-    
+
     # Initialize pipeline
     pipeline = CoreExtractionPipeline()
-    
+
     # Create multiple requests
     requests = [
         IngestionRequest(
@@ -214,15 +214,15 @@ async def demo_batch_processing():
             extract_entities=True
         )
     ]
-    
+
     # Process in batch
     start_time = datetime.now()
     responses = await pipeline.batch_process(requests)
     batch_time = (datetime.now() - start_time).total_seconds()
-    
+
     print(f"⏱️  Batch processed {len(requests)} requests in {batch_time:.2f} seconds")
     print(f"📊 Average time per request: {batch_time/len(requests):.2f} seconds\n")
-    
+
     # Show summary
     for i, response in enumerate(responses):
         if response.status == "completed" and response.processed_content:
@@ -238,20 +238,20 @@ async def demo_batch_processing():
 async def main():
     """Run all demos"""
     print("\n🎯 Enhanced Core Extraction Pipeline Demo with Transformers\n")
-    
+
     # Run extraction demo
     await demo_extraction()
-    
+
     # Run batch processing demo
     await demo_batch_processing()
-    
+
     print("\n✅ Demo completed!")
 
 
 if __name__ == "__main__":
     # Note: Download required models first:
     # python -m spacy download en_core_web_sm
-    # python -m spacy download en_core_web_lg  
+    # python -m spacy download en_core_web_lg
     # python -m spacy download en_core_web_trf
-    
+
     asyncio.run(main())

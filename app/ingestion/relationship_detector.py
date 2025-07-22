@@ -5,7 +5,7 @@ Relationship detection component for identifying connections between entities
 import logging
 import re
 from collections import defaultdict
-from typing import Any, Optional
+from typing import Any
 
 try:
     import spacy
@@ -42,7 +42,7 @@ class RelationshipDetector:
 
         # Initialize relationship patterns
         self.relationship_patterns = self._initialize_relationship_patterns()
-        
+
         # Initialize transformer-enhanced patterns
         self.transformer_patterns = self._initialize_transformer_patterns()
 
@@ -97,7 +97,7 @@ class RelationshipDetector:
             doc = self.nlp(text)
             dep_relationships = self._detect_dependency_relationships(text, entities)
             relationships.extend(dep_relationships)
-            
+
             # Transformer-based detection if using transformer model
             if self.model_name == "en_core_web_trf" and hasattr(doc, "_.trf_data"):
                 transformer_relationships = self.detect_transformer_relationships(doc, entities)
@@ -306,7 +306,7 @@ class RelationshipDetector:
 
         return entity_spans
 
-    def _find_dependency_path(self, token1: Any, token2: Any) -> Optional[list[Any]]:
+    def _find_dependency_path(self, token1: Any, token2: Any) -> list[Any] | None:
         """Find dependency path between two tokens"""
         if not token1 or not token2:
             return None
@@ -351,7 +351,7 @@ class RelationshipDetector:
 
         return path
 
-    def _analyze_dependency_path(self, path: list[Any]) -> tuple[Optional[RelationshipType], float]:
+    def _analyze_dependency_path(self, path: list[Any]) -> tuple[RelationshipType | None, float]:
         """Analyze dependency path to determine relationship type"""
         if not path:
             return None, 0.0
@@ -401,7 +401,7 @@ class RelationshipDetector:
 
         return None, 0.0
 
-    def _analyze_connecting_text(self, text: str) -> tuple[Optional[RelationshipType], float]:
+    def _analyze_connecting_text(self, text: str) -> tuple[RelationshipType | None, float]:
         """Analyze text between entities to determine relationship"""
         text_lower = text.lower().strip()
 
@@ -475,7 +475,7 @@ class RelationshipDetector:
     def _find_entity_by_text(self,
                            entities: list[Entity],
                            text: str,
-                           position: int) -> Optional[Entity]:
+                           position: int) -> Entity | None:
         """Find entity matching text near position"""
         text_lower = text.lower().strip()
 
@@ -631,28 +631,28 @@ class RelationshipDetector:
             List of detected relationships
         """
         relationships = []
-        
+
         if not hasattr(doc, "_.trf_data"):
             return relationships
-            
+
         # Create entity spans
         entity_spans = self._create_entity_spans(doc, entities)
-        
+
         for i, (entity1, span1) in enumerate(entity_spans):
             for j, (entity2, span2) in enumerate(entity_spans[i+1:], i+1):
                 # Get transformer embeddings for entities
                 if hasattr(span1, "_.trf_data") and hasattr(span2, "_.trf_data"):
                     # Calculate semantic similarity using transformer embeddings
                     similarity = span1.similarity(span2)
-                    
+
                     if similarity > self.transformer_patterns["semantic_similarity_threshold"]:
                         # High semantic similarity suggests relationship
                         rel_type = RelationshipType.SIMILAR_TO
                         confidence = similarity
-                        
+
                         # Check contextual patterns for more specific relationship types
                         context_between = doc[span1.end:span2.start].text.lower()
-                        
+
                         for rel_category, keywords in self.transformer_patterns["contextual_patterns"].items():
                             if any(keyword in context_between for keyword in keywords):
                                 if rel_category == "causation":
@@ -661,7 +661,7 @@ class RelationshipDetector:
                                     rel_type = RelationshipType.TEMPORAL_AFTER
                                 confidence = min(0.95, similarity + 0.1)
                                 break
-                        
+
                         relationships.append(Relationship(
                             source=entity1,
                             target=entity2,
@@ -673,7 +673,7 @@ class RelationshipDetector:
                                 "similarity_score": float(similarity)
                             }
                         ))
-                
+
         return relationships
 
     def get_relationship_statistics(self, relationships: list[Relationship]) -> dict[str, Any]:

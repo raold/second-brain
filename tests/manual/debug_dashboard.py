@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Test script to debug the dashboard data structure"""
 
+
 from development_status import get_development_status
-import json
+
 
 def main():
     data = get_development_status()
-    
+
     print('=== BRANCH DATA ===')
     if 'branches' in data:
         for branch in data['branches'][:3]:
@@ -24,7 +25,7 @@ def main():
     else:
         print('PR status not found')
 
-    print('\n=== VERSION ROADMAP ===')  
+    print('\n=== VERSION ROADMAP ===')
     if 'version_roadmap' in data:
         print(f'Roadmap versions: {list(data["version_roadmap"].keys())}')
         if data['version_roadmap']:

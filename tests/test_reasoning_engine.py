@@ -2,76 +2,70 @@
 Tests for the multi-hop reasoning engine
 """
 
-import pytest
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
-from app.services.reasoning_engine import (
-    ReasoningEngine,
-    ReasoningType,
-    ReasoningQuery,
-    ReasoningNode,
-    ReasoningPath
-)
+import pytest
+
+from app.services.reasoning_engine import ReasoningEngine, ReasoningNode, ReasoningPath, ReasoningQuery, ReasoningType
 
 
 class TestReasoningEngine:
     """Test the reasoning engine functionality"""
-    
+
     @pytest.fixture
     def mock_db(self):
         """Create a mock database"""
         db = AsyncMock()
         return db
-    
+
     @pytest.fixture
     def reasoning_engine(self, mock_db):
         """Create a reasoning engine instance"""
         return ReasoningEngine(mock_db)
-    
+
     @pytest.mark.asyncio
     async def test_parse_query(self, reasoning_engine):
         """Test query parsing"""
         # Test causal query detection
         query = "What caused me to change careers?"
         result = await reasoning_engine._parse_query(query, max_hops=3, reasoning_type=None)
-        
+
         assert result.text == query
         assert result.max_hops == 3
         assert result.reasoning_type == ReasoningType.CAUSAL
         assert result.include_temporal == False
         assert result.include_semantic == True
-        
+
         # Test temporal query detection
         query2 = "What happened before this event?"
         result2 = await reasoning_engine._parse_query(query2, max_hops=3, reasoning_type=None)
-        
+
         assert result2.reasoning_type == ReasoningType.TEMPORAL
         assert result2.include_temporal == True
-    
+
     @pytest.mark.asyncio
     async def test_detect_reasoning_type(self, reasoning_engine):
         """Test reasoning type detection"""
-        
+
         # Causal
         assert reasoning_engine._detect_reasoning_type("What caused this?") == ReasoningType.CAUSAL
         assert reasoning_engine._detect_reasoning_type("Why did this happen?") == ReasoningType.CAUSAL
-        
+
         # Temporal
         assert reasoning_engine._detect_reasoning_type("What happened before?") == ReasoningType.TEMPORAL
         assert reasoning_engine._detect_reasoning_type("Show timeline") == ReasoningType.TEMPORAL
-        
+
         # Evolutionary
         assert reasoning_engine._detect_reasoning_type("How did this evolve?") == ReasoningType.EVOLUTIONARY
         assert reasoning_engine._detect_reasoning_type("How has this changed?") == ReasoningType.EVOLUTIONARY
-        
+
         # Comparative
         assert reasoning_engine._detect_reasoning_type("Compare A to B") == ReasoningType.COMPARATIVE
         assert reasoning_engine._detect_reasoning_type("What's the difference?") == ReasoningType.COMPARATIVE
-        
+
         # Default to semantic
         assert reasoning_engine._detect_reasoning_type("Tell me about this") == ReasoningType.SEMANTIC
-    
+
     @pytest.mark.asyncio
     async def test_find_starting_nodes(self, reasoning_engine, mock_db):
         """Test finding starting nodes"""
@@ -94,19 +88,19 @@ class TestReasoningEngine:
                 "created_at": "2024-01-01T09:00:00"
             }
         ]
-        
+
         query = ReasoningQuery(text="career change", max_hops=3)
         nodes = await reasoning_engine._find_starting_nodes(query)
-        
+
         assert len(nodes) == 2
         assert nodes[0].memory_id == "mem1"
         assert nodes[0].relevance_score == 0.9
         assert nodes[0].hop_number == 0
         assert nodes[0].relationship_type == "query_match"
-        
+
         assert nodes[1].memory_id == "mem2"
         assert nodes[1].relevance_score == 0.7
-    
+
     def test_calculate_path_score(self, reasoning_engine):
         """Test path score calculation"""
         nodes = [
@@ -135,15 +129,15 @@ class TestReasoningEngine:
                 metadata={}
             )
         ]
-        
+
         score = reasoning_engine._calculate_path_score(nodes)
-        
+
         # Score should be weighted average with decay
         # weights: [1.0, 0.8, 0.64] for 0.8^i
         # (0.9*1.0 + 0.8*0.8 + 0.7*0.64) / (1.0 + 0.8 + 0.64)
         expected = (0.9 + 0.64 + 0.448) / 2.44
         assert abs(score - expected) < 0.01
-    
+
     @pytest.mark.asyncio
     async def test_score_node_relevance(self, reasoning_engine):
         """Test node relevance scoring"""
@@ -155,7 +149,7 @@ class TestReasoningEngine:
             relationship_type="semantic",
             metadata={"importance_score": 0.9}
         )
-        
+
         previous_node = ReasoningNode(
             memory_id="0",
             content="Previous content",
@@ -164,23 +158,23 @@ class TestReasoningEngine:
             relationship_type="start",
             metadata={}
         )
-        
+
         query = ReasoningQuery(
             text="How did machine learning evolve?",
             reasoning_type=ReasoningType.EVOLUTIONARY
         )
-        
+
         # Test with evolutionary content
         current_node.content = "Machine learning has evolved significantly"
         score = await reasoning_engine._score_node_relevance(
             current_node, previous_node, query
         )
-        
+
         # Should get boost for evolutionary keywords and high importance
         # Base: 0.8 * 1.2 (evolutionary) * 0.9 (hop decay) * 1.1 (importance)
         expected = 0.8 * 1.2 * 0.9 * 1.1
         assert abs(score - expected) < 0.01
-    
+
     def test_rank_paths(self, reasoning_engine):
         """Test path ranking"""
         # Create some paths with different scores
@@ -204,17 +198,17 @@ class TestReasoningEngine:
                 execution_time_ms=100
             )
             paths.append(path)
-        
+
         # Add duplicate path
         paths.append(paths[0])
-        
+
         ranked = reasoning_engine._rank_paths(paths)
-        
+
         # Should be sorted by score descending
         assert len(ranked) == 5  # Duplicate removed
         assert ranked[0].total_score == 0.9
         assert ranked[-1].total_score == 0.5
-    
+
     @pytest.mark.asyncio
     async def test_extract_insights(self, reasoning_engine):
         """Test insight extraction"""
@@ -251,14 +245,14 @@ class TestReasoningEngine:
             insights=[],
             execution_time_ms=100
         )
-        
+
         insights = await reasoning_engine._extract_insights(path)
-        
+
         assert len(insights) >= 3
         assert any("Connected" in i for i in insights)
         assert any("Relationships discovered" in i for i in insights)
         assert any("Evolution pattern" in i for i in insights)
-    
+
     @pytest.mark.asyncio
     async def test_multi_hop_query_integration(self, reasoning_engine, mock_db):
         """Test the full multi-hop query flow"""
@@ -300,13 +294,13 @@ class TestReasoningEngine:
             # Fifth call - temporal neighbors (empty)
             []
         ]
-        
+
         paths = await reasoning_engine.multi_hop_query(
             query="How did I become a programmer?",
             max_hops=2,
             reasoning_type=ReasoningType.EVOLUTIONARY
         )
-        
+
         assert len(paths) > 0
         assert paths[0].reasoning_type == ReasoningType.EVOLUTIONARY
         assert len(paths[0].nodes) >= 2
@@ -323,7 +317,7 @@ class TestReasoningEngine:
             "memory_type": "episodic",
             "created_at": "2024-02-01"
         }
-        
+
         mock_db.contextual_search.return_value = [
             {
                 "id": "cause1",
@@ -332,19 +326,19 @@ class TestReasoningEngine:
                 "memory_type": "semantic"
             }
         ]
-        
+
         paths = await reasoning_engine.find_causal_chains(
             "event1",
             direction="backward",
             max_depth=2
         )
-        
+
         assert isinstance(paths, list)
         # Should search for causal relationships
         assert mock_db.contextual_search.called
         call_args = mock_db.contextual_search.call_args[0][0]
         assert "caused" in call_args.lower() or "led to" in call_args.lower()
-    
+
     @pytest.mark.asyncio
     async def test_trace_reasoning_path(self, reasoning_engine, mock_db):
         """Test tracing path between specific memories"""
@@ -353,31 +347,31 @@ class TestReasoningEngine:
             "mem1": {"id": "mem1", "content": "Started with Python", "metadata": {}},
             "mem2": {"id": "mem2", "content": "Learned machine learning", "metadata": {}}
         }.get(id)
-        
+
         # Mock search for path finding
         mock_db.contextual_search.side_effect = [
             [{"id": "mem2", "content": "Learned machine learning", "similarity": 0.7}],
             []
         ]
-        
+
         path = await reasoning_engine.trace_reasoning_path(
             "mem1",
             "mem2",
             max_hops=3
         )
-        
+
         # Should attempt to find path
         assert mock_db.get_memory.called
         if path:
             assert path.query == "Path from mem1 to mem2"
             assert len(path.nodes) >= 2
-    
+
     @pytest.mark.asyncio
     async def test_error_handling(self, reasoning_engine, mock_db):
         """Test error handling in reasoning engine"""
         # Test with database error
         mock_db.contextual_search.side_effect = Exception("Database error")
-        
+
         # Should handle gracefully
         try:
             paths = await reasoning_engine.multi_hop_query("test query")
@@ -386,12 +380,12 @@ class TestReasoningEngine:
         except Exception:
             # Or re-raise with context
             pass
-        
+
         # Test with invalid memory ID
         mock_db.get_memory.return_value = None
         path = await reasoning_engine.trace_reasoning_path("invalid1", "invalid2")
         assert path is None
-    
+
     @pytest.mark.asyncio
     async def test_beam_search_pruning(self, reasoning_engine, mock_db):
         """Test that beam search properly prunes low-scoring paths"""
@@ -404,20 +398,20 @@ class TestReasoningEngine:
                 "similarity": 0.9 - (i * 0.04),  # Decreasing scores
                 "memory_type": "semantic"
             })
-        
+
         mock_db.contextual_search.return_value = candidates
-        
+
         # Set small beam width
         reasoning_engine.beam_width = 3
-        
+
         paths = await reasoning_engine.multi_hop_query(
             "test query",
             max_hops=1
         )
-        
+
         # Should only keep top beam_width paths
         assert len(paths) <= reasoning_engine.beam_width * reasoning_engine.max_paths
-        
+
         # Paths should be highest scoring ones
         if paths:
             min_score = min(p.total_score for p in paths)

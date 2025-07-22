@@ -10,7 +10,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -554,7 +554,7 @@ class ImportanceEngine:
 
         return ", ".join(explanations) if explanations else "standard scoring"
 
-    async def update_memory_importance(self, memory_id: str) -> Optional[float]:
+    async def update_memory_importance(self, memory_id: str) -> float | None:
         """
         Update importance score for a specific memory.
         Called when memory is accessed or appears in search results.
@@ -671,8 +671,8 @@ class ImportanceEngine:
         self,
         memory_id: str,
         access_type: str = "retrieval",
-        search_position: Optional[int] = None,
-        user_action: Optional[str] = None,
+        search_position: int | None = None,
+        user_action: str | None = None,
     ) -> None:
         """
         Log memory access for importance calculation.

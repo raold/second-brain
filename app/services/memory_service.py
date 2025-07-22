@@ -4,7 +4,7 @@ Separates concerns from route handlers, making the code more testable and mainta
 """
 
 import logging
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 from app.database import Database, get_database
 from app.database_importance_schema import setup_importance_tracking_schema
@@ -14,7 +14,7 @@ from app.importance_engine import ImportanceEngine, get_importance_engine
 logger = logging.getLogger(__name__)
 
 
-def _is_real_database_with_pool(database: Optional[Union[Database, MockDatabase]]) -> bool:
+def _is_real_database_with_pool(database: Union[Database, MockDatabase] | None) -> bool:
     """Check if database is a real Database instance with pool access."""
     if not database:
         return False
@@ -38,9 +38,9 @@ class MemoryService:
     - Calculate content quality scores
     """
 
-    def __init__(self, database: Optional[Union[Database, MockDatabase]] = None):
-        self.database: Optional[Union[Database, MockDatabase]] = database
-        self.importance_engine: Optional[ImportanceEngine] = None
+    def __init__(self, database: Union[Database, MockDatabase] | None = None):
+        self.database: Union[Database, MockDatabase] | None = database
+        self.importance_engine: ImportanceEngine | None = None
         self._initialized = False
 
     async def initialize(self):
@@ -79,11 +79,11 @@ class MemoryService:
         self,
         content: str,
         memory_type: str = "semantic",
-        semantic_metadata: Optional[dict] = None,
-        episodic_metadata: Optional[dict] = None,
-        procedural_metadata: Optional[dict] = None,
-        importance_score: Optional[float] = None,
-        metadata: Optional[dict] = None,
+        semantic_metadata: dict | None = None,
+        episodic_metadata: dict | None = None,
+        procedural_metadata: dict | None = None,
+        importance_score: float | None = None,
+        metadata: dict | None = None,
     ) -> str:
         """
         Store a memory with automatic importance calculation
@@ -128,7 +128,7 @@ class MemoryService:
 
         return memory_id
 
-    async def get_memory(self, memory_id: str, track_access: bool = True) -> Optional[dict[str, Any]]:
+    async def get_memory(self, memory_id: str, track_access: bool = True) -> dict[str, Any] | None:
         """
         Retrieve a memory and automatically track access for importance scoring
         """
@@ -155,8 +155,8 @@ class MemoryService:
         self,
         query: str,
         limit: int = 10,
-        memory_types: Optional[list[str]] = None,
-        importance_threshold: Optional[float] = None,
+        memory_types: list[str] | None = None,
+        importance_threshold: float | None = None,
         track_results: bool = True,
     ) -> list[dict[str, Any]]:
         """
@@ -216,7 +216,7 @@ class MemoryService:
         except Exception as e:
             logger.debug(f"Failed to log search result: {e}")
 
-    async def click_search_result(self, memory_id: str, query: str) -> Optional[dict[str, Any]]:
+    async def click_search_result(self, memory_id: str, query: str) -> dict[str, Any] | None:
         """
         Handle search result click - tracks interaction and retrieves memory
         """
@@ -255,8 +255,8 @@ class MemoryService:
         self,
         memory_id: str,
         feedback_type: str,
-        feedback_value: Optional[int] = None,
-        feedback_text: Optional[str] = None,
+        feedback_value: int | None = None,
+        feedback_text: str | None = None,
     ) -> bool:
         """
         Add user feedback for a memory (upvote, downvote, save, etc.)

@@ -5,7 +5,6 @@ Provides API endpoints for persistent context continuity and mobile idea process
 """
 
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -30,7 +29,7 @@ class IdeaIngestionRequest(BaseModel):
 class SessionResumeRequest(BaseModel):
     """Request model for session resumption"""
 
-    session_id: Optional[str] = Field(default=None, description="Specific session ID to resume")
+    session_id: str | None = Field(default=None, description="Specific session ID to resume")
     load_full_context: bool = Field(default=True, description="Whether to load full conversation context")
 
 
@@ -348,7 +347,7 @@ async def sync_session(target_device: str = "cloud"):
 
 # Mobile-optimized endpoints
 @session_router.post("/mobile/idea")
-async def mobile_idea_quick_drop(idea: str = Form(...), voice_note: Optional[str] = Form(default=None)):
+async def mobile_idea_quick_drop(idea: str = Form(...), voice_note: str | None = Form(default=None)):
     """
     Quick idea drop from mobile - ultra-simple interface
     The fastest way to get ideas into the system
