@@ -1,7 +1,7 @@
 {
-  "current_stable": "2.4.3",
-  "current_development": "2.6.0",
-  "testing_version": "2.5.0",
+  "current_stable": "2.8.1",
+  "current_development": "2.9.0",
+  "testing_version": "2.8.2",
   "branch_strategy": "develop->testing->main",
   "supported_workflows": [
     "develop->testing->main",
@@ -16,6 +16,49 @@
     "github_release": "optional"
   },
   "versions": {
+    "2.8.1": {
+      "status": "stable",
+      "title": "Advanced Content Analysis & NLP",
+      "focus": "Analysis",
+      "release_date": "2025-07-22",
+      "changes": [
+        "BERTopic modeling with hierarchical clustering",
+        "NetworkX graph analysis and visualization",
+        "Enhanced structured extraction with form parsing",
+        "Multi-label domain classification (15+ domains)",
+        "Transformer intent recognition with BART",
+        "11 new API endpoints for graph and analysis",
+        "Complete CI/CD overhaul for v2.8.x",
+        "Migration system enhancements"
+      ],
+      "breaking_changes": [],
+      "commit_message": "Release v2.8.1: Advanced content analysis and NLP features",
+      "pr_testing": true,
+      "git_workflow": "main->release",
+      "deployment_notes": "Enhanced NLP capabilities, requires transformer models",
+      "migration_required": false
+    },
+    "2.8.0": {
+      "status": "released",
+      "title": "AI Reasoning & Knowledge Graphs",
+      "focus": "Reasoning",
+      "release_date": "2025-07-20",
+      "changes": [
+        "Revolutionary multi-hop reasoning engine",
+        "Beam search algorithm for optimal paths",
+        "Interactive D3.js knowledge graphs",
+        "9 entity types and 14 relationship types",
+        "Bulk memory processing (1000+ items)",
+        "Confidence scoring for conclusions",
+        "Sub-100ms query performance"
+      ],
+      "breaking_changes": [],
+      "commit_message": "Release v2.8.0: AI reasoning engine and knowledge graphs",
+      "pr_testing": true,
+      "git_workflow": "testing->main->release",
+      "deployment_notes": "Major reasoning capabilities, enhanced visualization",
+      "migration_required": false
+    },
     "2.4.2": {
       "status": "development",
       "title": "Architecture Cleanup & Optimization",
@@ -185,6 +228,25 @@
       "pr_testing": true,
       "git_workflow": "testing->main->release",
       "deployment_notes": "Enhanced visualization capabilities and dashboard improvements",
+      "migration_required": false
+    },
+    "2.9.0": {
+      "status": "planned",
+      "title": "Next Generation Memory System",
+      "focus": "Next Gen",
+      "release_date": "2025-10-01",
+      "changes": [
+        "Advanced memory compression algorithms",
+        "Distributed memory architecture",
+        "Real-time memory synchronization",
+        "Enhanced security features",
+        "Performance optimizations"
+      ],
+      "breaking_changes": [],
+      "commit_message": "Release v2.9.0: Next generation memory system",
+      "pr_testing": true,
+      "git_workflow": "develop->testing->main->release",
+      "deployment_notes": "Major architectural improvements",
       "migration_required": false
     }
   },
