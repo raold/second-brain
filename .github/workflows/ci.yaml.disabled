@@ -1,4 +1,4 @@
-name: Second Brain v2.4.3 CI Pipeline
+name: Second Brain v2.8.x CI Pipeline (Legacy)
 
 on:
   push:

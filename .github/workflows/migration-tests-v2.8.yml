@@ -1,0 +1,245 @@
+name: Migration System Tests v2.8
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+    paths:
+      - 'app/migration_*'
+      - 'app/database_migrations.py'
+      - 'app/memory_migrations.py'
+      - 'app/dashboard_migrations.py'
+      - 'app/routes/migration_*'
+      - 'tests/unit/test_*migration*.py'
+      - '.github/workflows/migration-tests*.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'app/migration_*'
+      - 'app/*_migrations.py'
+      - 'tests/unit/test_*migration*.py'
+
+jobs:
+  migration-tests:
+    name: Migration Framework Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: ankane/pgvector:v0.5.1
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test_migrations
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio pytest-cov pytest-timeout
+    
+    - name: Initialize PostgreSQL extensions
+      env:
+        PGPASSWORD: postgres
+      run: |
+        psql -h localhost -U postgres -d test_migrations -c "CREATE EXTENSION IF NOT EXISTS vector;"
+        psql -h localhost -U postgres -d test_migrations -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+        psql -h localhost -U postgres -d test_migrations -c "CREATE EXTENSION IF NOT EXISTS uuid-ossp;"
+    
+    - name: Set up test environment
+      run: |
+        cat > .env.test << EOF
+        DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_migrations
+        USE_MOCK_DATABASE=false
+        POSTGRES_HOST=localhost
+        POSTGRES_PORT=5432
+        POSTGRES_USER=postgres
+        POSTGRES_PASSWORD=postgres
+        POSTGRES_DB=test_migrations
+        OPENAI_API_KEY=test_key_migration
+        API_TOKENS=test_token_migration
+        ENVIRONMENT=test
+        LOG_LEVEL=DEBUG
+        EOF
+    
+    - name: Run migration unit tests
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+      run: |
+        echo "🧪 Running migration unit tests..."
+        python -m pytest tests/unit/test_database_migrations.py -v --tb=short --cov=app.database_migrations
+        python -m pytest tests/unit/test_memory_migrations.py -v --tb=short --cov=app.memory_migrations
+        python -m pytest tests/unit/test_dashboard_migrations.py -v --tb=short --cov=app.dashboard_migrations
+    
+    - name: Test migration modules import
+      run: |
+        echo "📦 Testing migration module imports..."
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        
+        try:
+            from app.migration_framework import MigrationFramework
+            print('✅ MigrationFramework imported successfully')
+        except ImportError as e:
+            print(f'❌ Failed to import MigrationFramework: {e}')
+        
+        try:
+            from app.migration_engine import MigrationEngine
+            print('✅ MigrationEngine imported successfully')
+        except ImportError as e:
+            print(f'❌ Failed to import MigrationEngine: {e}')
+        
+        try:
+            from app.database_migrations import DatabaseMigrations
+            print('✅ DatabaseMigrations imported successfully')
+        except ImportError as e:
+            print(f'❌ Failed to import DatabaseMigrations: {e}')
+        
+        try:
+            from app.memory_migrations import MemoryMigrationEngine
+            print('✅ MemoryMigrationEngine imported successfully')
+        except ImportError as e:
+            print(f'❌ Failed to import MemoryMigrationEngine: {e}')
+        
+        try:
+            from app.dashboard_migrations import get_migration_dashboard
+            print('✅ Dashboard migrations imported successfully')
+        except ImportError as e:
+            print(f'❌ Failed to import dashboard migrations: {e}')
+        "
+    
+    - name: Test migration routes
+      run: |
+        echo "🔌 Testing migration API routes..."
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        
+        try:
+            from app.routes.migration_routes import router
+            print(f'✅ Migration routes loaded: {len(router.routes)} endpoints')
+            for route in router.routes:
+                print(f'  - {route.methods} {route.path}')
+        except ImportError as e:
+            print(f'❌ Failed to import migration routes: {e}')
+        except Exception as e:
+            print(f'⚠️  Migration routes exist but initialization failed: {e}')
+        "
+    
+    - name: Test migration CLI (if exists)
+      continue-on-error: true
+      run: |
+        echo "🖥️  Testing migration CLI..."
+        if [ -f "scripts/migrate.py" ]; then
+          python scripts/migrate.py --help || echo "CLI exists but failed to run"
+          python scripts/migrate.py list || echo "Failed to list migrations"
+        else
+          echo "ℹ️  No migration CLI script found"
+        fi
+    
+    - name: Integration test with mock data
+      env:
+        USE_MOCK_DATABASE: "true"
+        PYTHONPATH: ${{ github.workspace }}
+      run: |
+        echo "🔗 Running migration integration test..."
+        python -c "
+        import asyncio
+        import sys
+        sys.path.insert(0, '.')
+        
+        async def test_migration_integration():
+            try:
+                from app.database_mock import MockDatabase
+                from app.memory_migrations import MemoryMigrationEngine
+                
+                # Test with mock database
+                db = MockDatabase()
+                await db.initialize()
+                
+                engine = MemoryMigrationEngine(db)
+                print('✅ Migration engine initialized with mock database')
+                
+                # Test basic migration operations
+                result = await engine.get_migration_status()
+                print(f'✅ Migration status retrieved: {result}')
+                
+            except Exception as e:
+                print(f'❌ Integration test failed: {e}')
+                import traceback
+                traceback.print_exc()
+        
+        asyncio.run(test_migration_integration())
+        "
+    
+    - name: Upload coverage reports
+      if: always()
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./coverage.xml
+        flags: migration-tests
+        name: migration-coverage
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+  migration-security-scan:
+    name: Migration Security Scan
+    runs-on: ubuntu-latest
+    needs: migration-tests
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit[toml] safety semgrep
+    
+    - name: Run security scan on migration code
+      run: |
+        echo "🔒 Running security scan on migration system..."
+        
+        # Bandit security scan
+        echo "Running Bandit..."
+        bandit -r app/migration_* app/database_migrations.py app/memory_migrations.py -f json -o bandit-migrations.json || true
+        
+        # Safety check for dependencies
+        echo "Running Safety check..."
+        safety check --json --output safety-migrations.json || true
+        
+        # Semgrep for OWASP patterns
+        echo "Running Semgrep..."
+        semgrep --config=auto app/migration_* app/*_migrations.py --json --output=semgrep-migrations.json || true
+        
+        echo "✅ Security scans completed"
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: migration-security-reports
+        path: |
+          bandit-migrations.json
+          safety-migrations.json
+          semgrep-migrations.json

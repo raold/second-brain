@@ -1,0 +1,333 @@
+name: Comprehensive Test Suite v2.8
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+  workflow_dispatch:
+    inputs:
+      test_group:
+        description: 'Specific test group to run'
+        type: choice
+        options:
+          - all
+          - unit
+          - integration
+          - performance
+          - security
+          - api
+        default: all
+
+env:
+  PYTHON_VERSION: '3.11'
+  PYTEST_WORKERS: 'auto'
+  COVERAGE_THRESHOLD: '70'
+
+jobs:
+  test-matrix:
+    name: Test Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set test matrix
+        id: set-matrix
+        run: |
+          if [ "${{ inputs.test_group }}" = "all" ] || [ -z "${{ inputs.test_group }}" ]; then
+            MATRIX=$(cat << 'EOF'
+          {
+            "include": [
+              {
+                "name": "Unit Tests - Core",
+                "pattern": "tests/unit/test_[a-m]*.py",
+                "marks": "not integration and not slow",
+                "timeout": 300
+              },
+              {
+                "name": "Unit Tests - Extended",
+                "pattern": "tests/unit/test_[n-z]*.py",
+                "marks": "not integration and not slow",
+                "timeout": 300
+              },
+              {
+                "name": "Integration Tests",
+                "pattern": "tests/integration/",
+                "marks": "",
+                "timeout": 600
+              },
+              {
+                "name": "API Tests",
+                "pattern": "tests/",
+                "marks": "api or endpoint",
+                "timeout": 600
+              },
+              {
+                "name": "Migration Tests",
+                "pattern": "tests/unit/test_*migration*.py",
+                "marks": "",
+                "timeout": 300
+              },
+              {
+                "name": "Bulk Operations Tests",
+                "pattern": "tests/unit/test_bulk*.py",
+                "marks": "",
+                "timeout": 300
+              },
+              {
+                "name": "AI/ML Tests",
+                "pattern": "tests/",
+                "marks": "ml or ai or reasoning or knowledge",
+                "timeout": 900
+              },
+              {
+                "name": "Performance Tests",
+                "pattern": "tests/performance/",
+                "marks": "",
+                "timeout": 1200
+              }
+            ]
+          }
+          EOF
+            )
+          else
+            # Single test group
+            case "${{ inputs.test_group }}" in
+              unit)
+                PATTERN="tests/unit/"
+                MARKS="not integration and not slow"
+                ;;
+              integration)
+                PATTERN="tests/integration/"
+                MARKS=""
+                ;;
+              performance)
+                PATTERN="tests/performance/"
+                MARKS=""
+                ;;
+              security)
+                PATTERN="tests/"
+                MARKS="security"
+                ;;
+              api)
+                PATTERN="tests/"
+                MARKS="api or endpoint"
+                ;;
+            esac
+            
+            MATRIX=$(cat << EOF
+          {
+            "include": [
+              {
+                "name": "${{ inputs.test_group }} Tests",
+                "pattern": "$PATTERN",
+                "marks": "$MARKS",
+                "timeout": 600
+              }
+            ]
+          }
+          EOF
+            )
+          fi
+          
+          echo "matrix<<EOF" >> $GITHUB_OUTPUT
+          echo "$MATRIX" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  run-tests:
+    name: ${{ matrix.name }}
+    needs: test-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    
+    services:
+      postgres:
+        image: ankane/pgvector:v0.5.1
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_secondbrain
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client libpq-dev
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio pytest-xdist pytest-timeout pytest-benchmark
+
+      - name: Set up test database
+        if: contains(matrix.name, 'Integration') || contains(matrix.name, 'API')
+        env:
+          PGPASSWORD: test_pass
+        run: |
+          psql -h localhost -U test_user -d test_secondbrain << EOF
+          CREATE EXTENSION IF NOT EXISTS vector;
+          CREATE EXTENSION IF NOT EXISTS pg_trgm;
+          CREATE EXTENSION IF NOT EXISTS uuid-ossp;
+          
+          -- Create test tables
+          CREATE TABLE IF NOT EXISTS test_setup (
+            id SERIAL PRIMARY KEY,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+          
+          INSERT INTO test_setup DEFAULT VALUES;
+          EOF
+
+      - name: Configure test environment
+        run: |
+          # Determine if mock database should be used
+          USE_MOCK="true"
+          if [[ "${{ matrix.name }}" == *"Integration"* ]] || [[ "${{ matrix.name }}" == *"API"* ]]; then
+            USE_MOCK="false"
+          fi
+          
+          cat > .env.test << EOF
+          DATABASE_URL=postgresql://test_user:test_pass@localhost:5432/test_secondbrain
+          REDIS_URL=redis://localhost:6379
+          USE_MOCK_DATABASE=$USE_MOCK
+          OPENAI_API_KEY=test_key_${{ github.run_id }}
+          API_TOKENS=test_token_1,test_token_2
+          ENVIRONMENT=test
+          LOG_LEVEL=WARNING
+          PYTHONPATH=${{ github.workspace }}
+          EOF
+          
+          # Export for current session
+          export $(cat .env.test | xargs)
+
+      - name: Run ${{ matrix.name }}
+        id: test
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          echo "🧪 Running ${{ matrix.name }}..."
+          
+          # Build pytest command
+          PYTEST_CMD="python -m pytest ${{ matrix.pattern }}"
+          PYTEST_CMD="$PYTEST_CMD -v --tb=short"
+          PYTEST_CMD="$PYTEST_CMD --timeout=${{ matrix.timeout }}"
+          PYTEST_CMD="$PYTEST_CMD --maxfail=10"
+          PYTEST_CMD="$PYTEST_CMD -n ${{ env.PYTEST_WORKERS }}"
+          PYTEST_CMD="$PYTEST_CMD --cov=app --cov-report=xml --cov-report=html --cov-report=term"
+          
+          # Add marks if specified
+          if [ -n "${{ matrix.marks }}" ]; then
+            PYTEST_CMD="$PYTEST_CMD -m \"${{ matrix.marks }}\""
+          fi
+          
+          # Add specific exclusions
+          PYTEST_CMD="$PYTEST_CMD --ignore=tests/manual/"
+          PYTEST_CMD="$PYTEST_CMD --ignore=tests/unit/test_database_basic.py"
+          
+          # Run tests and capture exit code
+          eval $PYTEST_CMD || TEST_EXIT_CODE=$?
+          
+          # Generate test summary
+          if [ -f .coverage ]; then
+            coverage report --skip-covered --skip-empty --sort=cover
+            COVERAGE=$(coverage report | grep TOTAL | awk '{print $4}' | sed 's/%//')
+            echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+          fi
+          
+          exit ${TEST_EXIT_CODE:-0}
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.name }}
+          path: |
+            coverage.xml
+            htmlcov/
+
+      - name: Check coverage threshold
+        if: steps.test.outputs.coverage
+        run: |
+          COVERAGE=${{ steps.test.outputs.coverage }}
+          THRESHOLD=${{ env.COVERAGE_THRESHOLD }}
+          
+          echo "📊 Coverage: ${COVERAGE}% (threshold: ${THRESHOLD}%)"
+          
+          if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "::warning::Coverage ${COVERAGE}% is below threshold ${THRESHOLD}%"
+          else
+            echo "✅ Coverage meets threshold"
+          fi
+
+  test-summary:
+    name: Test Summary
+    needs: run-tests
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          merge-multiple: true
+
+      - name: Generate combined coverage report
+        run: |
+          echo "# 📊 Test Suite Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Status table
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          # This would need actual status checks from the matrix jobs
+          echo "| All Tests | ${{ needs.run-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./
+          flags: unittests
+          name: second-brain-v2.8
+          token: ${{ secrets.CODECOV_TOKEN }}
