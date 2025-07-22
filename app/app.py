@@ -139,9 +139,27 @@ async def lifespan(app: FastAPI):
     service_factory.set_security_manager(security_manager)
     logger.info("Service factory initialized")
 
+    # Initialize automation service
+    from app.services.automation_service import automation_service
+    
+    try:
+        await automation_service.initialize()
+        logger.info("Automation service initialized - scheduled tasks and triggers active")
+    except Exception as e:
+        logger.error(f"Failed to initialize automation service: {e}")
+        logger.warning("Application running without automated tasks")
+
     yield
 
     # Cleanup
+    
+    # Shutdown automation service
+    try:
+        await automation_service.shutdown()
+        logger.info("Automation service shutdown complete")
+    except Exception as e:
+        logger.error(f"Error shutting down automation service: {e}")
+    
     use_mock = os.getenv("USE_MOCK_DATABASE", "false").lower() == "true"
 
     if use_mock:
@@ -268,9 +286,11 @@ app.include_router(analysis_router)
 # Include insights router
 from app.routes.insights import router as insights_router
 from app.routes.batch_routes import router as batch_router
+from app.routes.automation_routes import router as automation_router
 
 app.include_router(insights_router)
 app.include_router(batch_router, dependencies=[Depends(verify_api_key)])
+app.include_router(automation_router, dependencies=[Depends(verify_api_key)])
 
 # Include bulk operations routes
 app.include_router(get_bulk_routes(), dependencies=[Depends(verify_api_key)])
