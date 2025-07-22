@@ -25,7 +25,10 @@
       "Bash(USE_MOCK_DATABASE=true PYTHONPATH=. python -m pytest test_integration_features.py test_knowledge_graph_minimal.py test_reasoning_minimal.py -v)",
       "Bash(USE_MOCK_DATABASE=true PYTHONPATH=. python test_integration_features.py)",
       "Bash(USE_MOCK_DATABASE=true PYTHONPATH=. python -c \"from app.app import app; print(''✅ App imports successfully with advanced-analysis features'')\")",
-      "Bash(USE_MOCK_DATABASE=true PYTHONPATH=. python -c \"from app.app import app; print(''✅ App imports successfully with advanced-analysis features'')\")"
+      "Bash(USE_MOCK_DATABASE=true PYTHONPATH=. python -c \"from app.app import app; print(''✅ App imports successfully with advanced-analysis features'')\")",
+      "Bash(USE_MOCK_DATABASE=true PYTHONPATH=. python -m pytest test_integration_features.py -v)",
+      "Bash(USE_MOCK_DATABASE=true PYTHONPATH=. python -c \"\nimport asyncio\nfrom app.app import app\nfrom app.ingestion.entity_extractor import EntityExtractor\nfrom app.ingestion.topic_classifier import TopicClassifier\nfrom app.ingestion.domain_classifier import DomainClassifier\nfrom app.routes.graph_routes import router as graph_router\nfrom app.routes.analysis_routes import router as analysis_router\n\nprint(''✅ All new modules import successfully'')\nprint(f''✅ Graph routes: {len(graph_router.routes)} endpoints'')\nprint(f''✅ Analysis routes: {len(analysis_router.routes)} endpoints'')\n\")",
+      "Bash(USE_MOCK_DATABASE=true PYTHONPATH=.:*)"
     ],
     "deny": []
   }

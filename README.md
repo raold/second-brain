@@ -1,10 +1,20 @@
-# Second Brain v2.8.0 🧠 - **AI-Powered Reasoning & Graph Intelligence** 🚀
+# Second Brain v2.8.1 🧠 - **AI-Powered Reasoning & Advanced Content Analysis** 🚀
 
-![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg) ![Python](https://img.shields.io/badge/python-3.11+-blue.svg) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg) ![pgvector](https://img.shields.io/badge/pgvector-latest-green.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg) ![D3.js](https://img.shields.io/badge/D3.js-v7-orange.svg) ![Tests](https://img.shields.io/badge/tests-100%20passing-brightgreen.svg) ![Coverage](https://img.shields.io/badge/coverage-75%25-green.svg) ![Build](https://img.shields.io/badge/build-stable-green.svg) ![Status](https://img.shields.io/badge/status-production-green.svg) ![Version](https://img.shields.io/badge/v2.8.0-stable-green.svg)
+![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg) ![Python](https://img.shields.io/badge/python-3.11+-blue.svg) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg) ![pgvector](https://img.shields.io/badge/pgvector-latest-green.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg) ![D3.js](https://img.shields.io/badge/D3.js-v7-orange.svg) ![Tests](https://img.shields.io/badge/tests-100%20passing-brightgreen.svg) ![Coverage](https://img.shields.io/badge/coverage-75%25-green.svg) ![Build](https://img.shields.io/badge/build-stable-green.svg) ![Status](https://img.shields.io/badge/status-production-green.svg) ![Version](https://img.shields.io/badge/v2.8.1-stable-green.svg)
 
-> **Major Release v2.8.0** - AI-powered reasoning with multi-hop intelligence, interactive knowledge graphs, and sophisticated graph visualization
+> **Major Release v2.8.1** - Enhanced with advanced content analysis, BERTopic modeling, NetworkX graphs, and transformer-based NLP capabilities
 
-## 🚀 **v2.8.0 Major Feature Release - "Reasoning"**
+## 🚀 **v2.8.1 Enhanced Release - "Analysis"**
+
+### 🔬 **NEW: Advanced Content Analysis Suite**
+- **BERTopic Modeling** - Transformer-based topic discovery with hierarchical clustering
+- **NetworkX Graph Analysis** - Centrality metrics, community detection, and path finding
+- **Enhanced Structured Extraction** - Form parsing, schema inference, advanced table parsing
+- **Multi-Label Domain Classification** - 15+ domains with ML and transformer support
+- **Transformer Intent Recognition** - Zero-shot classification with BART for intent detection
+- **11 New API Endpoints** - Comprehensive `/graph/*` and `/analysis/*` routes
+
+## 🚀 **v2.8.0 Core Features - "Reasoning"**
 
 ### 🧠 **Revolutionary Reasoning Engine**
 - **Multi-hop Reasoning** - Traverse knowledge connections up to 10 levels deep with intelligent path-finding
@@ -234,6 +244,339 @@ curl -X POST http://localhost:8000/memories \
       "relationships": [{"source": "PostgreSQL", "target": "pgvector", "type": "includes"}]
     }
   }'
+```
+
+### **NEW v2.8.1: Graph API Endpoints (`/graph/*`)**
+
+#### Build Relationship Graph
+```bash
+curl -X POST http://localhost:8000/graph/build \
+  -H "Authorization: Bearer demo-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "memory_ids": ["id1", "id2"],
+    "tags": ["technology", "database"],
+    "min_confidence": 0.5,
+    "max_entities": 100,
+    "enable_clustering": true
+  }'
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "statistics": {
+    "nodes": 45,
+    "edges": 78,
+    "communities": 5,
+    "density": 0.08
+  },
+  "graph": {
+    "nodes": [...],
+    "links": [...]
+  },
+  "layout": {
+    "node_id": [x, y],
+    ...
+  },
+  "metadata": {
+    "num_memories": 10,
+    "num_entities": 45,
+    "num_relationships": 78
+  }
+}
+```
+
+#### Find Relationship Paths
+```bash
+curl -X POST http://localhost:8000/graph/paths \
+  -H "Authorization: Bearer demo-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source_entity_id": "entity-uuid-1",
+    "target_entity_id": "entity-uuid-2",
+    "max_paths": 5,
+    "max_length": 5
+  }'
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "paths": [
+    {
+      "path": ["entity1", "entity2", "entity3"],
+      "length": 2,
+      "confidence": 0.85
+    }
+  ],
+  "metadata": {
+    "source": "entity-uuid-1",
+    "target": "entity-uuid-2",
+    "num_paths_found": 3
+  }
+}
+```
+
+#### Get Entity Neighborhood
+```bash
+curl -X POST http://localhost:8000/graph/neighborhood \
+  -H "Authorization: Bearer demo-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "entity_id": "entity-uuid",
+    "depth": 2,
+    "min_confidence": 0.5
+  }'
+```
+
+#### Get Central Entities
+```bash
+curl -X GET "http://localhost:8000/graph/centrality?top_n=10" \
+  -H "Authorization: Bearer demo-token"
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "centrality_metrics": {
+    "degree_centrality": [
+      {"entity": "Python", "score": 0.89},
+      {"entity": "Machine Learning", "score": 0.76}
+    ],
+    "betweenness_centrality": [...],
+    "eigenvector_centrality": [...]
+  },
+  "metadata": {
+    "total_entities": 150,
+    "total_relationships": 320
+  }
+}
+```
+
+#### Detect Communities
+```bash
+curl -X GET "http://localhost:8000/graph/communities?algorithm=spectral" \
+  -H "Authorization: Bearer demo-token"
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "communities": [
+    {
+      "id": 0,
+      "entities": ["Python", "Django", "Flask"],
+      "size": 15,
+      "density": 0.72
+    }
+  ],
+  "metadata": {
+    "algorithm": "spectral",
+    "total_entities": 150,
+    "total_relationships": 320
+  }
+}
+```
+
+#### Export Graph
+```bash
+curl -X GET "http://localhost:8000/graph/export/json" \
+  -H "Authorization: Bearer demo-token"
+```
+
+**Supported formats:** `json`, `graphml`, `gexf`
+
+### **NEW v2.8.1: Analysis API Endpoints (`/analysis/*`)**
+
+#### Analyze Content
+```bash
+curl -X POST http://localhost:8000/analysis/analyze \
+  -H "Authorization: Bearer demo-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "Machine learning with Python and TensorFlow for neural networks",
+    "include_topics": true,
+    "include_structure": true,
+    "include_domain": true,
+    "advanced_features": false
+  }'
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "analysis": {
+    "topics": {
+      "extracted_topics": [
+        {
+          "name": "Machine Learning",
+          "keywords": ["learning", "neural", "networks"],
+          "confidence": 0.92,
+          "relevance": 0.88,
+          "hierarchy": ["Technology", "AI", "Machine Learning"]
+        }
+      ],
+      "statistics": {
+        "total_topics": 3,
+        "avg_confidence": 0.85
+      }
+    },
+    "structured_data": {
+      "key_value_pairs": {},
+      "lists": [],
+      "tables": [],
+      "code_snippets": [],
+      "metadata": {},
+      "statistics": {
+        "extraction_time_ms": 45
+      }
+    },
+    "domains": {
+      "domains": ["Technology", "Computer Science"],
+      "confidence_scores": {
+        "Technology": 0.95,
+        "Computer Science": 0.88
+      },
+      "hierarchy": {
+        "Technology": ["Computer Science", "AI"]
+      }
+    }
+  }
+}
+```
+
+#### Batch Analysis
+```bash
+curl -X POST http://localhost:8000/analysis/batch \
+  -H "Authorization: Bearer demo-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "memory_ids": ["id1", "id2", "id3"],
+    "tags": ["python", "ai"],
+    "limit": 50,
+    "include_topics": true,
+    "include_structure": true,
+    "include_domain": true
+  }'
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "analyzed_memories": [
+    {
+      "memory_id": "id1",
+      "title": "Python ML Basics",
+      "topics": ["Machine Learning", "Python", "Data Science"],
+      "structured_summary": {
+        "kv_pairs": 5,
+        "lists": 2,
+        "tables": 0,
+        "code_snippets": 3
+      },
+      "domains": ["Technology", "Education"]
+    }
+  ],
+  "statistics": {
+    "total_memories": 3,
+    "memories_analyzed": 3,
+    "topic_statistics": {
+      "unique_topics": 12,
+      "topic_distribution": {...}
+    },
+    "domain_statistics": {
+      "unique_domains": 5,
+      "cross_domain_percentage": 33.3
+    }
+  }
+}
+```
+
+#### Classify Domain
+```bash
+curl -X POST http://localhost:8000/analysis/classify-domain \
+  -H "Authorization: Bearer demo-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "Quantum computing algorithms for cryptography",
+    "multi_label": true,
+    "include_hierarchy": true,
+    "confidence_threshold": 0.3
+  }'
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "classification": {
+    "domains": ["Technology", "Physics", "Mathematics"],
+    "confidence_scores": {
+      "Technology": 0.92,
+      "Physics": 0.88,
+      "Mathematics": 0.75
+    },
+    "hierarchy": {
+      "Technology": ["Computer Science", "Quantum Computing"],
+      "Physics": ["Quantum Mechanics"],
+      "Mathematics": ["Cryptography", "Algorithms"]
+    }
+  }
+}
+```
+
+#### Get Trending Topics
+```bash
+curl -X GET "http://localhost:8000/analysis/topics/trending?days=7&limit=10" \
+  -H "Authorization: Bearer demo-token"
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "period_days": 7,
+  "memories_analyzed": 45,
+  "trending_topics": [
+    {
+      "topic": "Machine Learning",
+      "occurrences": 23,
+      "keywords": ["AI", "neural", "deep", "learning", "model"],
+      "trend_score": 0.51
+    }
+  ]
+}
+```
+
+#### Get Domain Distribution
+```bash
+curl -X GET http://localhost:8000/analysis/domains/distribution \
+  -H "Authorization: Bearer demo-token"
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "total_memories": 200,
+  "domain_distribution": [
+    {
+      "domain": "Technology",
+      "count": 85,
+      "percentage": 42.5,
+      "avg_confidence": 0.88
+    }
+  ],
+  "cross_domain_percentage": 28.5,
+  "unique_domains": 12
+}
 ```
 
 ## 🗄️ **Enhanced Database Schema**

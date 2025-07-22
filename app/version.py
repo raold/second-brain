@@ -8,8 +8,8 @@ from datetime import datetime
 from typing import Any
 
 # Core version information
-__version__ = "2.8.0"
-__version_info__ = (2, 8, 0)
+__version__ = "2.8.1"
+__version_info__ = (2, 8, 1)
 __build__ = "stable"
 __release_date__ = "2025-01-22"
 
@@ -288,6 +288,20 @@ def get_cognitive_roadmap() -> dict[str, dict[str, Any]]:
                 "natural_language_queries",
                 "entity_relationship_extraction",
                 "interactive_graph_exploration",
+            ],
+            "status": "completed",
+            "release_date": "2025-01-22",
+        },
+        "v2.8.1": {
+            "codename": "Analysis",
+            "focus": "Advanced Content Analysis & NLP",
+            "features": [
+                "advanced_topic_modeling_bertopic",
+                "relationship_graph_networkx",
+                "enhanced_structured_extraction",
+                "multi_label_domain_classification",
+                "transformer_based_intent_recognition",
+                "graph_analysis_api_endpoints",
             ],
             "status": "current",
             "release_date": "2025-01-22",
