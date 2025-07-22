@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 
 # Core version information
-__version__ = "2.6.0-reasoning"
+__version__ = "2.6.1-knowledge-graph"
 __version_info__ = (2, 6, 0)
 __build__ = "testing"
 __release_date__ = "2025-08-01"
