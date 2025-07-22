@@ -78,7 +78,7 @@ async def multi_hop_reasoning(
 ):
     """
     Execute a multi-hop reasoning query to find connections and insights across memories
-    
+
     This endpoint enables complex questions like:
     - "How did my understanding of Python evolve over time?"
     - "What caused me to change careers?"
@@ -171,7 +171,7 @@ async def trace_path(
 ):
     """
     Trace the reasoning path between two specific memories
-    
+
     Useful for understanding how two seemingly unrelated memories connect
     """
     try:
@@ -218,7 +218,7 @@ async def find_causal_chains(
 ):
     """
     Find causal chains leading to or resulting from a specific event/memory
-    
+
     Helps answer questions like:
     - "What led to this decision?"
     - "What were the consequences of this action?"

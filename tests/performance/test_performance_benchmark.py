@@ -467,7 +467,7 @@ async def test_benchmark_metrics_structure():
 
     assert result.test_name == "Test"
     assert result.avg_response_time == 0.1
-    assert result.passed == True
+    assert result.passed
 
 
 @pytest.mark.asyncio

@@ -76,13 +76,6 @@ def test_integrated_features():
     print("\n🎨 Testing Visualization Integration...")
     try:
         # Test D3.js component structure
-        viz_config = {
-            "width": 800,
-            "height": 600,
-            "nodeRadius": 8,
-            "linkDistance": 100,
-            "chargeStrength": -300
-        }
 
         # Test color mapping
         color_map = {

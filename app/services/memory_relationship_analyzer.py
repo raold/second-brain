@@ -348,7 +348,7 @@ class MemoryRelationshipAnalyzer:
             return None
 
         try:
-            if isinstance(embedding, (list, tuple)):
+            if isinstance(embedding, list | tuple):
                 return [float(x) for x in embedding]
             elif isinstance(embedding, str):
                 # Try to parse as JSON

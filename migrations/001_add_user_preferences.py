@@ -38,39 +38,39 @@ class AddUserPreferencesTable(DatabaseSchemaMigration):
             CREATE TABLE user_preferences (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 user_id UUID NOT NULL,
-                
+
                 -- Dashboard preferences
-                theme VARCHAR(50) DEFAULT 'gruvbox_light' 
+                theme VARCHAR(50) DEFAULT 'gruvbox_light'
                     CHECK (theme IN ('gruvbox_light', 'gruvbox_dark', 'dracula', 'solarized_dark')),
                 dashboard_layout JSONB DEFAULT '{"layout": "default"}',
-                
+
                 -- Notification preferences
                 notifications_enabled BOOLEAN DEFAULT true,
                 email_notifications BOOLEAN DEFAULT false,
-                
+
                 -- Memory preferences
                 default_memory_type VARCHAR(20) DEFAULT 'semantic'
                     CHECK (default_memory_type IN ('semantic', 'episodic', 'procedural')),
                 auto_classify_memories BOOLEAN DEFAULT true,
-                
+
                 -- Search preferences
                 search_result_limit INTEGER DEFAULT 10 CHECK (search_result_limit BETWEEN 1 AND 100),
                 importance_threshold DECIMAL(3,2) DEFAULT 0.5 CHECK (importance_threshold BETWEEN 0 AND 1),
-                
+
                 -- Timestamps
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                
+
                 -- Constraints
                 UNIQUE(user_id)
             )
             """,
             """
-            CREATE INDEX idx_user_preferences_user_id 
+            CREATE INDEX idx_user_preferences_user_id
             ON user_preferences(user_id)
             """,
             """
-            CREATE INDEX idx_user_preferences_theme 
+            CREATE INDEX idx_user_preferences_theme
             ON user_preferences(theme)
             """,
             """
@@ -131,7 +131,7 @@ class AddUserPreferencesTable(DatabaseSchemaMigration):
                 """
                 SELECT EXISTS(
                     SELECT 1 FROM information_schema.columns
-                    WHERE table_name = 'user_preferences' 
+                    WHERE table_name = 'user_preferences'
                     AND column_name = $1
                 )
             """,
@@ -143,7 +143,7 @@ class AddUserPreferencesTable(DatabaseSchemaMigration):
 
         # Check indexes exist
         index_exists = await conn.fetchval("""
-            SELECT COUNT(*) FROM pg_indexes 
+            SELECT COUNT(*) FROM pg_indexes
             WHERE tablename = 'user_preferences'
         """)
 

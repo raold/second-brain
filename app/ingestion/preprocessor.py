@@ -198,7 +198,6 @@ class ContentPreprocessor:
         # Replace special quotes and dashes
         replacements = {
             '"': '"',
-            '"': '"',
             ''': "'",
             ''': "'",
             '–': '-',

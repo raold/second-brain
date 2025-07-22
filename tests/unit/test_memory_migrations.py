@@ -361,7 +361,7 @@ class TestMemoryDataMigrationIntegration:
         )
 
         with patch('app.bulk_memory_operations.BulkOperationConfig') as mock_config_class:
-            bulk_config = migration._create_bulk_config(strict_config)
+            migration._create_bulk_config(strict_config)
 
             # Verify the call was made with correct parameters
             assert mock_config_class.called
@@ -389,7 +389,7 @@ class TestMemoryDataMigrationIntegration:
         )
 
         with patch('app.bulk_memory_operations.BulkOperationConfig') as mock_config_class:
-            bulk_config = migration._create_bulk_config(minimal_config)
+            migration._create_bulk_config(minimal_config)
 
             # Verify minimal validation and single worker
             call_kwargs = mock_config_class.call_args[1]

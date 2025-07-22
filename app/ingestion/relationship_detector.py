@@ -136,7 +136,7 @@ class RelationshipDetector:
 
             # Analyze dependencies between entities
             for i, (entity1, span1) in enumerate(entity_spans):
-                for j, (entity2, span2) in enumerate(entity_spans[i+1:], i+1):
+                for _j, (entity2, span2) in enumerate(entity_spans[i+1:], i+1):
                     # Find dependency path between entities
                     path = self._find_dependency_path(span1.root, span2.root)
 
@@ -172,7 +172,7 @@ class RelationshipDetector:
         relationships = []
 
         # Create entity position map
-        entity_positions = self._create_entity_position_map(entities)
+        self._create_entity_position_map(entities)
 
         for pattern_type, patterns in self.relationship_patterns.items():
             for pattern_info in patterns:
@@ -263,7 +263,7 @@ class RelationshipDetector:
             entity_groups[key].append(entity)
 
         # Create relationships within groups
-        for (normalized, entity_type), group in entity_groups.items():
+        for (normalized, _entity_type), group in entity_groups.items():
             if len(group) > 1:
                 # Sort by position
                 group.sort(key=lambda e: e.start_pos)
@@ -622,11 +622,11 @@ class RelationshipDetector:
     def detect_transformer_relationships(self, doc: Any, entities: list[Entity]) -> list[Relationship]:
         """
         Use transformer embeddings to detect semantic relationships
-        
+
         Args:
             doc: SpaCy document with transformer embeddings
             entities: List of entities
-            
+
         Returns:
             List of detected relationships
         """
@@ -639,7 +639,7 @@ class RelationshipDetector:
         entity_spans = self._create_entity_spans(doc, entities)
 
         for i, (entity1, span1) in enumerate(entity_spans):
-            for j, (entity2, span2) in enumerate(entity_spans[i+1:], i+1):
+            for _j, (entity2, span2) in enumerate(entity_spans[i+1:], i+1):
                 # Get transformer embeddings for entities
                 if hasattr(span1, "_.trf_data") and hasattr(span2, "_.trf_data"):
                     # Calculate semantic similarity using transformer embeddings

@@ -36,7 +36,7 @@ class DomainClassifier:
                  confidence_threshold: float = 0.3):
         """
         Initialize domain classifier
-        
+
         Args:
             enable_ml_classification: Use ML models for classification
             enable_rule_based: Use rule-based classification
@@ -72,12 +72,12 @@ class DomainClassifier:
                        include_hierarchy: bool = True) -> dict[str, Any]:
         """
         Classify text into one or more domains
-        
+
         Args:
             text: Input text
             multi_label: Allow multiple domain labels
             include_hierarchy: Include hierarchical domain structure
-            
+
         Returns:
             Domain classification results
         """
@@ -344,7 +344,7 @@ class DomainClassifier:
     def train_ml_models(self, training_data: list[tuple[str, list[str]]]):
         """
         Train ML models with labeled data
-        
+
         Args:
             training_data: List of (text, domains) tuples
         """

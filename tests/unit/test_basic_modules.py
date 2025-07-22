@@ -86,7 +86,7 @@ class TestMainApplication:
             module_attrs = dir(main)
 
             # Check for common app patterns
-            has_app_attrs = any(attr in module_attrs for attr in ['app', 'application', 'create_app'])
+            any(attr in module_attrs for attr in ['app', 'application', 'create_app'])
 
             # Basic verification
             assert len(module_attrs) > 0
@@ -113,7 +113,7 @@ class TestDatabaseModule:
             module_attrs = dir(db)
 
             # Look for database-related classes
-            db_classes = [attr for attr in module_attrs if 'Database' in attr or 'Connection' in attr]
+            [attr for attr in module_attrs if 'Database' in attr or 'Connection' in attr]
 
             # Basic verification
             assert len(module_attrs) > 0
@@ -139,7 +139,7 @@ class TestMemoryRelationships:
             module_attrs = dir(mr)
 
             # Look for relationship-related classes
-            relationship_classes = [attr for attr in module_attrs if 'Relationship' in attr or 'Memory' in attr]
+            [attr for attr in module_attrs if 'Relationship' in attr or 'Memory' in attr]
 
             assert len(module_attrs) > 0
 
@@ -164,7 +164,7 @@ class TestMemoryVisualization:
             module_attrs = dir(mv)
 
             # Look for visualization classes
-            viz_classes = [attr for attr in module_attrs if 'Visual' in attr or 'Chart' in attr or 'Graph' in attr]
+            [attr for attr in module_attrs if 'Visual' in attr or 'Chart' in attr or 'Graph' in attr]
 
             assert len(module_attrs) > 0
 

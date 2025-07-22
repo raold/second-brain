@@ -81,20 +81,20 @@ async def test_knowledge_graph_basic():
     # Test input validation
     try:
         await builder.build_graph_from_memories([])
-        assert False, "Should have failed with empty memory list"
+        raise AssertionError("Should have failed with empty memory list")
     except ValueError as e:
         print(f"✅ Input validation works: {e}")
 
     try:
         await builder.build_graph_from_memories(["mem1"] * 1001)
-        assert False, "Should have failed with too many memories"
+        raise AssertionError("Should have failed with too many memories")
     except ValueError as e:
         print(f"✅ Memory limit validation works: {e}")
 
     # Test confidence validation
     try:
         await builder.build_graph_from_memories(["mem1"], min_confidence=1.5)
-        assert False, "Should have failed with invalid confidence"
+        raise AssertionError("Should have failed with invalid confidence")
     except ValueError as e:
         print(f"✅ Confidence validation works: {e}")
 
@@ -105,7 +105,7 @@ async def test_knowledge_graph_basic():
 async def main():
     """Run the test"""
     try:
-        success = await test_knowledge_graph_basic()
+        await test_knowledge_graph_basic()
         print("\n✅ Knowledge Graph Builder Feature Test: PASSED")
         return True
     except Exception as e:

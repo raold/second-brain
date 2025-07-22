@@ -67,7 +67,7 @@ async def build_knowledge_graph(
 ):
     """
     Build a knowledge graph from specified memories
-    
+
     Extracts entities and relationships to create a visual graph representation
     """
     try:
@@ -161,7 +161,7 @@ async def get_entity_graph(
 ):
     """
     Get a subgraph centered on a specific entity
-    
+
     Shows all relationships and connected entities up to the specified depth
     """
     try:
@@ -195,8 +195,8 @@ async def search_entities(
         async with db.pool.acquire() as conn:
             # Build query
             query = """
-                SELECT 
-                    id, name, entity_type, description, 
+                SELECT
+                    id, name, entity_type, description,
                     occurrence_count, importance_score, metadata
                 FROM entities
                 WHERE 1=1
@@ -258,7 +258,7 @@ async def get_graph_statistics(
         async with db.pool.acquire() as conn:
             # Get entity stats
             entity_stats = await conn.fetchrow("""
-                SELECT 
+                SELECT
                     COUNT(*) as total_entities,
                     COUNT(DISTINCT entity_type) as entity_types,
                     AVG(occurrence_count) as avg_occurrences,
@@ -269,7 +269,7 @@ async def get_graph_statistics(
 
             # Get relationship stats
             rel_stats = await conn.fetchrow("""
-                SELECT 
+                SELECT
                     COUNT(*) as total_relationships,
                     COUNT(DISTINCT relationship_type) as relationship_types,
                     AVG(weight) as avg_weight,
@@ -279,7 +279,7 @@ async def get_graph_statistics(
 
             # Get memory relationship stats
             mem_rel_stats = await conn.fetchrow("""
-                SELECT 
+                SELECT
                     COUNT(*) as total_memory_relationships,
                     COUNT(DISTINCT relationship_type) as memory_relationship_types
                 FROM memory_relationships
@@ -350,7 +350,7 @@ async def analyze_graph_patterns(
 ):
     """
     Analyze patterns in the knowledge graph
-    
+
     Identifies clusters, important nodes, and relationship patterns
     """
     try:
@@ -445,7 +445,7 @@ async def natural_language_query(
 ):
     """
     Process natural language queries about the knowledge graph
-    
+
     Examples:
     - "Show connections between Python and machine learning"
     - "What is related to neural networks?"

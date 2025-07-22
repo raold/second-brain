@@ -461,11 +461,11 @@ class EntityExtractor:
     def extract_entities_with_context(self, text: str, context_window: int = 50) -> list[dict[str, Any]]:
         """
         Extract entities with surrounding context for better understanding
-        
+
         Args:
             text: Input text
             context_window: Number of characters to include before/after entity
-            
+
         Returns:
             List of entities with context
         """

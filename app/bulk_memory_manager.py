@@ -167,7 +167,7 @@ class BulkMemoryManager:
 
             result = ExportResult(
                 total_exported=len(memories),
-                file_size_bytes=len(export_data) if isinstance(export_data, (str, bytes)) else 0,
+                file_size_bytes=len(export_data) if isinstance(export_data, str | bytes) else 0,
                 processing_time=(datetime.now() - start_time).total_seconds(),
                 export_format=format_type.value,
                 file_content=export_data if isinstance(export_data, bytes) else export_data.encode("utf-8"),

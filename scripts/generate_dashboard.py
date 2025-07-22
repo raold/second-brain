@@ -255,10 +255,10 @@ def generate_roadmap_html(data):
 
     html += """
             </div>
-            
+
             <h3>� Paradigm Shifts</h3>"""
 
-    for shift_key, shift_data in data['roadmap']['paradigm_shifts'].items():
+    for _shift_key, shift_data in data['roadmap']['paradigm_shifts'].items():
         html += f"""
             <div class="paradigm-item">
                 <div class="paradigm-header">
@@ -277,7 +277,7 @@ def generate_roadmap_html(data):
             </div>"""
 
     html += """
-            
+
             <h3>�🔬 Research Initiatives</h3>"""
 
     for initiative in data['roadmap']['research_initiatives']:
@@ -541,7 +541,7 @@ def generate_dashboard_html(data):
             <h1>🧠 Second Brain v{data['version']['current_version']}</h1>
             <div class="subtitle">Quality Excellence Dashboard - {data['meta']['generated_at'][:19]}</div>
         </div>
-        
+
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value">{data['build_metrics']['tests']['passing']}</div>
@@ -560,7 +560,7 @@ def generate_dashboard_html(data):
                 <div class="stat-label">Milestone Progress</div>
             </div>
         </div>
-        
+
         <div class="section">
             <h2>📊 Timeline & Milestones</h2>
             <div class="timeline-item">
@@ -574,7 +574,7 @@ def generate_dashboard_html(data):
                 </div>
             </div>
         </div>
-        
+
         <div class="section">
             <h2>🔗 API Status</h2>
             <div class="api-status">
@@ -584,7 +584,7 @@ def generate_dashboard_html(data):
                 <div class="endpoint-status"><strong>/dashboard</strong><br>Status: {data['api_status']['endpoints']['dashboard']['status']}<br>Response: {data['api_status']['endpoints']['dashboard']['response_time_ms']}ms</div>
             </div>
         </div>
-        
+
         <div class="section">
             <h2>⚙️ Woodchipper Processing</h2>
             <div class="stats-grid">
@@ -606,25 +606,25 @@ def generate_dashboard_html(data):
                 </div>
             </div>
         </div>
-        
+
         <div class="section">
             <h2>📚 Documentation Status</h2>
             <div>API Documentation: {data['documentation']['completeness']['api_documentation']}%</div>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {data['documentation']['completeness']['api_documentation']}%"></div>
             </div>
-            
+
             <div>User Guides: {data['documentation']['completeness']['user_guides']}%</div>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {data['documentation']['completeness']['user_guides']}%"></div>
             </div>
-            
+
             <div>Developer Docs: {data['documentation']['completeness']['developer_docs']}%</div>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {data['documentation']['completeness']['developer_docs']}%"></div>
             </div>
         </div>
-        
+
         <div class="section">
             <h2>🗺️ Roadmap Progress</h2>
             <div><strong>Current Phase:</strong> {data['roadmap']['current_phase']}</div>
@@ -632,26 +632,26 @@ def generate_dashboard_html(data):
                 <div class="progress-fill" style="width: {data['roadmap']['phase_progress_percent']}%"></div>
             </div>
             <small>{data['roadmap']['phase_progress_percent']}% complete</small>
-            
+
             <h3>In Progress</h3>
             <div class="timeline-item"><div>• {data['roadmap']['in_progress_features'][0]}</div></div>
             <div class="timeline-item"><div>• {data['roadmap']['in_progress_features'][1]}</div></div>
             <div class="timeline-item"><div>• {data['roadmap']['in_progress_features'][2]}</div></div>
-            
+
             {generate_roadmap_html(data)}
         </div>
-        
+
         <div class="section">
             <h2>📝 Changelog</h2>
             <div><strong>Latest:</strong> {data['changelog']['latest_version']} - {data['changelog']['release_date']}</div>
             <div><strong>Type:</strong> {data['changelog']['release_type'].replace('_', ' ').title()}</div>
-            
+
             <h3>Major Changes</h3>
             <div class="timeline-item"><div>• {data['changelog']['major_changes'][0]}</div></div>
             <div class="timeline-item"><div>• {data['changelog']['major_changes'][1]}</div></div>
             <div class="timeline-item"><div>• {data['changelog']['major_changes'][2]}</div></div>
         </div>
-        
+
         <div class="section">
             <h2>📄 README.md</h2>
             <div>Status: Updated with build statistics and quality metrics</div>

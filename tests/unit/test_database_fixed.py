@@ -228,7 +228,7 @@ async def test_database_error_handling():
         try:
             content = "Test memory with invalid type"
             metadata = {"type": "invalid_type", "test": True}
-            memory_id = await db.store_memory(content, metadata)
+            await db.store_memory(content, metadata)
             print("✅ Invalid memory type handled gracefully")
         except Exception as e:
             print(f"✅ Invalid memory type properly rejected: {e}")

@@ -226,9 +226,9 @@ class VersionManager:
 
 ## 📋 Release Overview
 
-**Version**: v{version} ({info["focus"]})  
-**Release Date**: {info["release_date"]}  
-**Focus**: {info["title"]}  
+**Version**: v{version} ({info["focus"]})
+**Release Date**: {info["release_date"]}
+**Focus**: {info["title"]}
 **Status**: {info["status"].title()}
 
 ## 🎯 Key Improvements
@@ -259,8 +259,8 @@ docker-compose up -d --build
 
 ## 🔗 Links
 
-**Repository**: [github.com/raold/second-brain](https://github.com/raold/second-brain)  
-**Documentation**: [Project Documentation](../../README.md)  
+**Repository**: [github.com/raold/second-brain](https://github.com/raold/second-brain)
+**Documentation**: [Project Documentation](../../README.md)
 **Issues**: [GitHub Issues](https://github.com/raold/second-brain/issues)
 
 ---

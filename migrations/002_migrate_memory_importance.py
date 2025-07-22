@@ -34,17 +34,17 @@ class RecalculateMemoryImportance(MemoryDataMigration):
         """Get all memories that need importance recalculation."""
         async with self.pool.acquire() as conn:
             rows = await conn.fetch("""
-                SELECT 
-                    id, 
-                    content, 
+                SELECT
+                    id,
+                    content,
                     metadata,
                     memory_type,
                     importance_score,
                     created_at,
                     last_accessed
                 FROM memories
-                WHERE 
-                    importance_score IS NULL 
+                WHERE
+                    importance_score IS NULL
                     OR importance_score = 0.5  -- Default value needs recalculation
                     OR metadata->>'importance_calculated_at' IS NULL
                 ORDER BY created_at DESC
@@ -235,7 +235,7 @@ class RecalculateMemoryImportance(MemoryDataMigration):
             has_column = await conn.fetchval("""
                 SELECT EXISTS(
                     SELECT 1 FROM information_schema.columns
-                    WHERE table_name = 'memories' 
+                    WHERE table_name = 'memories'
                     AND column_name = 'importance_score'
                 )
             """)
@@ -252,13 +252,13 @@ class RecalculateMemoryImportance(MemoryDataMigration):
         async with self.pool.acquire() as conn:
             # Check that no memories have null importance scores
             null_count = await conn.fetchval("""
-                SELECT COUNT(*) FROM memories 
+                SELECT COUNT(*) FROM memories
                 WHERE importance_score IS NULL
             """)
 
             # Check that importance calculation metadata was added
             calculated_count = await conn.fetchval("""
-                SELECT COUNT(*) FROM memories 
+                SELECT COUNT(*) FROM memories
                 WHERE metadata->>'importance_calculation'->>'migration' = '002_recalculate_importance'
             """)
 

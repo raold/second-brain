@@ -360,7 +360,7 @@ class MemoryVisualizationEngine:
         clusters = {}
         current_label = 0
 
-        for i, memory in enumerate(memories):
+        for _i, memory in enumerate(memories):
             assigned = False
             memory_topics = set(self._extract_topics(memory))
             memory_type = memory["memory_type"]
@@ -457,7 +457,7 @@ class MemoryVisualizationEngine:
         for metadata_type in ["semantic_metadata", "episodic_metadata", "procedural_metadata"]:
             metadata = memory.get(metadata_type, {})
             if isinstance(metadata, dict):
-                for key, value in metadata.items():
+                for _key, value in metadata.items():
                     if isinstance(value, str) and len(value) > 2:
                         topics.append(value.lower())
                     elif isinstance(value, list):

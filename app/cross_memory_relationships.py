@@ -649,7 +649,7 @@ class CrossMemoryRelationshipEngine:
         clusters = []
         visited = set()
 
-        for memory_id, memory_node in self.memory_nodes.items():
+        for memory_id, _memory_node in self.memory_nodes.items():
             if memory_id in visited:
                 continue
 

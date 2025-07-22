@@ -134,11 +134,11 @@ async def test_advanced_operations():
 
         # Initialize advanced operations
         print("  ✓ Initializing advanced operations...")
-        advanced_ops = await get_advanced_bulk_operations()
+        await get_advanced_bulk_operations()
 
         # Test bulk update
         print("  ✓ Testing bulk update...")
-        update_operation = BulkUpdateOperation(
+        BulkUpdateOperation(
             filter_criteria={"memory_type": "semantic"}, update_fields={"importance_score": 0.8}
         )
 
@@ -147,7 +147,7 @@ async def test_advanced_operations():
 
         # Test export
         print("  ✓ Testing export...")
-        export_config = ExportConfig(
+        ExportConfig(
             format=ExportFormat.JSON, include_embeddings=False, include_metadata=True, compress=True
         )
 
@@ -156,8 +156,8 @@ async def test_advanced_operations():
 
         # Test import
         print("  ✓ Testing import...")
-        import_data = generate_test_memories(10)
-        import_config = ImportConfig(
+        generate_test_memories(10)
+        ImportConfig(
             format=ExportFormat.JSON, strategy=ImportStrategy.SKIP, validation_level=ValidationLevel.STANDARD
         )
 
@@ -400,11 +400,10 @@ async def test_error_handling():
         print("  ✓ Testing edge cases...")
 
         # Test empty batch
-        empty_items = []
         print("    - Empty batch handling: ✓")
 
         # Test invalid data
-        invalid_item = BulkMemoryItem(
+        BulkMemoryItem(
             content=None,  # Invalid content
             memory_type="invalid",
             importance_score=-1,
@@ -413,7 +412,7 @@ async def test_error_handling():
 
         # Test large content
         large_content = "x" * 100000  # 100KB content
-        large_item = BulkMemoryItem(content=large_content, memory_type="semantic", importance_score=0.5)
+        BulkMemoryItem(content=large_content, memory_type="semantic", importance_score=0.5)
         print("    - Large content handling: ✓")
 
         # Test concurrent operations (simulated)

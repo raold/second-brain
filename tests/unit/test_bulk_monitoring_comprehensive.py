@@ -499,7 +499,7 @@ class TestIntegrationScenarios:
 
         # Simulate high-volume metric collection
         metrics_count = 5000
-        start_time = datetime.now()
+        datetime.now()
 
         for i in range(metrics_count):
             await collector.record_metric(

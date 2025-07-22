@@ -37,18 +37,18 @@ async def demo_importance_scoring():
             "name": "Technical Documentation",
             "content": """
             # Database Performance Optimization Guide
-            
+
             ## Indexing Strategies
             ```sql
-            CREATE INDEX CONCURRENTLY idx_memories_composite 
+            CREATE INDEX CONCURRENTLY idx_memories_composite
             ON memories(importance_score DESC, last_accessed DESC);
             ```
-            
+
             Key considerations:
             - Use partial indexes for filtered queries
             - Monitor index usage with pg_stat_user_indexes
             - Consider covering indexes for read-heavy workloads
-            
+
             ## Connection Pooling
             Configure pgbouncer for optimal connection management.
             """,
@@ -59,12 +59,12 @@ async def demo_importance_scoring():
             "name": "Meeting Notes",
             "content": """
             Team standup meeting - 2024-01-15
-            
+
             Discussed:
             - Implementation of importance scoring algorithm
             - Database schema updates needed
             - Timeline for testing and deployment
-            
+
             Action items:
             - John: Complete schema migration
             - Sarah: Test importance calculations

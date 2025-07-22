@@ -562,12 +562,12 @@ class TopicClassifier:
                                **kwargs) -> list[Topic]:
         """
         Extract topics using advanced transformer-based models
-        
+
         Args:
             texts: Input text(s)
             use_hierarchy: Include hierarchical clustering
             **kwargs: Additional arguments for advanced modeling
-            
+
         Returns:
             List of advanced topics
         """

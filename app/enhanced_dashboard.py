@@ -128,7 +128,7 @@ class EnhancedDashboardData:
 
     def _get_timeline_data(self) -> dict[str, Any]:
         """Get project timeline and milestone data."""
-        now = datetime.now()
+        datetime.now()
 
         return {
             "current_milestone": {
@@ -200,7 +200,7 @@ class EnhancedDashboardData:
 
     def _get_documentation_status(self) -> dict[str, Any]:
         """Get documentation completeness and status."""
-        docs_path = self.project_root / "docs"
+        self.project_root / "docs"
 
         return {
             "completeness": {

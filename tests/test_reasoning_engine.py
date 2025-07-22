@@ -33,15 +33,15 @@ class TestReasoningEngine:
         assert result.text == query
         assert result.max_hops == 3
         assert result.reasoning_type == ReasoningType.CAUSAL
-        assert result.include_temporal == False
-        assert result.include_semantic == True
+        assert not result.include_temporal
+        assert result.include_semantic
 
         # Test temporal query detection
         query2 = "What happened before this event?"
         result2 = await reasoning_engine._parse_query(query2, max_hops=3, reasoning_type=None)
 
         assert result2.reasoning_type == ReasoningType.TEMPORAL
-        assert result2.include_temporal == True
+        assert result2.include_temporal
 
     @pytest.mark.asyncio
     async def test_detect_reasoning_type(self, reasoning_engine):

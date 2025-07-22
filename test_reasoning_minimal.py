@@ -48,13 +48,13 @@ async def test_reasoning_basic():
     # Test input validation
     try:
         await engine.multi_hop_query("", max_hops=3)
-        assert False, "Should have failed with empty query"
+        raise AssertionError("Should have failed with empty query")
     except ValueError:
         print("✅ Input validation works")
 
     try:
         await engine.multi_hop_query("test", max_hops=20)
-        assert False, "Should have failed with too many hops"
+        raise AssertionError("Should have failed with too many hops")
     except ValueError:
         print("✅ Hop limit validation works")
 
@@ -65,7 +65,7 @@ async def test_reasoning_basic():
 async def main():
     """Run the test"""
     try:
-        success = await test_reasoning_basic()
+        await test_reasoning_basic()
         print("\n✅ Reasoning Engine Feature Test: PASSED")
         return True
     except Exception as e:

@@ -91,11 +91,10 @@ async def run_diagnostics(db=Depends(get_db_instance)):
         diagnostics = await health_service.run_diagnostics()
 
         # Return appropriate status code based on overall status
-        status_code = 200
         if diagnostics["overall_status"] == "degraded":
-            status_code = 207  # Multi-Status
+            pass  # Multi-Status
         elif diagnostics["overall_status"] == "critical":
-            status_code = 503  # Service Unavailable
+            pass  # Service Unavailable
 
         return diagnostics
 

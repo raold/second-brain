@@ -422,7 +422,7 @@ async def download_export(operation_id: str, api_key: str = Depends(verify_api_k
     try:
         # In a real implementation, would retrieve file path from operation result
         # and return the actual file
-        export_path = f"exports/memory_export_{operation_id[:8]}.json"
+        f"exports/memory_export_{operation_id[:8]}.json"
 
         # Check if file exists and return it
         # For now, return a mock response

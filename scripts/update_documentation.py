@@ -102,7 +102,7 @@ class DocumentationUpdater:
         "focus": "Memory Type Architecture",
         "features": [
             "semantic_memory",
-            "episodic_memory", 
+            "episodic_memory",
             "procedural_memory",
             "contextual_retrieval",
             "memory_classification",
@@ -133,7 +133,7 @@ The **Cognitive Memory Type Separation** system transforms Second Brain from sim
 ### **Added**
 - 🧠 **Memory Type Classification**: Three cognitive memory types
   - **Semantic Memory**: Facts, concepts, and general knowledge
-  - **Episodic Memory**: Time-bound experiences and contextual events  
+  - **Episodic Memory**: Time-bound experiences and contextual events
   - **Procedural Memory**: Process knowledge, workflows, and instructions
 - 🤖 **Intelligent Classification Engine**: Automatic memory type detection
   - 30+ regex patterns for content analysis

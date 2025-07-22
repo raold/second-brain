@@ -275,7 +275,7 @@ class BulkMemoryEngine:
                 if item.memory_type not in ["semantic", "episodic", "procedural"]:
                     validation_errors.append("Invalid memory type")
 
-                if not isinstance(item.importance_score, (int, float)) or not 0 <= item.importance_score <= 1:
+                if not isinstance(item.importance_score, int | float) or not 0 <= item.importance_score <= 1:
                     validation_errors.append("Importance score must be between 0 and 1")
 
             # Standard validation - schema validation
@@ -295,7 +295,7 @@ class BulkMemoryEngine:
             # Strict validation - integrity checks
             if level.value in ["strict", "paranoid"]:
                 # Check for duplicate content in batch
-                content_hash = hash(item.content)
+                hash(item.content)
                 # Add deduplication logic here
 
                 # Validate metadata structure

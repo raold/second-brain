@@ -44,7 +44,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                  enable_semantic_parsing: bool = True):
         """
         Initialize advanced structured extractor
-        
+
         Args:
             enable_form_extraction: Extract form-like data
             enable_schema_inference: Infer schemas from data
@@ -66,10 +66,10 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
     def extract_structured_data(self, text: str) -> StructuredData:
         """
         Extract structured data with advanced techniques
-        
+
         Args:
             text: Input text
-            
+
         Returns:
             Enhanced structured data
         """
@@ -619,7 +619,6 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         spec_keywords = ['specification', 'spec', 'requirement', 'must', 'shall', 'should']
 
         lines = text.split('\n')
-        current_spec = None
 
         for line in lines:
             line_lower = line.lower()

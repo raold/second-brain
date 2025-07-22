@@ -360,9 +360,9 @@ class MemoryManager:
         if len(self.memory_samples) >= 10:
             recent_avg = sum(list(self.memory_samples)[-5:]) / 5
             overall_avg = sum(self.memory_samples) / len(self.memory_samples)
-            memory_trend = (recent_avg - overall_avg) / overall_avg
+            (recent_avg - overall_avg) / overall_avg
         else:
-            memory_trend = 0
+            pass
 
         # Adjust batch size based on memory pressure and performance
         memory_ratio = current_memory_mb / self.config.max_memory_usage_mb
@@ -481,7 +481,7 @@ class CacheManager:
         """Estimate memory size of cached value."""
         if isinstance(value, str):
             return len(value.encode("utf-8"))
-        elif isinstance(value, (list, tuple)):
+        elif isinstance(value, list | tuple):
             return sum(self._estimate_size(item) for item in value)
         elif isinstance(value, dict):
             return sum(self._estimate_size(k) + self._estimate_size(v) for k, v in value.items())

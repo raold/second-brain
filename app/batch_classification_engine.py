@@ -223,7 +223,7 @@ class KeywordClassifier:
     async def classify_memory(self, memory: dict[str, Any]) -> tuple[str, float, str]:
         """Classify memory using keyword matching"""
         content = memory.get("content", "").lower()
-        metadata = memory.get("metadata", {})
+        memory.get("metadata", {})
 
         rule_scores = []
 

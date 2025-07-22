@@ -65,7 +65,7 @@ def test_graph_query_parser():
 
     # Test empty query handling
     try:
-        empty_result = parser.parse("")
+        parser.parse("")
         # Should handle gracefully
         print("✅ Empty query handling works")
     except Exception:

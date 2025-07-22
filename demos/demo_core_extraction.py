@@ -38,15 +38,15 @@ async def demo_extraction():
         {
             "name": "Technical Discussion",
             "content": """
-            I'm working on integrating PyTorch with our machine learning pipeline at DataCorp. 
-            The main challenge is optimizing the transformer models for real-time inference. 
-            John Smith from the AI team suggested using ONNX for model optimization, which could 
+            I'm working on integrating PyTorch with our machine learning pipeline at DataCorp.
+            The main challenge is optimizing the transformer models for real-time inference.
+            John Smith from the AI team suggested using ONNX for model optimization, which could
             reduce latency by 40%. We need to complete this by next Friday for the product launch.
-            
+
             TODO: Benchmark the current model performance
             TODO: Implement ONNX conversion pipeline
             TODO: Set up A/B testing framework
-            
+
             The project repository is at https://github.com/datacorp/ml-pipeline
             """
         },
@@ -54,34 +54,34 @@ async def demo_extraction():
             "name": "Meeting Notes",
             "content": """
             Meeting with Sarah Johnson (CEO) and Michael Chen (CTO) about Q4 roadmap.
-            
+
             Key decisions:
             1. We will prioritize the mobile app development over the web platform
             2. The budget for cloud infrastructure will be increased by $50,000
             3. New hiring freeze until January 2024
-            
-            Sarah emphasized that customer retention is critical. Our current churn rate 
-            of 15% needs to drop below 10% by year end. Michael will lead the technical 
+
+            Sarah emphasized that customer retention is critical. Our current churn rate
+            of 15% needs to drop below 10% by year end. Michael will lead the technical
             initiatives to improve app performance.
-            
+
             Next meeting scheduled for December 15th at 2:00 PM PST.
             """
         },
         {
             "name": "Research Notes",
             "content": """
-            Exploring the relationship between deep learning and cognitive science. Recent papers 
-            by Dr. Emma Watson at MIT show promising connections between transformer attention 
-            mechanisms and human visual attention patterns. This could revolutionize how we 
+            Exploring the relationship between deep learning and cognitive science. Recent papers
+            by Dr. Emma Watson at MIT show promising connections between transformer attention
+            mechanisms and human visual attention patterns. This could revolutionize how we
             design neural architectures.
-            
+
             Key insights:
             - Attention weights correlate with eye-tracking data (r=0.82)
             - Multi-head attention mirrors parallel processing in the brain
             - Self-attention resembles working memory mechanisms
-            
-            I think this research opens new possibilities for explainable AI. What if we could 
-            design models that not only perform well but also process information in ways that 
+
+            I think this research opens new possibilities for explainable AI. What if we could
+            design models that not only perform well but also process information in ways that
             align with human cognition?
             """
         }

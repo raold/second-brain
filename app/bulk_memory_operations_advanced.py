@@ -592,7 +592,7 @@ class AdvancedBulkOperations:
             progress.current_batch = (batch_num // config.batch_size) + 1
 
             # Mock update processing
-            for memory in batch:
+            for _memory in batch:
                 memory_id = str(uuid.uuid4())  # Mock ID
                 updated_ids.append(memory_id)
 
@@ -644,7 +644,7 @@ class AdvancedBulkOperations:
             progress.current_batch = (batch_num // config.batch_size) + 1
 
             # Mock delete processing
-            for memory in batch:
+            for _memory in batch:
                 memory_id = str(uuid.uuid4())  # Mock ID
                 deleted_ids.append(memory_id)
 

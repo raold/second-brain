@@ -62,26 +62,6 @@ class TestExactMatchDetector:
     async def test_exact_match_detection(self):
         """Test detection of exact duplicate content."""
         # Test data
-        memories = [
-            {
-                'id': 'mem_1',
-                'content': 'This is identical content.',
-                'created_at': '2024-01-01T10:00:00Z',
-                'metadata': {'importance_score': 0.8}
-            },
-            {
-                'id': 'mem_2',
-                'content': 'This is identical content.',  # Exact match
-                'created_at': '2024-01-01T11:00:00Z',
-                'metadata': {'importance_score': 0.6}
-            },
-            {
-                'id': 'mem_3',
-                'content': 'This is different content.',
-                'created_at': '2024-01-01T12:00:00Z',
-                'metadata': {'importance_score': 0.7}
-            }
-        ]
 
         # This will test ExactMatchDetector.find_duplicates
         # Expected: 1 duplicate group with mem_1 and mem_2
@@ -112,26 +92,6 @@ class TestFuzzyMatchDetector:
     async def test_fuzzy_match_detection(self):
         """Test detection of similar but not identical content."""
         # Test data with minor variations
-        memories = [
-            {
-                'id': 'mem_1',
-                'content': 'This is a test memory for fuzzy matching.',
-                'created_at': '2024-01-01T10:00:00Z',
-                'metadata': {'importance_score': 0.8}
-            },
-            {
-                'id': 'mem_2',
-                'content': 'This is a test memory for fuzzy matching!',  # Minor punctuation diff
-                'created_at': '2024-01-01T11:00:00Z',
-                'metadata': {'importance_score': 0.6}
-            },
-            {
-                'id': 'mem_3',
-                'content': 'This is test memory for fuzzy matching.',  # Missing word
-                'created_at': '2024-01-01T12:00:00Z',
-                'metadata': {'importance_score': 0.7}
-            }
-        ]
 
         # This will test FuzzyMatchDetector.find_duplicates
         pass
@@ -154,26 +114,6 @@ class TestSemanticSimilarityDetector:
     async def test_semantic_similarity_detection(self):
         """Test detection of semantically similar content."""
         # Test data with conceptual similarity
-        memories = [
-            {
-                'id': 'mem_1',
-                'content': 'The quick brown fox jumps over the lazy dog.',
-                'created_at': '2024-01-01T10:00:00Z',
-                'metadata': {'importance_score': 0.8}
-            },
-            {
-                'id': 'mem_2',
-                'content': 'A fast brown fox leaps over a sleepy canine.',  # Semantic similarity
-                'created_at': '2024-01-01T11:00:00Z',
-                'metadata': {'importance_score': 0.6}
-            },
-            {
-                'id': 'mem_3',
-                'content': 'Machine learning is a subset of artificial intelligence.',
-                'created_at': '2024-01-01T12:00:00Z',
-                'metadata': {'importance_score': 0.7}
-            }
-        ]
 
         # This will test SemanticSimilarityDetector.find_duplicates
         pass
@@ -197,32 +137,6 @@ class TestHybridDetector:
     async def test_hybrid_detection_combination(self):
         """Test combination of multiple detection methods."""
         # Test data that should trigger multiple detectors
-        memories = [
-            {
-                'id': 'mem_1',
-                'content': 'This is identical content for testing.',
-                'created_at': '2024-01-01T10:00:00Z',
-                'metadata': {'importance_score': 0.8}
-            },
-            {
-                'id': 'mem_2',
-                'content': 'This is identical content for testing.',  # Exact match
-                'created_at': '2024-01-01T11:00:00Z',
-                'metadata': {'importance_score': 0.6}
-            },
-            {
-                'id': 'mem_3',
-                'content': 'This is identical content for testing!',  # Fuzzy match
-                'created_at': '2024-01-01T12:00:00Z',
-                'metadata': {'importance_score': 0.7}
-            },
-            {
-                'id': 'mem_4',
-                'content': 'This content is identical for testing purposes.',  # Semantic match
-                'created_at': '2024-01-01T13:00:00Z',
-                'metadata': {'importance_score': 0.5}
-            }
-        ]
 
         # This will test HybridDetector comprehensive functionality
         pass

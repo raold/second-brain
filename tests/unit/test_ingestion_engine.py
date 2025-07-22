@@ -181,7 +181,7 @@ class TestContentClassifier:
             relationships=[]
         )
 
-        result = self.classifier.classify_content(content)
+        self.classifier.classify_content(content)
         assert content.quality in [ContentQuality.HIGH, ContentQuality.MEDIUM]
 
     def test_domain_classification(self):
@@ -194,7 +194,7 @@ class TestContentClassifier:
             topics=[Topic(name="AI Topic", keywords=["ai", "ml"], confidence=0.9, relevance=0.8)]
         )
 
-        result = self.classifier.classify_content(content)
+        self.classifier.classify_content(content)
         assert content.domain == "Technology"
 
     def test_tag_generation(self):
@@ -206,7 +206,7 @@ class TestContentClassifier:
             topics=[Topic(name="Programming", keywords=["python", "code"], confidence=0.9, relevance=0.8)]
         )
 
-        result = self.classifier.classify_content(content)
+        self.classifier.classify_content(content)
         assert len(content.suggested_tags) > 0
         assert any("python" in tag.lower() for tag in content.suggested_tags)
 
@@ -402,7 +402,7 @@ class TestIngestionPipeline:
         John Smith, CEO of TechCorp, announced today that they will be launching
         a new AI product next month. The product uses machine learning to analyze
         customer behavior. Contact: john@techcorp.com
-        
+
         TODO: Prepare marketing materials for the launch
         """
 
@@ -442,7 +442,7 @@ class TestIngestionPipeline:
         )
 
         # Classify
-        classification = content_classifier.classify_content(content)
+        content_classifier.classify_content(content)
 
         # Validate
         validation_result = validator.validate(content)

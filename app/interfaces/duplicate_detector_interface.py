@@ -297,7 +297,7 @@ class BaseDuplicateDetector(DuplicateDetectorInterface):
 
             if val1 == val2:
                 similarities.append(1.0)
-            elif isinstance(val1, (int, float)) and isinstance(val2, (int, float)):
+            elif isinstance(val1, int | float) and isinstance(val2, int | float):
                 # Numeric similarity
                 max_val = max(abs(val1), abs(val2))
                 if max_val == 0:

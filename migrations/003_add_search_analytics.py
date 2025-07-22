@@ -37,28 +37,28 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
                 query_text TEXT NOT NULL,
                 query_hash VARCHAR(64) NOT NULL,
                 user_session VARCHAR(100),
-                
+
                 -- Search parameters
                 memory_type_filter VARCHAR(20),
                 importance_threshold DECIMAL(3,2),
                 limit_requested INTEGER,
-                
+
                 -- Results
                 results_count INTEGER NOT NULL DEFAULT 0,
                 results_returned INTEGER NOT NULL DEFAULT 0,
-                
+
                 -- Performance
                 execution_time_ms INTEGER,
                 cache_hit BOOLEAN DEFAULT false,
-                
+
                 -- Context
                 search_context JSONB DEFAULT '{}',
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                
+
                 -- Indexes will be created separately
-                CONSTRAINT check_importance_threshold 
+                CONSTRAINT check_importance_threshold
                     CHECK (importance_threshold IS NULL OR importance_threshold BETWEEN 0 AND 1),
-                CONSTRAINT check_execution_time 
+                CONSTRAINT check_execution_time
                     CHECK (execution_time_ms IS NULL OR execution_time_ms >= 0)
             )
             """,
@@ -68,24 +68,24 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 search_query_id UUID NOT NULL REFERENCES search_queries(id) ON DELETE CASCADE,
                 memory_id UUID NOT NULL,
-                
+
                 -- Result ranking
                 rank_position INTEGER NOT NULL,
                 similarity_score DECIMAL(5,4),
                 importance_boost DECIMAL(5,4),
                 final_score DECIMAL(5,4),
-                
+
                 -- User interaction
                 clicked BOOLEAN DEFAULT false,
                 clicked_at TIMESTAMP WITH TIME ZONE,
                 dwell_time_seconds INTEGER,
-                
+
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                
+
                 CONSTRAINT check_rank_position CHECK (rank_position > 0),
-                CONSTRAINT check_similarity_score 
+                CONSTRAINT check_similarity_score
                     CHECK (similarity_score IS NULL OR similarity_score BETWEEN 0 AND 1),
-                CONSTRAINT check_dwell_time 
+                CONSTRAINT check_dwell_time
                     CHECK (dwell_time_seconds IS NULL OR dwell_time_seconds >= 0)
             )
             """,
@@ -95,20 +95,20 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 pattern_type VARCHAR(50) NOT NULL,
                 pattern_data JSONB NOT NULL,
-                
+
                 -- Statistics
                 frequency_count INTEGER DEFAULT 1,
                 last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 first_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                
+
                 -- Analysis results
                 effectiveness_score DECIMAL(3,2),
                 user_satisfaction DECIMAL(3,2),
-                
+
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                
+
                 CONSTRAINT check_frequency CHECK (frequency_count > 0),
-                CONSTRAINT check_effectiveness 
+                CONSTRAINT check_effectiveness
                     CHECK (effectiveness_score IS NULL OR effectiveness_score BETWEEN 0 AND 1),
                 UNIQUE(pattern_type, pattern_data)
             )
@@ -157,7 +157,7 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
             # 6. Create analytics view
             """
             CREATE VIEW search_analytics_summary AS
-            SELECT 
+            SELECT
                 DATE(sq.created_at) as search_date,
                 COUNT(*) as total_searches,
                 COUNT(DISTINCT sq.query_hash) as unique_queries,
@@ -175,9 +175,9 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
             # 7. Populate with sample historical data
             """
             INSERT INTO search_queries (
-                query_text, query_hash, user_session, results_count, 
+                query_text, query_hash, user_session, results_count,
                 results_returned, execution_time_ms, created_at
-            ) VALUES 
+            ) VALUES
             ('machine learning algorithms', 'hash_ml_001', 'session_001', 15, 10, 45, CURRENT_TIMESTAMP - INTERVAL '7 days'),
             ('database optimization', 'hash_db_001', 'session_002', 8, 8, 32, CURRENT_TIMESTAMP - INTERVAL '6 days'),
             ('python best practices', 'hash_py_001', 'session_003', 12, 10, 38, CURRENT_TIMESTAMP - INTERVAL '5 days'),
@@ -186,7 +186,7 @@ class AddSearchAnalyticsSystem(DatabaseSchemaMigration):
             """,
             # 8. Initialize search patterns
             """
-            INSERT INTO search_patterns (pattern_type, pattern_data, frequency_count, effectiveness_score) VALUES 
+            INSERT INTO search_patterns (pattern_type, pattern_data, frequency_count, effectiveness_score) VALUES
             ('query_length', '{"avg_words": 2.5, "range": "2-3"}', 15, 0.85),
             ('technical_terms', '{"contains_tech": true, "domains": ["programming", "database"]}', 12, 0.90),
             ('question_format', '{"is_question": false, "descriptive": true}', 18, 0.75),

@@ -134,7 +134,7 @@ class TestInsightRequests:
         assert request.time_frame == TimeFrame.WEEKLY
         assert request.limit == 10
         assert request.min_confidence == 0.7
-        assert request.include_recommendations == True
+        assert request.include_recommendations
 
     def test_pattern_detection_request(self):
         """Test pattern detection request"""
@@ -348,7 +348,7 @@ class TestAnalyticsEngine:
             TimeFrame.YEARLY: 365
         }
 
-        for time_frame, expected_days in conversions.items():
+        for _time_frame, expected_days in conversions.items():
             # This would be tested against actual implementation
             assert expected_days > 0
 

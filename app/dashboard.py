@@ -800,7 +800,7 @@ def update_dashboard_for_feature(feature_name: str, description: str = "") -> st
     Returns updated dashboard view
     """
     dashboard = get_dashboard()
-    milestone_id = dashboard.add_new_feature_context(feature_name, description)
+    dashboard.add_new_feature_context(feature_name, description)
 
     # Generate updated visual report
     return dashboard.generate_visual_report()

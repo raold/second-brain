@@ -682,11 +682,11 @@ class StructuredDataExtractor:
     def extract_advanced_structured_data(self, text: str, **kwargs) -> StructuredData:
         """
         Extract structured data using advanced techniques
-        
+
         Args:
             text: Input text
             **kwargs: Additional arguments for advanced extraction
-            
+
         Returns:
             Advanced structured data
         """

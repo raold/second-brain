@@ -249,7 +249,7 @@ class ClusterAnalyzer:
                 cluster_groups[label].append((idx, memory_data[idx]))
 
         # Create cluster objects
-        for cluster_id, members in cluster_groups.items():
+        for _cluster_id, members in cluster_groups.items():
             if len(members) < request.min_cluster_size:
                 continue
 

@@ -98,10 +98,10 @@ class GraphQueryParser:
     def parse(self, query: str) -> ParsedQuery:
         """
         Parse a natural language query into structured format
-        
+
         Args:
             query: Natural language query string
-            
+
         Returns:
             ParsedQuery object with extracted information
         """
@@ -238,10 +238,10 @@ class GraphQueryParser:
     def suggest_query(self, partial_query: str) -> list[str]:
         """
         Suggest query completions based on partial input
-        
+
         Args:
             partial_query: Partial query string
-            
+
         Returns:
             List of suggested completions
         """

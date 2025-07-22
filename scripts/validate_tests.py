@@ -222,7 +222,7 @@ class TestValidator:
 
             # Test summary
             try:
-                summary = dashboard.get_dashboard_summary()
+                dashboard.get_dashboard_summary()
                 self.test_result("Dashboard Summary", True, "Summary generated")
             except Exception as e:
                 self.test_result("Dashboard Summary", False, f"Summary failed: {e}")

@@ -657,7 +657,7 @@ class MemoryRelationshipAnalyzer:
         total_coefficient = 0.0
         node_count = 0
 
-        for node, neighbors in adj_list.items():
+        for _node, neighbors in adj_list.items():
             if len(neighbors) < 2:
                 continue
 

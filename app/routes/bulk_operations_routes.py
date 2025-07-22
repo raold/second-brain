@@ -438,7 +438,7 @@ async def get_bulk_operations_status(api_key: str = Depends(verify_api_key)):
     """
     try:
         # Get statistics from all engines
-        bulk_manager = await get_bulk_memory_manager()
+        await get_bulk_memory_manager()
         classification_engine = await get_batch_classification_engine()
         deduplication_engine = await get_memory_deduplication_engine()
         migration_manager = await get_migration_manager()

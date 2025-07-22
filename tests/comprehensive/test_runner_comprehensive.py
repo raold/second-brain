@@ -217,7 +217,7 @@ class ComprehensiveTestRunner:
             self.results.append(TestResult("Metrics Loading", True, f"Loaded {len(metrics)} metrics"))
 
             # Test summary generation
-            summary = dashboard.get_dashboard_summary()
+            dashboard.get_dashboard_summary()
             self.results.append(TestResult("Dashboard Summary", True, "Summary generated successfully"))
 
         except Exception as e:
@@ -260,7 +260,7 @@ class ComprehensiveTestRunner:
             from tests.performance.test_performance_benchmark import BenchmarkResult, PerformanceMetrics
 
             # Test performance classes
-            metrics = PerformanceMetrics(
+            PerformanceMetrics(
                 response_time=0.1,
                 memory_usage=50.0,
                 cpu_usage=25.0,
@@ -270,7 +270,7 @@ class ComprehensiveTestRunner:
             )
             self.results.append(TestResult("Performance Metrics", True, "Performance metrics class working"))
 
-            result = BenchmarkResult(
+            BenchmarkResult(
                 test_name="test",
                 endpoint="/test",
                 method="GET",

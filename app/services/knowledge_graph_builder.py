@@ -171,13 +171,13 @@ class KnowledgeGraphBuilder:
     ) -> dict[str, Any]:
         """
         Build a knowledge graph from a set of memories
-        
+
         Args:
             memory_ids: List of memory IDs to process
             extract_entities: Whether to extract entities
             extract_relationships: Whether to extract relationships
             min_confidence: Minimum confidence threshold
-            
+
         Returns:
             Graph data with nodes and edges
         """
@@ -544,7 +544,7 @@ class KnowledgeGraphBuilder:
         if self.db.pool:
             async with self.db.pool.acquire() as conn:
                 await conn.execute("""
-                    INSERT INTO entity_mentions 
+                    INSERT INTO entity_mentions
                     (entity_id, memory_id, position_start, position_end, context, confidence)
                     VALUES ($1, $2, $3, $4, $5, $6)
                     ON CONFLICT DO NOTHING
@@ -557,14 +557,14 @@ class KnowledgeGraphBuilder:
             async with self.db.pool.acquire() as conn:
                 # Check if entity exists
                 existing = await conn.fetchrow("""
-                    SELECT id FROM entities 
+                    SELECT id FROM entities
                     WHERE LOWER(name) = LOWER($1) AND entity_type = $2
                 """, entity.name, entity.entity_type.value)
 
                 if existing:
                     # Update occurrence count
                     await conn.execute("""
-                        UPDATE entities 
+                        UPDATE entities
                         SET occurrence_count = occurrence_count + 1,
                             last_seen = NOW()
                         WHERE id = $1
@@ -573,7 +573,7 @@ class KnowledgeGraphBuilder:
                 else:
                     # Insert new entity
                     result = await conn.fetchrow("""
-                        INSERT INTO entities 
+                        INSERT INTO entities
                         (name, entity_type, description, metadata, importance_score)
                         VALUES ($1, $2, $3, $4, $5)
                         RETURNING id
@@ -589,10 +589,10 @@ class KnowledgeGraphBuilder:
         if self.db.pool:
             async with self.db.pool.acquire() as conn:
                 await conn.execute("""
-                    INSERT INTO memory_relationships 
+                    INSERT INTO memory_relationships
                     (source_memory_id, target_memory_id, relationship_type, confidence, metadata)
                     VALUES ($1, $2, $3, $4, $5)
-                    ON CONFLICT (source_memory_id, target_memory_id, relationship_type) 
+                    ON CONFLICT (source_memory_id, target_memory_id, relationship_type)
                     DO UPDATE SET confidence = EXCLUDED.confidence
                 """, relationship["source_memory_id"], relationship["target_memory_id"],
                     relationship["relationship_type"], relationship["confidence"],
@@ -725,7 +725,7 @@ class KnowledgeGraphBuilder:
         if self.db.pool:
             async with self.db.pool.acquire() as conn:
                 await conn.execute("""
-                    INSERT INTO graph_metadata 
+                    INSERT INTO graph_metadata
                     (graph_name, node_count, edge_count, density, metadata)
                     VALUES ($1, $2, $3, $4, $5)
                 """, "main_graph", stats["node_count"], stats["edge_count"],
@@ -766,7 +766,7 @@ class KnowledgeGraphBuilder:
 
                 # Get relationships
                 relationships = await conn.fetch("""
-                    SELECT * FROM entity_relationships 
+                    SELECT * FROM entity_relationships
                     WHERE source_entity_id = $1 OR target_entity_id = $1
                 """, eid)
 

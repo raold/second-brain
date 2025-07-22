@@ -179,7 +179,7 @@ class MetricsCollector:
             hourly_groups[group_key].append(metric)
 
         # Aggregate each group
-        for group_key, metrics in hourly_groups.items():
+        for _group_key, metrics in hourly_groups.items():
             if metrics[0].metric_type == MetricType.COUNTER:
                 aggregated_value = sum(m.value for m in metrics)
             elif metrics[0].metric_type == MetricType.GAUGE:
@@ -378,7 +378,7 @@ class AlertManager:
 
     async def check_alerts(self, metrics: dict[str, float], operation_data: dict[str, Any]):
         """Check all alert conditions against current metrics."""
-        for alert_id, alert in self.alerts.items():
+        for _alert_id, alert in self.alerts.items():
             should_trigger = await self._evaluate_alert_condition(alert, metrics, operation_data)
 
             if should_trigger and not alert.is_active:

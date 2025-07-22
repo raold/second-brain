@@ -61,7 +61,7 @@ class TestInsightsAPI:
     async def test_detect_patterns_endpoint(self, client, api_key):
         """Test pattern detection endpoint"""
         # Create memories with temporal pattern
-        base_time = datetime.utcnow()
+        datetime.utcnow()
         for i in range(10):
             memory_data = {
                 "content": f"Morning routine memory {i}",

@@ -45,7 +45,7 @@ class AdvancedTopicModeling:
                  embedding_model: str | None = None):
         """
         Initialize advanced topic modeling
-        
+
         Args:
             enable_bertopic: Use BERTopic for transformer-based topic modeling
             enable_hierarchical: Use hierarchical topic clustering
@@ -116,13 +116,13 @@ class AdvancedTopicModeling:
                               include_hierarchy: bool = True) -> list[Topic]:
         """
         Extract topics using advanced modeling techniques
-        
+
         Args:
             texts: Input text(s)
             min_relevance: Minimum topic relevance
             max_topics: Maximum number of topics
             include_hierarchy: Include hierarchical topic structure
-            
+
         Returns:
             List of advanced topics with metadata
         """
@@ -177,7 +177,7 @@ class AdvancedTopicModeling:
             topic_info = self.bertopic_model.get_topic_info()
 
             # Process each discovered topic
-            for index, row in topic_info.iterrows():
+            for _index, row in topic_info.iterrows():
                 if row['Topic'] == -1:  # Skip outlier topic
                     continue
 
@@ -374,12 +374,12 @@ class AdvancedTopicModeling:
                               min_relevance: float = 0.3) -> dict[str, list[Topic]]:
         """
         Extract topics over time for temporal analysis
-        
+
         Args:
             documents: List of documents with timestamps
             time_field: Field containing timestamp
             min_relevance: Minimum topic relevance
-            
+
         Returns:
             Dictionary mapping time periods to topics
         """
@@ -418,10 +418,10 @@ class AdvancedTopicModeling:
     def get_topic_evolution(self, temporal_topics: dict[str, list[Topic]]) -> dict[str, Any]:
         """
         Analyze how topics evolve over time
-        
+
         Args:
             temporal_topics: Topics organized by time period
-            
+
         Returns:
             Topic evolution analysis
         """
@@ -467,7 +467,7 @@ class AdvancedTopicModeling:
 
             # Calculate metrics
             presence_ratio = appearances / total_periods
-            recent_presence = sum(1 for t in timeline if t['period'] in recent_periods)
+            sum(1 for t in timeline if t['period'] in recent_periods)
 
             # Classify topic evolution
             if topic_first_seen[topic_name] in recent_periods:

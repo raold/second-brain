@@ -189,7 +189,7 @@ def create_visualization_data(repo_info):
 
     main_branches = [b for b in repo_info['branches'] if b['status'] == 'main']
 
-    for i, branch in enumerate(repo_info['branches']):
+    for _i, branch in enumerate(repo_info['branches']):
         # Create node
         node = {
             'id': branch['name'],

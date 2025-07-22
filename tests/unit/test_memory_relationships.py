@@ -29,7 +29,7 @@ class TestMemoryRelationshipAnalyzer:
         analyzer = MemoryRelationshipAnalyzer()
 
         # Check that all relationship types are callable
-        for relationship_type, method in analyzer.relationship_types.items():
+        for _relationship_type, method in analyzer.relationship_types.items():
             assert callable(method)
             assert hasattr(analyzer, method.__name__)
 
@@ -39,7 +39,7 @@ class TestMemoryRelationshipAnalyzer:
         # Verify default settings
         assert isinstance(analyzer.similarity_threshold, float)
         assert 0 <= analyzer.similarity_threshold <= 1
-        assert isinstance(analyzer.temporal_window_hours, (int, float))
+        assert isinstance(analyzer.temporal_window_hours, int | float)
         assert analyzer.temporal_window_hours > 0
 
     def test_relationship_types_completeness(self):

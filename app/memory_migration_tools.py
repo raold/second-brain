@@ -449,7 +449,7 @@ class MetadataEnrichmentMigration(MemoryMigration):
                     original_metadata = memory.get("metadata", {}).copy()
 
                     # Apply enrichment function
-                    enriched_metadata = await self.enrichment_function(memory)
+                    await self.enrichment_function(memory)
 
                     # Store rollback data
                     if "original_metadata" not in self.rollback_data:

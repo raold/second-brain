@@ -440,7 +440,7 @@ class FuzzyMatchDetector:
 
             if val1 == val2:
                 matches += 1
-            elif isinstance(val1, (int, float)) and isinstance(val2, (int, float)):
+            elif isinstance(val1, int | float) and isinstance(val2, int | float):
                 # Numeric similarity
                 if val1 != 0 or val2 != 0:
                     similarity = 1 - abs(val1 - val2) / max(abs(val1), abs(val2))

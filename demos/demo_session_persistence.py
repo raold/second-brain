@@ -138,7 +138,7 @@ async def demonstrate_session_persistence():
     session_manager.restore_technical_context()
 
     # Show context restoration
-    current_context = session_manager.generate_resume_context()
+    session_manager.generate_resume_context()
     print("✅ Session resumed successfully!")
     print("\n🧠 RESTORED CONTEXT:")
     print(f"   • Conversation history: {len(session_manager.session_buffer)} messages")
@@ -197,7 +197,7 @@ async def demonstrate_session_persistence():
 
     final_analytics = session_manager.get_session_analytics()
     dashboard = get_dashboard()
-    dashboard_summary = dashboard.get_dashboard_summary()
+    dashboard.get_dashboard_summary()
 
     print("🎯 Session Performance:")
     print(f"   • Duration: {final_analytics['duration']}")

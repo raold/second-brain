@@ -75,12 +75,12 @@ class ReasoningEngine:
     ) -> list[ReasoningPath]:
         """
         Execute a multi-hop reasoning query
-        
+
         Args:
             query: Natural language query
             max_hops: Maximum number of hops to traverse
             reasoning_type: Specific type of reasoning to apply
-            
+
         Returns:
             List of reasoning paths ranked by relevance
         """
@@ -178,7 +178,7 @@ class ReasoningEngine:
         )
 
         starting_nodes = []
-        for idx, result in enumerate(search_results):
+        for _idx, result in enumerate(search_results):
             node = ReasoningNode(
                 memory_id=result["id"],
                 content=result["content"],
@@ -472,12 +472,12 @@ class ReasoningEngine:
     ) -> ReasoningPath | None:
         """
         Find the reasoning path between two specific memories
-        
+
         Args:
             start_memory_id: Starting memory ID
             end_memory_id: Target memory ID
             max_hops: Maximum hops to explore
-            
+
         Returns:
             ReasoningPath if found, None otherwise
         """
@@ -538,12 +538,12 @@ class ReasoningEngine:
     ) -> list[ReasoningPath]:
         """
         Find causal chains leading to or from an event
-        
+
         Args:
             event_memory_id: The event memory to analyze
             direction: "backward" for causes, "forward" for effects
             max_depth: Maximum causal depth to explore
-            
+
         Returns:
             List of causal reasoning paths
         """

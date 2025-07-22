@@ -107,7 +107,7 @@ class ProductionTester:
             times = []
             for _ in range(5):
                 req_start = time.time()
-                response = requests.get(f"{self.base_url}/health", timeout=5)
+                requests.get(f"{self.base_url}/health", timeout=5)
                 req_duration = time.time() - req_start
                 times.append(req_duration)
 

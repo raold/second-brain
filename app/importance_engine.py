@@ -322,23 +322,6 @@ class ImportanceEngine:
             # For demonstration, we'll use heuristics based on content patterns
 
             # Memories with cross-type indicators get search bonus
-            cross_type_indicators = [
-                "example",
-                "instance",
-                "case study",  # Semantic → Episodic
-                "pattern",
-                "principle",
-                "general",  # Episodic → Semantic
-                "procedure",
-                "steps",
-                "process",  # Semantic → Procedural
-                "experience",
-                "context",
-                "situation",  # Procedural → Episodic
-                "implementation",
-                "applied",
-                "practice",  # Theory → Practice
-            ]
 
             # This is a simplified version - in production would use actual relationship data
             bonus = 0.0

@@ -101,33 +101,33 @@ class ImportanceSystemTester:
             {
                 "content": """
                 # Database Optimization Strategies
-                
+
                 ## Performance Tuning Guidelines
-                
+
                 1. **Indexing Strategy**
                    ```sql
-                   CREATE INDEX CONCURRENTLY idx_memories_importance_score 
+                   CREATE INDEX CONCURRENTLY idx_memories_importance_score
                    ON memories(importance_score DESC, last_accessed DESC);
                    ```
-                
+
                 2. **Query Optimization**
                    - Use EXPLAIN ANALYZE for query planning
                    - Implement proper WHERE clause filtering
                    - Consider materialized views for complex aggregations
-                
+
                 3. **Connection Pooling**
                    - Configure `max_connections` appropriately
                    - Use connection pooling libraries like asyncpg
                    - Monitor connection usage patterns
-                
+
                 ## Architecture Considerations
-                
+
                 The system implements a multi-dimensional scoring algorithm that considers:
                 - Access frequency with logarithmic scaling
                 - Temporal decay using half-life calculations
                 - Content quality indicators (code, structure, complexity)
                 - User feedback integration for learning
-                
+
                 This approach ensures that truly valuable information rises to the top
                 while less relevant content naturally decreases in importance over time.
                 """,
@@ -360,7 +360,7 @@ class ImportanceSystemTester:
                     frequency_score = calculate_frequency_score(access_pattern)
                     return combine_scores(quality_score, frequency_score)
                 ```
-                
+
                 This implementation uses logarithmic scaling for frequency
                 and incorporates temporal decay factors.
                 """,
@@ -370,12 +370,12 @@ class ImportanceSystemTester:
                 "name": "Structured documentation",
                 "content": """
                 # API Documentation
-                
+
                 ## Endpoints
                 - GET /api/memories - List memories
                 - POST /api/memories - Create memory
                 - PUT /api/memories/{id} - Update memory
-                
+
                 ## Authentication
                 Use Bearer token in Authorization header.
                 """,

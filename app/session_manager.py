@@ -327,7 +327,7 @@ TO RESUME SEAMLESSLY:
         """Process and store conversation message with full context"""
 
         # Analyze message content
-        processor = get_conversation_processor()
+        get_conversation_processor()
 
         # Extract features and context (simplified for now)
         detected_features = []
@@ -454,7 +454,7 @@ TO RESUME SEAMLESSLY:
         print(f"Idea: {idea}")
 
         # Process the idea through conversation processor
-        processor = get_conversation_processor()
+        get_conversation_processor()
 
         # Create a special "idea ingestion" conversation message
         conv_message = self.process_conversation_message(

@@ -194,7 +194,7 @@ class PatternDetector:
                 cluster_groups[label].append(valid_memories[idx])
 
         # Create patterns for significant clusters
-        for cluster_id, cluster_memories in cluster_groups.items():
+        for _cluster_id, cluster_memories in cluster_groups.items():
             if len(cluster_memories) >= request.min_occurrences:
                 # Extract common themes
                 all_tags = []
@@ -420,7 +420,7 @@ class PatternDetector:
         bursts = []
         current_burst = []
 
-        for i, memory in enumerate(sorted_memories):
+        for _i, memory in enumerate(sorted_memories):
             if not current_burst:
                 current_burst.append(memory)
             else:
@@ -581,7 +581,7 @@ class PatternDetector:
 
         # Average normalized growth rate of top trends
         strengths = []
-        for topic, growth in trends[:5]:
+        for _topic, growth in trends[:5]:
             # Normalize growth rate
             normalized = min(growth, 2.0) / 2.0
             strengths.append(normalized)

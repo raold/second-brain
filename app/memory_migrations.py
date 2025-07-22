@@ -74,7 +74,7 @@ class MemoryDataMigration(Migration):
 
             if config.dry_run:
                 # Simulate migration
-                result = await self._dry_run_migration(memories_to_migrate)
+                await self._dry_run_migration(memories_to_migrate)
                 return MigrationResult(
                     migration_id=self.metadata.id,
                     status=MigrationStatus.COMPLETED,

@@ -344,7 +344,7 @@ async def find_knowledge_bridges(
 
         # Find bridge memories
         engine = CrossMemoryRelationshipEngine(database)
-        analysis = await engine.analyze_memory_relationships(memories)
+        await engine.analyze_memory_relationships(memories)
 
         # Filter for bridge relationships between specified types
         bridges = []

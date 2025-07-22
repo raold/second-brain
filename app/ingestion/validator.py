@@ -367,7 +367,7 @@ class AdvancedValidator:
         # Embedding validation
         if content.embeddings:
             for key, embedding in content.embeddings.items():
-                if not isinstance(embedding, list) or not all(isinstance(x, (int, float)) for x in embedding):
+                if not isinstance(embedding, list) or not all(isinstance(x, int | float) for x in embedding):
                     issues.append(ValidationIssue(
                         level=ValidationLevel.ERROR,
                         type=ValidationType.EXTRACTION,

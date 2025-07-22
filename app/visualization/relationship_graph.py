@@ -35,7 +35,7 @@ class RelationshipGraph:
                  layout_algorithm: str = "spring"):
         """
         Initialize relationship graph
-        
+
         Args:
             enable_clustering: Enable community detection
             enable_centrality: Enable centrality analysis
@@ -65,12 +65,12 @@ class RelationshipGraph:
                    min_confidence: float = 0.5) -> dict[str, Any]:
         """
         Build graph from entities and relationships
-        
+
         Args:
             entities: List of entities
             relationships: List of relationships
             min_confidence: Minimum confidence threshold
-            
+
         Returns:
             Graph statistics and metadata
         """
@@ -154,10 +154,10 @@ class RelationshipGraph:
     def compute_centrality_metrics(self, top_n: int = 10) -> dict[str, Any]:
         """
         Compute various centrality metrics for nodes
-        
+
         Args:
             top_n: Number of top central nodes to return
-            
+
         Returns:
             Dictionary of centrality metrics
         """
@@ -199,10 +199,10 @@ class RelationshipGraph:
     def detect_communities(self, algorithm: str = "spectral") -> dict[str, Any]:
         """
         Detect communities in the graph
-        
+
         Args:
             algorithm: Community detection algorithm
-            
+
         Returns:
             Community structure and statistics
         """
@@ -300,13 +300,13 @@ class RelationshipGraph:
                   max_length: int = 5) -> list[dict[str, Any]]:
         """
         Find paths between two entities
-        
+
         Args:
             source_id: Source entity ID
             target_id: Target entity ID
             max_paths: Maximum number of paths to return
             max_length: Maximum path length
-            
+
         Returns:
             List of paths with metadata
         """
@@ -378,12 +378,12 @@ class RelationshipGraph:
                                min_confidence: float = 0.5) -> dict[str, Any]:
         """
         Get the neighborhood of an entity up to specified depth
-        
+
         Args:
             entity_id: Entity ID
             depth: How many hops to include
             min_confidence: Minimum relationship confidence
-            
+
         Returns:
             Subgraph data for the neighborhood
         """
@@ -450,10 +450,10 @@ class RelationshipGraph:
     def compute_layout(self, algorithm: str | None = None) -> dict[str, tuple[float, float]]:
         """
         Compute graph layout for visualization
-        
+
         Args:
             algorithm: Layout algorithm (spring, circular, hierarchical, kamada_kawai)
-            
+
         Returns:
             Dictionary mapping node IDs to (x, y) positions
         """
@@ -528,10 +528,10 @@ class RelationshipGraph:
     def export_to_format(self, format: str = "json") -> Union[str, dict]:
         """
         Export graph to various formats
-        
+
         Args:
             format: Export format (json, graphml, gexf)
-            
+
         Returns:
             Exported graph data
         """

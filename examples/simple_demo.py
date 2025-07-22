@@ -202,7 +202,7 @@ async def dashboard_home():
                 --border-color: #bdae93;
                 --shadow: rgba(60, 56, 54, 0.1);
             }
-            
+
             [data-theme="gruvbox-dark"] {
                 --bg-primary: #282828;
                 --bg-secondary: #3c3836;
@@ -218,7 +218,7 @@ async def dashboard_home():
                 --border-color: #665c54;
                 --shadow: rgba(0, 0, 0, 0.3);
             }
-            
+
             [data-theme="dracula"] {
                 --bg-primary: #282a36;
                 --bg-secondary: #44475a;
@@ -234,7 +234,7 @@ async def dashboard_home():
                 --border-color: #6272a4;
                 --shadow: rgba(0, 0, 0, 0.4);
             }
-            
+
             [data-theme="solarized-dark"] {
                 --bg-primary: #002b36;
                 --bg-secondary: #073642;
@@ -250,28 +250,28 @@ async def dashboard_home():
                 --border-color: #586e75;
                 --shadow: rgba(0, 0, 0, 0.5);
             }
-            
-            body { 
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                margin: 0; 
-                padding: 20px; 
+
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                margin: 0;
+                padding: 20px;
                 background: var(--bg-primary);
                 color: var(--text-primary);
                 min-height: 100vh;
                 transition: all 0.3s ease;
             }
-            
+
             .container { max-width: 1600px; margin: 0 auto; }
-            
-            .header { 
-                text-align: center; 
-                margin-bottom: 30px; 
+
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
                 background: var(--bg-secondary);
                 padding: 20px;
                 border-radius: 15px;
                 box-shadow: 0 4px 15px var(--shadow);
             }
-            
+
             .theme-switcher {
                 position: absolute;
                 top: 20px;
@@ -283,7 +283,7 @@ async def dashboard_home():
                 border-radius: 10px;
                 box-shadow: 0 2px 8px var(--shadow);
             }
-            
+
             .theme-btn {
                 padding: 8px 12px;
                 border: none;
@@ -295,49 +295,49 @@ async def dashboard_home():
                 border: 2px solid transparent;
                 transition: all 0.2s;
             }
-            
+
             .theme-btn.active {
                 border-color: var(--accent-primary);
                 background: var(--accent-primary);
                 color: var(--bg-primary);
             }
-            
-            .version-badge { 
-                background: var(--accent-primary); 
+
+            .version-badge {
+                background: var(--accent-primary);
                 color: var(--bg-primary);
-                padding: 8px 16px; 
-                border-radius: 20px; 
-                display: inline-block; 
-                margin: 10px; 
+                padding: 8px 16px;
+                border-radius: 20px;
+                display: inline-block;
+                margin: 10px;
                 font-weight: bold;
             }
-            
+
             .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
-            
-            .card { 
-                background: var(--bg-secondary); 
-                border-radius: 15px; 
-                padding: 25px; 
-                box-shadow: 0 8px 25px var(--shadow); 
-                transition: all 0.3s; 
+
+            .card {
+                background: var(--bg-secondary);
+                border-radius: 15px;
+                padding: 25px;
+                box-shadow: 0 8px 25px var(--shadow);
+                transition: all 0.3s;
                 border: 2px solid var(--border-color);
             }
-            
+
             .card:hover { transform: translateY(-5px); box-shadow: 0 12px 35px var(--shadow); }
-            
-            .card h3 { 
-                color: var(--accent-primary); 
-                margin-top: 0; 
-                border-bottom: 2px solid var(--border-color); 
-                padding-bottom: 10px; 
+
+            .card h3 {
+                color: var(--accent-primary);
+                margin-top: 0;
+                border-bottom: 2px solid var(--border-color);
+                padding-bottom: 10px;
             }
-            
+
             .roadmap-timeline {
                 position: relative;
                 margin: 20px 0;
                 padding: 20px 0;
             }
-            
+
             .timeline-line {
                 position: absolute;
                 left: 50%;
@@ -347,17 +347,17 @@ async def dashboard_home():
                 background: var(--accent-primary);
                 border-radius: 2px;
             }
-            
+
             .timeline-item {
                 display: flex;
                 align-items: center;
                 margin: 30px 0;
                 position: relative;
             }
-            
+
             .timeline-item:nth-child(odd) { flex-direction: row; }
             .timeline-item:nth-child(even) { flex-direction: row-reverse; }
-            
+
             .timeline-content {
                 flex: 1;
                 max-width: 45%;
@@ -369,12 +369,12 @@ async def dashboard_home():
                 cursor: pointer;
                 transition: all 0.3s;
             }
-            
+
             .timeline-content:hover {
                 transform: scale(1.05);
                 border-color: var(--accent-primary);
             }
-            
+
             .timeline-dot {
                 width: 20px;
                 height: 20px;
@@ -386,14 +386,14 @@ async def dashboard_home():
                 transform: translateX(-50%);
                 z-index: 2;
             }
-            
+
             .version-label {
                 font-size: 18px;
                 font-weight: bold;
                 color: var(--accent-primary);
                 margin-bottom: 8px;
             }
-            
+
             .features-count {
                 background: var(--accent-secondary);
                 color: var(--bg-primary);
@@ -403,134 +403,134 @@ async def dashboard_home():
                 display: inline-block;
                 margin-top: 8px;
             }
-            
+
             .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-            
-            .stat { 
-                background: var(--bg-tertiary); 
-                padding: 15px; 
-                border-radius: 10px; 
-                text-align: center; 
+
+            .stat {
+                background: var(--bg-tertiary);
+                padding: 15px;
+                border-radius: 10px;
+                text-align: center;
                 cursor: pointer;
                 transition: all 0.3s;
                 border: 2px solid var(--border-color);
             }
-            
+
             .stat:hover {
                 transform: translateY(-3px);
                 border-color: var(--accent-primary);
             }
-            
-            .stat-number { 
-                font-size: 24px; 
-                font-weight: bold; 
-                color: var(--accent-primary); 
+
+            .stat-number {
+                font-size: 24px;
+                font-weight: bold;
+                color: var(--accent-primary);
             }
-            
-            .milestone { 
-                background: var(--bg-tertiary); 
-                border-left: 4px solid var(--accent-primary); 
-                padding: 15px; 
-                margin: 10px 0; 
-                border-radius: 8px; 
+
+            .milestone {
+                background: var(--bg-tertiary);
+                border-left: 4px solid var(--accent-primary);
+                padding: 15px;
+                margin: 10px 0;
+                border-radius: 8px;
                 transition: all 0.3s;
                 cursor: pointer;
             }
-            
+
             .milestone:hover { transform: translateX(5px); }
-            
+
             .milestone-completed { border-left-color: var(--accent-success); }
             .milestone-high { border-left-color: var(--accent-warning); }
             .milestone-medium { border-left-color: var(--accent-primary); }
             .milestone-low { border-left-color: var(--text-secondary); }
-            
-            .progress-bar { 
-                background: var(--border-color); 
-                border-radius: 10px; 
-                height: 8px; 
-                margin: 10px 0; 
-                overflow: hidden; 
+
+            .progress-bar {
+                background: var(--border-color);
+                border-radius: 10px;
+                height: 8px;
+                margin: 10px 0;
+                overflow: hidden;
             }
-            
-            .progress-fill { 
-                background: var(--accent-success); 
-                height: 100%; 
-                transition: width 0.8s ease; 
+
+            .progress-fill {
+                background: var(--accent-success);
+                height: 100%;
+                transition: width 0.8s ease;
             }
-            
-            .priority-badge { 
-                padding: 4px 8px; 
-                border-radius: 12px; 
-                font-size: 12px; 
-                font-weight: bold; 
+
+            .priority-badge {
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
             }
-            
+
             .priority-high { background: var(--accent-error); color: var(--bg-primary); }
             .priority-medium { background: var(--accent-warning); color: var(--bg-primary); }
             .priority-low { background: var(--accent-success); color: var(--bg-primary); }
             .priority-critical { background: var(--accent-error); color: var(--bg-primary); }
-            
-            .idea-input { 
-                width: 100%; 
-                padding: 12px; 
-                border: 2px solid var(--border-color); 
-                border-radius: 8px; 
-                margin-bottom: 10px; 
+
+            .idea-input {
+                width: 100%;
+                padding: 12px;
+                border: 2px solid var(--border-color);
+                border-radius: 8px;
+                margin-bottom: 10px;
                 background: var(--bg-tertiary);
                 color: var(--text-primary);
                 font-family: inherit;
             }
-            
-            .btn { 
-                background: var(--accent-primary); 
-                color: var(--bg-primary); 
-                border: none; 
-                padding: 12px 24px; 
-                border-radius: 8px; 
-                cursor: pointer; 
-                width: 100%; 
-                margin: 5px 0; 
+
+            .btn {
+                background: var(--accent-primary);
+                color: var(--bg-primary);
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                width: 100%;
+                margin: 5px 0;
                 font-weight: bold;
                 transition: all 0.3s;
             }
-            
-            .btn:hover { 
-                background: var(--accent-secondary); 
+
+            .btn:hover {
+                background: var(--accent-secondary);
                 transform: translateY(-2px);
             }
-            
+
             .btn-secondary { background: var(--accent-secondary); }
             .btn-secondary:hover { background: var(--accent-primary); }
-            
-            .section-tabs { 
-                display: flex; 
-                margin-bottom: 20px; 
-                background: var(--bg-secondary); 
-                border-radius: 10px; 
-                overflow: hidden; 
+
+            .section-tabs {
+                display: flex;
+                margin-bottom: 20px;
+                background: var(--bg-secondary);
+                border-radius: 10px;
+                overflow: hidden;
                 box-shadow: 0 4px 15px var(--shadow);
             }
-            
-            .tab { 
-                flex: 1; 
-                padding: 15px; 
-                text-align: center; 
-                cursor: pointer; 
-                background: var(--bg-secondary); 
-                border: none; 
+
+            .tab {
+                flex: 1;
+                padding: 15px;
+                text-align: center;
+                cursor: pointer;
+                background: var(--bg-secondary);
+                border: none;
                 color: var(--text-primary);
                 font-weight: bold;
                 transition: all 0.3s;
             }
-            
-            .tab.active { 
-                background: var(--accent-primary); 
-                color: var(--bg-primary); 
+
+            .tab.active {
+                background: var(--accent-primary);
+                color: var(--bg-primary);
             }
-            
+
             .tab-content { display: none; }
             .tab-content.active { display: block; }
-            
+
             .modal {
                 display: none;
                 position: fixed;
@@ -542,7 +542,7 @@ async def dashboard_home():
                 background-color: rgba(0,0,0,0.5);
                 backdrop-filter: blur(5px);
             }
-            
+
             .modal-content {
                 background-color: var(--bg-secondary);
                 margin: 5% auto;
@@ -554,12 +554,12 @@ async def dashboard_home():
                 border: 2px solid var(--border-color);
                 animation: modalSlideIn 0.3s ease;
             }
-            
+
             @keyframes modalSlideIn {
                 from { transform: translateY(-50px); opacity: 0; }
                 to { transform: translateY(0); opacity: 1; }
             }
-            
+
             .close {
                 color: var(--text-secondary);
                 float: right;
@@ -568,32 +568,32 @@ async def dashboard_home():
                 cursor: pointer;
                 transition: color 0.3s;
             }
-            
+
             .close:hover { color: var(--accent-error); }
-            
+
             .woodchipper-effect {
                 animation: woodchipperPulse 1s ease;
                 border-color: var(--accent-success) !important;
             }
-            
+
             @keyframes woodchipperPulse {
                 0% { transform: scale(1); }
                 50% { transform: scale(1.05); box-shadow: 0 0 20px var(--accent-success); }
                 100% { transform: scale(1); }
             }
-            
+
             .timeline-update {
                 animation: timelineGlow 2s ease;
             }
-            
+
             @keyframes timelineGlow {
                 0% { box-shadow: 0 4px 12px var(--shadow); }
                 50% { box-shadow: 0 4px 25px var(--accent-success); }
                 100% { box-shadow: 0 4px 12px var(--shadow); }
             }
-            
+
             .status-active { color: var(--accent-success); font-weight: bold; }
-            
+
             .feature-item {
                 background: var(--bg-tertiary);
                 padding: 8px 12px;
@@ -610,7 +610,7 @@ async def dashboard_home():
             <button class="theme-btn" onclick="setTheme('dracula')">🧛 Dracula</button>
             <button class="theme-btn" onclick="setTheme('solarized-dark')">🌊 Solarized Dark</button>
         </div>
-        
+
         <div class="container">
             <div class="header">
                 <h1>🚀 Second Brain - Project Pipeline Dashboard</h1>
@@ -619,7 +619,7 @@ async def dashboard_home():
                 <div class="version-badge">Next: v2.4.0</div>
                 <p id="status" class="status-active">✅ Session Active - Context Preserved</p>
             </div>
-            
+
             <div class="section-tabs">
                 <button class="tab active" onclick="showTab('overview')">📊 Overview</button>
                 <button class="tab" onclick="showTab('roadmap')">🗺️ Visual Roadmap</button>
@@ -627,7 +627,7 @@ async def dashboard_home():
                 <button class="tab" onclick="showTab('todos')">🎯 Development Pipeline</button>
                 <button class="tab" onclick="showTab('session')">⚡ Session Control</button>
             </div>
-            
+
             <div id="overview" class="tab-content active">
                 <div class="grid">
                     <div class="card">
@@ -651,7 +651,7 @@ async def dashboard_home():
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="card" id="woodchipperCard">
                         <h3>💡 Mobile Idea Ingestion (Woodchipper)</h3>
                         <textarea id="ideaText" class="idea-input" placeholder="Drop your idea here... Watch the roadmap update in real-time!"></textarea>
@@ -661,13 +661,13 @@ async def dashboard_home():
                     </div>
                 </div>
             </div>
-            
+
             <div id="roadmap" class="tab-content">
                 <div class="card">
                     <h3>🗺️ Project Roadmap Timeline</h3>
                     <div class="roadmap-timeline" id="roadmapTimeline">
                         <div class="timeline-line"></div>
-                        
+
                         <div class="timeline-item" onclick="showVersionModal('v2.1.0')">
                             <div class="timeline-content">
                                 <div class="version-label">v2.1.0 - Foundation</div>
@@ -676,7 +676,7 @@ async def dashboard_home():
                             </div>
                             <div class="timeline-dot"></div>
                         </div>
-                        
+
                         <div class="timeline-item" onclick="showVersionModal('v2.2.0')">
                             <div class="timeline-content">
                                 <div class="version-label">v2.2.0 - Performance</div>
@@ -685,7 +685,7 @@ async def dashboard_home():
                             </div>
                             <div class="timeline-dot"></div>
                         </div>
-                        
+
                         <div class="timeline-item" onclick="showVersionModal('v2.3.0')">
                             <div class="timeline-content" style="border-color: var(--accent-success);">
                                 <div class="version-label">v2.3.0 - Cognitive Memory (Current)</div>
@@ -694,7 +694,7 @@ async def dashboard_home():
                             </div>
                             <div class="timeline-dot" style="background: var(--accent-success);"></div>
                         </div>
-                        
+
                         <div class="timeline-item" onclick="showVersionModal('v2.4.0')" id="nextVersion">
                             <div class="timeline-content" style="border-style: dashed;">
                                 <div class="version-label">v2.4.0 - Analytics (In Progress)</div>
@@ -703,7 +703,7 @@ async def dashboard_home():
                             </div>
                             <div class="timeline-dot" style="background: var(--accent-warning);"></div>
                         </div>
-                        
+
                         <div class="timeline-item" onclick="showVersionModal('v2.5.0')">
                             <div class="timeline-content" style="opacity: 0.7;">
                                 <div class="version-label">v2.5.0 - Enhanced UX</div>
@@ -712,7 +712,7 @@ async def dashboard_home():
                             </div>
                             <div class="timeline-dot" style="background: var(--text-secondary);"></div>
                         </div>
-                        
+
                         <div class="timeline-item" onclick="showVersionModal('v3.0.0')">
                             <div class="timeline-content" style="opacity: 0.5;">
                                 <div class="version-label">v3.0.0 - Ecosystem</div>
@@ -724,7 +724,7 @@ async def dashboard_home():
                     </div>
                 </div>
             </div>
-            
+
             <div id="completed" class="tab-content">
                 <!-- Previous completed content remains the same -->
                 <div class="grid">
@@ -742,7 +742,7 @@ async def dashboard_home():
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="card">
                         <h3>⚡ Performance & Security (v2.2.0)</h3>
                         <div class="milestone milestone-completed">
@@ -757,7 +757,7 @@ async def dashboard_home():
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="card">
                         <h3>🧠 Session Persistence & Context Continuity</h3>
                         <div class="milestone milestone-completed">
@@ -774,7 +774,7 @@ async def dashboard_home():
                     </div>
                 </div>
             </div>
-            
+
             <div id="todos" class="tab-content">
                 <!-- Previous todos content with enhanced styling -->
                 <div class="grid">
@@ -788,7 +788,7 @@ async def dashboard_home():
                             </div>
                             <div>15% Complete - Click for details</div>
                         </div>
-                        
+
                         <div class="milestone milestone-high" onclick="showMilestoneModal('batch-operations')">
                             <strong>🔄 Batch Memory Operations</strong>
                             <span class="priority-badge priority-high">HIGH PRIORITY</span>
@@ -800,7 +800,7 @@ async def dashboard_home():
                     </div>
                 </div>
             </div>
-            
+
             <div id="session" class="tab-content">
                 <!-- Previous session content with enhanced styling -->
                 <div class="grid">
@@ -811,7 +811,7 @@ async def dashboard_home():
                         <button class="btn" onclick="resumeSession()">▶️ Resume Session (Full Context)</button>
                         <div id="sessionStatus"></div>
                     </div>
-                    
+
                     <div class="card">
                         <h3>📱 Mobile Interface</h3>
                         <p>Access the mobile-optimized interface for on-the-go idea capture</p>
@@ -820,7 +820,7 @@ async def dashboard_home():
                 </div>
             </div>
         </div>
-        
+
         <!-- Modals -->
         <div id="milestoneModal" class="modal">
             <div class="modal-content">
@@ -829,7 +829,7 @@ async def dashboard_home():
                 <div id="modalContent"></div>
             </div>
         </div>
-        
+
         <div id="versionModal" class="modal">
             <div class="modal-content">
                 <span class="close" onclick="closeModal('versionModal')">&times;</span>
@@ -837,86 +837,86 @@ async def dashboard_home():
                 <div id="versionModalContent"></div>
             </div>
         </div>
-        
+
         <script>
             let ideaCounter = 0;
-            
+
             function setTheme(theme) {
                 document.body.setAttribute('data-theme', theme);
-                
+
                 // Update active theme button
                 document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
                 event.target.classList.add('active');
-                
+
                 // Store theme preference
                 localStorage.setItem('preferred-theme', theme);
             }
-            
+
             // Load saved theme
             document.addEventListener('DOMContentLoaded', function() {
                 const savedTheme = localStorage.getItem('preferred-theme') || 'gruvbox-light';
                 setTheme(savedTheme);
             });
-            
+
             function showTab(tabName) {
                 // Hide all tab contents
                 const contents = document.querySelectorAll('.tab-content');
                 contents.forEach(content => content.classList.remove('active'));
-                
+
                 // Remove active class from all tabs
                 const tabs = document.querySelectorAll('.tab');
                 tabs.forEach(tab => tab.classList.remove('active'));
-                
+
                 // Show selected tab content
                 document.getElementById(tabName).classList.add('active');
-                
+
                 // Add active class to clicked tab
                 event.target.classList.add('active');
             }
-            
+
             async function submitIdea() {
                 const idea = document.getElementById('ideaText').value;
                 if (!idea.trim()) return;
-                
+
                 // Apply woodchipper effect
                 const card = document.getElementById('woodchipperCard');
                 card.classList.add('woodchipper-effect');
-                
+
                 try {
                     const response = await fetch('/api/ingest-idea', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ idea: idea, source: 'web_dashboard' })
                     });
-                    
+
                     const result = await response.json();
-                    
+
                     // Show result
-                    document.getElementById('ideaResult').innerHTML = 
+                    document.getElementById('ideaResult').innerHTML =
                         `<p style="color: var(--accent-success);">✅ ${result.message}</p>`;
-                    
+
                     // Show impact visualization
                     showIdeaImpact(result);
-                    
+
                     // Update roadmap visually
                     updateRoadmapVisually(result);
-                    
+
                     // Update milestone count
                     ideaCounter++;
                     const milestonesCount = document.getElementById('milestonesCount');
                     milestonesCount.textContent = parseInt(milestonesCount.textContent) + 1;
-                    
+
                     document.getElementById('ideaText').value = '';
-                    
+
                 } catch (error) {
-                    document.getElementById('ideaResult').innerHTML = 
+                    document.getElementById('ideaResult').innerHTML =
                         `<p style="color: var(--accent-error);">❌ Error processing idea</p>`;
                 }
-                
+
                 // Remove effect after animation
                 setTimeout(() => card.classList.remove('woodchipper-effect'), 1000);
             }
-            
+
             function showIdeaImpact(result) {
                 const impactDiv = document.getElementById('ideaImpact');
                 impactDiv.style.display = 'block';
@@ -931,21 +931,21 @@ async def dashboard_home():
                     </div>
                 `;
             }
-            
+
             function updateRoadmapVisually(result) {
                 // Animate the next version in timeline
                 const nextVersion = document.getElementById('nextVersion');
                 nextVersion.classList.add('timeline-update');
-                
+
                 // Update progress text
                 const progressText = document.getElementById('v240Progress');
                 const currentFeatures = parseInt(progressText.textContent.split(' ')[0]) || 2;
                 progressText.textContent = `${currentFeatures + result.features_detected.length} Features Planned`;
-                
+
                 // Remove animation after effect
                 setTimeout(() => nextVersion.classList.remove('timeline-update'), 2000);
             }
-            
+
             function showMilestoneDetails() {
                 showModal('milestoneModal', 'Active Development Milestones', `
                     <div class="feature-item">🧪 Memory Consolidation & Analytics (v2.4.0) - 15% Complete</div>
@@ -955,7 +955,7 @@ async def dashboard_home():
                     <p style="margin-top: 15px; color: var(--text-secondary);">Click on individual milestones in the Development Pipeline tab for detailed task lists.</p>
                 `);
             }
-            
+
             function showVersionDetails() {
                 showModal('versionModal', 'Version Information', `
                     <div class="feature-item"><strong>Current:</strong> v2.3.0 - Cognitive Memory Architecture</div>
@@ -965,7 +965,7 @@ async def dashboard_home():
                     <div class="feature-item"><strong>Development Model:</strong> Semantic Versioning</div>
                 `);
             }
-            
+
             function showTestDetails() {
                 showModal('milestoneModal', 'Test Success Details', `
                     <div class="feature-item">✅ Unit Tests: 35/35 passing</div>
@@ -975,7 +975,7 @@ async def dashboard_home():
                     <div class="feature-item">✅ Linting: 0 issues (289 resolved)</div>
                 `);
             }
-            
+
             function showAIDetails() {
                 showModal('milestoneModal', 'AI Classification Accuracy', `
                     <div class="feature-item">🧠 Semantic Memory: 97% accuracy</div>
@@ -985,7 +985,7 @@ async def dashboard_home():
                     <div class="feature-item">📊 30+ regex patterns for content analysis</div>
                 `);
             }
-            
+
             function showVersionModal(version) {
                 const versionData = {
                     'v2.1.0': {
@@ -1053,13 +1053,13 @@ async def dashboard_home():
                         `
                     }
                 };
-                
+
                 const data = versionData[version];
                 if (data) {
                     showModal('versionModal', data.title, data.content);
                 }
             }
-            
+
             function showMilestoneModal(milestoneId) {
                 const milestoneData = {
                     'memory-consolidation': {
@@ -1096,31 +1096,31 @@ async def dashboard_home():
                         `
                     }
                 };
-                
+
                 const data = milestoneData[milestoneId];
                 if (data) {
                     showModal('milestoneModal', data.title, data.content);
                 }
             }
-            
+
             function showModal(modalId, title, content) {
                 const modal = document.getElementById(modalId);
-                const titleElement = modalId === 'versionModal' ? 
-                    document.getElementById('versionModalTitle') : 
+                const titleElement = modalId === 'versionModal' ?
+                    document.getElementById('versionModalTitle') :
                     document.getElementById('modalTitle');
-                const contentElement = modalId === 'versionModal' ? 
-                    document.getElementById('versionModalContent') : 
+                const contentElement = modalId === 'versionModal' ?
+                    document.getElementById('versionModalContent') :
                     document.getElementById('modalContent');
-                
+
                 titleElement.textContent = title;
                 contentElement.innerHTML = content;
                 modal.style.display = 'block';
             }
-            
+
             function closeModal(modalId) {
                 document.getElementById(modalId).style.display = 'none';
             }
-            
+
             // Close modal when clicking outside
             window.onclick = function(event) {
                 const modals = document.querySelectorAll('.modal');
@@ -1130,7 +1130,7 @@ async def dashboard_home():
                     }
                 });
             }
-            
+
             async function pauseSession() {
                 try {
                     const response = await fetch('/api/session', {
@@ -1138,16 +1138,16 @@ async def dashboard_home():
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ action: 'pause', reason: 'User request' })
                     });
-                    
+
                     const result = await response.json();
-                    document.getElementById('sessionStatus').innerHTML = 
+                    document.getElementById('sessionStatus').innerHTML =
                         `<p style="color: var(--accent-warning);">⏸️ ${result.message}</p>`;
                     document.getElementById('status').textContent = '⏸️ Session Paused - Context Preserved';
                 } catch (error) {
                     console.error('Error pausing session:', error);
                 }
             }
-            
+
             async function resumeSession() {
                 try {
                     const response = await fetch('/api/session', {
@@ -1155,9 +1155,9 @@ async def dashboard_home():
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ action: 'resume' })
                     });
-                    
+
                     const result = await response.json();
-                    document.getElementById('sessionStatus').innerHTML = 
+                    document.getElementById('sessionStatus').innerHTML =
                         `<p style="color: var(--accent-success);">▶️ ${result.message}</p>`;
                     document.getElementById('status').textContent = '✅ Session Active - Context Preserved';
                 } catch (error) {
@@ -1196,14 +1196,14 @@ async def mobile_interface():
         <div class="mobile-container">
             <h1>📱 Project Pipeline</h1>
             <p style="text-align: center; color: #666;">Mobile Idea Ingestion</p>
-            
+
             <div class="card">
                 <h3>💡 Drop Your Idea</h3>
                 <textarea id="mobileIdea" placeholder="Quick idea capture... Voice recording coming soon!"></textarea>
                 <button onclick="submitMobileIdea()">🌊 Process Idea</button>
                 <div id="mobileResult"></div>
             </div>
-            
+
             <div class="card">
                 <h3>🔄 Quick Actions</h3>
                 <div class="quick-buttons">
@@ -1211,7 +1211,7 @@ async def mobile_interface():
                     <button class="quick-btn" onclick="resumeFromMobile()">▶️ Resume</button>
                 </div>
             </div>
-            
+
             <div class="card">
                 <h3>📊 Status</h3>
                 <div id="mobileStatus">
@@ -1221,33 +1221,33 @@ async def mobile_interface():
                 </div>
             </div>
         </div>
-        
+
         <script>
             async function submitMobileIdea() {
                 const idea = document.getElementById('mobileIdea').value;
                 if (!idea.trim()) return;
-                
+
                 try {
                     const response = await fetch('/api/ingest-idea', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ idea: idea, source: 'mobile' })
                     });
-                    
+
                     const result = await response.json();
-                    document.getElementById('mobileResult').innerHTML = 
+                    document.getElementById('mobileResult').innerHTML =
                         `<div class="status success">✅ ${result.message}</div>`;
                     document.getElementById('mobileIdea').value = '';
-                    
+
                     // Update ideas count
                     const current = parseInt(document.getElementById('ideasCount').textContent);
                     document.getElementById('ideasCount').textContent = current + 1;
                 } catch (error) {
-                    document.getElementById('mobileResult').innerHTML = 
+                    document.getElementById('mobileResult').innerHTML =
                         `<div class="status" style="background: #fef2f2; color: #991b1b;">❌ Error processing idea</div>`;
                 }
             }
-            
+
             async function pauseFromMobile() {
                 const response = await fetch('/api/session', {
                     method: 'POST',
@@ -1256,7 +1256,7 @@ async def mobile_interface():
                 });
                 alert('⏸️ Session paused - context preserved!');
             }
-            
+
             async function resumeFromMobile() {
                 const response = await fetch('/api/session', {
                     method: 'POST',
