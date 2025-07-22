@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Any
 
 try:
-    import yaml
+    import yaml  # noqa: F401
     YAML_AVAILABLE = True
 except ImportError:
     YAML_AVAILABLE = False

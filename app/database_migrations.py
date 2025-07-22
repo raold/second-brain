@@ -324,7 +324,7 @@ class AddImportanceScoreToMemories(DatabaseSchemaMigration):
             id="add_importance_score_001",
             name="Add importance score to memories",
             description="Adds importance_score column for memory ranking",
-            version="2.5.0",
+            version="2.8.1",
             migration_type=MigrationType.DATABASE_SCHEMA,
             author="system",
             created_at=datetime.now(),
