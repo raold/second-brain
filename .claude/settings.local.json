@@ -41,7 +41,10 @@
       "Bash(rm:*)",
       "Bash(grep:*)",
       "Bash(chmod:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(source:*)"
     ],
     "deny": []
   }

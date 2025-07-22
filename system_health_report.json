@@ -1,0 +1,58 @@
+{
+  "health_score": 67,
+  "issues": [
+    {
+      "category": "dependencies",
+      "message": "Missing critical dependencies: uvicorn",
+      "severity": "error",
+      "timestamp": "2025-07-22T01:41:29.577158"
+    }
+  ],
+  "warnings": [
+    {
+      "category": "git",
+      "message": "Many uncommitted changes (11)",
+      "severity": "warning",
+      "timestamp": "2025-07-22T01:41:29.583204"
+    },
+    {
+      "category": "security",
+      "message": "No .env file found (may need environment variables)",
+      "severity": "warning",
+      "timestamp": "2025-07-22T01:41:29.585026"
+    },
+    {
+      "category": "security",
+      "message": "Missing .gitignore patterns: *.key, *.pem",
+      "severity": "warning",
+      "timestamp": "2025-07-22T01:41:29.585072"
+    }
+  ],
+  "recommendations": [
+    {
+      "category": "config",
+      "message": "Missing optional config file: pyproject.toml",
+      "severity": "recommendation",
+      "timestamp": "2025-07-22T01:41:29.577247"
+    },
+    {
+      "category": "config",
+      "message": "Missing optional config file: .env",
+      "severity": "recommendation",
+      "timestamp": "2025-07-22T01:41:29.577270"
+    },
+    {
+      "category": "docs",
+      "message": "Missing documentation: API.md",
+      "severity": "recommendation",
+      "timestamp": "2025-07-22T01:41:29.584974"
+    },
+    {
+      "category": "docs",
+      "message": "Missing documentation: TESTING.md",
+      "severity": "recommendation",
+      "timestamp": "2025-07-22T01:41:29.585000"
+    }
+  ],
+  "status": "\ud83d\udfe1 NEEDS ATTENTION"
+}
