@@ -342,7 +342,7 @@ class ConsolidateDuplicateMemories(MemoryDataMigration):
             id="consolidate_duplicates_001",
             name="Consolidate duplicate memories",
             description="Identifies and merges duplicate or highly similar memories",
-            version="2.5.1",
+            version="2.8.1",
             migration_type=MigrationType.MEMORY_DATA,
             author="system",
             created_at=datetime.now(),
