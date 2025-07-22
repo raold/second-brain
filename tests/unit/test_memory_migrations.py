@@ -5,7 +5,7 @@ Tests key functionality of memory migration system using the actual class interf
 """
 
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -70,11 +70,10 @@ class TestAddMemoryTypeClassification:
             {"id": 2, "content": "How to bake a cake", "metadata": {}},
         ]
 
-        # Create a proper async context manager mock
-        mock_acquire = AsyncMock()
-        mock_acquire.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_acquire.__aexit__ = AsyncMock(return_value=None)
-        mock_pool.acquire = AsyncMock(return_value=mock_acquire)
+        # Create a proper async context manager mock  
+        mock_pool.acquire = MagicMock()
+        mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
+        mock_pool.acquire.return_value.__aexit__ = AsyncMock(return_value=None)
 
         result = await migration.get_memories_to_migrate()
 
@@ -232,11 +231,10 @@ class TestConsolidateDuplicateMemories:
             },
         ]
 
-        # Create a proper async context manager mock
-        mock_acquire = AsyncMock()
-        mock_acquire.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_acquire.__aexit__ = AsyncMock(return_value=None)
-        mock_pool.acquire = AsyncMock(return_value=mock_acquire)
+        # Create a proper async context manager mock  
+        mock_pool.acquire = MagicMock()
+        mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
+        mock_pool.acquire.return_value.__aexit__ = AsyncMock(return_value=None)
 
         result = await migration.get_memories_to_migrate()
 
