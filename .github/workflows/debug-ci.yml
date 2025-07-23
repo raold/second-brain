@@ -1,0 +1,110 @@
+name: Debug CI Issues
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, develop]
+
+jobs:
+  debug-environment:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Environment Info
+        run: |
+          echo "=== System Info ==="
+          uname -a
+          echo ""
+          echo "=== Python Version ==="
+          python3 --version
+          echo ""
+          echo "=== Directory Structure ==="
+          ls -la
+          echo ""
+          echo "=== GitHub Context ==="
+          echo "Workspace: ${{ github.workspace }}"
+          echo "Runner OS: ${{ runner.os }}"
+          
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Check Python Setup
+        run: |
+          echo "=== Python Location ==="
+          which python
+          python --version
+          echo ""
+          echo "=== Pip Version ==="
+          pip --version
+          
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          echo "=== Installing requirements.txt ==="
+          pip install -r requirements.txt
+          echo ""
+          echo "=== Installed Packages ==="
+          pip list | grep -E "ruff|pytest|fastapi|pydantic"
+          
+      - name: Check Ruff Version
+        run: |
+          echo "=== Ruff Version Check ==="
+          pip show ruff
+          ruff --version
+          
+      - name: Test Imports
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          echo "=== Testing Basic Imports ==="
+          python -c "import app; print('app module OK')"
+          python -c "import app.models; print('app.models OK')"
+          python -c "import app.services; print('app.services OK')"
+          python -c "import app.routes; print('app.routes OK')"
+          
+      - name: Test Synthesis Imports
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          echo "=== Testing Synthesis Imports ==="
+          python -c "
+import sys
+print('Python path:', sys.path[:3])
+try:
+    from app.models.synthesis import ReportType, RepetitionAlgorithm, EventType
+    print('✓ Synthesis models imported successfully')
+except Exception as e:
+    print(f'✗ Failed to import synthesis models: {e}')
+    
+try:
+    from app.services.synthesis import ReportGenerator, RepetitionScheduler, WebSocketService
+    print('✓ Synthesis services imported successfully')
+except Exception as e:
+    print(f'✗ Failed to import synthesis services: {e}')
+    
+try:
+    from app.routes.synthesis_routes import router
+    print('✓ Synthesis routes imported successfully')
+except Exception as e:
+    print(f'✗ Failed to import synthesis routes: {e}')
+"
+          
+      - name: Run Minimal Test
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          USE_MOCK_DATABASE: true
+        run: |
+          echo "=== Running Minimal Test ==="
+          python -m pytest --version
+          python -m pytest tests/unit/synthesis/test_report_models.py::TestReportModels::test_report_type_enum -v
+          
+      - name: Check File Permissions
+        run: |
+          echo "=== File Permissions ==="
+          ls -la app/models/synthesis/
+          ls -la app/services/synthesis/
+          ls -la tests/unit/synthesis/

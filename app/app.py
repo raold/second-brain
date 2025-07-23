@@ -268,6 +268,10 @@ app.include_router(insights_router)
 # Include bulk operations routes
 app.include_router(get_bulk_routes(), dependencies=[Depends(verify_api_key)])
 
+# Include synthesis routes (v2.8.2)
+from app.routes.synthesis_routes import router as synthesis_router
+app.include_router(synthesis_router)
+
 # Setup legacy dashboard and session routes (temporary until full migration)
 setup_dashboard_routes(app)
 setup_session_routes(app)

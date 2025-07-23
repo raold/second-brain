@@ -1,4 +1,4 @@
-# Second Brain v2.0.0 - Optimized Docker Image
+# Second Brain v2.8.2 - Optimized Docker Image
 FROM python:3.11-slim
 
 # Set environment variables
@@ -23,6 +23,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY app/ ./app/
 COPY static/ ./static/
+COPY migrations/ ./migrations/
+
+# Create directories for synthesis features
+RUN mkdir -p /app/data/reports
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash app && chown -R app:app /app

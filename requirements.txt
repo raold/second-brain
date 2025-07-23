@@ -39,7 +39,7 @@ pytest-asyncio==0.21.1
 httpx==0.25.2
 
 # Development tools
-ruff==0.1.6
+ruff==0.12.4
 
 # NLP and Text Processing
 spacy==3.7.2
