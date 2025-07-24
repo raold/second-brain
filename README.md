@@ -78,11 +78,11 @@ Each release builds upon the previous, creating a comprehensive AI-powered knowl
 The three core systems work together seamlessly:
 
 ```
-Natural Language Query → Reasoning Engine → Knowledge Graph Builder → Interactive Visualization
-          ↓                     ↓                      ↓                        ↓
-"How are Python and ML   Extract entities &    Build graph with nodes    Render interactive
- connected through       find reasoning        & relationship edges      D3.js visualization
- data science?"          paths with confidence                           with export options
+Natural Language Query   →   Reasoning Engine   →    Knowledge Graph Builder   →   Interactive Visualization
+          ↓                         ↓                          ↓                             ↓
+"How are Python and ML       Extract entities &      Build graph with nodes        Render interactive
+ connected through           find reasoning          & relationship edges          D3.js visualization
+ data science?"              paths with confidence                                  with export options
 ```
 
 ## 🎯 **Complete Feature Set**
