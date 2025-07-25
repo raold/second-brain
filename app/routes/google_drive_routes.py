@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from app.dependencies import get_current_user, get_db
 from app.ingestion.engine import IngestionEngine
 from app.ingestion.google_drive_client import DriveFile, GoogleDriveClient
-from app.models.models import User
+from src.domain.models.user import User
 from app.repositories.memory_repository import MemoryRepository
 from app.services.service_factory import ServiceFactory
 from app.utils.logger import get_logger
