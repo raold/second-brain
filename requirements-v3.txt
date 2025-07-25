@@ -1,0 +1,52 @@
+# Core dependencies for v3.0.0
+
+# Web framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Database
+sqlalchemy==2.0.25
+asyncpg==0.29.0
+alembic==1.13.1
+aiosqlite==0.19.0  # For testing
+
+# Authentication
+bcrypt==4.1.2
+python-jose[cryptography]==3.3.0
+passlib==1.7.4
+
+# Validation
+pydantic==2.5.3
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# Logging and monitoring
+structlog==24.1.0
+python-json-logger==2.0.7
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+httpx==0.26.0
+
+# Development
+black==23.12.1
+ruff==0.1.11
+mypy==1.8.0
+pre-commit==3.6.0
+
+# CLI
+click==8.1.7
+rich==13.7.0
+
+# Event handling
+aiokafka==0.10.0  # Optional, for Kafka support
+
+# Caching
+aioredis==2.0.1
+
+# API documentation
+mkdocs==1.5.3
+mkdocs-material==9.5.3
