@@ -3,8 +3,9 @@ Unit tests for User domain model.
 """
 
 import pytest
+import time
 from datetime import datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from src.domain.models.user import User, UserId, UserRole
 
@@ -23,7 +24,7 @@ class TestUserId:
         """Test that UserId is immutable."""
         user_id = UserId.generate()
         with pytest.raises(AttributeError):
-            user_id.value = UUID()
+            user_id.value = uuid4()
 
 
 class TestUser:
@@ -76,6 +77,9 @@ class TestUser:
         """Test updating user profile."""
         user = User(**valid_user_data)
         old_updated_at = user.updated_at
+        
+        # Add small delay to ensure timestamp difference
+        time.sleep(0.001)
         
         user.update_profile(
             full_name="Test User",

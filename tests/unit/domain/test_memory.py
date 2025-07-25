@@ -3,8 +3,9 @@ Unit tests for Memory domain model.
 """
 
 import pytest
+import time
 from datetime import datetime, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from src.domain.models.memory import Memory, MemoryId, MemoryType, MemoryStatus
 
@@ -91,6 +92,9 @@ class TestMemory:
         memory = Memory(**valid_memory_data)
         old_updated_at = memory.updated_at
         
+        # Add small delay to ensure timestamp difference
+        time.sleep(0.001)
+        
         memory.update_content("New Title", "New content")
         assert memory.title == "New Title"
         assert memory.content == "New content"
@@ -146,6 +150,9 @@ class TestMemory:
         memory = Memory(**valid_memory_data)
         initial_count = memory.retrieval_count
         old_accessed_at = memory.accessed_at
+        
+        # Add small delay to ensure timestamp difference
+        time.sleep(0.001)
         
         memory.record_access()
         assert memory.retrieval_count == initial_count + 1

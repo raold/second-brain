@@ -1,47 +1,49 @@
-# Second Brain v2.4.2 - Simplified Docker Compose
-version: '3.8'
+# Second Brain Development Services
+# Simple setup for local development
+# Run: docker-compose up -d
 
 services:
-  # PostgreSQL database with pgvector extension
   postgres:
-    image: pgvector/pgvector:pg16
-    container_name: second-brain-postgres
+    image: postgres:16-alpine
+    container_name: secondbrain-postgres
     environment:
-      POSTGRES_DB: second_brain
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: secondbrain
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: secondbrain
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U secondbrain"]
+      interval: 5s
       timeout: 5s
       retries: 5
 
-  # Second Brain API
-  api:
-    build: .
-    container_name: second-brain-api
-    environment:
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/second_brain
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      API_TOKENS: demo-token,production-token
+  redis:
+    image: redis:7-alpine
+    container_name: secondbrain-redis
     ports:
-      - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - "6379:6379"
+    command: redis-server --appendonly yes
     volumes:
-      - ./static:/app/static:ro
-    command: uvicorn app.app:app --host 0.0.0.0 --port 8000 --reload
+      - redis_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer
+    container_name: secondbrain-adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:
+  redis_data:
