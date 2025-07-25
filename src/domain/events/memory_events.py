@@ -4,7 +4,7 @@ Memory-related domain events.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Optional
 from uuid import UUID
 
@@ -16,12 +16,12 @@ from src.domain.models.memory import MemoryType, MemoryStatus
 class MemoryCreated(DomainEvent):
     """Event raised when a memory is created."""
     
-    title: str
-    content: str
-    memory_type: MemoryType
-    user_id: UUID
-    tags: list[str]
-    importance_score: float
+    title: str = ""
+    content: str = ""
+    memory_type: MemoryType = MemoryType.SEMANTIC
+    user_id: UUID = field(default_factory=lambda: UUID('00000000-0000-0000-0000-000000000000'))
+    tags: list[str] = field(default_factory=list)
+    importance_score: float = 0.0
     
     @property
     def event_type(self) -> str:
@@ -50,10 +50,10 @@ class MemoryCreated(DomainEvent):
 class MemoryUpdated(DomainEvent):
     """Event raised when a memory is updated."""
     
-    title: str
-    content: str
-    old_title: str
-    old_content: str
+    title: str = ""
+    content: str = ""
+    old_title: str = ""
+    old_content: str = ""
     
     @property
     def event_type(self) -> str:
@@ -80,7 +80,7 @@ class MemoryUpdated(DomainEvent):
 class MemoryDeleted(DomainEvent):
     """Event raised when a memory is deleted."""
     
-    deletion_type: str  # "soft" or "hard"
+    deletion_type: str = "soft"  # "soft" or "hard"
     reason: Optional[str] = None
     
     @property
@@ -106,8 +106,8 @@ class MemoryDeleted(DomainEvent):
 class MemoryAccessed(DomainEvent):
     """Event raised when a memory is accessed."""
     
-    access_type: str  # "view", "search", "link", etc.
-    retrieval_count: int
+    access_type: str = "view"  # "view", "search", "link", etc.
+    retrieval_count: int = 1
     
     @property
     def event_type(self) -> str:
@@ -132,8 +132,8 @@ class MemoryAccessed(DomainEvent):
 class MemoryLinked(DomainEvent):
     """Event raised when a memory is linked to another."""
     
-    linked_memory_id: UUID
-    link_type: str  # "related", "prerequisite", "followup", etc.
+    linked_memory_id: UUID = field(default_factory=lambda: UUID('00000000-0000-0000-0000-000000000000'))
+    link_type: str = "related"  # "related", "prerequisite", "followup", etc.
     
     @property
     def event_type(self) -> str:
@@ -158,7 +158,7 @@ class MemoryLinked(DomainEvent):
 class MemoryUnlinked(DomainEvent):
     """Event raised when a memory link is removed."""
     
-    unlinked_memory_id: UUID
+    unlinked_memory_id: UUID = field(default_factory=lambda: UUID('00000000-0000-0000-0000-000000000000'))
     
     @property
     def event_type(self) -> str:
@@ -182,7 +182,7 @@ class MemoryUnlinked(DomainEvent):
 class MemoryTagged(DomainEvent):
     """Event raised when a tag is added to a memory."""
     
-    tag: str
+    tag: str = ""
     
     @property
     def event_type(self) -> str:
@@ -206,7 +206,7 @@ class MemoryTagged(DomainEvent):
 class MemoryUntagged(DomainEvent):
     """Event raised when a tag is removed from a memory."""
     
-    tag: str
+    tag: str = ""
     
     @property
     def event_type(self) -> str:
