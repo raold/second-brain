@@ -20,7 +20,7 @@ python-multipart==0.0.6
 orjson==3.9.10
 
 # Security
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 

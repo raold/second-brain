@@ -14,7 +14,7 @@ pgvector==0.2.4  # PostgreSQL vector extension support
 
 # Authentication
 bcrypt==4.1.2
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.5.0
 passlib==1.7.4
 
 # Validation
