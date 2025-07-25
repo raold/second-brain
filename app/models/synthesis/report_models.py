@@ -12,6 +12,11 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field, HttpUrl, validator
 
 
+class GeneratedReport(BaseModel):
+    """Legacy alias for ReportResponse"""
+    pass
+
+
 class ReportType(str, Enum):
     """Types of reports that can be generated."""
 

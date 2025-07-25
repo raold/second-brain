@@ -794,3 +794,10 @@ class KnowledgeGraphBuilder:
             "center_entity": entity_id,
             "depth": depth
         }
+
+
+class KnowledgeGraph:
+    """Simple wrapper class for knowledge graph data"""
+    def __init__(self, nodes=None, edges=None):
+        self.nodes = nodes or []
+        self.edges = edges or []

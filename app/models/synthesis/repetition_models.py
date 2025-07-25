@@ -12,6 +12,25 @@ from typing import Optional
 from pydantic import BaseModel, Field, validator
 
 
+class RepetitionSettings(BaseModel):
+    """Settings for spaced repetition system"""
+    algorithm: str = Field(default="sm2")
+    initial_interval: int = Field(default=1, gt=0)
+    easy_multiplier: float = Field(default=2.5, gt=1)
+    hard_multiplier: float = Field(default=0.5, gt=0, lt=1)
+
+
+class ForgettingCurve(BaseModel):
+    """Model for forgetting curve calculations"""
+    retention_rate: float = Field(default=0.9, ge=0, le=1)
+    time_since_review: float = Field(default=0, ge=0)
+    
+    def calculate_retention(self) -> float:
+        """Calculate current retention based on time"""
+        import math
+        return self.retention_rate * math.exp(-self.time_since_review / 30)
+
+
 class RepetitionAlgorithm(str, Enum):
     """Supported spaced repetition algorithms."""
 

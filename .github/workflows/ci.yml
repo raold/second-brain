@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: '3.11'
+  USE_MOCK_DATABASE: 'true'
+  PYTHONDONTWRITEBYTECODE: 1
+  PYTHONUNBUFFERED: 1
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+        cache-dependency-path: 'config/requirements-ci.txt'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r config/requirements-ci.txt
+    
+    - name: Create necessary directories
+      run: |
+        mkdir -p logs
+        mkdir -p data
+    
+    - name: Run tests
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+      run: |
+        python scripts/ci_test_runner.py
+    
+    - name: Run basic smoke test
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+      run: |
+        python -c "import app; print('App module imported successfully')"
+        python -c "from app.models.memory import Memory; print('Memory model imported successfully')"
+        python -c "from app.models.user import User; print('User model imported successfully')"
+    
+    - name: Check critical imports
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+      run: |
+        python -c "
+import sys
+sys.path.insert(0, '.')
+try:
+    from app.models.synthesis.advanced_models import AdvancedSynthesisRequest
+    from app.models.synthesis.consolidation_models import ConsolidationRequest
+    from app.models.synthesis.metrics_models import GraphMetrics
+    from app.models.synthesis.summary_models import SummaryRequest
+    from app.models.synthesis.suggestion_models import Suggestion
+    from app.models.synthesis.repetition_models import RepetitionSettings, ForgettingCurve
+    from app.models.synthesis.report_models import GeneratedReport
+    from app.models.synthesis.websocket_models import EventPriority, BroadcastMessage
+    from app.services.knowledge_graph_builder import KnowledgeGraph
+    print('All critical imports successful')
+except Exception as e:
+    print(f'Import error: {e}')
+    sys.exit(1)
+"

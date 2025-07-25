@@ -12,6 +12,30 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field, validator
 
 
+class EventPriority(str, Enum):
+    """Priority levels for websocket events"""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class BroadcastMessage(BaseModel):
+    """Message to broadcast via websocket"""
+    event_type: str
+    payload: Any
+    priority: EventPriority = Field(default=EventPriority.MEDIUM)
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ConnectionState(str, Enum):
+    """WebSocket connection states"""
+    CONNECTING = "connecting"
+    CONNECTED = "connected"
+    DISCONNECTED = "disconnected"
+    ERROR = "error"
+
+
 class EventType(str, Enum):
     """Types of events that can be broadcast."""
 
