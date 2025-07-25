@@ -1,8 +1,8 @@
 # Dashboard Deployment Guide
 
-This guide covers the dashboard hosting solutions for Second Brain v2.5.0-RC.
+This guide covers the production dashboard hosting solutions for Second Brain v2.4.4.
 
-> **Release Candidate Branch**: You are viewing documentation for the testing version on `testing` branch. Features are ready for final validation.
+> **Production Branch**: You are viewing documentation for the stable production release on `main` branch.
 
 ## 🚀 Quick Start
 

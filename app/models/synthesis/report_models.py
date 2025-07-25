@@ -7,7 +7,7 @@ templates, and scheduling options.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, HttpUrl, validator
 
@@ -47,7 +47,7 @@ class ReportSection(BaseModel):
     order: int = Field(1, description="Display order")
     include_visualization: bool = Field(False, description="Include charts/graphs")
     visualization_type: Optional[str] = Field(None, description="Type of visualization")
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ReportTemplate(BaseModel):
@@ -57,7 +57,7 @@ class ReportTemplate(BaseModel):
     name: str = Field(..., description="Template name")
     description: Optional[str] = Field(None, description="Template description")
     report_type: ReportType = Field(..., description="Type of report")
-    sections: List[str] = Field(..., description="Section identifiers to include")
+    sections: list[str] = Field(..., description="Section identifiers to include")
     default_format: ReportFormat = Field(ReportFormat.PDF)
     custom_css: Optional[str] = Field(None, description="Custom styling for HTML/PDF")
     include_summary: bool = Field(True, description="Include AI-generated summary")
@@ -92,7 +92,7 @@ class ReportConfig(BaseModel):
     analysis_depth: str = Field("standard", description="Analysis depth: basic, standard, deep")
 
     # Delivery configuration
-    email_recipients: List[str] = Field(default_factory=list, description="Email recipients")
+    email_recipients: list[str] = Field(default_factory=list, description="Email recipients")
     webhook_url: Optional[HttpUrl] = Field(None, description="Webhook for delivery")
 
     @validator('relative_timeframe')
@@ -164,16 +164,16 @@ class ReportMetrics(BaseModel):
     average_daily_memories: float = Field(0.0, description="Average memories per day")
 
     # Knowledge metrics
-    topics_covered: List[str] = Field(default_factory=list, description="Topics covered")
+    topics_covered: list[str] = Field(default_factory=list, description="Topics covered")
     knowledge_growth_rate: float = Field(0.0, description="Knowledge growth percentage")
     retention_rate: float = Field(0.0, description="Memory retention rate")
 
     # Insights
-    top_insights: List[Dict[str, Any]] = Field(
+    top_insights: list[dict[str, Any]] = Field(
         default_factory=list,
         description="Top insights discovered"
     )
-    recommendations: List[str] = Field(
+    recommendations: list[str] = Field(
         default_factory=list,
         description="Recommendations for improvement"
     )
@@ -188,7 +188,7 @@ class ReportResponse(BaseModel):
     # Report content
     title: str = Field(..., description="Report title")
     summary: Optional[str] = Field(None, description="Executive summary")
-    sections: List[ReportSection] = Field(..., description="Report sections")
+    sections: list[ReportSection] = Field(..., description="Report sections")
     metrics: ReportMetrics = Field(..., description="Report metrics")
 
     # Generation metadata

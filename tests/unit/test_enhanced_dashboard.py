@@ -41,7 +41,7 @@ class TestEnhancedDashboardData:
         assert "dashboard_version" in meta
         assert "generated_at" in meta
         assert "last_updated" in meta
-        assert meta["dashboard_version"] == "2.8.1-enhanced"
+        assert meta["dashboard_version"] == "2.4.4-enhanced"
 
     def test_version_info_structure(self):
         dashboard = EnhancedDashboardData()

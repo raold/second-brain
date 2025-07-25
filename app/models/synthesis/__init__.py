@@ -7,36 +7,34 @@ This module contains data models for the synthesis features including:
 - WebSocket event models
 """
 
+from .repetition_models import (
+    BulkReviewRequest,
+    LearningStatistics,
+    MemoryStrength,
+    RepetitionAlgorithm,
+    RepetitionConfig,
+    ReviewDifficulty,
+    ReviewSchedule,
+    ReviewSession,
+    ReviewStatus,
+)
 from .report_models import (
-    ReportType,
-    ReportFormat,
     ReportConfig,
+    ReportFilter,
+    ReportFormat,
     ReportRequest,
     ReportResponse,
     ReportSchedule,
     ReportTemplate,
-    ReportFilter,
+    ReportType,
 )
-
-from .repetition_models import (
-    RepetitionAlgorithm,
-    ReviewDifficulty,
-    ReviewStatus,
-    MemoryStrength,
-    ReviewSchedule,
-    RepetitionConfig,
-    ReviewSession,
-    LearningStatistics,
-    BulkReviewRequest,
-)
-
 from .websocket_models import (
-    EventType,
-    WebSocketEvent,
-    WebSocketMessage,
-    SubscriptionRequest,
     ConnectionStatus,
     EventSubscription,
+    EventType,
+    SubscriptionRequest,
+    WebSocketEvent,
+    WebSocketMessage,
     WebSocketMetrics,
 )
 

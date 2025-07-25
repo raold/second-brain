@@ -5,9 +5,9 @@ Data models for spaced repetition learning system including algorithms,
 scheduling, and learning statistics.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -118,7 +118,7 @@ class RepetitionConfig(BaseModel):
     easy_bonus: float = Field(1.3, description="Bonus multiplier for easy reviews")
 
     # Intervals
-    learning_steps: List[int] = Field(
+    learning_steps: list[int] = Field(
         [1, 10],  # minutes
         description="Learning steps in minutes"
     )
@@ -126,7 +126,7 @@ class RepetitionConfig(BaseModel):
     easy_interval: int = Field(4, description="Interval for 'easy' on first review")
 
     # Lapses
-    relearning_steps: List[int] = Field(
+    relearning_steps: list[int] = Field(
         [10],  # minutes
         description="Relearning steps in minutes"
     )
@@ -171,7 +171,7 @@ class ReviewSession(BaseModel):
     average_time_seconds: float = Field(0.0, description="Average review time")
 
     # Reviews by difficulty
-    difficulty_distribution: Dict[str, int] = Field(
+    difficulty_distribution: dict[str, int] = Field(
         default_factory=lambda: {"again": 0, "hard": 0, "good": 0, "easy": 0},
         description="Distribution of difficulty ratings"
     )
@@ -237,13 +237,13 @@ class LearningStatistics(BaseModel):
 
     # Time distribution
     best_review_time: Optional[str] = Field(None, description="Best time for reviews")
-    review_time_distribution: Dict[int, int] = Field(
+    review_time_distribution: dict[int, int] = Field(
         default_factory=dict,
         description="Reviews by hour of day"
     )
 
     # Difficulty distribution
-    difficulty_distribution: Dict[str, float] = Field(
+    difficulty_distribution: dict[str, float] = Field(
         default_factory=dict,
         description="Percentage by difficulty"
     )
@@ -257,7 +257,7 @@ class LearningStatistics(BaseModel):
 class BulkReviewRequest(BaseModel):
     """Request to schedule reviews for multiple memories."""
 
-    memory_ids: List[str] = Field(..., description="Memory IDs to schedule")
+    memory_ids: list[str] = Field(..., description="Memory IDs to schedule")
     algorithm: RepetitionAlgorithm = Field(
         RepetitionAlgorithm.SM2,
         description="Algorithm to use"

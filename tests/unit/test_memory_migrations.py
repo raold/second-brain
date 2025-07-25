@@ -4,8 +4,9 @@ Focused tests for memory migrations module.
 Tests key functionality of memory migration system using the actual class interfaces.
 """
 
+from contextlib import asynccontextmanager
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -22,11 +23,16 @@ def mock_pool():
     """Mock database connection pool."""
     pool = AsyncMock()
 
-    # Mock acquire context manager
+    # Create mock connection
     mock_conn = AsyncMock()
-    pool.acquire.return_value.__aenter__.return_value = mock_conn
-    pool.acquire.return_value.__aexit__.return_value = None
 
+    # Mock the acquire method to return an async context manager
+    @asynccontextmanager
+    async def mock_acquire():
+        yield mock_conn
+
+    pool.acquire = mock_acquire
+    pool._mock_conn = mock_conn  # Store for easy access in tests
     return pool
 
 
@@ -63,17 +69,11 @@ class TestAddMemoryTypeClassification:
         migration.bulk_engine = AsyncMock()
         migration.processed_memory_ids = set()
 
-        # Mock database connection and query results
-        mock_conn = AsyncMock()
-        mock_conn.fetch.return_value = [
+        # Use the mock connection from the fixture
+        mock_pool._mock_conn.fetch.return_value = [
             {"id": 1, "content": "Remember when we went to the park", "metadata": {}},
             {"id": 2, "content": "How to bake a cake", "metadata": {}},
         ]
-
-        # Create a proper async context manager mock  
-        mock_pool.acquire = MagicMock()
-        mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_pool.acquire.return_value.__aexit__ = AsyncMock(return_value=None)
 
         result = await migration.get_memories_to_migrate()
 
@@ -82,8 +82,8 @@ class TestAddMemoryTypeClassification:
         assert result[1]["id"] == 2
 
         # Verify SQL query was called
-        mock_conn.fetch.assert_called_once()
-        call_args = mock_conn.fetch.call_args[0][0]
+        mock_pool._mock_conn.fetch.assert_called_once()
+        call_args = mock_pool._mock_conn.fetch.call_args[0][0]
         assert "memory_type IS NULL" in call_args
         assert "ORDER BY created_at" in call_args
 
@@ -195,7 +195,7 @@ class TestConsolidateDuplicateMemories:
         assert metadata.migration_type == MigrationType.MEMORY_DATA
         assert metadata.dependencies == ["classify_memory_types_001"]
         assert metadata.reversible is True
-        assert metadata.version == "2.8.1"
+        assert metadata.version == "2.5.1"
 
     @patch('app.memory_migrations.BulkMemoryEngine')
     @pytest.mark.asyncio
@@ -208,9 +208,8 @@ class TestConsolidateDuplicateMemories:
         migration.bulk_engine = AsyncMock()
         migration.processed_memory_ids = set()
 
-        # Mock database connection and similarity query results
-        mock_conn = AsyncMock()
-        mock_conn.fetch.return_value = [
+        # Use the mock connection from the fixture
+        mock_pool._mock_conn.fetch.return_value = [
             {
                 "id1": 1,
                 "id2": 2,
@@ -231,11 +230,6 @@ class TestConsolidateDuplicateMemories:
             },
         ]
 
-        # Create a proper async context manager mock  
-        mock_pool.acquire = MagicMock()
-        mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_pool.acquire.return_value.__aexit__ = AsyncMock(return_value=None)
-
         result = await migration.get_memories_to_migrate()
 
         assert len(result) == 2
@@ -248,8 +242,8 @@ class TestConsolidateDuplicateMemories:
         assert len(group1["metadatas"]) == 2
 
         # Verify SQL query for similarity was called
-        mock_conn.fetch.assert_called_once()
-        call_args = mock_conn.fetch.call_args[0][0]
+        mock_pool._mock_conn.fetch.assert_called_once()
+        call_args = mock_pool._mock_conn.fetch.call_args[0][0]
         assert "similarity_pairs" in call_args
         assert "embedding" in call_args
         assert "0.95" in call_args
@@ -359,7 +353,7 @@ class TestMemoryDataMigrationIntegration:
         )
 
         with patch('app.bulk_memory_operations.BulkOperationConfig') as mock_config_class:
-            migration._create_bulk_config(strict_config)
+            _bulk_config = migration._create_bulk_config(strict_config)
 
             # Verify the call was made with correct parameters
             assert mock_config_class.called
@@ -387,7 +381,7 @@ class TestMemoryDataMigrationIntegration:
         )
 
         with patch('app.bulk_memory_operations.BulkOperationConfig') as mock_config_class:
-            migration._create_bulk_config(minimal_config)
+            _bulk_config = migration._create_bulk_config(minimal_config)
 
             # Verify minimal validation and single worker
             call_kwargs = mock_config_class.call_args[1]

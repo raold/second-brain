@@ -78,7 +78,7 @@ jobs:
           AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          python -m app.main
+          python -m uvicorn app.app:app
 ```
 
 ---

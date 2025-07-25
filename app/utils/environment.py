@@ -11,13 +11,13 @@ from app.config import Config
 def validate_test_environment() -> dict[str, Any]:
     """Validate and setup test environment configuration."""
     # Set test environment
-    os.environ["ENVIRONMENT"] = "testing"
+    os.environ["ENVIRONMENT"] = "test"
     os.environ["USE_MOCK_DATABASE"] = "true"
-    os.environ["API_TOKENS"] = "test-key-1,test-key-2"
+    os.environ["API_TOKENS"] = "test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba"
 
-    # Clear OpenAI requirement for tests
+    # Use real OpenAI key if available (from GitHub secrets), otherwise use mock
     if "OPENAI_API_KEY" not in os.environ:
-        os.environ["OPENAI_API_KEY"] = ""
+        os.environ["OPENAI_API_KEY"] = "test-key-mock"
 
     # Validate configuration
     issues = Config.validate_configuration()

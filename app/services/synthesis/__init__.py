@@ -7,9 +7,9 @@ This module contains service implementations for synthesis features including:
 - WebSocket event service
 """
 
-from .report_generator import ReportGenerator, ReportGeneratorConfig
 from .repetition_scheduler import RepetitionScheduler, SpacedRepetitionEngine
-from .websocket_service import WebSocketService, ConnectionManager, EventBroadcaster
+from .report_generator import ReportGenerator, ReportGeneratorConfig
+from .websocket_service import ConnectionManager, EventBroadcaster, WebSocketService
 
 __all__ = [
     # Report generation

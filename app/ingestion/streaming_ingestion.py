@@ -9,7 +9,7 @@ from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Union
+from typing import Any, Union, Tuple
 
 logger = logging.getLogger(__name__)
 

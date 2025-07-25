@@ -7,7 +7,7 @@ using the unified migration framework with bulk operations integration.
 
 import logging
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 import asyncpg
 
@@ -74,7 +74,7 @@ class MemoryDataMigration(Migration):
 
             if config.dry_run:
                 # Simulate migration
-                await self._dry_run_migration(memories_to_migrate)
+                _result = await self._dry_run_migration(memories_to_migrate)
                 return MigrationResult(
                     migration_id=self.metadata.id,
                     status=MigrationStatus.COMPLETED,
@@ -198,7 +198,7 @@ class MemoryDataMigration(Migration):
         """Get list of memories that need migration."""
         raise NotImplementedError
 
-    async def transform_memory(self, memory: dict[str, Any]) -> BulkMemoryItem | None:
+    async def transform_memory(self, memory: dict[str, Any]) -> Optional[BulkMemoryItem]:
         """Transform a memory according to migration rules."""
         raise NotImplementedError
 
@@ -290,7 +290,7 @@ class AddMemoryTypeClassification(MemoryDataMigration):
             """)
             return [dict(row) for row in rows]
 
-    async def transform_memory(self, memory: dict[str, Any]) -> BulkMemoryItem | None:
+    async def transform_memory(self, memory: dict[str, Any]) -> Optional[BulkMemoryItem]:
         """Classify memory type based on content analysis."""
         # Simple classification based on content patterns
         content = memory["content"].lower()
@@ -342,7 +342,7 @@ class ConsolidateDuplicateMemories(MemoryDataMigration):
             id="consolidate_duplicates_001",
             name="Consolidate duplicate memories",
             description="Identifies and merges duplicate or highly similar memories",
-            version="2.8.1",
+            version="2.5.1",
             migration_type=MigrationType.MEMORY_DATA,
             author="system",
             created_at=datetime.now(),
@@ -391,7 +391,7 @@ class ConsolidateDuplicateMemories(MemoryDataMigration):
 
             return duplicate_groups
 
-    async def transform_memory(self, memory_group: dict[str, Any]) -> BulkMemoryItem | None:
+    async def transform_memory(self, memory_group: dict[str, Any]) -> Optional[BulkMemoryItem]:
         """Consolidate duplicate memories into one."""
         # Merge contents intelligently
         merged_content = self._merge_contents(memory_group["contents"])

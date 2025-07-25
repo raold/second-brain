@@ -13,12 +13,10 @@ import pytest
 # Add the current directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Set up test environment using centralized configuration
 from app.utils.environment import validate_test_environment
+from app.database_mock import get_mock_database
 
 test_config = validate_test_environment()
-
-from app.database_mock import get_mock_database
 
 
 @pytest.mark.asyncio

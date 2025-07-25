@@ -61,6 +61,9 @@ from app.routes.insights import router as insights_router
 
 # Import relationship routes
 from app.routes.relationship_routes import router as relationship_router
+from app.routes.synthesis_routes import router as synthesis_router
+from app.routes.ingestion_routes import router as ingestion_router
+from app.routes.google_drive_routes import router as google_drive_router
 from app.security import SecurityConfig, SecurityManager
 
 # Import service factory and refactored routes
@@ -269,8 +272,13 @@ app.include_router(insights_router)
 app.include_router(get_bulk_routes(), dependencies=[Depends(verify_api_key)])
 
 # Include synthesis routes (v2.8.2)
-from app.routes.synthesis_routes import router as synthesis_router
 app.include_router(synthesis_router)
+
+# Include ingestion routes (v2.8.3)
+app.include_router(ingestion_router)
+
+# Include Google Drive routes (v2.8.3)
+app.include_router(google_drive_router)
 
 # Setup legacy dashboard and session routes (temporary until full migration)
 setup_dashboard_routes(app)
@@ -351,6 +359,29 @@ async def insights_dashboard():
         <body>
         <h1>🧠 AI Insights Dashboard</h1>
         <p>Insights dashboard is not available. Please check your installation.</p>
+        </body>
+        </html>
+        """
+        )
+
+
+# File Ingestion Dashboard
+@app.get("/ingestion", response_class=HTMLResponse)
+async def ingestion_dashboard():
+    """Serve the file ingestion dashboard"""
+    try:
+        with open("static/ingestion-dashboard.html", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(
+            content="""
+        <html>
+        <head>
+            <title>File Ingestion - Second Brain</title>
+        </head>
+        <body>
+        <h1>📁 File Ingestion Dashboard</h1>
+        <p>Ingestion dashboard is not available. Please check your installation.</p>
         </body>
         </html>
         """

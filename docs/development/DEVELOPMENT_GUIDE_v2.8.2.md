@@ -479,12 +479,12 @@ class MemoryService:
 
 ```bash
 # CPU profiling
-python -m cProfile -o profile.out app/main.py
+python -m cProfile -o profile.out -m uvicorn app.app:app
 snakeviz profile.out
 
 # Memory profiling
 pip install memory-profiler
-python -m memory_profiler app/main.py
+python -m memory_profiler -m uvicorn app.app:app
 
 # Async profiling
 pip install aiomonitor

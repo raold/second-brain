@@ -8,7 +8,6 @@ import pytest
 # Add the current directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Use mock database for testing
 from app.database_mock import get_mock_database
 
 

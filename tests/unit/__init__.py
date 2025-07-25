@@ -1,1 +1,1 @@
-# Unit tests for the second-brain application
+"""Unit tests for Second Brain."""

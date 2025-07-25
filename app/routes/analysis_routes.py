@@ -3,6 +3,7 @@ API routes for advanced analysis features including domain classification
 """
 
 import logging
+from collections import Counter, defaultdict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -11,6 +12,8 @@ from app.ingestion.domain_classifier import DomainClassifier
 from app.ingestion.structured_extractor import StructuredDataExtractor
 from app.ingestion.topic_classifier import TopicClassifier
 from app.shared import get_db_instance, verify_api_key
+from app.services.memory_service import MemoryService
+from app.routes.auth import get_current_user
 
 # Authentication handled by shared verify_api_key
 
@@ -126,6 +129,7 @@ async def analyze_content(
 @router.post("/batch")
 async def batch_analyze(
     request: BatchAnalysisRequest,
+    current_user: dict = Depends(get_current_user),
     _: str = Depends(verify_api_key),
     db=Depends(get_db_instance)
 ):
@@ -139,12 +143,12 @@ async def batch_analyze(
         if request.memory_ids:
             memories = []
             for memory_id in request.memory_ids:
-                memory = await memory_service.get_memory(memory_id, current_user.id)
+                memory = await memory_service.get_memory(memory_id, current_user.get('user_id', 'default_user'))
                 if memory:
                     memories.append(memory)
         else:
             memories = await memory_service.search_memories(
-                user_id=current_user.id,
+                user_id=current_user.get('user_id', 'default_user'),
                 tags=request.tags,
                 limit=request.limit
             )
@@ -251,6 +255,7 @@ async def classify_domain(
 async def get_trending_topics(
     days: int = Query(7, description="Number of days to analyze"),
     limit: int = Query(10, description="Number of top topics"),
+    current_user: dict = Depends(get_current_user),
     _: str = Depends(verify_api_key),
     db=Depends(get_db_instance)
 ):
@@ -265,7 +270,7 @@ async def get_trending_topics(
         since = datetime.utcnow() - timedelta(days=days)
 
         memories = await memory_service.search_memories(
-            user_id=current_user.id,
+            user_id=current_user.get('user_id', 'default_user'),
             created_after=since,
             limit=100
         )
@@ -285,7 +290,6 @@ async def get_trending_topics(
             all_topics.extend(topics)
 
         # Count topic occurrences
-        from collections import Counter
         topic_counts = Counter()
         topic_keywords = {}
 
@@ -319,6 +323,7 @@ async def get_trending_topics(
 
 @router.get("/domains/distribution")
 async def get_domain_distribution(
+    current_user: dict = Depends(get_current_user),
     _: str = Depends(verify_api_key),
     db=Depends(get_db_instance)
 ):
@@ -328,7 +333,7 @@ async def get_domain_distribution(
     try:
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.id,
+            user_id=current_user.get('user_id', 'default_user'),
             limit=200
         )
 

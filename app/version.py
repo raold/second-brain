@@ -8,10 +8,10 @@ from datetime import datetime
 from typing import Any
 
 # Core version information
-__version__ = "2.8.2"
-__version_info__ = (2, 8, 2)
+__version__ = "2.8.3"
+__version_info__ = (2, 8, 3)
 __build__ = "stable"
-__release_date__ = "2025-01-23"
+__release_date__ = "2025-01-24"
 
 # Build and environment information
 __build_timestamp__ = datetime.now().isoformat()
@@ -317,8 +317,24 @@ def get_cognitive_roadmap() -> dict[str, dict[str, Any]]:
                 "scheduled_report_automation",
                 "learning_statistics_tracking",
             ],
-            "status": "current",
+            "status": "completed",
             "release_date": "2025-01-23",
+        },
+        "v2.8.3": {
+            "codename": "Universal Ingestion",
+            "focus": "File Ingestion & Google Drive Integration",
+            "features": [
+                "universal_file_ingestion_engine",
+                "pdf_docx_txt_html_markdown_support",
+                "image_ocr_text_extraction",
+                "spreadsheet_parsing_xlsx_csv",
+                "google_drive_oauth_integration",
+                "folder_monitoring_auto_sync",
+                "batch_file_processing",
+                "ingestion_dashboard_monitoring",
+            ],
+            "status": "current",
+            "release_date": "2025-01-24",
         },
         "v2.6.0": {
             "codename": "Collaboration",

@@ -16,7 +16,7 @@ import logging
 import math
 import re
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 
@@ -35,7 +35,7 @@ class SimilarityAnalyzers:
         self.temporal_window_hours = temporal_window_hours
 
     def calculate_semantic_similarity(
-        self, embedding1: list[float] | None, embedding2: list[float] | None
+        self, embedding1: Optional[list[float]], embedding2: Optional[list[float]]
     ) -> float:
         """Calculate semantic similarity using embeddings.
 
@@ -80,7 +80,7 @@ class SimilarityAnalyzers:
             logger.warning(f"Semantic similarity calculation failed: {e}")
             return 0.0
 
-    def calculate_temporal_proximity(self, created_at1: datetime | None, created_at2: datetime | None) -> float:
+    def calculate_temporal_proximity(self, created_at1: Optional[datetime], created_at2: Optional[datetime]) -> float:
         """Calculate temporal proximity score between two timestamps.
 
         Args:
@@ -107,7 +107,7 @@ class SimilarityAnalyzers:
             logger.warning(f"Temporal proximity calculation failed: {e}")
             return 0.0
 
-    def calculate_content_overlap(self, content1: str | None, content2: str | None) -> float:
+    def calculate_content_overlap(self, content1: Optional[str], content2: Optional[str]) -> float:
         """Calculate content overlap using Jaccard similarity.
 
         Args:
@@ -141,7 +141,7 @@ class SimilarityAnalyzers:
             logger.warning(f"Content overlap calculation failed: {e}")
             return 0.0
 
-    def calculate_conceptual_hierarchy(self, content1: str | None, content2: str | None) -> float:
+    def calculate_conceptual_hierarchy(self, content1: Optional[str], content2: Optional[str]) -> float:
         """Detect hierarchical relationships (parent-child, general-specific).
 
         Args:
@@ -189,10 +189,10 @@ class SimilarityAnalyzers:
 
     def detect_causal_relationship(
         self,
-        content1: str | None,
-        content2: str | None,
-        created_at1: datetime | None = None,
-        created_at2: datetime | None = None,
+        content1: Optional[str],
+        content2: Optional[str],
+        created_at1: Optional[datetime] = None,
+        created_at2: Optional[datetime] = None,
     ) -> float:
         """Detect potential causal relationships between memories.
 
@@ -252,12 +252,12 @@ class SimilarityAnalyzers:
 
     def calculate_contextual_association(
         self,
-        metadata1: dict[str, Any] | None,
-        metadata2: dict[str, Any] | None,
-        memory_type1: str | None = None,
-        memory_type2: str | None = None,
-        importance1: float | None = None,
-        importance2: float | None = None,
+        metadata1: Optional[dict[str, Any]],
+        metadata2: Optional[dict[str, Any]],
+        memory_type1: Optional[str] = None,
+        memory_type2: Optional[str] = None,
+        importance1: Optional[float] = None,
+        importance2: Optional[float] = None,
     ) -> float:
         """Calculate contextual association based on metadata and properties.
 

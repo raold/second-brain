@@ -375,6 +375,11 @@ All endpoints require an API key passed as a query parameter:
             {"name": "Health", "description": "System health and status endpoints"},
             {"name": "Memories", "description": "Memory management operations"},
             {"name": "Search", "description": "Semantic search functionality"},
+            {"name": "Synthesis", "description": "Knowledge synthesis and automation (v2.8.2)"},
+            {"name": "Consolidation", "description": "Memory consolidation operations"},
+            {"name": "Summarization", "description": "AI-powered knowledge summarization"},
+            {"name": "Suggestions", "description": "Smart memory suggestions"},
+            {"name": "Metrics", "description": "Real-time graph metrics and analytics"},
         ]
 
         # Add security schemes

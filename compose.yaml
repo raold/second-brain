@@ -1,0 +1,377 @@
+# Second Brain v3.0.0 - Production-Ready Docker Compose
+# Designed for: Local development → Single host → Kubernetes migration path
+
+name: secondbrain
+
+x-common-variables: &common-variables
+  # Observability
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  OTEL_SERVICE_NAME: secondbrain
+  OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=local,service.namespace=secondbrain"
+  # Logging
+  LOG_LEVEL: INFO
+  LOG_FORMAT: json
+  # Feature flags (prepare for A/B testing and gradual rollouts)
+  FEATURE_FLAGS_ENDPOINT: http://unleash:4242
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+services:
+  # Core Application (Stateless, Horizontally Scalable)
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: ${BUILD_TARGET:-runtime}
+      cache_from:
+        - type=registry,ref=secondbrain/app:buildcache
+      cache_to:
+        - type=registry,ref=secondbrain/app:buildcache,mode=max
+    image: secondbrain/app:${VERSION:-3.0.0}
+    container_name: secondbrain-app
+    restart: unless-stopped
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "${APP_PORT:-8000}:8000"     # API
+      - "${METRICS_PORT:-9090}:9090" # Prometheus metrics
+      - "${ADMIN_PORT:-8080}:8080"   # Admin interface
+    environment:
+      <<: *common-variables
+      # Database (ready for connection pooling and read replicas)
+      DATABASE_URL: postgresql://secondbrain:${DB_PASSWORD:-changeme}@postgres:5432/secondbrain
+      DATABASE_POOL_SIZE: 20
+      DATABASE_MAX_OVERFLOW: 40
+      # Cache (ready for Redis Cluster)
+      REDIS_URL: redis://redis:6379/0
+      REDIS_SENTINEL_ENABLED: false
+      # Message Queue
+      MESSAGE_BROKER_URL: amqp://secondbrain:${RABBITMQ_PASSWORD:-changeme}@rabbitmq:5672/secondbrain
+      # Object Storage (ready for S3/MinIO)
+      STORAGE_BACKEND: minio
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+      # Federation (dormant but ready)
+      FEDERATION_ENABLED: ${FEDERATION_ENABLED:-false}
+      NODE_ID: ${NODE_ID:-node-001}
+      CLUSTER_DISCOVERY: ${CLUSTER_DISCOVERY:-dns}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - secondbrain-net
+      - monitoring-net
+    volumes:
+      - app-data:/app/data
+      - app-logs:/app/logs
+    deploy:
+      # Ready for Docker Swarm / K8s conversion
+      replicas: ${APP_REPLICAS:-1}
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    labels:
+      # Service mesh ready
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`secondbrain.local`)"
+      - "traefik.http.services.app.loadbalancer.server.port=8000"
+      # Monitoring
+      - "prometheus.io/scrape=true"
+      - "prometheus.io/port=9090"
+      - "prometheus.io/path=/metrics"
+
+  # Event Worker (Processes background tasks)
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: ${BUILD_TARGET:-runtime}
+    image: secondbrain/worker:${VERSION:-3.0.0}
+    container_name: secondbrain-worker
+    restart: unless-stopped
+    command: python -m src.cli.worker
+    environment:
+      <<: *common-variables
+      # Database
+      DATABASE_URL: postgresql://secondbrain:${DB_PASSWORD:-changeme}@postgres:5432/secondbrain
+      DATABASE_POOL_SIZE: 10
+      # Cache
+      REDIS_URL: redis://redis:6379/0
+      # Message Queue
+      MESSAGE_BROKER_URL: amqp://secondbrain:${RABBITMQ_PASSWORD:-changeme}@rabbitmq:5672/secondbrain
+      # Object Storage
+      STORAGE_BACKEND: minio
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - secondbrain-net
+    volumes:
+      - app-logs:/app/logs
+    deploy:
+      replicas: ${WORKER_REPLICAS:-2}
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Database (PostgreSQL with TimescaleDB and pgvector for embeddings)
+  postgres:
+    image: ankane/pgvector:v0.5.1-pg15  # PostgreSQL 15 with pgvector pre-installed
+    container_name: secondbrain-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: secondbrain
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: secondbrain
+      # Replication ready
+      POSTGRES_REPLICATION_MODE: ${DB_REPLICATION_MODE:-master}
+      POSTGRES_REPLICATION_USER: replicator
+      POSTGRES_REPLICATION_PASSWORD: ${DB_REPLICATION_PASSWORD:-changeme}
+      # Performance tuning
+      POSTGRES_MAX_CONNECTIONS: 200
+      POSTGRES_SHARED_BUFFERS: 256MB
+      # pgvector settings
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --data-checksums"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - secondbrain-net
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "pg_isready -U secondbrain"]
+
+  # Cache Layer (Redis with Sentinel support)
+  redis:
+    image: redis:7-alpine
+    container_name: secondbrain-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --save 300 10
+      --save 900 1
+    volumes:
+      - redis-data:/data
+    networks:
+      - secondbrain-net
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "redis-cli", "ping"]
+
+  # Message Queue (RabbitMQ for now, Kafka-ready)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: secondbrain-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: secondbrain
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-changeme}
+      RABBITMQ_DEFAULT_VHOST: secondbrain
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - secondbrain-net
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+
+  # Object Storage (MinIO - S3 compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: secondbrain-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme123}
+      MINIO_BROWSER_REDIRECT_URL: http://localhost:9001
+    volumes:
+      - minio-data:/data
+    networks:
+      - secondbrain-net
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+
+  # Reverse Proxy / API Gateway (Traefik)
+  traefik:
+    image: traefik:v3.0
+    container_name: secondbrain-traefik
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.network=secondbrain-net"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--metrics.prometheus=true"
+      - "--tracing.otlp=true"
+      - "--tracing.otlp.grpc.endpoint=otel-collector:4317"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8081:8080" # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certs:/certs
+    networks:
+      - secondbrain-net
+      - monitoring-net
+
+  # Observability Stack
+  # OpenTelemetry Collector (Distributed tracing ready)
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: secondbrain-otel
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./docker/observability/otel-collector.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Prometheus metrics
+    networks:
+      - monitoring-net
+      - secondbrain-net
+
+  # Metrics Storage (Prometheus)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: secondbrain-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./docker/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9091}:9090"
+    networks:
+      - monitoring-net
+
+  # Visualization (Grafana)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: secondbrain-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-changeme}
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/observability/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./docker/observability/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    networks:
+      - monitoring-net
+    depends_on:
+      - prometheus
+
+  # Log Aggregation (Loki)
+  loki:
+    image: grafana/loki:latest
+    container_name: secondbrain-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./docker/observability/loki.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    networks:
+      - monitoring-net
+
+
+networks:
+  secondbrain-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+  monitoring-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  app-data:
+    driver: local
+  app-logs:
+    driver: local
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+  minio-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  loki-data:
+    driver: local
+  traefik-certs:
+    driver: local

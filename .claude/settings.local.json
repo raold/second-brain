@@ -45,7 +45,21 @@
       "Bash(venv/bin/python -m pytest tests/unit/test_memory_migrations.py::TestAddMemoryTypeClassification::test_get_memories_to_migrate -v)",
       "Bash(does not support the asynchronous context manager protocol\".\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(venv/bin/python -m pytest tests/unit/test_memory_migrations.py tests/unit/test_database_migrations.py tests/unit/test_version_system.py -v)",
-      "Bash(venv/bin/python -m pytest tests/unit/test_version_system.py::TestVersionManagerIntegration::test_version_manager_functionality -v)"
+      "Bash(venv/bin/python -m pytest tests/unit/test_version_system.py::TestVersionManagerIntegration::test_version_manager_functionality -v)",
+      "Bash(.venvScriptspython.exe -m pytest tests/unit/ -v)",
+      "Bash(.venv\\Scripts\\python.exe -m pytest tests/unit/ -v)",
+      "Bash(make test:*)",
+      "Bash(PYTHONPATH=. pytest --cov=app tests/)",
+      "Bash(curl:*)",
+      "Bash(C:Usersdrosecond-brain.venvScriptspython.exe -m uvicorn app.app:app --reload --port 8001)",
+      "Bash(C:Usersdrosecond-brain.venvScriptspython.exe test_server.py)",
+      "Bash(C:UsersdroAppDataLocalProgramsPythonPython310python.exe -m pytest tests/unit/domain -v)",
+      "Bash(where python)",
+      "Bash(C:Usersdrosecond-brain.venvScriptspython.exe -m pytest tests/infrastructure/test_repositories.py -v)",
+      "Bash(.venvScriptspython.exe -m pytest tests/infrastructure/test_repositories.py -v)",
+      "Bash(dir:*)",
+      "Bash(move:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

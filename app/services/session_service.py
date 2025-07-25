@@ -3,16 +3,17 @@ Session Service - Handles all session-related business logic.
 Manages session persistence, context continuity, and idea processing.
 """
 
-import logging
 from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
 from app.conversation_processor import ConversationProcessor
 from app.dashboard import ProjectDashboard
+from app.services.monitoring import get_metrics_collector
 from app.session_manager import SessionManager
+from app.utils.logging_config import PerformanceLogger, get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class SessionService:
@@ -30,7 +31,7 @@ class SessionService:
         self.session_manager = session_manager
         self.conversation_processor = conversation_processor
         self.project_dashboard = project_dashboard
-        self.logger = logger
+        self.logger = logger  # Deprecated: use module logger instead
 
     async def ingest_idea(
         self, idea: str, source: str = "mobile", priority: str = "medium", context: str | None = None
@@ -82,8 +83,22 @@ class SessionService:
             }
 
         except Exception as e:
-            self.logger.error(f"Failed to process idea: {e}")
-            raise
+                # Record failed metrics
+                metrics_collector = get_metrics_collector()
+                await metrics_collector.record_operation(
+                    operation="idea_ingestion",
+                    success=False,
+                    labels={"source": source, "priority": priority}
+                )
+
+                logger.exception("Failed to process idea", extra={
+                    "operation": "ingest_idea",
+                    "source": source,
+                    "priority": priority,
+                    "idea_length": len(idea),
+                    "error_type": type(e).__name__
+                })
+                raise
 
     async def pause_session(self, reason: str = "User requested") -> dict[str, Any]:
         """
@@ -95,34 +110,48 @@ class SessionService:
         Returns:
             Resume context and session summary
         """
-        try:
-            # Get current session state
-            session_state = self.session_manager.get_current_session_state()
+        with PerformanceLogger("session_pause", logger):
+            logger.info("Pausing session", extra={
+                "operation": "pause_session",
+                "reason": reason
+            })
 
-            # Generate comprehensive resume context
-            resume_context = self.session_manager.generate_resume_context()
+            try:
+                # Get current session state
+                session_state = self.session_manager.get_current_session_state()
 
-            # Save session state
-            saved_session = self.session_manager.save_session(reason=reason)
+                # Generate comprehensive resume context
+                resume_context = self.session_manager.generate_resume_context()
 
-            # Get analytics
-            analytics = self.session_manager.get_session_analytics()
+                # Save session state
+                saved_session = self.session_manager.save_session(reason=reason)
 
-            self.logger.info(f"Session paused: {saved_session['session_id']}")
+                # Get analytics
+                analytics = self.session_manager.get_session_analytics()
 
-            return {
-                "session_id": saved_session["session_id"],
-                "pause_reason": reason,
-                "resume_context": resume_context,
-                "session_analytics": analytics,
-                "conversation_summary": session_state.get("conversation_summary", ""),
-                "next_steps": session_state.get("next_steps", []),
-                "cost_savings": self._calculate_cost_savings(analytics),
-            }
+                logger.info("Session paused successfully", extra={
+                    "operation": "pause_session",
+                    "session_id": saved_session.get('session_id'),
+                    "reason": reason
+                })
 
-        except Exception as e:
-            self.logger.error(f"Failed to pause session: {e}")
-            raise
+                return {
+                    "session_id": saved_session["session_id"],
+                    "pause_reason": reason,
+                    "resume_context": resume_context,
+                    "session_analytics": analytics,
+                    "conversation_summary": session_state.get("conversation_summary", ""),
+                    "next_steps": session_state.get("next_steps", []),
+                    "cost_savings": self._calculate_cost_savings(analytics),
+                }
+
+            except Exception as e:
+                logger.exception("Failed to pause session", extra={
+                    "operation": "pause_session",
+                    "reason": reason,
+                    "error_type": type(e).__name__
+                })
+                raise
 
     async def resume_session(
         self, session_id: str | None = None, device_context: str | None = None

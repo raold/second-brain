@@ -7,7 +7,7 @@ subscriptions, and connection management.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -76,13 +76,13 @@ class WebSocketEvent(BaseModel):
     user_id: Optional[str] = Field(None, description="User who triggered the event")
 
     # Payload
-    data: Dict[str, Any] = Field(default_factory=dict, description="Event-specific data")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    data: dict[str, Any] = Field(default_factory=dict, description="Event-specific data")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     # Routing
     channel: Optional[str] = Field(None, description="Channel for routing")
     broadcast: bool = Field(False, description="Whether to broadcast to all users")
-    target_users: List[str] = Field(default_factory=list, description="Specific users to notify")
+    target_users: list[str] = Field(default_factory=list, description="Specific users to notify")
 
 
 class WebSocketMessage(BaseModel):
@@ -94,7 +94,7 @@ class WebSocketMessage(BaseModel):
     # Content
     event: Optional[WebSocketEvent] = Field(None, description="Event data (for event messages)")
     action: Optional[str] = Field(None, description="Action to perform (for requests)")
-    payload: Optional[Dict[str, Any]] = Field(None, description="Message payload")
+    payload: Optional[dict[str, Any]] = Field(None, description="Message payload")
 
     # Response data
     success: Optional[bool] = Field(None, description="Success status (for responses)")
@@ -110,12 +110,12 @@ class SubscriptionRequest(BaseModel):
     """Request to subscribe to specific events."""
 
     action: str = Field("subscribe", description="Action: subscribe or unsubscribe")
-    event_types: List[EventType] = Field(..., description="Event types to subscribe to")
+    event_types: list[EventType] = Field(..., description="Event types to subscribe to")
 
     # Filters
-    channels: List[str] = Field(default_factory=list, description="Specific channels")
-    resource_types: List[str] = Field(default_factory=list, description="Filter by resource type")
-    resource_ids: List[str] = Field(default_factory=list, description="Specific resource IDs")
+    channels: list[str] = Field(default_factory=list, description="Specific channels")
+    resource_types: list[str] = Field(default_factory=list, description="Filter by resource type")
+    resource_ids: list[str] = Field(default_factory=list, description="Specific resource IDs")
 
     # Options
     include_historical: bool = Field(False, description="Include recent historical events")
@@ -137,9 +137,9 @@ class EventSubscription(BaseModel):
     connection_id: str = Field(..., description="WebSocket connection ID")
 
     # Subscription details
-    event_types: List[EventType] = Field(..., description="Subscribed event types")
-    channels: List[str] = Field(default_factory=list, description="Subscribed channels")
-    filters: Dict[str, Any] = Field(default_factory=dict, description="Active filters")
+    event_types: list[EventType] = Field(..., description="Subscribed event types")
+    channels: list[str] = Field(default_factory=list, description="Subscribed channels")
+    filters: dict[str, Any] = Field(default_factory=dict, description="Active filters")
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -168,7 +168,7 @@ class ConnectionInfo(BaseModel):
     ip_address: Optional[str] = Field(None, description="Client IP address")
 
     # Subscriptions
-    subscriptions: List[EventSubscription] = Field(
+    subscriptions: list[EventSubscription] = Field(
         default_factory=list,
         description="Active subscriptions"
     )
@@ -187,14 +187,14 @@ class ConnectionInfo(BaseModel):
 class EventBatch(BaseModel):
     """Batch of events for efficient delivery."""
 
-    events: List[WebSocketEvent] = Field(..., description="Events in batch")
+    events: list[WebSocketEvent] = Field(..., description="Events in batch")
     batch_id: str = Field(..., description="Batch ID")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     # Delivery tracking
-    target_connections: List[str] = Field(..., description="Target connection IDs")
-    delivered_to: List[str] = Field(default_factory=list, description="Successfully delivered")
-    failed_deliveries: Dict[str, str] = Field(
+    target_connections: list[str] = Field(..., description="Target connection IDs")
+    delivered_to: list[str] = Field(default_factory=list, description="Successfully delivered")
+    failed_deliveries: dict[str, str] = Field(
         default_factory=dict,
         description="Failed deliveries with reasons"
     )
@@ -217,11 +217,11 @@ class BroadcastRequest(BaseModel):
         "all",
         description="Broadcast type: all, channel, users, filters"
     )
-    channels: List[str] = Field(default_factory=list, description="Target channels")
-    user_ids: List[str] = Field(default_factory=list, description="Target users")
+    channels: list[str] = Field(default_factory=list, description="Target channels")
+    user_ids: list[str] = Field(default_factory=list, description="Target users")
 
     # Filters
-    connection_filters: Dict[str, Any] = Field(
+    connection_filters: dict[str, Any] = Field(
         default_factory=dict,
         description="Filter connections by attributes"
     )
@@ -265,7 +265,7 @@ class WebSocketMetrics(BaseModel):
     failed_deliveries: int = Field(0, description="Failed delivery count")
 
     # By event type
-    events_by_type: Dict[str, int] = Field(
+    events_by_type: dict[str, int] = Field(
         default_factory=dict,
         description="Event counts by type"
     )

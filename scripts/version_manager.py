@@ -9,6 +9,7 @@ This script manages all aspects of versioning including:
 - Commit messages
 - Git workflows
 - Documentation updates
+- Repository cleanup and organization
 """
 
 import json
@@ -17,13 +18,15 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from .repository_cleanup import RepositoryCleanupManager
+
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
 DOCS_RELEASES = PROJECT_ROOT / "docs" / "releases"
 APP_VERSION_FILE = PROJECT_ROOT / "app" / "version.py"
 README_FILE = PROJECT_ROOT / "README.md"
 CHANGELOG_FILE = PROJECT_ROOT / "CHANGELOG.md"
-PROJECT_STATUS_FILE = PROJECT_ROOT / "PROJECT_STATUS.md"
+PROJECT_STATUS_FILE = PROJECT_ROOT / "docs" / "archive" / "PROJECT_STATUS.md"
 
 
 class VersionManager:
@@ -32,6 +35,7 @@ class VersionManager:
     def __init__(self):
         self.versions_config = self.load_versions_config()
         self.current_version = self.get_current_version()
+        self.cleanup_manager = RepositoryCleanupManager(PROJECT_ROOT)
 
     def load_versions_config(self) -> dict:
         """Load version configuration from centralized file"""
@@ -279,7 +283,7 @@ docker-compose up -d --build
             formatted.append(f"- **{change}**: Detailed implementation and impact")
         return "\n".join(formatted)
 
-    def prepare_release(self, version: str):
+    def prepare_release(self, version: str, skip_cleanup: bool = False):
         """Prepare everything for a release"""
         if version not in self.versions_config["versions"]:
             print(f"❌ Version {version} not found in configuration")
@@ -291,6 +295,15 @@ docker-compose up -d --build
         print(f"   Title: {info['title']}")
         print(f"   Status: {info['status']}")
         print(f"   Changes: {len(info['changes'])} items")
+
+        # Repository cleanup and organization (unless skipped)
+        if not skip_cleanup:
+            print("\n🧹 Performing repository cleanup...")
+            cleanup_report = self.cleanup_manager.full_cleanup_for_release(version)
+            print("✅ Repository cleanup completed:")
+            print(f"   Files removed: {cleanup_report['summary']['total_files_removed']}")
+            print(f"   Files moved: {cleanup_report['summary']['total_files_moved']}")
+            print(f"   Directories organized: {cleanup_report['summary']['directories_created']}")
 
         # Update all version files
         self.update_version(version, info)
@@ -558,10 +571,11 @@ def main():
 
     elif command == "prepare":
         if len(sys.argv) < 3:
-            print("Usage: python version_manager.py prepare <version>")
+            print("Usage: python version_manager.py prepare <version> [--skip-cleanup]")
             return
         version = sys.argv[2]
-        vm.prepare_release(version)
+        skip_cleanup = "--skip-cleanup" in sys.argv
+        vm.prepare_release(version, skip_cleanup=skip_cleanup)
 
     elif command == "update":
         if len(sys.argv) < 3:
@@ -589,8 +603,33 @@ def main():
         vm.load_versions_config()  # This will create default if not exists
         print("✅ Version configuration created at docs/releases/version_config.json")
 
+    elif command == "cleanup":
+        # Repository cleanup commands
+        cleanup_type = sys.argv[2] if len(sys.argv) > 2 else "full"
+        if cleanup_type == "full":
+            version = sys.argv[3] if len(sys.argv) > 3 else None
+            report = vm.cleanup_manager.full_cleanup_for_release(version)
+            print("✅ Full cleanup completed. Report saved.")
+        elif cleanup_type == "quick":
+            vm.cleanup_manager.quick_cleanup()
+        elif cleanup_type == "validate":
+            is_valid = vm.cleanup_manager.validate_organization()
+            if not is_valid:
+                sys.exit(1)
+        else:
+            print("Usage: python version_manager.py cleanup [full|quick|validate] [version]")
+
     else:
         print(f"Unknown command: {command}")
+        print("\nAvailable commands:")
+        print("  status                    - Show current version status")
+        print("  prepare <version>         - Prepare release with cleanup")
+        print("  prepare <version> --skip-cleanup - Prepare release without cleanup")
+        print("  update <version>          - Update version without release prep")
+        print("  test [unit|integration|performance|migration|all] - Run test suites")
+        print("  validate <version>        - Validate pre-release requirements")
+        print("  create-config             - Create version configuration file")
+        print("  cleanup [full|quick|validate] [version] - Repository cleanup operations")
 
 
 if __name__ == "__main__":

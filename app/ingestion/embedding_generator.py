@@ -20,6 +20,8 @@ try:
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
 
+from app.utils.openai_client import OpenAIClient
+
 from app.ingestion.models import EmbeddingMetadata
 
 logger = logging.getLogger(__name__)
@@ -190,10 +192,9 @@ class EmbeddingGenerator:
     async def _generate_openai_embedding(self, text: str) -> list[float]:
         """Generate embedding using OpenAI API"""
         try:
-            from app.utils.openai_client import get_openai_client
 
-            client = get_openai_client()
-            if client:
+            client = OpenAIClient()
+            if client._client:
                 response = await client.embeddings.create(
                     model="text-embedding-ada-002",
                     input=text

@@ -141,3 +141,8 @@ class Config:
         if os.getenv("DEBUG"):
             return cls.DEBUG
         return env_config.debug_mode
+
+
+def get_settings() -> Config:
+    """Get application settings instance."""
+    return Config()

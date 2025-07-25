@@ -4,12 +4,15 @@ Provides a centralized way to create and access service instances.
 """
 
 import logging
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    pass
 
 from app.conversation_processor import ConversationProcessor
 from app.dashboard import ProjectDashboard
 from app.database import Database
 from app.database_mock import MockDatabase
-from app.security import SecurityManager
 from app.session_manager import get_session_manager
 
 from .dashboard_service import DashboardService
@@ -28,13 +31,13 @@ class ServiceFactory:
     """
 
     def __init__(self):
-        self._memory_service: MemoryService | None = None
-        self._session_service: SessionService | None = None
-        self._dashboard_service: DashboardService | None = None
-        self._health_service: HealthService | None = None
-        self._git_service: GitService | None = None
-        self._database: Database | MockDatabase | None = None
-        self._security_manager: SecurityManager | None = None
+        self._memory_service: Optional[MemoryService] = None
+        self._session_service: Optional[SessionService] = None
+        self._dashboard_service: Optional[DashboardService] = None
+        self._health_service: Optional[HealthService] = None
+        self._git_service: Optional[GitService] = None
+        self._database: Optional[Database | MockDatabase] = None
+        self._security_manager = None
         self.logger = logger
 
     def set_database(self, database: Database | MockDatabase):
@@ -44,7 +47,7 @@ class ServiceFactory:
         self._memory_service = None
         self._health_service = None
 
-    def set_security_manager(self, security_manager: SecurityManager):
+    def set_security_manager(self, security_manager):
         """Set the security manager instance."""
         self._security_manager = security_manager
         # Reset services that depend on security

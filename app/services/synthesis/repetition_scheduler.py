@@ -5,11 +5,10 @@ Service for implementing spaced repetition algorithms including
 SuperMemo 2, Anki-style, and Leitner box system.
 """
 
-import asyncio
 import logging
 import math
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import asyncpg
 import numpy as np
@@ -24,7 +23,6 @@ from app.models.synthesis.repetition_models import (
     ReviewResult,
     ReviewSchedule,
     ReviewSession,
-    ReviewStatus,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,7 +41,7 @@ class SpacedRepetitionEngine:
         ease_factor: float,
         difficulty: ReviewDifficulty,
         repetitions: int,
-    ) -> Tuple[int, float]:
+    ) -> tuple[int, float]:
         """Calculate next interval and updated ease factor."""
         if self.algorithm == RepetitionAlgorithm.SM2:
             return self._sm2_algorithm(current_interval, ease_factor, difficulty, repetitions)
@@ -61,7 +59,7 @@ class SpacedRepetitionEngine:
         ease_factor: float,
         difficulty: ReviewDifficulty,
         repetitions: int,
-    ) -> Tuple[int, float]:
+    ) -> tuple[int, float]:
         """SuperMemo 2 algorithm implementation."""
         # Update ease factor based on difficulty
         if difficulty == ReviewDifficulty.AGAIN:
@@ -97,7 +95,7 @@ class SpacedRepetitionEngine:
         ease_factor: float,
         difficulty: ReviewDifficulty,
         repetitions: int,
-    ) -> Tuple[int, float]:
+    ) -> tuple[int, float]:
         """Anki-style algorithm implementation."""
         # Similar to SM2 but with Anki's modifications
         if difficulty == ReviewDifficulty.AGAIN:
@@ -124,7 +122,7 @@ class SpacedRepetitionEngine:
         current_interval: int,
         difficulty: ReviewDifficulty,
         repetitions: int,
-    ) -> Tuple[int, float]:
+    ) -> tuple[int, float]:
         """Leitner box system implementation."""
         # Box intervals: 1, 2, 4, 8, 16, 32, 64 days
         boxes = [1, 2, 4, 8, 16, 32, 64]
@@ -161,7 +159,7 @@ class SpacedRepetitionEngine:
 
     def calculate_optimal_review_time(
         self,
-        user_performance: Dict[int, float],
+        user_performance: dict[int, float],
         timezone: str = "UTC",
     ) -> str:
         """Calculate optimal review time based on past performance."""
@@ -247,7 +245,7 @@ class RepetitionScheduler:
     async def bulk_schedule_reviews(
         self,
         request: BulkReviewRequest,
-    ) -> List[ReviewSchedule]:
+    ) -> list[ReviewSchedule]:
         """Schedule reviews for multiple memories."""
         schedules = []
 
@@ -362,7 +360,7 @@ class RepetitionScheduler:
         user_id: Optional[str] = None,
         limit: int = 100,
         include_overdue: bool = True,
-    ) -> List[ReviewSchedule]:
+    ) -> list[ReviewSchedule]:
         """Get memories due for review."""
         now = datetime.utcnow()
 
@@ -725,7 +723,7 @@ class RepetitionScheduler:
             """, memory_id)
             return float(avg) if avg else 3.0
 
-    async def _get_user_performance(self, memory_id: str) -> Dict[int, float]:
+    async def _get_user_performance(self, memory_id: str) -> dict[int, float]:
         """Get user performance by hour of day."""
         async with self.pool.acquire() as conn:
             rows = await conn.fetch("""
@@ -740,7 +738,7 @@ class RepetitionScheduler:
 
             return {int(row['hour']): row['success_rate'] for row in rows}
 
-    async def _get_memory_priorities(self, memory_ids: List[str]) -> Dict[str, float]:
+    async def _get_memory_priorities(self, memory_ids: list[str]) -> dict[str, float]:
         """Get importance scores for memories."""
         async with self.pool.acquire() as conn:
             rows = await conn.fetch("""
@@ -767,7 +765,7 @@ class RepetitionScheduler:
 
         return min(10.0, base_priority)  # Cap at 10
 
-    async def _calculate_streak(self, user_id: str) -> Dict[str, int]:
+    async def _calculate_streak(self, user_id: str) -> dict[str, int]:
         """Calculate current and best streaks."""
         async with self.pool.acquire() as conn:
             # Get all review dates

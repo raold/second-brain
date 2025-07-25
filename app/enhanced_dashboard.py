@@ -1,5 +1,5 @@
 """
-Enhanced Dashboard Data Generator for v2.5.2-RC
+Enhanced Dashboard Data Generator for v2.4.3
 Provides comprehensive project information including timeline, API status, and documentation.
 """
 
@@ -14,14 +14,14 @@ from app.version import get_version_info
 
 
 class EnhancedDashboardData:
-    """Enhanced dashboard data provider for v2.5.2-RC Release Candidate."""
+    """Enhanced dashboard data provider for v2.4.3 Quality Excellence."""
 
     def __init__(self):
         self.project_root = Path(__file__).parent.parent
         self.timestamp = datetime.now()
 
     def get_comprehensive_dashboard_data(self) -> dict[str, Any]:
-        """Get all dashboard data for v2.5.2-RC."""
+        """Get all dashboard data for v2.4.3."""
         return {
             "meta": self._get_meta_info(),
             "version": self._get_version_info(),
@@ -39,7 +39,7 @@ class EnhancedDashboardData:
     def _get_meta_info(self) -> dict[str, Any]:
         """Get dashboard metadata."""
         return {
-            "dashboard_version": "2.5.2-RC-enhanced",
+            "dashboard_version": "2.4.4-enhanced",
             "generated_at": self.timestamp.isoformat(),
             "last_updated": self.timestamp.isoformat(),
             "update_frequency": "real-time",
@@ -128,7 +128,7 @@ class EnhancedDashboardData:
 
     def _get_timeline_data(self) -> dict[str, Any]:
         """Get project timeline and milestone data."""
-        datetime.now()
+        _now = datetime.now()
 
         return {
             "current_milestone": {
@@ -200,7 +200,7 @@ class EnhancedDashboardData:
 
     def _get_documentation_status(self) -> dict[str, Any]:
         """Get documentation completeness and status."""
-        self.project_root / "docs"
+        _docs_path = self.project_root / "docs"
 
         return {
             "completeness": {
@@ -472,7 +472,7 @@ class EnhancedDashboardData:
 <body>
     <div class="dashboard">
         <div class="header">
-            <h1>🧠 Second Brain v{data['version']['current_version']}</h1>
+            <h1>Second Brain v{data['version']['current_version']}</h1>
             <div class="subtitle">Quality Excellence Dashboard - {data['meta']['generated_at'][:19]}</div>
         </div>
 
@@ -496,7 +496,7 @@ class EnhancedDashboardData:
         </div>
 
         <div class="section">
-            <h2>📊 Timeline & Milestones</h2>
+            <h2>Timeline & Milestones</h2>
             <div class="timeline-item">
                 <div class="timeline-date">Current</div>
                 <div>
@@ -513,14 +513,14 @@ class EnhancedDashboardData:
         </div>
 
         <div class="section">
-            <h2>🔗 API Status</h2>
+            <h2>API Status</h2>
             <div class="api-status">
                 {' '.join([f'<div class="endpoint-status"><strong>/{name}</strong><br>Status: {info["status"]}<br>Response: {info["response_time_ms"]}ms</div>' for name, info in data['api_status']['endpoints'].items()])}
             </div>
         </div>
 
         <div class="section">
-            <h2>⚙️ Woodchipper Processing</h2>
+            <h2>Woodchipper Processing</h2>
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value">{data['woodchipper']['memory_processing']['memories_processed_today']}</div>
@@ -542,7 +542,7 @@ class EnhancedDashboardData:
         </div>
 
         <div class="section">
-            <h2>📚 Documentation Status</h2>
+            <h2>Documentation Status</h2>
             <div>API Documentation: {data['documentation']['completeness']['api_documentation']}%</div>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {data['documentation']['completeness']['api_documentation']}%"></div>
@@ -558,7 +558,7 @@ class EnhancedDashboardData:
         </div>
 
         <div class="section">
-            <h2>🗺️ Roadmap Progress</h2>
+            <h2>Roadmap Progress</h2>
             <div><strong>Current Phase:</strong> {data['roadmap']['current_phase']}</div>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {data['roadmap']['phase_progress_percent']}%"></div>
@@ -570,7 +570,7 @@ class EnhancedDashboardData:
         </div>
 
         <div class="section">
-            <h2>📝 Changelog</h2>
+            <h2>Changelog</h2>
             <div><strong>Latest:</strong> {data['changelog']['latest_version']} - {data['changelog']['release_date']}</div>
             <div><strong>Type:</strong> {data['changelog']['release_type'].replace('_', ' ').title()}</div>
 
@@ -579,7 +579,7 @@ class EnhancedDashboardData:
         </div>
 
         <div class="section">
-            <h2>🔍 Raw Dashboard Data</h2>
+            <h2>Raw Dashboard Data</h2>
             <div class="json-data">
                 <pre>{json.dumps(data, indent=2, default=str)}</pre>
             </div>
@@ -596,9 +596,9 @@ enhanced_dashboard = EnhancedDashboardData()
 if __name__ == "__main__":
     # Generate and save dashboard data
     enhanced_dashboard.save_dashboard_data()
-    print("✅ Enhanced dashboard data generated successfully!")
+    print("[OK] Enhanced dashboard data generated successfully!")
 
     # Optionally save HTML version
     with open("dashboard_data/dashboard.html", "w") as f:
         f.write(enhanced_dashboard.get_dashboard_html())
-    print("✅ Enhanced dashboard HTML generated successfully!")
+    print("[OK] Enhanced dashboard HTML generated successfully!")

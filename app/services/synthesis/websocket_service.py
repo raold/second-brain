@@ -9,8 +9,8 @@ import asyncio
 import json
 import logging
 from collections import defaultdict
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from datetime import datetime, timedelta
+from typing import Any, Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
@@ -36,14 +36,14 @@ class ConnectionManager:
 
     def __init__(self):
         # Connection tracking
-        self._connections: Dict[str, WebSocket] = {}
-        self._connection_info: Dict[str, ConnectionInfo] = {}
-        self._user_connections: Dict[str, Set[str]] = defaultdict(set)
+        self._connections: dict[str, WebSocket] = {}
+        self._connection_info: dict[str, ConnectionInfo] = {}
+        self._user_connections: dict[str, set[str]] = defaultdict(set)
 
         # Subscription tracking
-        self._subscriptions: Dict[str, EventSubscription] = {}
-        self._event_subscribers: Dict[EventType, Set[str]] = defaultdict(set)
-        self._channel_subscribers: Dict[str, Set[str]] = defaultdict(set)
+        self._subscriptions: dict[str, EventSubscription] = {}
+        self._event_subscribers: dict[EventType, set[str]] = defaultdict(set)
+        self._channel_subscribers: dict[str, set[str]] = defaultdict(set)
 
         # Metrics
         self._metrics = WebSocketMetrics()
@@ -51,14 +51,14 @@ class ConnectionManager:
         self._event_count = 0
 
         # Rate limiting
-        self._rate_limits: Dict[str, Dict[str, Any]] = {}
+        self._rate_limits: dict[str, dict[str, Any]] = {}
 
     async def connect(
         self,
         websocket: WebSocket,
         connection_id: str,
         user_id: str,
-        client_info: Optional[Dict[str, str]] = None,
+        client_info: Optional[dict[str, str]] = None,
     ) -> ConnectionInfo:
         """Accept and register a new WebSocket connection."""
         await websocket.accept()
@@ -246,8 +246,8 @@ class ConnectionManager:
     async def broadcast_event(
         self,
         event: WebSocketEvent,
-        target_connections: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        target_connections: Optional[list[str]] = None,
+    ) -> dict[str, Any]:
         """Broadcast event to multiple connections."""
         if target_connections is None:
             # Determine target connections based on event type and subscriptions
@@ -292,7 +292,7 @@ class ConnectionManager:
     async def handle_message(
         self,
         connection_id: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
     ):
         """Handle incoming WebSocket message."""
         try:
@@ -322,7 +322,7 @@ class ConnectionManager:
         """Get information about a connection."""
         return self._connection_info.get(connection_id)
 
-    def get_user_connections(self, user_id: str) -> List[str]:
+    def get_user_connections(self, user_id: str) -> list[str]:
         """Get all connections for a user."""
         return list(self._user_connections.get(user_id, set()))
 
@@ -339,7 +339,7 @@ class ConnectionManager:
 
         return self._metrics
 
-    def _get_event_subscribers(self, event: WebSocketEvent) -> List[str]:
+    def _get_event_subscribers(self, event: WebSocketEvent) -> list[str]:
         """Get connections subscribed to an event."""
         subscribers = set()
 
@@ -492,7 +492,7 @@ class ConnectionManager:
     async def _send_historical_events(
         self,
         connection_id: str,
-        event_types: List[EventType],
+        event_types: list[EventType],
         limit: int,
     ):
         """Send recent historical events to new subscriber."""
@@ -553,7 +553,7 @@ class EventBroadcaster:
         event_type: EventType,
         memory_id: str,
         user_id: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
     ):
         """Broadcast a memory-related event."""
         event = WebSocketEvent(
@@ -578,7 +578,7 @@ class EventBroadcaster:
         event_type: EventType,
         report_id: str,
         user_id: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
     ):
         """Broadcast a report-related event."""
         event = WebSocketEvent(
@@ -601,7 +601,7 @@ class EventBroadcaster:
     async def broadcast_system_event(
         self,
         event_type: EventType,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         channel: Optional[str] = None,
     ):
         """Broadcast a system-wide event."""
@@ -659,7 +659,7 @@ class EventBroadcaster:
             except Exception as e:
                 logger.error(f"Broadcast worker error: {e}")
 
-    def _filter_connections(self, filters: Dict[str, Any]) -> List[str]:
+    def _filter_connections(self, filters: dict[str, Any]) -> list[str]:
         """Filter connections based on criteria."""
         connections = []
 
@@ -702,7 +702,7 @@ class WebSocketService:
         self,
         websocket: WebSocket,
         user_id: str,
-        client_info: Optional[Dict[str, str]] = None,
+        client_info: Optional[dict[str, str]] = None,
     ) -> str:
         """Handle a new WebSocket connection."""
         connection_id = f"conn_{user_id}_{datetime.utcnow().timestamp()}"
