@@ -5,15 +5,17 @@ on:
     branches: [main, v3.0.0]
     paths:
       - 'src/**'
-      - 'tests/v3/**'
-      - 'requirements-v3.txt'
+      - 'tests/**'
+      - 'config/requirements*.txt'
+      - 'scripts/**'
       - '.github/workflows/test-v3.yml'
   pull_request:
     branches: [main, v3.0.0]
     paths:
       - 'src/**'
-      - 'tests/v3/**'
-      - 'requirements-v3.txt'
+      - 'tests/**'
+      - 'config/requirements*.txt'
+      - 'scripts/**'
 
 env:
   PYTHON_VERSION: '3.11'
@@ -81,21 +83,19 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements-consolidated.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('config/requirements-ci.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Install core dependencies avoiding conflicts  
-        pip install fastapi==0.109.0 pydantic==2.5.3 uvicorn[standard]==0.27.0
-        pip install sqlalchemy==2.0.25 asyncpg==0.29.0 httpx==0.26.0 
-        pip install redis==5.0.1 python-dotenv==1.0.0 openai==1.3.8
-        pip install psutil==5.9.0 structlog==25.4.0 numpy==1.26.3
-        pip install pytest==7.4.4 pytest-asyncio==0.23.3 pytest-cov==4.1.0
-        pip install scikit-learn==1.3.2 pandas==2.0.3 networkx==3.2.1
-        pip install jinja2==3.1.2 python-multipart==0.0.6 psycopg2-binary==2.9.10
+        # Install from CI requirements file
+        pip install -r config/requirements-ci.txt
+    
+    - name: Run validation tests
+      run: |
+        python scripts/test_runner.py --validation
     
     - name: Run unit tests
       env:
@@ -106,7 +106,7 @@ jobs:
         TEST_MINIO_ACCESS_KEY: minioadmin
         TEST_MINIO_SECRET_KEY: minioadmin
       run: |
-        pytest tests/v3/unit -v --cov=src --cov-report=xml --cov-report=term-missing -m unit
+        python scripts/test_runner.py --unit --coverage
     
     - name: Run integration tests
       if: env.USE_MOCK_DATABASE != 'true'
@@ -118,7 +118,7 @@ jobs:
         TEST_MINIO_ACCESS_KEY: minioadmin
         TEST_MINIO_SECRET_KEY: minioadmin
       run: |
-        pytest tests/v3/integration -v --cov=src --cov-append --cov-report=xml --cov-report=term-missing -m integration
+        python scripts/test_runner.py --integration
     
     - name: Run integration tests with mocks
       if: env.USE_MOCK_DATABASE == 'true'
@@ -126,7 +126,7 @@ jobs:
         USE_MOCK_DATABASE: true
         MOCK_EMBEDDINGS: true
       run: |
-        pytest tests/v3/integration -v --cov=src --cov-append --cov-report=xml --cov-report=term-missing -m "integration and not requires_real_db"
+        python scripts/test_runner.py --integration
     
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
@@ -138,7 +138,7 @@ jobs:
     - name: Run performance tests
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
-        pytest tests/v3/performance -v -m performance --benchmark-only
+        python scripts/test_runner.py --e2e
     
     - name: Archive test results
       if: always()
@@ -166,14 +166,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install ruff mypy black isort
     
-    - name: Run ruff
-      run: ruff check src/ tests/v3/
-    
-    - name: Run black
-      run: black --check src/ tests/v3/
-    
-    - name: Run isort
-      run: isort --check-only src/ tests/v3/
-    
-    - name: Run mypy
-      run: mypy src/ --ignore-missing-imports
+    - name: Run linting
+      run: |
+        python scripts/test_runner.py --lint
