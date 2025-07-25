@@ -53,7 +53,10 @@
       "Bash(curl:*)",
       "Bash(C:Usersdrosecond-brain.venvScriptspython.exe -m uvicorn app.app:app --reload --port 8001)",
       "Bash(C:Usersdrosecond-brain.venvScriptspython.exe test_server.py)",
-      "Bash(C:UsersdroAppDataLocalProgramsPythonPython310python.exe -m pytest tests/unit/domain -v)"
+      "Bash(C:UsersdroAppDataLocalProgramsPythonPython310python.exe -m pytest tests/unit/domain -v)",
+      "Bash(where python)",
+      "Bash(C:Usersdrosecond-brain.venvScriptspython.exe -m pytest tests/infrastructure/test_repositories.py -v)",
+      "Bash(.venvScriptspython.exe -m pytest tests/infrastructure/test_repositories.py -v)"
     ],
     "deny": []
   }
