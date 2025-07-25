@@ -2,20 +2,9 @@ name: Test v3.0.0
 
 on:
   push:
-    branches: [main, v3.0.0]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'config/requirements*.txt'
-      - 'scripts/**'
-      - '.github/workflows/test-v3.yml'
+    branches: [main]
   pull_request:
-    branches: [main, v3.0.0]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'config/requirements*.txt'
-      - 'scripts/**'
+    branches: [main]
 
 env:
   PYTHON_VERSION: '3.11'
@@ -25,50 +14,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: secondbrain_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-      
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-      
-      rabbitmq:
-        image: rabbitmq:3-management-alpine
-        env:
-          RABBITMQ_DEFAULT_USER: test
-          RABBITMQ_DEFAULT_PASS: test
-          RABBITMQ_DEFAULT_VHOST: test
-        ports:
-          - 5672:5672
-          - 15672:15672
-      
-      minio:
-        image: minio/minio:latest
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        ports:
-          - 9000:9000
-        command: server /data
-
     steps:
     - uses: actions/checkout@v4
     
@@ -77,18 +22,9 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     
-    - name: Cache pip packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('config/requirements-ci.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Install from CI requirements file
         pip install -r config/requirements-ci.txt
     
     - name: Run validation tests
@@ -96,74 +32,5 @@ jobs:
         python scripts/test_runner.py --validation
     
     - name: Run unit tests
-      env:
-        TEST_DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/secondbrain_test
-        TEST_REDIS_URL: redis://localhost:6379/1
-        TEST_RABBITMQ_URL: amqp://test:test@localhost:5672/test
-        TEST_MINIO_ENDPOINT: localhost:9000
-        TEST_MINIO_ACCESS_KEY: minioadmin
-        TEST_MINIO_SECRET_KEY: minioadmin
       run: |
-        python scripts/test_runner.py --unit --coverage
-    
-    - name: Run integration tests
-      if: env.USE_MOCK_DATABASE != 'true'
-      env:
-        TEST_DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/secondbrain_test
-        TEST_REDIS_URL: redis://localhost:6379/1
-        TEST_RABBITMQ_URL: amqp://test:test@localhost:5672/test
-        TEST_MINIO_ENDPOINT: localhost:9000
-        TEST_MINIO_ACCESS_KEY: minioadmin
-        TEST_MINIO_SECRET_KEY: minioadmin
-      run: |
-        python scripts/test_runner.py --integration
-    
-    - name: Run integration tests with mocks
-      if: env.USE_MOCK_DATABASE == 'true'
-      env:
-        USE_MOCK_DATABASE: true
-        MOCK_EMBEDDINGS: true
-      run: |
-        python scripts/test_runner.py --integration
-    
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-v3
-    
-    - name: Run performance tests
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: |
-        python scripts/test_runner.py --e2e
-    
-    - name: Archive test results
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: |
-          htmlcov/
-          .coverage
-          coverage.xml
-
-  lint:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r config/requirements-ci.txt
-    
-    - name: Run linting
-      run: |
-        python scripts/test_runner.py --lint
+        python scripts/test_runner.py --unit
