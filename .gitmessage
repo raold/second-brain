@@ -1,0 +1,17 @@
+# Commit message template for Second Brain project
+# 
+# Format: <type>(<scope>): <subject>
+#
+# Types: feat, fix, docs, style, refactor, test, chore
+# Scope: component/area being changed (optional)
+# Subject: brief description (50 chars max)
+#
+# Example: feat(api): add user authentication endpoint
+#
+# Body (optional - explain what and why, not how):
+# - 
+# - 
+#
+# Footer (optional - reference issues):
+# Closes #123
+# Fixes #456
