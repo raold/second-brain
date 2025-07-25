@@ -24,6 +24,7 @@ from src.application.dto.memory_dto import (
 from src.application.use_cases.memory_use_cases import (
     CreateMemoryUseCase,
     DeleteMemoryUseCase,
+    FindSimilarMemoriesUseCase,
     GetMemoryUseCase,
     LinkMemoriesUseCase,
     SearchMemoriesUseCase,
@@ -141,6 +142,23 @@ async def search_memories(
     """
     use_case = SearchMemoriesUseCase(deps)
     return await use_case((user_id, q, limit))
+
+
+@router.get("/similar", response_model=MemoryListDTO)
+async def find_similar_memories(
+    q: str = Query(..., description="Query text to find similar memories"),
+    user_id: Annotated[UUID, Depends(get_current_user_id)] = None,
+    deps: Annotated[Dependencies, Depends(get_dependencies)] = None,
+    limit: int = Query(10, ge=1, le=50),
+    threshold: float = Query(0.8, ge=0.0, le=1.0, description="Similarity threshold"),
+):
+    """
+    Find similar memories using vector similarity.
+    
+    Uses embeddings to find memories semantically similar to the query text.
+    """
+    use_case = FindSimilarMemoriesUseCase(deps)
+    return await use_case((user_id, q, limit, threshold))
 
 
 @router.post("/{memory_id}/link/{target_id}", status_code=status.HTTP_204_NO_CONTENT)

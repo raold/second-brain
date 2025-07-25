@@ -90,7 +90,7 @@ USER nonroot
 STOPSIGNAL SIGTERM
 
 # Entry point with signal handling
-ENTRYPOINT ["python", "-m", "app.main"]
+ENTRYPOINT ["python", "-m", "uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # Development stage (optional)
 FROM python:3.11-slim-bookworm AS development
@@ -118,4 +118,4 @@ RUN pip install --no-cache-dir \
     mypy
 
 VOLUME ["/app"]
-CMD ["python", "-m", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "app.app:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]

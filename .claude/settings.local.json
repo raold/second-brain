@@ -56,7 +56,10 @@
       "Bash(C:UsersdroAppDataLocalProgramsPythonPython310python.exe -m pytest tests/unit/domain -v)",
       "Bash(where python)",
       "Bash(C:Usersdrosecond-brain.venvScriptspython.exe -m pytest tests/infrastructure/test_repositories.py -v)",
-      "Bash(.venvScriptspython.exe -m pytest tests/infrastructure/test_repositories.py -v)"
+      "Bash(.venvScriptspython.exe -m pytest tests/infrastructure/test_repositories.py -v)",
+      "Bash(dir:*)",
+      "Bash(move:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

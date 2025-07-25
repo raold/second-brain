@@ -10,54 +10,119 @@ from typing import Callable
 
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+import structlog
 
 from src.infrastructure.logging import get_logger
+from src.infrastructure.observability import get_metrics_collector
 
 logger = get_logger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
-    """Middleware for logging HTTP requests."""
+    """Middleware for logging HTTP requests and tracking metrics."""
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Process request and log details."""
-        # Generate request ID
+        # Generate request ID and bind to context
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
+        
+        # Bind to logging context
+        structlog.contextvars.bind_contextvars(request_id=request_id)
+        
+        # Get metrics collector
+        metrics = get_metrics_collector()
         
         # Start timer
         start_time = time.time()
         
-        # Log request
-        logger.info(
-            "Request started",
-            request_id=request_id,
-            method=request.method,
-            path=request.url.path,
-            client=request.client.host if request.client else None,
-        )
-        
-        # Process request
-        response = await call_next(request)
-        
-        # Calculate duration
-        duration_ms = (time.time() - start_time) * 1000
-        
-        # Log response
-        logger.info(
-            "Request completed",
-            request_id=request_id,
-            method=request.method,
-            path=request.url.path,
-            status_code=response.status_code,
-            duration_ms=duration_ms,
-        )
-        
-        # Add headers
-        response.headers["X-Request-ID"] = request_id
-        response.headers["X-Process-Time"] = f"{duration_ms:.2f}"
-        
-        return response
+        # Create span for request
+        with tracer.start_as_current_span(
+            f"{request.method} {request.url.path}",
+            kind=trace.SpanKind.SERVER,
+            attributes={
+                "http.method": request.method,
+                "http.url": str(request.url),
+                "http.scheme": request.url.scheme,
+                "http.host": request.url.hostname or "localhost",
+                "http.target": request.url.path,
+                "request.id": request_id,
+            },
+        ) as span:
+            try:
+                # Log request
+                logger.info(
+                    "Request started",
+                    method=request.method,
+                    path=request.url.path,
+                    client=request.client.host if request.client else None,
+                )
+                
+                # Process request
+                response = await call_next(request)
+                
+                # Calculate duration
+                duration = time.time() - start_time
+                
+                # Update span
+                span.set_attribute("http.status_code", response.status_code)
+                span.set_status(Status(StatusCode.OK))
+                
+                # Track metrics
+                metrics.track_request(
+                    method=request.method,
+                    endpoint=request.url.path,
+                    status=response.status_code,
+                    duration=duration,
+                )
+                
+                # Log response
+                logger.info(
+                    "Request completed",
+                    method=request.method,
+                    path=request.url.path,
+                    status_code=response.status_code,
+                    duration_ms=duration * 1000,
+                )
+                
+                # Add headers
+                response.headers["X-Request-ID"] = request_id
+                response.headers["X-Process-Time"] = f"{duration * 1000:.2f}"
+                
+                return response
+                
+            except Exception as e:
+                # Calculate duration
+                duration = time.time() - start_time
+                
+                # Update span
+                span.set_status(Status(StatusCode.ERROR, str(e)))
+                span.record_exception(e)
+                
+                # Track metrics
+                metrics.track_request(
+                    method=request.method,
+                    endpoint=request.url.path,
+                    status=500,
+                    duration=duration,
+                )
+                
+                # Log error
+                logger.error(
+                    "Request failed",
+                    method=request.method,
+                    path=request.url.path,
+                    error=str(e),
+                    exc_info=True,
+                )
+                
+                raise
+            finally:
+                # Clear context
+                structlog.contextvars.unbind_contextvars("request_id")
 
 
 class RateLimitingMiddleware(BaseHTTPMiddleware):

@@ -4,6 +4,7 @@ Dependency injection container for the application.
 Manages creation and lifecycle of services and repositories.
 """
 
+import os
 from typing import Optional
 
 from src.domain.repositories.event_store import EventStore
@@ -21,6 +22,8 @@ from src.infrastructure.database import (
     get_connection,
 )
 from src.infrastructure.logging import get_logger
+from src.infrastructure.messaging import EventPublisher, MessageBroker, get_message_broker
+from src.infrastructure.caching import Cache, get_cache
 
 logger = get_logger(__name__)
 
@@ -35,6 +38,9 @@ class Dependencies:
     def __init__(self):
         """Initialize dependencies container."""
         self._db_connection: Optional[DatabaseConnection] = None
+        self._message_broker: Optional[MessageBroker] = None
+        self._event_publisher: Optional[EventPublisher] = None
+        self._cache: Optional[Cache] = None
         self._repositories: dict[str, object] = {}
         self._services: dict[str, object] = {}
     
@@ -45,11 +51,40 @@ class Dependencies:
         # Initialize database connection
         self._db_connection = await get_connection()
         
+        # Initialize message broker
+        broker_url = os.getenv("MESSAGE_BROKER_URL", "amqp://guest:guest@localhost:5672/")
+        if broker_url and broker_url != "none":
+            try:
+                self._message_broker = await get_message_broker(broker_url)
+                self._event_publisher = EventPublisher(self._message_broker)
+                logger.info("Message broker connected")
+            except Exception as e:
+                logger.warning(f"Failed to connect to message broker: {e}")
+                # Continue without message broker - events will be logged only
+        
+        # Initialize cache
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        if redis_url and redis_url != "none":
+            try:
+                self._cache = await get_cache(redis_url)
+                logger.info("Cache connected")
+            except Exception as e:
+                logger.warning(f"Failed to connect to cache: {e}")
+                # Continue without cache
+        
         logger.info("Dependencies initialized")
     
     async def close(self) -> None:
         """Close all dependencies."""
         logger.info("Closing dependencies")
+        
+        # Close cache
+        if self._cache:
+            await self._cache.close()
+        
+        # Close message broker
+        if self._message_broker:
+            await self._message_broker.disconnect()
         
         # Close database connection
         if self._db_connection:
@@ -105,6 +140,18 @@ class Dependencies:
     async def begin_transaction(self):
         """Begin a new database transaction."""
         return self._db_connection.get_session()
+    
+    async def get_message_broker(self) -> Optional[MessageBroker]:
+        """Get message broker instance."""
+        return self._message_broker
+    
+    async def get_event_publisher(self) -> Optional[EventPublisher]:
+        """Get event publisher instance."""
+        return self._event_publisher
+    
+    async def get_cache(self) -> Optional[Cache]:
+        """Get cache instance."""
+        return self._cache
 
 
 # Global dependencies instance

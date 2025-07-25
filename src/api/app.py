@@ -4,6 +4,7 @@ FastAPI application factory.
 Creates and configures the FastAPI application.
 """
 
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -17,6 +18,7 @@ from src.api.middleware import setup_middleware
 from src.api.routes import setup_routes
 from src.application import get_dependencies, reset_dependencies
 from src.infrastructure.logging import get_logger, setup_logging
+from src.infrastructure.observability import setup_tracing
 
 logger = get_logger(__name__)
 
@@ -34,6 +36,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     # Initialize dependencies
     deps = await get_dependencies()
     app.state.dependencies = deps
+    
+    # Setup tracing
+    setup_tracing(
+        service_name="secondbrain-api",
+        environment=os.getenv("ENVIRONMENT", "development"),
+    )
     
     logger.info("Second Brain API started successfully")
     

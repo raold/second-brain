@@ -9,9 +9,10 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, func, or_, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from pgvector.sqlalchemy import Vector
 
 from src.domain.models.memory import Memory, MemoryId, MemoryStatus, MemoryType
 from src.domain.models.tag import TagId
@@ -96,8 +97,11 @@ class SQLMemoryRepository(MemoryRepository):
             existing.confidence_score = memory.confidence_score
             existing.source_url = memory.source_url
             existing.embedding = memory.embedding
+            if memory.embedding:
+                existing.embedding_vector = memory.embedding
             existing.embedding_model = memory.embedding_model
             existing.metadata = memory.metadata
+            existing.attachments = memory.attachments
             existing.updated_at = datetime.utcnow()
             existing.retention_strength = memory.retention_strength
             existing.retrieval_count = memory.retrieval_count
@@ -116,8 +120,10 @@ class SQLMemoryRepository(MemoryRepository):
                 confidence_score=memory.confidence_score,
                 source_url=memory.source_url,
                 embedding=memory.embedding,
+                embedding_vector=memory.embedding if memory.embedding else None,
                 embedding_model=memory.embedding_model,
                 metadata=memory.metadata,
+                attachments=memory.attachments,
                 created_at=memory.created_at,
                 updated_at=memory.updated_at,
                 accessed_at=memory.accessed_at,
@@ -180,35 +186,45 @@ class SQLMemoryRepository(MemoryRepository):
         limit: int = 10,
         threshold: float = 0.8,
     ) -> list[Memory]:
-        """Find memories with similar embeddings."""
-        # For MVP, we'll use a simple approach
-        # In production, use pgvector or similar
-        query = self.session.query(MemoryModel).filter(
-            and_(
-                MemoryModel.user_id == user_id,
-                MemoryModel.embedding.isnot(None),
-            )
-        ).limit(limit * 10)  # Get more candidates
+        """Find memories with similar embeddings using pgvector."""
+        # Convert threshold from similarity to distance (1 - similarity)
+        distance_threshold = 1 - threshold
+        
+        # Use pgvector for efficient similarity search
+        query = text("""
+            SELECT m.*, 1 - (m.embedding_vector <=> :embedding::vector) as similarity
+            FROM memories m
+            WHERE m.user_id = :user_id
+            AND m.embedding_vector IS NOT NULL
+            AND m.embedding_vector <=> :embedding::vector < :threshold
+            ORDER BY m.embedding_vector <=> :embedding::vector
+            LIMIT :limit
+        """)
         
         results = await self.session.execute(
-            query.options(
-                selectinload(MemoryModel.tags),
-                selectinload(MemoryModel.linked_to),
-            )
+            query,
+            {
+                "user_id": user_id,
+                "embedding": embedding,
+                "threshold": distance_threshold,
+                "limit": limit
+            }
         )
         
-        # Calculate similarities
-        candidates = []
-        for row in results.scalars():
-            if row.embedding:
-                # Simple cosine similarity
-                similarity = self._cosine_similarity(embedding, row.embedding)
-                if similarity >= threshold:
-                    candidates.append((similarity, row))
+        memories = []
+        for row in results:
+            memory_model = await self.session.get(
+                MemoryModel,
+                row.id,
+                options=[
+                    selectinload(MemoryModel.tags),
+                    selectinload(MemoryModel.linked_to),
+                ]
+            )
+            if memory_model:
+                memories.append(self._to_domain(memory_model))
         
-        # Sort by similarity and take top N
-        candidates.sort(key=lambda x: x[0], reverse=True)
-        return [self._to_domain(row) for _, row in candidates[:limit]]
+        return memories
     
     async def get_by_tag(
         self,
@@ -335,7 +351,8 @@ class SQLMemoryRepository(MemoryRepository):
             retention_strength=db_memory.retention_strength,
             retrieval_count=db_memory.retrieval_count,
             tags=[tag.id for tag in db_memory.tags],
-            linked_memory_ids=[mem.id for mem in db_memory.linked_to],
+            linked_memories=[MemoryId(mem.id) for mem in db_memory.linked_to],
+            attachments=db_memory.attachments or [],
         )
     
     def _cosine_similarity(self, a: list[float], b: list[float]) -> float:

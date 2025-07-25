@@ -6,9 +6,11 @@ Organizes all API endpoints.
 
 from fastapi import FastAPI
 
+from .attachments import router as attachments_router
 from .auth import router as auth_router
 from .health import router as health_router
 from .memories import router as memories_router
+from .metrics import router as metrics_router
 from .sessions import router as sessions_router
 from .tags import router as tags_router
 from .users import router as users_router
@@ -61,4 +63,17 @@ def setup_routes(app: FastAPI) -> None:
         tags_router,
         prefix="/api/tags",
         tags=["tags"],
+    )
+    
+    # Attachments
+    app.include_router(
+        attachments_router,
+        prefix="/api",
+        tags=["attachments"],
+    )
+    
+    # Metrics (Prometheus)
+    app.include_router(
+        metrics_router,
+        prefix="",  # No prefix, metrics at /metrics
     )

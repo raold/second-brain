@@ -25,6 +25,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from pgvector.sqlalchemy import Vector
 
 Base = declarative_base()
 
@@ -121,11 +122,13 @@ class MemoryModel(Base):
     source_url = Column(String(1000), nullable=True)
     
     # Embeddings
-    embedding = Column(JSON, nullable=True)  # Store as JSON array
+    embedding = Column(JSON, nullable=True)  # Store as JSON array (legacy)
+    embedding_vector = Column(Vector(1536), nullable=True)  # pgvector column for similarity search
     embedding_model = Column(String(100), nullable=True)
     
     # Additional data
     metadata = Column(JSON, nullable=False, default=dict)
+    attachments = Column(JSON, nullable=False, default=list)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)

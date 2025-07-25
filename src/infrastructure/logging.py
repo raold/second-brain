@@ -10,8 +10,21 @@ import sys
 from typing import Any, Optional
 
 import structlog
+from opentelemetry import trace
+from opentelemetry.trace import get_current_span
 from structlog.processors import CallsiteParameter, CallsiteParameterAdder
 from structlog.stdlib import BoundLogger
+
+
+def add_opentelemetry_context(logger, log_method, event_dict):
+    """Add OpenTelemetry trace context to logs."""
+    span = get_current_span()
+    if span and span.is_recording():
+        span_context = span.get_span_context()
+        event_dict["trace_id"] = format(span_context.trace_id, "032x")
+        event_dict["span_id"] = format(span_context.span_id, "016x")
+        event_dict["trace_flags"] = format(span_context.trace_flags, "02x")
+    return event_dict
 
 
 def setup_logging(
@@ -54,6 +67,9 @@ def setup_logging(
                 CallsiteParameter.LINENO,
             ]
         ),
+        
+        # Add OpenTelemetry context
+        add_opentelemetry_context,
         
         # Add correlation ID if available
         structlog.contextvars.merge_contextvars,

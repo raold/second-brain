@@ -74,17 +74,17 @@ class TestBulkValidationSafety:
 
 
 class TestMainApplication:
-    """Test basic main.py functionality."""
+    """Test basic app.py functionality."""
 
     def test_module_imports(self):
-        """Test that main.py can be imported."""
-        import app.main
-        assert app.main is not None
+        """Test that app.py can be imported."""
+        import app.app
+        assert app.app is not None
 
     def test_app_creation(self):
         """Test basic app functionality if available."""
         try:
-            import app.main as main
+            import app.app as main
 
             # Look for FastAPI app or similar
             module_attrs = dir(main)
@@ -97,8 +97,8 @@ class TestMainApplication:
 
         except Exception:
             # Fallback
-            import app.main
-            assert app.main is not None
+            import app.app
+            assert app.app is not None
 
 
 class TestDatabaseModule:

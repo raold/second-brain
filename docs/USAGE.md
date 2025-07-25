@@ -13,7 +13,7 @@
 | **Install** | `pip install -r requirements-minimal.txt` | Dependencies | ~2min |
 | **Config** | `cp .env.example .env` → edit | Environment setup | ~1min |
 | **Database** | `python setup_db.py` | Initialize pgvector | ~30s |
-| **Run** | `python -m app.main` | Start server | ~5s |
+| **Run** | `python -m uvicorn app.app:app --reload` | Start server | ~5s |
 
 **Total Setup Time: ~4 minutes**
 

@@ -34,6 +34,7 @@ services:
     image: secondbrain/app:${VERSION:-3.0.0}
     container_name: secondbrain-app
     restart: unless-stopped
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "${APP_PORT:-8000}:8000"     # API
       - "${METRICS_PORT:-9090}:9090" # Prometheus metrics
@@ -47,11 +48,13 @@ services:
       # Cache (ready for Redis Cluster)
       REDIS_URL: redis://redis:6379/0
       REDIS_SENTINEL_ENABLED: false
-      # Message Queue (ready for Kafka/NATS)
-      MESSAGE_BROKER_URL: amqp://rabbitmq:5672
+      # Message Queue
+      MESSAGE_BROKER_URL: amqp://secondbrain:${RABBITMQ_PASSWORD:-changeme}@rabbitmq:5672/secondbrain
       # Object Storage (ready for S3/MinIO)
       STORAGE_BACKEND: minio
       STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
       # Federation (dormant but ready)
       FEDERATION_ENABLED: ${FEDERATION_ENABLED:-false}
       NODE_ID: ${NODE_ID:-node-001}
@@ -96,9 +99,54 @@ services:
       - "prometheus.io/port=9090"
       - "prometheus.io/path=/metrics"
 
-  # Database (PostgreSQL with TimescaleDB for time-series data)
+  # Event Worker (Processes background tasks)
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: ${BUILD_TARGET:-runtime}
+    image: secondbrain/worker:${VERSION:-3.0.0}
+    container_name: secondbrain-worker
+    restart: unless-stopped
+    command: python -m src.cli.worker
+    environment:
+      <<: *common-variables
+      # Database
+      DATABASE_URL: postgresql://secondbrain:${DB_PASSWORD:-changeme}@postgres:5432/secondbrain
+      DATABASE_POOL_SIZE: 10
+      # Cache
+      REDIS_URL: redis://redis:6379/0
+      # Message Queue
+      MESSAGE_BROKER_URL: amqp://secondbrain:${RABBITMQ_PASSWORD:-changeme}@rabbitmq:5672/secondbrain
+      # Object Storage
+      STORAGE_BACKEND: minio
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - secondbrain-net
+    volumes:
+      - app-logs:/app/logs
+    deploy:
+      replicas: ${WORKER_REPLICAS:-2}
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Database (PostgreSQL with TimescaleDB and pgvector for embeddings)
   postgres:
-    image: timescale/timescaledb-ha:pg15-latest
+    image: ankane/pgvector:v0.5.1-pg15  # PostgreSQL 15 with pgvector pre-installed
     container_name: secondbrain-postgres
     restart: unless-stopped
     environment:
@@ -112,6 +160,8 @@ services:
       # Performance tuning
       POSTGRES_MAX_CONNECTIONS: 200
       POSTGRES_SHARED_BUFFERS: 256MB
+      # pgvector settings
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --data-checksums"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -291,20 +341,6 @@ services:
     networks:
       - monitoring-net
 
-  # Vector Database (for embeddings)
-  qdrant:
-    image: qdrant/qdrant:latest
-    container_name: secondbrain-qdrant
-    restart: unless-stopped
-    volumes:
-      - qdrant-data:/qdrant/storage
-    ports:
-      - "${QDRANT_PORT:-6333}:6333"
-      - "${QDRANT_GRPC_PORT:-6334}:6334"
-    networks:
-      - secondbrain-net
-    environment:
-      QDRANT__LOG_LEVEL: INFO
 
 networks:
   secondbrain-net:
@@ -336,8 +372,6 @@ volumes:
   grafana-data:
     driver: local
   loki-data:
-    driver: local
-  qdrant-data:
     driver: local
   traefik-certs:
     driver: local

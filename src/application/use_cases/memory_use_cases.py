@@ -17,6 +17,8 @@ from src.application.use_cases.base import UseCase
 from src.domain.events.memory_events import MemoryCreated, MemoryDeleted, MemoryLinked, MemoryUpdated
 from src.domain.models.memory import Memory, MemoryId
 from src.infrastructure.logging import get_logger
+from src.infrastructure.observability import trace, get_metrics_collector
+from src.infrastructure.embeddings import EmbeddingClient
 
 logger = get_logger(__name__)
 
@@ -24,12 +26,21 @@ logger = get_logger(__name__)
 class CreateMemoryUseCase(UseCase[CreateMemoryDTO, MemoryDTO]):
     """Use case for creating a new memory."""
     
+    @trace("create_memory")
     async def execute(self, request: CreateMemoryDTO) -> MemoryDTO:
         """Create a new memory."""
         # Get user from context (would come from auth in real app)
         user_id = UUID("00000000-0000-0000-0000-000000000001")  # Placeholder
         
+        metrics = get_metrics_collector()
+        
         async with self.deps.begin_transaction() as session:
+            # Generate embedding for the memory content
+            embedding_client = EmbeddingClient()
+            embedding_result = await embedding_client.generate_embedding(
+                f"{request.title}\n\n{request.content}"
+            )
+            
             # Create memory domain object
             memory = Memory(
                 id=MemoryId(uuid4()),
@@ -41,6 +52,8 @@ class CreateMemoryUseCase(UseCase[CreateMemoryDTO, MemoryDTO]):
                 confidence_score=request.confidence_score,
                 source_url=request.source_url,
                 metadata=request.metadata,
+                embedding=embedding_result.embedding,
+                embedding_model=embedding_result.model.value,
             )
             
             # Get repository
@@ -49,15 +62,19 @@ class CreateMemoryUseCase(UseCase[CreateMemoryDTO, MemoryDTO]):
             # Save memory
             saved_memory = await memory_repo.save(memory)
             
-            # Publish event
+            # Store event
             event_store = await self.deps.get_event_store()
-            await event_store.append(
-                MemoryCreated(
-                    aggregate_id=memory.id.value,
-                    memory_type=memory.memory_type.value,
-                    title=memory.title,
-                )
+            event = MemoryCreated(
+                aggregate_id=memory.id.value,
+                memory_type=memory.memory_type.value,
+                title=memory.title,
             )
+            await event_store.append(event)
+            
+            # Publish event to message queue
+            event_publisher = await self.deps.get_event_publisher()
+            if event_publisher:
+                await event_publisher.publish(event)
             
             # Handle tags
             if request.tags:
@@ -70,6 +87,9 @@ class CreateMemoryUseCase(UseCase[CreateMemoryDTO, MemoryDTO]):
                         pass
             
             await session.commit()
+            
+            # Track metrics
+            metrics.track_memory_operation("create", "success", 0)
             
         return MemoryDTO.from_domain(saved_memory)
 
@@ -110,10 +130,22 @@ class UpdateMemoryUseCase(UseCase[tuple[UUID, UpdateMemoryDTO], MemoryDTO]):
                 raise NotFoundError("Memory", str(memory_id))
             
             # Update fields
+            regenerate_embedding = False
             if update_dto.title is not None:
                 memory.title = update_dto.title
+                regenerate_embedding = True
             if update_dto.content is not None:
                 memory.content = update_dto.content
+                regenerate_embedding = True
+            
+            # Regenerate embedding if title or content changed
+            if regenerate_embedding:
+                embedding_client = EmbeddingClient()
+                embedding_result = await embedding_client.generate_embedding(
+                    f"{memory.title}\n\n{memory.content}"
+                )
+                memory.embedding = embedding_result.embedding
+                memory.embedding_model = embedding_result.model.value
             if update_dto.memory_type is not None:
                 memory.memory_type = update_dto.memory_type
             if update_dto.status is not None:
@@ -185,6 +217,39 @@ class SearchMemoriesUseCase(UseCase[tuple[UUID, str, int], MemoryListDTO]):
             
             # Search memories
             memories = await memory_repo.search(user_id, query, limit)
+            
+            # Get total count
+            total = await memory_repo.count_by_user(user_id)
+            
+        return MemoryListDTO(
+            memories=[MemoryDTO.from_domain(m) for m in memories],
+            total=total,
+            page=1,
+            page_size=limit,
+        )
+
+
+class FindSimilarMemoriesUseCase(UseCase[tuple[UUID, str, int, float], MemoryListDTO]):
+    """Use case for finding similar memories using embeddings."""
+    
+    async def execute(self, request: tuple[UUID, str, int, float]) -> MemoryListDTO:
+        """Find memories similar to the given text."""
+        user_id, query_text, limit, threshold = request
+        
+        # Generate embedding for query text
+        embedding_client = EmbeddingClient()
+        embedding_result = await embedding_client.generate_embedding(query_text)
+        
+        async with self.deps.begin_transaction() as session:
+            memory_repo = await self.deps.get_memory_repository()
+            
+            # Find similar memories using pgvector
+            memories = await memory_repo.find_similar(
+                user_id,
+                embedding_result.embedding,
+                limit,
+                threshold,
+            )
             
             # Get total count
             total = await memory_repo.count_by_user(user_id)

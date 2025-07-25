@@ -79,6 +79,7 @@ class Memory:
     tags: list[str] = field(default_factory=list)
     linked_memories: list[MemoryId] = field(default_factory=list)
     source_url: Optional[str] = None
+    attachments: list[str] = field(default_factory=list)  # Attachment URLs
     
     # Embeddings and search
     embedding: Optional[list[float]] = None
@@ -199,6 +200,7 @@ class Memory:
             "tags": self.tags,
             "linked_memories": [str(m) for m in self.linked_memories],
             "source_url": self.source_url,
+            "attachments": self.attachments,
             "metadata": self.metadata,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),

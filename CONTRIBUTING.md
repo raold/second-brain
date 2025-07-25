@@ -1,354 +1,287 @@
-# Contributing to Second Brain
+# Contributing to Second Brain v3.0.0
 
 ## 🤝 Welcome Contributors
 
-Thank you for your interest in contributing to Second Brain! This document provides guidelines for contributing to this single-user AI memory system.
+Thank you for your interest in contributing to Second Brain! This document provides guidelines for contributing to our enterprise-ready AI memory system.
 
 ## 📋 Project Overview
 
-Second Brain is a **personal AI memory system** designed for **single-user deployments**. It's not intended for multi-user or enterprise scenarios.
+Second Brain v3.0.0 is an **enterprise-ready AI memory system** built with clean architecture principles, designed for scalability, maintainability, and production deployment.
 
 ### Key Principles
-- **Simplicity**: Minimal dependencies, clean architecture
-- **Personal Use**: Single-user focus, not multi-tenant
-- **Performance**: Sub-100ms search times
-- **Reliability**: Comprehensive testing and quality standards
+- **Clean Architecture**: Domain-driven design with clear separation of concerns
+- **Event Sourcing**: Complete audit trail and event-driven architecture
+- **Test-Driven Development**: Comprehensive test coverage at all layers
+- **Enterprise-Ready**: Production-grade observability, caching, and messaging
+- **API-First**: Well-documented RESTful API with OpenAPI specification
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.10+
-- PostgreSQL 15+ with pgvector extension
-- OpenAI API key (optional, can use mock mode)
+- Python 3.11+
+- PostgreSQL 16+ with pgvector extension
+- Redis 7+
+- RabbitMQ 3.12+
+- MinIO (or S3-compatible storage)
+- Docker & Docker Compose (optional but recommended)
 
 ### Development Setup
+
+#### Using Docker Compose (Recommended)
 ```bash
 # Clone repository
-git clone https://github.com/raold/second-brain.git
+git clone https://github.com/yourusername/second-brain.git
+cd second-brain
+
+# Start all services
+docker-compose -f docker-compose.dev.yml up -d
+
+# Install dependencies in virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements-v3.txt
+pip install -r requirements-dev.txt
+
+# Run migrations
+alembic upgrade head
+
+# Start development server
+uvicorn src.main:app --reload
+```
+
+#### Manual Setup
+```bash
+# Clone repository
+git clone https://github.com/yourusername/second-brain.git
 cd second-brain
 
 # Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements-v3.txt
+pip install -r requirements-dev.txt
 
 # Set up environment
-cp config/environments/env.example .env
+cp .env.example .env
 # Edit .env with your configuration
 
-# Initialize database
-python scripts/setup_database.py
+# Start required services (PostgreSQL, Redis, RabbitMQ, MinIO)
+# ... (configure each service)
 
-# Run tests using version manager
-python scripts/version_manager.py test all
+# Run migrations
+alembic upgrade head
+
+# Run tests
+pytest
 
 # Start development server
-uvicorn app.main:app --reload
+uvicorn src.main:app --reload
 ```
+
+## 🏗️ Architecture Overview
+
+```
+src/
+├── domain/           # Core business logic
+│   ├── models/      # Entities, value objects
+│   ├── events/      # Domain events
+│   └── repositories/# Repository interfaces
+├── application/      # Use cases and DTOs
+│   ├── use_cases/   # Business operations
+│   └── dto/         # Data transfer objects
+├── infrastructure/   # External services
+│   ├── database/    # PostgreSQL repositories
+│   ├── caching/     # Redis implementation
+│   ├── messaging/   # RabbitMQ integration
+│   └── storage/     # MinIO/S3 client
+└── api/             # FastAPI application
+    ├── routes/      # API endpoints
+    └── middleware/  # Cross-cutting concerns
+```
+
+### Development Guidelines
+
+1. **Follow Clean Architecture**: Dependencies should always point inward
+2. **Domain First**: Start with domain models and business logic
+3. **Test Coverage**: Maintain >90% test coverage
+4. **Type Hints**: Use Python type hints throughout
+5. **Documentation**: Update docs for all public APIs
 
 ## 🌿 Development Workflow
 
-### Branch Strategy: develop → testing → main
-
-We use a three-branch development strategy:
-
-- **`develop`**: Experimental features and active development
-- **`testing`**: Feature integration and release preparation  
-- **`main`**: Production-ready code with automated CI/CD
+### Branch Strategy
+- **`main`**: Production-ready code
+- **`develop`**: Integration branch for features
+- **`feature/*`**: Individual feature branches
+- **`hotfix/*`**: Emergency fixes for production
 
 ### Contributing Process
 
-#### 1. Start Development
+#### 1. Create Feature Branch
 ```bash
-# Get latest develop branch
+# Update develop branch
 git checkout develop
 git pull origin develop
 
-# Create feature branch (optional for larger features)
+# Create feature branch
 git checkout -b feature/your-feature-name
-# OR work directly on develop for smaller changes
 ```
 
-#### 2. Development and Testing
+#### 2. Development
 ```bash
-# Run tests frequently during development
-python scripts/version_manager.py test unit      # Fast feedback
-python scripts/version_manager.py test integration  # API testing
+# Run tests during development
+pytest tests/unit/  # Fast unit tests
+pytest tests/integration/  # Integration tests
+pytest  # All tests
 
-# Commit changes following conventional commits
-git commit -m "feat: add new memory search algorithm"
+# Check code quality
+black src/ tests/
+ruff check src/ tests/
+mypy src/
+
+# Run pre-commit hooks
+pre-commit run --all-files
 ```
 
-#### 3. Integration (develop → testing)
+#### 3. Commit Guidelines
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```bash
-# When feature is ready for integration
-git checkout testing
-git pull origin testing
-git merge develop  # or feature branch
+# Features
+git commit -m "feat: add bulk memory import"
 
-# Run full test suite
-python scripts/version_manager.py test all
-git push origin testing
+# Fixes
+git commit -m "fix: resolve cache invalidation issue"
+
+# Documentation
+git commit -m "docs: update API documentation"
+
+# Performance
+git commit -m "perf: optimize vector search query"
+
+# Refactoring
+git commit -m "refactor: simplify repository pattern"
 ```
 
-#### 4. Release (testing → main)
-- Create PR from testing → main
-- Automatic CI/CD runs full test suite
-- Manual review and approval required
-- After merge, automatic deployment to production
+#### 4. Create Pull Request
+1. Push your feature branch
+2. Create PR against `develop` branch
+3. Ensure all CI checks pass
+4. Request review from maintainers
 
-### Quick Development Setup
-```bash
-# One-command setup for development
-git clone https://github.com/raold/second-brain.git
-cd second-brain
-git checkout develop
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your settings
-docker-compose up postgres -d
+### Code Review Checklist
+- [ ] Tests pass and coverage maintained
+- [ ] Code follows project style guide
+- [ ] Documentation updated
+- [ ] No security vulnerabilities
+- [ ] Performance impact considered
+- [ ] Breaking changes documented
+
+## 🧪 Testing
+
+### Test Structure
 ```
-
-## 📁 Repository Structure
-
+tests/
+├── unit/          # Domain and application logic
+├── integration/   # Infrastructure and API
+├── e2e/          # End-to-end scenarios
+└── fixtures/     # Test data and mocks
 ```
-second-brain/
-├── app/                    # Core application code
-├── docs/                   # Documentation
-│   ├── api/               # API documentation
-│   ├── architecture/      # System design
-│   ├── deployment/        # Deployment guides
-│   ├── development/       # Development guides
-│   └── user/              # User guides
-├── tests/                 # All testing code
-│   ├── integration/       # Integration tests
-│   ├── unit/             # Unit tests
-│   ├── performance/      # Performance tests
-│   └── fixtures/         # Test utilities
-├── scripts/               # Utility scripts
-├── config/                # Configuration files
-└── README.md             # Main documentation
-```
-
-## 🧪 Testing Guidelines
-
-### Test Organization
-- **Unit Tests**: `tests/unit/` - Individual function testing
-- **Integration Tests**: `tests/integration/` - API endpoint testing
-- **Performance Tests**: `tests/performance/` - Benchmarking
 
 ### Running Tests
 ```bash
-# Using the centralized version manager (recommended)
-python scripts/version_manager.py test unit         # Unit tests only
-python scripts/version_manager.py test integration  # Integration tests only
-python scripts/version_manager.py test all          # Full test suite with coverage
-
-# Direct pytest usage
-pytest tests/unit/ -v                    # Unit tests
-pytest tests/integration/ -v             # Integration tests
-pytest tests/ -v --cov=app               # All tests with coverage
-```
 # All tests
-pytest tests/ -v
-
-# Specific test category
-pytest tests/unit/ -v
-pytest tests/integration/ -v
+pytest
 
 # With coverage
-pytest tests/ --cov=app --cov-report=html
+pytest --cov=src --cov-report=html
 
-# Performance benchmarks
-pytest tests/performance/ -v
+# Specific suite
+pytest tests/unit/
+pytest tests/integration/
+pytest -m "not slow"
+
+# Watch mode
+pytest-watch
 ```
 
-### Test Requirements
-- ✅ All new features must include tests
-- ✅ Maintain >80% code coverage
-- ✅ Integration tests for all API endpoints
-- ✅ Performance tests for critical paths
-
-## 📝 Code Standards
-
-### Python Style
-- **Formatter**: Black (configured in pyproject.toml)
-- **Linter**: Ruff (configured in ruff.toml)
-- **Type Hints**: Required for all functions
-- **Docstrings**: Required for all public functions
-
-### Code Quality
-```bash
-# Format code
-black app/ tests/
-
-# Lint code
-ruff check app/ tests/
-
-# Type checking
-mypy app/
-```
-
-### Git Workflow
-```bash
-# Create feature branch
-git checkout -b feature/your-feature-name
-
-# Make changes and commit
-git add .
-git commit -m "feat: add new feature description"
-
-# Push and create pull request
-git push origin feature/your-feature-name
-```
-
-## 🔄 Development Workflow
-
-### 1. Issue Creation
-- Check existing issues before creating new ones
-- Use issue templates for bugs and features
-- Provide clear reproduction steps for bugs
-
-### 2. Development Process
-1. **Fork and Clone**: Fork the repository and clone locally
-2. **Branch**: Create feature branch from `main`
-3. **Develop**: Write code following style guidelines
-4. **Test**: Add tests and ensure all tests pass
-5. **Document**: Update documentation as needed
-6. **Commit**: Use conventional commit messages
-7. **Push**: Push to your fork and create pull request
-
-### 3. Pull Request Process
-- Fill out the PR template completely
-- Ensure CI/CD pipeline passes
-- Request review from maintainers
-- Address review feedback
-- Squash commits before merge
-
-## 🐛 Bug Reports
-
-### Before Reporting
-- Check existing issues
-- Verify with latest version
-- Test with minimal reproduction case
-
-### Bug Report Template
-```markdown
-## Bug Description
-Clear description of the issue
-
-## Steps to Reproduce
-1. Step one
-2. Step two
-3. Step three
-
-## Expected Behavior
-What should happen
-
-## Actual Behavior
-What actually happens
-
-## Environment
-- OS: [e.g., Windows 11, Ubuntu 20.04]
-- Python: [e.g., 3.10.6]
-- Version: [e.g., 2.0.2]
-- Database: [e.g., PostgreSQL 15.1]
-```
-
-## ✨ Feature Requests
-
-### Feature Request Template
-```markdown
-## Feature Description
-Clear description of the proposed feature
-
-## Use Case
-Why is this feature needed?
-
-## Proposed Implementation
-How should this feature work?
-
-## Alternatives Considered
-What other approaches were considered?
-
-## Additional Context
-Any other relevant information
+### Writing Tests
+```python
+# Example unit test
+def test_memory_creation():
+    """Test memory entity creation with valid data."""
+    memory = Memory.create(
+        content="Test content",
+        user_id=uuid4(),
+        tags=["test"]
+    )
+    
+    assert memory.content == "Test content"
+    assert len(memory.events) == 1
+    assert isinstance(memory.events[0], MemoryCreatedEvent)
 ```
 
 ## 📚 Documentation
 
-### Documentation Standards
-- **README**: Keep updated with latest features
-- **API Docs**: OpenAPI specification in `app/docs.py`
-- **Architecture**: Document design decisions
-- **Deployment**: Update deployment guides
+### API Documentation
+- Update OpenAPI annotations on routes
+- Include request/response examples
+- Document error scenarios
 
-### Documentation Structure
-- **User-facing**: Clear, example-driven documentation
-- **Developer-facing**: Technical implementation details
-- **API Reference**: Complete OpenAPI specification
+### Code Documentation
+- Use docstrings for all public functions
+- Include type hints
+- Add usage examples where helpful
 
-## 🔒 Security
+### Architecture Documentation
+- Update architecture diagrams for significant changes
+- Document design decisions in ADRs (Architecture Decision Records)
 
-### Security Guidelines
-- Never commit secrets or API keys
+## 🔍 Code Quality
+
+### Style Guide
+- Follow PEP 8 with Black formatting
+- Use meaningful variable names
+- Keep functions focused and small
+- Apply SOLID principles
+
+### Pre-commit Hooks
+```bash
+# Install pre-commit
+pip install pre-commit
+pre-commit install
+
+# Run manually
+pre-commit run --all-files
+```
+
+### Security
+- Never commit secrets or credentials
 - Use environment variables for configuration
-- Report security issues privately to security@oldham.io
-- Follow responsible disclosure practices
+- Validate all user inputs
+- Follow OWASP guidelines
 
-### Security Scope
-- **In Scope**: Personal data protection, API security
-- **Out of Scope**: Multi-user security, enterprise compliance
+## 🚀 Release Process
 
-## 📋 Release Process
-
-### Version Management
-- **Configuration-Driven**: Use centralized `docs/releases/version_config.json`
-- **Automated Release Preparation**: Use `scripts/version_manager.py`
-- **Professional Documentation**: Auto-generated release notes
-
-### Release Steps
-1. **Configure Version**: Add version info to `docs/releases/version_config.json`
-2. **Prepare Release**: `python scripts/version_manager.py prepare X.Y.Z`
-3. **Execute Git Commands**: Follow the generated workflow commands
-4. **GitHub Release**: Use the auto-generated release notes
-
-## 🎯 Areas for Contribution
-
-### High Priority
-- **Performance Optimization**: Response time improvements
-- **Test Coverage**: Additional edge cases
-- **Documentation**: User guides and examples
-- **Security**: Input validation and rate limiting
-
-### Medium Priority
-- **Monitoring**: Performance metrics and logging
-- **Error Handling**: Better error messages
-- **Developer Tools**: Development utilities
-- **CI/CD**: Pipeline improvements
-
-### Low Priority
-- **Advanced Features**: Export capabilities
-- **Integrations**: Additional data sources
-- **UI/UX**: Web interface (future consideration)
+1. **Feature Freeze**: Stop adding features to release branch
+2. **Testing**: Run full test suite including performance tests
+3. **Documentation**: Update changelog and version numbers
+4. **Tag Release**: Create git tag following semantic versioning
+5. **Deploy**: Use CI/CD pipeline for deployment
 
 ## 📞 Getting Help
 
-### Community
-- **Issues**: GitHub issues for bugs and features
-- **Discussions**: GitHub discussions for questions
-- **Email**: Technical questions to development team
+- **Documentation**: Check `/docs` directory
+- **Issues**: Search existing GitHub issues
+- **Discussions**: Use GitHub Discussions for questions
+- **Discord**: Join our community (link in README)
 
-### Resources
-- **Documentation**: [docs/](docs/)
-- **API Reference**: Start server and visit `/docs`
-- **Architecture**: [docs/architecture/](docs/architecture/)
-- **Examples**: [docs/user/](docs/user/)
+## 🙏 Recognition
 
----
+Contributors will be recognized in:
+- Release notes
+- Contributors file
+- Project documentation
 
-**Thank you for contributing to Second Brain!** 🧠✨
-
-*This document is maintained by the development team and updated regularly.*
+Thank you for contributing to Second Brain! 🧠
