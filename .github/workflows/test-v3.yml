@@ -28,9 +28,13 @@ jobs:
         pip install -r config/requirements-ci.txt
     
     - name: Run validation tests
+      env:
+        PYTHONPATH: ${{ github.workspace }}
       run: |
         python scripts/test_runner.py --validation
     
     - name: Run unit tests
+      env:
+        PYTHONPATH: ${{ github.workspace }}
       run: |
         python scripts/test_runner.py --unit

@@ -1,6 +1,10 @@
 # Second Brain v3.0.0 🧠 - **Enterprise-Ready AI Memory System**
 
-![Python](https://img.shields.io/badge/python-3.11+-blue.svg) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg) ![Clean Architecture](https://img.shields.io/badge/Clean%20Architecture-DDD-green.svg) ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg) ![Production Ready](https://img.shields.io/badge/Production-Ready-blue.svg)
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
+[![Clean Architecture](https://img.shields.io/badge/Clean%20Architecture-DDD-green.svg)](docs/ARCHITECTURE_V3.md)
+[![Test v3.0.0](https://github.com/dromationeer/second-brain/actions/workflows/test-v3.yml/badge.svg)](https://github.com/dromationeer/second-brain/actions/workflows/test-v3.yml)
+[![Deploy](https://img.shields.io/badge/Deploy-Ready-brightgreen.svg)](docs/deployment/DEPLOYMENT_V3.md)
 
 > **Major Release**: v3.0.0 brings clean architecture, event sourcing, and enterprise-grade features to Second Brain.
 

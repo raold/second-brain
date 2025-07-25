@@ -8,8 +8,12 @@ import time
 from pathlib import Path
 
 # Add project root to path
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent.parent.resolve()
 sys.path.insert(0, str(project_root))
+
+# Also add PYTHONPATH for CI environment
+import os
+os.environ['PYTHONPATH'] = str(project_root)
 
 def test_memory_domain():
     """Test Memory domain model."""
