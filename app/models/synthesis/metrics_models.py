@@ -25,3 +25,15 @@ class MetricsReport(BaseModel):
     graph_metrics: GraphMetrics
     top_nodes: List[NodeMetrics] = Field(default_factory=list)
     generated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class MetricsAlert(BaseModel):
+    """Alert for significant metric changes"""
+    metric_name: str
+    current_value: float
+    previous_value: float
+    change_percentage: float
+    threshold: float
+    severity: str = Field(default="info")
+    message: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)

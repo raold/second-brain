@@ -36,6 +36,16 @@ class ConnectionState(str, Enum):
     ERROR = "error"
 
 
+class SubscriptionType(str, Enum):
+    """Types of subscriptions for websocket updates"""
+    ALL = "all"
+    MEMORY = "memory"
+    SYNTHESIS = "synthesis"
+    REPORT = "report"
+    USER = "user"
+    SYSTEM = "system"
+
+
 class EventType(str, Enum):
     """Types of events that can be broadcast."""
 

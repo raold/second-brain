@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import Dict, List, Optional, Any
 from uuid import UUID
 
@@ -22,3 +23,12 @@ class SynthesisOptions(BaseModel):
     max_tokens: int = Field(default=1000, gt=0)
     temperature: float = Field(default=0.7, ge=0, le=2)
     include_references: bool = Field(default=True)
+
+
+class ExportFormat(str, Enum):
+    """Supported export formats for synthesis results"""
+    PDF = "pdf"
+    DOCX = "docx"
+    MARKDOWN = "markdown"
+    HTML = "html"
+    JSON = "json"

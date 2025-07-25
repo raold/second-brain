@@ -819,3 +819,7 @@ class RepetitionScheduler:
                 raise ValueError(f"Session {session_id} not found")
 
             return ReviewSession(**dict(row))
+
+
+# Legacy alias for backward compatibility
+SpacedRepetitionScheduler = RepetitionScheduler

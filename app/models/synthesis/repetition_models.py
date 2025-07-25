@@ -31,6 +31,21 @@ class ForgettingCurve(BaseModel):
         return self.retention_rate * math.exp(-self.time_since_review / 30)
 
 
+class SessionStatistics(BaseModel):
+    """Statistics for a review session"""
+    total_reviewed: int = Field(default=0, ge=0)
+    correct_answers: int = Field(default=0, ge=0)
+    average_difficulty: float = Field(default=0.0, ge=0, le=5)
+    average_time_per_card: float = Field(default=0.0, ge=0)
+    session_duration: float = Field(default=0.0, ge=0)
+    
+    @property
+    def accuracy_rate(self) -> float:
+        if self.total_reviewed == 0:
+            return 0.0
+        return self.correct_answers / self.total_reviewed
+
+
 class RepetitionAlgorithm(str, Enum):
     """Supported spaced repetition algorithms."""
 

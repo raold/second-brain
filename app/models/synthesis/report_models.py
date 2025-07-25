@@ -7,7 +7,7 @@ templates, and scheduling options.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, HttpUrl, validator
 
@@ -15,6 +15,15 @@ from pydantic import BaseModel, Field, HttpUrl, validator
 class GeneratedReport(BaseModel):
     """Legacy alias for ReportResponse"""
     pass
+
+
+class KnowledgeMapReport(BaseModel):
+    """Report containing knowledge map visualization data"""
+    nodes: List[Dict[str, Any]] = Field(default_factory=list)
+    edges: List[Dict[str, Any]] = Field(default_factory=list)
+    clusters: List[Dict[str, Any]] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class ReportType(str, Enum):
