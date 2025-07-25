@@ -19,9 +19,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.11'
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-  API_TOKENS: ${{ secrets.API_TOKENS }}
-  USE_MOCK_DATABASE: ${{ vars.CI_USE_MOCK_DATABASE }}
+  USE_MOCK_DATABASE: 'true'
 
 jobs:
   test:
@@ -161,10 +159,10 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     
-    - name: Install linting tools
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install ruff mypy black isort
+        pip install -r config/requirements-ci.txt
     
     - name: Run linting
       run: |
