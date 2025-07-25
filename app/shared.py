@@ -36,7 +36,7 @@ async def verify_api_key(api_key: str = Query(..., alias="api_key")):
     """Simple API key authentication."""
     # Allow bypassing authentication in test mode
     if os.getenv("USE_MOCK_DATABASE", "false").lower() == "true":
-        valid_tokens = ["test-key-1", "test-key-2"]
+        valid_tokens = ["test-token-32-chars-long-for-auth-1234567890abcdef", "test-token-32-chars-long-for-auth-0987654321fedcba"]
     else:
         valid_tokens = os.getenv("API_TOKENS", "").split(",")
         valid_tokens = [token.strip() for token in valid_tokens if token.strip()]

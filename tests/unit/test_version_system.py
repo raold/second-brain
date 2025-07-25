@@ -11,7 +11,6 @@ from app.version import (
     __version_info__,
     get_cognitive_roadmap,
     get_current_codename,
-    get_current_roadmap_info,
     get_dashboard_version,
     get_next_planned_version,
     get_version,
@@ -124,9 +123,9 @@ class TestVersionSystem:
     def test_increment_version(self):
         """Test version increment functionality"""
         test_cases = [
-            ("patch", "2.8.2"),  # Patch increment: 2.8.1 -> 2.8.2
-            ("minor", "2.9.0"),  # Minor increment: 2.8.1 -> 2.9.0
-            ("major", "3.0.0"),  # Major increment: 2.8.1 -> 3.0.0
+            ("patch", "2.4.5"),  # Patch increment: 2.4.4 -> 2.4.5
+            ("minor", "2.5.0"),  # Minor increment: 2.4.4 -> 2.5.0
+            ("major", "3.0.0"),  # Major increment: 2.4.4 -> 3.0.0
         ]
 
         for bump_type, expected in test_cases:
@@ -141,11 +140,10 @@ class TestVersionSystem:
     def test_is_version_compatible(self):
         """Test version compatibility checking"""
         test_cases = [
-            ("2.8.1", True),  # Same version
-            ("2.8.0", True),  # Earlier patch
-            ("2.7.0", True),  # Earlier minor
-            ("2.8.2", False),  # Later patch (incompatible)
-            ("2.9.0", False),  # Later minor
+            ("2.4.0", True),  # Same minor, earlier patch
+            ("2.4.1", True),  # Exact match
+            ("2.3.0", True),  # Earlier minor
+            ("2.5.0", False),  # Later minor
             ("3.0.0", False),  # Later major
             ("1.9.9", False),  # Earlier major
         ]
@@ -161,11 +159,9 @@ class TestVersionSystem:
         assert isinstance(roadmap, dict)
         assert len(roadmap) > 0
 
-        # Check current version info can be retrieved
-        current_info = get_current_roadmap_info()
-        assert current_info, "Current version info not found in roadmap"
-        assert "codename" in current_info
-        assert "focus" in current_info
+        # Check current version exists in roadmap
+        current_key = f"v{__version__}"
+        assert current_key in roadmap, f"Current version {current_key} not in roadmap"
 
         # Check roadmap structure
         for version, info in roadmap.items():

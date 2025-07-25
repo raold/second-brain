@@ -1,4 +1,4 @@
-# Second Brain v2.4.2 - Usage Guide
+# Second Brain v2.4.4 - Usage Guide
 
 **Single-User AI Memory System** | PostgreSQL + pgvector + OpenAI embeddings
 
@@ -30,7 +30,7 @@ AUTH_TOKEN=your_secure_auth_token_here
 
 **Optional Settings**
 ```
-HOST=0.0.0.0    # Default: all interfaces
+HOST=v2.4.4.0    # Default: all interfaces
 PORT=8000       # Default: 8000
 ```
 
@@ -119,7 +119,7 @@ class SecondBrainClient:
 | `DATABASE_URL` | ✅ | None | PostgreSQL URI format | Connection string |
 | `OPENAI_API_KEY` | ✅ | None | `sk-...` format | Embedding API access |
 | `AUTH_TOKEN` | ✅ | None | Min 32 chars | Security token |
-| `HOST` | ❌ | `0.0.0.0` | Valid IP/hostname | Server bind address |
+| `HOST` | ❌ | `v2.4.4.0` | Valid IP/hostname | Server bind address |
 | `PORT` | ❌ | `8000` | 1024-65535 | Server port |
 
 ---
@@ -149,9 +149,9 @@ Memories exist? → Test: psql $DATABASE_URL -c "SELECT count(*) FROM memories;"
 
 ---
 
-## Migration Path: v1.x → v2.4.2
+## Migration Path: v1.x → v2.4.4
 
-| Migration Step | v1.x State | v2.4.2 Target | Action Required |
+| Migration Step | v1.x State | v2.4.4 Target | Action Required |
 |----------------|------------|----------------|-----------------|
 | **Database Schema** | Complex tables | Simple `memories` table | Run migration script |
 | **Configuration** | Multiple files | Single `.env` file | Consolidate settings |

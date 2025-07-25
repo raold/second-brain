@@ -7,9 +7,9 @@ spaced repetition, and WebSocket connections.
 
 import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket
 from fastapi.responses import StreamingResponse
 
 from app.models.synthesis.repetition_models import (
@@ -22,14 +22,12 @@ from app.models.synthesis.repetition_models import (
     ReviewSession,
 )
 from app.models.synthesis.report_models import (
-    ReportConfig,
     ReportFilter,
     ReportFormat,
     ReportRequest,
     ReportResponse,
     ReportSchedule,
     ReportTemplate,
-    ReportType,
 )
 from app.models.synthesis.websocket_models import (
     EventType,
@@ -37,9 +35,9 @@ from app.models.synthesis.websocket_models import (
     WebSocketMetrics,
 )
 from app.services.synthesis import (
+    RepetitionScheduler,
     ReportGenerator,
     ReportGeneratorConfig,
-    RepetitionScheduler,
     WebSocketService,
 )
 from app.shared import get_db_instance, verify_api_key
@@ -87,12 +85,12 @@ async def generate_report(
 ):
     """
     Generate a new report.
-    
+
     Supports multiple report types and formats with AI-powered summaries.
     """
     try:
         report = await generator.generate_report(request)
-        
+
         # Broadcast report completion event
         await websocket_service.event_broadcaster.broadcast_report_event(
             EventType.REPORT_COMPLETED,
@@ -100,15 +98,15 @@ async def generate_report(
             api_key,  # Using API key as user ID for now
             {"title": report.title, "format": report.format.value},
         )
-        
+
         return report
-        
+
     except Exception as e:
         logger.error(f"Report generation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/reports", response_model=List[ReportResponse])
+@router.get("/reports", response_model=list[ReportResponse])
 async def list_reports(
     filter: ReportFilter = Depends(),
     api_key: str = Depends(verify_api_key),
@@ -161,7 +159,7 @@ async def schedule_report(
     return schedule
 
 
-@router.get("/reports/schedules", response_model=List[ReportSchedule])
+@router.get("/reports/schedules", response_model=list[ReportSchedule])
 async def list_schedules(
     api_key: str = Depends(verify_api_key),
 ):
@@ -196,7 +194,7 @@ async def create_template(
     return template
 
 
-@router.get("/reports/templates", response_model=List[ReportTemplate])
+@router.get("/reports/templates", response_model=list[ReportTemplate])
 async def list_templates(
     api_key: str = Depends(verify_api_key),
 ):
@@ -222,7 +220,7 @@ async def schedule_review(
     """
     try:
         schedule = await scheduler.schedule_review(memory_id, algorithm, config)
-        
+
         # Broadcast review scheduled event
         await websocket_service.event_broadcaster.broadcast_memory_event(
             EventType.REVIEW_SCHEDULED,
@@ -230,15 +228,15 @@ async def schedule_review(
             api_key,
             {"next_review": schedule.scheduled_date.isoformat()},
         )
-        
+
         return schedule
-        
+
     except Exception as e:
         logger.error(f"Failed to schedule review: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/repetition/bulk-schedule", response_model=List[ReviewSchedule])
+@router.post("/repetition/bulk-schedule", response_model=list[ReviewSchedule])
 async def bulk_schedule_reviews(
     request: BulkReviewRequest,
     api_key: str = Depends(verify_api_key),
@@ -250,13 +248,13 @@ async def bulk_schedule_reviews(
     try:
         schedules = await scheduler.bulk_schedule_reviews(request)
         return schedules
-        
+
     except Exception as e:
         logger.error(f"Failed to bulk schedule reviews: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/repetition/due", response_model=List[ReviewSchedule])
+@router.get("/repetition/due", response_model=list[ReviewSchedule])
 async def get_due_reviews(
     limit: int = Query(100, ge=1, le=1000),
     include_overdue: bool = Query(True),
@@ -273,7 +271,7 @@ async def get_due_reviews(
             include_overdue=include_overdue,
         )
         return schedules
-        
+
     except Exception as e:
         logger.error(f"Failed to get due reviews: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -290,7 +288,7 @@ async def start_review_session(
     try:
         session = await scheduler.start_review_session(api_key)
         return session
-        
+
     except Exception as e:
         logger.error(f"Failed to start review session: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -308,7 +306,7 @@ async def end_review_session(
     try:
         session = await scheduler.end_review_session(session_id)
         return session
-        
+
     except Exception as e:
         logger.error(f"Failed to end review session: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -337,7 +335,7 @@ async def record_review(
             confidence_level,
             notes,
         )
-        
+
         # Broadcast review completed event
         await websocket_service.event_broadcaster.broadcast_memory_event(
             EventType.REVIEW_COMPLETED,
@@ -349,14 +347,14 @@ async def record_review(
                 "interval_change": result.interval_change,
             },
         )
-        
+
         return {
             "success": True,
             "next_review": result.next_review,
             "new_interval": result.new_strength.interval,
             "ease_factor": result.new_strength.ease_factor,
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to record review: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -374,7 +372,7 @@ async def get_learning_statistics(
     try:
         stats = await scheduler.get_learning_statistics(api_key, period)
         return stats
-        
+
     except Exception as e:
         logger.error(f"Failed to get learning statistics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -389,7 +387,7 @@ async def websocket_endpoint(
 ):
     """
     WebSocket endpoint for real-time updates.
-    
+
     Requires API key as query parameter for authentication.
     """
     # Verify API key
@@ -398,7 +396,7 @@ async def websocket_endpoint(
     except HTTPException:
         await websocket.close(code=4001, reason="Invalid API key")
         return
-    
+
     # Handle connection
     connection_id = await websocket_service.handle_connection(
         websocket,
@@ -408,7 +406,7 @@ async def websocket_endpoint(
             "ip_address": websocket.client.host if websocket.client else None,
         },
     )
-    
+
     logger.info(f"WebSocket connection closed: {connection_id}")
 
 
@@ -420,7 +418,7 @@ async def subscribe_to_events(
 ):
     """
     Subscribe to specific event types.
-    
+
     Used for HTTP-based subscription management.
     """
     try:
@@ -429,7 +427,7 @@ async def subscribe_to_events(
             request,
         )
         return subscription
-        
+
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:

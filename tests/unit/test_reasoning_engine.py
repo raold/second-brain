@@ -43,28 +43,28 @@ class TestReasoningEngine:
         assert result2.reasoning_type == ReasoningType.TEMPORAL
         assert result2.include_temporal
 
+    @pytest.mark.parametrize("query,expected_type", [
+        ("What caused this?", ReasoningType.CAUSAL),
+        ("Why did this happen?", ReasoningType.CAUSAL),
+        ("What led to this outcome?", ReasoningType.CAUSAL),
+        ("What happened before?", ReasoningType.TEMPORAL),
+        ("Show timeline", ReasoningType.TEMPORAL),
+        ("When did this occur?", ReasoningType.TEMPORAL),
+        ("How did this evolve?", ReasoningType.EVOLUTIONARY),
+        ("How has this changed?", ReasoningType.EVOLUTIONARY),
+        ("What's the progression?", ReasoningType.EVOLUTIONARY),
+        ("Compare A to B", ReasoningType.COMPARATIVE),
+        ("What's the difference?", ReasoningType.COMPARATIVE),
+        ("How do they differ?", ReasoningType.COMPARATIVE),
+        ("Tell me about this", ReasoningType.SEMANTIC),
+        ("Explain this concept", ReasoningType.SEMANTIC),
+        ("Random query", ReasoningType.SEMANTIC),
+    ])
     @pytest.mark.asyncio
-    async def test_detect_reasoning_type(self, reasoning_engine):
-        """Test reasoning type detection"""
-
-        # Causal
-        assert reasoning_engine._detect_reasoning_type("What caused this?") == ReasoningType.CAUSAL
-        assert reasoning_engine._detect_reasoning_type("Why did this happen?") == ReasoningType.CAUSAL
-
-        # Temporal
-        assert reasoning_engine._detect_reasoning_type("What happened before?") == ReasoningType.TEMPORAL
-        assert reasoning_engine._detect_reasoning_type("Show timeline") == ReasoningType.TEMPORAL
-
-        # Evolutionary
-        assert reasoning_engine._detect_reasoning_type("How did this evolve?") == ReasoningType.EVOLUTIONARY
-        assert reasoning_engine._detect_reasoning_type("How has this changed?") == ReasoningType.EVOLUTIONARY
-
-        # Comparative
-        assert reasoning_engine._detect_reasoning_type("Compare A to B") == ReasoningType.COMPARATIVE
-        assert reasoning_engine._detect_reasoning_type("What's the difference?") == ReasoningType.COMPARATIVE
-
-        # Default to semantic
-        assert reasoning_engine._detect_reasoning_type("Tell me about this") == ReasoningType.SEMANTIC
+    async def test_detect_reasoning_type(self, reasoning_engine, query, expected_type):
+        """Test reasoning type detection with various queries."""
+        detected_type = reasoning_engine._detect_reasoning_type(query)
+        assert detected_type == expected_type, f"Query '{query}' should detect {expected_type}, got {detected_type}"
 
     @pytest.mark.asyncio
     async def test_find_starting_nodes(self, reasoning_engine, mock_db):

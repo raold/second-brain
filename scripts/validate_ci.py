@@ -7,7 +7,6 @@ This script checks for common CI/CD issues before pushing to main.
 
 import os
 import sys
-import subprocess
 from pathlib import Path
 
 # Colors for output
@@ -46,13 +45,13 @@ def check_python_syntax(filepath):
 def check_imports():
     """Check if key imports work."""
     print("\n=== Checking Imports ===")
-    
+
     imports_to_check = [
         ("from app.models.synthesis import ReportType", "Synthesis models"),
         ("from app.services.synthesis import ReportGenerator", "Synthesis services"),
         ("from app.routes.synthesis_routes import router", "Synthesis routes"),
     ]
-    
+
     all_ok = True
     for import_stmt, description in imports_to_check:
         try:
@@ -61,13 +60,13 @@ def check_imports():
         except Exception as e:
             print_status("ERROR", f"{description} import failed: {e}")
             all_ok = False
-    
+
     return all_ok
 
 def check_requirements():
     """Check requirements.txt for version conflicts."""
     print("\n=== Checking Requirements ===")
-    
+
     # Check ruff version
     with open("requirements.txt") as f:
         reqs = f.read()
@@ -78,13 +77,13 @@ def check_requirements():
             return False
         else:
             print_status("WARNING", "Ruff not found in requirements.txt")
-    
+
     return True
 
 def check_test_files():
     """Check if test files exist and are valid."""
     print("\n=== Checking Test Files ===")
-    
+
     test_files = [
         "tests/unit/synthesis/test_report_models.py",
         "tests/unit/synthesis/test_repetition_models.py",
@@ -94,7 +93,7 @@ def check_test_files():
         "tests/unit/synthesis/test_websocket_service.py",
         "tests/integration/synthesis/test_synthesis_integration.py",
     ]
-    
+
     all_ok = True
     for test_file in test_files:
         if Path(test_file).exists():
@@ -105,13 +104,13 @@ def check_test_files():
         else:
             print_status("ERROR", f"Test file missing: {test_file}")
             all_ok = False
-    
+
     return all_ok
 
 def check_github_actions():
     """Check GitHub Actions workflow files."""
     print("\n=== Checking GitHub Actions ===")
-    
+
     workflow_file = ".github/workflows/ci-v2.8.yml"
     if check_file_exists(workflow_file, "Main CI workflow"):
         # Check for common issues
@@ -121,20 +120,20 @@ def check_github_actions():
                 print_status("OK", "CI ruff version set correctly")
             else:
                 print_status("WARNING", "CI ruff version may not match requirements")
-    
+
     return True
 
 def main():
     """Run all validation checks."""
     print("=== Second Brain v2.8.2 CI/CD Validation ===\n")
-    
+
     # Change to project root
     project_root = Path(__file__).parent.parent
     os.chdir(project_root)
-    
+
     # Add project root to Python path
     sys.path.insert(0, str(project_root))
-    
+
     checks = [
         ("Python Files", lambda: all([
             check_file_exists("app/models/__init__.py", "Models package init"),
@@ -147,12 +146,12 @@ def main():
         ("GitHub Actions", check_github_actions),
         ("Imports", check_imports),
     ]
-    
+
     all_passed = True
     for check_name, check_func in checks:
         if not check_func():
             all_passed = False
-    
+
     print("\n" + "="*50)
     if all_passed:
         print(f"{GREEN}✓ All checks passed!{RESET}")

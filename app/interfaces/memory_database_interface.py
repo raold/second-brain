@@ -13,14 +13,14 @@ Created as part of Phase 1: Emergency Stabilization
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 
 class MemoryDatabaseInterface(ABC):
     """Abstract interface for memory database operations."""
 
     @abstractmethod
-    async def get_memory(self, memory_id: str) -> dict[str, Any] | None:
+    async def get_memory(self, memory_id: str) -> Optional[dict[str, Any]]:
         """Get a specific memory by ID.
 
         Args:
@@ -33,7 +33,7 @@ class MemoryDatabaseInterface(ABC):
 
     @abstractmethod
     async def get_candidate_memories(
-        self, exclude_id: str, limit: int = 50, memory_types: list[str] | None = None
+        self, exclude_id: str, limit: int = 50, memory_types: Optional[list[str]] = None
     ) -> list[dict[str, Any]]:
         """Get candidate memories for relationship analysis.
 
@@ -49,7 +49,7 @@ class MemoryDatabaseInterface(ABC):
 
     @abstractmethod
     async def get_memories_for_clustering(
-        self, memory_types: list[str] | None = None, limit: int = 200
+        self, memory_types: Optional[list[str]] = None, limit: int = 200
     ) -> list[dict[str, Any]]:
         """Get memories for clustering analysis.
 
@@ -90,7 +90,7 @@ class PostgreSQLMemoryDatabase(MemoryDatabaseInterface):
         """
         self.database_service = database_service
 
-    async def get_memory(self, memory_id: str) -> dict[str, Any] | None:
+    async def get_memory(self, memory_id: str) -> Optional[dict[str, Any]]:
         """Get memory from PostgreSQL."""
         async with self.database_service.pool.acquire() as conn:
             result = await conn.fetchrow(
@@ -106,7 +106,7 @@ class PostgreSQLMemoryDatabase(MemoryDatabaseInterface):
             return dict(result) if result else None
 
     async def get_candidate_memories(
-        self, exclude_id: str, limit: int = 50, memory_types: list[str] | None = None
+        self, exclude_id: str, limit: int = 50, memory_types: Optional[list[str]] = None
     ) -> list[dict[str, Any]]:
         """Get candidate memories from PostgreSQL."""
         query_filters = ["id != $1", "embedding IS NOT NULL"]
@@ -134,7 +134,7 @@ class PostgreSQLMemoryDatabase(MemoryDatabaseInterface):
             return [dict(result) for result in results]
 
     async def get_memories_for_clustering(
-        self, memory_types: list[str] | None = None, limit: int = 200
+        self, memory_types: Optional[list[str]] = None, limit: int = 200
     ) -> list[dict[str, Any]]:
         """Get memories for clustering from PostgreSQL."""
         query_filters = ["embedding IS NOT NULL"]
@@ -190,7 +190,7 @@ class PostgreSQLMemoryDatabase(MemoryDatabaseInterface):
 class MockMemoryDatabase(MemoryDatabaseInterface):
     """Mock implementation for testing."""
 
-    def __init__(self, mock_memories: list[dict[str, Any]] | None = None):
+    def __init__(self, mock_memories: Optional[list[dict[str, Any]]] = None):
         """Initialize with optional mock data.
 
         Args:
@@ -198,7 +198,7 @@ class MockMemoryDatabase(MemoryDatabaseInterface):
         """
         self.memories = mock_memories or []
 
-    async def get_memory(self, memory_id: str) -> dict[str, Any] | None:
+    async def get_memory(self, memory_id: str) -> Optional[dict[str, Any]]:
         """Get memory from mock data."""
         for memory in self.memories:
             if memory.get("id") == memory_id:
@@ -206,7 +206,7 @@ class MockMemoryDatabase(MemoryDatabaseInterface):
         return None
 
     async def get_candidate_memories(
-        self, exclude_id: str, limit: int = 50, memory_types: list[str] | None = None
+        self, exclude_id: str, limit: int = 50, memory_types: Optional[list[str]] = None
     ) -> list[dict[str, Any]]:
         """Get candidate memories from mock data."""
         candidates = []
@@ -227,7 +227,7 @@ class MockMemoryDatabase(MemoryDatabaseInterface):
         )
 
     async def get_memories_for_clustering(
-        self, memory_types: list[str] | None = None, limit: int = 200
+        self, memory_types: Optional[list[str]] = None, limit: int = 200
     ) -> list[dict[str, Any]]:
         """Get memories for clustering from mock data."""
         candidates = []

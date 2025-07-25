@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Brain - Git Repository Dashboard</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header .subtitle {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .section {
+            margin: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+        }
+        
+        .section h2 {
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 10px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .status-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .status-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4facfe;
+            margin-bottom: 5px;
+        }
+        
+        .status-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .activity-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .activity-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: none;
+            font-size: 1em;
+        }
+        
+        .activity-tab.active {
+            background: #4facfe;
+            color: white;
+        }
+        
+        .activity-tab:hover {
+            background: #e9ecef;
+        }
+        
+        .activity-tab.active:hover {
+            background: #3a8fe6;
+        }
+        
+        .activity-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .branch-activity {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .branch-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #ddd;
+        }
+        
+        .branch-card.high-activity {
+            border-left-color: #e74c3c;
+        }
+        
+        .branch-card.medium-activity {
+            border-left-color: #f39c12;
+        }
+        
+        .branch-card.low-activity {
+            border-left-color: #95a5a6;
+        }
+        
+        .branch-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .branch-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        #visualization {
+            background: white;
+            border-radius: 8px;
+            min-height: 400px;
+            position: relative;
+        }
+        
+        .branch-list {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .branch-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .branch-item:last-child {
+            border-bottom: none;
+        }
+        
+        .current-branch {
+            background: #e8f4fd;
+            border-radius: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>🧠 Second Brain Git Dashboard</h1>
+            <div class="subtitle">Real-time Git Repository Visualization & Analytics</div>
+        </div>
+        
+        <!-- Git Status Section -->
+        <div class="section">
+            <h2>📊 Repository Status</h2>
+            <div class="status-grid" id="statusGrid">
+                <div class="loading">Loading repository status...</div>
+            </div>
+            <div class="branch-list" id="branchList">
+                <div class="loading">Loading branches...</div>
+            </div>
+        </div>
+        
+        <!-- Commit Activity Section -->
+        <div class="section">
+            <h2>📈 Commit Activity Analytics</h2>
+            <div class="activity-tabs">
+                <button class="activity-tab active" data-period="24h">24 Hours</button>
+                <button class="activity-tab" data-period="7d">7 Days</button>
+                <button class="activity-tab" data-period="30d">30 Days</button>
+            </div>
+            <div class="activity-summary" id="activitySummary">
+                <div class="loading">Loading activity data...</div>
+            </div>
+            <div class="branch-activity" id="branchActivity">
+                <div class="loading">Loading branch activity...</div>
+            </div>
+        </div>
+        
+        <!-- Git Visualization Section -->
+        <div class="section">
+            <h2>🌳 Branch Visualization</h2>
+            <div id="visualization">
+                <div class="loading">Loading git visualization...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPeriod = '24h';
+        let gitData = null;
+        let activityData = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGitStatus();
+            loadCommitActivity();
+            loadGitVisualization();
+            setupActivityTabs();
+        });
+
+        // Setup activity period tabs
+        function setupActivityTabs() {
+            document.querySelectorAll('.activity-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.activity-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentPeriod = this.dataset.period;
+                    updateActivityDisplay();
+                });
+            });
+        }
+
+        // Load git repository status
+        async function loadGitStatus() {
+            try {
+                const response = await fetch('/dashboard/git/repository-status');
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('statusGrid').innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                    return;
+                }
+
+                displayGitStatus(data);
+            } catch (error) {
+                document.getElementById('statusGrid').innerHTML = `<div class="error">Failed to load git status: ${error.message}</div>`;
+            }
+        }
+
+        // Display git status
+        function displayGitStatus(data) {
+            const statusGrid = document.getElementById('statusGrid');
+            statusGrid.innerHTML = `
+                <div class="status-card">
+                    <div class="status-value">${data.current_branch}</div>
+                    <div class="status-label">Current Branch</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-value">${data.total_branches}</div>
+                    <div class="status-label">Total Branches</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-value">${data.has_uncommitted_changes ? 'Yes' : 'No'}</div>
+                    <div class="status-label">Uncommitted Changes</div>
+                </div>
+            `;
+
+            // Display branch list
+            const branchList = document.getElementById('branchList');
+            if (data.branches && data.branches.length > 0) {
+                branchList.innerHTML = data.branches.map(branch => `
+                    <div class="branch-item ${branch === data.current_branch ? 'current-branch' : ''}">
+                        <span>${branch}</span>
+                        ${branch === data.current_branch ? '<span>👑 Current</span>' : ''}
+                    </div>
+                `).join('');
+            } else {
+                branchList.innerHTML = '<div class="loading">No branch data available</div>';
+            }
+        }
+
+        // Load commit activity
+        async function loadCommitActivity() {
+            try {
+                const response = await fetch('/dashboard/git/commit-activity');
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('activitySummary').innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                    return;
+                }
+
+                activityData = data;
+                updateActivityDisplay();
+            } catch (error) {
+                document.getElementById('activitySummary').innerHTML = `<div class="error">Failed to load activity: ${error.message}</div>`;
+            }
+        }
+
+        // Update activity display
+        function updateActivityDisplay() {
+            if (!activityData || !activityData.repository_summary) {
+                return;
+            }
+
+            const summary = activityData.repository_summary[currentPeriod] || {};
+            
+            // Update activity summary
+            const activitySummary = document.getElementById('activitySummary');
+            activitySummary.innerHTML = `
+                <div class="status-card">
+                    <div class="status-value">${summary.commits || 0}</div>
+                    <div class="status-label">Commits</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-value">${(summary.lines_added || 0).toLocaleString()}</div>
+                    <div class="status-label">Lines Added</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-value">${(summary.lines_deleted || 0).toLocaleString()}</div>
+                    <div class="status-label">Lines Deleted</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-value">${summary.authors || 0}</div>
+                    <div class="status-label">Authors</div>
+                </div>
+            `;
+
+            // Update branch activity (simplified since we don't have per-branch data from the API)
+            const branchActivity = document.getElementById('branchActivity');
+            branchActivity.innerHTML = `
+                <div class="branch-card high-activity">
+                    <div class="branch-name">Repository Activity (${currentPeriod.toUpperCase()})</div>
+                    <div class="branch-stats">
+                        <span>${summary.commits || 0} commits</span>
+                        <span>+${(summary.lines_added || 0).toLocaleString()}/-${(summary.lines_deleted || 0).toLocaleString()} lines</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load git visualization
+        async function loadGitVisualization() {
+            try {
+                const response = await fetch('/dashboard/git/visualization');
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('visualization').innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                    return;
+                }
+
+                gitData = data;
+                createVisualization(data);
+            } catch (error) {
+                document.getElementById('visualization').innerHTML = `<div class="error">Failed to load visualization: ${error.message}</div>`;
+            }
+        }
+
+        // Create D3.js visualization
+        function createVisualization(data) {
+            const container = document.getElementById('visualization');
+            container.innerHTML = ''; // Clear loading message
+            
+            if (!data.nodes || data.nodes.length === 0) {
+                container.innerHTML = '<div class="loading">No visualization data available</div>';
+                return;
+            }
+
+            const width = container.clientWidth;
+            const height = 400;
+
+            const svg = d3.select('#visualization')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            // Create simulation
+            const simulation = d3.forceSimulation(data.nodes)
+                .force('link', d3.forceLink(data.links).id(d => d.id).distance(100))
+                .force('charge', d3.forceManyBody().strength(-300))
+                .force('center', d3.forceCenter(width / 2, height / 2));
+
+            // Add links
+            const link = svg.append('g')
+                .selectAll('line')
+                .data(data.links)
+                .join('line')
+                .attr('stroke', '#999')
+                .attr('stroke-opacity', 0.6)
+                .attr('stroke-width', 2);
+
+            // Add nodes
+            const node = svg.append('g')
+                .selectAll('circle')
+                .data(data.nodes)
+                .join('circle')
+                .attr('r', d => d.is_current ? 12 : 8)
+                .attr('fill', d => {
+                    if (d.group === 'main') return '#4facfe';
+                    if (d.group === 'feature') return '#52c41a';
+                    if (d.group === 'testing') return '#13c2c2';
+                    if (d.group === 'development') return '#722ed1';
+                    return '#8c8c8c';
+                })
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2);
+
+            // Add labels
+            const labels = svg.append('g')
+                .selectAll('text')
+                .data(data.nodes)
+                .join('text')
+                .text(d => d.id.replace('origin/', ''))
+                .attr('font-size', '12px')
+                .attr('dx', 15)
+                .attr('dy', 4);
+
+            // Add drag behavior
+            node.call(d3.drag()
+                .on('start', dragstarted)
+                .on('drag', dragged)
+                .on('end', dragended));
+
+            // Add tooltips
+            node.append('title')
+                .text(d => `${d.id}${d.is_current ? ' (current)' : ''}\nStatus: ${d.status}\nFeatures: ${d.features}`);
+
+            // Update positions on simulation tick
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+
+                node
+                    .attr('cx', d => d.x)
+                    .attr('cy', d => d.y);
+
+                labels
+                    .attr('x', d => d.x)
+                    .attr('y', d => d.y);
+            });
+
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            loadGitStatus();
+            loadCommitActivity();
+            loadGitVisualization();
+        }, 300000);
+    </script>
+</body>
+</html>

@@ -13,7 +13,6 @@ This test suite validates the refactored, modular architecture.
 
 from datetime import datetime, timedelta
 
-import numpy as np
 import pytest
 
 from app.interfaces.memory_database_interface import MockMemoryDatabase
@@ -308,6 +307,7 @@ class TestMemoryRelationshipAnalyzer:
         assert analyzer._parse_embedding([1.0, 2.0, 3.0]) == [1.0, 2.0, 3.0]
 
         # Test numpy array
+        import numpy as np
         arr = np.array([1.0, 2.0, 3.0])
         assert analyzer._parse_embedding(arr) == [1.0, 2.0, 3.0]
 

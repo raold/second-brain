@@ -12,7 +12,7 @@ from app.version import get_version_info
 
 # Set up test environment
 os.environ["USE_MOCK_DATABASE"] = "true"
-os.environ["API_TOKENS"] = "test-key-1,test-key-2"
+os.environ["API_TOKENS"] = "test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba"
 
 
 class TestIntegrationSuite:
@@ -23,14 +23,14 @@ class TestIntegrationSuite:
         """Test version info integration across app, API, and docs."""
         # Get version from version module
         version_info = get_version_info()
-        assert version_info["version"] == "2.8.1"
-        assert version_info["build"] == "release-candidate"
+        assert version_info["version"] == "2.4.4"
+        assert version_info["build"] == "stable"
 
         # Get version from API endpoint
         response = await client.get("/health")
         assert response.status_code == 200
         api_data = response.json()
-        assert api_data["version"] == "2.8.1"
+        assert api_data["version"] == "2.4.4"
 
         # Ensure consistency across sources
         assert version_info["version"] == api_data["version"]
@@ -42,7 +42,7 @@ class TestIntegrationSuite:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert data["version"] == "2.8.1"
+        assert data["version"] == "2.4.4"
         assert "timestamp" in data
 
     @pytest.mark.asyncio
@@ -179,7 +179,7 @@ class TestIntegrationSuite:
         assert response.status_code == 401
 
         # Test valid API key from list
-        response = await client.get("/memories", params={"api_key": "test-key-2"})
+        response = await client.get("/memories", params={"api_key": "test-token-32-chars-long-for-auth-0987654321fedcba"})
         assert response.status_code == 200
 
     @pytest.mark.asyncio

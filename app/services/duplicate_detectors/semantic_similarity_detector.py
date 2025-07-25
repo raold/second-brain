@@ -6,7 +6,7 @@ Handles conceptual similarity beyond lexical matching.
 """
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from app.interfaces.duplicate_detector_interface import BaseDuplicateDetector
 from app.models.deduplication_models import DeduplicationConfig, DuplicateGroup, SimilarityMethod, SimilarityScore
@@ -525,7 +525,7 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
 
         return duplicate_group
 
-    async def get_embedding(self, content: str, config: DeduplicationConfig) -> list[float] | None:
+    async def get_embedding(self, content: str, config: DeduplicationConfig) -> Optional[list[float]]:
         """
         Get embedding for a single piece of content.
 

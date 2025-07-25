@@ -27,7 +27,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 
 # Local type definitions (in production these would be proper imports)
@@ -102,8 +102,8 @@ class DeduplicationProgress:
     memories_merged: int = 0
     errors_encountered: int = 0
     current_stage: str = "initializing"
-    started_at: datetime | None = None
-    estimated_completion: datetime | None = None
+    started_at: Optional[datetime] = None
+    estimated_completion: Optional[datetime] = None
 
     @property
     def progress_percentage(self) -> float:
@@ -113,7 +113,7 @@ class DeduplicationProgress:
         return min(100.0, (self.memories_processed / self.total_memories) * 100.0)
 
     @property
-    def elapsed_time(self) -> timedelta | None:
+    def elapsed_time(self) -> Optional[timedelta]:
         """Calculate elapsed time since start."""
         if not self.started_at:
             return None
@@ -129,7 +129,7 @@ class OrchestrationResult:
     statistics: dict[str, Any] = field(default_factory=dict)
     progress: DeduplicationProgress = field(default_factory=DeduplicationProgress)
     errors: list[str] = field(default_factory=list)
-    config_used: DeduplicationConfig | None = None
+    config_used: Optional[DeduplicationConfig] = None
     total_time_seconds: float = 0.0
     success: bool = True
 
@@ -140,7 +140,7 @@ class DeduplicationDatabaseInterface(ABC):
 
     @abstractmethod
     async def get_memories_for_deduplication(
-        self, filter_criteria: dict[str, Any] | None = None, limit: int | None = None
+        self, filter_criteria: Optional[dict[str, Any]] = None, limit: Optional[int] = None
     ) -> list[dict[str, Any]]:
         pass
 
@@ -154,7 +154,7 @@ class DeduplicationDatabaseInterface(ABC):
         primary_id: str,
         duplicate_ids: list[str],
         merge_strategy: str,
-        merged_metadata: dict[str, Any] | None = None,
+        merged_metadata: Optional[dict[str, Any]] = None,
     ) -> bool:
         pass
 
@@ -199,7 +199,7 @@ class DeduplicationOrchestrator:
         database: DeduplicationDatabaseInterface,
         detectors: dict[DetectionMethod, BaseDuplicateDetector],
         memory_merger: MemoryMerger,
-        logger: logging.Logger | None = None,
+        logger: Optional[logging.Logger] = None,
     ):
         """
         Initialize the orchestrator.
@@ -229,7 +229,7 @@ class DeduplicationOrchestrator:
         }
 
     async def deduplicate_memories(
-        self, config: DeduplicationConfig | None = None, filter_criteria: dict[str, Any] | None = None
+        self, config: Optional[DeduplicationConfig] = None, filter_criteria: Optional[dict[str, Any]] = None
     ) -> OrchestrationResult:
         """
         Execute the complete deduplication process.
@@ -334,7 +334,7 @@ class DeduplicationOrchestrator:
             return result
 
     async def _load_memories_for_deduplication(
-        self, filter_criteria: dict[str, Any] | None, config: DeduplicationConfig
+        self, filter_criteria: Optional[dict[str, Any]], config: DeduplicationConfig
     ) -> list[dict[str, Any]]:
         """
         Load memories from the database for deduplication analysis.
@@ -499,50 +499,129 @@ class DeduplicationOrchestrator:
             return groups
 
         # Build a mapping of memory_id -> groups containing that memory
+        memory_to_groups = self._build_memory_to_groups_mapping(groups)
+
+        # Find connected components (groups that share memories)
+        components = self._find_connected_components(groups, memory_to_groups)
+
+        # Consolidate each component
+        consolidated_groups = []
+        for component in components:
+            consolidated_group = await self._consolidate_component(component)
+            consolidated_groups.append(consolidated_group)
+
+        self.logger.info(f"Consolidated {len(groups)} groups into {len(consolidated_groups)} groups")
+        return consolidated_groups
+
+    def _build_memory_to_groups_mapping(self, groups: list[DuplicateGroup]) -> dict[str, list[DuplicateGroup]]:
+        """
+        Build a mapping from memory IDs to the groups containing them.
+
+        Args:
+            groups: List of duplicate groups
+
+        Returns:
+            Dictionary mapping memory_id to list of groups containing that memory
+        """
         memory_to_groups = {}
         for group in groups:
             for memory_id in group.memory_ids:
                 if memory_id not in memory_to_groups:
                     memory_to_groups[memory_id] = []
                 memory_to_groups[memory_id].append(group)
+        return memory_to_groups
 
-        # Find connected components (groups that share memories)
+    def _find_connected_components(
+        self, groups: list[DuplicateGroup], memory_to_groups: dict[str, list[DuplicateGroup]]
+    ) -> list[list[DuplicateGroup]]:
+        """
+        Find connected components of groups that share memories.
+
+        Args:
+            groups: List of duplicate groups
+            memory_to_groups: Mapping of memory IDs to groups
+
+        Returns:
+            List of connected components (each component is a list of connected groups)
+        """
         visited = set()
-        consolidated_groups = []
+        components = []
 
         for group in groups:
-            if group.group_id in visited:
+            if group.group_id not in visited:
+                component = self._explore_component(group, memory_to_groups, visited)
+                components.append(component)
+
+        return components
+
+    def _explore_component(
+        self, start_group: DuplicateGroup, memory_to_groups: dict[str, list[DuplicateGroup]], visited: set[str]
+    ) -> list[DuplicateGroup]:
+        """
+        Explore a single connected component using depth-first search.
+
+        Args:
+            start_group: Starting group for exploration
+            memory_to_groups: Mapping of memory IDs to groups
+            visited: Set of already visited group IDs
+
+        Returns:
+            List of all groups in the connected component
+        """
+        component = []
+        stack = [start_group]
+
+        while stack:
+            current_group = stack.pop()
+            if current_group.group_id in visited:
                 continue
 
-            # Find all groups connected to this one
-            connected_groups = []
-            stack = [group]
+            visited.add(current_group.group_id)
+            component.append(current_group)
 
-            while stack:
-                current_group = stack.pop()
-                if current_group.group_id in visited:
-                    continue
+            # Add unvisited related groups to stack
+            related_groups = self._get_unvisited_related_groups(current_group, memory_to_groups, visited)
+            stack.extend(related_groups)
 
-                visited.add(current_group.group_id)
-                connected_groups.append(current_group)
+        return component
 
-                # Find other groups sharing memories with this group
-                for memory_id in current_group.memory_ids:
-                    for related_group in memory_to_groups[memory_id]:
-                        if related_group.group_id not in visited:
-                            stack.append(related_group)
+    def _get_unvisited_related_groups(
+        self, group: DuplicateGroup, memory_to_groups: dict[str, list[DuplicateGroup]], visited: set[str]
+    ) -> list[DuplicateGroup]:
+        """
+        Get all unvisited groups that share memories with the given group.
 
-            # Merge connected groups into one consolidated group
-            if len(connected_groups) == 1:
-                # Single group, no merging needed
-                consolidated_groups.append(connected_groups[0])
-            else:
-                # Multiple groups need consolidation
-                merged_group = await self._merge_overlapping_groups(connected_groups)
-                consolidated_groups.append(merged_group)
+        Args:
+            group: The group to find related groups for
+            memory_to_groups: Mapping of memory IDs to groups
+            visited: Set of already visited group IDs
 
-        self.logger.info(f"Consolidated {len(groups)} groups into {len(consolidated_groups)} groups")
-        return consolidated_groups
+        Returns:
+            List of unvisited related groups
+        """
+        related_groups = []
+        for memory_id in group.memory_ids:
+            for related_group in memory_to_groups[memory_id]:
+                if related_group.group_id not in visited:
+                    related_groups.append(related_group)
+        return related_groups
+
+    async def _consolidate_component(self, component: list[DuplicateGroup]) -> DuplicateGroup:
+        """
+        Consolidate a connected component into a single group.
+
+        Args:
+            component: List of connected duplicate groups
+
+        Returns:
+            Single consolidated duplicate group
+        """
+        if len(component) == 1:
+            # Single group, no merging needed
+            return component[0]
+        else:
+            # Multiple groups need consolidation
+            return await self._merge_overlapping_groups(component)
 
     async def _merge_overlapping_groups(self, groups: list[DuplicateGroup]) -> DuplicateGroup:
         """
@@ -679,7 +758,7 @@ class DeduplicationOrchestrator:
         """Get current deduplication progress."""
         return self.current_progress
 
-    def get_operation_history(self, limit: int | None = None) -> list[OrchestrationResult]:
+    def get_operation_history(self, limit: Optional[int] = None) -> list[OrchestrationResult]:
         """
         Get history of deduplication operations.
 
@@ -743,7 +822,7 @@ class DeduplicationOrchestrator:
         return health_status
 
     async def estimate_processing_time(
-        self, memory_count: int, config: DeduplicationConfig | None = None
+        self, memory_count: int, config: Optional[DeduplicationConfig] = None
     ) -> dict[str, Any]:
         """
         Estimate processing time for a given number of memories.

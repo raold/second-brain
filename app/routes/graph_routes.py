@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field
 
 from app.ingestion.entity_extractor import EntityExtractor
 from app.ingestion.relationship_detector import RelationshipDetector
+from app.routes.auth import get_current_user
+from app.services.memory_service import MemoryService
 from app.shared import get_db_instance, verify_api_key
 from app.visualization.relationship_graph import RelationshipGraph
 
@@ -53,6 +55,7 @@ class NeighborhoodRequest(BaseModel):
 async def build_relationship_graph(
     request: GraphRequest,
     _: str = Depends(verify_api_key),
+    current_user: dict = Depends(get_current_user),
     db=Depends(get_db_instance)
 ):
     """
@@ -65,13 +68,13 @@ async def build_relationship_graph(
         if request.memory_ids:
             memories = []
             for memory_id in request.memory_ids:
-                memory = await memory_service.get_memory(memory_id, current_user.id)
+                memory = await memory_service.get_memory(memory_id, current_user.get('user_id', 'default_user'))
                 if memory:
                     memories.append(memory)
         else:
             # Get all memories with optional tag filter
             memories = await memory_service.search_memories(
-                user_id=current_user.id,
+                user_id=current_user.get('user_id', 'default_user'),
                 tags=request.tags,
                 limit=50
             )
@@ -142,6 +145,7 @@ async def build_relationship_graph(
 async def find_relationship_paths(
     request: PathRequest,
     _: str = Depends(verify_api_key),
+    current_user: dict = Depends(get_current_user),
     db=Depends(get_db_instance)
 ):
     """
@@ -151,7 +155,7 @@ async def find_relationship_paths(
         # Build graph first (in production, this might be cached)
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.id,
+            user_id=current_user.get('user_id', 'default_user'),
             limit=100
         )
 
@@ -203,6 +207,7 @@ async def find_relationship_paths(
 async def get_entity_neighborhood(
     request: NeighborhoodRequest,
     _: str = Depends(verify_api_key),
+    current_user: dict = Depends(get_current_user),
     db=Depends(get_db_instance)
 ):
     """
@@ -212,7 +217,7 @@ async def get_entity_neighborhood(
         # Build graph (in production, this might be cached)
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.id,
+            user_id=current_user.get('user_id', 'default_user'),
             limit=100
         )
 
@@ -258,6 +263,7 @@ async def get_entity_neighborhood(
 async def get_central_entities(
     top_n: int = Query(10, description="Number of top entities"),
     _: str = Depends(verify_api_key),
+    current_user: dict = Depends(get_current_user),
     db=Depends(get_db_instance)
 ):
     """
@@ -267,7 +273,7 @@ async def get_central_entities(
         # Build graph
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.id,
+            user_id=current_user.get('user_id', 'default_user'),
             limit=100
         )
 
@@ -313,6 +319,7 @@ async def get_central_entities(
 async def detect_communities(
     algorithm: str = Query("spectral", description="Community detection algorithm"),
     _: str = Depends(verify_api_key),
+    current_user: dict = Depends(get_current_user),
     db=Depends(get_db_instance)
 ):
     """
@@ -322,7 +329,7 @@ async def detect_communities(
         # Build graph
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.id,
+            user_id=current_user.get('user_id', 'default_user'),
             limit=100
         )
 
@@ -369,6 +376,7 @@ async def detect_communities(
 async def export_graph(
     format: str = "json",
     _: str = Depends(verify_api_key),
+    current_user: dict = Depends(get_current_user),
     db=Depends(get_db_instance)
 ):
     """
@@ -381,7 +389,7 @@ async def export_graph(
         # Build graph
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.id,
+            user_id=current_user.get('user_id', 'default_user'),
             limit=100
         )
 

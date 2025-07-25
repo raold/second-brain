@@ -9,7 +9,11 @@ import pytest
 # Since the module might not be importable due to dependencies,
 # let's create basic tests that at least import and test basic functionality
 try:
-    from app.bulk_performance_optimizer import *
+    from app.bulk_performance_optimizer import (
+        BulkPerformanceOptimizer,
+        OptimizationMode,
+        PerformanceMetrics,
+    )
 except ImportError:
     # If import fails, create basic mock tests
     pytest.skip("bulk_performance_optimizer module not available", allow_module_level=True)
@@ -86,7 +90,7 @@ class TestMainApplication:
             module_attrs = dir(main)
 
             # Check for common app patterns
-            any(attr in module_attrs for attr in ['app', 'application', 'create_app'])
+            _has_app_attrs = any(attr in module_attrs for attr in ['app', 'application', 'create_app'])
 
             # Basic verification
             assert len(module_attrs) > 0
@@ -113,7 +117,7 @@ class TestDatabaseModule:
             module_attrs = dir(db)
 
             # Look for database-related classes
-            [attr for attr in module_attrs if 'Database' in attr or 'Connection' in attr]
+            _db_classes = [attr for attr in module_attrs if 'Database' in attr or 'Connection' in attr]
 
             # Basic verification
             assert len(module_attrs) > 0
@@ -139,7 +143,7 @@ class TestMemoryRelationships:
             module_attrs = dir(mr)
 
             # Look for relationship-related classes
-            [attr for attr in module_attrs if 'Relationship' in attr or 'Memory' in attr]
+            _relationship_classes = [attr for attr in module_attrs if 'Relationship' in attr or 'Memory' in attr]
 
             assert len(module_attrs) > 0
 
@@ -164,7 +168,7 @@ class TestMemoryVisualization:
             module_attrs = dir(mv)
 
             # Look for visualization classes
-            [attr for attr in module_attrs if 'Visual' in attr or 'Chart' in attr or 'Graph' in attr]
+            _viz_classes = [attr for attr in module_attrs if 'Visual' in attr or 'Chart' in attr or 'Graph' in attr]
 
             assert len(module_attrs) > 0
 

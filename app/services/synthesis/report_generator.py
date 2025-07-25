@@ -9,10 +9,10 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import asyncpg
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import Environment, FileSystemLoader
 
 from app.models.synthesis.report_models import (
     ReportConfig,
@@ -154,7 +154,7 @@ class ReportGenerator:
                 logger.error(f"Report generation failed: {e}")
                 raise
 
-    def _get_time_range(self, config: ReportConfig) -> Tuple[datetime, datetime]:
+    def _get_time_range(self, config: ReportConfig) -> tuple[datetime, datetime]:
         """Determine the time range for the report."""
         if config.start_date and config.end_date:
             return config.start_date, config.end_date
@@ -185,7 +185,7 @@ class ReportGenerator:
         start_date: datetime,
         end_date: datetime,
         config: ReportConfig,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Gather data needed for the report."""
         data = {
             "start_date": start_date,
@@ -224,7 +224,7 @@ class ReportGenerator:
 
     async def _calculate_metrics(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         start_date: datetime,
         end_date: datetime,
     ) -> ReportMetrics:
@@ -268,10 +268,10 @@ class ReportGenerator:
     async def _generate_sections(
         self,
         report_type: ReportType,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         metrics: ReportMetrics,
         config: ReportConfig,
-    ) -> List[ReportSection]:
+    ) -> list[ReportSection]:
         """Generate report sections based on type."""
         sections = []
 
@@ -350,7 +350,7 @@ class ReportGenerator:
 
         return f"Second Brain {type_name} Report - {date_range}"
 
-    def _generate_overview(self, data: Dict[str, Any], metrics: ReportMetrics) -> str:
+    def _generate_overview(self, data: dict[str, Any], metrics: ReportMetrics) -> str:
         """Generate overview section content."""
         return f"""
 This report covers the period from {data['start_date'].strftime('%B %d, %Y')} to {data['end_date'].strftime('%B %d, %Y')}.
@@ -363,7 +363,7 @@ This report covers the period from {data['start_date'].strftime('%B %d, %Y')} to
 - Topics covered: {len(metrics.topics_covered)}
 """
 
-    def _generate_memory_section(self, data: Dict[str, Any], metrics: ReportMetrics) -> str:
+    def _generate_memory_section(self, data: dict[str, Any], metrics: ReportMetrics) -> str:
         """Generate memory activity section."""
         content = f"During this period, {metrics.new_memories} new memories were added.\n\n"
 
@@ -377,7 +377,7 @@ This report covers the period from {data['start_date'].strftime('%B %d, %Y')} to
 
         return content
 
-    def _generate_insights_section(self, insights: List[Dict[str, Any]]) -> str:
+    def _generate_insights_section(self, insights: list[dict[str, Any]]) -> str:
         """Generate insights section."""
         content = "**Key insights discovered during this period:**\n\n"
 
@@ -387,7 +387,7 @@ This report covers the period from {data['start_date'].strftime('%B %d, %Y')} to
 
         return content
 
-    def _generate_graph_section(self, graph_data: Dict[str, Any]) -> str:
+    def _generate_graph_section(self, graph_data: dict[str, Any]) -> str:
         """Generate knowledge graph section."""
         return f"""
 **Knowledge Network Statistics:**
@@ -399,7 +399,7 @@ This report covers the period from {data['start_date'].strftime('%B %d, %Y')} to
 The knowledge graph shows the interconnections between your memories and concepts.
 """
 
-    def _generate_recommendations_section(self, recommendations: List[str]) -> str:
+    def _generate_recommendations_section(self, recommendations: list[str]) -> str:
         """Generate recommendations section."""
         content = "**Recommendations for improving your knowledge management:**\n\n"
 
@@ -408,7 +408,7 @@ The knowledge graph shows the interconnections between your memories and concept
 
         return content
 
-    async def _generate_learning_path_section(self, data: Dict[str, Any]) -> ReportSection:
+    async def _generate_learning_path_section(self, data: dict[str, Any]) -> ReportSection:
         """Generate learning path section for learning path reports."""
         # This would analyze the knowledge graph and suggest learning paths
         content = """
@@ -437,7 +437,7 @@ Based on your current knowledge and interests, here are recommended learning pat
 
     async def _generate_progress_section(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         metrics: ReportMetrics,
     ) -> ReportSection:
         """Generate progress section for progress reports."""
@@ -469,7 +469,7 @@ Your knowledge base is growing steadily with consistent daily contributions.
         self,
         title: str,
         summary: Optional[str],
-        sections: List[ReportSection],
+        sections: list[ReportSection],
         metrics: ReportMetrics,
         format: ReportFormat,
     ) -> str:
@@ -510,13 +510,13 @@ Your knowledge base is growing steadily with consistent daily contributions.
         content: str,
         format: ReportFormat,
         title: str,
-    ) -> Tuple[str, int]:
+    ) -> tuple[str, int]:
         """Save report to file and return URL and size."""
         # Implementation would save to S3 or local storage
         # For now, return mock values
         return f"https://storage.example.com/reports/{title}.{format.value}", len(content)
 
-    async def _deliver_email(self, report: ReportResponse, recipients: List[str]):
+    async def _deliver_email(self, report: ReportResponse, recipients: list[str]):
         """Deliver report via email."""
         # Implementation would use email service
         logger.info(f"Delivering report {report.id} to {recipients}")
@@ -530,7 +530,7 @@ Your knowledge base is growing steadily with consistent daily contributions.
         self,
         start_date: datetime,
         end_date: datetime,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get insights for the time period."""
         # Would query insights from database
         return [
@@ -550,7 +550,7 @@ Your knowledge base is growing steadily with consistent daily contributions.
         self,
         start_date: datetime,
         end_date: datetime,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get activity data for the time period."""
         async with self.pool.acquire() as conn:
             # Get active days
@@ -579,7 +579,7 @@ Your knowledge base is growing steadily with consistent daily contributions.
         self,
         start_date: datetime,
         end_date: datetime,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get knowledge graph statistics."""
         # Would calculate from actual graph data
         return {
@@ -591,9 +591,9 @@ Your knowledge base is growing steadily with consistent daily contributions.
 
     async def _generate_recommendations(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         metrics: ReportMetrics,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate recommendations based on data and metrics."""
         recommendations = []
 
@@ -616,7 +616,7 @@ Your knowledge base is growing steadily with consistent daily contributions.
 
     async def _generate_ai_summary(
         self,
-        sections: List[ReportSection],
+        sections: list[ReportSection],
         metrics: ReportMetrics,
         target_length: int,
     ) -> str:
@@ -637,7 +637,7 @@ maintaining current learning velocity.
 
     def _generate_basic_summary(
         self,
-        sections: List[ReportSection],
+        sections: list[ReportSection],
         metrics: ReportMetrics,
     ) -> str:
         """Generate basic summary without AI."""

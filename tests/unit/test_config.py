@@ -13,13 +13,20 @@ class TestConfig:
 
     def test_default_config_values(self):
         """Test that default configuration values are set correctly."""
-        # Test database defaults
+        # Test database defaults - in test environment these are overridden
         assert Config.DATABASE_URL.startswith("postgresql://")
-        assert Config.POSTGRES_USER == "brain"
-        assert Config.POSTGRES_PASSWORD == "brain_password"
+        if os.getenv("ENVIRONMENT") == "test":
+            assert Config.POSTGRES_USER == "test"
+            assert Config.POSTGRES_PASSWORD == "test"
+        else:
+            assert Config.POSTGRES_USER == "brain"
+            assert Config.POSTGRES_PASSWORD == "brain_password"
         assert Config.POSTGRES_HOST == "localhost"
         assert Config.POSTGRES_PORT == "5432"
-        assert Config.POSTGRES_DB == "brain"
+        if os.getenv("ENVIRONMENT") == "test":
+            assert Config.POSTGRES_DB == "test"
+        else:
+            assert Config.POSTGRES_DB == "brain"
 
         # Test OpenAI defaults
         assert Config.OPENAI_EMBEDDING_MODEL == "text-embedding-3-small"

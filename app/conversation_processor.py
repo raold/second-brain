@@ -388,7 +388,6 @@ def setup_conversation_monitoring():
 
 if __name__ == "__main__":
     # Demo conversation processing
-    import asyncio
 
     async def demo():
         processor = ConversationProcessor()
