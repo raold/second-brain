@@ -68,19 +68,20 @@ open http://localhost:8000
 ### **Local Development**
 
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Clone and setup environment (works on any OS)
+git clone https://github.com/yourusername/second-brain.git
+cd second-brain
+python scripts/setup_dev_environment.py
 
-# Install dependencies
-pip install -r requirements-v3.txt
+# Activate virtual environment
+.venv\Scripts\activate      # Windows
+source .venv/bin/activate   # Linux/Mac
 
-# Set environment variables
-cp .env.example .env
-# Edit .env with your configuration
+# Start services
+docker-compose up -d
 
-# Run migrations
-alembic upgrade head
+# Run tests to validate setup
+python scripts/test_runner.py --validation
 
 # Start the application
 uvicorn src.main:app --reload
@@ -145,20 +146,24 @@ GET    /metrics                  # Prometheus metrics
 ## 🧪 **Testing**
 
 ```bash
-# Run all tests
-pytest
+# Validate environment and run tests
+python scripts/test_runner.py --validation   # Environment validation
+python scripts/test_runner.py --unit         # Unit tests only
+python scripts/test_runner.py --integration  # Integration tests
+python scripts/test_runner.py --e2e          # End-to-end tests
+python scripts/test_runner.py --all          # All tests (fast)
+python scripts/test_runner.py --all --slow   # All tests including slow ones
 
-# Run with coverage
-pytest --cov=src --cov-report=html
+# Generate coverage report
+python scripts/test_runner.py --coverage
 
-# Run specific test suites
+# Run linting
+python scripts/test_runner.py --lint
+
+# Direct pytest (alternative)
 pytest tests/unit/              # Unit tests only
 pytest tests/integration/        # Integration tests
-pytest tests/e2e/               # End-to-end tests
-
-# Run with markers
-pytest -m "not slow"            # Skip slow tests
-pytest -m "unit"                # Unit tests only
+pytest -m "unit"                # Unit tests with marker
 ```
 
 ## 📊 **Monitoring & Observability**
