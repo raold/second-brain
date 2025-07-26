@@ -472,7 +472,7 @@ class SessionService:
                 await self.create_session()
             
             # Process the idea by storing it as a memory
-            from app.services.service_factory import get_memory_service
+            from app.core.dependencies import get_memory_service
             memory_service = get_memory_service()
             
             # Determine memory type based on idea content
@@ -618,52 +618,77 @@ class SessionService:
             return False
 
 
-# Singleton instances
-_dashboard_service = None
-_git_service = None
-_health_service = None
-_memory_service = None
-_session_service = None
+# DEPRECATED: Use app.core.dependencies instead
+# This module is kept for backward compatibility
+
+# Import from the new centralized dependency injection system
+from app.core.dependencies import (
+    get_dashboard_service as _get_dashboard_service,
+    get_git_service as _get_git_service,
+    get_health_service as _get_health_service,
+    get_memory_service as _get_memory_service,
+    get_session_service as _get_session_service,
+)
 
 
 def get_dashboard_service() -> DashboardService:
-    """Get dashboard service instance"""
-    global _dashboard_service
-    if _dashboard_service is None:
-        _dashboard_service = DashboardService()
-    return _dashboard_service
+    """Get dashboard service instance (DEPRECATED: use app.core.dependencies)"""
+    import warnings
+    warnings.warn(
+        "app.services.service_factory.get_dashboard_service is deprecated. "
+        "Use app.core.dependencies.get_dashboard_service instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return _get_dashboard_service()
 
 
 def get_git_service() -> GitService:
-    """Get git service instance"""
-    global _git_service
-    if _git_service is None:
-        _git_service = GitService()
-    return _git_service
+    """Get git service instance (DEPRECATED: use app.core.dependencies)"""
+    import warnings
+    warnings.warn(
+        "app.services.service_factory.get_git_service is deprecated. "
+        "Use app.core.dependencies.get_git_service instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return _get_git_service()
 
 
 def get_health_service() -> HealthService:
-    """Get health service instance"""
-    global _health_service
-    if _health_service is None:
-        _health_service = HealthService()
-    return _health_service
+    """Get health service instance (DEPRECATED: use app.core.dependencies)"""
+    import warnings
+    warnings.warn(
+        "app.services.service_factory.get_health_service is deprecated. "
+        "Use app.core.dependencies.get_health_service instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return _get_health_service()
 
 
 def get_memory_service() -> MemoryService:
-    """Get memory service instance"""
-    global _memory_service
-    if _memory_service is None:
-        _memory_service = MemoryService()
-    return _memory_service
+    """Get memory service instance (DEPRECATED: use app.core.dependencies)"""
+    import warnings
+    warnings.warn(
+        "app.services.service_factory.get_memory_service is deprecated. "
+        "Use app.core.dependencies.get_memory_service instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return _get_memory_service()
 
 
 def get_session_service() -> SessionService:
-    """Get session service instance"""
-    global _session_service
-    if _session_service is None:
-        _session_service = SessionService()
-    return _session_service
+    """Get session service instance (DEPRECATED: use app.core.dependencies)"""
+    import warnings
+    warnings.warn(
+        "app.services.service_factory.get_session_service is deprecated. "
+        "Use app.core.dependencies.get_session_service instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return _get_session_service()
 
 
 class ServiceFactory:
@@ -678,27 +703,27 @@ class ServiceFactory:
     
     @staticmethod
     def get_dashboard_service() -> DashboardService:
-        """Get dashboard service"""
+        """Get dashboard service (DEPRECATED: use app.core.dependencies)"""
         return get_dashboard_service()
     
     @staticmethod
     def get_git_service() -> GitService:
-        """Get git service"""
+        """Get git service (DEPRECATED: use app.core.dependencies)"""
         return get_git_service()
     
     @staticmethod
     def get_health_service() -> HealthService:
-        """Get health service"""
+        """Get health service (DEPRECATED: use app.core.dependencies)"""
         return get_health_service()
     
     @staticmethod
     def get_memory_service() -> MemoryService:
-        """Get memory service"""
+        """Get memory service (DEPRECATED: use app.core.dependencies)"""
         return get_memory_service()
     
     @staticmethod
     def get_session_service() -> SessionService:
-        """Get session service"""
+        """Get session service (DEPRECATED: use app.core.dependencies)"""
         return get_session_service()
 
 

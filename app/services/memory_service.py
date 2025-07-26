@@ -9,7 +9,7 @@ from typing import Any, Optional, Union
 
 from app.database import Database, get_database
 from app.database_importance_schema import setup_importance_tracking_schema
-from app.database_mock import MockDatabase
+# MockDatabase removed - using real database only
 from app.services.importance_engine import ImportanceEngine, get_importance_engine
 from app.services.monitoring import get_metrics_collector
 from app.utils.logging_config import PerformanceLogger, get_logger
@@ -27,11 +27,11 @@ from app.utils.protocols import (
 logger = get_logger(__name__)
 
 
-def _is_real_database_with_pool(database: Union[Database, MockDatabase] | None) -> bool:
+def _is_real_database_with_pool(database: Database | None) -> bool:
     """Check if database is a real Database instance with pool access."""
     if not database:
         return False
-    # Check class name to avoid MockDatabase
+    # Check if it's a real Database with pool
     return (
         hasattr(database, "pool")
         and hasattr(database, "__class__")
@@ -57,8 +57,8 @@ class MemoryService:
     - Cacheable: Caching support
     """
 
-    def __init__(self, database: Union[Database, MockDatabase] | None = None):
-        self.database: Union[Database, MockDatabase] | None = database
+    def __init__(self, database: Database | None = None):
+        self.database: Database | None = database
         self.importance_engine: ImportanceEngine | None = None
         self._initialized = False
         self._running = False
@@ -1125,7 +1125,7 @@ class MemoryServiceFactory:
 
     @staticmethod
     async def create_service(
-        database: Union[Database, MockDatabase] = None,
+        database: Database = None,
         validate_protocols: bool = True
     ) -> MemoryService:
         """Create and initialize a memory service."""

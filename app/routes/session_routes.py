@@ -5,10 +5,10 @@ All business logic is delegated to SessionService.
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Form
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Form, Depends
 from pydantic import BaseModel, Field
 
-from app.services.service_factory import get_session_service
+from app.core.dependencies import get_session_service_dep
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/session", tags=["Session"])
@@ -44,13 +44,12 @@ class ConversationMessage(BaseModel):
 
 
 @router.post("/ingest")
-async def ingest_mobile_idea(idea_request: IdeaIngestionRequest, background_tasks: BackgroundTasks):
+async def ingest_mobile_idea(idea_request: IdeaIngestionRequest, background_tasks: BackgroundTasks, session_service=Depends(get_session_service_dep)):
     """
     The WOODCHIPPER - Ingest ideas from mobile/remote and automatically process them.
     This is the core feature for dropping ideas and having them automatically integrated.
     """
     try:
-        session_service = get_session_service()
         result = await session_service.ingest_idea(
             idea=idea_request.idea,
             source=idea_request.source,
@@ -66,10 +65,9 @@ async def ingest_mobile_idea(idea_request: IdeaIngestionRequest, background_task
 
 
 @router.get("/")
-async def get_session_status():
+async def get_session_status(session_service=Depends(get_session_service_dep)):
     """Get current session status and analytics."""
     try:
-        session_service = get_session_service()
         status = await session_service.get_session_status()
 
         return {"status": "success", **status}
@@ -80,13 +78,12 @@ async def get_session_status():
 
 
 @router.post("/pause")
-async def pause_session(pause_request: SessionPauseRequest):
+async def pause_session(pause_request: SessionPauseRequest, session_service=Depends(get_session_service_dep)):
     """
     Pause current session and generate comprehensive resume context.
     Critical for cost management and seamless continuation.
     """
     try:
-        session_service = get_session_service()
         result = await session_service.pause_session(reason=pause_request.reason)
 
         return {
@@ -107,13 +104,12 @@ async def pause_session(pause_request: SessionPauseRequest):
 
 
 @router.post("/resume")
-async def resume_session(resume_request: SessionResumeRequest):
+async def resume_session(resume_request: SessionResumeRequest, session_service=Depends(get_session_service_dep)):
     """
     Resume a previous session with full context restoration.
     Supports cross-device synchronization.
     """
     try:
-        session_service = get_session_service()
         result = await session_service.resume_session(
             session_id=resume_request.session_id, device_context=resume_request.device_context
         )
@@ -126,13 +122,12 @@ async def resume_session(resume_request: SessionResumeRequest):
 
 
 @router.post("/conversation/process")
-async def process_conversation(message: ConversationMessage):
+async def process_conversation(message: ConversationMessage, session_service=Depends(get_session_service_dep)):
     """
     Process conversation messages to extract insights and update project state.
     Monitors for technical discussions and feature requests.
     """
     try:
-        session_service = get_session_service()
         result = await session_service.process_conversation_message(
             message=message.message, context_type=message.context_type
         )
@@ -145,13 +140,12 @@ async def process_conversation(message: ConversationMessage):
 
 
 @router.get("/context")
-async def get_current_context():
+async def get_current_context(session_service=Depends(get_session_service_dep)):
     """
     Get comprehensive current context for overview.
     Shows exactly where we are and what's next.
     """
     try:
-        session_service = get_session_service()
         context = await session_service.get_session_status()
         
         return {"status": "success", "current_context": context}
@@ -162,10 +156,9 @@ async def get_current_context():
 
 
 @router.get("/history")
-async def get_session_history(limit: int = Query(default=50, ge=1, le=1000)):
+async def get_session_history(limit: int = Query(default=50, ge=1, le=1000), session_service=Depends(get_session_service_dep)):
     """Get conversation history with context preservation."""
     try:
-        session_service = get_session_service()
         # Note: This would need to be implemented in SessionService
         # For now, return a placeholder
         return {
@@ -180,13 +173,12 @@ async def get_session_history(limit: int = Query(default=50, ge=1, le=1000)):
 
 
 @router.post("/sync")
-async def sync_session(target_device: str = "cloud"):
+async def sync_session(target_device: str = "cloud", session_service=Depends(get_session_service_dep)):
     """
     Synchronize session across devices for seamless continuation.
     Critical for cross-device productivity.
     """
     try:
-        session_service = get_session_service()
         # Note: This would need to be implemented in SessionService
         # For now, return a placeholder
         return {
@@ -202,7 +194,7 @@ async def sync_session(target_device: str = "cloud"):
 
 # Mobile-optimized endpoints
 @router.post("/mobile/idea")
-async def mobile_idea_quick_drop(idea: str = Form(...), voice_note: str | None = Form(default=None)):
+async def mobile_idea_quick_drop(idea: str = Form(...), voice_note: str | None = Form(default=None), session_service=Depends(get_session_service_dep)):
     """
     Quick idea drop from mobile - ultra-simple interface.
     The fastest way to get ideas into the system.
@@ -213,7 +205,6 @@ async def mobile_idea_quick_drop(idea: str = Form(...), voice_note: str | None =
         if voice_note:
             full_idea += f" [Voice note: {voice_note}]"
             
-        session_service = get_session_service()
         result = await session_service.ingest_idea(
             idea=full_idea,
             source="mobile_quick",
@@ -235,10 +226,9 @@ async def mobile_idea_quick_drop(idea: str = Form(...), voice_note: str | None =
 
 
 @router.get("/mobile/status")
-async def mobile_status_check():
+async def mobile_status_check(session_service=Depends(get_session_service_dep)):
     """Quick status check optimized for mobile."""
     try:
-        session_service = get_session_service()
         status = await session_service.get_session_status()
         
         # Extract mobile-friendly summary

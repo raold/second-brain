@@ -8,7 +8,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.docs import HealthResponse, StatusResponse
-from app.services.service_factory import get_health_service
+from app.core.dependencies import get_health_service_dep
 from app.shared import get_db_instance, verify_api_key
 
 logger = logging.getLogger(__name__)
@@ -21,10 +21,9 @@ router = APIRouter(tags=["Health"])
     summary="Health Check",
     description="Check system health and version information",
 )
-async def health_check():
+async def health_check(health_service=Depends(get_health_service_dep)):
     """Health check endpoint."""
     try:
-        health_service = get_health_service()
         health_status = await health_service.get_health_status()
 
         return HealthResponse(
@@ -45,10 +44,9 @@ async def health_check():
     description="Get database and performance metrics",
     dependencies=[Depends(verify_api_key)],
 )
-async def get_status():
+async def get_status(health_service=Depends(get_health_service_dep)):
     """Get database and index status for performance monitoring."""
     try:
-        health_service = get_health_service()
         system_status = await health_service.get_system_status()
 
         return StatusResponse(
@@ -68,10 +66,9 @@ async def get_status():
     description="Run comprehensive system diagnostics",
     dependencies=[Depends(verify_api_key)],
 )
-async def run_diagnostics():
+async def run_diagnostics(health_service=Depends(get_health_service_dep)):
     """Run system diagnostics and return results."""
     try:
-        health_service = get_health_service()
         diagnostics = await health_service.run_diagnostics()
 
         # Return appropriate status code based on overall status
@@ -93,10 +90,9 @@ async def run_diagnostics():
     description="Get detailed performance metrics",
     dependencies=[Depends(verify_api_key)],
 )
-async def get_performance_metrics():
+async def get_performance_metrics(health_service=Depends(get_health_service_dep)):
     """Get performance metrics."""
     try:
-        health_service = get_health_service()
         metrics = await health_service.get_performance_metrics()
 
         return metrics

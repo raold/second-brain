@@ -11,7 +11,6 @@ from typing import Any
 import psutil
 
 from app.database import Database
-from app.database_mock import MockDatabase
 from app.version import get_version_info
 
 logger = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ class HealthService:
     Monitors system health, database status, and performance metrics.
     """
 
-    def __init__(self, database: Database | MockDatabase):
+    def __init__(self, database: Database = None):
         self.db = database
         self.logger = logger
         self.start_time = datetime.utcnow()
