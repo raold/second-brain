@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\insights\__init__.py
+# hypothesis_version: 6.136.2
+
+['AnalyticsEngine', 'ClusterAnalyzer', 'ClusterResponse', 'ClusteringRequest', 'GapAnalysisRequest', 'GapAnalysisResponse', 'Insight', 'InsightGenerator', 'InsightRequest', 'InsightResponse', 'InsightType', 'KnowledgeGap', 'KnowledgeGapDetector', 'LearningProgress', 'MemoryCluster', 'Pattern', 'PatternDetector', 'PatternResponse', 'PatternType', 'TimeFrame', 'UsageStatistics']

@@ -60,20 +60,22 @@ class TestAdvancedSynthesisEngine:
         # Mock memories
         memories = [
             Memory(
-                id=uuid4(),
-                title="Python Basics",
-                content="Variables and data types",
+                id=str(uuid4()),
+                content="Python Basics: Variables and data types",
                 memory_type=MemoryType.SEMANTIC,
-                importance=7,
-                user_id="test_user"
+                importance_score=0.7,
+                user_id="test_user",
+                tags=["python", "basics"],
+                created_at=datetime.utcnow()
             ),
             Memory(
-                id=uuid4(),
-                title="Python Functions",
-                content="def keyword and parameters",
+                id=str(uuid4()),
+                content="Python Functions: def keyword and parameters",
                 memory_type=MemoryType.SEMANTIC,
-                importance=8,
-                user_id="test_user"
+                importance_score=0.8,
+                user_id="test_user",
+                tags=["python", "functions"],
+                created_at=datetime.utcnow()
             )
         ]
 
@@ -85,7 +87,7 @@ class TestAdvancedSynthesisEngine:
         # Create request
         request = SynthesisRequest(
             memory_ids=[m.id for m in memories],
-            strategy=SynthesisStrategy.HIERARCHICAL,
+            strategy=SynthesisStrategy.SUMMARY,
             user_id="test_user"
         )
 
@@ -94,7 +96,7 @@ class TestAdvancedSynthesisEngine:
 
         # Verify results
         assert len(results) > 0
-        assert results[0].synthesis_type == "hierarchical"
+        assert results[0].synthesis_type == "summary"
         assert "Python" in results[0].content
 
     @pytest.mark.asyncio
@@ -106,13 +108,13 @@ class TestAdvancedSynthesisEngine:
         base_time = datetime.utcnow()
         memories = [
             Memory(
-                id=uuid4(),
-                title=f"Event {i}",
-                content=f"Event {i} happened",
+                id=str(uuid4()),
+                content=f"Event {i}: Event {i} happened",
                 memory_type=MemoryType.EPISODIC,
-                importance=5,
+                importance_score=0.5,
                 user_id="test_user",
-                created_at=base_time + timedelta(hours=i)
+                created_at=base_time + timedelta(hours=i),
+                tags=[f"event{i}"]
             )
             for i in range(3)
         ]
@@ -123,14 +125,14 @@ class TestAdvancedSynthesisEngine:
 
         request = SynthesisRequest(
             memory_ids=[m.id for m in memories],
-            strategy=SynthesisStrategy.TEMPORAL,
+            strategy=SynthesisStrategy.TIMELINE,
             user_id="test_user"
         )
 
         results = await synthesis_engine.synthesize_memories(request)
 
         assert len(results) > 0
-        assert results[0].synthesis_type == "temporal"
+        assert results[0].synthesis_type == "timeline"
 
     @pytest.mark.asyncio
     async def test_causal_synthesis(self, synthesis_engine, mock_dependencies):
@@ -139,20 +141,20 @@ class TestAdvancedSynthesisEngine:
 
         memories = [
             Memory(
-                id=uuid4(),
-                title="Cause",
-                content="Heavy rain",
+                id=str(uuid4()),
+                content="Cause: Heavy rain",
                 memory_type=MemoryType.EPISODIC,
-                importance=6,
-                user_id="test_user"
+                importance_score=0.6,
+                user_id="test_user",
+                tags=["cause", "weather"]
             ),
             Memory(
-                id=uuid4(),
-                title="Effect",
-                content="Flooding occurred",
+                id=str(uuid4()),
+                content="Effect: Flooding occurred",
                 memory_type=MemoryType.EPISODIC,
-                importance=8,
-                user_id="test_user"
+                importance_score=0.8,
+                user_id="test_user",
+                tags=["effect", "weather"]
             )
         ]
 
@@ -162,14 +164,14 @@ class TestAdvancedSynthesisEngine:
 
         request = SynthesisRequest(
             memory_ids=[m.id for m in memories],
-            strategy=SynthesisStrategy.CAUSAL,
+            strategy=SynthesisStrategy.ANALYSIS,
             user_id="test_user"
         )
 
         results = await synthesis_engine.synthesize_memories(request)
 
         assert len(results) > 0
-        assert results[0].synthesis_type == "causal"
+        assert results[0].synthesis_type == "analysis"
 
 
 class TestGraphVisualizationService:
@@ -190,11 +192,11 @@ class TestGraphVisualizationService:
         # Mock memories
         memories = [
             Memory(
-                id=uuid4(),
+                id=str(uuid4()),
                 title=f"Node {i}",
                 content=f"Content {i}",
                 memory_type=MemoryType.SEMANTIC,
-                importance=5,
+                importance_score=0.5,
                 user_id="test_user"
             )
             for i in range(3)
@@ -235,20 +237,24 @@ class TestGraphVisualizationService:
         """Test hierarchical graph layout."""
         memories = [
             Memory(
-                id=uuid4(),
-                title="Root",
-                content="Root node",
+                id=str(uuid4()),
+                
+                content="Root: Root node",
                 memory_type=MemoryType.SEMANTIC,
-                importance=10,
+                importance_score=1.0,
                 user_id="test_user"
+,
+                tags=["root"]
             ),
             Memory(
-                id=uuid4(),
-                title="Child",
-                content="Child node",
+                id=str(uuid4()),
+                
+                content="Child: Child node",
                 memory_type=MemoryType.SEMANTIC,
-                importance=7,
+                importance_score=0.7,
                 user_id="test_user"
+,
+                tags=["child"]
             )
         ]
 
@@ -273,20 +279,20 @@ class TestGraphVisualizationService:
         """Test graph filtering by tags and importance."""
         memories = [
             Memory(
-                id=uuid4(),
-                title="Important",
-                content="Very important",
+                id=str(uuid4()),
+                
+                content="Important: Very important",
                 memory_type=MemoryType.SEMANTIC,
-                importance=9,
+                importance_score=0.9,
                 tags=["critical"],
                 user_id="test_user"
             ),
             Memory(
-                id=uuid4(),
-                title="Less Important",
-                content="Not as important",
+                id=str(uuid4()),
+                
+                content="Less Important: Not as important",
                 memory_type=MemoryType.SEMANTIC,
-                importance=3,
+                importance_score=0.3,
                 tags=["optional"],
                 user_id="test_user"
             )
@@ -395,11 +401,11 @@ class TestWorkflowAutomationService:
         """Test scheduled workflow with cron trigger."""
         workflow = WorkflowDefinition(
             name="Daily Synthesis",
-            trigger=WorkflowTrigger.SCHEDULE,
+            trigger=WorkflowTrigger.SCHEDULED,
             schedule="0 0 * * *",  # Daily at midnight
             actions=[
                 WorkflowStep(
-                    action=WorkflowAction.GENERATE_REPORT,
+                    action=WorkflowAction.EXPORT,
                     parameters={"report_type": "daily"}
                 )
             ]
@@ -428,11 +434,11 @@ class TestExportImportService:
         """Test export to Markdown format."""
         memories = [
             Memory(
-                id=uuid4(),
-                title="Test Memory",
-                content="Test content",
+                id=str(uuid4()),
+                
+                content="Test Memory: Test content",
                 memory_type=MemoryType.SEMANTIC,
-                importance=7,
+                importance_score=0.7,
                 tags=["test"],
                 user_id="test_user"
             )
@@ -462,12 +468,12 @@ class TestExportImportService:
     async def test_export_json(self, export_service):
         """Test export to JSON format."""
         memory = Memory(
-            id=uuid4(),
-            title="JSON Test",
-            content="JSON content",
+            id=str(uuid4()),
+            content="JSON Test: JSON content",
             memory_type=MemoryType.SEMANTIC,
-            importance=5,
-            user_id="test_user"
+            importance_score=0.5,
+            user_id="test_user",
+            tags=["json_test"]
         )
 
         mock_search_result = Mock()
@@ -511,11 +517,10 @@ class TestExportImportService:
 
         # Mock memory creation
         created_memory = Memory(
-            id=uuid4(),
-            title="Imported Memory",
-            content="Imported content",
+            id=str(uuid4()),
+            content="Imported Memory: Imported content",
             memory_type=MemoryType.SEMANTIC,
-            importance=6,
+            importance_score=0.6,
             tags=["imported"],
             user_id="test_user"
         )
@@ -539,11 +544,11 @@ class TestExportImportService:
         """Test export to Obsidian vault format."""
         memories = [
             Memory(
-                id=uuid4(),
-                title="Obsidian Note",
-                content="Note content with [[links]]",
+                id=str(uuid4()),
+                
+                content="Obsidian Note: Note content with [[links]]",
                 memory_type=MemoryType.SEMANTIC,
-                importance=8,
+                importance_score=0.8,
                 tags=["obsidian", "pkm"],
                 user_id="test_user"
             )

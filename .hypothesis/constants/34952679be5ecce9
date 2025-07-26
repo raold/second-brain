@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\routes\health_routes.py
+# hypothesis_version: 6.136.2
+
+[500, '/diagnostics', '/health', '/metrics', '/status', 'Diagnostics failed', 'Failed to get status', 'Health', 'Health Check', 'Health check failed', 'Run Diagnostics', 'System Status', 'critical', 'database', 'degraded', 'index_status', 'overall_status', 'recommendations', 'status', 'timestamp', 'version']

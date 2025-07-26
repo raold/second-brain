@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\dashboard_migrations.py
+# hypothesis_version: 6.136.2
+
+[100, 500, '+00:00', 'Unknown', 'Z', 'affected_items', 'applied_at', 'author', 'checkpoint', 'completed', 'created_at', 'dependencies', 'dry_run', 'engine_status', 'error', 'errors', 'estimated_duration', 'execution_time_ms', 'failed', 'id', 'last_update', 'message', 'metadata', 'migration_type', 'name', 'operational', 'pending_count', 'ready', 'recent_failures', 'reversible', 'running', 'running_count', 'skipped', 'started_at', 'stats', 'status', 'success', 'success_rate', 'successful', 'summary', 'total_migrations', 'type', 'type_distribution', 'unavailable', 'unknown', 'version']

@@ -37,6 +37,9 @@ coverage.xml
 *.swp
 *.swo
 
+# Claude AI
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db

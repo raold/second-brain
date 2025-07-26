@@ -7,43 +7,9 @@ scheduling, and learning statistics.
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, validator
-
-
-class RepetitionSettings(BaseModel):
-    """Settings for spaced repetition system"""
-    algorithm: str = Field(default="sm2")
-    initial_interval: int = Field(default=1, gt=0)
-    easy_multiplier: float = Field(default=2.5, gt=1)
-    hard_multiplier: float = Field(default=0.5, gt=0, lt=1)
-
-
-class ForgettingCurve(BaseModel):
-    """Model for forgetting curve calculations"""
-    retention_rate: float = Field(default=0.9, ge=0, le=1)
-    time_since_review: float = Field(default=0, ge=0)
-    
-    def calculate_retention(self) -> float:
-        """Calculate current retention based on time"""
-        import math
-        return self.retention_rate * math.exp(-self.time_since_review / 30)
-
-
-class SessionStatistics(BaseModel):
-    """Statistics for a review session"""
-    total_reviewed: int = Field(default=0, ge=0)
-    correct_answers: int = Field(default=0, ge=0)
-    average_difficulty: float = Field(default=0.0, ge=0, le=5)
-    average_time_per_card: float = Field(default=0.0, ge=0)
-    session_duration: float = Field(default=0.0, ge=0)
-    
-    @property
-    def accuracy_rate(self) -> float:
-        if self.total_reviewed == 0:
-            return 0.0
-        return self.correct_answers / self.total_reviewed
 
 
 class RepetitionAlgorithm(str, Enum):
@@ -65,22 +31,84 @@ class ReviewStatus(str, Enum):
     FAILED = "failed"
 
 
-class ReviewDifficulty(int, Enum):
+class ReviewDifficulty(str, Enum):
     """Difficulty rating for a review."""
 
-    AGAIN = 1  # Complete failure
-    HARD = 2   # Difficult but recalled
-    GOOD = 3   # Normal difficulty
-    EASY = 4   # Very easy
+    AGAIN = "again"  # Complete failure
+    HARD = "hard"   # Difficult but recalled
+    GOOD = "good"   # Normal difficulty
+    EASY = "easy"   # Very easy
+
+
+class RepetitionSettings(BaseModel):
+    """Settings for spaced repetition system"""
+    algorithm: str = Field(default="sm2")
+    initial_interval: int = Field(default=1, gt=0)
+    easy_multiplier: float = Field(default=2.5, gt=1)
+    hard_multiplier: float = Field(default=0.5, gt=0, lt=1)
+
+
+class ForgettingCurve(BaseModel):
+    """Model for forgetting curve calculations"""
+    days: List[int] = Field(default_factory=list, description="Days after review")
+    retention_rates: List[float] = Field(default_factory=list, description="Retention rates at each day")
+    algorithm: Optional[RepetitionAlgorithm] = Field(None, description="Algorithm used")
+    sample_size: Optional[int] = Field(None, description="Number of samples")
+    
+    @validator('retention_rates')
+    def validate_same_length(cls, v, values):
+        """Ensure days and retention_rates have same length"""
+        if 'days' in values and len(v) != len(values['days']):
+            raise ValueError("days and retention_rates must have same length")
+        return v
+    
+    def calculate_retention(self, day: int) -> float:
+        """Calculate retention for specific day"""
+        if day in self.days:
+            idx = self.days.index(day)
+            return self.retention_rates[idx]
+        # Interpolate or extrapolate
+        import math
+        if self.retention_rates:
+            return self.retention_rates[0] * math.exp(-day / 30)
+        return 0.9 * math.exp(-day / 30)
+
+
+class SessionStatistics(BaseModel):
+    """Statistics for a review session"""
+    # Basic counts
+    total_reviewed: int = Field(default=0, ge=0)
+    correct_answers: int = Field(default=0, ge=0)
+    
+    # Difficulty counts
+    again_count: int = Field(default=0, ge=0)
+    hard_count: int = Field(default=0, ge=0)
+    good_count: int = Field(default=0, ge=0)
+    easy_count: int = Field(default=0, ge=0)
+    
+    # Performance metrics
+    average_difficulty: float = Field(default=0.0, ge=0, le=5)
+    average_time_per_card: float = Field(default=0.0, ge=0)
+    session_duration: float = Field(default=0.0, ge=0)
+    average_ease_change: float = Field(default=0.0)
+    average_interval_change: float = Field(default=0.0)
+    retention_rate: float = Field(default=0.0, ge=0, le=1)
+    total_time_seconds: int = Field(default=0, ge=0)
+    
+    @property
+    def accuracy_rate(self) -> float:
+        if self.total_reviewed == 0:
+            return 0.0
+        return self.correct_answers / self.total_reviewed
 
 
 class MemoryStrength(BaseModel):
     """Represents the strength of a memory."""
 
-    memory_id: str = Field(..., description="Memory ID")
+    memory_id: Optional[str] = Field(None, description="Memory ID")
 
     # Core metrics
-    ease_factor: float = Field(2.5, ge=1.3, description="Ease factor (difficulty)")
+    ease_factor: float = Field(2.5, ge=1.3, le=5.0, description="Ease factor (difficulty)")
     interval: int = Field(1, ge=1, description="Current interval in days")
     repetitions: int = Field(0, ge=0, description="Number of successful reviews")
 
@@ -116,18 +144,19 @@ class ReviewSchedule(BaseModel):
     scheduled_date: datetime = Field(..., description="Scheduled review date")
 
     # Scheduling metadata
-    interval_days: int = Field(..., description="Days until review")
-    priority: float = Field(1.0, description="Review priority (higher = more important)")
+    interval_days: Optional[int] = Field(None, description="Days until review")
+    priority_score: float = Field(1.0, description="Review priority (higher = more important)")
     overdue_days: int = Field(0, description="Days overdue (negative if not due yet)")
 
     # Review window
-    earliest_date: datetime = Field(..., description="Earliest review date")
-    latest_date: datetime = Field(..., description="Latest review date")
+    earliest_date: Optional[datetime] = Field(None, description="Earliest review date")
+    latest_date: Optional[datetime] = Field(None, description="Latest review date")
     optimal_time: Optional[str] = Field(None, description="Optimal time of day for review")
 
     # Context
     algorithm: RepetitionAlgorithm = Field(..., description="Algorithm used")
-    strength: MemoryStrength = Field(..., description="Current memory strength")
+    current_strength: Optional[MemoryStrength] = Field(None, description="Current memory strength")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
     @validator('overdue_days', always=True)
     def calculate_overdue(cls, v, values):
@@ -147,9 +176,11 @@ class RepetitionConfig(BaseModel):
     )
 
     # Algorithm parameters
-    initial_ease: float = Field(2.5, description="Initial ease factor")
-    minimum_ease: float = Field(1.3, description="Minimum ease factor")
+    initial_ease_factor: float = Field(2.5, description="Initial ease factor")
+    minimum_ease_factor: float = Field(1.3, description="Minimum ease factor")
     easy_bonus: float = Field(1.3, description="Bonus multiplier for easy reviews")
+    hard_factor: float = Field(0.8, description="Factor for hard reviews")
+    again_factor: float = Field(0.5, description="Factor for again reviews")
 
     # Intervals
     learning_steps: list[int] = Field(
@@ -166,6 +197,11 @@ class RepetitionConfig(BaseModel):
     )
     lapse_multiplier: float = Field(0.5, description="Interval multiplier on lapse")
     minimum_interval: int = Field(1, description="Minimum interval in days")
+    maximum_interval: int = Field(365, description="Maximum interval in days")
+    
+    # Leech handling
+    leech_threshold: int = Field(8, description="Number of lapses before marking as leech")
+    leech_action: str = Field("suspend", description="Action to take for leeches")
 
     # Review timing
     review_ahead_time: int = Field(20, description="Minutes to review ahead")
@@ -189,6 +225,9 @@ class ReviewSession(BaseModel):
 
     id: Optional[str] = Field(None, description="Session ID")
     user_id: str = Field(..., description="User ID")
+    
+    # Algorithm
+    algorithm: Optional[RepetitionAlgorithm] = Field(None, description="Algorithm used")
 
     # Session info
     started_at: datetime = Field(default_factory=datetime.utcnow)
@@ -198,6 +237,10 @@ class ReviewSession(BaseModel):
     # Reviews
     total_reviews: int = Field(0, description="Total reviews in session")
     completed_reviews: int = Field(0, description="Completed reviews")
+    
+    # Additional fields from test
+    correct_reviews: Optional[int] = Field(None, description="Number of correct reviews")
+    statistics: Optional[SessionStatistics] = Field(None, description="Session statistics")
 
     # Performance
     correct_count: int = Field(0, description="Correct answers")
@@ -219,7 +262,7 @@ class ReviewResult(BaseModel):
     """Result of a single memory review."""
 
     memory_id: str = Field(..., description="Memory ID")
-    session_id: str = Field(..., description="Session ID")
+    session_id: Optional[str] = Field(None, description="Session ID")
 
     # Review data
     reviewed_at: datetime = Field(default_factory=datetime.utcnow)
@@ -247,25 +290,34 @@ class ReviewResult(BaseModel):
 class LearningStatistics(BaseModel):
     """Overall learning statistics for a user."""
 
-    user_id: str = Field(..., description="User ID")
-    period: str = Field("all_time", description="Statistics period")
+    user_id: Optional[str] = Field(None, description="User ID")
+    period: Optional[str] = Field("all_time", description="Statistics period")
+
+    # Memory statistics
+    total_memories: int = Field(0, description="Total memories in system")
+    scheduled_memories: int = Field(0, description="Scheduled memories")
+    overdue_memories: int = Field(0, description="Overdue memories")
+    mature_memories: int = Field(0, description="Memories with interval > 21 days")
+    learned_today: int = Field(0, description="New memories learned today")
 
     # Review statistics
     total_reviews: int = Field(0, description="Total reviews completed")
+    perfect_reviews: int = Field(0, description="Perfect reviews")
     total_time_minutes: int = Field(0, description="Total time spent reviewing")
     average_daily_reviews: float = Field(0.0, description="Average reviews per day")
 
     # Performance metrics
+    average_retention_rate: float = Field(0.0, description="Average retention rate")
     overall_retention_rate: float = Field(0.0, description="Overall retention rate")
     mature_retention_rate: float = Field(0.0, description="Retention for mature cards")
     young_retention_rate: float = Field(0.0, description="Retention for young cards")
-
-    # Memory statistics
-    total_memories: int = Field(0, description="Total memories in system")
-    mature_memories: int = Field(0, description="Memories with interval > 21 days")
-    learned_today: int = Field(0, description="New memories learned today")
+    
+    # Learning metrics
+    learning_velocity: float = Field(0.0, description="Learning velocity")
+    daily_review_goal: int = Field(0, description="Daily review goal")
 
     # Streaks
+    streak_days: int = Field(0, description="Current daily streak")
     current_streak_days: int = Field(0, description="Current daily streak")
     best_streak_days: int = Field(0, description="Best daily streak")
 
@@ -275,11 +327,21 @@ class LearningStatistics(BaseModel):
         default_factory=dict,
         description="Reviews by hour of day"
     )
+    time_distribution: Optional[dict[str, float]] = Field(
+        None,
+        description="Time period distribution"
+    )
 
     # Difficulty distribution
     difficulty_distribution: dict[str, float] = Field(
         default_factory=dict,
         description="Percentage by difficulty"
+    )
+    
+    # Forgetting curves
+    forgetting_curves: List[ForgettingCurve] = Field(
+        default_factory=list,
+        description="Forgetting curves data"
     )
 
     # Projections
@@ -304,4 +366,8 @@ class BulkReviewRequest(BaseModel):
     prioritize_by: str = Field(
         "importance",
         description="Prioritization: importance, age, random"
+    )
+    force_schedule: bool = Field(
+        False,
+        description="Force scheduling even if not due"
     )

@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\services\synthesis\report_generator.py
+# hypothesis_version: 6.136.2
+
+[0.037, 0.78, 0.85, 5.6, 100, 150, 365, 420, 1000, '**Top Topics:**\n', 'Annual', 'Custom', 'Daily', 'Insights', 'Key Insights', 'Knowledge Map', 'Knowledge Network', 'Learning Path', 'Learning Paths', 'Memory Activity', 'Monthly', 'Overview', 'Progress', 'Progress Analysis', 'Quarterly', 'Recommendations', 'Webhook delivered', 'Weekly', 'active_days', 'activity', 'avg_degree', 'confidence', 'created_at', 'density', 'description', 'edge_count', 'end_date', 'graph', 'insights', 'memories', 'memory_count', 'metadata', 'metrics', 'network', 'node_count', 'output/reports', 'path', 'peak_time', 'progress', 'report.html', 'report_type', 'sections', 'start_date', 'summary', 'templates/reports', 'timeline', 'title', 'topics']

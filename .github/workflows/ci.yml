@@ -40,7 +40,7 @@ jobs:
       env:
         PYTHONPATH: ${{ github.workspace }}
       run: |
-        python scripts/ci_test_runner.py || echo "Tests completed with warnings"
+        python scripts/simple_ci_runner.py
     
     - name: Run basic smoke test
       env:

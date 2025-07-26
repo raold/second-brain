@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\repositories\base_repository.py
+# hypothesis_version: 6.136.2
+
+['Repository operation', 'T', 'created_at DESC', 'entity_id', 'operation', 'params', 'query', 'repository', 'table']

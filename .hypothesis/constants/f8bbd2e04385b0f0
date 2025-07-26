@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\models\intelligence\analytics_models.py
+# hypothesis_version: 6.136.2
+
+[0.0, 0.01, 0.5, 0.7, 1.0, 3600, 'api_usage', 'behavior', 'day', 'decreasing', 'drop', 'embedding_quality', 'end_date', 'hour', 'increasing', 'knowledge', 'knowledge_coverage', 'memory_count', 'memory_growth', 'minute', 'month', 'opportunity', 'pattern_break', 'performance', 'quarter', 'query_performance', 'relationship_density', 'retention_rate', 'review_completion', 'spike', 'stable', 'start_date', 'system', 'system_health', 'threshold_breach', 'unusual_frequency', 'value', 'volatile', 'warning', 'week', 'year']

@@ -8,13 +8,9 @@ templates, and scheduling options.
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, HttpUrl, validator
-
-
-class GeneratedReport(BaseModel):
-    """Legacy alias for ReportResponse"""
-    pass
 
 
 class KnowledgeMapReport(BaseModel):
@@ -230,3 +226,36 @@ class ReportFilter(BaseModel):
     delivered: Optional[bool] = Field(None, description="Filter by delivery status")
     limit: int = Field(10, ge=1, le=100, description="Maximum results")
     offset: int = Field(0, ge=0, description="Offset for pagination")
+
+
+# Additional report types expected by tests
+class LearningPathReport(BaseModel):
+    """Report for learning progress and recommendations"""
+    id: UUID = Field(default_factory=uuid4)
+    user_id: str
+    title: str
+    current_progress: Dict[str, Any]
+    completed_topics: List[str] = Field(default_factory=list)
+    recommended_topics: List[str] = Field(default_factory=list)
+    learning_velocity: float = Field(ge=0)
+    estimated_completion: Optional[datetime] = None
+    milestones: List[Dict[str, Any]] = Field(default_factory=list)
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ProgressReport(BaseModel):
+    """Report tracking progress over time"""
+    id: UUID = Field(default_factory=uuid4)
+    user_id: str
+    title: str
+    time_period: Dict[str, datetime]
+    metrics: Dict[str, Any]
+    achievements: List[str] = Field(default_factory=list)
+    improvements: List[str] = Field(default_factory=list)
+    comparisons: Dict[str, Any] = Field(default_factory=dict)
+    visualizations: List[Dict[str, Any]] = Field(default_factory=list)
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+# Legacy alias - must be after ReportResponse
+GeneratedReport = ReportResponse

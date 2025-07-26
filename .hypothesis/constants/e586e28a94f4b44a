@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\utils\time_utils.py
+# hypothesis_version: 6.136.2
+
+[365, 'just now', 'last_24_hours', 'last_30_days', 'last_7_days', 'last_month', 'last_quarter', 'last_year', 'this_month', 'this_quarter', 'this_week', 'this_year']

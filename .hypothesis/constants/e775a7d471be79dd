@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\ingestion\core_extraction_pipeline.py
+# hypothesis_version: 6.136.2
+
+[0.0, 0.1, 0.15, 0.2, 0.25, 0.3, 0.5, 0.7, 0.8, 1.0, 1000, '-', '2.0.0', 'ada', 'auto', 'completed', 'components', 'config', 'custom_patterns', 'date', 'decision', 'dimensions', 'embedding_count', 'embedding_generator', 'embedding_model', 'entity_count', 'entity_extractor', 'entity_model', 'failed', 'general', 'gpu_enabled', 'high-quality', 'idea', 'insight', 'intent_recognizer', 'knowledge', 'learning', 'model', 'model_info', 'model_name', 'model_type', 'note', 'openai', 'partial', 'patterns_enabled', 'planning', 'problem', 'processing_time_ms', 'question', 'reference', 'reflection', 'relationship_count', 'sentiment_enabled', 'solution', 'task', 'technical', 'time', 'todo', 'topic_count', 'urgent', 'use_transformers', 'version']

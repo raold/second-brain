@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\src\domain\models\memory.py
+# hypothesis_version: 6.136.2
+
+[0.01, 0.5, 0.99, 1.0, 1.1, 'accessed_at', 'active', 'archived', 'attachments', 'confidence_score', 'content', 'created_at', 'deleted', 'draft', 'episodic', 'id', 'importance_score', 'linked_memories', 'memory_type', 'metadata', 'procedural', 'prospective', 'retention_strength', 'retrieval_count', 'semantic', 'source_url', 'status', 'tags', 'title', 'updated_at', 'user_id', 'working']

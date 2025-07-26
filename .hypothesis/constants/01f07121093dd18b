@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\repositories\memory_repository.py
+# hypothesis_version: 6.136.2
+
+[0.0, 100, ' AND ', 'FROM memories', 'TRUE', 'access_count', 'content', 'count', 'created_at', 'created_at DESC', 'embedding', 'find_by_user', 'find_related', 'id', 'importance_score', 'last_accessed', 'mark_accessed', 'memories', 'memory_type', 'metadata', 'save', 'search_by_content', 'search_by_criteria', 'update', 'update_importance', 'updated_at', 'user_id', 'user_id = $1', '{}']

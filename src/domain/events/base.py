@@ -45,7 +45,7 @@ class DomainEvent(ABC):
     """
     
     aggregate_id: UUID
-    metadata: EventMetadata = field(default_factory=EventMetadata)
+    metadata: EventMetadata  # No default to allow child classes to have required fields
     
     @property
     @abstractmethod

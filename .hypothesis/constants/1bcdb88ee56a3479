@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\insights\pattern_detector.py
+# hypothesis_version: 6.136.2
+
+[0.0, 0.1, 0.3, 0.5, 1.0, 2.0, 5.0, 10.0, 100, 365, 3600, 'Emerging Topics', 'High-Access Memories', 'Peak Creation Hours', 'access_count', 'accesses', 'average_accesses', 'cluster_size', 'common_tags', 'content', 'content_preview', 'content_vector', 'count', 'created_at', 'distribution', 'growth_rate', 'hour', 'id', 'importance', 'lift', 'memories_per_minute', 'memory_id', 'percentage', 'tag_frequencies', 'tag_pair', 'tags', 'time_periods', 'timeline', 'topic', 'total_accesses', 'total_emerging', 'total_high_access', 'total_pairs', 'week']

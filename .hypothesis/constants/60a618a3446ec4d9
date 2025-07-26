@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\repositories\session_repository.py
+# hypothesis_version: 6.136.2
+
+['create_session', 'created_at', 'deactivate_session', 'find_active_sessions', 'find_by_session_id', 'is_active', 'last_accessed', 'last_accessed DESC', 'metadata', 'session_id', 'sessions', 'update_access_time', 'user_id']

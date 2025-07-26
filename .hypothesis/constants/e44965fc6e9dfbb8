@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\database_importance_schema.py
+# hypothesis_version: 6.136.2
+
+[0.1, 0.8, 'access_logs_cleaned', 'api_call', 'cutoff_days', 'direct_access', 'error', 'memory management', 'performance tuning', 'retrieval', 'search_logs_cleaned', 'search_result']

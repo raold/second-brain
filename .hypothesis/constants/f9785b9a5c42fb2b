@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\security.py
+# hypothesis_version: 6.136.2
+
+[-1000, 100, 300, 400, 429, 1000, 3600, 10000, '\x00', ',', '1; mode=block', '60', 'DENY', 'DROP TABLE users; --', 'Rate limit exceeded', 'Referrer-Policy', 'Retry-After', 'Second-Brain', 'User-Agent', 'X-API-Version', 'X-Forwarded-For', 'X-Frame-Options', 'X-Powered-By', 'X-RateLimit-Limit', 'X-RateLimit-Reset', 'X-Real-IP', 'X-XSS-Protection', '__main__', 'active_rate_limits', 'block_rate', 'blocked_attempts', 'blocked_ips', 'category', 'client_ip', 'config', 'details', 'error', 'event_type', 'high', 'importance', 'message', 'method', 'nosniff', 'path', 'rate_limit_exceeded', 'rate_limiter', 'recent_events', 'retry_after', 'test', 'timestamp', 'total_requests', 'unknown', 'user_agent', 'v1']

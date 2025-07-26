@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\visualization\relationship_graph.py
+# hypothesis_version: 6.136.2
+
+[0.0, 0.5, 1.0, 100, 'algorithm', 'center', 'central_entity', 'centrality', 'centrality_metrics', 'circular', 'communities', 'confidence', 'degree_centrality', 'degree_distribution', 'density', 'distance', 'dot', 'edges', 'entities', 'entity_types', 'error', 'gexf', 'graphml', 'hierarchical', 'id', 'is_connected', 'json', 'kamada_kawai', 'label', 'layouts', 'length', 'louvain', 'max', 'max_distance', 'mean', 'metadata', 'min', 'modularity', 'nodes', 'num_communities', 'num_edges', 'num_entities', 'num_nodes', 'num_relationships', 'pagerank', 'path', 'precomputed', 'relationship_types', 'relationships', 'score', 'size', 'source', 'spectral', 'spring', 'stats', 'target', 'total_edges', 'total_nodes', 'type']

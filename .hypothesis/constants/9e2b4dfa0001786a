@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\models\synthesis\__init__.py
+# hypothesis_version: 6.136.2
+
+['BulkReviewRequest', 'ConnectionStatus', 'EventSubscription', 'EventType', 'LearningStatistics', 'MemoryStrength', 'RepetitionAlgorithm', 'RepetitionConfig', 'ReportConfig', 'ReportFilter', 'ReportFormat', 'ReportRequest', 'ReportResponse', 'ReportSchedule', 'ReportTemplate', 'ReportType', 'ReviewDifficulty', 'ReviewSchedule', 'ReviewSession', 'ReviewStatus', 'SubscriptionRequest', 'WebSocketEvent', 'WebSocketMessage', 'WebSocketMetrics']

@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\services\monitoring\metrics_collector.py
+# hypothesis_version: 6.136.2
+
+[100, 250, 400, 500, 1000, 2500, 3600, 5000, 10000, '+Inf', ',', 'active_users', 'avg_durations', 'buckets', 'counter', 'counters', 'counts', 'current_memory_usage', 'duration_ms', 'error', 'error_rate', 'gauge', 'gauges', 'histogram', 'histograms', 'http_request', 'http_requests_total', 'inf', 'memory_allocation', 'memory_mb', 'memory_type', 'memory_usage_mb', 'method', 'operation', 'operation_duration', 'operation_errors', 'operation_type', 'operations_total', 'path', 'status', 'status_class', 'success', 'summary', 'sums', 'time_series', 'timestamp', 'total_errors', 'total_operations', 'totals', 'tracked_operations', 'type', 'user_id']

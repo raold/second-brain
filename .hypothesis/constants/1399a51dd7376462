@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\dependencies.py
+# hypothesis_version: 6.136.2
+
+['demo', 'demo-user', 'demo@example.com']

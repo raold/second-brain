@@ -306,3 +306,18 @@ class WebSocketMetrics(BaseModel):
 
     # Timestamp
     measured_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class SystemNotification(BaseModel):
+    """System-wide notification for WebSocket clients"""
+    id: str
+    title: str
+    message: str
+    notification_type: str  # "info", "warning", "error", "success"
+    priority: EventPriority = Field(default=EventPriority.MEDIUM)
+    target_users: Optional[list[str]] = None  # None means all users
+    expires_at: Optional[datetime] = None
+    action_url: Optional[str] = None
+    action_label: Optional[str] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=datetime.utcnow)

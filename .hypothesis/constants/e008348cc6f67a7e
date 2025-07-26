@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\services\reasoning_engine.py
+# hypothesis_version: 6.136.2
+
+[0.0, 0.2, 0.3, 0.5, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 100, 200, 1000, 'about', 'after', 'backward', 'because', 'before', 'causal', 'caused', 'changed', 'close', 'comparative', 'compare', 'concerning', 'content', 'contextual_score', 'created_at', 'developed', 'difference', 'during', 'episodic', 'evolutionary', 'evolved', 'id', 'importance_score', 'last_year', 'led to', 'like', 'memory_type', 'metadata', 'progressed', 'query_match', 'regarding', 'related', 'resulted', 'semantic', 'semantic_similarity', 'similar', 'similarity', 'similarity_score', 'start', 'temporal', 'temporal_distance', 'temporal_proximity', 'timeline', 'versus', 'when', 'why']

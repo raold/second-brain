@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\services\intelligence\anomaly_detection.py
+# hypothesis_version: 6.136.2
+
+[0.0, 0.3, 0.5, 0.6, 0.65, 0.7, 0.75, 0.8, 1.0, 1.2, 1.5, 2.0, 2.5, 3.0, 168, 'Fri', 'Mon', 'Sat', 'Sun', 'Thu', 'Tue', 'Wed', 'bands', 'bounds', 'daily_pattern', 'day', 'detection_count', 'frequency', 'hour', 'iqr', 'ma', 'mean', 'method', 'moving_average', 'std', 'weekly_pattern', 'window_minutes', 'window_size', 'z_score']

@@ -1,0 +1,4 @@
+# file: C:\Users\dro\second-brain\app\utils\environment.py
+# hypothesis_version: 6.136.2
+
+['API_TOKENS', 'DEBUG', 'ENVIRONMENT', 'LOG_LEVEL', 'OPENAI_API_KEY', 'USE_MOCK_DATABASE', 'WARNING', 'api_tokens', 'api_tokens_count', 'ci', 'configuration_status', 'current_environment', 'debug_mode', 'effective_settings', 'environment', 'environment_config', 'false', 'log_level', 'name', 'openai_configured', 'production', 'require_openai', 'test', 'test-key-mock', 'true', 'use_mock_database', 'validation_issues']

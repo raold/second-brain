@@ -10,7 +10,15 @@ def run_command(cmd, description, allow_failure=False):
     """Run a command and handle failures gracefully"""
     print(f"\n{'='*60}")
     print(f"Running: {description}")
+    print(f"Command: {cmd}")
     print(f"{'='*60}")
+    
+    # Use shell=False and split command for Windows compatibility
+    if sys.platform == "win32":
+        # For Windows, we need to handle the command differently
+        if cmd.startswith('.venv'):
+            # Convert to absolute path
+            cmd = cmd.replace('.venv/Scripts/python.exe', sys.executable)
     
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     
@@ -33,15 +41,18 @@ def main():
     # Set Python path
     os.environ['PYTHONPATH'] = os.getcwd()
     
+    # Use the same Python that's running this script
+    python = sys.executable
+    
     # Run import checks
     run_command(
-        "python -c \"import app; print('App imported successfully')\"",
+        f'"{python}" -c "import app; print(\'App imported successfully\')"',
         "Basic import check"
     )
     
     # Run unit tests but allow failures
     passed = run_command(
-        "python -m pytest tests/unit/ -v --tb=short -x",
+        f'"{python}" -m pytest tests/unit/ -v --tb=short -x',
         "Unit tests",
         allow_failure=True
     )
@@ -50,7 +61,7 @@ def main():
     if not passed:
         print("\nRunning specific stable tests...")
         run_command(
-            "python -m pytest tests/unit/domain/ -v --tb=short",
+            f'"{python}" -m pytest tests/unit/domain/ -v --tb=short',
             "Domain tests",
             allow_failure=True
         )
