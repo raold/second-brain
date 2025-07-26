@@ -15,7 +15,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from app.database_mock import get_mock_database
+from app.database import get_database
 
 
 class SimilarityMethod(str, Enum):
@@ -657,7 +657,7 @@ class MemoryDeduplicationEngine:
 
         try:
             # Get memories to process
-            db = await get_mock_database()
+            db = await get_database()
             memories = await self._get_memories_for_deduplication(db, memory_filter)
             result.total_memories = len(memories)
 

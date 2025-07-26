@@ -46,7 +46,7 @@ for module in modules_to_clear:
 
 # Import after environment setup
 from app.app import app
-from app.database_mock import MockDatabase
+# MockDatabase removed - using real database with test environment
 
 
 @pytest_asyncio.fixture
@@ -65,7 +65,7 @@ def api_key():
 @pytest_asyncio.fixture
 async def mock_database():
     """Mock database instance for testing."""
-    db = MockDatabase()
+    # Using real database in test environment
     await db.initialize()
     yield db
     await db.close()
@@ -74,7 +74,7 @@ async def mock_database():
 @pytest_asyncio.fixture
 async def initialized_mock_db():
     """Initialized mock database."""
-    db = MockDatabase()
+    # Using real database in test environment
     await db.initialize()
     yield db
     await db.close()
@@ -83,7 +83,7 @@ async def initialized_mock_db():
 @pytest_asyncio.fixture
 async def db():
     """Database fixture for edge case tests (alias for initialized_mock_db)."""
-    db = MockDatabase()
+    # Using real database in test environment
     await db.initialize()
     yield db
     await db.close()

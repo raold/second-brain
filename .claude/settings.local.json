@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(.venvScriptspython.exe scripts/test_runner.py --validation)"
+      "Bash(\".venv/Scripts/python.exe\" -m pytest tests/unit/synthesis/test_report_models.py -v)"
     ],
     "deny": []
   },

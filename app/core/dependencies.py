@@ -50,8 +50,10 @@ class DependencyContainer:
         raise ValueError(f"No factory or instance registered for service: {service_name}")
     
     def clear_cache(self) -> None:
-        """Clear all cached service instances (except singletons)"""
+        """Clear all cached service instances (including singletons for testing)"""
         self._services.clear()
+        # Also clear singletons for testing purposes
+        self._singletons.clear()
         logger.debug("Cleared service cache")
     
     def reset(self) -> None:
@@ -225,6 +227,8 @@ def override_service(service_name: str, mock_instance: Any):
 def clear_service_cache():
     """Clear service cache (for testing)"""
     _container.clear_cache()
+    # Re-initialize to register factories again
+    initialize_dependencies()
 
 
 def reset_dependencies():

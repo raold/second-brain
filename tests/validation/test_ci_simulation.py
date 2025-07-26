@@ -82,8 +82,8 @@ print('[OK] Pytest imports successful')
     print("\n5. Testing basic app functionality...")
     app_test = """
 try:
-    from src.domain.models.memory import Memory, MemoryId, MemoryType
-    from src.domain.models.user import User, UserId  
+    from app.models.memory import Memory, MemoryType
+    from app.models.user import User  
     print('[OK] Core domain models import successfully')
 except ImportError as e:
     print(f'Domain models import failed: {e}')

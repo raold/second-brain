@@ -16,7 +16,7 @@ from typing import Any, Union
 import pandas as pd
 from pydantic import BaseModel, Field
 
-from app.database_mock import get_mock_database
+from app.database import get_database
 
 
 class ImportFormat(str, Enum):
@@ -157,7 +157,7 @@ class BulkMemoryManager:
 
         try:
             # Get database connection
-            db = await get_mock_database()
+            db = await get_database()
 
             # Retrieve memories based on filter criteria
             memories = await self._get_memories_for_export(db, filter_criteria)
@@ -364,7 +364,7 @@ class BulkMemoryManager:
 
     async def _process_memory_imports(self, memories: list[dict[str, Any]], options: dict[str, Any]) -> ImportResult:
         """Process and validate memory imports"""
-        db = await get_mock_database()
+        db = await get_database()
 
         total_processed = len(memories)
         successful_imports = 0
