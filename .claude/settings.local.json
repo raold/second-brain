@@ -31,7 +31,10 @@
       "Bash(.venv/Scripts/python.exe:*)",
       "Bash(find:*)",
       "Bash(rg:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(python:*)",
+      "Bash(rm:*)",
+      "Bash(dir)"
     ],
     "deny": []
   }

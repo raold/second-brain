@@ -154,7 +154,14 @@ class SecondBrainLogger:
         self._log(logging.CRITICAL, message, *args, **kwargs)
 
     def exception(self, message: str, *args, **kwargs):
-        kwargs['exc_info'] = True
+        # Get current exception info properly
+        import sys
+        exc_info = sys.exc_info()
+        if exc_info and exc_info[0] is not None:
+            kwargs['exc_info'] = exc_info
+        else:
+            # If no exception, just log as error
+            kwargs.pop('exc_info', None)
         self.error(message, *args, **kwargs)
 
 

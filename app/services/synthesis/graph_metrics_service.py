@@ -21,7 +21,8 @@ from app.models.synthesis.metrics_models import (
     NodeMetrics,
     ClusterMetrics,
     ConnectivityMetrics,
-    TemporalMetrics
+    TemporalMetrics,
+    KnowledgeCluster
 )
 
 logger = logging.getLogger(__name__)
@@ -75,21 +76,35 @@ class GraphMetricsService:
                 connectivity_metrics
             )
             
+            # Convert node_metrics to proper format
+            node_metrics_dict = {}
+            if isinstance(node_metrics, dict) and 'top_pagerank_nodes' in node_metrics:
+                for node_info in node_metrics.get('top_pagerank_nodes', []):
+                    if isinstance(node_info, dict) and 'node' in node_info:
+                        node_id = node_info['node']
+                        node_metrics_dict[str(node_id)] = NodeMetrics(
+                            node_id=node_id,
+                            degree=graph.degree(node_id) if node_id in graph else 0,
+                            betweenness_centrality=0.0,
+                            closeness_centrality=0.0,
+                            pagerank=node_info.get('score', 0.0)
+                        )
+
             return GraphMetrics(
                 total_nodes=graph.number_of_nodes(),
                 total_edges=graph.number_of_edges(),
                 graph_density=nx.density(graph),
-                average_degree=sum(dict(graph.degree()).values()) / graph.number_of_nodes(),
+                average_degree=sum(dict(graph.degree()).values()) / graph.number_of_nodes() if graph.number_of_nodes() > 0 else 0,
                 clustering_coefficient=nx.average_clustering(graph),
-                node_metrics=node_metrics,
-                cluster_metrics=cluster_metrics,
+                node_metrics=node_metrics_dict,
                 connectivity_metrics=connectivity_metrics,
                 temporal_metrics=temporal_metrics,
                 health_score=health_score,
                 metadata={
                     'analysis_timestamp': datetime.utcnow().isoformat(),
                     'graph_type': 'knowledge_graph',
-                    'includes_relationships': request.include_relationships
+                    'includes_relationships': request.include_relationships,
+                    'raw_node_metrics': node_metrics  # Keep raw metrics in metadata
                 }
             )
             
@@ -129,18 +144,9 @@ class GraphMetricsService:
             return NodeMetrics(
                 node_id=memory_id,
                 degree=graph.degree(memory_id),
-                in_degree=graph.in_degree(memory_id) if graph.is_directed() else graph.degree(memory_id),
-                out_degree=graph.out_degree(memory_id) if graph.is_directed() else graph.degree(memory_id),
                 betweenness_centrality=between_cent,
                 closeness_centrality=closeness_cent,
-                pagerank_score=pagerank,
-                clustering_coefficient=local_clustering,
-                importance_score=node_data.get('importance', 0.5),
-                metadata={
-                    'degree_centrality': degree_cent,
-                    'neighbor_count': len(list(graph.neighbors(memory_id))),
-                    'created_at': node_data.get('created_at', '').isoformat() if node_data.get('created_at') else None
-                }
+                pagerank=pagerank
             )
             
         except Exception as e:
@@ -174,20 +180,20 @@ class GraphMetricsService:
                     cluster_tags.update(node_data.get('tags', []))
                 
                 # Calculate cluster metrics
-                cluster = ClusterMetrics(
+                cluster = KnowledgeCluster(
                     cluster_id=f"cluster_{i}",
+                    cluster_theme=self._infer_cluster_theme(cluster_tags, subgraph),
                     size=len(component),
                     density=nx.density(subgraph),
-                    cohesion=nx.average_clustering(subgraph.to_undirected()),
                     central_nodes=[central_node],
                     member_nodes=list(component),
-                    cluster_theme=self._infer_cluster_theme(cluster_tags, subgraph),
                     metadata={
                         'avg_importance': np.mean([
                             graph.nodes[n].get('importance', 0.5) for n in component
                         ]),
                         'tags': list(cluster_tags)[:10],  # Top 10 tags
-                        'modularity': self._calculate_cluster_modularity(graph, component)
+                        'modularity': self._calculate_cluster_modularity(graph, component),
+                        'cohesion': nx.average_clustering(subgraph.to_undirected())
                     }
                 )
                 clusters.append(cluster)
@@ -464,37 +470,45 @@ class GraphMetricsService:
         if len(times) < 2:
             return []
         
-        # Calculate time differences
-        time_diffs = [(times[i+1] - times[i]).total_seconds() / 3600 for i in range(len(times)-1)]
+        # Sort times to ensure chronological order
+        sorted_times = sorted(times)
         
-        # Find clusters using statistical approach
-        mean_diff = np.mean(time_diffs)
-        std_diff = np.std(time_diffs)
-        threshold = mean_diff - std_diff  # Activity bursts have smaller gaps
+        # Calculate time differences
+        time_diffs = [(sorted_times[i+1] - sorted_times[i]).total_seconds() / 3600 for i in range(len(sorted_times)-1)]
+        
+        # Find clusters using a threshold based on median
+        # Use median instead of mean to handle outliers better
+        median_diff = np.median(time_diffs)
+        # Threshold: gaps larger than 3x median indicate cluster boundaries
+        threshold = median_diff * 3
+        
+        # If all times are very close, use a fixed threshold of 6 hours
+        if threshold < 6:
+            threshold = 6
         
         clusters = []
         current_cluster_start = 0
         
         for i, diff in enumerate(time_diffs):
-            if diff > threshold and i > current_cluster_start:
+            if diff > threshold:
                 # End of cluster
                 cluster_size = i - current_cluster_start + 1
                 if cluster_size >= 3:  # Minimum cluster size
                     clusters.append({
-                        'start_time': times[current_cluster_start].isoformat(),
-                        'end_time': times[i].isoformat(),
+                        'start_time': sorted_times[current_cluster_start].isoformat(),
+                        'end_time': sorted_times[i].isoformat(),
                         'size': cluster_size,
-                        'duration_hours': (times[i] - times[current_cluster_start]).total_seconds() / 3600
+                        'duration_hours': (sorted_times[i] - sorted_times[current_cluster_start]).total_seconds() / 3600
                     })
                 current_cluster_start = i + 1
         
         # Handle last cluster
-        if len(times) - current_cluster_start >= 3:
+        if len(sorted_times) - current_cluster_start >= 3:
             clusters.append({
-                'start_time': times[current_cluster_start].isoformat(),
-                'end_time': times[-1].isoformat(),
-                'size': len(times) - current_cluster_start,
-                'duration_hours': (times[-1] - times[current_cluster_start]).total_seconds() / 3600
+                'start_time': sorted_times[current_cluster_start].isoformat(),
+                'end_time': sorted_times[-1].isoformat(),
+                'size': len(sorted_times) - current_cluster_start,
+                'duration_hours': (sorted_times[-1] - sorted_times[current_cluster_start]).total_seconds() / 3600
             })
         
         return clusters

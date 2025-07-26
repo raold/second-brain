@@ -158,11 +158,11 @@ class ReasoningEngine:
 
         if any(word in query_lower for word in ["caused", "why", "because", "led to", "resulted"]):
             return ReasoningType.CAUSAL
-        elif any(word in query_lower for word in ["evolved", "changed", "developed", "progressed"]):
+        elif any(word in query_lower for word in ["evolve", "evolved", "changed", "developed", "progressed", "progression"]):
             return ReasoningType.EVOLUTIONARY
         elif any(word in query_lower for word in ["before", "after", "when", "timeline"]):
             return ReasoningType.TEMPORAL
-        elif any(word in query_lower for word in ["compare", "difference", "similar", "versus"]):
+        elif any(word in query_lower for word in ["compare", "differ", "difference", "similar", "versus"]):
             return ReasoningType.COMPARATIVE
         else:
             return ReasoningType.SEMANTIC
@@ -381,7 +381,7 @@ class ReasoningEngine:
         score = node.relevance_score
 
         # Boost score based on reasoning type alignment
-        if query.reasoning_type == ReasoningType.Causal:
+        if query.reasoning_type == ReasoningType.CAUSAL:
             if "because" in node.content.lower() or "caused" in node.content.lower():
                 score *= 1.2
         elif query.reasoning_type == ReasoningType.TEMPORAL:

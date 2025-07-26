@@ -157,7 +157,8 @@ class InputValidator:
         self.email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
         self.url_pattern = re.compile(r"^https?://[^\s/$.?#].[^\s]*$")
         self.sql_injection_pattern = re.compile(
-            r"(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b.*\b(FROM|INTO|WHERE|SET)\b)|"
+            r"(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b.*\b(FROM|INTO|WHERE|SET|TABLE|DATABASE)\b)|"
+            r"(\b(DROP|CREATE|ALTER)\s+(TABLE|DATABASE|INDEX|VIEW)\b)|"
             r"(--[^\n]*$)|"
             r"(\/\*.*?\*\/)|"
             r"(\b(OR|AND)\b\s*['\"]?\s*['\"]?\s*=)|"
@@ -178,6 +179,10 @@ class InputValidator:
         """Validate and sanitize memory content"""
         if not content or not isinstance(content, str):
             raise HTTPException(status_code=400, detail="Content is required and must be a string")
+
+        # Check for null bytes
+        if '\x00' in content:
+            raise HTTPException(status_code=400, detail="Content contains potentially dangerous null bytes")
 
         # Check length
         if len(content) > self.config.max_content_length:
@@ -287,11 +292,12 @@ class InputValidator:
         # Remove null bytes
         text = text.replace("\x00", "")
 
-        # Normalize whitespace
-        text = " ".join(text.split())
-
-        # Remove control characters except newlines and tabs
+        # Remove control characters except newlines and tabs  
         text = "".join(char for char in text if ord(char) >= 32 or char in "\n\t")
+        
+        # Normalize multiple spaces (but preserve newlines and tabs)
+        import re
+        text = re.sub(r' +', ' ', text)
 
         return text.strip()
 

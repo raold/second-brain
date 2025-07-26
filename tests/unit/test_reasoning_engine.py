@@ -336,8 +336,10 @@ class TestReasoningEngine:
         assert isinstance(paths, list)
         # Should search for causal relationships
         assert mock_db.contextual_search.called
-        call_args = mock_db.contextual_search.call_args[0][0]
-        assert "caused" in call_args.lower() or "led to" in call_args.lower()
+        # Get keyword arguments
+        call_kwargs = mock_db.contextual_search.call_args.kwargs
+        query_text = call_kwargs.get('query', '')
+        assert "caused" in query_text.lower() or "led to" in query_text.lower()
 
     @pytest.mark.asyncio
     async def test_trace_reasoning_path(self, reasoning_engine, mock_db):

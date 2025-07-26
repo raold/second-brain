@@ -778,6 +778,17 @@ database = Database()
 
 async def get_database() -> Database:
     """Get initialized database instance."""
+    # Check if we should use mock database
+    if os.getenv("USE_MOCK_DATABASE", "false").lower() == "true":
+        from app.database_mock import MockDatabase
+        global database
+        if not isinstance(database, MockDatabase):
+            database = MockDatabase()
+        if not database.is_initialized:
+            await database.initialize()
+        return database
+    
+    # Use real database
     if not database.pool:
         await database.initialize()
     return database

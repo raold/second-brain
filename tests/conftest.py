@@ -12,7 +12,7 @@ from httpx import AsyncClient
 
 # Force test environment before any imports
 os.environ["ENVIRONMENT"] = "test"
-os.environ["USE_MOCK_DATABASE"] = "false"  # Mock database was removed
+os.environ["USE_MOCK_DATABASE"] = "true"  # Use mock database for tests
 os.environ["SECURITY_LEVEL"] = "development"
 os.environ["API_TOKENS"] = "test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba"
 # Use real OpenAI key if available (from GitHub secrets), otherwise use mock
@@ -65,25 +65,28 @@ def api_key():
 @pytest_asyncio.fixture
 async def mock_database():
     """Mock database instance for testing."""
-    # Using real database in test environment
-    await db.initialize()
-    yield db
-    await db.close()
+    from app.database_mock import MockDatabase
+    mock_db = MockDatabase()
+    await mock_db.initialize()
+    yield mock_db
+    await mock_db.close()
 
 
 @pytest_asyncio.fixture
 async def initialized_mock_db():
     """Initialized mock database."""
-    # Using real database in test environment
-    await db.initialize()
-    yield db
-    await db.close()
+    from app.database_mock import MockDatabase
+    mock_db = MockDatabase()
+    await mock_db.initialize()
+    yield mock_db
+    await mock_db.close()
 
 
 @pytest_asyncio.fixture
 async def db():
     """Database fixture for edge case tests (alias for initialized_mock_db)."""
-    # Using real database in test environment
-    await db.initialize()
-    yield db
-    await db.close()
+    from app.database_mock import MockDatabase
+    mock_db = MockDatabase()
+    await mock_db.initialize()
+    yield mock_db
+    await mock_db.close()

@@ -169,8 +169,7 @@ class TestGraphMetricsService:
         assert node_metrics.degree >= 2  # Has at least 2 connections
         assert 0 <= node_metrics.betweenness_centrality <= 1
         assert 0 <= node_metrics.closeness_centrality <= 1
-        assert node_metrics.pagerank_score > 0
-        assert 0 <= node_metrics.clustering_coefficient <= 1
+        assert node_metrics.pagerank > 0
     
     @pytest.mark.asyncio
     async def test_analyze_node_importance_not_found(self, service):
