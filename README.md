@@ -1,11 +1,11 @@
 # Second Brain v3.0.0 🧠 - **AI Memory System**
 
-[![CI Tests](https://github.com/raold/second-brain/actions/workflows/test.yml/badge.svg)](https://github.com/raold/second-brain/actions/workflows/test.yml)
-[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://docker.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](tests/)
+[![CI Tests](https://github.com/raold/second-brain/actions/workflows/test.yml/badge.svg)](https://github.com/raold/second-brain/actions/workflows/test.yml)
 
 > **🐳 Docker-First Development**: Zero host dependencies, bulletproof cross-platform development experience.
 
