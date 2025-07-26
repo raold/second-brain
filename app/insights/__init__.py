@@ -12,7 +12,8 @@ from .models import (
     InsightRequest,
     InsightResponse,
     TrendAnalysis,
-    PatternDetection
+    PatternDetection,
+    ClusteringRequest
 )
 from .pattern_detector import PatternDetector
 
@@ -27,5 +28,6 @@ __all__ = [
     "InsightResponse",
     "TrendAnalysis",
     "PatternDetection",
+    "ClusteringRequest",
     "PatternDetector",
 ]

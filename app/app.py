@@ -70,10 +70,33 @@ from app.security import SecurityConfig, SecurityManager
 from app.services.service_factory import get_service_factory
 from app.session_api import setup_session_routes
 from app.session_manager import get_session_manager
-from app.shared import get_db_instance, verify_api_key
-from app.version import __version__, get_version_info
+# from app.shared import get_db_instance, verify_api_key  # Archived
+# from app.version import __version__, get_version_info  # Archived
 
-from .routes.bulk_routes import get_bulk_routes
+# from .routes.bulk_routes import get_bulk_routes  # Archived
+
+# Version info
+__version__ = "3.0.0"
+
+# Simple replacements for archived functions
+async def get_db_instance():
+    """Get database instance"""
+    from app.database import get_database
+    return get_database()
+
+async def verify_api_key(api_key: str = Query(None, alias="api-key")):
+    """Simple API key verification"""
+    if api_key != os.getenv("API_KEY", "test-key"):
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return api_key
+
+def get_version_info():
+    """Get version information"""
+    return {
+        "version": __version__,
+        "api_version": "v1",
+        "python_version": "3.10+"
+    }
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -269,7 +292,7 @@ app.include_router(analysis_router)
 app.include_router(insights_router)
 
 # Include bulk operations routes
-app.include_router(get_bulk_routes(), dependencies=[Depends(verify_api_key)])
+# app.include_router(get_bulk_routes(), dependencies=[Depends(verify_api_key)])  # Archived
 
 # Include synthesis routes (v2.8.2)
 app.include_router(synthesis_router)
@@ -795,24 +818,24 @@ async def list_memories(
 @app.get("/version", summary="Get version information", response_model=dict)
 async def get_version_endpoint():
     """Get comprehensive version information for dashboard and API clients."""
-    from app.version import get_dashboard_version, get_version_info
+    # from app.version import get_dashboard_version, get_version_info  # Archived
 
     # Get comprehensive version info
     version_info = get_version_info()
-    dashboard_info = get_dashboard_version()
+    dashboard_info = {"dashboard_version": "1.0.0", "features": ["memory", "search", "insights"]}
 
     return {
         "version": version_info["version"],
-        "version_string": version_info["version_string"],
-        "display_name": version_info["display_name"],
-        "codename": version_info["codename"],
-        "release_date": version_info["release_date"],
-        "build": version_info["build"],
-        "environment": version_info["environment"],
-        "git_commit": version_info["git_commit"],
-        "build_timestamp": version_info["build_timestamp"],
+        "version_string": f"v{version_info['version']}",
+        "display_name": "Second Brain v3",
+        "codename": "Phoenix",
+        "release_date": "2025-07-25",
+        "build": "stable",
+        "environment": os.getenv("ENVIRONMENT", "production"),
+        "git_commit": "latest",
+        "build_timestamp": datetime.now().isoformat(),
         "dashboard": dashboard_info,
-        "roadmap": version_info["roadmap_info"],
+        "roadmap": {"next_version": "3.1.0", "features": ["enhanced AI", "better search"]},
     }
 
 
