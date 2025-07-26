@@ -57,8 +57,8 @@ class FileParser(ABC):
         pass
 
     @abstractmethod
-    def supports(self, mime_type: str) -> bool:
-        """Check if parser supports given mime type"""
+    def supports(self, mime_type: str, file_path: Optional[Path] = None) -> bool:
+        """Check if parser supports given mime type or file extension"""
         pass
 
 
@@ -85,7 +85,7 @@ class TextFileParser(FileParser):
             }
         }
 
-    def supports(self, mime_type: str) -> bool:
+    def supports(self, mime_type: str, file_path: Optional[Path] = None) -> bool:
         return mime_type in self.SUPPORTED_TYPES
 
 
@@ -203,9 +203,9 @@ class IngestionEngine:
                 mime_type = 'application/octet-stream'
 
             # Find appropriate parser
-            parser = self._get_parser(mime_type)
+            parser = self._get_parser(mime_type, file_path)
             if not parser:
-                raise ValueError(f"Unsupported file type: {mime_type}")
+                raise ValueError(f"Unsupported file type: {mime_type} for file {filename}")
 
             # Parse file
             parsed_data = await parser.parse(file_path)
@@ -306,10 +306,10 @@ class IngestionEngine:
 
         # Add more validation as needed (file type restrictions, etc.)
 
-    def _get_parser(self, mime_type: str) -> Optional[FileParser]:
-        """Get appropriate parser for mime type"""
+    def _get_parser(self, mime_type: str, file_path: Optional[Path] = None) -> Optional[FileParser]:
+        """Get appropriate parser for mime type or file extension"""
         for parser in self.parsers:
-            if parser.supports(mime_type):
+            if parser.supports(mime_type, file_path):
                 return parser
         return None
 
@@ -399,8 +399,63 @@ class IngestionEngine:
         Returns:
             IngestionResult
         """
-        # To be implemented with Google Drive integration
-        raise NotImplementedError("Google Drive integration pending")
+        import tempfile
+        import os
+        from app.ingestion.google_drive_client import GoogleDriveClient
+        
+        try:
+            # Create Google Drive client with provided service
+            drive_client = GoogleDriveClient()
+            drive_client.service = drive_service
+            
+            # Get file metadata
+            file_info = await drive_client.get_file_info(file_id)
+            
+            # Download file content
+            file_content = await drive_client.download_file(file_id, file_info.name)
+            
+            # Create temporary file for processing
+            with tempfile.NamedTemporaryFile(suffix=Path(file_info.name).suffix, delete=False) as tmp_file:
+                tmp_file.write(file_content.getvalue())
+                tmp_path = Path(tmp_file.name)
+            
+            try:
+                # Process the file using standard ingestion
+                result = await self.ingest_file(
+                    file_path=tmp_path,
+                    filename=file_info.name,
+                    user_id=user_id,
+                    tags=tags,
+                    metadata={
+                        **(metadata or {}),
+                        'source': 'google_drive',
+                        'drive_file_id': file_id,
+                        'drive_web_link': file_info.web_view_link,
+                        'original_mime_type': file_info.mime_type
+                    }
+                )
+                
+                logger.info(f"Successfully ingested Google Drive file: {file_info.name}")
+                return result
+                
+            finally:
+                # Clean up temporary file
+                os.unlink(tmp_path)
+                
+        except Exception as e:
+            logger.error(f"Failed to ingest Google Drive file {file_id}: {e}")
+            return IngestionResult(
+                success=False,
+                file_metadata=FileMetadata(
+                    filename=f"google_drive_{file_id}",
+                    file_type="unknown",
+                    size=0,
+                    hash="",
+                    source="google_drive",
+                    source_id=file_id
+                ),
+                errors=[str(e)]
+            )
 
     async def batch_ingest(
         self,

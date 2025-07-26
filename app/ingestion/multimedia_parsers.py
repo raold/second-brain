@@ -151,11 +151,14 @@ class VideoParser(FileParser):
         'video/x-msvideo',
         'video/avi',
         'video/quicktime',
-        'video/x-matroska',
+        'video/x-matroska',  # Matroska/MKV container
         'video/webm',
         'video/mpeg',
         'video/ogg',
     }
+
+    # File extensions for fallback detection
+    SUPPORTED_EXTENSIONS = {'.mp4', '.avi', '.mov', '.mkv', '.webm', '.mpg', '.mpeg', '.ogv'}
 
     def __init__(self):
         if not HAS_MOVIEPY:
@@ -182,6 +185,7 @@ class VideoParser(FileParser):
 
         if HAS_MOVIEPY:
             try:
+                logger.info(f"Processing video file: {file_path.name} ({file_path.suffix.lower()})")
                 video = mp.VideoFileClip(str(file_path))
                 
                 # Extract metadata
@@ -189,7 +193,8 @@ class VideoParser(FileParser):
                     'duration': video.duration,
                     'fps': video.fps,
                     'resolution': f"{video.w}x{video.h}",
-                    'has_audio': video.audio is not None
+                    'has_audio': video.audio is not None,
+                    'container': 'mkv' if file_path.suffix.lower() == '.mkv' else file_path.suffix.lower()[1:]
                 })
 
                 # Extract audio and transcribe if available
@@ -233,8 +238,18 @@ class VideoParser(FileParser):
             'metadata': metadata
         }
 
-    def supports(self, mime_type: str) -> bool:
-        return mime_type in self.SUPPORTED_TYPES
+    def supports(self, mime_type: str, file_path: Optional[Path] = None) -> bool:
+        """Check if this parser supports the given MIME type or file extension"""
+        # Primary check: MIME type
+        if mime_type in self.SUPPORTED_TYPES:
+            return True
+        
+        # Fallback: check file extension for cases where MIME detection fails
+        if file_path and file_path.suffix.lower() in self.SUPPORTED_EXTENSIONS:
+            logger.info(f"Supporting {file_path.suffix} file via extension fallback")
+            return True
+            
+        return False
 
 
 class SubtitleParser(FileParser):

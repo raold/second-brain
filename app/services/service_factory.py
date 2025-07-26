@@ -126,10 +126,23 @@ class HealthService:
             health_status["database"] = "error"
             health_status["status"] = "unhealthy"
         
-        # Check Redis (placeholder - would need Redis client)
+        # Check Redis connection
         try:
-            # TODO: Implement real Redis health check when Redis client is added
-            health_status["redis"] = "not_configured"
+            import aioredis
+            import os
+            
+            redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
+            
+            # Quick connection test with timeout
+            redis_client = aioredis.from_url(redis_url, socket_timeout=2, socket_connect_timeout=2)
+            await redis_client.ping()
+            await redis_client.close()
+            
+            health_status["redis"] = "healthy"
+            logger.debug("Redis health check passed")
+        except ImportError:
+            health_status["redis"] = "not_available"
+            logger.warning("Redis client not installed")
         except Exception as e:
             logger.error(f"Redis health check failed: {e}")
             health_status["redis"] = "error"

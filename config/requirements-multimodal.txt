@@ -23,7 +23,7 @@ xlrd>=2.0.1
 pydub>=0.25.1
 SpeechRecognition>=3.10.0
 
-# Video processing
+# Video processing (supports MP4, AVI, MOV, MKV, WebM, MPEG, OGV)
 moviepy>=1.0.3
 imageio-ffmpeg>=0.4.8
 
