@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(\".venv/Scripts/python.exe\" -m pytest tests/unit/synthesis/test_report_models.py -v)"
+      "Bash(.venv/Scripts/pip.exe install:*)"
     ],
     "deny": []
   },
@@ -10,5 +10,8 @@
     "autonomous_mode": true,
     "auto_commit": true,
     "auto_push": false
+  },
+  "git": {
+    "github_coauthorship": false
   }
 }

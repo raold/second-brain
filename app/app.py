@@ -71,6 +71,10 @@ from app.core.monitoring import (
     get_metrics_collector, get_health_checker, get_request_tracker,
     export_metrics, MetricDefinition, MetricType
 )
+from app.core.security_audit import (
+    SecurityHeadersManager, get_security_auditor,
+    get_security_monitor
+)
 
 from app.services.service_factory import get_service_factory
 from app.session_manager import get_session_manager
@@ -257,7 +261,30 @@ register_exception_handlers(app)
 # Add request tracking middleware
 @app.middleware("http")
 async def track_requests(request: Request, call_next):
-    return await request_tracker.track_request(request, call_next)
+    # Track request
+    response = await request_tracker.track_request(request, call_next)
+    
+    # Apply security headers
+    SecurityHeadersManager.apply_security_headers(response)
+    
+    # Monitor for suspicious activity
+    security_monitor = get_security_monitor()
+    if request.method in ["POST", "PUT", "PATCH"]:
+        try:
+            body = await request.body()
+            if body:
+                activities = security_monitor.detect_suspicious_activity(request, body.decode())
+                if activities:
+                    await security_monitor.log_security_event(
+                        event_type="SUSPICIOUS_ACTIVITY",
+                        severity="HIGH",
+                        source_ip=request.client.host if request.client else "unknown",
+                        details={"activities": activities}
+                    )
+        except:
+            pass  # Don't break request processing
+    
+    return response
 
 # Add security middleware
 for middleware_class, middleware_kwargs in security_manager.get_security_middleware():
@@ -865,6 +892,21 @@ async def monitoring_summary():
         }
     
     return summary
+
+
+# Security audit endpoint
+@app.get("/security/audit", tags=["Security"], summary="Run Security Audit")
+async def run_security_audit(_: str = Depends(verify_api_key)):
+    """Run comprehensive security audit"""
+    auditor = get_security_auditor()
+    
+    # Run audit
+    results = await auditor.run_full_audit()
+    
+    # Generate report
+    report = auditor.generate_audit_report(results)
+    
+    return report
 
 
 # Application is now run from main.py in the root directory
