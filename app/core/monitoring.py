@@ -24,7 +24,14 @@ from prometheus_client import (
     generate_latest, CONTENT_TYPE_LATEST
 )
 from fastapi import Response
-import aioredis
+
+# Optional Redis dependency
+try:
+    import aioredis
+    HAS_AIOREDIS = True
+except ImportError:
+    HAS_AIOREDIS = False
+    aioredis = None
 
 
 class MetricType(str, Enum):
@@ -306,6 +313,13 @@ class HealthChecker:
     
     async def check_redis(self, redis_url: str) -> Dict[str, Any]:
         """Check Redis health"""
+        if not HAS_AIOREDIS:
+            return {
+                "healthy": False,
+                "error": "aioredis not installed",
+                "message": "Redis monitoring unavailable"
+            }
+            
         try:
             redis = await aioredis.create_redis_pool(redis_url)
             await redis.ping()

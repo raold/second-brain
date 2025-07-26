@@ -27,7 +27,11 @@
       "Bash(.venv/Scripts/python.exe -m pytest tests/unit/synthesis/test_knowledge_summarizer.py -v --tb=no)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/unit/synthesis/test_knowledge_summarizer.py::TestKnowledgeSummarizer::test_create_summary_success -xvs)",
       "Bash(.venv/Scripts/python.exe -m pytest tests/unit/synthesis/test_knowledge_summarizer.py::TestKnowledgeSummarizer::test_organize_knowledge_domains -xvs)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(find:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

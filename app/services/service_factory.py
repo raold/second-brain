@@ -128,15 +128,14 @@ class HealthService:
         
         # Check Redis connection
         try:
-            import aioredis
+            import redis as redis_sync
             import os
             
             redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
             
-            # Quick connection test with timeout
-            redis_client = aioredis.from_url(redis_url, socket_timeout=2, socket_connect_timeout=2)
-            await redis_client.ping()
-            await redis_client.close()
+            # Use synchronous Redis client for health check (more compatible)
+            redis_client = redis_sync.from_url(redis_url, socket_timeout=2, socket_connect_timeout=2)
+            redis_client.ping()
             
             health_status["redis"] = "healthy"
             logger.debug("Redis health check passed")
