@@ -7,6 +7,14 @@ python-multipart==0.0.6
 # Data validation
 pydantic==2.5.3
 pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# Authentication and Security
+bcrypt==4.1.2
+python-jose[cryptography]==3.5.0
+passlib==1.7.4
+argon2-cffi==23.1.0
+cryptography==41.0.7
 
 # Database
 sqlalchemy==2.0.25
