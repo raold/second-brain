@@ -63,6 +63,14 @@ from app.routes.synthesis_routes import router as synthesis_router
 from app.routes.ingestion_routes import router as ingestion_router
 from app.routes.google_drive_routes import router as google_drive_router
 from app.security import SecurityConfig, SecurityManager
+from app.core.logging import (
+    LogConfig, configure_logging, get_logger, LoggingRoute,
+    request_id_var, user_id_var
+)
+from app.core.monitoring import (
+    get_metrics_collector, get_health_checker, get_request_tracker,
+    export_metrics, MetricDefinition, MetricType
+)
 
 from app.services.service_factory import get_service_factory
 from app.session_manager import get_session_manager
@@ -90,9 +98,23 @@ def get_version_info():
         "python_version": "3.10+"
     }
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Configure structured logging
+log_config = LogConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format="json" if os.getenv("ENVIRONMENT", "production") == "production" else "text",
+    enable_file=True,
+    file_path="logs/second-brain.log",
+    enable_performance_logging=True,
+    enable_audit_logging=True,
+    enable_request_logging=True
+)
+configure_logging(log_config)
+logger = get_logger(__name__)
+
+# Initialize monitoring
+metrics_collector = get_metrics_collector()
+health_checker = get_health_checker()
+request_tracker = get_request_tracker()
 
 
 # Security configuration
@@ -120,7 +142,36 @@ class SearchRequest(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Handle application startup and shutdown."""
-    logger.info("Starting Second Brain application")
+    logger.info("Starting Second Brain application", version=__version__, environment=os.getenv("ENVIRONMENT", "production"))
+    
+    # Register custom metrics
+    metrics_collector.register_custom_metric(
+        MetricDefinition(
+            name="memory_searches",
+            type=MetricType.COUNTER,
+            description="Number of memory searches",
+            labels=["query_type"]
+        )
+    )
+    
+    metrics_collector.register_custom_metric(
+        MetricDefinition(
+            name="operation_duration",
+            type=MetricType.HISTOGRAM,
+            description="Operation duration in seconds",
+            labels=["operation", "status"],
+            buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 2.5, 5.0]
+        )
+    )
+    
+    metrics_collector.register_custom_metric(
+        MetricDefinition(
+            name="operation_errors",
+            type=MetricType.COUNTER,
+            description="Number of operation errors",
+            labels=["operation", "error_type"]
+        )
+    )
 
     # Check if using mock database
     use_mock = os.getenv("USE_MOCK_DATABASE", "false").lower() == "true"
@@ -142,7 +193,12 @@ async def lifespan(app: FastAPI):
 
         try:
             await initialize_pool(database_url, pool_config)
-            logger.info("Database connection pool initialized")
+            logger.info("Database connection pool initialized", min_connections=pool_config.min_connections, max_connections=pool_config.max_connections)
+            
+            # Register database health check
+            async def check_db():
+                return await health_checker.check_database(db)
+            health_checker.register_check("database", check_db)
             db = await get_database()
         except Exception as e:
             logger.error(f"Failed to initialize database pool: {e}")
@@ -180,12 +236,13 @@ async def lifespan(app: FastAPI):
     logger.info("Application shutdown complete")
 
 
-# Create FastAPI app
+# Create FastAPI app with custom route class for logging
 app = FastAPI(
     title="Second Brain API",
     description="Simple memory storage and search system",
     version=__version__,
     lifespan=lifespan,
+    route_class=LoggingRoute
 )
 
 # Setup OpenAPI documentation
@@ -196,6 +253,11 @@ setup_openapi_documentation(app)
 from app.core.exceptions import register_exception_handlers
 register_exception_handlers(app)
 
+
+# Add request tracking middleware
+@app.middleware("http")
+async def track_requests(request: Request, call_next):
+    return await request_tracker.track_request(request, call_next)
 
 # Add security middleware
 for middleware_class, middleware_kwargs in security_manager.get_security_middleware():
@@ -766,6 +828,43 @@ async def get_version_endpoint():
         "dashboard": dashboard_info,
         "roadmap": {"next_version": "3.1.0", "features": ["enhanced AI", "better search"]},
     }
+
+
+# Monitoring endpoints
+@app.get("/metrics", tags=["Monitoring"], include_in_schema=False)
+async def metrics_endpoint():
+    """Export Prometheus metrics"""
+    return await export_metrics()
+
+
+@app.get("/health/detailed", tags=["Health"], summary="Detailed Health Check")
+async def detailed_health_check():
+    """Get detailed health check results"""
+    results = await health_checker.run_checks()
+    status_code = 200 if results["status"] == "healthy" else 503
+    return JSONResponse(content=results, status_code=status_code)
+
+
+@app.get("/monitoring/summary", tags=["Monitoring"], summary="Monitoring Summary")
+async def monitoring_summary():
+    """Get monitoring metrics summary"""
+    # Collect system metrics
+    await metrics_collector.collect_system_metrics()
+    
+    # Get summary
+    summary = metrics_collector.get_metrics_summary()
+    
+    # Add request stats
+    if request_tracker.request_history:
+        recent_requests = list(request_tracker.request_history)[-100:]
+        avg_duration = sum(r["duration_ms"] for r in recent_requests) / len(recent_requests)
+        summary["requests"] = {
+            "active": request_tracker.active_requests,
+            "recent_count": len(recent_requests),
+            "average_duration_ms": avg_duration
+        }
+    
+    return summary
 
 
 # Application is now run from main.py in the root directory
