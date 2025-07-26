@@ -23,7 +23,7 @@ from fastapi import Request, Response
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 import structlog
-from pythonjsonlogger.json import JsonFormatter
+from pythonjsonlogger import jsonlogger
 
 # Context variables for request tracking
 request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
@@ -64,7 +64,7 @@ class StructuredLogger:
         if self.config.enable_console:
             console_handler = logging.StreamHandler(sys.stdout)
             if self.config.format == "json":
-                formatter = JsonFormatter(
+                formatter = jsonlogger.JsonFormatter(
                     "%(timestamp)s %(level)s %(name)s %(message)s",
                     timestamp=lambda: datetime.utcnow().isoformat()
                 )
@@ -92,7 +92,7 @@ class StructuredLogger:
             )
             
             if self.config.format == "json":
-                formatter = JsonFormatter(
+                formatter = jsonlogger.JsonFormatter(
                     "%(timestamp)s %(level)s %(name)s %(message)s",
                     timestamp=lambda: datetime.utcnow().isoformat()
                 )
