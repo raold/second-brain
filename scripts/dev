@@ -1,0 +1,286 @@
+#!/usr/bin/env python3
+"""
+Development Environment Management Script
+Docker-first approach with bulletproof .venv fallback
+"""
+
+import os
+import sys
+import subprocess
+import platform
+import shutil
+from pathlib import Path
+from typing import List, Optional
+
+
+class DevEnvironment:
+    """Manages development environment with Docker-first approach"""
+    
+    def __init__(self):
+        self.project_root = Path(__file__).parent.parent
+        self.is_windows = platform.system() == "Windows"
+        self.docker_available = self._check_docker()
+        self.compose_file = self.project_root / "docker-compose.yml"
+        
+    def _check_docker(self) -> bool:
+        """Check if Docker is available and running"""
+        try:
+            result = subprocess.run(
+                ["docker", "--version"], 
+                capture_output=True, 
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                # Check if Docker daemon is running
+                result = subprocess.run(
+                    ["docker", "info"], 
+                    capture_output=True, 
+                    text=True,
+                    timeout=5
+                )
+                return result.returncode == 0
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+        return False
+    
+    def _get_venv_python(self) -> Optional[str]:
+        """Get the virtual environment Python executable path"""
+        venv_dir = self.project_root / ".venv"
+        if self.is_windows:
+            python_exe = venv_dir / "Scripts" / "python.exe"
+        else:
+            python_exe = venv_dir / "bin" / "python"
+        
+        return str(python_exe) if python_exe.exists() else None
+    
+    def _create_venv(self) -> bool:
+        """Create virtual environment if it doesn't exist"""
+        venv_dir = self.project_root / ".venv"
+        if venv_dir.exists():
+            return True
+            
+        print("📦 Creating virtual environment...")
+        try:
+            subprocess.run([sys.executable, "-m", "venv", str(venv_dir)], check=True)
+            
+            # Install requirements
+            python_exe = self._get_venv_python()
+            if python_exe:
+                print("📦 Installing dependencies...")
+                requirements_file = self.project_root / "requirements.txt"
+                if requirements_file.exists():
+                    subprocess.run([python_exe, "-m", "pip", "install", "-r", str(requirements_file)], check=True)
+                return True
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to create virtual environment: {e}")
+        return False
+    
+    def start_development(self, service: Optional[str] = None) -> bool:
+        """Start development environment"""
+        if self.docker_available:
+            return self._start_docker_dev(service)
+        else:
+            return self._start_venv_dev()
+    
+    def _start_docker_dev(self, service: Optional[str] = None) -> bool:
+        """Start Docker development environment"""
+        print("🐳 Starting Docker development environment...")
+        
+        try:
+            cmd = ["docker-compose", "up", "--build"]
+            if service:
+                cmd.append(service)
+            else:
+                cmd.append("-d")  # Detached mode for full stack
+                
+            subprocess.run(cmd, cwd=self.project_root, check=True)
+            
+            if not service:
+                print("✅ Development environment started!")
+                print("   🌐 Application: http://localhost:8000")
+                print("   🗄️  Database Admin: http://localhost:8080")
+                print("   📊 Redis: localhost:6379")
+                print("\n🔧 Development commands:")
+                print("   docker-compose exec app python scripts/test_runner.py --all")
+                print("   docker-compose exec app python manage.py migrate")
+                print("   docker-compose logs -f app")
+            
+            return True
+            
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Docker start failed: {e}")
+            print("💡 Falling back to virtual environment...")
+            return self._start_venv_dev()
+    
+    def _start_venv_dev(self) -> bool:
+        """Start virtual environment development"""
+        print("🔧 Starting virtual environment development...")
+        
+        # Ensure venv exists
+        if not self._create_venv():
+            print("❌ Failed to create virtual environment")
+            return False
+        
+        python_exe = self._get_venv_python()
+        if not python_exe:
+            print("❌ Virtual environment not found")
+            return False
+        
+        print("✅ Virtual environment ready!")
+        print(f"   🐍 Python: {python_exe}")
+        print("\n🔧 Development commands:")
+        print(f"   {python_exe} main.py")
+        print(f"   {python_exe} scripts/test_runner.py --all")
+        print(f"   {python_exe} -m uvicorn main:app --reload")
+        
+        return True
+    
+    def stop_development(self) -> bool:
+        """Stop development environment"""
+        if self.docker_available:
+            try:
+                subprocess.run(["docker-compose", "down"], cwd=self.project_root, check=True)
+                print("🛑 Docker environment stopped")
+                return True
+            except subprocess.CalledProcessError as e:
+                print(f"❌ Failed to stop Docker: {e}")
+        
+        print("🛑 Development environment stopped")
+        return True
+    
+    def run_tests(self, test_type: str = "all") -> bool:
+        """Run tests in the appropriate environment"""
+        if self.docker_available:
+            cmd = ["docker-compose", "exec", "app", "python", "scripts/test_runner.py", f"--{test_type}"]
+            try:
+                subprocess.run(cmd, cwd=self.project_root, check=True)
+                return True
+            except subprocess.CalledProcessError:
+                print("❌ Docker tests failed, trying venv...")
+        
+        # Fallback to venv
+        python_exe = self._get_venv_python()
+        if python_exe:
+            cmd = [python_exe, "scripts/test_runner.py", f"--{test_type}"]
+            try:
+                subprocess.run(cmd, cwd=self.project_root, check=True)
+                return True
+            except subprocess.CalledProcessError as e:
+                print(f"❌ Tests failed: {e}")
+        
+        return False
+    
+    def shell(self) -> bool:
+        """Open a shell in the development environment"""
+        if self.docker_available:
+            try:
+                subprocess.run(["docker-compose", "exec", "app", "bash"], cwd=self.project_root)
+                return True
+            except subprocess.CalledProcessError:
+                pass
+        
+        # Fallback message for venv
+        python_exe = self._get_venv_python()
+        if python_exe:
+            print(f"🐍 Virtual environment available: {python_exe}")
+            print("💡 Activate with:")
+            if self.is_windows:
+                print(f"   .venv\\Scripts\\activate")
+            else:
+                print(f"   source .venv/bin/activate")
+        
+        return True
+    
+    def status(self) -> None:
+        """Show development environment status"""
+        print("🔍 Development Environment Status")
+        print("=" * 40)
+        
+        # Docker status
+        if self.docker_available:
+            print("🐳 Docker: ✅ Available")
+            try:
+                result = subprocess.run(
+                    ["docker-compose", "ps", "--services", "--filter", "status=running"],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True
+                )
+                if result.stdout.strip():
+                    print(f"   Running services: {result.stdout.strip().replace(chr(10), ', ')}")
+                else:
+                    print("   No services running")
+            except subprocess.CalledProcessError:
+                print("   Status check failed")
+        else:
+            print("🐳 Docker: ❌ Not available")
+        
+        # Virtual environment status
+        venv_python = self._get_venv_python()
+        if venv_python:
+            print("🐍 Virtual Env: ✅ Available")
+            print(f"   Python: {venv_python}")
+        else:
+            print("🐍 Virtual Env: ❌ Not created")
+        
+        # Project status
+        main_py = self.project_root / "main.py"
+        print(f"📁 Project Root: {self.project_root}")
+        print(f"🚀 Entry Point: {'✅' if main_py.exists() else '❌'} main.py")
+
+
+def main():
+    """Main CLI interface"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Second Brain Development Environment")
+    parser.add_argument("command", choices=[
+        "start", "stop", "test", "shell", "status", "build"
+    ], help="Command to run")
+    parser.add_argument("--service", help="Specific service to start (Docker only)")
+    parser.add_argument("--test-type", default="all", choices=[
+        "all", "unit", "integration", "validation"
+    ], help="Type of tests to run")
+    
+    args = parser.parse_args()
+    
+    dev_env = DevEnvironment()
+    
+    if args.command == "start":
+        success = dev_env.start_development(args.service)
+        sys.exit(0 if success else 1)
+    
+    elif args.command == "stop":
+        success = dev_env.stop_development()
+        sys.exit(0 if success else 1)
+    
+    elif args.command == "test":
+        success = dev_env.run_tests(args.test_type)
+        sys.exit(0 if success else 1)
+    
+    elif args.command == "shell":
+        dev_env.shell()
+        sys.exit(0)
+    
+    elif args.command == "status":
+        dev_env.status()
+        sys.exit(0)
+    
+    elif args.command == "build":
+        if dev_env.docker_available:
+            try:
+                subprocess.run(["docker-compose", "build", "--no-cache"], 
+                             cwd=dev_env.project_root, check=True)
+                print("🏗️ Build completed successfully")
+                sys.exit(0)
+            except subprocess.CalledProcessError as e:
+                print(f"❌ Build failed: {e}")
+                sys.exit(1)
+        else:
+            print("🐳 Docker not available for build")
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

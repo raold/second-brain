@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any
 
 from app.conversation_processor import get_conversation_processor
-from app.dashboard import get_dashboard
 
 
 class SessionState(Enum):
@@ -135,8 +134,8 @@ class SessionManager:
         session_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
 
         # Get current project state
-        dashboard = get_dashboard()
-        dashboard_state = dashboard.get_dashboard_summary()
+        dashboard = None
+        dashboard_state = {}
 
         # Initialize momentum tracker
         momentum = ProjectMomentum(
@@ -189,6 +188,21 @@ class SessionManager:
                 session_data = json.load(f)
 
             # Reconstruct session object
+            # Convert project_momentum dict back to ProjectMomentum object
+            if isinstance(session_data.get('project_momentum'), dict):
+                session_data['project_momentum'] = ProjectMomentum(**session_data['project_momentum'])
+            
+            # Convert state string back to enum
+            if isinstance(session_data.get('state'), str):
+                session_data['state'] = SessionState(session_data['state'])
+            
+            # Convert conversation_history dicts back to ConversationMessage objects
+            if 'conversation_history' in session_data:
+                session_data['conversation_history'] = [
+                    ConversationMessage(**msg) if isinstance(msg, dict) else msg 
+                    for msg in session_data['conversation_history']
+                ]
+            
             self.current_session = CodingSession(**session_data)
             self.current_session.state = SessionState.ACTIVE
 
@@ -462,7 +476,7 @@ TO RESUME SEAMLESSLY:
         )
 
         # Auto-process through dashboard system
-        dashboard = get_dashboard()
+        dashboard = None
 
         # Extract and classify the idea
         result = {
@@ -628,8 +642,8 @@ TO RESUME SEAMLESSLY:
             momentum.current_focus = f"Last discussed: {last_message.semantic_summary}"
 
         # Update technical context
-        dashboard = get_dashboard()
-        dashboard_summary = dashboard.get_dashboard_summary()
+        dashboard = None
+        dashboard_summary = {}
         momentum.technical_context = f"Dashboard state at pause: {dashboard_summary['overall_health']['status']}"
 
     def get_session_analytics(self) -> dict[str, Any]:

@@ -1,60 +1,67 @@
-# Second Brain v3.0.0 - Makefile
-# Production-ready build and deployment automation
+# Second Brain - Docker-First Development
+# Zero host Python dependencies required
 
 .PHONY: help
 help: ## Show this help message
-	@echo 'Second Brain v3.0.0 - Available commands:'
-	@echo ''
-	@awk 'BEGIN {FS = ":.*##"; printf "\033[36m%-30s\033[0m %s\n", "Command", "Description"} /^[a-zA-Z_-]+:.*?##/ { printf "\033[36m%-30s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@echo "Second Brain - Docker-First Development Commands"
+	@echo "================================================"
+	@echo ""
+	@echo "🐳 Docker-first approach: All commands prefer Docker, fallback to .venv"
+	@echo ""
+	@awk 'BEGIN {FS = ":.*##"; printf "\033[36m%-20s\033[0m %s\n", "Command", "Description"} /^[a-zA-Z_-]+:.*?##/ { printf "\033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 # Variables
-DOCKER_COMPOSE = docker compose
+DOCKER_COMPOSE = docker-compose
 DOCKER = docker
 VERSION ?= 3.0.0
 REGISTRY ?= secondbrain
 APP_NAME = secondbrain
-PYTHON = python3.11
 
-# Development
+# Core development commands (Docker-first with .venv fallback)
+.PHONY: setup
+setup: ## Set up development environment (Docker + .venv fallback)
+	@python scripts/dev start
+
 .PHONY: dev
-dev: ## Start development environment
-	@echo "🚀 Starting development environment..."
-	@cp -n .env.example .env || true
-	$(DOCKER_COMPOSE) up -d --build
+dev: ## Start development environment (Docker-first)
+	@python scripts/dev start
+
+.PHONY: dev-stop
+dev-stop: ## Stop development environment
+	@python scripts/dev stop
 
 .PHONY: dev-logs
 dev-logs: ## Show development logs
 	$(DOCKER_COMPOSE) logs -f app
 
 .PHONY: shell
-shell: ## Enter app container shell
-	$(DOCKER_COMPOSE) exec app /bin/bash
+shell: ## Enter development shell (Docker-first)
+	@python scripts/dev shell
+
+.PHONY: status
+status: ## Show development environment status
+	@python scripts/dev status
 
 .PHONY: db-shell
 db-shell: ## Enter PostgreSQL shell
 	$(DOCKER_COMPOSE) exec postgres psql -U secondbrain
 
-# Testing
+# Testing (Docker-first with .venv fallback)
 .PHONY: test
 test: ## Run all tests
-	@echo "🧪 Running tests..."
-	$(DOCKER_COMPOSE) run --rm app pytest -v
+	@python scripts/dev test --test-type all
 
 .PHONY: test-unit
 test-unit: ## Run unit tests
-	$(DOCKER_COMPOSE) run --rm app pytest tests/unit -v
+	@python scripts/dev test --test-type unit
 
 .PHONY: test-integration
 test-integration: ## Run integration tests
-	$(DOCKER_COMPOSE) run --rm app pytest tests/integration -v
+	@python scripts/dev test --test-type integration
 
-.PHONY: test-e2e
-test-e2e: ## Run end-to-end tests
-	$(DOCKER_COMPOSE) run --rm app pytest tests/e2e -v
-
-.PHONY: test-coverage
-test-coverage: ## Run tests with coverage
-	$(DOCKER_COMPOSE) run --rm app pytest --cov=app --cov-report=html --cov-report=term
+.PHONY: test-validation
+test-validation: ## Run validation tests
+	@python scripts/dev test --test-type validation
 
 # Code Quality
 .PHONY: lint

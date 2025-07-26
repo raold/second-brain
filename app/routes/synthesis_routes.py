@@ -362,7 +362,7 @@ async def record_review(
 
 @router.get("/repetition/statistics", response_model=LearningStatistics)
 async def get_learning_statistics(
-    period: str = Query("all_time", regex="^(all_time|today|week|month)$"),
+    period: str = Query("all_time", pattern="^(all_time|today|week|month)$"),
     api_key: str = Depends(verify_api_key),
     scheduler: RepetitionScheduler = Depends(get_repetition_scheduler),
 ):

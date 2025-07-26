@@ -1,8 +1,32 @@
-# Second Brain Development Services
-# Simple setup for local development
-# Run: docker-compose up -d
+# Second Brain - Docker-First Development Environment
+# Complete containerized development stack
+# Zero host dependencies beyond Docker
 
 services:
+  # Main application service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: secondbrain-app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://secondbrain:changeme@postgres:5432/secondbrain
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=development
+      - TEMP_DIR=/app/temp
+    volumes:
+      - .:/app:rw
+      - /app/.venv  # Exclude .venv from mount
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
   postgres:
     image: postgres:16-alpine
     container_name: secondbrain-postgres

@@ -12,21 +12,21 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPExcepti
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
-from app.batch_classification_engine import (
+from app.services.batch_classification_engine import (
     BatchClassificationEngine,
     BatchClassificationResult,
     ClassificationConfig,
     ClassificationMethod,
     get_batch_classification_engine,
 )
-from app.bulk_memory_manager import (
+from app.services.bulk_memory_manager import (
     BulkMemoryManager,
     ExportFormat,
     ImportFormat,
     ImportResult,
     get_bulk_memory_manager,
 )
-from app.memory_deduplication_engine import (
+from app.services.memory_deduplication_engine import (
     DeduplicationConfig,
     DeduplicationResult,
     DuplicateAction,

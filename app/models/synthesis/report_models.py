@@ -10,7 +10,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, HttpUrl, validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 
 class KnowledgeMapReport(BaseModel):
@@ -105,7 +105,7 @@ class ReportConfig(BaseModel):
     email_recipients: list[str] = Field(default_factory=list, description="Email recipients")
     webhook_url: Optional[HttpUrl] = Field(None, description="Webhook for delivery")
 
-    @validator('relative_timeframe')
+    @field_validator('relative_timeframe')
     def validate_timeframe(cls, v):
         """Validate relative timeframe format."""
         valid_timeframes = [
@@ -139,7 +139,7 @@ class ReportSchedule(BaseModel):
     last_run: Optional[datetime] = Field(None, description="Last execution time")
     next_run: Optional[datetime] = Field(None, description="Next scheduled run")
 
-    @validator('cron_expression')
+    @field_validator('cron_expression')
     def validate_cron(cls, v):
         """Validate cron expression format."""
         # Basic validation - in production, use croniter

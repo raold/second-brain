@@ -8,7 +8,6 @@ from typing import Any
 from uuid import uuid4
 
 from app.conversation_processor import ConversationProcessor
-from app.dashboard import ProjectDashboard
 from app.services.monitoring import get_metrics_collector
 from app.session_manager import SessionManager
 from app.utils.logging_config import PerformanceLogger, get_logger
@@ -26,7 +25,7 @@ class SessionService:
         self,
         session_manager: SessionManager,
         conversation_processor: ConversationProcessor,
-        project_dashboard: ProjectDashboard,
+        project_dashboard: Any
     ):
         self.session_manager = session_manager
         self.conversation_processor = conversation_processor
@@ -244,7 +243,7 @@ class SessionService:
             current_state = self.session_manager.get_current_session_state()
 
             # Get dashboard summary
-            dashboard_summary = self.project_dashboard.get_dashboard_summary()
+            dashboard_summary = {}
 
             return {
                 "session_analytics": analytics,

@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from app.database import get_database
 from app.database_importance_schema import setup_importance_tracking_schema
-from app.importance_engine import get_importance_engine
+from app.services.importance_engine import get_importance_engine
 
 logger = logging.getLogger(__name__)
 

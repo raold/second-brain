@@ -9,7 +9,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class EventPriority(str, Enum):
@@ -155,7 +155,7 @@ class SubscriptionRequest(BaseModel):
     include_historical: bool = Field(False, description="Include recent historical events")
     historical_limit: int = Field(10, description="Number of historical events")
 
-    @validator('action')
+    @field_validator('action')
     def validate_action(cls, v):
         """Validate subscription action."""
         if v not in ['subscribe', 'unsubscribe']:
@@ -233,7 +233,7 @@ class EventBatch(BaseModel):
         description="Failed deliveries with reasons"
     )
 
-    @validator('events')
+    @field_validator('events')
     def validate_batch_size(cls, v):
         """Validate batch size."""
         if len(v) > 100:
@@ -265,7 +265,7 @@ class BroadcastRequest(BaseModel):
     ttl_seconds: Optional[int] = Field(None, description="Message TTL")
     priority: str = Field("normal", description="Delivery priority: low, normal, high")
 
-    @validator('broadcast_type')
+    @field_validator('broadcast_type')
     def validate_broadcast_type(cls, v):
         """Validate broadcast type."""
         valid_types = ['all', 'channel', 'users', 'filters']

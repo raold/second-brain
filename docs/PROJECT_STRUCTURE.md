@@ -1,57 +1,72 @@
 # Second Brain Project Structure
 
-This document defines the organization and file structure for the Second Brain project.
+**🐳 Docker-First Development with Service-Oriented Architecture**
 
-## Directory Structure
+This document defines the current v3.0.0 organization optimized for developer experience.
+
+## Current Directory Structure
 
 ```
 second-brain/
-├── src/                          # v3.0.0 source code (Clean Architecture)
-│   ├── domain/                   # Domain layer (entities, value objects)
-│   ├── application/              # Application layer (use cases, DTOs)
-│   ├── infrastructure/           # Infrastructure layer (databases, APIs)
-│   └── api/                      # API layer (FastAPI routes, middleware)
-├── app/                          # Legacy v2.x source code
+├── main.py                       # Application entry point
+├── Dockerfile                    # Multi-stage Docker build (dev/prod)
+├── docker-compose.yml            # Full development stack
+├── Makefile                      # Cross-platform development commands
+
+├── app/                          # Main application module
+│   ├── services/                 # Business logic layer (moved from root)
+│   │   ├── importance_engine.py  # Importance scoring (moved)
+│   │   ├── batch_classification_engine.py  # Batch classification (moved)
+│   │   ├── memory_deduplication_engine.py  # Deduplication (moved)
+│   │   └── bulk_memory_manager.py  # Bulk operations (moved)
+│   ├── routes/                   # API endpoints (thin controllers)
+│   ├── models/                   # Data models and schemas
+│   ├── ingestion/                # File processing and parsing
+│   ├── insights/                 # Analytics and insights
+│   └── utils/                    # Utility functions
+
+├── scripts/                      # Development automation
+│   ├── dev                       # Universal development script
+│   ├── setup-bulletproof-venv.py  # Automated .venv creation
+│   └── test_runner.py           # Comprehensive test runner
+
 ├── tests/                        # All test files organized by type
-│   ├── unit/                     # Unit tests (fast, no external deps)
-│   ├── integration/              # Integration tests (require services)
-│   ├── validation/               # Environment and CI validation tests
-│   └── e2e/                      # End-to-end tests
-├── scripts/                      # Development and utility scripts
-│   ├── setup_dev_environment.py # Portable environment setup
-│   ├── test_runner.py           # Comprehensive test runner
-│   └── test_services.py         # Service connectivity tests
-├── config/                       # Configuration files
-│   ├── requirements.txt         # Main production dependencies
-│   ├── requirements-ci.txt      # CI-specific dependencies
-│   └── requirements-dev.txt     # Development dependencies
-├── docs/                         # Documentation
-│   ├── SETUP.md                 # Development setup guide
-│   ├── PROJECT_STRUCTURE.md     # This file
-│   └── ARCHITECTURE.md          # Architecture documentation
-├── .github/                      # GitHub Actions workflows
-│   └── workflows/
-├── docker-compose.yml           # Development services (PostgreSQL, Redis)
-├── pytest.ini                  # Pytest configuration
-├── .gitignore                   # Git ignore rules
-└── README.md                    # Project overview
+│   ├── unit/                     # Unit tests (fast, isolated)
+│   ├── integration/              # Integration tests (services)
+│   ├── validation/               # Environment validation
+│   └── comprehensive/            # Full end-to-end tests
+
+├── config/                       # Configuration management
+│   ├── requirements.txt         # Main dependencies
+│   ├── requirements-production.txt  # Production-only deps
+│   └── requirements-ci.txt      # CI-specific deps
+
+├── docs/                         # Documentation (updated)
+├── archive/                      # Previous versions (v1.x, v2.x)
+├── .venv/                        # Virtual environment (auto-created)
+├── activate-venv.bat            # Windows activation (auto-created)
+├── activate-venv.sh             # Unix activation (auto-created)
+└── session_storage/             # Session persistence
 ```
 
 ## File Organization Rules
 
 ### 🚀 **Scripts Directory (`scripts/`)**
-**Purpose**: Development, setup, and utility scripts
+**Purpose**: Development automation and environment management
 
-**What goes here**:
-- `setup_dev_environment.py` - Portable environment setup
+**Current scripts**:
+- `dev` - Universal development script (Docker-first with .venv fallback)
+- `setup-bulletproof-venv.py` - Automated .venv creation with validation
 - `test_runner.py` - Comprehensive test runner
-- `test_services.py` - Service connectivity validation
-- `validate_environment.py` - Environment validation
-- Deployment scripts
-- Data migration scripts
-- Development utilities
+- `setup_dev_environment.py` - Legacy setup script
 
-**Naming convention**: `snake_case.py`
+**Key Features**:
+- **Cross-Platform**: Works on Windows, macOS, Linux
+- **Smart Detection**: Automatically chooses Docker or .venv
+- **Environment Validation**: Health checks and dependency verification
+- **Self-Healing**: Automatic error recovery and environment repair
+
+**Naming convention**: `kebab-case` for main scripts, `snake_case.py` for Python modules
 
 ### 🧪 **Tests Directory (`tests/`)**
 **Purpose**: All testing code organized by test type
@@ -124,21 +139,32 @@ second-brain/
 ```
 
 ### Test Commands
+
+#### Docker-First Testing (Recommended)
 ```bash
-# Run all tests
-python scripts/test_runner.py --all
+# Make commands (cross-platform)
+make test                    # All tests in containers
+make test-unit              # Unit tests only
+make test-integration       # Integration tests only
+make test-validation        # Environment validation
+```
 
-# Run specific test types
-python scripts/test_runner.py --unit        # Fast unit tests
-python scripts/test_runner.py --integration # Integration tests  
-python scripts/test_runner.py --validation  # Environment validation
-python scripts/test_runner.py --e2e         # End-to-end tests
+#### Universal Testing Scripts
+```bash
+# Works with Docker or .venv automatically
+python scripts/dev test --test-type all
+python scripts/dev test --test-type unit
+python scripts/dev test --test-type integration
+python scripts/dev test --test-type validation
+```
 
-# Generate coverage report
-python scripts/test_runner.py --coverage
+#### Direct Testing (Fallback)
+```bash
+# Windows (.venv fallback)
+.venv\Scripts\python.exe scripts/test_runner.py --validation
 
-# Run linting
-python scripts/test_runner.py --lint
+# Unix (.venv fallback)  
+.venv/bin/python scripts/test_runner.py --validation
 ```
 
 ### CI/CD Integration
@@ -150,23 +176,37 @@ The test runner integrates with GitHub Actions:
 ## Development Workflow
 
 ### Setting Up Development Environment
+
+#### Instant Setup (Recommended)
 ```bash
 # Clone repository
 git clone <repository-url>
 cd second-brain
 
-# Setup environment (works on any OS)
-python scripts/setup_dev_environment.py
+# One-command setup (Docker + .venv fallback)
+make setup
+
+# Start development
+make dev
+
+# Check status
+make status
+```
+
+#### Manual Setup (if needed)
+```bash
+# Docker-first approach
+docker-compose up --build
+
+# OR bulletproof .venv creation
+python scripts/setup-bulletproof-venv.py
 
 # Activate environment
-.venv/Scripts/activate    # Windows
-source .venv/bin/activate # Linux/Mac
-
-# Start services
-docker-compose up -d
+activate-venv.bat        # Windows (auto-created)
+./activate-venv.sh       # Unix (auto-created)
 
 # Validate setup
-python scripts/test_runner.py --validation
+make test-validation
 ```
 
 ### Adding New Features

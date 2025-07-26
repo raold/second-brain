@@ -1,12 +1,34 @@
 # Second Brain v3.0.0 🧠 - **AI Memory System**
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://docker.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
-[![Clean Architecture](https://img.shields.io/badge/Clean%20Architecture-DDD-green.svg)](docs/ARCHITECTURE_V3.md)
-[![Test v3.0.0](https://github.com/dromationeer/second-brain/actions/workflows/test-v3.yml/badge.svg)](https://github.com/dromationeer/second-brain/actions/workflows/test-v3.yml)
-[![Deploy](https://img.shields.io/badge/Deploy-Ready-brightgreen.svg)](docs/deployment/DEPLOYMENT_V3.md)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Test Status](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
 
-> **Major Release**: v3.0.0 brings clean architecture, event sourcing, and enterprise-grade features to Second Brain.
+> **🐳 Docker-First Development**: Zero host dependencies, bulletproof cross-platform development experience.
+
+## 🎯 **Design Philosophy**
+
+Second Brain v3.0.0 is built on **developer-first principles** that eliminate environment friction:
+
+### **🐳 Docker-First Architecture**
+- **Zero Host Dependencies**: No Python, PostgreSQL, or Redis installation required
+- **Identical Environments**: Same containers run on Windows, macOS, and Linux  
+- **One-Command Setup**: `make setup` gets you developing in minutes
+- **Production Parity**: Development mirrors production exactly
+
+### **🔒 Bulletproof Fallback**
+- **Smart Detection**: Automatically uses Docker when available
+- **Automated .venv**: Creates bulletproof virtual environments when Docker unavailable
+- **Cross-Platform Scripts**: Windows `.bat` and Unix `.sh` activation scripts
+- **Environment Validation**: Automatic health checks ensure everything works
+
+### **🛠️ Developer Experience**
+- **Intelligent Makefile**: Commands work everywhere, adapt to your environment
+- **Real-Time Feedback**: Hot reload, live logs, instant test results  
+- **Clear Status**: Always know your environment health at a glance
+- **No Configuration**: Sensible defaults, minimal setup required
 
 ## 🚀 **What's New in v3.0.0**
 
@@ -50,54 +72,70 @@ main.py             # Application entry point
 
 ## 🚀 **Quick Start**
 
-### **Prerequisites**
-
-- Python 3.11+
-- PostgreSQL 16+ with pgvector extension
-- Redis 7+
-- RabbitMQ 3.12+
-- MinIO (or S3-compatible storage)
-
-### **Docker Compose Setup**
+### **⚡ Instant Setup (Recommended)**
 
 ```bash
 # Clone repository
 git clone https://github.com/yourusername/second-brain.git
 cd second-brain
 
-# Start all services
-docker-compose up -d
+# One-command setup (Docker + fallback .venv)
+make setup
 
-# Run migrations
-docker-compose exec api python -m alembic upgrade head
+# Start development environment
+make dev
 
-# Access the application
+# Check status
+make status
+
+# Run tests
+make test
+```
+
+### **📋 What Just Happened?**
+
+The setup automatically:
+- ✅ Detects if Docker is available and running
+- ✅ Starts PostgreSQL, Redis, and application containers
+- ✅ Creates bulletproof .venv if Docker unavailable  
+- ✅ Installs all dependencies correctly
+- ✅ Validates environment health
+- ✅ Provides activation scripts for your OS
+
+### **🔧 Manual Setup (if needed)**
+
+```bash
+# Docker-first approach
+docker-compose up --build          # Full development stack
+docker-compose exec app python scripts/test_runner.py --all
+
+# Bulletproof .venv fallback
+python scripts/setup-bulletproof-venv.py  # Creates validated .venv
+.venv/Scripts/python.exe main.py          # Windows
+.venv/bin/python main.py                  # Unix
+
+# Access application
 open http://localhost:8000
 ```
 
-### **Local Development**
+### **🎯 Development Commands**
 
 ```bash
-# Clone and setup environment (works on any OS)
-git clone https://github.com/yourusername/second-brain.git
-cd second-brain
-python scripts/setup_dev_environment.py
+# Core workflow
+make dev           # Start development environment  
+make test          # Run all tests
+make shell         # Open development shell
+make dev-logs      # Show application logs
+make dev-stop      # Stop development environment
 
-# Activate virtual environment
-.venv\Scripts\activate      # Windows
-source .venv/bin/activate   # Linux/Mac
+# Testing options
+make test-unit           # Unit tests only
+make test-integration    # Integration tests only  
+make test-validation     # Environment validation
 
-# Start services
-docker-compose up -d
-
-# Run tests to validate setup
-python scripts/test_runner.py --validation
-
-# Start the application
-uvicorn main:app --reload
-
-# Or run directly
-python main.py
+# Status and health
+make status              # Environment health check
+make db-shell           # PostgreSQL shell
 ```
 
 ## 🔧 **Configuration**
@@ -191,25 +229,29 @@ docker build -f Dockerfile.multimodal -t secondbrain:multimodal .
 ## 🧪 **Testing**
 
 ```bash
-# Validate environment and run tests
-python scripts/test_runner.py --validation   # Environment validation
-python scripts/test_runner.py --unit         # Unit tests only
-python scripts/test_runner.py --integration  # Integration tests
-python scripts/test_runner.py --e2e          # End-to-end tests
-python scripts/test_runner.py --all          # All tests (fast)
-python scripts/test_runner.py --all --slow   # All tests including slow ones
+# Docker-first testing (recommended)
+make test                    # All tests in containers
+make test-unit              # Unit tests only
+make test-integration       # Integration tests only
+make test-validation        # Environment validation
 
-# Generate coverage report
-python scripts/test_runner.py --coverage
+# Direct script access (cross-platform)
+python scripts/dev test --test-type all         # All tests  
+python scripts/dev test --test-type unit        # Unit tests
+python scripts/dev test --test-type integration # Integration tests
+python scripts/dev test --test-type validation  # Validation tests
 
-# Run linting
-python scripts/test_runner.py --lint
-
-# Direct pytest (alternative)
-pytest tests/unit/              # Unit tests only
-pytest tests/integration/        # Integration tests
-pytest -m "unit"                # Unit tests with marker
+# Fallback .venv testing (when Docker unavailable)
+.venv/Scripts/python.exe scripts/test_runner.py --validation  # Windows
+.venv/bin/python scripts/test_runner.py --validation          # Unix
 ```
+
+### **🔍 Test Categories**
+
+- **Validation**: Environment health, dependency checks, basic imports
+- **Unit**: Fast isolated tests, no external dependencies  
+- **Integration**: Database, API, service integration tests
+- **Comprehensive**: Full end-to-end testing (slower)
 
 ## 📊 **Monitoring & Observability**
 

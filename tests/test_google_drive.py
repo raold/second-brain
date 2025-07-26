@@ -2,6 +2,7 @@
 Unit tests for Google Drive integration
 """
 
+import io
 import pickle
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -449,9 +450,47 @@ class TestGoogleDriveClient:
         )
         assert client.get_export_filename(file) == "My Presentation.pdf"
 
-    def test_supported_mime_types(self):
-        """Test supported MIME types constant"""
-        assert 'application/pdf' in GoogleDriveClient.SUPPORTED_MIME_TYPES
-        assert 'text/plain' in GoogleDriveClient.SUPPORTED_MIME_TYPES
-        assert 'image/jpeg' in GoogleDriveClient.SUPPORTED_MIME_TYPES
-        assert 'application/vnd.google-apps.document' in GoogleDriveClient.SUPPORTED_MIME_TYPES
+    @pytest.mark.asyncio
+    async def test_ingest_file_streaming(self, client):
+        """Test that file ingestion uses streaming"""
+        client.service = MagicMock()
+
+        # Mock file metadata
+        client.service.files().get.return_value.execute.return_value = {
+            'mimeType': 'application/pdf'
+        }
+
+        # Mock file download to return a file-like object
+        mock_file_stream = io.BytesIO(b"test content")
+        with patch('app.ingestion.google_drive_client.MediaIoBaseDownload') as MockDownloader:
+            mock_downloader = MagicMock()
+            mock_downloader.next_chunk.return_value = (None, True)
+            MockDownloader.return_value = mock_downloader
+            
+            # Mock the download_file to return a stream
+            async def mock_download_file(*args, **kwargs):
+                return mock_file_stream
+            
+            client.download_file = mock_download_file
+
+            # Mock the ingestion engine
+            with patch('app.routes.google_drive_routes.IngestionEngine') as MockIngestionEngine:
+                mock_ingestion_engine = AsyncMock()
+                mock_ingestion_engine.ingest_file.return_value = MagicMock(success=True, memories_created=1)
+                MockIngestionEngine.return_value = mock_ingestion_engine
+
+                # Call the ingestion route
+                from app.routes.google_drive_routes import process_drive_ingestion
+                await process_drive_ingestion(
+                    client=client,
+                    file_ids=["file123"],
+                    user_id="user123",
+                    tags=[],
+                    metadata={},
+                    db=MagicMock()
+                )
+
+                # Assert that ingest_file was called with a file-like object
+                mock_ingestion_engine.ingest_file.assert_called_once()
+                call_args = mock_ingestion_engine.ingest_file.call_args
+                assert call_args[1]['file'] == mock_file_stream

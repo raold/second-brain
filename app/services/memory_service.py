@@ -10,7 +10,7 @@ from typing import Any, Optional, Union
 from app.database import Database, get_database
 from app.database_importance_schema import setup_importance_tracking_schema
 from app.database_mock import MockDatabase
-from app.importance_engine import ImportanceEngine, get_importance_engine
+from app.services.importance_engine import ImportanceEngine, get_importance_engine
 from app.services.monitoring import get_metrics_collector
 from app.utils.logging_config import PerformanceLogger, get_logger
 from app.utils.protocols import (

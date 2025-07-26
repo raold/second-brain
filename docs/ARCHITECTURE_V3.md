@@ -2,33 +2,44 @@
 
 ## Executive Summary
 
-Second Brain v3.0.0 implements a clean architecture design with domain-driven principles, event sourcing, and enterprise-grade features for production scalability and maintainability.
+Second Brain v3.0.0 implements a **Docker-first development architecture** with clean separation of concerns, service-oriented design, and bulletproof cross-platform development experience.
+
+## 🎯 Development-First Architecture
+
+### Core Philosophy: Zero Friction Development
+
+Second Brain v3.0.0 prioritizes **developer experience** above all else:
+
+- **🐳 Docker-First**: No host dependencies, identical environments everywhere
+- **🔒 Bulletproof Fallback**: Automated .venv creation when Docker unavailable  
+- **⚡ One-Command Setup**: `make setup` works on any machine instantly
+- **🌍 Cross-Platform**: Windows, macOS, Linux with zero configuration
 
 ## Core Architecture Principles
 
-### 1. Clean Architecture
-- **Domain-centric**: Business logic isolated from infrastructure
-- **Dependency inversion**: All dependencies point inward
-- **Testability**: Each layer can be tested independently
-- **Flexibility**: Easy to swap infrastructure components
+### 1. Service-Oriented Architecture  
+- **Clean Separation**: Business logic in `app/services/`
+- **Route Delegation**: Thin controllers delegate to service layer
+- **Repository Pattern**: Data access abstraction
+- **Dependency Injection**: Service factory pattern
 
-### 2. Domain-Driven Design (DDD)
-- **Bounded contexts**: Clear domain boundaries
-- **Aggregates**: Consistency boundaries for business rules
-- **Value objects**: Immutable domain concepts
-- **Domain events**: Decoupled communication
+### 2. Docker-First Infrastructure
+- **Container Parity**: Development == Production environments
+- **Multi-Stage Builds**: Optimized development and production images  
+- **Service Composition**: App, PostgreSQL, Redis in docker-compose
+- **Volume Management**: Persistent data, excluded .venv
 
-### 3. Event Sourcing & CQRS
-- **Event sourcing**: Complete audit trail of all changes
-- **CQRS**: Optimized read/write separation
-- **Event-driven**: Asynchronous processing
-- **Eventual consistency**: Scalable architecture
+### 3. Cross-Platform Development
+- **Universal Scripts**: `scripts/dev` works on Windows/Mac/Linux
+- **Smart Detection**: Automatic Docker vs .venv selection
+- **Platform Scripts**: Auto-generated activation for each OS
+- **Makefile Intelligence**: Commands adapt to environment
 
-### 4. Enterprise-Ready
-- **Observability**: OpenTelemetry, Prometheus, structured logging
-- **Caching**: Redis with multiple strategies
-- **Message queue**: RabbitMQ for async processing
-- **Object storage**: MinIO/S3 for attachments
+### 4. Bulletproof Environment Management
+- **Automated .venv**: `scripts/setup-bulletproof-venv.py` 
+- **Health Validation**: Automatic dependency and import checks
+- **Error Recovery**: Self-healing environment setup
+- **Activation Scripts**: `activate-venv.bat` and `activate-venv.sh`
 
 ## System Architecture
 

@@ -9,7 +9,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class RepetitionAlgorithm(str, Enum):
@@ -55,10 +55,10 @@ class ForgettingCurve(BaseModel):
     algorithm: Optional[RepetitionAlgorithm] = Field(None, description="Algorithm used")
     sample_size: Optional[int] = Field(None, description="Number of samples")
     
-    @validator('retention_rates')
-    def validate_same_length(cls, v, values):
+    @field_validator('retention_rates')
+    def validate_same_length(cls, v, info):
         """Ensure days and retention_rates have same length"""
-        if 'days' in values and len(v) != len(values['days']):
+        if info.data.get('days') and len(v) != len(info.data['days']):
             raise ValueError("days and retention_rates must have same length")
         return v
     
@@ -158,10 +158,10 @@ class ReviewSchedule(BaseModel):
     current_strength: Optional[MemoryStrength] = Field(None, description="Current memory strength")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    @validator('overdue_days', always=True)
-    def calculate_overdue(cls, v, values):
+    @field_validator('overdue_days', mode='before')
+    def calculate_overdue(cls, v, info):
         """Calculate overdue days."""
-        if 'scheduled_date' in values:
+        if info.data.get('scheduled_date'):
             days_diff = (datetime.utcnow() - values['scheduled_date']).days
             return max(0, days_diff)
         return v

@@ -30,8 +30,6 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.connection_pool import PoolConfig, close_pool, get_pool_manager, initialize_pool
 from app.conversation_processor import setup_conversation_monitoring
 
-# Dashboard and conversation processing imports
-from app.dashboard_api import setup_dashboard_routes
 from app.database import get_database
 from app.docs import (
     ContextualSearchRequest,
@@ -45,9 +43,6 @@ from app.docs import (
     setup_openapi_documentation,
 )
 from app.routes import (
-    dashboard_router as new_dashboard_router,
-)
-from app.routes import (
     health_router,
     memory_router,
     visualization_router,
@@ -57,29 +52,20 @@ from app.routes import (
 )
 from app.routes.analysis_routes import router as analysis_router
 
-# Import bulk operations routes
 from app.routes.bulk_operations_routes import bulk_router
 from app.routes.graph_routes import router as graph_router
 
-# Import importance routes
 from app.routes.importance_routes import router as importance_router
 from app.routes.insights import router as insights_router
 
-# Import relationship routes
 from app.routes.relationship_routes import router as relationship_router
 from app.routes.synthesis_routes import router as synthesis_router
 from app.routes.ingestion_routes import router as ingestion_router
 from app.routes.google_drive_routes import router as google_drive_router
 from app.security import SecurityConfig, SecurityManager
 
-# Import service factory and refactored routes
 from app.services.service_factory import get_service_factory
-from app.session_api import setup_session_routes
 from app.session_manager import get_session_manager
-# from app.shared import get_db_instance, verify_api_key  # Archived
-# from app.version import __version__, get_version_info  # Archived
-
-# from .routes.bulk_routes import get_bulk_routes  # Archived
 
 # Version info
 __version__ = "3.0.0"
@@ -283,7 +269,6 @@ app.add_middleware(
 app.include_router(memory_router)
 app.include_router(health_router)
 app.include_router(new_session_router)
-app.include_router(new_dashboard_router)
 app.include_router(visualization_router)
 app.include_router(importance_router)
 app.include_router(relationship_router)
@@ -295,7 +280,6 @@ app.include_router(analysis_router)
 app.include_router(insights_router)
 
 # Include bulk operations routes
-# app.include_router(get_bulk_routes(), dependencies=[Depends(verify_api_key)])  # Archived
 
 # Include synthesis routes (v2.8.2)
 app.include_router(synthesis_router)
@@ -306,9 +290,7 @@ app.include_router(ingestion_router)
 # Include Google Drive routes (v2.8.3)
 app.include_router(google_drive_router)
 
-# Setup legacy dashboard and session routes (temporary until full migration)
-setup_dashboard_routes(app)
-setup_session_routes(app)
+# Setup conversation monitoring
 setup_conversation_monitoring()
 
 # Initialize session management
@@ -821,7 +803,6 @@ async def list_memories(
 @app.get("/version", summary="Get version information", response_model=dict)
 async def get_version_endpoint():
     """Get comprehensive version information for dashboard and API clients."""
-    # from app.version import get_dashboard_version, get_version_info  # Archived
 
     # Get comprehensive version info
     version_info = get_version_info()

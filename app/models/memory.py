@@ -6,7 +6,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class User(BaseModel):
@@ -40,8 +40,7 @@ class Memory(BaseModel):
     access_count: int = 0
     last_accessed: Optional[datetime] = None
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
     @classmethod
     def create(cls, content: str, memory_type: MemoryType, user_id: Optional[str] = None) -> 'Memory':

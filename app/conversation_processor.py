@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from app.dashboard import get_dashboard
 from app.docs import Priority
 
 
@@ -35,7 +34,7 @@ class ConversationProcessor:
     """
 
     def __init__(self):
-        self.dashboard = get_dashboard()
+        self.dashboard = None
 
         # Enhanced pattern matching for feature detection
         self.feature_patterns = [
@@ -412,7 +411,7 @@ if __name__ == "__main__":
             print(f"📊 Dashboard updates: {len(result['dashboard_updates']['features_added'])} new features")
 
         print("\n📈 Final dashboard state:")
-        dashboard = get_dashboard()
+        dashboard = None
         print(dashboard.generate_visual_report())
 
     asyncio.run(demo())

@@ -1,7 +1,69 @@
-# Multi-stage Dockerfile for Second Brain
-# Optimized for both development and production
+# Second Brain - Docker-First Development Environment
+# Multi-stage build for development and production
+# Zero host Python dependencies required
 
-# Build stage
+# Development stage
+FROM python:3.11-slim as development
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+# Create app user
+RUN groupadd -r app && useradd -r -g app app
+
+# Install system dependencies for development
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    libpq-dev \
+    postgresql-client \
+    # Multi-modal support
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    libglib2.0-0 \
+    libgomp1 \
+    # Development tools
+    vim \
+    htop \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set work directory
+WORKDIR /app
+
+# Copy requirements files
+COPY requirements.txt ./
+COPY config/requirements-*.txt ./config/
+
+# Install Python dependencies (including dev tools)
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r config/requirements-production.txt
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p logs session_storage temp data && \
+    chown -R app:app /app
+
+# Switch to non-root user
+USER app
+
+# Expose port
+EXPOSE 8000
+
+# Development command (with hot reload)
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+# Build stage for production
 FROM python:3.11-slim as builder
 
 # Install build dependencies
