@@ -76,7 +76,6 @@ class TestRunner:
         cmd = [
             self.python_cmd, "-m", "pytest", 
             "tests/unit", 
-            "-m", "unit",
             "--tb=short"
         ]
         
@@ -90,7 +89,6 @@ class TestRunner:
         cmd = [
             self.python_cmd, "-m", "pytest",
             "tests/integration",
-            "-m", "integration", 
             "--tb=short"
         ]
         
