@@ -120,7 +120,19 @@
       "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" -m pytest tests/unit/test_advanced_synthesis.py::TestAdvancedSynthesisEngine::test_hierarchical_synthesis -v)",
       "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" -c \"with open(''app/models/synthesis/advanced_models.py'', ''r'') as f: lines = f.readlines(); print(f''Total lines: {len(lines)}''); print(''Last 10 lines:''); print(''''.join(lines[-10:]))\")",
       "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" -m pytest tests/unit -v --tb=no)",
-      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/simple_ci_runner.py)"
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/simple_ci_runner.py)",
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/cleanup_pre_v3.py)",
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/cleanup_unused_routes.py)",
+      "Bash(cp:*)",
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/restore_synthesis_models.py)",
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" -m pytest tests/unit/test_advanced_synthesis.py -v --tb=short -x)",
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" -m pytest tests/unit/test_advanced_synthesis.py::test_export_request -v --tb=short)",
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/restore_missing_files.py)",
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/restore_all_routes.py)",
+      "Bash(copy:*)",
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/find_restore_all_dependencies.py)",
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" -m pytest tests/unit -v --tb=no -q)",
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/summarize_ci_status.py)"
     ],
     "deny": []
   }

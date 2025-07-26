@@ -1,59 +1,31 @@
 """
-AI-powered insights and pattern discovery module for Second Brain v2.5.0
-
-This module provides intelligent analysis of memory patterns, usage statistics,
-and personalized insights to help users understand their knowledge evolution.
+Insights module for Second Brain - Advanced analytics and pattern detection
 """
 
 from .analytics_engine import AnalyticsEngine
 from .cluster_analyzer import ClusterAnalyzer
-from .gap_detector import KnowledgeGapDetector
+from .gap_detector import KnowledgeGapDetector as GapDetector
 from .insight_generator import InsightGenerator
 from .models import (
-    ClusteringRequest,
-    ClusterResponse,
-    GapAnalysisRequest,
-    GapAnalysisResponse,
     Insight,
+    InsightType,
     InsightRequest,
     InsightResponse,
-    InsightType,
-    KnowledgeGap,
-    LearningProgress,
-    MemoryCluster,
-    Pattern,
-    PatternDetectionRequest,
-    PatternResponse,
-    PatternType,
-    TimeFrame,
-    UsageStatistics,
+    TrendAnalysis,
+    PatternDetection
 )
 from .pattern_detector import PatternDetector
 
 __all__ = [
-    # Models
-    "InsightType",
-    "PatternType",
-    "TimeFrame",
-    "Insight",
-    "Pattern",
-    "MemoryCluster",
-    "KnowledgeGap",
-    "UsageStatistics",
-    "LearningProgress",
-    "InsightRequest",
-    "PatternDetectionRequest",
-    "ClusteringRequest",
-    "GapAnalysisRequest",
-    "InsightResponse",
-    "PatternResponse",
-    "ClusterResponse",
-    "GapAnalysisResponse",
-
-    # Core Components
-    "PatternDetector",
-    "ClusterAnalyzer",
-    "KnowledgeGapDetector",
+    "AnalyticsEngine",
+    "ClusterAnalyzer", 
+    "GapDetector",
     "InsightGenerator",
-    "AnalyticsEngine"
+    "Insight",
+    "InsightType",
+    "InsightRequest",
+    "InsightResponse",
+    "TrendAnalysis",
+    "PatternDetection",
+    "PatternDetector",
 ]

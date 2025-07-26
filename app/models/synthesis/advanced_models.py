@@ -32,6 +32,28 @@ class ExportFormat(str, Enum):
     MARKDOWN = "markdown"
     HTML = "html"
     JSON = "json"
+    OBSIDIAN = "obsidian"
+
+
+class ExportRequest(BaseModel):
+    """Request to export synthesis results"""
+    user_id: str
+    format: ExportFormat = Field(default=ExportFormat.MARKDOWN)
+    memory_ids: Optional[List[UUID]] = None
+    synthesis_ids: Optional[List[UUID]] = None
+    include_metadata: bool = Field(default=True)
+    include_relationships: bool = Field(default=True)
+    options: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ImportRequest(BaseModel):
+    """Request to import content"""
+    user_id: str
+    format: ExportFormat
+    content: str
+    merge_strategy: str = Field(default="append")
+    validate_schema: bool = Field(default=True)
+    options: Dict[str, Any] = Field(default_factory=dict)
 
 
 class SynthesisStrategy(str, Enum):

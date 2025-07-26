@@ -4,7 +4,7 @@ Data models for AI insights and pattern discovery
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -211,3 +211,25 @@ class GapAnalysisResponse(BaseModel):
     coverage_score: float = Field(ge=0.0, le=1.0)
     suggested_learning_paths: list[dict[str, Any]]
     analyzed_at: datetime
+
+
+class TrendAnalysis(BaseModel):
+    """Trend analysis results"""
+    trend_type: str
+    trend_direction: Literal["increasing", "decreasing", "stable"]
+    confidence: float = Field(ge=0.0, le=1.0)
+    data_points: list[dict[str, Any]]
+    forecast: Optional[dict[str, Any]] = None
+    insights: list[str]
+    analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class PatternDetection(BaseModel):
+    """Pattern detection results"""
+    pattern_type: PatternType
+    pattern_name: str
+    occurrences: int
+    confidence: float = Field(ge=0.0, le=1.0)
+    examples: list[dict[str, Any]]
+    description: str
+    detected_at: datetime = Field(default_factory=datetime.utcnow)
