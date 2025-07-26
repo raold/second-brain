@@ -16,15 +16,15 @@ class TestConfig:
         # Test database defaults - in test environment these are overridden
         assert Config.DATABASE_URL.startswith("postgresql://")
         if os.getenv("ENVIRONMENT") == "test":
-            assert Config.POSTGRES_USER == "test"
-            assert Config.POSTGRES_PASSWORD == "test"
+            assert Config.POSTGRES_USER == "secondbrain"
+            assert Config.POSTGRES_PASSWORD == "changeme"
         else:
             assert Config.POSTGRES_USER == "brain"
             assert Config.POSTGRES_PASSWORD == "brain_password"
         assert Config.POSTGRES_HOST == "localhost"
         assert Config.POSTGRES_PORT == "5432"
         if os.getenv("ENVIRONMENT") == "test":
-            assert Config.POSTGRES_DB == "test"
+            assert Config.POSTGRES_DB == "secondbrain"
         else:
             assert Config.POSTGRES_DB == "brain"
 

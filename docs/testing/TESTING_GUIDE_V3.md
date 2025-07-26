@@ -2,971 +2,383 @@
 
 ## Overview
 
-This guide covers comprehensive testing strategies for Second Brain v3.0.0, including unit tests, integration tests, end-to-end tests, and performance testing.
+This guide covers the testing strategy for Second Brain v3.0.0, focusing on practical, working tests that match our current architecture.
 
 ## Testing Philosophy
 
-1. **Test Pyramid**: Many unit tests, fewer integration tests, minimal E2E tests
-2. **Test Behavior**: Focus on what, not how
-3. **Fast Feedback**: Quick test execution
-4. **Reliable Tests**: No flaky tests
-5. **Maintainable**: Easy to understand and modify
+1. **Pragmatic Testing**: Focus on tests that actually work and provide value
+2. **Fast Feedback**: Quick test execution for development velocity
+3. **Real Dependencies**: Use actual services where practical, mock where necessary
+4. **Clean Architecture**: Test each layer appropriately
 
-## Test Structure
+## Current Test Structure
 
 ```
 tests/
-├── unit/                    # Fast, isolated tests
-│   ├── domain/             # Domain logic tests
-│   │   ├── models/         # Entity and value object tests
-│   │   ├── events/         # Domain event tests
-│   │   └── services/       # Domain service tests
-│   ├── application/        # Use case tests
-│   │   ├── use_cases/      # Business logic tests
-│   │   └── dto/            # DTO validation tests
-│   └── api/                # API route tests
-│       ├── routes/         # Endpoint tests
-│       └── middleware/     # Middleware tests
-├── integration/            # Tests with real dependencies
-│   ├── database/          # Database integration
-│   ├── cache/             # Redis integration
-│   ├── messaging/         # RabbitMQ integration
-│   ├── storage/           # MinIO integration
-│   └── external/          # External API integration
-├── e2e/                   # End-to-end scenarios
-│   ├── workflows/         # Complete user workflows
-│   └── api/              # Full API testing
-├── performance/           # Performance and load tests
-│   ├── benchmarks/       # Performance benchmarks
-│   └── load/             # Load testing scenarios
-├── fixtures/             # Shared test data
-│   ├── factories.py      # Test data factories
-│   ├── mocks.py         # Mock implementations
-│   └── data/            # Static test data
-└── conftest.py          # Pytest configuration
+├── unit/                    # Fast, focused unit tests
+│   ├── domain/             # Domain model tests
+│   │   ├── test_memory.py  # Memory model tests
+│   │   └── test_user.py    # User model tests
+│   ├── synthesis/          # Synthesis feature tests
+│   │   ├── test_report_models.py
+│   │   └── test_websocket_models.py
+│   ├── test_exceptions.py  # Exception handling
+│   ├── test_logging_monitoring.py
+│   ├── test_security_audit.py
+│   ├── test_dependency_injection.py
+│   ├── test_memory_service.py
+│   ├── test_session_service.py
+│   └── test_health_service.py
+├── integration/            # Integration tests
+│   ├── test_api_endpoints.py
+│   ├── test_health.py
+│   └── synthesis/
+│       └── test_synthesis_integration.py
+├── validation/             # Environment validation
+│   ├── test_ci_simulation.py
+│   └── test_env.py
+├── test_ingestion_engine.py  # Ingestion tests
+├── conftest.py            # Shared fixtures
+└── pytest.ini             # Pytest configuration
 ```
 
-## Unit Testing
+## Running Tests
 
-### Domain Model Tests
+### Quick Start with Virtual Environment
+
+```bash
+# Always use the project's virtual environment
+.venv/Scripts/activate  # Windows
+source .venv/bin/activate  # Unix/macOS
+
+# Run all tests
+.venv/Scripts/python.exe -m pytest tests/ -v
+
+# Run with coverage
+.venv/Scripts/python.exe -m pytest tests/ --cov=app --cov-report=html
+```
+
+### Running Specific Test Categories
+
+```bash
+# Unit tests only
+.venv/Scripts/python.exe -m pytest tests/unit/ -v
+
+# Integration tests
+.venv/Scripts/python.exe -m pytest tests/integration/ -v
+
+# Specific test file
+.venv/Scripts/python.exe -m pytest tests/unit/test_exceptions.py -v
+
+# Specific test
+.venv/Scripts/python.exe -m pytest tests/unit/test_exceptions.py::TestErrorResponse::test_error_response_creation -v
+```
+
+### Currently Working Test Suites
+
+These tests are validated and working:
+
+```bash
+# Core functionality
+.venv/Scripts/python.exe -m pytest tests/unit/test_exceptions.py -v
+.venv/Scripts/python.exe -m pytest tests/unit/test_logging_monitoring.py -v
+.venv/Scripts/python.exe -m pytest tests/unit/test_security_audit.py -v
+.venv/Scripts/python.exe -m pytest tests/unit/test_dependency_injection.py -v
+
+# Domain tests
+.venv/Scripts/python.exe -m pytest tests/unit/domain/ -v
+
+# Ingestion tests
+.venv/Scripts/python.exe -m pytest tests/test_ingestion_engine.py -v
+```
+
+## Writing Tests
+
+### Unit Test Example - Domain Model
 
 ```python
-# tests/unit/domain/models/test_memory.py
+"""Test memory domain model"""
 import pytest
-from uuid import uuid4
-from datetime import datetime
-from src.domain.models.memory import Memory
-from src.domain.events.memory_events import MemoryCreatedEvent, MemoryUpdatedEvent
+from app.models.memory import Memory, MemoryType
 
 class TestMemory:
-    """Test Memory aggregate."""
+    """Test Memory model"""
     
-    def test_create_memory_success(self):
-        """Test successful memory creation."""
-        # Arrange
-        content = "Test memory content"
-        user_id = uuid4()
-        tags = ["test", "unit-test"]
-        
-        # Act
-        memory = Memory.create(
-            content=content,
-            user_id=user_id,
-            tags=tags
+    def test_memory_creation(self):
+        """Test creating a memory"""
+        memory = Memory(
+            content="Test memory content",
+            memory_type=MemoryType.SEMANTIC,
+            user_id="user123",
+            tags=["test", "unit-test"]
         )
         
-        # Assert
-        assert memory.id is not None
-        assert memory.content == content
-        assert memory.user_id == user_id
-        assert memory.tags == tags
-        assert memory.version == 1
-        assert len(memory._events) == 1
-        assert isinstance(memory._events[0], MemoryCreatedEvent)
+        assert memory.content == "Test memory content"
+        assert memory.memory_type == "semantic"  # Enum value
+        assert memory.user_id == "user123"
+        assert memory.tags == ["test", "unit-test"]
+        assert memory.importance_score == 0.5  # Default
     
-    def test_create_memory_empty_content_raises_error(self):
-        """Test memory creation with empty content raises ValueError."""
-        # Arrange
-        user_id = uuid4()
-        
-        # Act & Assert
-        with pytest.raises(ValueError, match="Content cannot be empty"):
-            Memory.create(content="", user_id=user_id)
-    
-    def test_update_content_success(self):
-        """Test successful content update."""
-        # Arrange
-        memory = Memory.create(
-            content="Original content",
-            user_id=uuid4()
-        )
-        memory._events.clear()  # Clear creation event
-        new_content = "Updated content"
-        
-        # Act
-        memory.update_content(new_content)
-        
-        # Assert
-        assert memory.content == new_content
-        assert memory.version == 2
-        assert memory.embedding is None  # Should be cleared
-        assert len(memory._events) == 1
-        assert isinstance(memory._events[0], MemoryUpdatedEvent)
-    
-    @pytest.mark.parametrize("invalid_content", [
-        "",
-        "   ",
-        "\t\n",
-        None
-    ])
-    def test_update_content_invalid_raises_error(self, invalid_content):
-        """Test content update with invalid values raises error."""
-        # Arrange
-        memory = Memory.create(
-            content="Valid content",
-            user_id=uuid4()
-        )
-        
-        # Act & Assert
-        with pytest.raises(ValueError):
-            memory.update_content(invalid_content)
-    
-    def test_add_tags_deduplication(self):
-        """Test adding tags with deduplication."""
-        # Arrange
-        memory = Memory.create(
+    def test_memory_with_metadata(self):
+        """Test memory with metadata"""
+        metadata = {"source": "test", "category": "unit-test"}
+        memory = Memory(
             content="Test content",
-            user_id=uuid4(),
-            tags=["existing"]
+            metadata=metadata
         )
-        memory._events.clear()
         
-        # Act
-        memory.add_tags(["NEW", "existing", "another"])
-        
-        # Assert
-        assert set(memory.tags) == {"existing", "new", "another"}
-        assert memory.version == 2
-        events = memory.collect_events()
-        assert len(events) == 1
-        assert events[0].added_tags == ["new", "another"]
+        assert memory.metadata == metadata
+        assert memory.metadata["source"] == "test"
 ```
 
-### Use Case Tests
+### Unit Test Example - Service Layer
 
 ```python
-# tests/unit/application/use_cases/test_memory_use_cases.py
+"""Test memory service"""
 import pytest
 from unittest.mock import Mock, AsyncMock
-from uuid import uuid4
-from src.application.use_cases.memory_use_cases import CreateMemoryUseCase
-from src.domain.models.memory import Memory
+from app.services.memory_service import MemoryService
+from app.core.exceptions import NotFoundException
 
-class TestCreateMemoryUseCase:
-    """Test CreateMemoryUseCase."""
+class TestMemoryService:
+    """Test memory service operations"""
     
     @pytest.fixture
-    def mock_repository(self):
-        repository = Mock()
-        repository.save = AsyncMock(side_effect=lambda m: m)
-        return repository
+    def mock_database(self):
+        """Create mock database"""
+        db = AsyncMock()
+        db.store_memory = AsyncMock(return_value="mem-123")
+        db.get_memory = AsyncMock(return_value={
+            "id": "mem-123",
+            "content": "Test memory",
+            "created_at": "2025-01-26T10:00:00Z"
+        })
+        return db
     
     @pytest.fixture
-    def mock_event_publisher(self):
-        publisher = Mock()
-        publisher.publish = AsyncMock()
-        return publisher
-    
-    @pytest.fixture
-    def use_case(self, mock_repository, mock_event_publisher):
-        return CreateMemoryUseCase(
-            memory_repository=mock_repository,
-            event_publisher=mock_event_publisher
-        )
+    def memory_service(self, mock_database):
+        """Create memory service with mock database"""
+        return MemoryService(database=mock_database)
     
     @pytest.mark.asyncio
-    async def test_execute_success(self, use_case, mock_repository, mock_event_publisher):
-        """Test successful memory creation."""
-        # Arrange
-        content = "Test memory"
-        user_id = uuid4()
-        tags = ["test"]
-        
-        # Act
-        result = await use_case.execute(
-            content=content,
-            user_id=user_id,
-            tags=tags
+    async def test_store_memory_success(self, memory_service):
+        """Test successful memory storage"""
+        memory_id = await memory_service.store_memory(
+            content="Test memory content",
+            memory_type="semantic"
         )
         
-        # Assert
-        assert isinstance(result, Memory)
-        assert result.content == content
-        assert result.user_id == user_id
-        assert result.tags == tags
-        
-        # Verify interactions
-        mock_repository.save.assert_called_once()
-        mock_event_publisher.publish.assert_called_once()
-        
-        # Verify event was published
-        published_events = mock_event_publisher.publish.call_args[0][0]
-        assert len(published_events) == 1
-        assert published_events[0].event_type == "memory.created"
+        assert memory_id == "mem-123"
+        memory_service.database.store_memory.assert_called_once()
 ```
 
-### API Route Tests
+### Integration Test Example
 
 ```python
-# tests/unit/api/routes/test_memories.py
+"""Test API endpoints"""
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, AsyncMock
-from uuid import uuid4
-from src.api.app import create_app
-from src.domain.models.memory import Memory
+from app.app import app
 
-class TestMemoryRoutes:
-    """Test memory API routes."""
+class TestMemoryEndpoints:
+    """Test memory API endpoints"""
     
     @pytest.fixture
-    def mock_use_cases(self):
-        """Mock use cases."""
-        create_use_case = Mock()
-        create_use_case.execute = AsyncMock()
-        
-        get_use_case = Mock()
-        get_use_case.execute = AsyncMock()
-        
-        return {
-            "create": create_use_case,
-            "get": get_use_case
-        }
-    
-    @pytest.fixture
-    def mock_current_user(self):
-        """Mock current user."""
-        return Mock(id=uuid4(), email="test@example.com")
-    
-    @pytest.fixture
-    def client(self, mock_use_cases, mock_current_user):
-        """Create test client with mocked dependencies."""
-        app = create_app()
-        
-        # Override dependencies
-        app.dependency_overrides[get_current_user] = lambda: mock_current_user
-        app.dependency_overrides[get_create_memory_use_case] = lambda: mock_use_cases["create"]
-        app.dependency_overrides[get_memory_use_case] = lambda: mock_use_cases["get"]
-        
+    def client(self):
+        """Create test client"""
         return TestClient(app)
     
-    def test_create_memory_success(self, client, mock_use_cases, mock_current_user):
-        """Test successful memory creation."""
-        # Arrange
-        memory = Memory.create(
-            content="Test memory",
-            user_id=mock_current_user.id
-        )
-        mock_use_cases["create"].execute.return_value = memory
+    @pytest.fixture
+    def auth_headers(self):
+        """Create authentication headers"""
+        return {"api_key": "test-token-1"}
+    
+    def test_health_check(self, client):
+        """Test health check endpoint"""
+        response = client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+    
+    def test_create_memory(self, client, auth_headers):
+        """Test memory creation"""
+        memory_data = {
+            "content": "Test memory",
+            "memory_type": "semantic",
+            "importance_score": 0.8
+        }
         
-        # Act
         response = client.post(
-            "/api/v1/memories",
-            json={"content": "Test memory"},
-            headers={"Authorization": "Bearer test_token"}
+            "/memories",
+            json=memory_data,
+            params=auth_headers
         )
         
-        # Assert
-        assert response.status_code == 201
+        assert response.status_code == 200
         data = response.json()
         assert data["content"] == "Test memory"
-        assert data["id"] == str(memory.id)
-        
-        # Verify use case was called
-        mock_use_cases["create"].execute.assert_called_once_with(
-            content="Test memory",
-            user_id=mock_current_user.id,
-            tags=[],
-            metadata={}
-        )
-    
-    def test_create_memory_validation_error(self, client):
-        """Test memory creation with validation error."""
-        # Act
-        response = client.post(
-            "/api/v1/memories",
-            json={"content": ""},  # Empty content
-            headers={"Authorization": "Bearer test_token"}
-        )
-        
-        # Assert
-        assert response.status_code == 422
-        assert "Content cannot be empty" in response.text
 ```
 
-## Integration Testing
+## Test Configuration
 
-### Database Integration Tests
+### Environment Setup
 
-```python
-# tests/integration/database/test_memory_repository.py
-import pytest
-from uuid import uuid4
-from sqlalchemy.ext.asyncio import AsyncSession
-from src.domain.models.memory import Memory
-from src.infrastructure.database.repositories.memory_repository import SQLMemoryRepository
+Create `.env.test` for test configuration:
 
-@pytest.mark.integration
-@pytest.mark.asyncio
-class TestSQLMemoryRepository:
-    """Test SQLMemoryRepository with real database."""
-    
-    @pytest.fixture
-    async def repository(self, db_session: AsyncSession):
-        """Create repository instance."""
-        return SQLMemoryRepository(db_session)
-    
-    async def test_save_and_find_by_id(self, repository, db_session):
-        """Test saving and retrieving a memory."""
-        # Arrange
-        memory = Memory.create(
-            content="Integration test memory",
-            user_id=uuid4(),
-            tags=["test", "integration"]
-        )
-        
-        # Act
-        saved_memory = await repository.save(memory)
-        await db_session.commit()
-        
-        found_memory = await repository.find_by_id(saved_memory.id)
-        
-        # Assert
-        assert found_memory is not None
-        assert found_memory.id == saved_memory.id
-        assert found_memory.content == memory.content
-        assert found_memory.tags == memory.tags
-        assert found_memory.version == 1
-    
-    async def test_find_by_user_id(self, repository, db_session):
-        """Test finding memories by user ID."""
-        # Arrange
-        user_id = uuid4()
-        memories = [
-            Memory.create(content=f"Memory {i}", user_id=user_id)
-            for i in range(3)
-        ]
-        
-        for memory in memories:
-            await repository.save(memory)
-        await db_session.commit()
-        
-        # Act
-        found_memories = await repository.find_by_user_id(user_id, limit=10)
-        
-        # Assert
-        assert len(found_memories) == 3
-        assert all(m.user_id == user_id for m in found_memories)
-    
-    async def test_vector_search(self, repository, db_session):
-        """Test vector similarity search."""
-        # Arrange
-        memory1 = Memory.create(
-            content="Python programming tutorial",
-            user_id=uuid4()
-        )
-        memory1.embedding = [0.1] * 1536  # Mock embedding
-        
-        memory2 = Memory.create(
-            content="Cooking pasta recipe",
-            user_id=uuid4()
-        )
-        memory2.embedding = [0.9] * 1536  # Different embedding
-        
-        await repository.save(memory1)
-        await repository.save(memory2)
-        await db_session.commit()
-        
-        # Act
-        query_embedding = [0.1] * 1536  # Similar to memory1
-        results = await repository.search_by_vector(
-            embedding=query_embedding,
-            limit=2,
-            threshold=0.5
-        )
-        
-        # Assert
-        assert len(results) > 0
-        assert results[0].id == memory1.id  # Most similar should be first
-```
+```bash
+# Test environment
+DATABASE_URL=postgresql://test_user:test_pass@localhost:5432/test_secondbrain
+REDIS_URL=redis://localhost:6379/1
+USE_MOCK_DATABASE=false
+LOG_LEVEL=DEBUG
+ENVIRONMENT=test
 
-### Cache Integration Tests
+# Test API keys
+OPENAI_API_KEY=test-key
+API_TOKENS=test-token-1,test-token-2
 
-```python
-# tests/integration/cache/test_redis_cache.py
-import pytest
-from src.infrastructure.caching.cache import RedisCache
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-class TestRedisCache:
-    """Test Redis cache integration."""
-    
-    @pytest.fixture
-    async def cache(self, redis_client):
-        """Create cache instance."""
-        return RedisCache(redis_client)
-    
-    async def test_set_and_get(self, cache):
-        """Test setting and getting values."""
-        # Act
-        await cache.set("test_key", {"data": "test_value"}, ttl=60)
-        result = await cache.get("test_key")
-        
-        # Assert
-        assert result == {"data": "test_value"}
-    
-    async def test_delete(self, cache):
-        """Test deleting keys."""
-        # Arrange
-        await cache.set("test_key", "test_value")
-        
-        # Act
-        await cache.delete("test_key")
-        result = await cache.get("test_key")
-        
-        # Assert
-        assert result is None
-    
-    async def test_pattern_delete(self, cache):
-        """Test deleting keys by pattern."""
-        # Arrange
-        await cache.set("user:1:profile", {"name": "User 1"})
-        await cache.set("user:1:settings", {"theme": "dark"})
-        await cache.set("user:2:profile", {"name": "User 2"})
-        
-        # Act
-        await cache.delete_pattern("user:1:*")
-        
-        # Assert
-        assert await cache.get("user:1:profile") is None
-        assert await cache.get("user:1:settings") is None
-        assert await cache.get("user:2:profile") is not None
-```
-
-### Message Queue Integration Tests
-
-```python
-# tests/integration/messaging/test_rabbitmq.py
-import pytest
-import asyncio
-from src.infrastructure.messaging.broker import RabbitMQBroker
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-class TestRabbitMQBroker:
-    """Test RabbitMQ broker integration."""
-    
-    @pytest.fixture
-    async def broker(self, rabbitmq_url):
-        """Create broker instance."""
-        broker = RabbitMQBroker(rabbitmq_url)
-        await broker.connect()
-        yield broker
-        await broker.disconnect()
-    
-    async def test_publish_and_consume(self, broker):
-        """Test publishing and consuming messages."""
-        # Arrange
-        received_messages = []
-        
-        async def handler(message):
-            received_messages.append(message)
-        
-        # Subscribe to queue
-        await broker.subscribe(
-            routing_key="test.message",
-            handler=handler,
-            queue_name="test_queue"
-        )
-        
-        # Act
-        test_message = {"type": "test", "data": "Hello RabbitMQ"}
-        await broker.publish(
-            routing_key="test.message",
-            message=test_message
-        )
-        
-        # Wait for message to be consumed
-        await asyncio.sleep(0.5)
-        
-        # Assert
-        assert len(received_messages) == 1
-        assert received_messages[0] == test_message
-```
-
-## End-to-End Testing
-
-### Complete Workflow Tests
-
-```python
-# tests/e2e/workflows/test_memory_workflow.py
-import pytest
-from httpx import AsyncClient
-from uuid import uuid4
-
-@pytest.mark.e2e
-@pytest.mark.asyncio
-class TestMemoryWorkflow:
-    """Test complete memory workflow."""
-    
-    @pytest.fixture
-    async def authenticated_client(self, api_client: AsyncClient):
-        """Create authenticated client."""
-        # Login and get token
-        response = await api_client.post(
-            "/api/v1/auth/token",
-            json={"username": "test@example.com", "password": "testpass"}
-        )
-        token = response.json()["access_token"]
-        
-        # Set authorization header
-        api_client.headers["Authorization"] = f"Bearer {token}"
-        return api_client
-    
-    async def test_complete_memory_lifecycle(self, authenticated_client):
-        """Test creating, updating, searching, and deleting a memory."""
-        # 1. Create memory
-        create_response = await authenticated_client.post(
-            "/api/v1/memories",
-            json={
-                "content": "E2E test memory about Python programming",
-                "tags": ["python", "programming", "test"]
-            }
-        )
-        assert create_response.status_code == 201
-        memory_id = create_response.json()["id"]
-        
-        # 2. Verify memory was created
-        get_response = await authenticated_client.get(
-            f"/api/v1/memories/{memory_id}"
-        )
-        assert get_response.status_code == 200
-        memory = get_response.json()
-        assert memory["content"] == "E2E test memory about Python programming"
-        assert memory["tags"] == ["python", "programming", "test"]
-        
-        # 3. Update memory
-        update_response = await authenticated_client.put(
-            f"/api/v1/memories/{memory_id}",
-            json={
-                "content": "Updated E2E test memory about Python and FastAPI",
-                "tags": ["python", "programming", "test", "fastapi"]
-            }
-        )
-        assert update_response.status_code == 200
-        
-        # 4. Search for memory
-        search_response = await authenticated_client.post(
-            "/api/v1/memories/search",
-            json={
-                "query": "Python FastAPI programming",
-                "limit": 10
-            }
-        )
-        assert search_response.status_code == 200
-        results = search_response.json()["results"]
-        assert len(results) > 0
-        assert any(r["memory"]["id"] == memory_id for r in results)
-        
-        # 5. List memories with filters
-        list_response = await authenticated_client.get(
-            "/api/v1/memories?tag=python&page=1&size=10"
-        )
-        assert list_response.status_code == 200
-        memories = list_response.json()["items"]
-        assert any(m["id"] == memory_id for m in memories)
-        
-        # 6. Delete memory
-        delete_response = await authenticated_client.delete(
-            f"/api/v1/memories/{memory_id}"
-        )
-        assert delete_response.status_code == 204
-        
-        # 7. Verify deletion
-        get_deleted_response = await authenticated_client.get(
-            f"/api/v1/memories/{memory_id}"
-        )
-        assert get_deleted_response.status_code == 404
-```
-
-### API Contract Tests
-
-```python
-# tests/e2e/api/test_api_contracts.py
-import pytest
-from httpx import AsyncClient
-from jsonschema import validate
-
-@pytest.mark.e2e
-@pytest.mark.asyncio
-class TestAPIContracts:
-    """Test API contract compliance."""
-    
-    MEMORY_SCHEMA = {
-        "type": "object",
-        "required": ["id", "content", "user_id", "created_at", "updated_at"],
-        "properties": {
-            "id": {"type": "string", "format": "uuid"},
-            "content": {"type": "string", "minLength": 1},
-            "embedding": {
-                "type": "array",
-                "items": {"type": "number"},
-                "minItems": 1536,
-                "maxItems": 1536
-            },
-            "user_id": {"type": "string", "format": "uuid"},
-            "tags": {
-                "type": "array",
-                "items": {"type": "string"}
-            },
-            "metadata": {"type": "object"},
-            "created_at": {"type": "string", "format": "date-time"},
-            "updated_at": {"type": "string", "format": "date-time"},
-            "version": {"type": "integer", "minimum": 1}
-        }
-    }
-    
-    async def test_memory_response_schema(self, authenticated_client):
-        """Test memory response matches schema."""
-        # Create memory
-        response = await authenticated_client.post(
-            "/api/v1/memories",
-            json={"content": "Schema test memory"}
-        )
-        
-        # Validate response
-        assert response.status_code == 201
-        memory = response.json()
-        validate(instance=memory, schema=self.MEMORY_SCHEMA)
-```
-
-## Performance Testing
-
-### Benchmark Tests
-
-```python
-# tests/performance/benchmarks/test_memory_operations.py
-import pytest
-from uuid import uuid4
-import time
-
-@pytest.mark.benchmark
-class TestMemoryPerformance:
-    """Benchmark memory operations."""
-    
-    def test_memory_creation_performance(self, benchmark):
-        """Benchmark memory creation."""
-        def create_memory():
-            return Memory.create(
-                content="Performance test memory",
-                user_id=uuid4(),
-                tags=["perf", "test"]
-            )
-        
-        result = benchmark(create_memory)
-        assert result is not None
-        
-        # Performance assertions
-        assert benchmark.stats["mean"] < 0.001  # Less than 1ms
-    
-    @pytest.mark.asyncio
-    async def test_database_query_performance(self, benchmark, db_session):
-        """Benchmark database queries."""
-        repository = SQLMemoryRepository(db_session)
-        
-        # Setup test data
-        user_id = uuid4()
-        for i in range(100):
-            memory = Memory.create(
-                content=f"Test memory {i}",
-                user_id=user_id
-            )
-            await repository.save(memory)
-        await db_session.commit()
-        
-        # Benchmark query
-        async def query_memories():
-            return await repository.find_by_user_id(user_id, limit=20)
-        
-        result = await benchmark(query_memories)
-        assert len(result) == 20
-        
-        # Performance assertions
-        assert benchmark.stats["mean"] < 0.1  # Less than 100ms
-```
-
-### Load Tests
-
-```python
-# tests/performance/load/test_api_load.py
-import asyncio
-import pytest
-from httpx import AsyncClient
-from concurrent.futures import ThreadPoolExecutor
-
-@pytest.mark.load
-@pytest.mark.asyncio
-class TestAPILoad:
-    """Load test API endpoints."""
-    
-    async def test_concurrent_memory_creation(self, authenticated_client):
-        """Test concurrent memory creation."""
-        
-        async def create_memory(index: int):
-            response = await authenticated_client.post(
-                "/api/v1/memories",
-                json={
-                    "content": f"Load test memory {index}",
-                    "tags": ["load-test"]
-                }
-            )
-            return response.status_code
-        
-        # Create 100 memories concurrently
-        tasks = [create_memory(i) for i in range(100)]
-        start_time = time.time()
-        results = await asyncio.gather(*tasks)
-        duration = time.time() - start_time
-        
-        # Assertions
-        assert all(status == 201 for status in results)
-        assert duration < 10  # Should complete within 10 seconds
-        
-        # Calculate throughput
-        throughput = len(results) / duration
-        assert throughput > 10  # At least 10 requests per second
-```
-
-## Test Fixtures and Utilities
-
-### Test Factories
-
-```python
-# tests/fixtures/factories.py
-import factory
-from factory import Faker, LazyFunction, Trait
-from uuid import uuid4
-from datetime import datetime
-
-class UserFactory(factory.Factory):
-    """User factory for testing."""
-    
-    class Meta:
-        model = User
-    
-    id = LazyFunction(uuid4)
-    email = Faker('email')
-    name = Faker('name')
-    created_at = LazyFunction(datetime.utcnow)
-    
-    class Params:
-        admin = Trait(
-            role='admin',
-            email='admin@example.com'
-        )
-
-class MemoryFactory(factory.Factory):
-    """Memory factory for testing."""
-    
-    class Meta:
-        model = Memory
-    
-    id = LazyFunction(uuid4)
-    content = Faker('text', max_nb_chars=500)
-    user_id = LazyFunction(uuid4)
-    tags = factory.List([Faker('word') for _ in range(3)])
-    created_at = LazyFunction(datetime.utcnow)
-    updated_at = LazyFunction(datetime.utcnow)
-    version = 1
-    
-    @factory.post_generation
-    def embedding(obj, create, extracted, **kwargs):
-        if create and not extracted:
-            # Generate mock embedding
-            obj.embedding = [0.1] * 1536
-```
-
-### Mock Services
-
-```python
-# tests/fixtures/mocks.py
-from typing import List, Optional, Dict, Any
-from uuid import UUID
-from src.domain.models.memory import Memory
-
-class MockMemoryRepository:
-    """Mock memory repository for testing."""
-    
-    def __init__(self):
-        self._memories: Dict[UUID, Memory] = {}
-    
-    async def save(self, memory: Memory) -> Memory:
-        self._memories[memory.id] = memory
-        return memory
-    
-    async def find_by_id(self, memory_id: UUID) -> Optional[Memory]:
-        return self._memories.get(memory_id)
-    
-    async def find_by_user_id(
-        self,
-        user_id: UUID,
-        limit: int = 10,
-        offset: int = 0
-    ) -> List[Memory]:
-        user_memories = [
-            m for m in self._memories.values()
-            if m.user_id == user_id
-        ]
-        return user_memories[offset:offset + limit]
-
-class MockCache:
-    """Mock cache for testing."""
-    
-    def __init__(self):
-        self._cache: Dict[str, Any] = {}
-    
-    async def get(self, key: str) -> Optional[Any]:
-        return self._cache.get(key)
-    
-    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
-        self._cache[key] = value
-    
-    async def delete(self, key: str) -> None:
-        self._cache.pop(key, None)
+# Security
+SECRET_KEY=test-secret-key-for-jwt-tokens
 ```
 
 ### Pytest Configuration
 
-```python
-# tests/conftest.py
-import pytest
-import asyncio
-from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from testcontainers.postgres import PostgresContainer
-from testcontainers.redis import RedisContainer
-from testcontainers.rabbitmq import RabbitMQContainer
+`pytest.ini`:
+```ini
+[tool:pytest]
+minversion = 6.0
+addopts = 
+    -ra 
+    -q 
+    --strict-markers
+    --ignore=tests/manual
+    --ignore=tests/performance
+    --tb=short
 
-# Configure async tests
-pytest_plugins = ('pytest_asyncio',)
+testpaths = tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create event loop for async tests."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-@pytest.fixture(scope="session")
-async def postgres_container():
-    """Start PostgreSQL container for tests."""
-    with PostgresContainer("ankane/pgvector:v0.5.1-pg16") as postgres:
-        yield postgres
-
-@pytest.fixture(scope="session")
-async def redis_container():
-    """Start Redis container for tests."""
-    with RedisContainer("redis:7-alpine") as redis:
-        yield redis
-
-@pytest.fixture
-async def db_session(postgres_container) -> AsyncGenerator[AsyncSession, None]:
-    """Create database session for tests."""
-    engine = create_async_engine(
-        postgres_container.get_connection_url(),
-        echo=False
-    )
+markers =
+    slow: marks tests as slow (deselect with '-m "not slow"')
+    integration: marks tests as integration tests
+    unit: marks tests as unit tests
+    security: marks tests as security-related
     
-    async with engine.begin() as conn:
-        # Create tables
-        await conn.run_sync(Base.metadata.create_all)
-    
-    async with AsyncSession(engine) as session:
-        yield session
-        await session.rollback()
+asyncio_mode = strict
 
-@pytest.fixture
-def anyio_backend():
-    """Configure anyio backend."""
-    return "asyncio"
-
-# Markers
-def pytest_configure(config):
-    """Configure pytest markers."""
-    config.addinivalue_line(
-        "markers", "unit: Unit tests"
-    )
-    config.addinivalue_line(
-        "markers", "integration: Integration tests"
-    )
-    config.addinivalue_line(
-        "markers", "e2e: End-to-end tests"
-    )
-    config.addinivalue_line(
-        "markers", "benchmark: Performance benchmark tests"
-    )
-    config.addinivalue_line(
-        "markers", "load: Load tests"
-    )
+filterwarnings =
+    ignore::DeprecationWarning
+    ignore::PendingDeprecationWarning
 ```
 
-## Testing Best Practices
+## Test Best Practices
 
-### 1. Test Naming
+### 1. Use Proper Fixtures
+
 ```python
-# Good: Descriptive test names
-def test_create_memory_with_valid_content_returns_memory():
-    pass
-
-def test_create_memory_with_empty_content_raises_value_error():
-    pass
-
-# Bad: Vague test names
-def test_memory():
-    pass
-
-def test_error():
-    pass
+@pytest.fixture
+async def test_database():
+    """Create test database connection"""
+    from app.database import Database
+    
+    db = Database(database_url=os.getenv("TEST_DATABASE_URL"))
+    await db.initialize()
+    
+    yield db
+    
+    # Cleanup
+    await db.close()
 ```
 
-### 2. Test Organization
-- One test class per class/module being tested
-- Group related tests together
-- Use descriptive class names
+### 2. Mock External Services
 
-### 3. Test Data
-- Use factories for complex objects
-- Keep test data minimal
-- Avoid hardcoded IDs
+```python
+# Mock OpenAI service
+@pytest.fixture
+def mock_openai():
+    with patch("app.services.openai_service.OpenAI") as mock:
+        mock.return_value.embeddings.create.return_value = Mock(
+            data=[Mock(embedding=[0.1] * 1536)]
+        )
+        yield mock
+```
 
-### 4. Assertions
-- One logical assertion per test
-- Use specific assertions
-- Include helpful error messages
+### 3. Test Async Code Properly
 
-### 5. Mocking
-- Mock at boundaries
-- Don't mock what you don't own
-- Verify interactions when appropriate
+```python
+@pytest.mark.asyncio
+async def test_async_operation():
+    """Test async operations"""
+    result = await some_async_function()
+    assert result is not None
+```
+
+### 4. Validate Error Handling
+
+```python
+def test_validation_error():
+    """Test validation error handling"""
+    with pytest.raises(ValidationException) as exc_info:
+        validate_input("")
+    
+    assert "required" in str(exc_info.value).lower()
+```
+
+## Coverage Requirements
+
+### Target Coverage
+- Overall: >80%
+- Core services: >90%
+- API routes: >85%
+- Utilities: >70%
+
+### Generate Coverage Reports
+
+```bash
+# HTML report
+.venv/Scripts/python.exe -m pytest --cov=app --cov-report=html
+
+# Terminal report with missing lines
+.venv/Scripts/python.exe -m pytest --cov=app --cov-report=term-missing
+
+# XML report for CI
+.venv/Scripts/python.exe -m pytest --cov=app --cov-report=xml
+```
+
+## Debugging Tests
+
+### Verbose Output
+```bash
+# Show print statements
+.venv/Scripts/python.exe -m pytest -s tests/
+
+# Verbose test names
+.venv/Scripts/python.exe -m pytest -v tests/
+
+# Extra verbose with setup/teardown
+.venv/Scripts/python.exe -m pytest -vv tests/
+```
+
+### Debug on Failure
+```bash
+# Drop into debugger on failure
+.venv/Scripts/python.exe -m pytest --pdb tests/
+
+# Stop on first failure
+.venv/Scripts/python.exe -m pytest -x tests/
+
+# Show local variables on failure
+.venv/Scripts/python.exe -m pytest -l tests/
+```
 
 ## CI/CD Integration
 
-### GitHub Actions Test Pipeline
+### GitHub Actions
 
 ```yaml
 name: Tests
-
 on: [push, pull_request]
 
 jobs:
@@ -975,130 +387,79 @@ jobs:
     
     services:
       postgres:
-        image: ankane/pgvector:v0.5.1-pg16
+        image: postgres:16
         env:
-          POSTGRES_PASSWORD: testpass
+          POSTGRES_PASSWORD: postgres
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      
-      - name: Install dependencies
-        run: |
-          pip install -r requirements-v3.txt
-          pip install -r requirements-dev.txt
-      
-      - name: Run tests
-        run: |
-          pytest tests/unit/ -v --cov=src
-          pytest tests/integration/ -v --cov=src --cov-append
-          pytest tests/e2e/ -v --cov=src --cov-append
-      
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r config/requirements.txt
+        pip install -r config/requirements-dev.txt
+    
+    - name: Run tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost/test_db
+        API_TOKENS: test-token
+      run: |
+        python -m pytest tests/ --cov=app --cov-report=xml
 ```
 
-## Test Debugging
+## Common Issues and Solutions
 
-### Running Specific Tests
-
-```bash
-# Run single test
-pytest tests/unit/domain/models/test_memory.py::TestMemory::test_create_memory_success
-
-# Run tests matching pattern
-pytest -k "test_create"
-
-# Run tests with specific marker
-pytest -m unit
-
-# Run with debugging
-pytest --pdb
-
-# Run with verbose output
-pytest -vv
-
-# Run with print statements
-pytest -s
-```
-
-### Debugging Failed Tests
-
+### 1. Import Errors
 ```python
-# Use pytest fixtures for debugging
+# Problem: ModuleNotFoundError
+# Solution: Ensure PYTHONPATH includes project root
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+```
+
+### 2. Async Test Warnings
+```python
+# Problem: RuntimeWarning: coroutine was never awaited
+# Solution: Use @pytest.mark.asyncio decorator
+@pytest.mark.asyncio
+async def test_async_function():
+    result = await async_function()
+```
+
+### 3. Database Connection Issues
+```python
+# Problem: Database connection fails in tests
+# Solution: Use test database or mock
 @pytest.fixture
-def debug_info(request):
-    """Print debug information."""
-    print(f"\nTest: {request.node.name}")
-    print(f"Module: {request.module.__name__}")
-    yield
-    print(f"Test completed")
-
-# Use in test
-def test_something(debug_info):
-    # Test code
-    pass
+def use_test_db(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "postgresql://test@localhost/test_db")
 ```
 
-## Coverage Requirements
+## Test Maintenance
 
-### Minimum Coverage
-- Overall: 80%
-- Domain layer: 95%
-- Application layer: 90%
-- Infrastructure layer: 80%
-- API layer: 85%
+### Regular Tasks
+1. **Weekly**: Review and fix failing tests
+2. **Monthly**: Update test data and fixtures
+3. **Quarterly**: Review coverage and add missing tests
+4. **Yearly**: Refactor test structure and remove obsolete tests
 
-### Coverage Report
-```bash
-# Generate HTML coverage report
-pytest --cov=src --cov-report=html
+### Adding New Tests
+1. Write test first (TDD approach when appropriate)
+2. Ensure test fails initially
+3. Implement feature
+4. Verify test passes
+5. Add to appropriate test suite
+6. Update documentation
 
-# View coverage in terminal
-pytest --cov=src --cov-report=term-missing
+---
 
-# Fail if coverage below threshold
-pytest --cov=src --cov-fail-under=80
-```
-
-## Performance Monitoring
-
-### Test Performance
-```bash
-# Run with test durations
-pytest --durations=10
-
-# Profile slow tests
-pytest --profile
-
-# Run benchmarks
-pytest tests/performance/benchmarks/ --benchmark-only
-```
-
-### Memory Testing
-```python
-# Use memory profiler
-@profile
-def test_memory_usage():
-    # Test code
-    pass
-
-# Run with memory profiler
-python -m memory_profiler test_file.py
-```
-
-## Resources
-
-- [Pytest Documentation](https://docs.pytest.org/)
-- [Testing Best Practices](https://testdriven.io/blog/testing-best-practices/)
-- [Property-Based Testing](https://hypothesis.readthedocs.io/)
-- [Load Testing with Locust](https://docs.locust.io/)
+This testing guide provides a practical approach to testing Second Brain v3.0.0. Always use the virtual environment and follow the established patterns for consistent, maintainable tests.

@@ -1,5 +1,17 @@
 # Claude Memory - Second Brain Project
 
+## 🔥 CONTEXT HOTSWAP - READ THESE FILES FIRST
+1. **TODO.md** - Current tasks, blockers, project state (PRIMARY CONTEXT)
+2. **DEVELOPMENT_CONTEXT.md** - Session history, decisions, user prefs
+3. **This file (CLAUDE.md)** - Core principles, patterns, architecture
+
+## 🎯 CURRENT STATE (as of last session)
+- **Enterprise Ready**: 7/10 (working toward 10/10)
+- **Blockers**: 25 TODOs, test failures, missing load tests
+- **User Mode**: AUTONOMOUS - no confirmations needed
+- **Active Branch**: main
+- **Next Action**: Check TODO.md for priority tasks
+
 ## 🚨 FOUNDATIONAL DEVELOPMENT PRINCIPLES
 
 ### 🐳 Docker-First Architecture - MANDATORY

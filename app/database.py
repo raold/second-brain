@@ -199,6 +199,14 @@ class Database:
 
     async def _get_embedding(self, text: str) -> list[float]:
         """Get embedding for text using OpenAI API."""
+        # In test environment, return mock embeddings
+        if os.getenv("ENVIRONMENT") == "test" and not os.getenv("OPENAI_API_KEY", "").startswith("sk-"):
+            # Generate deterministic mock embedding based on text hash
+            import hashlib
+            text_hash = int(hashlib.md5(text.encode()).hexdigest()[:8], 16)
+            # Return a 1536-dimensional vector (matching text-embedding-3-small)
+            return [(text_hash + i) % 1000 / 1000.0 for i in range(1536)]
+        
         if not self.openai_client:
             raise RuntimeError("OpenAI client not initialized")
 

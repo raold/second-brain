@@ -1,17 +1,34 @@
 {
   "permissions": {
     "allow": [
-      "Bash(.venv/Scripts/pip.exe install:*)"
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/synthesis -v --tb=no)",
+      "Bash(make test:*)",
+      "Bash(.venv/Scripts/python.exe scripts/test_runner.py:*)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit -v --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_config.py::TestConfig::test_default_config_values -v)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_core_functionality.py::TestAPI::test_store_memory_basic -v)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit -v -k \"test_store_memory or test_search_memory\" --tb=no)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit -v --tb=no -q)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_knowledge_graph_builder.py::TestKnowledgeGraphBuilder::test_build_graph_from_memories -xvs)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_knowledge_graph_builder.py -v --tb=no)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_knowledge_graph_builder.py::TestKnowledgeGraphBuilder::test_extract_entities -xvs)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_reasoning_engine.py::TestReasoningEngine::test_parse_query -xvs)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_security_comprehensive.py::TestInputValidator::test_validate_memory_content -xvs -k \"Text with symbols\")",
+      "Bash(.venv/Scripts/python.exe -m pytest \"tests/unit/test_security_comprehensive.py::TestInputValidator::test_validate_memory_content[Text with symbols !@#$%-True]\" -xvs)",
+      "Bash(.venv/Scripts/python.exe -m pytest \"tests/unit/test_security_comprehensive.py::TestInputValidator::test_sanitize_string[text\\x00with\\x00nulls-textwithNulls]\" -xvs)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_health_service.py -v --tb=no)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_health_service.py::TestHealthService::test_get_system_status -xvs)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_knowledge_graph_builder.py -v --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_knowledge_graph_builder.py -v)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_memory_service.py -v --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_memory_service.py -v --tb=no)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/test_memory_service.py::TestMemoryService::test_add_user_feedback -xvs)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/synthesis/test_knowledge_summarizer.py -v --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/synthesis/test_knowledge_summarizer.py -v --tb=no)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/synthesis/test_knowledge_summarizer.py::TestKnowledgeSummarizer::test_create_summary_success -xvs)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/unit/synthesis/test_knowledge_summarizer.py::TestKnowledgeSummarizer::test_organize_knowledge_domains -xvs)",
+      "Bash(git add:*)"
     ],
     "deny": []
-  },
-  "optimization": {
-    "comment": "Full permissions for autonomous development - no confirmation prompts",
-    "autonomous_mode": true,
-    "auto_commit": true,
-    "auto_push": false
-  },
-  "git": {
-    "github_coauthorship": false
   }
 }

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from app.models.synthesis.repetition_models import (
     RepetitionSettings,
     ForgettingCurve,
-    RepetitionSchedule,
+    ReviewSchedule,
     ReviewStatus
 )
 
@@ -49,7 +49,7 @@ class TestRepetitionModels:
     def test_repetition_schedule_creation(self):
         """Test creating a repetition schedule"""
         next_review = datetime.utcnow() + timedelta(days=3)
-        schedule = RepetitionSchedule(
+        schedule = ReviewSchedule(
             id="sched-456",
             memory_id="mem-123",
             next_review_date=next_review,
@@ -65,7 +65,7 @@ class TestRepetitionModels:
     
     def test_review_status_transitions(self):
         """Test review status transitions"""
-        schedule = RepetitionSchedule(
+        schedule = ReviewSchedule(
             id="sched-789",
             memory_id="mem-456",
             next_review_date=datetime.utcnow(),

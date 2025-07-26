@@ -1,295 +1,424 @@
-# 🧪 Testing Strategy for Second Brain
+# Testing Strategy - Second Brain v3.0.0
 
 ## Overview
 
-This document outlines the comprehensive testing strategy for Second Brain, integrating with the centralized version management system and multi-branch development workflow.
+Second Brain v3.0.0 follows a comprehensive testing strategy aligned with Clean Architecture principles, emphasizing testability, maintainability, and reliability.
 
-## 🏗️ Testing Environments
+## Testing Philosophy
 
-### 1. **Development** (`develop` branch)
-- **Branch**: `develop`
-- **Purpose**: Experimental features and active development
-- **CI/CD**: ✅ GitHub Actions on every push
-- **Commands**:
-  ```bash
-  python scripts/version_manager.py test unit integration
-  ```
+### Core Principles
+1. **Test Pyramid**: More unit tests, fewer integration tests, minimal E2E tests
+2. **Clean Architecture**: Test each layer independently
+3. **TDD When Appropriate**: Write tests first for complex logic
+4. **Fast Feedback**: Quick test execution for rapid development
+5. **Deterministic**: Tests should produce consistent results
 
-### 2. **Local Development**
-- **Branch**: `feature/*`, `develop`
-- **Purpose**: Individual feature development and initial validation
-- **Commands**:
-  ```bash
-  python scripts/version_manager.py test unit
-  python scripts/version_manager.py test integration
-  ```
+## Test Categories
 
-### 3. **Integration Testing** (`testing` branch)
-- **Branch**: `develop` → `testing`
-- **Purpose**: Feature integration and cross-compatibility validation
-- **CI/CD**: ✅ GitHub Actions on merges from develop
-- **Commands**:
-  ```bash
-  python scripts/version_manager.py test all
-  ```
+### 1. Unit Tests (70%)
+**Location**: `tests/unit/`  
+**Purpose**: Test individual components in isolation  
+**Speed**: Fast (<100ms per test)  
+**Dependencies**: Mocked
 
-### 4. **PR Testing** (testing → main)
-- **Branch**: `testing` → `main` (Pull Request)
-- **Purpose**: Code review and comprehensive validation
-- **Automated**: GitHub Actions CI/CD pipeline
-- **Manual**: Code review + testing checklist
+```python
+# Example: Domain model test
+class TestMemory:
+    def test_memory_creation(self):
+        memory = Memory(
+            content="Test content",
+            memory_type=MemoryType.SEMANTIC
+        )
+        assert memory.content == "Test content"
+        assert memory.importance_score == 0.5  # default
+```
 
-### 5. **Staging/Pre-Production**
-- **Branch**: `main`
-- **Purpose**: Final validation before production release
-- **Commands**:
-  ```bash
-  python scripts/version_manager.py validate X.Y.Z
-  python scripts/test_production_readiness.py
-  ```
+### 2. Integration Tests (20%)
+**Location**: `tests/integration/`  
+**Purpose**: Test component interactions  
+**Speed**: Medium (100ms-1s per test)  
+**Dependencies**: Real or test doubles
 
-### 6. **Production**
-- **Branch**: `v*.*.*` tags
-- **Purpose**: Live system monitoring and health checks
-- **Monitoring**: Continuous health endpoint monitoring
+```python
+# Example: API endpoint test
+def test_create_memory_endpoint(client, auth_headers):
+    response = client.post(
+        "/memories",
+        json={"content": "Test", "memory_type": "semantic"},
+        params=auth_headers
+    )
+    assert response.status_code == 200
+```
 
-## 🧪 Test Types & Structure
+### 3. E2E Tests (10%)
+**Location**: `tests/e2e/`  
+**Purpose**: Test complete user workflows  
+**Speed**: Slow (>1s per test)  
+**Dependencies**: Full system
 
-### Unit Tests (`tests/unit/`)
-- **Purpose**: Test individual functions and classes
-- **Speed**: Fast (< 1 second per test)
-- **Coverage**: High code coverage target (>90%)
-- **Command**: `python scripts/version_manager.py test unit`
+## Testing Layers
 
-### Integration Tests (`tests/integration/`)
-- **Purpose**: Test API endpoints and database interactions
-- **Speed**: Medium (1-10 seconds per test)
-- **Coverage**: Critical user workflows
-- **Command**: `python scripts/version_manager.py test integration`
+### Domain Layer
+- **What to test**: Business logic, domain models, value objects
+- **What not to test**: Framework-specific code
+- **Example tests**:
+  - Memory importance calculation
+  - Session state transitions
+  - Business rule validation
 
-### Performance Tests (`tests/performance/`)
-- **Purpose**: Benchmark response times and throughput
-- **Speed**: Slow (10+ seconds per test)
-- **Coverage**: Critical performance paths
-- **Command**: `python scripts/version_manager.py test performance`
+### Application Layer
+- **What to test**: Use cases, service orchestration
+- **What not to test**: Direct database queries
+- **Example tests**:
+  - Memory storage workflow
+  - Session management logic
+  - Search and retrieval operations
 
-### Migration Tests (`tests/migration/`)
-- **Purpose**: Validate database schema changes
-- **Speed**: Medium (depends on migration complexity)
-- **Coverage**: All database migrations
-- **Command**: `python scripts/version_manager.py test migration`
+### Infrastructure Layer
+- **What to test**: External integrations, database operations
+- **What not to test**: Third-party library internals
+- **Example tests**:
+  - Database connection and queries
+  - OpenAI API integration
+  - Redis caching
 
-## 🔄 Testing Workflows
+### Presentation Layer
+- **What to test**: Request/response handling, validation
+- **What not to test**: FastAPI framework internals
+- **Example tests**:
+  - Route parameter validation
+  - Response serialization
+  - Error response formatting
 
-### Develop Branch Workflow (New!)
+## Test Organization
+
+```
+tests/
+├── unit/
+│   ├── domain/           # Pure business logic
+│   ├── application/      # Use cases and services
+│   ├── infrastructure/   # External integrations
+│   └── presentation/     # API routes
+├── integration/
+│   ├── api/             # API endpoint tests
+│   ├── database/        # Database integration
+│   └── services/        # Service integration
+├── e2e/
+│   └── workflows/       # Complete user scenarios
+├── fixtures/            # Test data
+├── utils/              # Test helpers
+└── conftest.py         # Shared fixtures
+```
+
+## Testing Patterns
+
+### 1. Arrange-Act-Assert (AAA)
+```python
+def test_memory_update():
+    # Arrange
+    memory = Memory(content="Original")
+    
+    # Act
+    memory.update_content("Updated")
+    
+    # Assert
+    assert memory.content == "Updated"
+    assert memory.updated_at is not None
+```
+
+### 2. Given-When-Then (BDD)
+```python
+def test_session_pause():
+    # Given an active session
+    session = Session(state=SessionState.ACTIVE)
+    
+    # When the session is paused
+    session.pause()
+    
+    # Then the state should be paused
+    assert session.state == SessionState.PAUSED
+```
+
+### 3. Test Builders
+```python
+class MemoryBuilder:
+    def __init__(self):
+        self._memory = Memory()
+    
+    def with_content(self, content):
+        self._memory.content = content
+        return self
+    
+    def with_type(self, memory_type):
+        self._memory.memory_type = memory_type
+        return self
+    
+    def build(self):
+        return self._memory
+
+# Usage
+memory = MemoryBuilder()\
+    .with_content("Test")\
+    .with_type(MemoryType.EPISODIC)\
+    .build()
+```
+
+## Mocking Strategies
+
+### 1. Interface Mocking
+```python
+class MockDatabase:
+    async def store_memory(self, content, metadata):
+        return "mock-id-123"
+    
+    async def get_memory(self, memory_id):
+        return {"id": memory_id, "content": "Mock content"}
+```
+
+### 2. Dependency Injection
+```python
+@pytest.fixture
+def memory_service(mock_database):
+    return MemoryService(database=mock_database)
+
+def test_store_memory(memory_service):
+    result = await memory_service.store("Test")
+    assert result == "mock-id-123"
+```
+
+### 3. Monkey Patching
+```python
+def test_with_fixed_time(monkeypatch):
+    fixed_time = datetime(2025, 1, 1)
+    monkeypatch.setattr(
+        "app.services.datetime",
+        lambda: fixed_time
+    )
+```
+
+## Test Data Management
+
+### Fixtures
+```python
+@pytest.fixture
+def sample_memories():
+    return [
+        Memory(content="Memory 1", memory_type=MemoryType.SEMANTIC),
+        Memory(content="Memory 2", memory_type=MemoryType.EPISODIC),
+        Memory(content="Memory 3", memory_type=MemoryType.PROCEDURAL)
+    ]
+```
+
+### Factories
+```python
+class MemoryFactory:
+    @staticmethod
+    def create_semantic(content="Default content"):
+        return Memory(
+            content=content,
+            memory_type=MemoryType.SEMANTIC,
+            importance_score=0.7
+        )
+```
+
+### Test Database
+```python
+@pytest.fixture
+async def test_db():
+    """Create isolated test database"""
+    db = Database(TEST_DATABASE_URL)
+    await db.initialize()
+    
+    yield db
+    
+    # Cleanup
+    await db.execute("TRUNCATE memories CASCADE")
+    await db.close()
+```
+
+## Performance Testing
+
+### Benchmarking
+```python
+@pytest.mark.benchmark
+def test_search_performance(benchmark):
+    result = benchmark(
+        search_memories,
+        query="test query",
+        limit=100
+    )
+    assert len(result) <= 100
+```
+
+### Load Testing
+```python
+@pytest.mark.slow
+async def test_concurrent_requests():
+    tasks = [
+        create_memory(f"Memory {i}")
+        for i in range(100)
+    ]
+    results = await asyncio.gather(*tasks)
+    assert all(r.status_code == 200 for r in results)
+```
+
+## Security Testing
+
+### Authentication Tests
+```python
+def test_unauthorized_access(client):
+    response = client.get("/memories")
+    assert response.status_code == 401
+    assert response.json()["error_code"] == "UNAUTHORIZED"
+```
+
+### Input Validation
+```python
+def test_sql_injection_protection(client, auth_headers):
+    malicious_input = "'; DROP TABLE memories; --"
+    response = client.post(
+        "/memories/search",
+        json={"query": malicious_input},
+        params=auth_headers
+    )
+    assert response.status_code == 400
+    assert "dangerous" in response.json()["message"]
+```
+
+## Test Environments
+
+### Local Development
 ```bash
-# 1. Start feature development
-git checkout develop
-git pull origin develop
-# Make changes...
+# Unit tests only (fast feedback)
+.venv/Scripts/python.exe -m pytest tests/unit/ -v
 
-# 2. Run fast tests during development
-python scripts/version_manager.py test unit
-
-# 3. Before committing, validate integration
-python scripts/version_manager.py test unit integration
-
-# 4. Commit to develop (CI will run automatically)
-git commit -m "feat: experimental feature"
-git push origin develop
-
-# 5. When ready for integration, merge to testing
-git checkout testing
-git pull origin testing
-git merge develop
-python scripts/version_manager.py test all  # Full validation
-git push origin testing
+# Full test suite
+.venv/Scripts/python.exe -m pytest tests/ -v
 ```
 
-### Testing Branch Workflow (Integration)
+### CI/CD Pipeline
+```yaml
+test:
+  script:
+    - pytest tests/unit/ --cov=app
+    - pytest tests/integration/
+    - pytest tests/e2e/ --slow
+```
+
+### Pre-Production
 ```bash
-# 1. Work on integrated features
-git checkout testing
-# Merge from develop or work directly...
+# Smoke tests
+pytest tests/smoke/ --env=staging
 
-# 2. Run comprehensive tests
-python scripts/version_manager.py test all
-
-# 3. Before PR to main
-python scripts/version_manager.py validate X.Y.Z
-
-# 4. Create PR with full testing checklist
+# Performance tests
+pytest tests/performance/ --benchmark
 ```
 
-### Traditional Development Workflow (Direct Testing)
+## Coverage Goals
+
+### Minimum Coverage Requirements
+- **Overall**: 80%
+- **Domain Layer**: 95%
+- **Application Layer**: 90%
+- **Infrastructure Layer**: 80%
+- **Presentation Layer**: 85%
+
+### Coverage Reports
 ```bash
-# 1. Work on feature
-git checkout testing
-# Make changes...
+# Generate coverage report
+pytest --cov=app --cov-report=html
 
-# 2. Run relevant tests during development
-python scripts/version_manager.py test unit
-
-# 3. Before committing, run all tests
-python scripts/version_manager.py test all
-
-# 4. Commit and push
-git commit -m "feat: new feature"
-git push origin testing
+# Check coverage thresholds
+pytest --cov=app --cov-fail-under=80
 ```
 
-### PR Testing Workflow
-When `pr_testing: true` in version configuration:
+## Continuous Testing
 
-1. **Automated GitHub Actions** runs full test suite
-2. **Manual Review Checklist**:
-   - ✅ Unit tests pass
-   - ✅ Integration tests pass  
-   - ✅ Performance tests pass
-   - ✅ Migration tests pass
-   - ✅ Code review completed
-   - ✅ Documentation updated
-   - ✅ Security considerations reviewed
-   - ✅ Breaking changes documented
-
-### Release Validation Workflow
-```bash
-# 1. Validate all pre-release requirements
-python scripts/version_manager.py validate 2.4.2
-
-# 2. Prepare release
-python scripts/version_manager.py prepare 2.4.2
-
-# 3. Follow generated git workflow commands
-
-# 4. Test production readiness
-python scripts/test_production_readiness.py http://localhost:8000
-
-# 5. Deploy to production
-docker-compose up -d --build
-
-# 6. Verify production deployment
-curl http://localhost:8000/health
-python scripts/test_production_readiness.py http://your-domain.com
+### Pre-commit Hooks
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: unit-tests
+        name: Run unit tests
+        entry: pytest tests/unit/ -x
+        language: system
+        pass_filenames: false
 ```
 
-## 📊 Testing Standards
+### CI/CD Integration
+```yaml
+name: Test Suite
+on: [push, pull_request]
 
-### Coverage Requirements
-- **Unit Tests**: >90% code coverage
-- **Integration Tests**: All API endpoints covered
-- **Performance Tests**: Critical paths benchmarked
-- **Migration Tests**: All migrations validated
-
-### Performance Thresholds
-- **Health Endpoint**: < 100ms response time
-- **API Endpoints**: < 500ms average response time
-- **Database Queries**: < 200ms for simple queries
-- **Memory Operations**: < 1s for create/read operations
-
-### Quality Gates
-All releases must pass:
-1. ✅ All unit tests
-2. ✅ All integration tests
-3. ✅ Performance benchmarks within thresholds
-4. ✅ All migration tests
-5. ✅ Security scans clean
-6. ✅ Production readiness validation
-
-## 🛠️ Testing Tools & Configuration
-
-### pytest Configuration (`pytest.ini`)
-```ini
-[tool:pytest]
-addopts = 
-    --cov=app 
-    --cov-report=term-missing 
-    --cov-report=html
-    --cov-report=xml
-    --strict-markers
-    --verbose
-
-markers =
-    unit: Unit tests
-    integration: Integration tests
-    performance: Performance tests
-    slow: Slow-running tests
+jobs:
+  test:
+    strategy:
+      matrix:
+        test-type: [unit, integration, e2e]
+    
+    steps:
+      - name: Run ${{ matrix.test-type }} tests
+        run: pytest tests/${{ matrix.test-type }}/
 ```
 
-### GitHub Actions Integration
-- Automatic test execution on PR creation
-- Coverage reporting
-- Performance regression detection
-- Security scanning integration
+## Test Maintenance
 
-## 🚀 Production Readiness Testing
+### Regular Reviews
+1. **Weekly**: Fix flaky tests
+2. **Monthly**: Update test data
+3. **Quarterly**: Refactor test structure
+4. **Yearly**: Audit test coverage
 
-### Health Checks
-- **Endpoint**: `/health`
-- **Frequency**: Every 30 seconds
-- **Timeout**: 10 seconds
-- **Expected**: 200 OK response
+### Test Quality Metrics
+- **Execution Time**: Track and optimize slow tests
+- **Flakiness**: Monitor and fix intermittent failures
+- **Coverage Trends**: Ensure coverage doesn't decrease
+- **Maintenance Cost**: Time spent fixing vs writing tests
 
-### System Validation
-```bash
-# Run comprehensive production readiness tests
-python scripts/test_production_readiness.py
+## Best Practices
 
-# Tests include:
-# - Health endpoint responsiveness
-# - API endpoint functionality  
-# - Database connectivity
-# - Performance baselines
-# - Memory operations
-```
+### Do's
+- ✅ Write tests before fixing bugs
+- ✅ Keep tests simple and focused
+- ✅ Use descriptive test names
+- ✅ Test one thing at a time
+- ✅ Make tests deterministic
+- ✅ Use appropriate test doubles
+- ✅ Clean up test data
 
-### Monitoring & Alerting
-- **Application**: Health endpoint monitoring
-- **Database**: Connection pool monitoring
-- **Performance**: Response time tracking
-- **Errors**: Error rate and type monitoring
+### Don'ts
+- ❌ Test implementation details
+- ❌ Write brittle tests
+- ❌ Ignore flaky tests
+- ❌ Test third-party code
+- ❌ Use production data
+- ❌ Share state between tests
+- ❌ Make tests dependent on order
 
-## 📝 Test Data Management
+## Testing Checklist
 
-### Test Fixtures
-- Located in `tests/fixtures/`
-- Realistic but anonymized data
-- Consistent across test runs
+### Before Committing
+- [ ] All unit tests pass
+- [ ] New code has tests
+- [ ] Coverage hasn't decreased
+- [ ] No hardcoded test data
+- [ ] Tests are deterministic
 
-### Database Testing
-- Isolated test database
-- Automatic cleanup after tests
-- Migration testing on separate schemas
+### Before Merging
+- [ ] Integration tests pass
+- [ ] No flaky tests introduced
+- [ ] Performance benchmarks met
+- [ ] Security tests pass
+- [ ] Documentation updated
 
-## 🔧 Configuration
-
-### Environment Variables
-```bash
-# Testing configuration
-TESTING=true
-TEST_DATABASE_URL=postgresql://test_user:test_pass@localhost/test_db
-LOG_LEVEL=DEBUG
-```
-
-### Test-Specific Settings
-- Reduced timeouts for faster tests
-- In-memory databases where appropriate
-- Mock external services
-
-## 📚 Best Practices
-
-### Writing Tests
-1. **Arrange-Act-Assert** pattern
-2. **Descriptive test names** that explain what's being tested
-3. **Independent tests** that don't rely on order
-4. **Clean fixtures** for consistent state
-
-### Test Maintenance
-1. **Regular test review** and cleanup
-2. **Performance test baseline updates**
-3. **Test data refresh** to match production patterns
-4. **Documentation updates** with code changes
+### Before Releasing
+- [ ] E2E tests pass
+- [ ] Smoke tests on staging
+- [ ] Performance regression tests
+- [ ] Security audit complete
+- [ ] Test data cleaned up
 
 ---
 
-This comprehensive testing strategy ensures high-quality releases while maintaining development velocity through the centralized version management system.
+This testing strategy ensures Second Brain v3.0.0 maintains high quality through comprehensive, efficient testing practices aligned with Clean Architecture principles.

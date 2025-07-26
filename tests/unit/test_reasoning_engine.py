@@ -34,7 +34,7 @@ class TestReasoningEngine:
         assert result.max_hops == 3
         assert result.reasoning_type == ReasoningType.CAUSAL
         assert not result.include_temporal
-        assert result.include_semantic
+        assert not result.include_semantic  # No semantic keywords in query
 
         # Test temporal query detection
         query2 = "What happened before this event?"

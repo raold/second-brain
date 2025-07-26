@@ -15,6 +15,16 @@ class TestHealthService:
     def setup_method(self):
         """Setup test fixtures"""
         self.mock_db = AsyncMock()
+        # Mock get_index_stats to return a proper dict
+        self.mock_db.get_index_stats.return_value = {
+            "total_memories": 100,
+            "memories_with_embeddings": 50,
+            "index_ready": False,
+            "hnsw_index_exists": False,
+            "ivf_index_exists": False,
+            "avg_content_length": 256.5,
+            "recommended_index_threshold": 1000
+        }
         self.health_service = HealthService(self.mock_db)
     
     @pytest.mark.asyncio

@@ -696,10 +696,15 @@ class ServiceFactory:
     
     def __init__(self):
         self.database = None
+        self.security_manager = None
     
     def set_database(self, database):
         """Set database instance for services"""
         self.database = database
+    
+    def set_security_manager(self, security_manager):
+        """Set security manager instance for services"""
+        self.security_manager = security_manager
     
     @staticmethod
     def get_dashboard_service() -> DashboardService:

@@ -197,16 +197,34 @@ class TestSuggestionEngine:
     async def test_analyze_knowledge_state(self, engine):
         """Test knowledge state analysis"""
         # Mock analytics engine responses
-        from app.insights.models import InsightResponse, Insight
+        from app.insights.models import InsightResponse, Insight, InsightType, TimeFrame, UsageStatistics
+        from uuid import uuid4
         mock_insights = InsightResponse(
             insights=[Insight(
-                type="growth",
+                id=uuid4(),
+                type=InsightType.KNOWLEDGE_GROWTH,
                 title="Rapid growth",
                 description="Your knowledge is growing",
-                importance=0.8,
-                data={}
+                confidence=0.8,
+                impact_score=7.5,
+                data={},
+                created_at=datetime.utcnow(),
+                time_frame=TimeFrame.WEEKLY
             )],
-            metadata={}
+            total=1,
+            time_frame=TimeFrame.WEEKLY,
+            generated_at=datetime.utcnow(),
+            statistics=UsageStatistics(
+                time_frame=TimeFrame.WEEKLY,
+                total_memories=100,
+                total_accesses=150,
+                unique_accessed=50,
+                average_importance=0.7,
+                most_accessed_memories=[],
+                access_frequency={"Monday": 20, "Tuesday": 30},
+                peak_usage_times=["14:00", "20:00"],
+                growth_rate=0.15
+            )
         )
         
         # Mock cluster and gap analysis
@@ -549,7 +567,7 @@ class TestSuggestionEngine:
                 title=f"Suggestion {i}",
                 description="Test",
                 action=ActionType.CREATE,
-                priority=0.5 + i * 0.1
+                priority=min(0.5 + i * 0.05, 1.0)  # Ensure priority doesn't exceed 1.0
             )
             for i in range(10)
         ]

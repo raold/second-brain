@@ -130,7 +130,7 @@ def get_memory_service():
     try:
         return _container.get_service("memory_service")
     except ValueError:
-        from app.services.service_factory import MemoryService
+        from app.services.memory_service import MemoryService
         service = MemoryService()
         _container.register_singleton("memory_service", service)
         return service

@@ -351,6 +351,10 @@ class KnowledgeGraphBuilder:
 
     def _is_likely_entity(self, phrase: str) -> bool:
         """Check if a phrase is likely an entity"""
+        # Handle empty strings
+        if not phrase or not phrase.strip():
+            return False
+            
         # Simple heuristics
         words = phrase.lower().split()
 

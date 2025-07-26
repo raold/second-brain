@@ -76,3 +76,7 @@ pytest-trace-config.log
 # Session and dashboard runtime data
 session_storage/
 dashboard_data/
+
+# Claude session context (local only)
+DEVELOPMENT_CONTEXT.md
+.claude/settings.local.json

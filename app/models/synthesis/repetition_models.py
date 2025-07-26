@@ -25,6 +25,7 @@ class ReviewStatus(str, Enum):
     """Status of a memory review."""
 
     PENDING = "pending"
+    SCHEDULED = "scheduled"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     SKIPPED = "skipped"
@@ -46,6 +47,12 @@ class RepetitionSettings(BaseModel):
     initial_interval: int = Field(default=1, gt=0)
     easy_multiplier: float = Field(default=2.5, gt=1)
     hard_multiplier: float = Field(default=0.5, gt=0, lt=1)
+    
+    # Additional fields expected by tests
+    interval_days: List[int] = Field(default_factory=lambda: [1, 3, 7, 14, 30])
+    retention_goal: float = Field(default=0.9, ge=0.0, le=1.0)
+    difficulty_modifier: float = Field(default=1.0, gt=0)
+    enable_notifications: bool = Field(default=True)
 
 
 class ForgettingCurve(BaseModel):
@@ -54,6 +61,13 @@ class ForgettingCurve(BaseModel):
     retention_rates: List[float] = Field(default_factory=list, description="Retention rates at each day")
     algorithm: Optional[RepetitionAlgorithm] = Field(None, description="Algorithm used")
     sample_size: Optional[int] = Field(None, description="Number of samples")
+    
+    # Additional fields expected by tests
+    memory_id: Optional[str] = Field(None, description="Memory ID")
+    initial_strength: float = Field(1.0, ge=0.0, le=1.0, description="Initial memory strength")
+    decay_rate: float = Field(0.5, gt=0.0, le=1.0, description="Decay rate")
+    time_constant: float = Field(7.0, gt=0, description="Time constant in days")
+    last_review: Optional[datetime] = Field(None, description="Last review date")
     
     @field_validator('retention_rates')
     def validate_same_length(cls, v, info):
@@ -67,9 +81,12 @@ class ForgettingCurve(BaseModel):
         if day in self.days:
             idx = self.days.index(day)
             return self.retention_rates[idx]
-        # Interpolate or extrapolate
+        # Use forgetting curve formula with new fields
         import math
-        if self.retention_rates:
+        if self.last_review and self.time_constant > 0:
+            # Use Ebbinghaus forgetting curve: R = e^(-t/s) where t is time, s is strength
+            return self.initial_strength * math.exp(-day * self.decay_rate / self.time_constant)
+        elif self.retention_rates:
             return self.retention_rates[0] * math.exp(-day / 30)
         return 0.9 * math.exp(-day / 30)
 
@@ -139,30 +156,34 @@ class MemoryStrength(BaseModel):
 
 class ReviewSchedule(BaseModel):
     """Schedule for memory reviews."""
-
+    
+    # Primary fields expected by tests
+    id: Optional[str] = Field(None, description="Schedule ID")
     memory_id: str = Field(..., description="Memory ID")
-    scheduled_date: datetime = Field(..., description="Scheduled review date")
-
-    # Scheduling metadata
+    next_review_date: datetime = Field(..., description="Next review date")
+    review_count: int = Field(0, description="Number of reviews completed")
+    status: ReviewStatus = Field(ReviewStatus.SCHEDULED, description="Review status")
+    
+    # Original fields for backward compatibility
+    scheduled_date: Optional[datetime] = Field(None, description="Scheduled review date")
     interval_days: Optional[int] = Field(None, description="Days until review")
     priority_score: float = Field(1.0, description="Review priority (higher = more important)")
     overdue_days: int = Field(0, description="Days overdue (negative if not due yet)")
-
-    # Review window
     earliest_date: Optional[datetime] = Field(None, description="Earliest review date")
     latest_date: Optional[datetime] = Field(None, description="Latest review date")
     optimal_time: Optional[str] = Field(None, description="Optimal time of day for review")
-
-    # Context
-    algorithm: RepetitionAlgorithm = Field(..., description="Algorithm used")
+    algorithm: Optional[RepetitionAlgorithm] = Field(None, description="Algorithm used")
     current_strength: Optional[MemoryStrength] = Field(None, description="Current memory strength")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     @field_validator('overdue_days', mode='before')
     def calculate_overdue(cls, v, info):
         """Calculate overdue days."""
-        if info.data.get('scheduled_date'):
-            days_diff = (datetime.utcnow() - values['scheduled_date']).days
+        if info.data.get('next_review_date'):
+            days_diff = (datetime.utcnow() - info.data['next_review_date']).days
+            return max(0, days_diff)
+        elif info.data.get('scheduled_date'):
+            days_diff = (datetime.utcnow() - info.data['scheduled_date']).days
             return max(0, days_diff)
         return v
 

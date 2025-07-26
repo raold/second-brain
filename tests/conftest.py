@@ -12,7 +12,7 @@ from httpx import AsyncClient
 
 # Force test environment before any imports
 os.environ["ENVIRONMENT"] = "test"
-os.environ["USE_MOCK_DATABASE"] = "true"
+os.environ["USE_MOCK_DATABASE"] = "false"  # Mock database was removed
 os.environ["SECURITY_LEVEL"] = "development"
 os.environ["API_TOKENS"] = "test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba"
 # Use real OpenAI key if available (from GitHub secrets), otherwise use mock
@@ -20,11 +20,11 @@ if not os.environ.get("OPENAI_API_KEY"):
     os.environ["OPENAI_API_KEY"] = "test-key-mock"
 os.environ["DEBUG"] = "false"
 os.environ["LOG_LEVEL"] = "WARNING"
-os.environ["POSTGRES_USER"] = "test"
-os.environ["POSTGRES_PASSWORD"] = "test"
+os.environ["POSTGRES_USER"] = "secondbrain"
+os.environ["POSTGRES_PASSWORD"] = "changeme"
 os.environ["POSTGRES_HOST"] = "localhost"
 os.environ["POSTGRES_PORT"] = "5432"
-os.environ["POSTGRES_DB"] = "test"
+os.environ["POSTGRES_DB"] = "secondbrain"
 
 # Add project root to path
 project_root = Path(__file__).parent.parent

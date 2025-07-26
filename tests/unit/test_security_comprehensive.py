@@ -245,7 +245,7 @@ class TestInputValidator:
     @pytest.mark.parametrize("input_text,expected", [
         ("normal text", "normal text"),
         ("  extra  spaces  ", "extra spaces"),
-        ("text\x00with\x00nulls", "textwithNulls"),
+        ("text\x00with\x00nulls", "textwithnulls"),
         ("text\nwith\nnewlines", "text\nwith\nnewlines"),
         ("text\twith\ttabs", "text\twith\ttabs"),
         ("\x01\x02control\x03chars\x04", "controlchars"),

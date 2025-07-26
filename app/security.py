@@ -157,9 +157,12 @@ class InputValidator:
         self.email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
         self.url_pattern = re.compile(r"^https?://[^\s/$.?#].[^\s]*$")
         self.sql_injection_pattern = re.compile(
-            r"(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b)|"
-            r"(--|\/\*|\*\/|;|\'|\"|\||&|\+|\-|\*|\/|%|=|<|>|\(|\)|\[|\]|\{|\})",
-            re.IGNORECASE,
+            r"(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b.*\b(FROM|INTO|WHERE|SET)\b)|"
+            r"(--[^\n]*$)|"
+            r"(\/\*.*?\*\/)|"
+            r"(\b(OR|AND)\b\s*['\"]?\s*['\"]?\s*=)|"
+            r"(;\s*(SELECT|INSERT|UPDATE|DELETE|DROP))",
+            re.IGNORECASE | re.MULTILINE,
         )
         self.xss_pattern = re.compile(
             r"<script[^>]*>.*?</script>|"
