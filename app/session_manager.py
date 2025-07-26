@@ -187,22 +187,8 @@ class SessionManager:
             with gzip.open(session_file, "rt") as f:
                 session_data = json.load(f)
 
-            # Reconstruct session object
-            # Convert project_momentum dict back to ProjectMomentum object
-            if isinstance(session_data.get('project_momentum'), dict):
-                session_data['project_momentum'] = ProjectMomentum(**session_data['project_momentum'])
-            
-            # Convert state string back to enum
-            if isinstance(session_data.get('state'), str):
-                session_data['state'] = SessionState(session_data['state'])
-            
-            # Convert conversation_history dicts back to ConversationMessage objects
-            if 'conversation_history' in session_data:
-                session_data['conversation_history'] = [
-                    ConversationMessage(**msg) if isinstance(msg, dict) else msg 
-                    for msg in session_data['conversation_history']
-                ]
-            
+            # Reconstruct session object with proper deserialization
+            session_data = self._deserialize_session_data(session_data)
             self.current_session = CodingSession(**session_data)
             self.current_session.state = SessionState.ACTIVE
 
@@ -523,13 +509,19 @@ TO RESUME SEAMLESSLY:
             # Update sync hash
             self.current_session.sync_hash = self.generate_sync_hash()
 
-            # Convert to dict for JSON serialization
+            # Convert to dict for JSON serialization with enum handling
             session_dict = asdict(self.current_session)
+            
+            # Convert enum to string value for JSON serialization
+            if isinstance(session_dict.get('state'), SessionState):
+                session_dict['state'] = session_dict['state'].value
+            elif hasattr(session_dict.get('state'), 'value'):
+                session_dict['state'] = session_dict['state'].value
 
             # Save compressed session file
             session_file = self.sessions_dir / f"{self.current_session.session_id}.json.gz"
             with gzip.open(session_file, "wt") as f:
-                json.dump(session_dict, f, indent=2, default=str)
+                json.dump(session_dict, f, indent=2, default=self._json_serializer)
 
             # Save quick resume file (uncompressed for fast access)
             resume_file = self.sessions_dir / "last_session.json"
@@ -541,10 +533,23 @@ TO RESUME SEAMLESSLY:
             }
 
             with open(resume_file, "w") as f:
-                json.dump(resume_data, f, indent=2)
+                json.dump(resume_data, f, indent=2, default=self._json_serializer)
 
         except Exception as e:
             print(f"Error saving session state: {e}")
+    
+    def _json_serializer(self, obj):
+        """Custom JSON serializer for complex objects"""
+        if isinstance(obj, SessionState):
+            return obj.value
+        elif isinstance(obj, ContextType):
+            return obj.value
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
+        elif hasattr(obj, '__dict__'):
+            return obj.__dict__
+        else:
+            return str(obj)
 
     def find_last_active_session(self) -> CodingSession | None:
         """Find the last active session for resumption"""
@@ -565,11 +570,43 @@ TO RESUME SEAMLESSLY:
             with gzip.open(session_file, "rt") as f:
                 session_data = json.load(f)
 
+            # Convert data types before creating CodingSession
+            session_data = self._deserialize_session_data(session_data)
             return CodingSession(**session_data)
 
         except Exception as e:
             print(f"Warning: Could not load last session: {e}")
             return None
+    
+    def _deserialize_session_data(self, session_data: dict) -> dict:
+        """Convert serialized session data back to proper types"""
+        # Convert project_momentum dict back to ProjectMomentum object
+        if isinstance(session_data.get('project_momentum'), dict):
+            session_data['project_momentum'] = ProjectMomentum(**session_data['project_momentum'])
+        
+        # Convert state string back to enum
+        if isinstance(session_data.get('state'), str):
+            try:
+                session_data['state'] = SessionState(session_data['state'])
+            except ValueError:
+                session_data['state'] = SessionState.ACTIVE  # Default fallback
+        
+        # Convert conversation_history dicts back to ConversationMessage objects
+        if 'conversation_history' in session_data and isinstance(session_data['conversation_history'], list):
+            converted_messages = []
+            for msg in session_data['conversation_history']:
+                if isinstance(msg, dict):
+                    try:
+                        converted_messages.append(ConversationMessage(**msg))
+                    except TypeError as e:
+                        print(f"Warning: Could not deserialize conversation message: {e}")
+                        # Skip malformed messages
+                        continue
+                else:
+                    converted_messages.append(msg)
+            session_data['conversation_history'] = converted_messages
+        
+        return session_data
 
     def generate_sync_hash(self) -> str:
         """Generate hash for cross-device sync conflict resolution"""
