@@ -1,0 +1,58 @@
+name: Test OpenAI API Key
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-api-key:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install OpenAI package
+      run: |
+        python -m pip install --upgrade pip
+        pip install openai
+    
+    - name: Test OpenAI API Key
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: |
+        python -c "
+        import os
+        import sys
+        from openai import OpenAI
+        
+        api_key = os.environ.get('OPENAI_API_KEY', '')
+        
+        if not api_key:
+            print('❌ OPENAI_API_KEY is not set in GitHub secrets')
+            sys.exit(1)
+        
+        if api_key.startswith('sk-'):
+            print('✅ OPENAI_API_KEY is set and appears to be valid format')
+            print(f'   Key starts with: {api_key[:7]}...')
+            
+            # Try a simple API call to verify it works
+            try:
+                client = OpenAI(api_key=api_key)
+                # Use a minimal API call to test
+                response = client.models.list()
+                print('✅ API key is valid and working!')
+                print(f'   Available models: {len(list(response))} models found')
+            except Exception as e:
+                print(f'❌ API key validation failed: {e}')
+                sys.exit(1)
+        else:
+            print('❌ OPENAI_API_KEY does not start with sk-')
+            print(f'   Key format: {api_key[:3]}...')
+            sys.exit(1)
+        "

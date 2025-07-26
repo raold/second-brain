@@ -28,5 +28,6 @@ jobs:
         TESTING: true
         USE_MOCK_DATABASE: true
         ENVIRONMENT: test
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         python -m pytest tests/unit -v --tb=short
