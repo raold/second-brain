@@ -102,7 +102,17 @@ class IngestionEngine:
     ):
         self.memory_repository = memory_repository
         self.extraction_pipeline = extraction_pipeline or CoreExtractionPipeline()
-        self.temp_dir = temp_dir or Path("/tmp/secondbrain/ingestion")
+        
+        # Use platform-appropriate temp directory
+        if temp_dir:
+            self.temp_dir = temp_dir
+        else:
+            import tempfile
+            import os
+            # Use environment variable if set (for Docker), otherwise use system temp
+            base_temp = os.environ.get('TEMP_DIR', tempfile.gettempdir())
+            self.temp_dir = Path(base_temp) / "secondbrain" / "ingestion"
+        
         self.temp_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize parsers
@@ -131,6 +141,23 @@ class IngestionEngine:
                     logger.warning(f"Could not load {parser_class.__name__}: {e}")
         except ImportError:
             logger.warning("Additional parsers not available")
+        
+        # Add multimedia parsers
+        try:
+            from app.ingestion.multimedia_parsers import (
+                AudioParser,
+                VideoParser,
+                SubtitleParser,
+            )
+            
+            for parser_class in [AudioParser, VideoParser, SubtitleParser]:
+                try:
+                    self.parsers.append(parser_class())
+                    logger.info(f"Loaded {parser_class.__name__}")
+                except Exception as e:
+                    logger.warning(f"Could not load {parser_class.__name__}: {e}")
+        except ImportError:
+            logger.warning("Multimedia parsers not available")
 
         # File size limits (in bytes)
         self.max_file_size = 100 * 1024 * 1024  # 100MB

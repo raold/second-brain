@@ -1,5 +1,6 @@
-# Multi-stage Dockerfile for Second Brain
-# Optimized for both development and production
+# Multi-modal Dockerfile for Second Brain
+# Includes all dependencies for processing various file types
+# Build with: docker build -f Dockerfile.multimodal -t secondbrain:multimodal .
 
 # Build stage
 FROM python:3.11-slim as builder
@@ -13,18 +14,27 @@ RUN apt-get update && apt-get install -y \
     libxslt1-dev \
     libffi-dev \
     libssl-dev \
+    # Audio/video processing
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libportaudio2 \
+    libportaudiocpp0 \
+    portaudio19-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements files
-COPY config/requirements.txt config/requirements-production.txt ./config/
+# Copy all requirements files
+COPY config/requirements.txt config/requirements-production.txt config/requirements-multimodal.txt ./config/
 
-# Install Python dependencies
+# Install Python dependencies including multi-modal support
 RUN pip install --upgrade pip && \
     pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels \
-    -r config/requirements-production.txt
+    -r config/requirements-production.txt && \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels \
+    -r config/requirements-multimodal.txt
 
 # Runtime stage
 FROM python:3.11-slim
@@ -36,11 +46,21 @@ RUN apt-get update && apt-get install -y \
     # Multi-modal runtime dependencies
     tesseract-ocr \
     tesseract-ocr-eng \
+    tesseract-ocr-fra \
+    tesseract-ocr-deu \
+    tesseract-ocr-spa \
     ffmpeg \
     libsm6 \
     libxext6 \
     libglib2.0-0 \
     libgomp1 \
+    # Audio processing
+    libportaudio2 \
+    flac \
+    # Additional tools
+    poppler-utils \
+    antiword \
+    unrtf \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
@@ -57,16 +77,20 @@ RUN pip install --upgrade pip && \
     pip install --no-cache /wheels/* && \
     rm -rf /wheels
 
+# Download spaCy language model
+RUN python -m spacy download en_core_web_sm
+
 # Copy application code
 COPY --chown=appuser:appuser . .
 
 # Create necessary directories
-RUN mkdir -p /app/data /app/logs /app/temp && \
-    chown -R appuser:appuser /app/data /app/logs /app/temp
+RUN mkdir -p /app/data /app/logs /app/temp /app/models && \
+    chown -R appuser:appuser /app/data /app/logs /app/temp /app/models
 
 # Set environment variables
 ENV TEMP_DIR=/app/temp
 ENV PYTHONUNBUFFERED=1
+ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
 
 # Switch to non-root user
 USER appuser

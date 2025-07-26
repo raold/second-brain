@@ -1,6 +1,15 @@
 """
-Simple FastAPI application for Second Brain.
-Minimal dependencies, direct database access.
+Second Brain API Application Module
+
+This module defines the main FastAPI application for Second Brain.
+It handles:
+- Application lifecycle (startup/shutdown)
+- Security configuration
+- Route registration
+- Middleware setup
+- Error handling
+
+The application is initialized and run from main.py in the project root.
 """
 
 import logging
@@ -39,11 +48,8 @@ from app.routes import (
     dashboard_router as new_dashboard_router,
 )
 from app.routes import (
-    github_router,
     health_router,
     memory_router,
-    migration_router,
-    todo_router,
     visualization_router,
 )
 from app.routes import (
@@ -278,9 +284,6 @@ app.include_router(memory_router)
 app.include_router(health_router)
 app.include_router(new_session_router)
 app.include_router(new_dashboard_router)
-app.include_router(todo_router)
-app.include_router(github_router)
-app.include_router(migration_router)
 app.include_router(visualization_router)
 app.include_router(importance_router)
 app.include_router(relationship_router)
@@ -839,7 +842,4 @@ async def get_version_endpoint():
     }
 
 
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# Application is now run from main.py in the root directory

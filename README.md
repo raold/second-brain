@@ -1,4 +1,4 @@
-# Second Brain v3.0.0 🧠 - **Enterprise-Ready AI Memory System**
+# Second Brain v3.0.0 🧠 - **AI Memory System**
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
@@ -20,18 +20,24 @@ Second Brain v3.0.0 is a complete architectural overhaul designed for production
 - **📦 Message Queue**: RabbitMQ integration for async processing
 - **📊 Observability**: OpenTelemetry tracing, Prometheus metrics, structured logging
 - **💾 Caching Layer**: Redis caching with multiple strategies
-- **📁 Object Storage**: MinIO/S3-compatible attachment handling
-- **🔍 Vector Search**: PostgreSQL with pgvector for embeddings (Qdrant removed)
+- **📁 Multi-Modal Ingestion**: Support for documents, images, audio, and video files
+- **🎯 Batch Classification**: Intelligent categorization with multiple methods
+- **🔍 Vector Search**: PostgreSQL with pgvector for embeddings
+- **🐳 Docker-First**: Cross-platform compatibility (Windows, macOS, Linux)
 - **🧪 Comprehensive Testing**: Unit, integration, and e2e test suites
 
 ## 🏗️ **Architecture Overview**
 
 ```
-src/
-├── domain/           # Core business logic (entities, value objects, domain events)
-├── application/      # Use cases and DTOs
-├── infrastructure/   # External services (database, cache, message queue, storage)
-└── api/             # FastAPI routes and middleware
+app/                 # Main application module
+├── models/          # Pydantic models and domain entities
+├── services/        # Business logic and service layer
+├── routes/          # API route handlers
+├── ingestion/       # Data ingestion and processing
+├── insights/        # Analytics and insights generation
+└── utils/           # Utility functions and helpers
+
+main.py             # Application entry point
 ```
 
 ### **Core Principles**
@@ -88,7 +94,10 @@ docker-compose up -d
 python scripts/test_runner.py --validation
 
 # Start the application
-uvicorn src.main:app --reload
+uvicorn main:app --reload
+
+# Or run directly
+python main.py
 ```
 
 ## 🔧 **Configuration**
@@ -137,6 +146,17 @@ DELETE /api/v1/memories/{id}     # Delete memory
 # Search
 POST   /api/v1/memories/search   # Vector similarity search
 
+# Multi-Modal Ingestion
+POST   /api/v1/ingest/upload     # Upload single file (PDF, audio, video, etc.)
+POST   /api/v1/ingest/batch      # Batch file upload
+GET    /api/v1/ingest/status/{id} # Check ingestion status
+
+# Bulk Operations
+POST   /bulk/import              # Import memories (CSV, JSON, etc.)
+POST   /bulk/export              # Export memories
+POST   /bulk/classify            # Batch classification
+POST   /bulk/deduplicate         # Remove duplicates
+
 # Sessions
 POST   /api/v1/sessions          # Create session
 GET    /api/v1/sessions          # List sessions
@@ -145,6 +165,27 @@ GET    /api/v1/sessions/{id}     # Get session with memories
 # Health & Metrics
 GET    /health                   # Health check
 GET    /metrics                  # Prometheus metrics
+```
+
+### **🎯 Multi-Modal Ingestion**
+
+Second Brain now supports ingestion of various file types:
+
+- **Documents**: PDF, Word, HTML, Markdown, Plain text
+- **Spreadsheets**: Excel, CSV, OpenDocument
+- **Images**: JPG, PNG, GIF (with OCR support)
+- **Audio**: MP3, WAV, M4A (with transcription)
+- **Video**: MP4, AVI, MOV (with audio extraction)
+- **Subtitles**: SRT, VTT
+
+```bash
+# Upload a PDF with automatic text extraction
+curl -X POST "http://localhost:8000/api/v1/ingest/upload" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@document.pdf"
+
+# For full multi-modal support with audio/video
+docker build -f Dockerfile.multimodal -t secondbrain:multimodal .
 ```
 
 ## 🧪 **Testing**

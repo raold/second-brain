@@ -20,9 +20,8 @@ from app.models.synthesis.summary_models import (
     SummaryRequest,
     SummaryResponse,
     SummaryType,
-    TopicSummary,
-    DomainOverview,
-    KeyInsight
+    SummarySegment,
+    FormatType
 )
 
 logger = logging.getLogger(__name__)
@@ -322,7 +321,7 @@ Create an educational summary optimized for learning and retention.
         self,
         memories: List[Dict[str, Any]],
         domains: Dict[str, KnowledgeDomain]
-    ) -> List[KeyInsight]:
+    ) -> List[str]:
         """Extract key insights from memories and domains"""
         insights = []
         
@@ -344,7 +343,7 @@ Create an educational summary optimized for learning and retention.
         insights.sort(key=lambda i: i.impact_score, reverse=True)
         return insights[:10]  # Top 10 insights
     
-    async def _analyze_domain_patterns(self, domains: Dict[str, KnowledgeDomain]) -> List[KeyInsight]:
+    async def _analyze_domain_patterns(self, domains: Dict[str, KnowledgeDomain]) -> List[str]:
         """Analyze patterns within domains"""
         insights = []
         
@@ -381,21 +380,14 @@ Focus on actionable, non-obvious insights.
                 domain_insights = json.loads(response)
                 
                 for insight_data in domain_insights[:2]:
-                    insights.append(KeyInsight(
-                        title=insight_data['title'],
-                        description=insight_data['description'],
-                        source_memories=[m['id'] for m in domain.memories[:3]],
-                        impact_score=domain.importance_score * 0.8,
-                        category="domain_pattern",
-                        supporting_evidence=insight_data.get('evidence', [])
-                    ))
+                    insights.append(f"{insight_data['title']}: {insight_data['description']}")
                     
             except Exception as e:
                 logger.error(f"Domain pattern analysis failed for {domain_name}: {e}")
         
         return insights
     
-    async def _extract_memory_insights(self, memories: List[Dict[str, Any]]) -> List[KeyInsight]:
+    async def _extract_memory_insights(self, memories: List[Dict[str, Any]]) -> List[str]:
         """Extract insights from individual important memories"""
         insights = []
         
@@ -424,21 +416,14 @@ Provide a JSON object with:
                     
                     insight_data = json.loads(response)
                     
-                    insights.append(KeyInsight(
-                        title=insight_data['title'],
-                        description=insight_data['key_point'],
-                        source_memories=[memory['id']],
-                        impact_score=memory['importance'] / 10.0,
-                        category="key_memory",
-                        supporting_evidence=[f"From memory created {memory['created_at'].strftime('%Y-%m-%d')}"]
-                    ))
+                    insights.append(f"{insight_data['title']}: {insight_data['key_point']}")
                     
                 except Exception as e:
                     logger.error(f"Memory insight extraction failed: {e}")
         
         return insights
     
-    async def _find_cross_domain_insights(self, domains: Dict[str, KnowledgeDomain]) -> List[KeyInsight]:
+    async def _find_cross_domain_insights(self, domains: Dict[str, KnowledgeDomain]) -> List[str]:
         """Find insights from connections between domains"""
         insights = []
         domain_list = list(domains.items())
@@ -453,25 +438,17 @@ Provide a JSON object with:
                 common_concepts = domain1.key_concepts.intersection(domain2.key_concepts)
                 
                 if common_concepts:
-                    insights.append(KeyInsight(
-                        title=f"Connection: {domain1_name} ↔ {domain2_name}",
-                        description=f"These domains share concepts: {', '.join(list(common_concepts)[:3])}. "
-                                   f"This suggests potential for knowledge transfer or integration.",
-                        source_memories=[
-                            domain1.memories[0]['id'] if domain1.memories else None,
-                            domain2.memories[0]['id'] if domain2.memories else None
-                        ],
-                        impact_score=0.7,
-                        category="cross_domain",
-                        supporting_evidence=[f"Shared concepts: {list(common_concepts)}"]
-                    ))
+                    connection_desc = (f"Connection: {domain1_name} ↔ {domain2_name} - "
+                                     f"These domains share concepts: {', '.join(list(common_concepts)[:3])}. "
+                                     f"This suggests potential for knowledge transfer or integration.")
+                    insights.append(connection_desc)
         
         return insights[:3]  # Limit cross-domain insights
     
     async def _create_executive_summary(
         self,
         domains: Dict[str, KnowledgeDomain],
-        key_insights: List[KeyInsight]
+        key_insights: List[str]
     ) -> str:
         """Create executive summary"""
         # Prepare content
@@ -503,7 +480,7 @@ Top Insights:
     async def _create_detailed_summary(
         self,
         domains: Dict[str, KnowledgeDomain],
-        key_insights: List[KeyInsight]
+        key_insights: List[str]
     ) -> str:
         """Create detailed comprehensive summary"""
         sections = []
@@ -544,7 +521,7 @@ Top Insights:
     async def _create_technical_summary(
         self,
         domains: Dict[str, KnowledgeDomain],
-        key_insights: List[KeyInsight]
+        key_insights: List[str]
     ) -> str:
         """Create technical summary focusing on technical details"""
         # Filter for technical content
@@ -588,7 +565,7 @@ Top Insights:
     async def _create_learning_summary(
         self,
         domains: Dict[str, KnowledgeDomain],
-        key_insights: List[KeyInsight]
+        key_insights: List[str]
     ) -> str:
         """Create learning-oriented summary"""
         # Structure content for learning
@@ -648,13 +625,13 @@ Key Insights for Learning:
             logger.error(f"Learning summary generation failed: {e}")
             return self._create_fallback_summary(domains, key_insights)
     
-    async def _create_topic_summaries(self, domains: Dict[str, KnowledgeDomain]) -> List[TopicSummary]:
+    async def _create_topic_summaries(self, domains: Dict[str, KnowledgeDomain]) -> List[Dict[str, Any]]:
         """Create summaries for individual topics"""
         summaries = []
         
         for domain_name, domain in domains.items():
             # Create summary for main domain
-            domain_summary = TopicSummary(
+            domain_summary = dict(
                 topic_name=domain_name,
                 summary=f"Domain containing {len(domain.memories)} memories covering "
                        f"{len(domain.key_concepts)} key concepts.",
@@ -670,7 +647,7 @@ Key Insights for Learning:
             # Create summaries for significant sub-topics
             for sub_topic, sub_memories in domain.sub_topics.items():
                 if len(sub_memories) >= 3:  # Significant sub-topic
-                    sub_summary = TopicSummary(
+                    sub_summary = dict(
                         topic_name=f"{domain_name} → {sub_topic}",
                         summary=f"Sub-topic with {len(sub_memories)} related memories.",
                         memory_count=len(sub_memories),
@@ -681,7 +658,7 @@ Key Insights for Learning:
         
         return summaries
     
-    async def _create_domain_overviews(self, domains: Dict[str, KnowledgeDomain]) -> List[DomainOverview]:
+    async def _create_domain_overviews(self, domains: Dict[str, KnowledgeDomain]) -> List[Dict[str, Any]]:
         """Create domain overview summaries"""
         overviews = []
         
@@ -690,7 +667,7 @@ Key Insights for Learning:
             memory_contents = [m['content'] for m in domain.memories]
             avg_length = np.mean([len(c) for c in memory_contents]) if memory_contents else 0
             
-            overview = DomainOverview(
+            overview = dict(
                 domain_name=domain_name,
                 description=f"Knowledge domain focused on {domain_name} with "
                            f"{len(domain.sub_topics)} identified sub-topics.",
@@ -718,11 +695,11 @@ Key Insights for Learning:
                         f"importance {domain.importance_score:.1f}/10")
         return "\n".join(lines)
     
-    def _prepare_insights_summary(self, insights: List[KeyInsight]) -> str:
+    def _prepare_insights_summary(self, insights: List[str]) -> str:
         """Prepare insights summary text"""
         lines = []
         for i, insight in enumerate(insights[:5], 1):
-            lines.append(f"{i}. {insight.title}: {insight.description}")
+            lines.append(f"{i}. {insight}")
         return "\n".join(lines)
     
     def _format_learning_path(self, path: List[Dict[str, Any]]) -> str:
@@ -799,7 +776,7 @@ Key Insights for Learning:
         
         return coverage_score
     
-    def _create_fallback_summary(self, domains: Dict[str, KnowledgeDomain], insights: List[KeyInsight]) -> str:
+    def _create_fallback_summary(self, domains: Dict[str, KnowledgeDomain], insights: List[str]) -> str:
         """Create a basic fallback summary"""
         lines = [
             "# Knowledge Summary\n",

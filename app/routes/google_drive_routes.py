@@ -10,9 +10,8 @@ from pydantic import BaseModel, Field
 from app.dependencies import get_current_user, get_db
 from app.ingestion.engine import IngestionEngine
 from app.ingestion.google_drive_client import DriveFile, GoogleDriveClient
-from src.domain.models.user import User
+from app.models import User
 from app.repositories.memory_repository import MemoryRepository
-from app.services.service_factory import ServiceFactory
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -304,14 +303,14 @@ async def process_drive_ingestion(
 
             # Download file
             logger.info(f"Downloading {file_info.name} from Google Drive")
-            file_content = await client.download_file(file_id, file_info.name)
+            file_stream = await client.download_file(file_id, file_info.name)
 
             # Get appropriate filename for export
             filename = client.get_export_filename(file_info)
 
             # Ingest file
             result = await ingestion_engine.ingest_file(
-                file=file_content,
+                file=file_stream,
                 filename=filename,
                 user_id=user_id,
                 tags=tags,

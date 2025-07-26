@@ -227,7 +227,7 @@ class GoogleDriveClient:
             'next_page_token': results.get('nextPageToken')
         }
 
-    async def download_file(self, file_id: str, file_name: str) -> bytes:
+    async def download_file(self, file_id: str, file_name: str) -> io.BytesIO:
         """
         Download a file from Google Drive
 
@@ -236,7 +236,7 @@ class GoogleDriveClient:
             file_name: Name of the file (for determining export format)
 
         Returns:
-            File content as bytes
+            File content as a file-like object
         """
         if not self.service:
             raise ValueError("Not authenticated. Call authenticate() first.")
@@ -270,7 +270,8 @@ class GoogleDriveClient:
             if status:
                 logger.info(f"Download {int(status.progress() * 100)}% complete.")
 
-        return file_content.getvalue()
+        file_content.seek(0)
+        return file_content
 
     async def get_file_info(self, file_id: str) -> DriveFile:
         """Get detailed information about a file"""

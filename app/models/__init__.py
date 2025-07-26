@@ -2,4 +2,7 @@
 Models package for Second Brain
 """
 
-# This file makes the models directory a Python package
+from .user import User
+from .memory import Memory
+
+__all__ = ["User", "Memory"]

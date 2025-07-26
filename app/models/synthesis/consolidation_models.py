@@ -14,19 +14,30 @@ class ConsolidationStrategy(str, Enum):
     TEMPORAL = "temporal"
 
 
+class MergeStrategy(str, Enum):
+    """Memory merge strategies"""
+    KEEP_NEWEST = "keep_newest"
+    KEEP_OLDEST = "keep_oldest"
+    KEEP_HIGHEST_IMPORTANCE = "keep_highest_importance"
+    MERGE_CONTENT = "merge_content"
+    CREATE_SUMMARY = "create_summary"
+    HIERARCHICAL = "hierarchical"
+
+
 class ConsolidationRequest(BaseModel):
-    memory_ids: List[UUID]
-    consolidation_type: str = Field(default="merge")
-    preserve_originals: bool = Field(default=True)
-    strategy: ConsolidationStrategy = Field(default=ConsolidationStrategy.MERGE)
+    memory_ids: Optional[List[UUID]] = None
+    similarity_threshold: float = Field(default=0.85, ge=0, le=1)
+    auto_merge: bool = Field(default=False)
+    merge_strategy: Optional[MergeStrategy] = None
+    include_metadata: bool = Field(default=True)
     options: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ConsolidationResult(BaseModel):
-    id: UUID
-    consolidated_content: str
-    original_count: int
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    kept_memory_id: Optional[UUID] = None
+    removed_memory_ids: List[UUID] = Field(default_factory=list)
+    new_content: Optional[str] = None
+    merge_metadata: Dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -74,3 +85,13 @@ class QualityAssessment(BaseModel):
     overall_score: float = Field(ge=0, le=1)
     issues: List[str] = Field(default_factory=list)
     recommendations: List[str] = Field(default_factory=list)
+
+
+class DuplicateGroup(BaseModel):
+    """Group of duplicate or similar memories"""
+    memory_ids: List[UUID]
+    similarity_score: float = Field(ge=0, le=1)
+    duplicate_type: str  # "exact", "near_duplicate", "similar"
+    group_summary: Optional[str] = None
+    suggested_action: Optional[MergeStrategy] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)

@@ -69,6 +69,9 @@ async def upload_file(
     - HTML files (.html, .htm)
     - Images with OCR (.jpg, .jpeg, .png, .gif, .bmp, .tiff)
     - Spreadsheets (.xlsx, .xls, .csv)
+    - Audio files with transcription (.mp3, .wav, .m4a, .flac, .ogg)
+    - Video files with transcription (.mp4, .avi, .mov, .mkv, .webm)
+    - Subtitle files (.srt, .vtt, .sub)
     """
     # Validate file
     if not file.filename:

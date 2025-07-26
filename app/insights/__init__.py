@@ -13,7 +13,14 @@ from .models import (
     InsightResponse,
     TrendAnalysis,
     PatternDetection,
-    ClusteringRequest
+    ClusteringRequest,
+    ClusterResponse,
+    GapAnalysisRequest,
+    GapAnalysisResponse,
+    LearningProgress,
+    PatternDetectionRequest,
+    PatternResponse,
+    TimeFrame
 )
 from .pattern_detector import PatternDetector
 
@@ -29,5 +36,12 @@ __all__ = [
     "TrendAnalysis",
     "PatternDetection",
     "ClusteringRequest",
+    "ClusterResponse",
+    "GapAnalysisRequest",
+    "GapAnalysisResponse",
+    "LearningProgress",
+    "PatternDetectionRequest",
+    "PatternResponse",
+    "TimeFrame",
     "PatternDetector",
 ]

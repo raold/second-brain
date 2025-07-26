@@ -222,7 +222,7 @@ To run specific test types:
   {python_cmd} scripts/test_runner.py --validation  # Environment validation
 
 To run the application:
-  {python_cmd} -m uvicorn src.main:app --reload
+  {python_cmd} -m uvicorn main:app --reload
 
 To run Docker services:
   docker-compose up -d

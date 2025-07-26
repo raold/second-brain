@@ -1,5 +1,21 @@
 # Claude Memory - Second Brain Project
 
+## 🏗️ Project Structure Update (2025-07-26)
+
+The project has been reorganized for clarity:
+- **main.py** - New application entry point in root directory
+- **app/** - Main application module containing all core functionality
+- **archive/src_clean_architecture/** - Archived clean architecture attempt (for reference)
+
+To run the application:
+```bash
+# From project root
+python main.py
+
+# Or with uvicorn
+uvicorn main:app --reload
+```
+
 ## 🚨 CRITICAL PROJECT REQUIREMENTS
 
 ### Virtual Environment Usage - MANDATORY

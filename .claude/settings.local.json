@@ -138,7 +138,10 @@
       "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/archive_unused_files.py)",
       "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/find_code_smells.py)",
       "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" -c \"\nimport os\n\n# Check synthesis services for stub implementations\nstub_services = []\nfor file in [''consolidation_engine.py'', ''graph_metrics_service.py'', ''knowledge_summarizer.py'', ''suggestion_engine.py'']:\n    path = os.path.join(''app'', ''services'', ''synthesis'', file)\n    with open(path, ''r'') as f:\n        content = f.read()\n        # Count pass statements in methods\n        pass_count = content.count(''pass'')\n        total_lines = len(content.split(''\\n''))\n        if pass_count > 2 and total_lines < 50:  # Likely a stub\n            stub_services.append(file)\n            print(f''{file}: {pass_count} pass statements in {total_lines} lines'')\n\nprint(f''\\nStub services to archive: {stub_services}'')\n\")",
-      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/final_cleanup.py)"
+      "Bash(\"C:\\Users\\dro\\second-brain\\.venv\\Scripts\\python.exe\" scripts/final_cleanup.py)",
+      "Bash(.venvScriptspython.exe -m pytest tests/unit/synthesis/ -v)",
+      "Bash(.venvScriptspython -m pytest tests/unit/synthesis/ -v)",
+      "Bash(.venv\\Scripts\\python.exe:*)"
     ],
     "deny": []
   }
