@@ -23,6 +23,12 @@ from app.utils.protocols import (
     call_if_callable,
     duck_type_check,
 )
+from app.core.exceptions import (
+    SecondBrainException,
+    NotFoundException,
+    ValidationException,
+    DatabaseException
+)
 
 logger = get_logger(__name__)
 
@@ -137,7 +143,7 @@ class MemoryService:
         await self.initialize()
 
         if not self.database:
-            raise RuntimeError("Database not initialized")
+            raise DatabaseException(message="Database not initialized")
 
         with PerformanceLogger("memory_storage", logger):
             logger.info("Storing memory", extra={
@@ -248,7 +254,7 @@ class MemoryService:
         await self.initialize()
 
         if not self.database:
-            raise RuntimeError("Database not initialized")
+            raise DatabaseException(message="Database not initialized")
 
         with PerformanceLogger("memory_retrieval", logger):
             logger.info("Retrieving memory", extra={
@@ -332,7 +338,7 @@ class MemoryService:
         await self.initialize()
 
         if not self.database:
-            raise RuntimeError("Database not initialized")
+            raise DatabaseException(message="Database not initialized")
 
         with PerformanceLogger("memory_search", logger):
             logger.info("Searching memories", extra={

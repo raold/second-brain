@@ -7,7 +7,7 @@ and advanced search capabilities.
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 
 from app.docs import (
     ContextualSearchRequest,
@@ -22,6 +22,13 @@ from app.docs import (
 from app.security import get_security_manager
 from app.services.service_factory import get_memory_service
 from app.shared import get_db_instance
+from app.core.exceptions import (
+    UnauthorizedException,
+    NotFoundException,
+    ValidationException,
+    RateLimitExceededException,
+    SecondBrainException
+)
 
 # For compatibility with existing code, alias the shared instance
 get_database = get_db_instance
@@ -49,10 +56,10 @@ async def verify_api_key(api_key: str = Query(..., alias="api_key")):
     valid_tokens = [token.strip() for token in valid_tokens if token.strip()]
 
     if not valid_tokens:
-        raise HTTPException(status_code=500, detail="No API tokens configured")
+        raise SecondBrainException(message="No API tokens configured")
 
     if api_key not in valid_tokens:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+        raise UnauthorizedException(message="Invalid API key")
 
     return api_key
 
@@ -79,7 +86,7 @@ async def store_memory(
     # Security validation
     security_manager = get_security_manager()
     if not security_manager.validate_request(request_obj):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise RateLimitExceededException(limit=100, window="minute")
 
     # Delegate to service
     try:
@@ -98,15 +105,17 @@ async def store_memory(
         # Get the stored memory to return full response
         memory = await service.get_memory(memory_id)
         if not memory:
-            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
+            raise SecondBrainException(message="Failed to retrieve stored memory")
 
         return memory
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationException(message=str(e))
+    except SecondBrainException:
+        raise
     except Exception as e:
         logger.error(f"Failed to store memory: {e}")
-        raise HTTPException(status_code=500, detail="Failed to store memory")
+        raise SecondBrainException(message="Failed to store memory")
 
 
 @router.post(
@@ -122,7 +131,7 @@ async def search_memories(
     # Security validation
     security_manager = get_security_manager()
     if not security_manager.validate_request(request_obj):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise RateLimitExceededException(limit=100, window="minute")
 
     # Delegate to service
     try:
@@ -132,10 +141,12 @@ async def search_memories(
         return memories
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationException(message=str(e))
+    except SecondBrainException:
+        raise
     except Exception as e:
         logger.error(f"Search failed: {e}")
-        raise HTTPException(status_code=500, detail="Search failed")
+        raise SecondBrainException(message="Search failed")
 
 
 @router.post(
@@ -151,7 +162,7 @@ async def store_semantic_memory(
     # Security validation
     security_manager = get_security_manager()
     if not security_manager.validate_request(request_obj):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise RateLimitExceededException(limit=100, window="minute")
 
     # Delegate to service
     try:
@@ -169,15 +180,17 @@ async def store_semantic_memory(
         # Get the stored memory to return full response
         memory = await service.get_memory(memory_id)
         if not memory:
-            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
+            raise SecondBrainException(message="Failed to retrieve stored memory")
 
         return memory
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationException(message=str(e))
+    except SecondBrainException:
+        raise
     except Exception as e:
         logger.error(f"Failed to store semantic memory: {e}")
-        raise HTTPException(status_code=500, detail="Failed to store semantic memory")
+        raise SecondBrainException(message="Failed to store semantic memory")
 
 
 @router.post(
@@ -193,7 +206,7 @@ async def store_episodic_memory(
     # Security validation
     security_manager = get_security_manager()
     if not security_manager.validate_request(request_obj):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise RateLimitExceededException(limit=100, window="minute")
 
     # Delegate to service
     try:
@@ -211,15 +224,17 @@ async def store_episodic_memory(
         # Get the stored memory to return full response
         memory = await service.get_memory(memory_id)
         if not memory:
-            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
+            raise SecondBrainException(message="Failed to retrieve stored memory")
 
         return memory
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationException(message=str(e))
+    except SecondBrainException:
+        raise
     except Exception as e:
         logger.error(f"Failed to store episodic memory: {e}")
-        raise HTTPException(status_code=500, detail="Failed to store episodic memory")
+        raise SecondBrainException(message="Failed to store episodic memory")
 
 
 @router.post(
@@ -235,7 +250,7 @@ async def store_procedural_memory(
     # Security validation
     security_manager = get_security_manager()
     if not security_manager.validate_request(request_obj):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise RateLimitExceededException(limit=100, window="minute")
 
     # Delegate to service
     try:
@@ -253,15 +268,17 @@ async def store_procedural_memory(
         # Get the stored memory to return full response
         memory = await service.get_memory(memory_id)
         if not memory:
-            raise HTTPException(status_code=500, detail="Failed to retrieve stored memory")
+            raise SecondBrainException(message="Failed to retrieve stored memory")
 
         return memory
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationException(message=str(e))
+    except SecondBrainException:
+        raise
     except Exception as e:
         logger.error(f"Failed to store procedural memory: {e}")
-        raise HTTPException(status_code=500, detail="Failed to store procedural memory")
+        raise SecondBrainException(message="Failed to store procedural memory")
 
 
 @router.post(
@@ -277,7 +294,7 @@ async def contextual_search(
     # Security validation
     security_manager = get_security_manager()
     if not security_manager.validate_request(request_obj):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise RateLimitExceededException(limit=100, window="minute")
 
     # Delegate to service
     try:
@@ -298,10 +315,12 @@ async def contextual_search(
         return results
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationException(message=str(e))
+    except SecondBrainException:
+        raise
     except Exception as e:
         logger.error(f"Contextual search failed: {e}")
-        raise HTTPException(status_code=500, detail="Contextual search failed")
+        raise SecondBrainException(message="Contextual search failed")
 
 
 @router.get(
@@ -317,12 +336,12 @@ async def get_memory(memory_id: str, db=Depends(get_database), _: str = Depends(
         memory = await service.get_memory(memory_id)
 
         if not memory:
-            raise HTTPException(status_code=404, detail="Memory not found")
+            raise NotFoundException(resource="Memory", identifier=memory_id)
 
         return memory
 
-    except HTTPException:
+    except SecondBrainException:
         raise
     except Exception as e:
         logger.error(f"Failed to retrieve memory: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve memory")
+        raise SecondBrainException(message="Failed to retrieve memory")

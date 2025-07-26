@@ -5,10 +5,11 @@ All business logic is delegated to SessionService.
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Form, Depends
+from fastapi import APIRouter, BackgroundTasks, Query, Form, Depends
 from pydantic import BaseModel, Field
 
 from app.core.dependencies import get_session_service_dep
+from app.core.exceptions import SecondBrainException, NotFoundException
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/session", tags=["Session"])
@@ -59,9 +60,11 @@ async def ingest_mobile_idea(idea_request: IdeaIngestionRequest, background_task
 
         return {"status": "success", "message": "Idea successfully ingested and processed", **result}
 
+    except SecondBrainException:
+        raise
     except Exception as e:
         logger.error(f"Idea ingestion failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Idea ingestion failed: {str(e)}")
+        raise SecondBrainException(message=f"Idea ingestion failed: {str(e)}")
 
 
 @router.get("/")
@@ -72,9 +75,11 @@ async def get_session_status(session_service=Depends(get_session_service_dep)):
 
         return {"status": "success", **status}
 
+    except SecondBrainException:
+        raise
     except Exception as e:
         logger.error(f"Session status error: {e}")
-        raise HTTPException(status_code=500, detail=f"Session status error: {str(e)}")
+        raise SecondBrainException(message=f"Session status error: {str(e)}")
 
 
 @router.post("/pause")

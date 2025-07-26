@@ -5,11 +5,12 @@ All business logic is delegated to HealthService.
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from app.docs import HealthResponse, StatusResponse
 from app.core.dependencies import get_health_service_dep
 from app.shared import get_db_instance, verify_api_key
+from app.core.exceptions import SecondBrainException
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Health"])
@@ -32,9 +33,11 @@ async def health_check(health_service=Depends(get_health_service_dep)):
             timestamp=health_status["timestamp"]
         )
 
+    except SecondBrainException:
+        raise
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        raise HTTPException(status_code=500, detail="Health check failed")
+        raise SecondBrainException(message="Health check failed")
 
 
 @router.get(

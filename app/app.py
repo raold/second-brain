@@ -192,64 +192,9 @@ app = FastAPI(
 setup_openapi_documentation(app)
 
 
-# Add comprehensive error handling
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    """Handle HTTP exceptions with structured error responses."""
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "error": {
-                "code": exc.status_code,
-                "message": exc.detail,
-                "type": "HTTPException",
-                "timestamp": datetime.utcnow().isoformat(),
-                "path": str(request.url.path),
-                "method": request.method,
-            }
-        },
-    )
-
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Handle validation errors with detailed feedback."""
-    return JSONResponse(
-        status_code=422,
-        content={
-            "error": {
-                "code": 422,
-                "message": "Validation error",
-                "type": "ValidationError",
-                "timestamp": datetime.utcnow().isoformat(),
-                "path": str(request.url.path),
-                "method": request.method,
-                "details": exc.errors(),
-            }
-        },
-    )
-
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    """Handle unexpected exceptions with proper logging."""
-    error_id = f"error_{int(time.time())}"
-    logger.error(f"Unexpected error {error_id}: {exc}\n{traceback.format_exc()}")
-
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": {
-                "code": 500,
-                "message": "Internal server error occurred",
-                "type": "InternalServerError",
-                "timestamp": datetime.utcnow().isoformat(),
-                "path": str(request.url.path),
-                "method": request.method,
-                "error_id": error_id,
-            }
-        },
-    )
+# Register exception handlers from the new exception handling system
+from app.core.exceptions import register_exception_handlers
+register_exception_handlers(app)
 
 
 # Add security middleware
