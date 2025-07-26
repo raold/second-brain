@@ -311,8 +311,5 @@ class SubtitleParser(FileParser):
         }
 
     def supports(self, mime_type: str) -> bool:
-        # Check both mime type and file extension
-        if mime_type in self.SUPPORTED_TYPES:
-            return True
-        # Additional check for subtitle files that might have generic mime types
-        return any(str(file_path).lower().endswith(ext) for ext in self.SUBTITLE_EXTENSIONS)
+        # Check both mime type
+        return mime_type in self.SUPPORTED_TYPES

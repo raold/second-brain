@@ -334,13 +334,14 @@ class IngestionEngine:
             memory = Memory(
                 user_id=user_id,
                 content=chunk,
-                title=f"{filename} - Part {i+1}" if len(chunks) > 1 else filename,
                 tags=tags or [],
                 metadata={
                     **(metadata or {}),
                     'chunk_index': i,
                     'total_chunks': len(chunks),
-                    'extraction_result': extraction_result
+                    'extraction_result': extraction_result,
+                    'source_filename': filename,
+                    'chunk_title': f"{filename} - Part {i+1}" if len(chunks) > 1 else filename
                 }
             )
 
