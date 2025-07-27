@@ -11,6 +11,11 @@ env:
   DOCKER_BUILDKIT: 1
   COMPOSE_DOCKER_CLI_BUILD: 1
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   docker-build:
     name: Build Docker Images
@@ -27,10 +32,13 @@ jobs:
       run: docker compose config
     
     - name: Build Docker images
-      run: docker compose build
+      run: |
+        docker compose build
+        docker tag second-brain-app:latest second-brain-app:latest
     
     - name: Save Docker images
       run: |
+        docker images
         docker save second-brain-app:latest | gzip > app-image.tar.gz
     
     - name: Upload Docker image artifact
@@ -45,34 +53,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: docker-build
     
-    services:
-      postgres:
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: secondbrain
-          POSTGRES_PASSWORD: changeme
-          POSTGRES_DB: secondbrain
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-          
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+    
+    - name: Clean up any existing containers
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml down -v || true
+        docker system prune -f || true
     
     - name: Download Docker image artifact
       uses: actions/download-artifact@v4
@@ -86,14 +74,12 @@ jobs:
     - name: Create test env file
       run: |
         echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
-        echo "DATABASE_URL=postgresql://secondbrain:changeme@localhost:5432/secondbrain" >> .env
-        echo "REDIS_URL=redis://localhost:6379" >> .env
     
     - name: Start Docker containers
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
-        docker compose up -d
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
         
     - name: Wait for services
       run: |
@@ -101,8 +87,8 @@ jobs:
     
     - name: Check container health
       run: |
-        docker compose ps
-        docker compose logs app --tail=50
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml ps
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml logs app --tail=50
     
     - name: Run deployment tests
       run: |
@@ -129,12 +115,12 @@ jobs:
     - name: Container logs on failure
       if: failure()
       run: |
-        docker compose logs
-        docker compose ps
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml logs
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml ps
     
     - name: Stop containers
       if: always()
-      run: docker compose down -v
+      run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down -v
 
   docker-security-scan:
     name: Security Scan
