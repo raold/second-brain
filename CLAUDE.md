@@ -239,6 +239,41 @@ python scripts/test_runner.py --all
 python scripts/setup_dev_environment.py
 ```
 
+### 🐧 WSL2 Testing on Windows - CRITICAL
+**ALWAYS USE WSL2 FOR TESTING ON WINDOWS WHEN AVAILABLE**
+
+The CI/CD pipeline runs on Ubuntu Linux. Testing only on Windows can miss platform-specific issues that will cause CI failures. WSL2 provides a Linux environment that matches GitHub Actions.
+
+#### WSL2 Testing Workflow
+```bash
+# Enter WSL2 Ubuntu environment
+wsl
+
+# Navigate to project (Windows drives mounted under /mnt)
+cd /mnt/c/Users/dro/second-brain
+
+# Run tests in Linux environment (matches CI)
+python scripts/test_runner.py --all
+
+# Expected output should match CI:
+# ================= 430 passed, 6 skipped, 64 warnings ==================
+```
+
+#### Why WSL2 is Critical
+- **CI runs on Ubuntu**: GitHub Actions uses ubuntu-latest
+- **Path separators differ**: Windows uses `\`, Linux uses `/`
+- **File encodings differ**: Windows uses cp1252, Linux uses UTF-8
+- **File sizes vary**: Line endings and encoding affect byte counts
+- **Case sensitivity**: Linux is case-sensitive, Windows is not
+
+#### Common Cross-Platform Issues
+1. **Hardcoded paths**: Use `pathlib.Path` for OS-agnostic paths
+2. **Unicode in tests**: Replace emojis with ASCII for Windows compatibility
+3. **File size assertions**: Avoid exact byte count checks
+4. **Path separators in strings**: Use `os.path.join()` or `Path`
+
+**Remember**: After 2 weeks of CI failures, using WSL2 solved all platform-specific test issues immediately.
+
 ### Why This Matters
 - **Portability**: Code must work on work computer, laptop, home desktop
 - **Dependency Isolation**: Avoid conflicts with system packages
