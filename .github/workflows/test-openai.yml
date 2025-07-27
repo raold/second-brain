@@ -20,7 +20,7 @@ jobs:
     - name: Install OpenAI package
       run: |
         python -m pip install --upgrade pip
-        pip install openai
+        pip install openai python-dotenv
     
     - name: Test OpenAI API Key
       env:
