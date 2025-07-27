@@ -24,10 +24,10 @@ jobs:
       uses: docker/setup-buildx-action@v3
     
     - name: Validate docker-compose.yml
-      run: docker-compose config
+      run: docker compose config
     
     - name: Build Docker images
-      run: docker-compose build
+      run: docker compose build
     
     - name: Save Docker images
       run: |
@@ -93,7 +93,7 @@ jobs:
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
-        docker-compose up -d
+        docker compose up -d
         
     - name: Wait for services
       run: |
@@ -101,8 +101,8 @@ jobs:
     
     - name: Check container health
       run: |
-        docker-compose ps
-        docker-compose logs app --tail=50
+        docker compose ps
+        docker compose logs app --tail=50
     
     - name: Run deployment tests
       run: |
@@ -129,12 +129,12 @@ jobs:
     - name: Container logs on failure
       if: failure()
       run: |
-        docker-compose logs
-        docker-compose ps
+        docker compose logs
+        docker compose ps
     
     - name: Stop containers
       if: always()
-      run: docker-compose down -v
+      run: docker compose down -v
 
   docker-security-scan:
     name: Security Scan

@@ -16,6 +16,11 @@ from typing import Dict, Any
 class TestDockerDeployment:
     """Test suite for Docker deployment validation."""
     
+    @classmethod
+    def setup_class(cls):
+        """Detect docker compose command."""
+        cls.docker_compose_cmd = ["docker", "compose"] if subprocess.run(["docker", "compose", "--version"], capture_output=True).returncode == 0 else ["docker-compose"]
+    
     @pytest.fixture(scope="class", autouse=True)
     def docker_environment(self):
         """Set up and tear down Docker environment for tests."""
@@ -28,12 +33,12 @@ class TestDockerDeployment:
             os.chdir(project_root)
             
             # Stop any existing containers
-            subprocess.run(["docker-compose", "down", "-v"], capture_output=True)
+            subprocess.run(self.docker_compose_cmd + ["down", "-v"], capture_output=True)
             
             # Start containers
             print("Starting Docker containers...")
             result = subprocess.run(
-                ["docker-compose", "up", "-d", "--build"],
+                self.docker_compose_cmd + ["up", "-d", "--build"],
                 capture_output=True,
                 text=True
             )
@@ -50,7 +55,7 @@ class TestDockerDeployment:
         finally:
             # Cleanup
             print("Stopping Docker containers...")
-            subprocess.run(["docker-compose", "down"], capture_output=True)
+            subprocess.run(self.docker_compose_cmd + ["down"], capture_output=True)
             os.chdir(original_dir)
     
     def _wait_for_services(self, timeout: int = 60):
@@ -74,7 +79,7 @@ class TestDockerDeployment:
     def test_docker_compose_valid(self):
         """Test that docker-compose.yml is valid."""
         result = subprocess.run(
-            ["docker-compose", "config"],
+            self.docker_compose_cmd + ["config"],
             capture_output=True,
             text=True
         )
@@ -83,7 +88,7 @@ class TestDockerDeployment:
     def test_containers_running(self):
         """Test that all required containers are running."""
         result = subprocess.run(
-            ["docker-compose", "ps", "--format", "json"],
+            self.docker_compose_cmd + ["ps", "--format", "json"],
             capture_output=True,
             text=True
         )
@@ -154,7 +159,7 @@ class TestDockerDeployment:
     def test_container_logs_no_errors(self):
         """Test that container logs don't contain critical errors."""
         result = subprocess.run(
-            ["docker-compose", "logs", "app", "--tail=100"],
+            self.docker_compose_cmd + ["logs", "app", "--tail=100"],
             capture_output=True,
             text=True
         )
@@ -169,7 +174,7 @@ class TestDockerDeployment:
     def test_environment_variables_set(self):
         """Test that required environment variables are set in container."""
         result = subprocess.run(
-            ["docker-compose", "exec", "app", "env"],
+            self.docker_compose_cmd + ["exec", "app", "env"],
             capture_output=True,
             text=True
         )
