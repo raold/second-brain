@@ -1,0 +1,30 @@
+# Google Drive Integration Dependencies
+# Based on Gemini 2.5 Pro recommendations for enterprise-grade streaming
+
+# Google API & Authentication
+google-auth>=2.15.0
+google-auth-oauthlib>=1.2.0
+google-api-python-client>=2.70.0
+
+# Google Cloud AI Services
+google-cloud-documentai>=2.16.0
+google-cloud-language>=2.9.0
+google-cloud-aiplatform>=1.38.0
+
+# Security & Encryption
+cryptography>=3.4.8
+
+# Async & Retry Logic
+tenacity>=8.2.0
+aiofiles>=23.1.0
+
+# Monitoring & Metrics
+prometheus-client>=0.18.0
+
+# Background Processing
+celery>=5.3.0
+redis>=4.5.0
+
+# Additional utilities for streaming
+httpx>=0.24.0
+ujson>=5.7.0

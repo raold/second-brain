@@ -1,0 +1,151 @@
+# Google Drive Integration Makefile
+# Additional commands for Drive development and testing
+
+include Makefile
+
+# Google Drive specific setup
+.PHONY: gdrive-setup gdrive-dev gdrive-test gdrive-worker gdrive-clean
+
+# Environment setup for Google Drive development
+gdrive-setup:
+	@echo "🚀 Setting up Google Drive integration..."
+	@echo "📦 Installing Google Drive dependencies..."
+	$(PYTHON) -m pip install -r config/requirements-gdrive.txt
+	@echo "🔑 Checking Google Cloud credentials..."
+	@if [ -z "$(GOOGLE_CLIENT_ID)" ]; then \
+		echo "❌ GOOGLE_CLIENT_ID not set. Please configure OAuth credentials."; \
+		echo "📖 See: https://developers.google.com/drive/api/quickstart/python"; \
+		exit 1; \
+	fi
+	@echo "🗄️  Setting up Google Drive database schema..."
+	$(PYTHON) scripts/setup_gdrive_db.py
+	@echo "✅ Google Drive setup complete!"
+
+# Start development environment with Google Drive services
+gdrive-dev:
+	@echo "🚀 Starting Second Brain with Google Drive integration..."
+	docker-compose -f docker-compose.yml -f docker/docker-compose.gdrive.yml up --build
+
+# Run Google Drive specific tests
+gdrive-test:
+	@echo "🧪 Running Google Drive integration tests..."
+	$(PYTHON) scripts/test_runner.py --gdrive
+
+# Start Google Drive background worker
+gdrive-worker:
+	@echo "⚙️  Starting Google Drive background worker..."
+	$(PYTHON) scripts/gdrive_worker.py
+
+# Test Google Drive API connectivity
+gdrive-test-api:
+	@echo "🔍 Testing Google Drive API connectivity..."
+	$(PYTHON) scripts/test_gdrive_api.py
+
+# Generate Google OAuth URL for testing
+gdrive-oauth-url:
+	@echo "🔐 Generating Google OAuth URL for testing..."
+	$(PYTHON) scripts/generate_oauth_url.py
+
+# Clean Google Drive data (development only)
+gdrive-clean:
+	@echo "🧹 Cleaning Google Drive development data..."
+	@read -p "Are you sure you want to delete all Google Drive data? [y/N] " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		$(PYTHON) scripts/clean_gdrive_data.py; \
+		echo "✅ Google Drive data cleaned"; \
+	else \
+		echo "❌ Operation cancelled"; \
+	fi
+
+# Monitor Google Drive processing
+gdrive-monitor:
+	@echo "📊 Monitoring Google Drive processing..."
+	$(PYTHON) scripts/monitor_gdrive.py
+
+# Show Google Drive integration status
+gdrive-status:
+	@echo "📈 Google Drive Integration Status"
+	@echo "================================="
+	@echo "🔑 OAuth Configuration:"
+	@if [ -n "$(GOOGLE_CLIENT_ID)" ]; then \
+		echo "   ✅ Client ID configured"; \
+	else \
+		echo "   ❌ Client ID missing"; \
+	fi
+	@if [ -n "$(GOOGLE_CLIENT_SECRET)" ]; then \
+		echo "   ✅ Client Secret configured"; \
+	else \
+		echo "   ❌ Client Secret missing"; \
+	fi
+	@echo "🗄️  Database Status:"
+	@$(PYTHON) -c "from app.database import engine; from sqlalchemy import text; \
+		with engine.connect() as conn: \
+			result = conn.execute(text(\"SELECT COUNT(*) FROM information_schema.tables WHERE table_name LIKE 'gdrive_%'\")).scalar(); \
+			print(f'   📊 Drive tables: {result}')"
+	@echo "⚙️  Worker Status:"
+	@docker ps --filter "name=gdrive-worker" --format "table {{.Names}}\t{{.Status}}" || echo "   ❌ Workers not running"
+
+# Backup Google Drive integration data
+gdrive-backup:
+	@echo "💾 Backing up Google Drive integration data..."
+	@mkdir -p backups/gdrive
+	@$(PYTHON) scripts/backup_gdrive_data.py backups/gdrive/$(shell date +%Y%m%d_%H%M%S)
+
+# Restore Google Drive integration data
+gdrive-restore:
+	@echo "📥 Restoring Google Drive integration data..."
+	@if [ -z "$(BACKUP_FILE)" ]; then \
+		echo "❌ Usage: make gdrive-restore BACKUP_FILE=path/to/backup"; \
+		exit 1; \
+	fi
+	@$(PYTHON) scripts/restore_gdrive_data.py $(BACKUP_FILE)
+
+# Performance testing for Google Drive
+gdrive-perf-test:
+	@echo "🏃‍♂️ Running Google Drive performance tests..."
+	$(PYTHON) scripts/test_gdrive_performance.py
+
+# Validate Google Drive webhooks
+gdrive-test-webhooks:
+	@echo "🔔 Testing Google Drive webhook functionality..."
+	$(PYTHON) scripts/test_gdrive_webhooks.py
+
+# Show help for Google Drive commands
+gdrive-help:
+	@echo "Google Drive Integration Commands"
+	@echo "================================"
+	@echo "Setup & Development:"
+	@echo "  gdrive-setup      - Install dependencies and configure Google Drive"
+	@echo "  gdrive-dev        - Start development environment with Drive services"
+	@echo "  gdrive-worker     - Start background worker for file processing"
+	@echo ""
+	@echo "Testing & Validation:"
+	@echo "  gdrive-test       - Run Google Drive integration tests"
+	@echo "  gdrive-test-api   - Test Google Drive API connectivity"
+	@echo "  gdrive-perf-test  - Run performance tests"
+	@echo "  gdrive-test-webhooks - Test webhook functionality"
+	@echo ""
+	@echo "Monitoring & Status:"
+	@echo "  gdrive-status     - Show integration status and health"
+	@echo "  gdrive-monitor    - Monitor real-time processing"
+	@echo ""
+	@echo "Utilities:"
+	@echo "  gdrive-oauth-url  - Generate OAuth URL for testing"
+	@echo "  gdrive-backup     - Backup Drive integration data"
+	@echo "  gdrive-restore    - Restore from backup"
+	@echo "  gdrive-clean      - Clean development data (DESTRUCTIVE)"
+	@echo ""
+	@echo "Configuration Required:"
+	@echo "  GOOGLE_CLIENT_ID     - OAuth client ID"
+	@echo "  GOOGLE_CLIENT_SECRET - OAuth client secret"
+	@echo "  GDRIVE_ENCRYPTION_KEY - Key for token encryption"
+
+# Quick development workflow
+gdrive-dev-cycle:
+	@echo "🔄 Google Drive Development Cycle"
+	@echo "1. Setting up environment..."
+	@make gdrive-setup
+	@echo "2. Running tests..."
+	@make gdrive-test
+	@echo "3. Starting development environment..."
+	@make gdrive-dev

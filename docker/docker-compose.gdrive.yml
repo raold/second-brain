@@ -1,0 +1,95 @@
+# Google Drive Integration - Docker Compose Extension
+# Extends main docker-compose.yml with Drive-specific services
+
+version: '3.8'
+
+services:
+  # Main app with Google Drive dependencies
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        - INSTALL_GDRIVE=true
+    environment:
+      # Google OAuth Configuration
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-http://localhost:8000/auth/google/callback}
+      
+      # Google Cloud Configuration (optional for enhanced AI features)
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+      
+      # Encryption for secure token storage
+      - GDRIVE_ENCRYPTION_KEY=${GDRIVE_ENCRYPTION_KEY}
+      
+      # Webhook configuration
+      - GDRIVE_WEBHOOK_TOKEN=${GDRIVE_WEBHOOK_TOKEN}
+      - GDRIVE_WEBHOOK_URL=${GDRIVE_WEBHOOK_URL:-http://localhost:8000/webhooks/gdrive}
+    volumes:
+      # Mount Google Cloud credentials if using service account
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-/dev/null}:${GOOGLE_APPLICATION_CREDENTIALS:-/dev/null}:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+
+  # Background worker for file processing
+  gdrive-worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        - INSTALL_GDRIVE=true
+    command: python scripts/gdrive_worker.py
+    environment:
+      # Same environment as main app
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GDRIVE_ENCRYPTION_KEY=${GDRIVE_ENCRYPTION_KEY}
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+    volumes:
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-/dev/null}:${GOOGLE_APPLICATION_CREDENTIALS:-/dev/null}:ro
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    deploy:
+      replicas: 2  # Multiple workers for scalability
+
+  # Redis for caching and job queue
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  # PostgreSQL with extensions for Google Drive data
+  postgres:
+    image: pgvector/pgvector:pg15
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-second_brain}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../sql/gdrive_schema.sql:/docker-entrypoint-initdb.d/02_gdrive_schema.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  default:
+    name: second-brain-gdrive
