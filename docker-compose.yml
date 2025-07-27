@@ -19,6 +19,7 @@ services:
       - TEMP_DIR=/app/temp
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TRANSFORMERS_CACHE=/app/.cache
+      - API_TOKENS=test-token-for-development
     volumes:
       - .:/app:rw
       - /app/.venv  # Exclude .venv from mount

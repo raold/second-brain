@@ -4,6 +4,11 @@
 
 This guide covers the continuous integration and deployment pipeline for Second Brain v3.0.0, using GitHub Actions as the primary CI/CD platform.
 
+## Current Status
+
+- **CI (Continuous Integration)**: ✅ Active - Tests run on every push
+- **CD (Continuous Deployment)**: ✅ Active - Docker deployment validation on every push
+
 ## CI/CD Architecture
 
 ```mermaid
@@ -39,6 +44,25 @@ graph LR
 ```
 
 ## GitHub Actions Workflows
+
+### Continuous Integration (CI) - Test Workflow
+
+The CI workflow runs on every push and pull request to ensure code quality and test coverage.
+
+**File**: `.github/workflows/test.yml`
+
+### Continuous Deployment (CD) - Docker Deployment Workflow
+
+The CD workflow validates Docker deployment on every push to main branch.
+
+**File**: `.github/workflows/cd.yml`
+
+Key features:
+- Builds and validates Docker images
+- Tests container startup and health
+- Validates all services are accessible
+- Runs security scans on containers
+- Ensures API endpoints respond correctly
 
 ### Main CI/CD Pipeline
 
