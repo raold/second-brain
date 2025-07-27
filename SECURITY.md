@@ -190,12 +190,12 @@ If you discover a security vulnerability, please report it responsibly:
 
 ## Resources
 
-- [Project Documentation](../README.md)
-- [Architecture Overview](../docs/ARCHITECTURE.md)
-- [Testing Guide](../docs/TESTING.md)
-- [Deployment Guide](../docs/DEPLOYMENT.md)
-- [Version History](../CHANGELOG.md)
-- [Release Notes v2.8.1](../RELEASE_NOTES_v2.8.1.md)
+- [Project Documentation](README.md)
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [Testing Guide](docs/TESTING.md)
+- [Deployment Guide](docs/deployment/DEPLOYMENT_V3.md)
+- [Version History](CHANGELOG.md)
+- [Release Notes v3.0.0](RELEASE_NOTES_v3.0.0.md)
 
 ---
 
