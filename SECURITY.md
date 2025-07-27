@@ -199,7 +199,7 @@ If you discover a security vulnerability, please report it responsibly:
 
 ---
 
-**Last Updated**: January 27, 2025  
+**Last Updated**: July 27, 2025  
 **Security Model**: Enterprise-Ready AI Memory System  
 **Current Stable**: v3.0.0 | **Previous Stable**: v2.8.2  
 **Support Matrix**: Active (3.x) | Maintenance (2.8.x) | EOL (2.4.x) | Unsupported (<2.3)
