@@ -39,7 +39,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy requirements files
-COPY requirements.txt ./
+COPY config/requirements.txt ./
 COPY config/requirements-*.txt ./config/
 
 # Install Python dependencies (including dev tools)

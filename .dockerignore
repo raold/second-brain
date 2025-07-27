@@ -1,0 +1,91 @@
+# Python virtual environments
+.venv/
+.venv-wsl/
+venv/
+env/
+ENV/
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+*.md
+docs/
+README.md
+CHANGELOG.md
+LICENSE
+
+# Logs
+logs/
+*.log
+
+# Environment files
+.env
+.env.*
+*.env
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Archives
+archive/
+*.tar.gz
+*.zip
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Database dumps
+*.sql
+*.dump
+
+# Node modules (if any frontend)
+node_modules/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Other
+.claude/
+*.bak
+*.orig
+.local/
