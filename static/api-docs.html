@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="gruvbox-dark" data-density="comfortable">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,31 +8,17 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="apple-touch-icon" href="/static/favicon.svg">
-    <link rel="mask-icon" href="/static/favicon.svg" color="#8ec07c">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#ff6b9d">
+    
+    <!-- Design System -->
+    <link rel="stylesheet" href="/static/css/main.css">
+    
+    <!-- Settings Management -->
+    <script src="/static/js/settings.js"></script>
     
     <style>
-        /* Gruvbox Dark Theme Colors */
-        :root {
-            --gruvbox-bg0: #282828;
-            --gruvbox-bg0-hard: #1d2021;
-            --gruvbox-bg0-soft: #32302f;
-            --gruvbox-bg1: #3c3836;
-            --gruvbox-bg2: #504945;
-            --gruvbox-bg3: #665c54;
-            --gruvbox-bg4: #7c6f64;
-            --gruvbox-fg0: #fbf1c7;
-            --gruvbox-fg1: #ebdbb2;
-            --gruvbox-fg2: #d5c4a1;
-            --gruvbox-fg3: #bdae93;
-            --gruvbox-fg4: #a89984;
-            --gruvbox-red: #fb4934;
-            --gruvbox-green: #b8bb26;
-            --gruvbox-yellow: #fabd2f;
-            --gruvbox-blue: #83a598;
-            --gruvbox-purple: #d3869b;
-            --gruvbox-aqua: #8ec07c;
-            --gruvbox-orange: #fe8019;
-        }
+        /* Page-specific styles */
 
         * {
             margin: 0;
@@ -47,58 +33,12 @@
             line-height: 1.6;
         }
 
-        /* Navigation */
-        nav {
-            background-color: var(--gruvbox-bg0-hard);
-            padding: 1rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-
-        .nav-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--gruvbox-fg0);
-            text-decoration: none;
-        }
-
-        .logo span {
-            color: var(--gruvbox-aqua);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--gruvbox-fg2);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: var(--gruvbox-aqua);
-        }
+        /* Navigation styles in main.css */
 
         /* Layout */
         .api-container {
             display: flex;
-            max-width: 1600px;
+            max-width: var(--container-2xl);
             margin: 0 auto;
         }
 
@@ -106,23 +46,23 @@
         .api-sidebar {
             width: 280px;
             background-color: var(--gruvbox-bg0-soft);
-            padding: 2rem 1rem;
-            height: calc(100vh - 4rem);
+            padding: var(--space-8) var(--space-4);
+            height: calc(100vh - var(--nav-height));
             overflow-y: auto;
             position: sticky;
-            top: 4rem;
+            top: var(--nav-height);
         }
 
         .sidebar-section {
-            margin-bottom: 2rem;
+            margin-bottom: var(--space-8);
         }
 
         .sidebar-title {
-            font-size: 0.875rem;
+            font-size: var(--text-sm);
             text-transform: uppercase;
             letter-spacing: 0.1em;
             color: var(--gruvbox-fg3);
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-4);
             font-weight: 600;
         }
 
@@ -131,67 +71,76 @@
         }
 
         .sidebar-links li {
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--space-2);
         }
 
         .sidebar-links a {
             color: var(--gruvbox-fg2);
             text-decoration: none;
-            display: block;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            transition: all var(--duration-fast);
+            font-size: var(--text-sm);
+            cursor: pointer;
         }
 
         .sidebar-links a:hover {
-            background-color: var(--gruvbox-bg1);
+            background: var(--gruvbox-bg1);
             color: var(--gruvbox-aqua);
         }
 
         .sidebar-links a.active {
-            background-color: var(--gruvbox-bg1);
+            background: var(--gruvbox-bg1);
             color: var(--gruvbox-aqua);
-            border-left: 3px solid var(--gruvbox-aqua);
+            font-weight: 500;
+        }
+
+        .api-icon {
+            font-size: var(--text-sm);
+            opacity: 0.8;
         }
 
         /* Main Content */
         .api-content {
             flex: 1;
-            padding: 2rem 3rem;
-            max-width: 1000px;
+            padding: var(--space-8) var(--space-12);
+            max-width: var(--container-lg);
         }
 
         .content-section {
-            margin-bottom: 3rem;
-            scroll-margin-top: 5rem;
+            margin-bottom: var(--space-12);
+            scroll-margin-top: calc(var(--nav-height) + var(--space-4));
         }
 
         .content-section h2 {
-            font-size: 2rem;
+            font-size: var(--text-2xl);
             color: var(--gruvbox-fg0);
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-2);
             border-bottom: 2px solid var(--gruvbox-bg2);
         }
 
         .content-section h3 {
-            font-size: 1.5rem;
+            font-size: var(--text-xl);
             color: var(--gruvbox-yellow);
-            margin: 2rem 0 1rem;
+            margin: var(--space-8) 0 var(--space-4);
         }
 
         /* API Status Cards */
         .status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
         }
 
         .status-card {
             background: var(--gruvbox-bg1);
-            border-radius: 8px;
-            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            padding: var(--space-6);
             border: 1px solid var(--gruvbox-bg3);
         }
 
@@ -200,7 +149,7 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            margin-right: 0.5rem;
+            margin-right: var(--space-2);
         }
 
         .status-indicator.online {
@@ -213,38 +162,38 @@
         }
 
         .status-value {
-            font-size: 2rem;
+            font-size: var(--text-2xl);
             font-weight: bold;
             color: var(--gruvbox-fg0);
-            margin: 0.5rem 0;
+            margin: var(--space-2) 0;
         }
 
         .status-label {
             color: var(--gruvbox-fg3);
-            font-size: 0.9rem;
+            font-size: var(--text-sm);
         }
 
         /* Endpoint Documentation */
         .endpoint {
             background: var(--gruvbox-bg0-soft);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            border-radius: var(--radius-md);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
             border: 1px solid var(--gruvbox-bg2);
         }
 
         .endpoint-header {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
         }
 
         .method {
             font-weight: bold;
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
-            font-size: 0.875rem;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-base);
+            font-size: var(--text-sm);
             font-family: monospace;
         }
 
@@ -270,29 +219,29 @@
 
         .endpoint-path {
             font-family: monospace;
-            font-size: 1.1rem;
+            font-size: var(--text-lg);
             color: var(--gruvbox-fg0);
         }
 
         .endpoint-description {
             color: var(--gruvbox-fg2);
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-4);
         }
 
         /* Code Blocks */
         .code-block {
             background: var(--gruvbox-bg0-hard);
             border: 1px solid var(--gruvbox-bg3);
-            border-radius: 6px;
-            padding: 1rem;
+            border-radius: var(--radius-base);
+            padding: var(--space-4);
             overflow-x: auto;
-            margin: 1rem 0;
+            margin: var(--space-4) 0;
         }
 
         .code-block pre {
             margin: 0;
             font-family: 'Fira Code', monospace;
-            font-size: 0.9rem;
+            font-size: var(--text-sm);
             color: var(--gruvbox-fg1);
         }
 
@@ -306,7 +255,7 @@
         .params-table th,
         .params-table td {
             text-align: left;
-            padding: 0.75rem;
+            padding: var(--space-3);
             border-bottom: 1px solid var(--gruvbox-bg2);
         }
 
@@ -327,25 +276,25 @@
 
         .param-type {
             font-family: monospace;
-            font-size: 0.875rem;
+            font-size: var(--text-sm);
             color: var(--gruvbox-blue);
         }
 
         /* Tabs */
         .tabs {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
             border-bottom: 2px solid var(--gruvbox-bg2);
         }
 
         .tab {
-            padding: 0.75rem 1.5rem;
+            padding: var(--space-3) var(--space-6);
             background: none;
             border: none;
             color: var(--gruvbox-fg3);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all var(--duration-base);
             border-bottom: 2px solid transparent;
         }
 
@@ -365,11 +314,11 @@
         /* Response Status */
         .response-status {
             display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
-            font-size: 0.875rem;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-base);
+            font-size: var(--text-sm);
             font-weight: bold;
-            margin-right: 0.5rem;
+            margin-right: var(--space-2);
         }
 
         .response-status.success {
@@ -385,8 +334,8 @@
         /* Loading State */
         .loading {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: var(--space-5);
+            height: var(--space-5);
             border: 3px solid var(--gruvbox-bg3);
             border-radius: 50%;
             border-top-color: var(--gruvbox-aqua);
@@ -409,6 +358,7 @@
                 <li><a href="/dashboard">Dashboard</a></li>
                 <li><a href="/insights">Insights</a></li>
                 <li><a href="/documentation">Docs</a></li>
+                <li><a href="#" onclick="showSettings()">⚙️</a></li>
             </ul>
         </div>
     </nav>
@@ -419,47 +369,98 @@
             <div class="sidebar-section">
                 <h3 class="sidebar-title">Getting Started</h3>
                 <ul class="sidebar-links">
-                    <li><a href="#overview" class="active">Overview</a></li>
-                    <li><a href="#authentication">Authentication</a></li>
-                    <li><a href="#quickstart">Quick Start</a></li>
+                    <li><a href="#overview" class="active">
+                        <span class="api-icon">🏠</span>
+                        <span>Overview</span>
+                    </a></li>
+                    <li><a href="#authentication">
+                        <span class="api-icon">🔐</span>
+                        <span>Authentication</span>
+                    </a></li>
+                    <li><a href="#quickstart">
+                        <span class="api-icon">🚀</span>
+                        <span>Quick Start</span>
+                    </a></li>
                 </ul>
             </div>
 
             <div class="sidebar-section">
                 <h3 class="sidebar-title">System Status</h3>
                 <ul class="sidebar-links">
-                    <li><a href="#health">Health Check</a></li>
-                    <li><a href="#metrics">Metrics</a></li>
-                    <li><a href="#status">Database Status</a></li>
+                    <li><a href="#health">
+                        <span class="api-icon">🏥</span>
+                        <span>Health Check</span>
+                    </a></li>
+                    <li><a href="#metrics">
+                        <span class="api-icon">📊</span>
+                        <span>Metrics</span>
+                    </a></li>
+                    <li><a href="#status">
+                        <span class="api-icon">💾</span>
+                        <span>Database Status</span>
+                    </a></li>
                 </ul>
             </div>
 
             <div class="sidebar-section">
                 <h3 class="sidebar-title">Memory API</h3>
                 <ul class="sidebar-links">
-                    <li><a href="#create-memory">Create Memory</a></li>
-                    <li><a href="#search-memories">Search Memories</a></li>
-                    <li><a href="#get-memory">Get Memory</a></li>
-                    <li><a href="#list-memories">List Memories</a></li>
-                    <li><a href="#delete-memory">Delete Memory</a></li>
+                    <li><a href="#create-memory">
+                        <span class="api-icon">✨</span>
+                        <span>Create Memory</span>
+                    </a></li>
+                    <li><a href="#search-memories">
+                        <span class="api-icon">🔍</span>
+                        <span>Search Memories</span>
+                    </a></li>
+                    <li><a href="#get-memory">
+                        <span class="api-icon">📄</span>
+                        <span>Get Memory</span>
+                    </a></li>
+                    <li><a href="#list-memories">
+                        <span class="api-icon">📚</span>
+                        <span>List Memories</span>
+                    </a></li>
+                    <li><a href="#delete-memory">
+                        <span class="api-icon">🗑️</span>
+                        <span>Delete Memory</span>
+                    </a></li>
                 </ul>
             </div>
 
             <div class="sidebar-section">
                 <h3 class="sidebar-title">Memory Types</h3>
                 <ul class="sidebar-links">
-                    <li><a href="#semantic-memory">Semantic Memory</a></li>
-                    <li><a href="#episodic-memory">Episodic Memory</a></li>
-                    <li><a href="#procedural-memory">Procedural Memory</a></li>
+                    <li><a href="#semantic-memory">
+                        <span class="api-icon">🧠</span>
+                        <span>Semantic Memory</span>
+                    </a></li>
+                    <li><a href="#episodic-memory">
+                        <span class="api-icon">📖</span>
+                        <span>Episodic Memory</span>
+                    </a></li>
+                    <li><a href="#procedural-memory">
+                        <span class="api-icon">⚙️</span>
+                        <span>Procedural Memory</span>
+                    </a></li>
                 </ul>
             </div>
 
             <div class="sidebar-section">
                 <h3 class="sidebar-title">Advanced Features</h3>
                 <ul class="sidebar-links">
-                    <li><a href="#insights-api">Insights API</a></li>
-                    <li><a href="#bulk-operations">Bulk Operations</a></li>
-                    <li><a href="#relationships">Relationships</a></li>
+                    <li><a href="#insights-api">
+                        <span class="api-icon">💡</span>
+                        <span>Insights API</span>
+                    </a></li>
+                    <li><a href="#bulk-operations">
+                        <span class="api-icon">🔄</span>
+                        <span>Bulk Operations</span>
+                    </a></li>
+                    <li><a href="#relationships">
+                        <span class="api-icon">🔗</span>
+                        <span>Relationships</span>
+                    </a></li>
                 </ul>
             </div>
         </aside>
