@@ -51,7 +51,7 @@ RUN pip install --upgrade pip && \
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p logs session_storage temp data && \
+RUN mkdir -p logs session_storage temp data .cache && \
     chown -R app:app /app
 
 # Switch to non-root user

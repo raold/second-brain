@@ -17,6 +17,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - ENVIRONMENT=development
       - TEMP_DIR=/app/temp
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TRANSFORMERS_CACHE=/app/.cache
     volumes:
       - .:/app:rw
       - /app/.venv  # Exclude .venv from mount

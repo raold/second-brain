@@ -24,8 +24,11 @@ class Database:
 
     async def initialize(self):
         """Initialize database connection and OpenAI client."""
-        # Database connection
-        db_url = f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'postgres')}@{os.getenv('POSTGRES_HOST', 'localhost')}:{os.getenv('POSTGRES_PORT', '5432')}/{os.getenv('POSTGRES_DB', 'secondbrain')}"
+        # Database connection - prefer DATABASE_URL if provided
+        db_url = os.getenv('DATABASE_URL')
+        if not db_url:
+            # Fall back to individual components
+            db_url = f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'postgres')}@{os.getenv('POSTGRES_HOST', 'localhost')}:{os.getenv('POSTGRES_PORT', '5432')}/{os.getenv('POSTGRES_DB', 'secondbrain')}"
 
         try:
             self.pool = await asyncpg.create_pool(db_url, min_size=1, max_size=10)
