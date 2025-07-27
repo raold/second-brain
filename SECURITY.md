@@ -2,22 +2,22 @@
 
 ## Supported Versions
 
-We actively support the current stable and development versions. The v2.8.x series represents the current architecture with AI reasoning, knowledge graphs, and advanced content analysis.
+We actively support the current v3.x series with its enterprise-ready architecture. The v3.0.0 release represents a complete architectural transformation with Clean Architecture, event sourcing, and production-grade infrastructure.
 
 | Version | Supported        | Security Level | Notes |
 | ------- | ---------------- | -------------- | ----- |
-| 2.8.x   | ✅ **Active**     | ⭐⭐⭐⭐⭐ High | Current stable (AI Reasoning + Advanced Analysis) |
-| 2.4.x   | ✅ **Maintenance** | ⭐⭐⭐⭐ Good  | Security patches and critical fixes only |
-| 2.3.x   | ⚠️ **End of Life** | ⭐⭐ Limited | No updates, upgrade recommended |
-| < 2.2   | ❌ **Unsupported** | ⚠️ None    | Legacy versions discontinued |
+| 3.x     | ✅ **Active**     | ⭐⭐⭐⭐⭐ Maximum | Current stable (Clean Architecture + Enterprise Features) |
+| 2.8.x   | 🔧 **Maintenance** | ⭐⭐⭐⭐ Good  | Security patches and critical fixes only |
+| 2.4.x   | ⚠️ **End of Life** | ⭐⭐ Limited | No updates, upgrade to v3.x strongly recommended |
+| < 2.3   | ❌ **Unsupported** | ⚠️ None    | Legacy versions discontinued |
 
-**Current Stable**: v2.8.1 | **Development**: v2.9.0
+**Current Stable**: v3.0.0 | **Previous Stable**: v2.8.2
 
-We strongly encourage all users to upgrade to v2.8.x for improved security, performance, AI reasoning capabilities, and advanced NLP features.
+We strongly encourage all users to upgrade to v3.x for enterprise-grade security, scalability, observability, and the complete benefits of Clean Architecture.
 
-## Single-User Architecture
+## Enterprise-Ready Architecture (v3.x)
 
-**Second Brain v2.x is designed as a personal, single-user AI memory system.** Our security model reflects this use case:
+**Second Brain v3.x has evolved into an enterprise-ready AI memory system** with production-grade security features. While maintaining simplicity for single-user deployments, v3.x now provides the foundation for secure multi-user and enterprise scenarios:
 
 ### Security Scope
 - ✅ **Personal Data Protection**: Secure storage of individual memories and embeddings
@@ -42,26 +42,30 @@ We strongly encourage all users to upgrade to v2.8.x for improved security, perf
 - Enterprise compliance (SOC2, GDPR, etc.)
 - Distributed system security
 
-## Current Security Features
+## Current Security Features (v3.0.0)
 
 ### ✅ **Implemented Protections**
-- **API Key Authentication**: Simple token-based access control
-- **Environment Variable Security**: Secrets stored in `.env` files (not committed)
-- **PostgreSQL Security**: Database credentials and connection security
-- **OpenAI API Protection**: Secure API key handling for embeddings
-- **Input Validation**: Pydantic models for request validation
-- **Mock Database Mode**: Testing without external API dependencies
-- **NLP Model Isolation**: Transformer models run in isolated contexts
-- **Graph Data Validation**: Entity and relationship validation before storage
+- **JWT Authentication**: Industry-standard JSON Web Tokens for API security
+- **Environment Variable Security**: Secrets management with `.env` files (gitignored)
+- **PostgreSQL Security**: Connection pooling, SSL support, and credential isolation
+- **OpenAI API Protection**: Secure key handling with automatic rotation support
+- **Input Validation**: Pydantic V2 models with strict type checking and validation
+- **Dependency Injection**: No hardcoded dependencies, secure service instantiation
+- **Event Sourcing**: Complete audit trail of all state changes
+- **Structured Logging**: JSON logs with security context and correlation IDs
+- **Docker Isolation**: Container-based security boundaries
+- **CORS Configuration**: Proper cross-origin resource sharing controls
+- **Error Handling**: Sanitized error messages prevent information disclosure
+- **Async Architecture**: Protection against blocking attacks
 
-### 🔄 **In Development** (v2.9.0)
-- **Enhanced Input Sanitization**: Advanced validation for memory content and metadata
-- **Rate Limiting**: Protection against API abuse
-- **Security Headers**: HTTP security headers for web dashboard
-- **Audit Logging**: Security event logging and monitoring
-- **Backup Encryption**: Encrypted backup and restore functionality
-- **Model Security**: Sandboxed execution for transformer models
-- **Graph Privacy**: Access control for sensitive entity relationships
+### 🔄 **Security Enhancements in v3.x**
+- **Rate Limiting**: Built-in protection against API abuse
+- **Security Headers**: Comprehensive HTTP security headers (CSP, HSTS, etc.)
+- **Audit Logging**: Full event stream with security event tracking
+- **Service Isolation**: Clean Architecture ensures security boundaries
+- **Health Checks**: Secure health endpoints that don't expose sensitive data
+- **Observability**: OpenTelemetry tracing for security monitoring
+- **Database Migrations**: Version-controlled schema changes with Alembic
 
 ### ⏳ **Future Considerations**
 - **Encryption at Rest**: Database-level encryption for sensitive memories
@@ -71,19 +75,24 @@ We strongly encourage all users to upgrade to v2.8.x for improved security, perf
 
 ## Deployment Security
 
-### **Recommended Single-User Setup**
+### **Recommended Production Setup (v3.0.0)**
 ```bash
-# Local development (default)
-export API_TOKENS="your-personal-token"
-export OPENAI_API_KEY="your-openai-key" 
-export DATABASE_URL="postgresql://user:pass@localhost:5432/second_brain"
+# Docker-based deployment (recommended)
+docker-compose up -d
 
-# Self-hosted production
-- Use strong, unique API tokens
-- Secure PostgreSQL with network restrictions
-- Deploy behind reverse proxy with HTTPS
-- Regular database backups with encryption
-- Isolate NLP model execution environments
+# Environment configuration (.env)
+JWT_SECRET="strong-256-bit-secret"
+OPENAI_API_KEY="sk-your-openai-key" 
+DATABASE_URL="postgresql://user:pass@postgres:5432/secondbrain"
+REDIS_URL="redis://redis:6379"
+
+# Production best practices
+- Use Docker Compose or Kubernetes
+- Enable SSL/TLS for all connections
+- Configure firewall rules
+- Regular automated backups
+- Monitor with Prometheus/Grafana
+- Use secrets management (Docker Secrets, K8s Secrets)
 ```
 
 ### **Security Checklist**
@@ -158,17 +167,26 @@ If you discover a security vulnerability, please report it responsibly:
 
 ## Version-Specific Security Notes
 
-### v2.8.x (Current)
+### v3.x (Current - Active Support)
+- **Clean Architecture**: Security boundaries between layers
+- **Event Sourcing**: Complete audit trail and state recovery
+- **Docker-First**: Container isolation for all components
+- **Enterprise Features**: JWT auth, structured logging, observability
+- **Cross-Platform**: Tested on Windows, macOS, Linux, and WSL2
+- **Zero Trust**: No implicit trust between services
+
+### v2.8.x (Maintenance Support)
 - Enhanced NLP processing requires additional dependencies
 - Transformer models may consume significant memory
 - Graph visualization runs client-side (secure)
-- All analysis happens locally, no external API calls
+- Security patches only, no new features
+- Upgrade to v3.x recommended for production use
 
-### v2.4.x (Maintenance)
+### v2.4.x (End of Life)
 - Stable PostgreSQL + pgvector architecture
-- Well-tested security model
-- Limited to core functionality
-- Recommended for conservative deployments
+- Known security limitations
+- No longer receiving updates
+- Immediate upgrade to v3.x strongly recommended
 
 ## Resources
 
@@ -181,7 +199,7 @@ If you discover a security vulnerability, please report it responsibly:
 
 ---
 
-**Last Updated**: January 22, 2025  
-**Security Model**: Single-User Personal AI System  
-**Current Stable**: v2.8.1 | **Development**: v2.9.0  
-**Next Security Review**: v2.9.0 (Collaboration Features)
+**Last Updated**: January 27, 2025  
+**Security Model**: Enterprise-Ready AI Memory System  
+**Current Stable**: v3.0.0 | **Previous Stable**: v2.8.2  
+**Support Matrix**: Active (3.x) | Maintenance (2.8.x) | EOL (2.4.x) | Unsupported (<2.3)
