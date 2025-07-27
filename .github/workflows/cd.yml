@@ -34,12 +34,12 @@ jobs:
     - name: Build Docker images
       run: |
         docker compose build
-        docker tag second-brain-app:latest second-brain-app:latest
     
     - name: Save Docker images
       run: |
         docker images
-        docker save second-brain-app:latest | gzip > app-image.tar.gz
+        # The image name includes the project name prefix
+        docker save second-brain-app | gzip > app-image.tar.gz
     
     - name: Upload Docker image artifact
       uses: actions/upload-artifact@v4
@@ -70,6 +70,9 @@ jobs:
     - name: Load Docker images
       run: |
         gunzip -c app-image.tar.gz | docker load
+        docker images
+        # Tag the image to match what docker-compose expects
+        docker tag second-brain-app:latest second-brain-app:latest || true
     
     - name: Create test env file
       run: |
@@ -80,10 +83,25 @@ jobs:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+        sleep 10  # Give containers time to start
+        
+    - name: Check container status
+      run: |
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml ps
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml logs
         
     - name: Wait for services
       run: |
-        timeout 60 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
+        # Check if app container is running
+        docker ps -a
+        # Try to get logs before health check
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml logs app
+        # Now try health check
+        timeout 60 bash -c 'until curl -sf http://localhost:8000/health 2>/dev/null; do echo "Waiting for app..."; sleep 2; done' || {
+          echo "Health check failed, getting more logs..."
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml logs
+          exit 1
+        }
     
     - name: Check container health
       run: |
