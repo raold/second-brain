@@ -56,37 +56,40 @@ class TestHealthService:
         """Test system status information"""
         system_status = await self.health_service.get_system_status()
         
-        assert "cpu" in system_status
-        assert "memory" in system_status
-        assert "disk" in system_status
+        assert "system_metrics" in system_status
         assert "database" in system_status
         assert "recommendations" in system_status
         
+        # Check system metrics structure
+        assert "cpu" in system_status["system_metrics"]
+        assert "memory" in system_status["system_metrics"]
+        assert "disk" in system_status["system_metrics"]
+        
         # Check CPU info structure
-        assert "percent" in system_status["cpu"]
-        assert "count" in system_status["cpu"]
+        assert "usage_percent" in system_status["system_metrics"]["cpu"]
+        assert "cores" in system_status["system_metrics"]["cpu"]
         
         # Check memory info structure
-        assert "total" in system_status["memory"]
-        assert "available" in system_status["memory"]
-        assert "percent" in system_status["memory"]
+        assert "total_gb" in system_status["system_metrics"]["memory"]
+        assert "available_gb" in system_status["system_metrics"]["memory"]
+        assert "usage_percent" in system_status["system_metrics"]["memory"]
     
     @pytest.mark.asyncio
     async def test_get_performance_metrics(self):
         """Test performance metrics collection"""
         metrics = await self.health_service.get_performance_metrics()
         
-        assert "system" in metrics
-        assert "database" in metrics
-        assert "response_times" in metrics
+        assert "database_performance" in metrics
+        assert "resource_usage" in metrics
+        assert "api_performance" in metrics
         
-        # Check system metrics
-        assert "cpu_usage" in metrics["system"]
-        assert "memory_usage" in metrics["system"]
-        assert "disk_usage" in metrics["system"]
+        # Check resource usage
+        assert "process_cpu_percent" in metrics["resource_usage"]
+        assert "process_memory_mb" in metrics["resource_usage"]
+        assert "thread_count" in metrics["resource_usage"]
         
-        # Check response times
-        assert "health_check" in metrics["response_times"]
+        # Check API performance
+        assert "endpoints" in metrics["api_performance"]
     
     @pytest.mark.asyncio
     async def test_run_diagnostics(self):
@@ -95,7 +98,7 @@ class TestHealthService:
         
         assert "overall_status" in diagnostics
         assert "checks" in diagnostics
-        assert "summary" in diagnostics
+        assert "issues" in diagnostics
         assert "timestamp" in diagnostics
         
         # Should have multiple diagnostic checks
@@ -103,9 +106,9 @@ class TestHealthService:
         
         # Each check should have required fields
         for check in diagnostics["checks"]:
-            assert "name" in check
-            assert "status" in check
-            assert "message" in check
+            assert "check" in check
+            assert "passed" in check
+            assert "details" in check
     
     @pytest.mark.asyncio
     async def test_health_check_with_real_timestamp(self):
@@ -149,6 +152,14 @@ class TestHealthServiceIntegration:
         mock_db.get_memory_count = AsyncMock(return_value=100)
         mock_db.get_database_size = AsyncMock(return_value=1024 * 1024)
         mock_db.check_connection = AsyncMock(return_value=True)
+        mock_db.get_index_stats = AsyncMock(return_value={
+            "total_memories": 100,
+            "memories_with_embeddings": 100,
+            "hnsw_index_exists": False,
+            "ivf_index_exists": False,
+            "index_ready": False
+        })
+        mock_db.pool = AsyncMock()
         
         health_service = HealthService(mock_db)
         
@@ -160,7 +171,7 @@ class TestHealthServiceIntegration:
         
         assert health_status["status"] == "healthy"
         assert "database" in system_status
-        assert "database" in performance
+        assert "database_performance" in performance
         assert diagnostics["overall_status"] in ["healthy", "degraded", "unhealthy"]
     
     @pytest.mark.asyncio
@@ -205,6 +216,14 @@ class TestHealthServiceErrorHandling:
         # Mock database methods that raise exceptions
         mock_db.get_memory_count = AsyncMock(side_effect=Exception("DB error"))
         mock_db.check_connection = AsyncMock(side_effect=Exception("Connection failed"))
+        mock_db.get_index_stats = AsyncMock(return_value={
+            "total_memories": 0,
+            "memories_with_embeddings": 0,
+            "hnsw_index_exists": False,
+            "ivf_index_exists": False,
+            "index_ready": False
+        })
+        mock_db.pool = AsyncMock()
         
         health_service = HealthService(mock_db)
         
@@ -235,5 +254,5 @@ class TestHealthServiceErrorHandling:
             system_status = await health_service.get_system_status()
             
             assert isinstance(system_status, dict)
-            # Should still have some system info even if CPU fails
-            assert "memory" in system_status or "disk" in system_status
+            # Should still have system metrics even if CPU fails
+            assert "system_metrics" in system_status

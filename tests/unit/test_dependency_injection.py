@@ -150,18 +150,18 @@ class TestServiceFunctionality:
         service = get_memory_service()
         
         # Should have expected methods
-        assert hasattr(service, 'get_memories')
-        assert hasattr(service, 'create_memory')
-        assert hasattr(service, 'search_memories')
+        assert hasattr(service, 'find_all')
+        assert hasattr(service, 'save')
+        assert hasattr(service, 'search')
         assert hasattr(service, 'get_memory')
-        assert hasattr(service, 'delete_memory')
+        assert hasattr(service, 'delete')
         
         # Methods should be callable
-        assert callable(service.get_memories)
-        assert callable(service.create_memory)
-        assert callable(service.search_memories)
+        assert callable(service.find_all)
+        assert callable(service.save)
+        assert callable(service.search)
         assert callable(service.get_memory)
-        assert callable(service.delete_memory)
+        assert callable(service.delete)
     
     async def test_session_service_basic_functionality(self):
         """Test session service provides expected methods"""

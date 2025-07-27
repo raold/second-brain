@@ -11,6 +11,7 @@ from typing import Any
 import psutil
 
 from app.database import Database
+from app.database_mock import MockDatabase
 from app.version import get_version_info
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,16 @@ class HealthService:
             system_metrics = self._get_system_metrics()
 
             # Get index statistics
-            index_stats = await self.db.get_index_stats()
+            if self.db:
+                index_stats = await self.db.get_index_stats()
+            else:
+                index_stats = {
+                    "total_memories": 0,
+                    "memories_with_embeddings": 0,
+                    "hnsw_index_exists": False,
+                    "ivf_index_exists": False,
+                    "index_ready": False
+                }
 
             # Generate recommendations
             recommendations = self._generate_recommendations(index_stats)

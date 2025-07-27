@@ -86,9 +86,9 @@ __version__ = "3.0.0"
 async def get_db_instance():
     """Get database instance"""
     from app.database import get_database
-    return get_database()
+    return await get_database()
 
-async def verify_api_key(api_key: str = Query(None, alias="api-key")):
+async def verify_api_key(api_key: str = Query(..., alias="api_key")):
     """Simple API key verification"""
     if api_key != os.getenv("API_KEY", "test-key"):
         raise HTTPException(status_code=401, detail="Invalid API key")

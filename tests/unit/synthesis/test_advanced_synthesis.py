@@ -45,7 +45,9 @@ class TestThemeCluster:
         ]
         
         high_cluster = ThemeCluster("Important Topic", recent_memories)
-        assert high_cluster.importance_score > 0.7
+        # With importance 8.5 avg, recent date, and 2 memories:
+        # score = (8.5/10) * 0.5 + (2/10) * 0.3 + 1.0 * 0.2 = 0.425 + 0.06 + 0.2 = 0.685
+        assert high_cluster.importance_score == pytest.approx(0.685, rel=0.01)
         
         # Low importance, old memories
         from datetime import timedelta

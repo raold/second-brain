@@ -16,6 +16,7 @@ class MockDatabase:
     def __init__(self):
         self.memories: dict[str, dict[str, Any]] = {}
         self.is_initialized = False
+        self.pool = None  # Mock pool attribute for compatibility
 
     async def initialize(self):
         """Initialize mock database (no actual connection needed)."""
@@ -142,7 +143,8 @@ class MockDatabase:
             results = [r for r in results if r.get("memory_type") in memory_types]
         
         # Apply importance filter
-        results = [r for r in results if r.get("importance_score", 0) >= importance_threshold]
+        if importance_threshold is not None:
+            results = [r for r in results if r.get("importance_score", 0) >= importance_threshold]
         
         return results[:limit]
 

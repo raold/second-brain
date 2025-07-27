@@ -203,9 +203,19 @@ class HealthService:
         except Exception as e:
             logger.error(f"Failed to get system status: {e}")
             return {
-                "database": {"connected": False, "error": str(e)},
-                "index_status": {"ready": False},
-                "recommendations": ["Fix database connection issues"]
+                "database": "disconnected",
+                "index_status": {
+                    "total_memories": 0,
+                    "memories_with_embeddings": 0,
+                    "hnsw_index_exists": False,
+                    "ivf_index_exists": False,
+                    "index_ready": False
+                },
+                "recommendations": {
+                    "create_index": False,
+                    "index_type": "None",
+                    "error": str(e)
+                }
             }
     
     async def run_diagnostics(self) -> dict:

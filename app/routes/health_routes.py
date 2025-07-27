@@ -5,7 +5,7 @@ All business logic is delegated to HealthService.
 
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.docs import HealthResponse, StatusResponse
 from app.core.dependencies import get_health_service_dep

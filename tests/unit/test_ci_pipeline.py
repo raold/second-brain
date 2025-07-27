@@ -47,7 +47,7 @@ class MockOpenAI:
 @pytest.mark.asyncio
 async def test_environment_setup():
     """Test that the environment is set up correctly."""
-    print("🔧 Testing Environment Setup...")
+    print("Testing Environment Setup...")
 
     # Try to load from .env.test first
     from pathlib import Path
@@ -59,7 +59,7 @@ async def test_environment_setup():
                 if line.strip() and not line.startswith("#"):
                     key, value = line.strip().split("=", 1)
                     os.environ[key] = value
-        print("✅ Loaded test environment variables from .env.test")
+        print("[OK] Loaded test environment variables from .env.test")
     else:
         # Check required environment variables
         required_vars = [
@@ -90,14 +90,14 @@ async def test_environment_setup():
             os.environ["OPENAI_API_KEY"] = "test-key-mock"
             os.environ["API_TOKENS"] = "test-token-1,test-token-2"
 
-    print("✅ Environment setup complete")
+    print("[OK] Environment setup complete")
     return True
 
 
 @pytest.mark.asyncio
 async def test_database_connection():
     """Test database connection and schema setup."""
-    print("\n🔧 Testing Database Connection...")
+    print("\n Testing Database Connection...")
 
     try:
         import asyncpg
@@ -110,19 +110,19 @@ async def test_database_connection():
         # Test pgvector extension
         try:
             await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-            print("✅ pgvector extension available")
+            print("[OK] pgvector extension available")
         except Exception as e:
-            print(f"⚠️  pgvector extension issue: {e}")
+            print(f"[WARN] pgvector extension issue: {e}")
 
         # Test basic query
         result = await conn.fetchval("SELECT 1")
         assert result == 1
-        print("✅ Database connection successful")
+        print("[OK] Database connection successful")
 
         await conn.close()
 
     except Exception as e:
-        print(f"❌ Database connection failed: {e}")
+        print(f"[FAIL] Database connection failed: {e}")
         return False
 
     return True
@@ -131,7 +131,7 @@ async def test_database_connection():
 @pytest.mark.asyncio
 async def test_mock_database_functionality():
     """Test the mock database functionality."""
-    print("\n🔧 Testing Mock Database Functionality...")
+    print("\n Testing Mock Database Functionality...")
 
     try:
         from app.database_mock import get_mock_database
@@ -141,29 +141,29 @@ async def test_mock_database_functionality():
 
         # Store a test memory
         memory_id = await db.store_memory("Test memory content", {"type": "test"})
-        print(f"✅ Memory stored with ID: {memory_id}")
+        print(f"[OK] Memory stored with ID: {memory_id}")
 
         # Retrieve the memory
         memory = await db.get_memory(memory_id)
         assert memory is not None
         assert memory["content"] == "Test memory content"
-        print("✅ Memory retrieval successful")
+        print("[OK] Memory retrieval successful")
 
         # Search memories
         results = await db.search_memories("test", limit=5)
         assert len(results) > 0
-        print(f"✅ Search returned {len(results)} results")
+        print(f"[OK] Search returned {len(results)} results")
 
         # List all memories
         all_memories = await db.get_all_memories(limit=10)
         assert len(all_memories) > 0
-        print(f"✅ Listed {len(all_memories)} total memories")
+        print(f"[OK] Listed {len(all_memories)} total memories")
 
         # Clean up
         await db.close()
 
     except Exception as e:
-        print(f"❌ Mock database test failed: {e}")
+        print(f"[FAIL] Mock database test failed: {e}")
         return False
 
     return True
@@ -172,7 +172,7 @@ async def test_mock_database_functionality():
 @pytest.mark.asyncio
 async def test_real_database_functionality():
     """Test the real database functionality if available."""
-    print("\n🔧 Testing Real Database Functionality...")
+    print("\n Testing Real Database Functionality...")
 
     try:
         # Mock the OpenAI client to avoid API calls
@@ -188,22 +188,22 @@ async def test_real_database_functionality():
 
         # Store a test memory
         memory_id = await db.store_memory("Real database test content", {"type": "integration_test"})
-        print(f"✅ Memory stored with ID: {memory_id}")
+        print(f"[OK] Memory stored with ID: {memory_id}")
 
         # Retrieve the memory
         memory = await db.get_memory(memory_id)
         assert memory is not None
         assert memory["content"] == "Real database test content"
-        print("✅ Memory retrieval successful")
+        print("[OK] Memory retrieval successful")
 
         # Search memories (may return 0 results with mock embeddings)
         results = await db.search_memories("integration", limit=5)
         assert isinstance(results, list)  # Just check it's a list, may be empty
-        print(f"✅ Search returned {len(results)} results")
+        print(f"[OK] Search returned {len(results)} results")
 
         # Clean up test data
         await db.delete_memory(memory_id)
-        print("✅ Test data cleaned up")
+        print("[OK] Test data cleaned up")
 
         # Don't close the database connection here - leave it for the app to manage
 
@@ -211,7 +211,7 @@ async def test_real_database_functionality():
         app.database.AsyncOpenAI = original_openai
 
     except Exception as e:
-        print(f"❌ Real database test failed: {e}")
+        print(f"[FAIL] Real database test failed: {e}")
         return False
 
     return True
@@ -220,7 +220,7 @@ async def test_real_database_functionality():
 @pytest.mark.asyncio
 async def test_api_endpoints():
     """Test the FastAPI endpoints."""
-    print("\n🔧 Testing API Endpoints...")
+    print("\n Testing API Endpoints...")
 
     try:
         from httpx import AsyncClient
@@ -237,7 +237,7 @@ async def test_api_endpoints():
             response = await client.get("/health")
             assert response.status_code == 200
             assert response.json()["status"] == "healthy"
-            print("✅ Health check endpoint working")
+            print("[OK] Health check endpoint working")
 
             # Test API key authentication
             api_key = os.getenv("API_TOKENS", "test-token-1").split(",")[0].strip()
@@ -249,14 +249,14 @@ async def test_api_endpoints():
             assert response.status_code == 200
             stored_memory = response.json()
             memory_id = stored_memory["id"]
-            print(f"✅ Memory stored via API: {memory_id}")
+            print(f"[OK] Memory stored via API: {memory_id}")
 
             # Test get memory
             response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
             assert response.status_code == 200
             retrieved_memory = response.json()
             assert retrieved_memory["content"] == "API test memory"
-            print("✅ Memory retrieved via API")
+            print("[OK] Memory retrieved via API")
 
             # Test search memories (may return 0 results with mock embeddings)
             search_data = {"query": "API test", "limit": 5}
@@ -265,25 +265,25 @@ async def test_api_endpoints():
             assert response.status_code == 200
             results = response.json()
             assert isinstance(results, list)  # Just check it's a list, may be empty
-            print(f"✅ Search via API returned {len(results)} results")
+            print(f"[OK] Search via API returned {len(results)} results")
 
             # Test delete memory
             response = await client.delete(f"/memories/{memory_id}", params={"api_key": api_key})
             assert response.status_code == 200
-            print("✅ Memory deleted via API")
+            print("[OK] Memory deleted via API")
 
             # Test list memories
             response = await client.get("/memories", params={"api_key": api_key, "limit": 10})
             assert response.status_code == 200
             memories = response.json()
             assert isinstance(memories, list)
-            print(f"✅ Listed {len(memories)} memories via API")
+            print(f"[OK] Listed {len(memories)} memories via API")
 
         # Restore original OpenAI
         app.database.AsyncOpenAI = original_openai
 
     except Exception as e:
-        print(f"❌ API endpoints test failed: {e}")
+        print(f"[FAIL] API endpoints test failed: {e}")
         return False
 
     return True
@@ -292,7 +292,7 @@ async def test_api_endpoints():
 @pytest.mark.asyncio
 async def test_docker_build():
     """Test Docker build process."""
-    print("\n🔧 Testing Docker Build...")
+    print("\n Testing Docker Build...")
 
     try:
         import subprocess
@@ -300,7 +300,7 @@ async def test_docker_build():
         # Check if Docker is available
         result = subprocess.run(["docker", "--version"], capture_output=True, text=True)
         if result.returncode != 0:
-            print("⚠️  Docker not available, skipping Docker tests")
+            print("[WARN] Docker not available, skipping Docker tests")
             return True
 
         # Build the Docker image
@@ -313,16 +313,16 @@ async def test_docker_build():
         )
 
         if result.returncode != 0:
-            print(f"❌ Docker build failed: {result.stderr}")
+            print(f"[FAIL] Docker build failed: {result.stderr}")
             return False
 
-        print("✅ Docker build successful")
+        print("[OK] Docker build successful")
 
         # Clean up the test image
         subprocess.run(["docker", "rmi", "second-brain-test"], capture_output=True, text=True)
 
     except Exception as e:
-        print(f"❌ Docker build test failed: {e}")
+        print(f"[FAIL] Docker build test failed: {e}")
         return False
 
     return True
@@ -331,7 +331,7 @@ async def test_docker_build():
 @pytest.mark.asyncio
 async def test_linting_and_formatting():
     """Test code quality with ruff."""
-    print("\n🔧 Testing Code Quality (Linting)...")
+    print("\n Testing Code Quality (Linting)...")
 
     try:
         import subprocess
@@ -340,13 +340,13 @@ async def test_linting_and_formatting():
         result = subprocess.run(["ruff", "check", "."], capture_output=True, text=True, cwd=Path(__file__).parent)
 
         if result.returncode != 0:
-            print(f"❌ Linting failed: {result.stdout}")
+            print(f"[FAIL] Linting failed: {result.stdout}")
             return False
 
-        print("✅ Code linting passed")
+        print("[OK] Code linting passed")
 
     except Exception as e:
-        print(f"❌ Linting test failed: {e}")
+        print(f"[FAIL] Linting test failed: {e}")
         return False
 
     return True
@@ -355,7 +355,7 @@ async def test_linting_and_formatting():
 @pytest.mark.asyncio
 async def test_requirements_installation():
     """Test that all requirements can be installed."""
-    print("\n🔧 Testing Requirements Installation...")
+    print("\n Testing Requirements Installation...")
 
     try:
         import subprocess
@@ -363,7 +363,7 @@ async def test_requirements_installation():
         # Check if requirements-minimal.txt exists
         requirements_file = Path(__file__).parent / "requirements-minimal.txt"
         if not requirements_file.exists():
-            print("❌ requirements-minimal.txt not found")
+            print("[FAIL] requirements-minimal.txt not found")
             return False
 
         # Create a temporary virtual environment
@@ -374,7 +374,7 @@ async def test_requirements_installation():
             result = subprocess.run([sys.executable, "-m", "venv", str(venv_path)], capture_output=True, text=True)
 
             if result.returncode != 0:
-                print(f"❌ Virtual environment creation failed: {result.stderr}")
+                print(f"[FAIL] Virtual environment creation failed: {result.stderr}")
                 return False
 
             # Determine pip path
@@ -389,13 +389,13 @@ async def test_requirements_installation():
             )
 
             if result.returncode != 0:
-                print(f"❌ Requirements installation failed: {result.stderr}")
+                print(f"[FAIL] Requirements installation failed: {result.stderr}")
                 return False
 
-            print("✅ Requirements installation successful")
+            print("[OK] Requirements installation successful")
 
     except Exception as e:
-        print(f"❌ Requirements test failed: {e}")
+        print(f"[FAIL] Requirements test failed: {e}")
         return False
 
     return True
@@ -403,7 +403,7 @@ async def test_requirements_installation():
 
 async def main():
     """Run all CI pipeline tests."""
-    print("🚀 Starting CI Pipeline Test Suite for Second Brain v2.0.0")
+    print(" Starting CI Pipeline Test Suite for Second Brain v2.0.0")
     print("=" * 60)
 
     tests = [
@@ -424,12 +424,12 @@ async def main():
             result = await test_func()
             results.append((test_name, result))
         except Exception as e:
-            print(f"❌ {test_name} failed with exception: {e}")
+            print(f"[FAIL] {test_name} failed with exception: {e}")
             results.append((test_name, False))
 
     # Print summary
     print("\n" + "=" * 60)
-    print("🎯 CI Pipeline Test Results Summary")
+    print(" CI Pipeline Test Results Summary")
     print("=" * 60)
 
     passed = 0
@@ -437,21 +437,21 @@ async def main():
 
     for test_name, result in results:
         if result:
-            print(f"✅ {test_name}")
+            print(f"[OK] {test_name}")
             passed += 1
         else:
-            print(f"❌ {test_name}")
+            print(f"[FAIL] {test_name}")
             failed += 1
 
-    print(f"\n📊 Total: {passed + failed} tests")
-    print(f"✅ Passed: {passed}")
-    print(f"❌ Failed: {failed}")
+    print(f"\nTotal: {passed + failed} tests")
+    print(f"[OK] Passed: {passed}")
+    print(f"[FAIL] Failed: {failed}")
 
     if failed == 0:
-        print("\n🎉 All tests passed! CI pipeline is ready for green builds! 🎉")
+        print("\n[SUCCESS] All tests passed! CI pipeline is ready for green builds! [SUCCESS]")
         return 0
     else:
-        print(f"\n⚠️  {failed} test(s) failed. CI pipeline needs attention.")
+        print(f"\n[WARN] {failed} test(s) failed. CI pipeline needs attention.")
         return 1
 
 

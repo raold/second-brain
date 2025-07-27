@@ -15,6 +15,7 @@ os.environ["ENVIRONMENT"] = "test"
 os.environ["USE_MOCK_DATABASE"] = "true"  # Use mock database for tests
 os.environ["SECURITY_LEVEL"] = "development"
 os.environ["API_TOKENS"] = "test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba"
+os.environ["API_KEY"] = "test-token-32-chars-long-for-auth-1234567890abcdef"  # For app.py endpoints
 # Use real OpenAI key if available (from GitHub secrets), otherwise use mock
 if not os.environ.get("OPENAI_API_KEY"):
     os.environ["OPENAI_API_KEY"] = "test-key-mock"
