@@ -27,11 +27,11 @@ from fastapi import Response
 
 # Optional Redis dependency
 try:
-    import aioredis
-    HAS_AIOREDIS = True
+    import redis.asyncio as redis
+    HAS_REDIS = True
 except ImportError:
-    HAS_AIOREDIS = False
-    aioredis = None
+    HAS_REDIS = False
+    redis = None
 
 
 class MetricType(str, Enum):
@@ -313,18 +313,18 @@ class HealthChecker:
     
     async def check_redis(self, redis_url: str) -> Dict[str, Any]:
         """Check Redis health"""
-        if not HAS_AIOREDIS:
+        if not HAS_REDIS:
             return {
                 "healthy": False,
-                "error": "aioredis not installed",
+                "error": "redis not installed",
                 "message": "Redis monitoring unavailable"
             }
             
         try:
-            redis = await aioredis.create_redis_pool(redis_url)
-            await redis.ping()
-            info = await redis.info()
-            await redis.close()
+            client = redis.from_url(redis_url)
+            await client.ping()
+            info = await client.info()
+            await client.close()
             
             return {
                 "healthy": True,

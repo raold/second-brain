@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(.venvScriptspython.exe -m pytest tests/unit/test_deduplication_phase2.py::test_phase_2_advanced_structure -xvs)"
+      "Bash(docker logs:*)"
     ],
     "deny": []
   },
