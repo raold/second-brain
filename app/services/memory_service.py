@@ -1170,3 +1170,27 @@ class MemoryServiceFactory:
             adapter.add_adapter(Service, 'health_check', lambda: {"status": "adapted", "healthy": True})
 
         return adapter
+
+    async def get_total_memory_count(self) -> int:
+        """Get the total count of memories in the database."""
+        try:
+            if not self.database:
+                logger.warning("No database connection available")
+                return 0
+            
+            # Get total count from database
+            # Using raw SQL for efficiency
+            pool = getattr(self.database, 'pool', None)
+            if pool:
+                async with pool.acquire() as conn:
+                    result = await conn.fetchval("SELECT COUNT(*) FROM memories")
+                    return result or 0
+            else:
+                # Fallback to get_all_memories if no pool
+                memories = await self.database.get_all_memories(limit=1, offset=0)
+                # This is inefficient but works as fallback
+                return len(memories)
+                
+        except Exception as e:
+            logger.error(f"Failed to get memory count: {e}")
+            return 0

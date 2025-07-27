@@ -184,11 +184,36 @@ version: ## Show version information
 	@echo "Docker Compose: $(shell docker compose version)"
 	@echo "Python: $(shell $(PYTHON) --version)"
 
-# Performance
+# Performance Testing
 .PHONY: benchmark
 benchmark: ## Run performance benchmarks
-	@echo "⚡ Running benchmarks..."
-	$(DOCKER_COMPOSE) run --rm app python -m pytest tests/performance -v
+	@echo "⚡ Running performance benchmarks..."
+	@python scripts/run_performance_tests.py --type benchmark
+
+.PHONY: load-test
+load-test: ## Run load tests (moderate intensity)
+	@echo "🚀 Running load tests..."
+	@python scripts/run_performance_tests.py --type load --load-intensity moderate
+
+.PHONY: load-test-basic
+load-test-basic: ## Run basic load tests (CI-friendly)
+	@echo "🚀 Running basic load tests..."
+	@python scripts/run_performance_tests.py --type load --load-intensity basic
+
+.PHONY: load-test-intensive
+load-test-intensive: ## Run intensive load tests
+	@echo "🚀 Running intensive load tests..."
+	@python scripts/run_performance_tests.py --type load --load-intensity intensive
+
+.PHONY: perf-test
+perf-test: ## Run complete performance test suite
+	@echo "⚡ Running complete performance test suite..."
+	@python scripts/run_performance_tests.py --type both --load-intensity moderate
+
+.PHONY: perf-test-quick
+perf-test-quick: ## Run quick performance tests (CI/CD)
+	@echo "⚡ Running quick performance tests..."
+	@python scripts/run_performance_tests.py --type both --quick
 
 .PHONY: profile
 profile: ## Profile application

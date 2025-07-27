@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Insights - Second Brain v3</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/static/favicon.svg">
+    <link rel="mask-icon" href="/static/favicon.svg" color="#8ec07c">
+    
+    <style>
+        /* Gruvbox Dark Theme Colors */
+        :root {
+            --gruvbox-bg0: #282828;
+            --gruvbox-bg0-hard: #1d2021;
+            --gruvbox-bg0-soft: #32302f;
+            --gruvbox-bg1: #3c3836;
+            --gruvbox-bg2: #504945;
+            --gruvbox-bg3: #665c54;
+            --gruvbox-bg4: #7c6f64;
+            --gruvbox-fg0: #fbf1c7;
+            --gruvbox-fg1: #ebdbb2;
+            --gruvbox-fg2: #d5c4a1;
+            --gruvbox-fg3: #bdae93;
+            --gruvbox-fg4: #a89984;
+            --gruvbox-red: #fb4934;
+            --gruvbox-green: #b8bb26;
+            --gruvbox-yellow: #fabd2f;
+            --gruvbox-blue: #83a598;
+            --gruvbox-purple: #d3869b;
+            --gruvbox-aqua: #8ec07c;
+            --gruvbox-orange: #fe8019;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--gruvbox-bg0);
+            color: var(--gruvbox-fg1);
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            background-color: var(--gruvbox-bg0-hard);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gruvbox-fg0);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--gruvbox-aqua);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--gruvbox-fg2);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--gruvbox-aqua);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            color: var(--gruvbox-fg0);
+            margin-bottom: 1rem;
+        }
+
+        .page-subtitle {
+            font-size: 1.2rem;
+            color: var(--gruvbox-fg3);
+        }
+
+        /* Insights Grid */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .insight-card {
+            background: var(--gruvbox-bg1);
+            border-radius: 8px;
+            padding: 2rem;
+            border: 1px solid var(--gruvbox-bg3);
+            transition: all 0.3s;
+        }
+
+        .insight-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-color: var(--gruvbox-aqua-dim);
+        }
+
+        .insight-type {
+            font-size: 0.875rem;
+            color: var(--gruvbox-aqua);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-title {
+            font-size: 1.5rem;
+            color: var(--gruvbox-fg0);
+            margin-bottom: 1rem;
+        }
+
+        .insight-content {
+            color: var(--gruvbox-fg2);
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .insight-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--gruvbox-fg4);
+        }
+
+        /* Coming Soon */
+        .coming-soon {
+            text-align: center;
+            padding: 6rem 2rem;
+            background: var(--gruvbox-bg0-soft);
+            border-radius: 8px;
+            margin: 3rem 0;
+        }
+
+        .coming-soon h2 {
+            font-size: 2rem;
+            color: var(--gruvbox-fg0);
+            margin-bottom: 1rem;
+        }
+
+        .coming-soon p {
+            font-size: 1.1rem;
+            color: var(--gruvbox-fg3);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .feature-item {
+            background: var(--gruvbox-bg1);
+            padding: 1.5rem;
+            border-radius: 6px;
+            text-align: left;
+        }
+
+        .feature-item h3 {
+            color: var(--gruvbox-yellow);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-item p {
+            color: var(--gruvbox-fg3);
+            font-size: 0.9rem;
+        }
+
+        /* Back Button */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--gruvbox-bg1);
+            color: var(--gruvbox-fg1);
+            border: 1px solid var(--gruvbox-bg3);
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-bottom: 2rem;
+        }
+
+        .back-btn:hover {
+            background: var(--gruvbox-bg2);
+            color: var(--gruvbox-aqua);
+            border-color: var(--gruvbox-aqua-dim);
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: var(--gruvbox-fg3);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--gruvbox-bg3);
+            border-radius: 50%;
+            border-top-color: var(--gruvbox-aqua);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                🧠 <span>Second Brain</span> v3
+            </a>
+            <ul class="nav-links">
+                <li><a href="/dashboard">Dashboard</a></li>
+                <li><a href="/api">API</a></li>
+                <li><a href="/documentation">Docs</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <a href="/" class="back-btn">
+            ← Back to Home
+        </a>
+
+        <div class="page-header">
+            <h1 class="page-title">💡 AI Insights</h1>
+            <p class="page-subtitle">Discover patterns, themes, and hidden connections in your knowledge base</p>
+        </div>
+
+        <!-- Sample Insights (when available) -->
+        <div class="insights-grid" id="insights-grid" style="display: none;">
+            <!-- Insights will be dynamically loaded here -->
+        </div>
+
+        <!-- Coming Soon Section -->
+        <div class="coming-soon">
+            <h2>🚀 Advanced AI Insights Coming Soon!</h2>
+            <p>
+                We're building powerful AI-driven analysis to help you understand and leverage your stored memories 
+                in ways you never imagined possible.
+            </p>
+
+            <div class="feature-list">
+                <div class="feature-item">
+                    <h3>🔍 Pattern Recognition</h3>
+                    <p>Automatically identify recurring themes and patterns across your memories</p>
+                </div>
+                <div class="feature-item">
+                    <h3>🕸️ Connection Discovery</h3>
+                    <p>Find hidden relationships between seemingly unrelated memories</p>
+                </div>
+                <div class="feature-item">
+                    <h3>📈 Trend Analysis</h3>
+                    <p>Track how your thoughts and knowledge evolve over time</p>
+                </div>
+                <div class="feature-item">
+                    <h3>💭 Thought Synthesis</h3>
+                    <p>Generate new insights by combining related memories</p>
+                </div>
+                <div class="feature-item">
+                    <h3>🎯 Smart Recommendations</h3>
+                    <p>Get personalized suggestions based on your memory patterns</p>
+                </div>
+                <div class="feature-item">
+                    <h3>📊 Visual Analytics</h3>
+                    <p>Interactive visualizations of your knowledge landscape</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Future functionality for loading insights
+        async function loadInsights() {
+            const grid = document.getElementById('insights-grid');
+            
+            try {
+                const response = await fetch('/api/v1/insights?api_key=test-token-for-development');
+                if (response.ok) {
+                    const insights = await response.json();
+                    if (insights && insights.length > 0) {
+                        displayInsights(insights);
+                        document.querySelector('.coming-soon').style.display = 'none';
+                        grid.style.display = 'grid';
+                    }
+                }
+            } catch (error) {
+                console.log('Insights feature not yet available');
+            }
+        }
+
+        function displayInsights(insights) {
+            const grid = document.getElementById('insights-grid');
+            grid.innerHTML = insights.map(insight => `
+                <div class="insight-card">
+                    <div class="insight-type">${insight.type || 'INSIGHT'}</div>
+                    <h3 class="insight-title">${insight.title}</h3>
+                    <p class="insight-content">${insight.content}</p>
+                    <div class="insight-meta">
+                        <span>Confidence: ${(insight.confidence * 100).toFixed(0)}%</span>
+                        <span>${new Date(insight.created_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Try to load insights on page load
+        document.addEventListener('DOMContentLoaded', loadInsights);
+    </script>
+</body>
+</html>

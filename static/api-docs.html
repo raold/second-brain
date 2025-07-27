@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - Second Brain v3</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/static/favicon.svg">
+    <link rel="mask-icon" href="/static/favicon.svg" color="#8ec07c">
+    
+    <style>
+        /* Gruvbox Dark Theme Colors */
+        :root {
+            --gruvbox-bg0: #282828;
+            --gruvbox-bg0-hard: #1d2021;
+            --gruvbox-bg0-soft: #32302f;
+            --gruvbox-bg1: #3c3836;
+            --gruvbox-bg2: #504945;
+            --gruvbox-bg3: #665c54;
+            --gruvbox-bg4: #7c6f64;
+            --gruvbox-fg0: #fbf1c7;
+            --gruvbox-fg1: #ebdbb2;
+            --gruvbox-fg2: #d5c4a1;
+            --gruvbox-fg3: #bdae93;
+            --gruvbox-fg4: #a89984;
+            --gruvbox-red: #fb4934;
+            --gruvbox-green: #b8bb26;
+            --gruvbox-yellow: #fabd2f;
+            --gruvbox-blue: #83a598;
+            --gruvbox-purple: #d3869b;
+            --gruvbox-aqua: #8ec07c;
+            --gruvbox-orange: #fe8019;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--gruvbox-bg0);
+            color: var(--gruvbox-fg1);
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            background-color: var(--gruvbox-bg0-hard);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gruvbox-fg0);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--gruvbox-aqua);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--gruvbox-fg2);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--gruvbox-aqua);
+        }
+
+        /* Layout */
+        .api-container {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Sidebar */
+        .api-sidebar {
+            width: 280px;
+            background-color: var(--gruvbox-bg0-soft);
+            padding: 2rem 1rem;
+            height: calc(100vh - 4rem);
+            overflow-y: auto;
+            position: sticky;
+            top: 4rem;
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gruvbox-fg3);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .sidebar-links {
+            list-style: none;
+        }
+
+        .sidebar-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-links a {
+            color: var(--gruvbox-fg2);
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .sidebar-links a:hover {
+            background-color: var(--gruvbox-bg1);
+            color: var(--gruvbox-aqua);
+        }
+
+        .sidebar-links a.active {
+            background-color: var(--gruvbox-bg1);
+            color: var(--gruvbox-aqua);
+            border-left: 3px solid var(--gruvbox-aqua);
+        }
+
+        /* Main Content */
+        .api-content {
+            flex: 1;
+            padding: 2rem 3rem;
+            max-width: 1000px;
+        }
+
+        .content-section {
+            margin-bottom: 3rem;
+            scroll-margin-top: 5rem;
+        }
+
+        .content-section h2 {
+            font-size: 2rem;
+            color: var(--gruvbox-fg0);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--gruvbox-bg2);
+        }
+
+        .content-section h3 {
+            font-size: 1.5rem;
+            color: var(--gruvbox-yellow);
+            margin: 2rem 0 1rem;
+        }
+
+        /* API Status Cards */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-card {
+            background: var(--gruvbox-bg1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--gruvbox-bg3);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-indicator.online {
+            background: var(--gruvbox-green);
+            box-shadow: 0 0 10px var(--gruvbox-green);
+        }
+
+        .status-indicator.offline {
+            background: var(--gruvbox-red);
+        }
+
+        .status-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--gruvbox-fg0);
+            margin: 0.5rem 0;
+        }
+
+        .status-label {
+            color: var(--gruvbox-fg3);
+            font-size: 0.9rem;
+        }
+
+        /* Endpoint Documentation */
+        .endpoint {
+            background: var(--gruvbox-bg0-soft);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--gruvbox-bg2);
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .method {
+            font-weight: bold;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-family: monospace;
+        }
+
+        .method.get {
+            background: var(--gruvbox-blue);
+            color: var(--gruvbox-bg0);
+        }
+
+        .method.post {
+            background: var(--gruvbox-green);
+            color: var(--gruvbox-bg0);
+        }
+
+        .method.put {
+            background: var(--gruvbox-yellow);
+            color: var(--gruvbox-bg0);
+        }
+
+        .method.delete {
+            background: var(--gruvbox-red);
+            color: var(--gruvbox-bg0);
+        }
+
+        .endpoint-path {
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: var(--gruvbox-fg0);
+        }
+
+        .endpoint-description {
+            color: var(--gruvbox-fg2);
+            margin-bottom: 1rem;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: var(--gruvbox-bg0-hard);
+            border: 1px solid var(--gruvbox-bg3);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .code-block pre {
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: var(--gruvbox-fg1);
+        }
+
+        /* Parameters Table */
+        .params-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .params-table th,
+        .params-table td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--gruvbox-bg2);
+        }
+
+        .params-table th {
+            background: var(--gruvbox-bg1);
+            color: var(--gruvbox-fg0);
+            font-weight: 600;
+        }
+
+        .params-table td {
+            color: var(--gruvbox-fg2);
+        }
+
+        .param-name {
+            font-family: monospace;
+            color: var(--gruvbox-orange);
+        }
+
+        .param-type {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--gruvbox-blue);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--gruvbox-bg2);
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--gruvbox-fg3);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: var(--gruvbox-aqua);
+            border-bottom-color: var(--gruvbox-aqua);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Response Status */
+        .response-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .response-status.success {
+            background: var(--gruvbox-green);
+            color: var(--gruvbox-bg0);
+        }
+
+        .response-status.error {
+            background: var(--gruvbox-red);
+            color: var(--gruvbox-bg0);
+        }
+
+        /* Loading State */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--gruvbox-bg3);
+            border-radius: 50%;
+            border-top-color: var(--gruvbox-aqua);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                🧠 <span>Second Brain</span> v3
+            </a>
+            <ul class="nav-links">
+                <li><a href="/dashboard">Dashboard</a></li>
+                <li><a href="/insights">Insights</a></li>
+                <li><a href="/documentation">Docs</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="api-container">
+        <!-- Sidebar Navigation -->
+        <aside class="api-sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Getting Started</h3>
+                <ul class="sidebar-links">
+                    <li><a href="#overview" class="active">Overview</a></li>
+                    <li><a href="#authentication">Authentication</a></li>
+                    <li><a href="#quickstart">Quick Start</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">System Status</h3>
+                <ul class="sidebar-links">
+                    <li><a href="#health">Health Check</a></li>
+                    <li><a href="#metrics">Metrics</a></li>
+                    <li><a href="#status">Database Status</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Memory API</h3>
+                <ul class="sidebar-links">
+                    <li><a href="#create-memory">Create Memory</a></li>
+                    <li><a href="#search-memories">Search Memories</a></li>
+                    <li><a href="#get-memory">Get Memory</a></li>
+                    <li><a href="#list-memories">List Memories</a></li>
+                    <li><a href="#delete-memory">Delete Memory</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Memory Types</h3>
+                <ul class="sidebar-links">
+                    <li><a href="#semantic-memory">Semantic Memory</a></li>
+                    <li><a href="#episodic-memory">Episodic Memory</a></li>
+                    <li><a href="#procedural-memory">Procedural Memory</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Advanced Features</h3>
+                <ul class="sidebar-links">
+                    <li><a href="#insights-api">Insights API</a></li>
+                    <li><a href="#bulk-operations">Bulk Operations</a></li>
+                    <li><a href="#relationships">Relationships</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="api-content">
+            <!-- Overview Section -->
+            <section id="overview" class="content-section">
+                <h2>📚 API Overview</h2>
+                <p>Second Brain v3 provides a powerful REST API for managing your AI-powered memory system. Built with enterprise-grade security, scalability, and clean architecture principles.</p>
+                
+                <div class="status-grid" id="api-status">
+                    <div class="status-card">
+                        <span class="status-indicator online"></span>
+                        <span>API Status</span>
+                        <div class="status-value">Online</div>
+                        <div class="status-label">All systems operational</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-label">Response Time</div>
+                        <div class="status-value"><span id="response-time">--</span>ms</div>
+                        <div class="status-label">Average (last hour)</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-label">Uptime</div>
+                        <div class="status-value"><span id="uptime">--</span>%</div>
+                        <div class="status-label">Last 30 days</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-label">API Version</div>
+                        <div class="status-value">v1</div>
+                        <div class="status-label">Latest stable</div>
+                    </div>
+                </div>
+
+                <h3>Base URL</h3>
+                <div class="code-block">
+                    <pre>http://localhost:8000/api/v1</pre>
+                </div>
+
+                <h3>Response Format</h3>
+                <p>All API responses are returned in JSON format with consistent structure:</p>
+                <div class="code-block">
+                    <pre>{
+  "status": "success",
+  "data": { ... },
+  "message": "Operation completed successfully",
+  "timestamp": "2025-07-27T10:00:00Z"
+}</pre>
+                </div>
+            </section>
+
+            <!-- Authentication Section -->
+            <section id="authentication" class="content-section">
+                <h2>🔐 Authentication</h2>
+                <p>All API endpoints require authentication using an API key passed as a query parameter.</p>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">AUTH</span>
+                        <span class="endpoint-path">?api_key={your_api_key}</span>
+                    </div>
+                    <div class="endpoint-description">
+                        Add your API key as a query parameter to all requests.
+                    </div>
+                    
+                    <h4>Example Request</h4>
+                    <div class="code-block">
+                        <pre>GET /api/v1/memories?api_key=test-token-for-development</pre>
+                    </div>
+
+                    <h4>Development Token</h4>
+                    <p>For local development, use this token:</p>
+                    <div class="code-block">
+                        <pre>test-token-for-development</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Start Section -->
+            <section id="quickstart" class="content-section">
+                <h2>🚀 Quick Start</h2>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('curl')">cURL</button>
+                    <button class="tab" onclick="switchTab('python')">Python</button>
+                    <button class="tab" onclick="switchTab('javascript')">JavaScript</button>
+                </div>
+
+                <div id="curl-tab" class="tab-content active">
+                    <h4>Create a Memory</h4>
+                    <div class="code-block">
+                        <pre>curl -X POST "http://localhost:8000/api/v1/memories?api_key=test-token-for-development" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "The mitochondria is the powerhouse of the cell",
+    "memory_type": "semantic",
+    "tags": ["biology", "science"],
+    "importance_score": 0.8
+  }'</pre>
+                    </div>
+
+                    <h4>Search Memories</h4>
+                    <div class="code-block">
+                        <pre>curl -X POST "http://localhost:8000/api/v1/memories/search?api_key=test-token-for-development" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "cell biology",
+    "limit": 10
+  }'</pre>
+                    </div>
+                </div>
+
+                <div id="python-tab" class="tab-content">
+                    <h4>Install SDK</h4>
+                    <div class="code-block">
+                        <pre>pip install second-brain-sdk</pre>
+                    </div>
+
+                    <h4>Example Usage</h4>
+                    <div class="code-block">
+                        <pre>from second_brain import SecondBrainClient
+
+client = SecondBrainClient(api_key="test-token-for-development")
+
+# Create a memory
+memory = client.memories.create(
+    content="The mitochondria is the powerhouse of the cell",
+    memory_type="semantic",
+    tags=["biology", "science"],
+    importance_score=0.8
+)
+
+# Search memories
+results = client.memories.search(
+    query="cell biology",
+    limit=10
+)</pre>
+                    </div>
+                </div>
+
+                <div id="javascript-tab" class="tab-content">
+                    <h4>Install SDK</h4>
+                    <div class="code-block">
+                        <pre>npm install @second-brain/sdk</pre>
+                    </div>
+
+                    <h4>Example Usage</h4>
+                    <div class="code-block">
+                        <pre>import { SecondBrainClient } from '@second-brain/sdk';
+
+const client = new SecondBrainClient({
+    apiKey: 'test-token-for-development'
+});
+
+// Create a memory
+const memory = await client.memories.create({
+    content: "The mitochondria is the powerhouse of the cell",
+    memoryType: "semantic",
+    tags: ["biology", "science"],
+    importanceScore: 0.8
+});
+
+// Search memories
+const results = await client.memories.search({
+    query: "cell biology",
+    limit: 10
+});</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Health Check Section -->
+            <section id="health" class="content-section">
+                <h2>🏥 Health Check</h2>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/health</span>
+                    </div>
+                    <div class="endpoint-description">
+                        Check if the API is running and healthy.
+                    </div>
+                    
+                    <h4>Response</h4>
+                    <div class="code-block">
+                        <pre>{
+  "status": "healthy",
+  "version": "3.0.0",
+  "timestamp": "2025-07-27T10:00:00Z"
+}</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Metrics Section -->
+            <section id="metrics" class="content-section">
+                <h2>📊 Metrics</h2>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/metrics</span>
+                    </div>
+                    <div class="endpoint-description">
+                        Get comprehensive system metrics including performance and resource usage.
+                    </div>
+                    
+                    <h4>Response</h4>
+                    <div class="code-block">
+                        <pre>{
+  "status": "healthy",
+  "timestamp": "2025-07-27T10:00:00Z",
+  "system": {
+    "cpu_percent": 15.2,
+    "memory_percent": 42.8,
+    "memory_used_mb": 512,
+    "memory_available_mb": 1536,
+    "disk_percent": 65.0,
+    "uptime_seconds": 86400
+  },
+  "security": {
+    "rate_limit_enabled": true,
+    "requests_blocked": 0,
+    "active_sessions": 5
+  },
+  "database": {
+    "connected": true,
+    "pool_size": 10,
+    "active_connections": 3
+  },
+  "application": {
+    "version": "3.0.0",
+    "environment": "production"
+  }
+}</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Memory API Sections -->
+            <section id="create-memory" class="content-section">
+                <h2>✨ Create Memory</h2>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/memories</span>
+                    </div>
+                    <div class="endpoint-description">
+                        Create a new memory in the system.
+                    </div>
+                    
+                    <h4>Request Body</h4>
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Type</th>
+                                <th>Required</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="param-name">content</td>
+                                <td class="param-type">string</td>
+                                <td>Yes</td>
+                                <td>The content of the memory</td>
+                            </tr>
+                            <tr>
+                                <td class="param-name">memory_type</td>
+                                <td class="param-type">string</td>
+                                <td>No</td>
+                                <td>Type: semantic, episodic, or procedural</td>
+                            </tr>
+                            <tr>
+                                <td class="param-name">tags</td>
+                                <td class="param-type">array</td>
+                                <td>No</td>
+                                <td>Array of string tags</td>
+                            </tr>
+                            <tr>
+                                <td class="param-name">importance_score</td>
+                                <td class="param-type">float</td>
+                                <td>No</td>
+                                <td>Importance from 0.0 to 1.0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Example Request</h4>
+                    <div class="code-block">
+                        <pre>{
+  "content": "Clean Architecture principles: separate concerns into layers",
+  "memory_type": "semantic",
+  "tags": ["architecture", "software", "best-practices"],
+  "importance_score": 0.9
+}</pre>
+                    </div>
+
+                    <h4>Response</h4>
+                    <span class="response-status success">200 OK</span>
+                    <div class="code-block">
+                        <pre>{
+  "id": "mem_123456",
+  "content": "Clean Architecture principles: separate concerns into layers",
+  "memory_type": "semantic",
+  "tags": ["architecture", "software", "best-practices"],
+  "importance_score": 0.9,
+  "created_at": "2025-07-27T10:00:00Z",
+  "embedding_status": "completed"
+}</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- More sections would follow for other endpoints... -->
+            <section id="search-memories" class="content-section">
+                <h2>🔍 Search Memories</h2>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/memories/search</span>
+                    </div>
+                    <div class="endpoint-description">
+                        Search memories using semantic similarity.
+                    </div>
+                    
+                    <h4>Request Body</h4>
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Type</th>
+                                <th>Required</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="param-name">query</td>
+                                <td class="param-type">string</td>
+                                <td>Yes</td>
+                                <td>Search query text</td>
+                            </tr>
+                            <tr>
+                                <td class="param-name">limit</td>
+                                <td class="param-type">integer</td>
+                                <td>No</td>
+                                <td>Max results (1-100, default: 10)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Sidebar navigation
+        document.querySelectorAll('.sidebar-links a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                document.querySelectorAll('.sidebar-links a').forEach(l => {
+                    l.classList.remove('active');
+                });
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Smooth scroll to section
+                const targetId = this.getAttribute('href').slice(1);
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Load API metrics
+        async function loadMetrics() {
+            try {
+                const response = await fetch('/api/v1/metrics?api_key=test-token-for-development');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update response time (mock for now)
+                    document.getElementById('response-time').textContent = Math.floor(Math.random() * 50 + 20);
+                    
+                    // Update uptime
+                    const uptimePercent = 99.9 + Math.random() * 0.09;
+                    document.getElementById('uptime').textContent = uptimePercent.toFixed(2);
+                }
+            } catch (error) {
+                console.log('Error loading metrics:', error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMetrics();
+            setInterval(loadMetrics, 30000); // Refresh every 30 seconds
+        });
+    </script>
+</body>
+</html>

@@ -1,31 +1,22 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(docker-compose:*)"
-    ],
-    "deny": []
-  },
+  "cleanupPeriodDays": 30,
   "env": {
-    "PYTHONPATH": "${workspaceRoot}",
+    "PYTHONPATH": ".",
     "SECOND_BRAIN_ENV": "development",
     "CLAUDE_CODE_AUTONOMOUS": "true"
   },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": {
-          "tools": [
-            "Bash"
-          ]
-        },
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '✓ Command completed'"
-          }
-        ]
-      }
-    ]
-  },
-  "cleanupPeriodDays": 30
+  "permissions": {
+    "allow": [
+      "Bash(**)",
+      "Bash(make status:*)",
+      "Bash(wsl:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker restart:*)",
+      "Bash(timeout 5 docker logs secondbrain-app --tail 30 -f)",
+      "Bash(curl:*)",
+      "Bash(timeout 3 docker logs secondbrain-app --tail 20 -f)",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
 }

@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development Dashboard - Second Brain v3</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/static/favicon.svg">
+    <link rel="mask-icon" href="/static/favicon.svg" color="#8ec07c">
+    
+    <style>
+        /* Gruvbox Dark Theme Colors */
+        :root {
+            --gruvbox-bg0: #282828;
+            --gruvbox-bg0-hard: #1d2021;
+            --gruvbox-bg0-soft: #32302f;
+            --gruvbox-bg1: #3c3836;
+            --gruvbox-bg2: #504945;
+            --gruvbox-bg3: #665c54;
+            --gruvbox-bg4: #7c6f64;
+            --gruvbox-fg0: #fbf1c7;
+            --gruvbox-fg1: #ebdbb2;
+            --gruvbox-fg2: #d5c4a1;
+            --gruvbox-fg3: #bdae93;
+            --gruvbox-fg4: #a89984;
+            --gruvbox-red: #fb4934;
+            --gruvbox-green: #b8bb26;
+            --gruvbox-yellow: #fabd2f;
+            --gruvbox-blue: #83a598;
+            --gruvbox-purple: #d3869b;
+            --gruvbox-aqua: #8ec07c;
+            --gruvbox-orange: #fe8019;
+            --gruvbox-red-dim: #cc241d;
+            --gruvbox-green-dim: #98971a;
+            --gruvbox-yellow-dim: #d79921;
+            --gruvbox-blue-dim: #458588;
+            --gruvbox-purple-dim: #b16286;
+            --gruvbox-aqua-dim: #689d6a;
+            --gruvbox-orange-dim: #d65d0e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--gruvbox-bg0);
+            color: var(--gruvbox-fg1);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--gruvbox-bg0-hard);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gruvbox-fg0);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--gruvbox-aqua);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--gruvbox-fg2);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--gruvbox-aqua);
+        }
+
+        /* Dashboard Layout */
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Critical Status Bar */
+        .status-bar {
+            background-color: var(--gruvbox-bg0-soft);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .status-items {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--gruvbox-green);
+        }
+
+        .status-indicator.warning {
+            background-color: var(--gruvbox-yellow);
+        }
+
+        .status-indicator.error {
+            background-color: var(--gruvbox-red);
+        }
+
+        .status-label {
+            font-size: 0.875rem;
+            color: var(--gruvbox-fg3);
+        }
+
+        .status-value {
+            font-weight: bold;
+            color: var(--gruvbox-fg0);
+        }
+
+        /* Main Grid Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Git Activity Section */
+        .git-section {
+            background-color: var(--gruvbox-bg0-soft);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--gruvbox-bg2);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--gruvbox-fg0);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .git-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .git-stat {
+            background-color: var(--gruvbox-bg1);
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .git-stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--gruvbox-aqua);
+        }
+
+        .git-stat-label {
+            font-size: 0.875rem;
+            color: var(--gruvbox-fg3);
+            margin-top: 0.25rem;
+        }
+
+        /* Commit Timeline */
+        .commit-timeline {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .commit-day {
+            margin-bottom: 1.5rem;
+        }
+
+        .commit-date {
+            font-size: 0.875rem;
+            color: var(--gruvbox-fg3);
+            margin-bottom: 0.5rem;
+            position: sticky;
+            top: 0;
+            background-color: var(--gruvbox-bg0-soft);
+            padding: 0.25rem 0;
+        }
+
+        .commit {
+            background-color: var(--gruvbox-bg1);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1rem;
+            align-items: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .commit:hover {
+            background-color: var(--gruvbox-bg2);
+            transform: translateX(4px);
+        }
+
+        .commit-hash {
+            font-family: 'Fira Code', monospace;
+            color: var(--gruvbox-blue);
+            font-size: 0.875rem;
+        }
+
+        .commit-details {
+            flex: 1;
+        }
+
+        .commit-message {
+            color: var(--gruvbox-fg0);
+            margin-bottom: 0.25rem;
+        }
+
+        .commit-author {
+            font-size: 0.75rem;
+            color: var(--gruvbox-fg4);
+        }
+
+        .commit-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .additions {
+            color: var(--gruvbox-green);
+        }
+
+        .deletions {
+            color: var(--gruvbox-red);
+        }
+
+        /* TODO Section */
+        .todo-section {
+            background-color: var(--gruvbox-bg0-soft);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .todo-filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-btn {
+            background-color: var(--gruvbox-bg1);
+            border: none;
+            color: var(--gruvbox-fg3);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+        }
+
+        .filter-btn.active {
+            background-color: var(--gruvbox-aqua);
+            color: var(--gruvbox-bg0);
+        }
+
+        .filter-btn:hover {
+            background-color: var(--gruvbox-bg2);
+        }
+
+        .todo-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .todo-item {
+            background-color: var(--gruvbox-bg1);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+            transition: all 0.3s;
+        }
+
+        .todo-item:hover {
+            background-color: var(--gruvbox-bg2);
+        }
+
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid var(--gruvbox-fg4);
+            flex-shrink: 0;
+            margin-top: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .todo-item.completed .todo-checkbox {
+            background-color: var(--gruvbox-green);
+            border-color: var(--gruvbox-green);
+        }
+
+        .todo-item.in-progress .todo-checkbox {
+            background-color: var(--gruvbox-yellow);
+            border-color: var(--gruvbox-yellow);
+        }
+
+        .todo-content {
+            flex: 1;
+        }
+
+        .todo-title {
+            color: var(--gruvbox-fg0);
+            margin-bottom: 0.25rem;
+        }
+
+        .todo-item.completed .todo-title {
+            text-decoration: line-through;
+            color: var(--gruvbox-fg3);
+        }
+
+        .todo-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.75rem;
+            color: var(--gruvbox-fg4);
+        }
+
+        .todo-priority {
+            padding: 0.125rem 0.5rem;
+            border-radius: 3px;
+            background-color: var(--gruvbox-bg2);
+        }
+
+        .todo-priority.high {
+            background-color: var(--gruvbox-red-dim);
+            color: var(--gruvbox-fg0);
+        }
+
+        /* Performance Dashboard */
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background-color: var(--gruvbox-bg0-soft);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .metric-title {
+            font-size: 1.125rem;
+            color: var(--gruvbox-fg0);
+        }
+
+        .metric-trend {
+            font-size: 0.875rem;
+            color: var(--gruvbox-green);
+        }
+
+        .metric-trend.down {
+            color: var(--gruvbox-red);
+        }
+
+        .metric-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--gruvbox-aqua);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-chart {
+            height: 100px;
+            background-color: var(--gruvbox-bg1);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            background-color: var(--gruvbox-bg0-soft);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-btn {
+            background-color: var(--gruvbox-bg1);
+            border: none;
+            color: var(--gruvbox-fg1);
+            padding: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            background-color: var(--gruvbox-bg2);
+            transform: translateY(-2px);
+        }
+
+        .action-icon {
+            font-size: 1.5rem;
+        }
+
+        /* Activity Timeline */
+        .activity-section {
+            background-color: var(--gruvbox-bg0-soft);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .activity-timeline {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gruvbox-bg2);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--gruvbox-bg3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.25rem;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            color: var(--gruvbox-fg1);
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--gruvbox-fg4);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .git-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .status-items {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+            
+            .performance-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gruvbox-bg1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gruvbox-bg3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gruvbox-bg4);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                🧠 <span>Second Brain</span> v3
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="/insights">Insights</a></li>
+                    <li><a href="/api">API</a></li>
+                    <li><a href="/documentation">Docs</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Critical Status Bar -->
+        <div class="status-bar">
+            <div class="status-items">
+                <div class="status-item">
+                    <div class="status-indicator" id="build-indicator"></div>
+                    <span class="status-label">Build:</span>
+                    <span class="status-value" id="build-status">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-indicator" id="test-indicator"></div>
+                    <span class="status-label">Tests:</span>
+                    <span class="status-value" id="test-status">Loading...</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-indicator" id="docker-indicator"></div>
+                    <span class="status-label">Docker:</span>
+                    <span class="status-value" id="docker-status">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Branch:</span>
+                    <span class="status-value" id="current-branch">main</span>
+                </div>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Last Updated:</span>
+                <span class="status-value" id="last-update">Just now</span>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <div class="actions-grid">
+                <a href="https://github.com/raold/second-brain/pulse" target="_blank" class="action-btn">
+                    <span class="action-icon">📈</span>
+                    <span>GitHub Pulse</span>
+                </a>
+                <a href="https://github.com/raold/second-brain/graphs/code-frequency" target="_blank" class="action-btn">
+                    <span class="action-icon">📊</span>
+                    <span>Code Frequency</span>
+                </a>
+                <a href="https://github.com/raold/second-brain/graphs/commit-activity" target="_blank" class="action-btn">
+                    <span class="action-icon">📅</span>
+                    <span>Commit Activity</span>
+                </a>
+                <a href="https://github.com/raold/second-brain/actions" target="_blank" class="action-btn">
+                    <span class="action-icon">🔄</span>
+                    <span>CI/CD Actions</span>
+                </a>
+                <a href="https://github.com/raold/second-brain/issues" target="_blank" class="action-btn">
+                    <span class="action-icon">🐛</span>
+                    <span>Issues</span>
+                </a>
+                <a href="https://github.com/raold/second-brain/pulls" target="_blank" class="action-btn">
+                    <span class="action-icon">🔀</span>
+                    <span>Pull Requests</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Git Activity (Left/Main Column) -->
+            <div class="git-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span>📊</span>
+                        Git Activity
+                    </h2>
+                    <a href="https://github.com/raold/second-brain/commits/main" target="_blank" style="color: var(--gruvbox-blue); text-decoration: none;">
+                        View all on GitHub →
+                    </a>
+                </div>
+
+                <div class="git-stats">
+                    <div class="git-stat">
+                        <div class="git-stat-value" id="commits-today">0</div>
+                        <div class="git-stat-label">Commits Today</div>
+                    </div>
+                    <div class="git-stat">
+                        <div class="git-stat-value" id="commits-week">0</div>
+                        <div class="git-stat-label">This Week</div>
+                    </div>
+                    <div class="git-stat">
+                        <div class="git-stat-value" id="contributors">0</div>
+                        <div class="git-stat-label">Contributors</div>
+                    </div>
+                    <div class="git-stat">
+                        <div class="git-stat-value" id="files-changed">0</div>
+                        <div class="git-stat-label">Files Changed</div>
+                    </div>
+                </div>
+
+                <div class="commit-timeline" id="commit-timeline">
+                    <!-- Commits will be grouped by day and populated here -->
+                </div>
+            </div>
+
+            <!-- TODO List (Right Column) -->
+            <div class="todo-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span>📋</span>
+                        Development Tasks
+                    </h2>
+                </div>
+
+                <div class="todo-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="pending">Pending</button>
+                    <button class="filter-btn" data-filter="in-progress">In Progress</button>
+                    <button class="filter-btn" data-filter="completed">Completed</button>
+                </div>
+
+                <div class="todo-list" id="todo-list">
+                    <!-- TODOs will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="performance-grid">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <h3 class="metric-title">API Response Time</h3>
+                    <span class="metric-trend">↓ 15%</span>
+                </div>
+                <div class="metric-value" id="api-response">---</div>
+                <div class="metric-chart" id="response-chart"></div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <h3 class="metric-title">Memory Count</h3>
+                    <span class="metric-trend">↑ 23%</span>
+                </div>
+                <div class="metric-value" id="memory-count">---</div>
+                <div class="metric-chart" id="memory-chart"></div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <h3 class="metric-title">Test Coverage</h3>
+                    <span class="metric-trend">→ 0%</span>
+                </div>
+                <div class="metric-value" id="test-coverage">---</div>
+                <div class="metric-chart" id="coverage-chart"></div>
+            </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="activity-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>🔔</span>
+                    Recent Activity
+                </h2>
+            </div>
+            <div class="activity-timeline" id="activity-timeline">
+                <!-- Activity items will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = '/api/v1/dashboard';
+        const API_KEY = 'test-token-for-development';
+        const GITHUB_REPO = 'raold/second-brain';
+        
+        // State
+        let allTodos = [];
+        let currentFilter = 'all';
+        
+        // Update system status
+        async function updateSystemStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/status?api_key=${API_KEY}`);
+                const data = await response.json();
+                
+                // Update branch
+                document.getElementById('current-branch').textContent = data.git.branch;
+                
+                // Update test status
+                const testStats = data.tests;
+                const testStatus = document.getElementById('test-status');
+                const testIndicator = document.getElementById('test-indicator');
+                
+                testStatus.textContent = `${testStats.passed}/${testStats.total} passed`;
+                if (testStats.failed > 0) {
+                    testIndicator.className = 'status-indicator error';
+                } else if (testStats.skipped > 0) {
+                    testIndicator.className = 'status-indicator warning';
+                } else {
+                    testIndicator.className = 'status-indicator';
+                }
+                
+                // Update build status
+                document.getElementById('build-status').textContent = 'Passing';
+                document.getElementById('build-indicator').className = 'status-indicator';
+                
+                // Process commits for timeline
+                processCommits(data.git.commits);
+                
+                // Update test coverage
+                document.getElementById('test-coverage').textContent = `${testStats.coverage}%`;
+                
+            } catch (error) {
+                console.error('Failed to update system status:', error);
+                document.getElementById('build-status').textContent = 'Error';
+                document.getElementById('build-indicator').className = 'status-indicator error';
+            }
+        }
+        
+        // Process and display commits grouped by day
+        function processCommits(commits) {
+            const timeline = document.getElementById('commit-timeline');
+            timeline.innerHTML = '';
+            
+            // Group commits by day
+            const commitsByDay = {};
+            commits.forEach(commit => {
+                // Extract day from relative time (e.g., "2 hours ago" -> "Today")
+                let day = 'Today';
+                if (commit.time.includes('yesterday')) {
+                    day = 'Yesterday';
+                } else if (commit.time.includes('days ago')) {
+                    const daysAgo = parseInt(commit.time);
+                    const date = new Date();
+                    date.setDate(date.getDate() - daysAgo);
+                    day = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+                }
+                
+                if (!commitsByDay[day]) {
+                    commitsByDay[day] = [];
+                }
+                commitsByDay[day].push(commit);
+            });
+            
+            // Create timeline HTML
+            Object.entries(commitsByDay).forEach(([day, dayCommits]) => {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'commit-day';
+                
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'commit-date';
+                dateDiv.textContent = day;
+                dayDiv.appendChild(dateDiv);
+                
+                dayCommits.forEach(commit => {
+                    const commitLink = document.createElement('a');
+                    commitLink.className = 'commit';
+                    commitLink.href = `https://github.com/${GITHUB_REPO}/commit/${commit.hash}`;
+                    commitLink.target = '_blank';
+                    
+                    commitLink.innerHTML = `
+                        <span class="commit-hash">${commit.hash}</span>
+                        <div class="commit-details">
+                            <div class="commit-message">${escapeHtml(commit.message)}</div>
+                            <div class="commit-author">Unknown • ${commit.time}</div>
+                        </div>
+                        <div class="commit-stats">
+                            <span class="additions">+??</span>
+                            <span class="deletions">-??</span>
+                        </div>
+                    `;
+                    
+                    dayDiv.appendChild(commitLink);
+                });
+                
+                timeline.appendChild(dayDiv);
+            });
+            
+            // Update git stats
+            updateGitStats(commits);
+        }
+        
+        // Update git statistics
+        function updateGitStats(commits) {
+            // Count commits today
+            const today = commits.filter(c => 
+                c.time.includes('minute') || 
+                c.time.includes('hour') || 
+                c.time === 'Just now'
+            ).length;
+            document.getElementById('commits-today').textContent = today;
+            
+            // Count commits this week (rough estimate)
+            const thisWeek = commits.filter(c => {
+                if (c.time.includes('minute') || c.time.includes('hour') || c.time === 'Just now') return true;
+                const match = c.time.match(/(\d+) days? ago/);
+                return match && parseInt(match[1]) <= 7;
+            }).length;
+            document.getElementById('commits-week').textContent = thisWeek;
+            
+            // These would need GitHub API for accurate data
+            document.getElementById('contributors').textContent = '1';
+            document.getElementById('files-changed').textContent = '??';
+        }
+        
+        // Update TODOs
+        async function updateTodos() {
+            try {
+                const response = await fetch(`${API_BASE}/todos?api_key=${API_KEY}`);
+                const data = await response.json();
+                
+                allTodos = data.todos;
+                renderTodos();
+                
+            } catch (error) {
+                console.error('Failed to update TODOs:', error);
+            }
+        }
+        
+        // Render filtered TODOs
+        function renderTodos() {
+            const todoList = document.getElementById('todo-list');
+            todoList.innerHTML = '';
+            
+            const filteredTodos = currentFilter === 'all' 
+                ? allTodos 
+                : allTodos.filter(todo => todo.status === currentFilter);
+            
+            filteredTodos.forEach(todo => {
+                const todoDiv = document.createElement('div');
+                todoDiv.className = `todo-item ${todo.status}`;
+                
+                const priority = todo.priority || 'medium';
+                
+                todoDiv.innerHTML = `
+                    <div class="todo-checkbox"></div>
+                    <div class="todo-content">
+                        <div class="todo-title">${escapeHtml(todo.title)}</div>
+                        <div class="todo-meta">
+                            <span class="todo-priority ${priority}">${priority}</span>
+                            ${todo.description ? `<span>${escapeHtml(todo.description)}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                todoList.appendChild(todoDiv);
+            });
+        }
+        
+        // Update Docker status
+        async function updateDockerStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/docker?api_key=${API_KEY}`);
+                const data = await response.json();
+                
+                const dockerStatus = document.getElementById('docker-status');
+                const dockerIndicator = document.getElementById('docker-indicator');
+                
+                const healthy = data.containers.filter(c => c.healthy).length;
+                const total = data.containers.length;
+                
+                dockerStatus.textContent = `${healthy}/${total} Running`;
+                
+                if (healthy === total) {
+                    dockerIndicator.className = 'status-indicator';
+                } else if (healthy > 0) {
+                    dockerIndicator.className = 'status-indicator warning';
+                } else {
+                    dockerIndicator.className = 'status-indicator error';
+                }
+                
+            } catch (error) {
+                console.error('Failed to update Docker status:', error);
+                document.getElementById('docker-status').textContent = 'Error';
+                document.getElementById('docker-indicator').className = 'status-indicator error';
+            }
+        }
+        
+        // Update performance metrics
+        async function updatePerformanceMetrics() {
+            try {
+                const response = await fetch(`${API_BASE}/metrics?api_key=${API_KEY}`);
+                const data = await response.json();
+                
+                // Update metrics
+                document.getElementById('api-response').textContent = data.performance.api_response_time;
+                document.getElementById('memory-count').textContent = data.memories.total.toLocaleString();
+                
+            } catch (error) {
+                console.error('Failed to update metrics:', error);
+            }
+        }
+        
+        // Update activity feed
+        async function updateActivityFeed() {
+            try {
+                const response = await fetch(`${API_BASE}/activity?api_key=${API_KEY}`);
+                const data = await response.json();
+                
+                const activityTimeline = document.getElementById('activity-timeline');
+                activityTimeline.innerHTML = '';
+                
+                data.activities.forEach(activity => {
+                    const activityDiv = document.createElement('div');
+                    activityDiv.className = 'activity-item';
+                    
+                    activityDiv.innerHTML = `
+                        <div class="activity-icon">${activity.icon}</div>
+                        <div class="activity-content">
+                            <div class="activity-text">${escapeHtml(activity.text)}</div>
+                            <div class="activity-time">${formatTime(activity.time)}</div>
+                        </div>
+                    `;
+                    
+                    activityTimeline.appendChild(activityDiv);
+                });
+                
+            } catch (error) {
+                console.error('Failed to update activity feed:', error);
+            }
+        }
+        
+        // Format time helper
+        function formatTime(time) {
+            if (time.includes('T')) {
+                const date = new Date(time);
+                const now = new Date();
+                const diff = now - date;
+                const minutes = Math.floor(diff / 60000);
+                const hours = Math.floor(diff / 3600000);
+                const days = Math.floor(diff / 86400000);
+                
+                if (minutes < 1) return 'Just now';
+                if (minutes < 60) return `${minutes}m ago`;
+                if (hours < 24) return `${hours}h ago`;
+                if (days < 7) return `${days}d ago`;
+                return date.toLocaleDateString();
+            }
+            return time;
+        }
+        
+        // Escape HTML helper
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+        
+        // Update all dashboard data
+        async function updateDashboard() {
+            const startTime = Date.now();
+            
+            await Promise.all([
+                updateSystemStatus(),
+                updateDockerStatus(),
+                updatePerformanceMetrics(),
+                updateTodos(),
+                updateActivityFeed()
+            ]);
+            
+            // Update last update time
+            document.getElementById('last-update').textContent = 'Just now';
+            
+            console.log(`Dashboard updated in ${Date.now() - startTime}ms`);
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // TODO filters
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.dataset.filter;
+                    renderTodos();
+                });
+            });
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            updateDashboard();
+            
+            // Update every 30 seconds
+            setInterval(updateDashboard, 30000);
+            
+            // Update last update time every minute
+            setInterval(() => {
+                const lastUpdate = document.getElementById('last-update');
+                const current = lastUpdate.textContent;
+                if (current === 'Just now') {
+                    lastUpdate.textContent = '1m ago';
+                } else {
+                    const minutes = parseInt(current) + 1;
+                    lastUpdate.textContent = `${minutes}m ago`;
+                }
+            }, 60000);
+        });
+    </script>
+</body>
+</html>

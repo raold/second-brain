@@ -26,6 +26,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import Response
 
 from app.connection_pool import PoolConfig, close_pool, get_pool_manager, initialize_pool
 from app.conversation_processor import setup_conversation_monitoring
@@ -62,6 +63,7 @@ from app.routes.relationship_routes import router as relationship_router
 from app.routes.synthesis_routes import router as synthesis_router
 from app.routes.ingestion_routes import router as ingestion_router
 from app.routes.google_drive_routes import router as google_drive_router
+from app.routes.dashboard_routes import router as dashboard_router
 from app.security import SecurityConfig, SecurityManager
 from app.core.logging import (
     LogConfig, configure_logging, get_logger, LoggingRoute,
@@ -74,6 +76,12 @@ from app.core.monitoring import (
 from app.core.security_audit import (
     SecurityHeadersManager, get_security_auditor,
     get_security_monitor
+)
+from app.core.redis_manager import (
+    get_redis_manager, get_redis_client, cleanup_redis, redis_health_check
+)
+from app.core.rate_limiting import (
+    RateLimitMiddleware, setup_rate_limiting
 )
 
 from app.services.service_factory import get_service_factory
@@ -210,6 +218,17 @@ async def lifespan(app: FastAPI):
             db = await get_database()
             logger.info("Database initialized (fallback mode)")
 
+    # Initialize Redis for caching and rate limiting
+    redis_manager = await get_redis_manager()
+    redis_client = await get_redis_client()
+    
+    if redis_client:
+        logger.info("Redis initialized for caching and rate limiting")
+        # Register Redis health check
+        health_checker.register_check("redis", redis_health_check)
+    else:
+        logger.warning("Redis not available - rate limiting will be disabled")
+    
     # Initialize service factory with dependencies
     service_factory = get_service_factory()
     service_factory.set_database(db)
@@ -236,6 +255,13 @@ async def lifespan(app: FastAPI):
                 logger.info("Database closed (fallback mode)")
             except Exception as cleanup_error:
                 logger.error(f"Error in fallback cleanup: {cleanup_error}")
+    
+    # Cleanup Redis
+    try:
+        await cleanup_redis()
+        logger.info("Redis cleanup complete")
+    except Exception as e:
+        logger.error(f"Error cleaning up Redis: {e}")
 
     logger.info("Application shutdown complete")
 
@@ -256,6 +282,19 @@ setup_openapi_documentation(app)
 # Register exception handlers from the new exception handling system
 from app.core.exceptions import register_exception_handlers
 register_exception_handlers(app)
+
+
+# Setup rate limiting middleware (before other middleware)
+async def setup_rate_limiting_if_redis():
+    """Setup rate limiting if Redis is available"""
+    redis_client = await get_redis_client()
+    if redis_client:
+        setup_rate_limiting(app, redis_client)
+        logger.info("Rate limiting middleware enabled")
+    else:
+        logger.info("Rate limiting middleware disabled (Redis not available)")
+
+# We'll call this during startup, but need to define it here for later use
 
 
 # Add request tracking middleware
@@ -299,30 +338,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include refactored routers
-app.include_router(memory_router)
+# Include refactored routers with API version prefix
+app.include_router(memory_router, prefix="/api/v1")
 app.include_router(health_router)
-app.include_router(new_session_router)
-app.include_router(visualization_router)
-app.include_router(importance_router)
-app.include_router(relationship_router)
-app.include_router(bulk_router)
-app.include_router(graph_router)
-app.include_router(analysis_router)
+app.include_router(new_session_router, prefix="/api/v1")
+app.include_router(visualization_router, prefix="/api/v1")
+app.include_router(importance_router, prefix="/api/v1")
+app.include_router(relationship_router, prefix="/api/v1")
+app.include_router(bulk_router, prefix="/api/v1")
+app.include_router(graph_router, prefix="/api/v1")
+app.include_router(analysis_router, prefix="/api/v1")
 
 # Include insights router
-app.include_router(insights_router)
+app.include_router(insights_router, prefix="/api/v1")
 
 # Include bulk operations routes
 
 # Include synthesis routes (v2.8.2)
-app.include_router(synthesis_router)
+app.include_router(synthesis_router, prefix="/api/v1")
 
 # Include ingestion routes (v2.8.3)
-app.include_router(ingestion_router)
+app.include_router(ingestion_router, prefix="/api/v1")
 
 # Include Google Drive routes (v2.8.3)
-app.include_router(google_drive_router)
+app.include_router(google_drive_router, prefix="/api/v1")
+
+# Include Dashboard routes (v3.0.0)
+app.include_router(dashboard_router)
 
 # Setup conversation monitoring
 setup_conversation_monitoring()
@@ -338,26 +380,91 @@ except Exception as e:
     logger.warning(f"Could not mount static files: {e}")
 
 
-# Dashboard homepage
+# Landing page
 @app.get("/", response_class=HTMLResponse)
-async def dashboard_home():
-    """Serve the project dashboard homepage"""
+async def landing_page():
+    """Serve the main landing page"""
     try:
-        with open("static/dashboard.html", encoding="utf-8") as f:
+        with open("static/index.html", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
         return HTMLResponse(
             content="""
         <html>
-        <head><title>Project Pipeline Dashboard</title></head>
+        <head><title>Second Brain v3.0.0</title></head>
         <body>
-        <h1>🎯 Project Pipeline Dashboard</h1>
-        <p>Dashboard is initializing... Please visit <a href="/dashboard/">/dashboard/</a> for API access.</p>
-        <p>Or visit <a href="/docs">/docs</a> for the API documentation.</p>
+        <h1>🧠 Second Brain</h1>
+        <p>Landing page is initializing... Please visit <a href="/docs">/docs</a> for the API documentation.</p>
         </body>
         </html>
         """
         )
+
+
+# Documentation library
+@app.get("/documentation", response_class=HTMLResponse)
+async def documentation_library():
+    """Serve the documentation library interface"""
+    try:
+        with open("static/library.html", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(
+            content="""
+        <html>
+        <head><title>Documentation Library - Second Brain</title></head>
+        <body>
+        <h1>📚 Documentation Library</h1>
+        <p>Documentation library is initializing... Please check your installation.</p>
+        </body>
+        </html>
+        """
+        )
+
+
+# Serve documentation files
+@app.get("/docs/{file_path:path}")
+async def serve_doc_file(file_path: str):
+    """Serve documentation markdown files"""
+    import os
+    from pathlib import Path
+    
+    # Security: prevent directory traversal
+    safe_path = Path(file_path).resolve()
+    docs_root = Path("docs").resolve()
+    
+    # Handle root docs directory files
+    if file_path and not file_path.startswith("docs/"):
+        # Check if it's a root level file like README.md or CHANGELOG.md
+        root_file = Path(file_path).resolve()
+        if root_file.exists() and root_file.is_file() and root_file.suffix == ".md":
+            try:
+                with open(root_file, encoding="utf-8") as f:
+                    content = f.read()
+                return Response(content=content, media_type="text/markdown")
+            except Exception as e:
+                logger.error(f"Error reading doc file: {e}")
+                raise HTTPException(status_code=404, detail="Documentation file not found")
+    
+    # Handle docs directory files
+    full_path = docs_root / safe_path
+    
+    # Ensure the path is within docs directory
+    try:
+        full_path.relative_to(docs_root)
+    except ValueError:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if full_path.exists() and full_path.is_file():
+        try:
+            with open(full_path, encoding="utf-8") as f:
+                content = f.read()
+            return Response(content=content, media_type="text/markdown")
+        except Exception as e:
+            logger.error(f"Error reading doc file: {e}")
+            raise HTTPException(status_code=500, detail="Error reading documentation")
+    else:
+        raise HTTPException(status_code=404, detail="Documentation file not found")
 
 
 # Mobile interface
@@ -407,6 +514,29 @@ async def insights_dashboard():
         )
 
 
+# API Documentation
+@app.get("/api", response_class=HTMLResponse)
+async def api_documentation():
+    """Serve the API documentation page"""
+    try:
+        with open("static/api-docs.html", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(
+            content="""
+        <html>
+        <head>
+            <title>API Documentation - Second Brain</title>
+        </head>
+        <body>
+        <h1>📚 API Documentation</h1>
+        <p>API documentation is not available. Please check your installation.</p>
+        </body>
+        </html>
+        """
+        )
+
+
 # File Ingestion Dashboard
 @app.get("/ingestion", response_class=HTMLResponse)
 async def ingestion_dashboard():
@@ -424,6 +554,37 @@ async def ingestion_dashboard():
         <body>
         <h1>📁 File Ingestion Dashboard</h1>
         <p>Ingestion dashboard is not available. Please check your installation.</p>
+        </body>
+        </html>
+        """
+        )
+
+
+# Favicon route
+@app.get("/favicon.ico")
+async def favicon():
+    """Redirect favicon.ico requests to the SVG favicon"""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/static/favicon.svg")
+
+
+# Development Dashboard
+@app.get("/dashboard", response_class=HTMLResponse)
+async def development_dashboard():
+    """Serve the development dashboard"""
+    try:
+        with open("static/dashboard.html", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(
+            content="""
+        <html>
+        <head>
+            <title>Development Dashboard - Second Brain</title>
+        </head>
+        <body>
+        <h1>📊 Development Dashboard</h1>
+        <p>Dashboard is not available. Please check your installation.</p>
         </body>
         </html>
         """

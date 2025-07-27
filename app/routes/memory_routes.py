@@ -345,3 +345,36 @@ async def get_memory(memory_id: str, db=Depends(get_database), _: str = Depends(
     except Exception as e:
         logger.error(f"Failed to retrieve memory: {e}")
         raise SecondBrainException(message="Failed to retrieve memory")
+
+
+@router.get(
+    "/stats",
+    summary="Get Memory Statistics",
+    description="Get statistics about stored memories",
+)
+async def get_memory_stats(db=Depends(get_database), _: str = Depends(verify_api_key)):
+    """Get memory statistics."""
+    try:
+        # Setup service with dependencies
+        security_manager = get_security_manager()
+        setup_memory_service_factory(db, security_manager)
+        service = get_memory_service()
+        
+        # Get total count of memories
+        total_memories = await service.get_total_memory_count()
+        
+        # Get insights count (we'll use the insights service when available)
+        total_insights = 0  # Placeholder for now
+        
+        # Get connections count from relationship service
+        total_connections = 0  # Placeholder for now
+        
+        return {
+            "total_memories": total_memories,
+            "total_insights": total_insights,
+            "total_connections": total_connections,
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to get memory stats: {e}")
+        raise SecondBrainException(message="Failed to get memory stats")

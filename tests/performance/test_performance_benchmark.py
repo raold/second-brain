@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Performance Benchmarking Suite for Second Brain v2.2.0
+Performance Benchmarking Suite for Second Brain v3.0.0
 Comprehensive performance testing and monitoring setup
+Integrates with enterprise load testing suite
 """
 
 import asyncio
