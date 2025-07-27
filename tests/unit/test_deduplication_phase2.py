@@ -204,13 +204,16 @@ class TestDeduplicationIntegration:
 def test_phase_2_advanced_structure():
     """Test that Phase 2 advanced modular structure is complete."""
     import os
+    from pathlib import Path
 
-    base_path = "c:/Users/dro/second-brain"
+    # Get the project root directory dynamically
+    test_file_path = Path(__file__)
+    base_path = test_file_path.parent.parent.parent  # Go up 3 levels from tests/unit/test_file.py
 
     # Check that our new directories exist
-    assert os.path.exists(f"{base_path}/app/interfaces")
-    assert os.path.exists(f"{base_path}/app/models")
-    assert os.path.exists(f"{base_path}/app/services/duplicate_detectors")
+    assert (base_path / "app" / "interfaces").exists()
+    assert (base_path / "app" / "models").exists()
+    assert (base_path / "app" / "services" / "duplicate_detectors").exists()
 
     # Check that our new files exist
     expected_files = [
@@ -225,8 +228,8 @@ def test_phase_2_advanced_structure():
     ]
 
     for file_path in expected_files:
-        full_path = f"{base_path}/{file_path}"
-        assert os.path.exists(full_path), f"Missing file: {file_path}"
+        full_path = base_path / file_path
+        assert full_path.exists(), f"Missing file: {file_path}"
 
     # Check file sizes to ensure substantial implementation
     # Reduced thresholds to account for file changes and variations
@@ -244,8 +247,8 @@ def test_phase_2_advanced_structure():
     }
 
     for file_path, min_size in size_requirements.items():
-        full_path = f"{base_path}/{file_path}"
-        actual_size = os.path.getsize(full_path)
+        full_path = base_path / file_path
+        actual_size = full_path.stat().st_size
         assert actual_size >= min_size, f"File {file_path} too small: {actual_size} < {min_size}"
 
     print("[OK] Phase 2 advanced modular structure validation passed!")
