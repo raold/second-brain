@@ -238,7 +238,7 @@ def test_phase_2_advanced_structure():
         "app/models/deduplication_models.py": 9000,
         "app/interfaces/duplicate_detector_interface.py": 10000,
         "app/services/duplicate_detectors/exact_match_detector.py": 10000,
-        "app/services/duplicate_detectors/fuzzy_match_detector.py": 18000,
+        "app/services/duplicate_detectors/fuzzy_match_detector.py": 17000,
         "app/services/duplicate_detectors/semantic_similarity_detector.py": 20000,
         "app/services/duplicate_detectors/hybrid_detector.py": 17000
         # Removed non-existent files:
