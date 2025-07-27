@@ -12,6 +12,9 @@
 - **Active Branch**: main
 - **Next Action**: Check TODO.md for priority tasks
 
+## ⚠️ IMPORTANT USER PREFERENCES
+- **NO CO-AUTHOR LINES IN COMMITS** - User has requested multiple times not to include co-author attribution
+
 ## 🚨 FOUNDATIONAL DEVELOPMENT PRINCIPLES
 
 ### 🐳 Docker-First Architecture - MANDATORY
