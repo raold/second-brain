@@ -366,6 +366,10 @@ app.include_router(google_drive_router, prefix="/api/v1")
 # Include Dashboard routes (v3.0.0)
 app.include_router(dashboard_router)
 
+# Include Google Drive integration routes (v3.0.0)
+from app.api.routes.gdrive import router as gdrive_router
+app.include_router(gdrive_router, prefix="/api/v1")
+
 # Setup conversation monitoring
 setup_conversation_monitoring()
 

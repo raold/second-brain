@@ -206,6 +206,23 @@ def get_metrics_collector_dep():
     return get_metrics_collector()
 
 
+# Google Drive service dependencies
+def get_google_auth_service():
+    """Get Google Auth service instance"""
+    try:
+        return _container.get_service("google_auth_service")
+    except ValueError:
+        from app.services.gdrive.auth_service import GoogleAuthService
+        service = GoogleAuthService()
+        _container.register_singleton("google_auth_service", service)
+        return service
+
+
+def get_google_auth_service_dep():
+    """FastAPI dependency for Google Auth service"""
+    return get_google_auth_service()
+
+
 # Initialize container with default services
 def initialize_dependencies():
     """Initialize the dependency container with default services"""
