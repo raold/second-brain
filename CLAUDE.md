@@ -290,3 +290,25 @@ python scripts/test_runner.py --all
 - **CI/CD**: GitHub Actions with dependency validation and testing
 
 **Remember**: The user was frustrated about hardcoded Python paths from different machines. The .venv solution ensures portability across all their computers.
+## 🤖 Claude Code Agent System (Added 2025-07-31)
+
+### Active Agents: 27 Total
+- **Knowledge Management**: 4 original agents (knowledge-synthesizer, research-orchestrator, note-processor, deep-researcher)
+- **Engineering-Specific**: 23 specialized agents across 8 categories
+  - Analysis (3): performance-analyzer, code-quality-analyzer, architecture-analyzer
+  - Documentation (3): api-documentation-agent, architecture-documentation-agent, adr-generator
+  - Maintenance (3): technical-debt-tracker, legacy-code-analyzer, dependency-manager
+  - Security (2): security-vulnerability-scanner, compliance-checker
+  - Quality (3): test-generator, code-review-agent, performance-optimizer
+  - Operations (3): incident-response-agent, postmortem-generator, devops-automation-agent
+  - Collaboration (3): knowledge-sharing-agent, expertise-mapper, team-sync-agent
+  - Integration (3): mcp-integration-agent, ci-cd-pipeline-agent, tool-orchestrator
+
+### Context-Aware Agents
+- **context-aware-orchestrator**: Reads TODO.md and CLAUDE.md before coordinating tasks
+- **context-aware-debt-tracker**: Integrates with TODO.md for debt tracking
+
+### Agent Configuration
+- Auto-activation in second-brain directory via .claude/config.yml
+- Context files automatically loaded: TODO.md, CLAUDE.md, DEVELOPMENT_CONTEXT.md
+- Expected 15x token usage with multi-agent workflows
