@@ -11,6 +11,9 @@ from typing import Any
 
 from app.models.synthesis.suggestion_models import (
     ActionType,
+    ContentSuggestion,
+    LearningPathSuggestion,
+    OrganizationSuggestion,
     Suggestion,
     SuggestionRequest,
     SuggestionResponse,
