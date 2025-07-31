@@ -38,7 +38,7 @@ coverage.xml
 *.swo
 
 # Claude AI
-.claude/
+#.claude/
 
 # OS
 .DS_Store

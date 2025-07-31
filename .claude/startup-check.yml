@@ -1,0 +1,228 @@
+# Claude Code Startup Check Configuration
+# Monitors Anthropic updates and incorporates improvements
+
+version: "1.0"
+enabled: true
+
+# Check behavior
+check_behavior:
+  run_on_startup: true
+  check_interval_hours: 24
+  max_check_duration_seconds: 30
+  cache_results: true
+  cache_ttl_hours: 6
+
+# Update sources to monitor
+update_sources:
+  anthropic_docs:
+    - name: "Claude Code Documentation"
+      url: "https://docs.anthropic.com/en/docs/claude-code"
+      sections:
+        - "overview"
+        - "quickstart"
+        - "best-practices"
+        - "changelog"
+        - "security"
+        - "troubleshooting"
+      check_frequency: "daily"
+    
+    - name: "Claude Code Changelog"
+      url: "https://docs.anthropic.com/en/docs/claude-code/changelog"
+      priority: "high"
+      check_frequency: "daily"
+    
+    - name: "Security Advisories"
+      url: "https://docs.anthropic.com/security"
+      priority: "critical"
+      check_frequency: "every_startup"
+
+# Relevance filtering for second-brain project
+relevance_filters:
+  keywords:
+    high_priority:
+      - "security"
+      - "performance"
+      - "agent"
+      - "token optimization"
+      - "best practice"
+    
+    medium_priority:
+      - "knowledge management"
+      - "fastapi"
+      - "postgresql"
+      - "docker"
+      - "clean architecture"
+    
+    low_priority:
+      - "ui enhancement"
+      - "experimental"
+      - "beta"
+  
+  # Minimum relevance score to show update
+  relevance_threshold: 30
+  
+  # Score weights
+  scoring:
+    keyword_match: 10
+    security_update: 50
+    performance_update: 30
+    best_practice_update: 20
+    feature_update: 15
+
+# Auto-application rules
+auto_apply:
+  # Critical updates applied automatically with notification
+  critical_updates:
+    enabled: true
+    types:
+      - "security_patch"
+      - "breaking_change_migration"
+      - "data_loss_prevention"
+    
+    require_backup: true
+    notify_before: true
+    notify_after: true
+  
+  # Recommended updates require approval
+  recommended_updates:
+    enabled: false
+    require_approval: true
+    batch_updates: true
+  
+  # Optional updates are information only
+  optional_updates:
+    show_notification: true
+    auto_apply: false
+
+# Implementation behavior
+implementation:
+  # How to apply updates
+  strategy: "incremental"
+  
+  # Verification after each change
+  verify_changes: true
+  
+  # Rollback on failure
+  auto_rollback: true
+  
+  # Maximum changes per session
+  max_changes_per_session: 10
+  
+  # Test execution
+  run_tests:
+    after_critical: true
+    after_recommended: true
+    test_command: "python scripts/test_runner.py --validation"
+
+# Backup configuration
+backup:
+  enabled: true
+  location: ".claude/backups"
+  retention_days: 30
+  before_updates: true
+  
+  # What to backup
+  include:
+    - "agents/**/*.md"
+    - "*.yml"
+    - "*.yaml"
+    - "*.json"
+
+# User notification settings
+notifications:
+  # When to show notifications
+  show_on_startup: true
+  show_summary: true
+  
+  # How to group updates
+  group_by: "impact"  # impact, type, or date
+  
+  # Maximum updates to show
+  max_items: 10
+  
+  # Notification format
+  format: "markdown"
+  
+  # Where to save notification history
+  history_file: ".claude/update-history.json"
+
+# Project-specific settings for second-brain
+second_brain_specific:
+  # Architecture compliance checks
+  architecture_checks:
+    - "clean_architecture_v3"
+    - "docker_first"
+    - "dependency_injection"
+  
+  # Technology-specific updates
+  monitor_technologies:
+    - "fastapi"
+    - "postgresql"
+    - "pgvector"
+    - "redis"
+    - "docker"
+  
+  # Project principles to maintain
+  principles:
+    - "no_co_author_commits"
+    - "enterprise_ready"
+    - "developer_efficiency"
+    - "fail_fast_fix_fast"
+
+# Logging and metrics
+logging:
+  enabled: true
+  level: "INFO"
+  file: ".claude/logs/startup-check.log"
+  
+  # What to log
+  log_events:
+    - "check_started"
+    - "updates_found"
+    - "updates_applied"
+    - "errors"
+    - "user_decisions"
+
+# State management
+state:
+  file: ".claude/startup-check-state.json"
+  
+  # What to track
+  track:
+    - "last_check_timestamp"
+    - "updates_applied"
+    - "updates_skipped"
+    - "error_count"
+    - "success_rate"
+
+# Integration with other agents
+integration:
+  # Agents to notify about updates
+  notify_agents:
+    - "context-aware-orchestrator"
+    - "technical-debt-tracker"
+  
+  # Trigger other agents after updates
+  post_update_agents:
+    security_update: ["security-vulnerability-scanner"]
+    performance_update: ["performance-analyzer"]
+    architecture_update: ["architecture-analyzer"]
+
+# Feature flags
+features:
+  # Experimental features
+  auto_pr_creation: false
+  ai_impact_analysis: true
+  predictive_updates: false
+  
+  # Advanced features
+  multi_project_sync: false
+  team_notifications: false
+  custom_update_sources: false
+
+# Metadata
+metadata:
+  created: "2025-07-31"
+  version: "1.0.0"
+  author: "Claude Code Startup System"
+  project: "second-brain"

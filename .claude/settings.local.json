@@ -15,7 +15,14 @@
       "Bash(timeout 5 docker logs secondbrain-app --tail 30 -f)",
       "Bash(curl:*)",
       "Bash(timeout 3 docker logs secondbrain-app --tail 20 -f)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(chmod:*)",
+      "Bash(bash:*)",
+      "Bash(python3:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": []
   }
