@@ -1001,7 +1001,7 @@ class StructuredDataExtractor:
         try:
             json.loads(content)
             return True
-        except:
+        except Exception:
             return False
 
     def _enhance_markdown_extraction(self, content: str, container: StructuredDataContainer) -> StructuredDataContainer:

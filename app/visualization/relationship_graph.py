@@ -166,7 +166,7 @@ class RelationshipGraph:
                 try:
                     eigenvector = nx.eigenvector_centrality(self.graph.to_undirected(), max_iter=100)
                     metrics["eigenvector_centrality"] = self._get_top_nodes(eigenvector, top_n)
-                except:
+                except Exception:
                     logger.warning("Eigenvector centrality computation failed")
 
             # PageRank (Google's algorithm)
@@ -474,7 +474,7 @@ class RelationshipGraph:
                         pos = nx.nx_agraph.graphviz_layout(dag, prog='dot')
                     else:
                         pos = nx.spring_layout(self.graph)
-                except:
+                except Exception:
                     pos = nx.spring_layout(self.graph)
             elif algorithm == "kamada_kawai":
                 pos = nx.kamada_kawai_layout(self.graph)

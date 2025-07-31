@@ -153,7 +153,7 @@ class StartupOptimizer:
                 timeout=5
             )
             return result.returncode == 0
-        except:
+        except Exception:
             return False
 
     def get_git_status(self) -> str:
@@ -169,7 +169,7 @@ class StartupOptimizer:
                 changes = len(result.stdout.strip().split('\n')) if result.stdout.strip() else 0
                 return f"{changes} uncommitted changes" if changes else "clean"
             return "unknown"
-        except:
+        except Exception:
             return "not a git repository"
 
     def count_agents(self) -> int:

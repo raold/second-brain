@@ -486,7 +486,7 @@ class TestSecurityValidation:
                     for pattern in sensitive_patterns:
                         assert pattern not in error_text, f"Error message contains sensitive info: {pattern}"
 
-                except:
+                except Exception:
                     # If response is not JSON, check raw text
                     error_text = response.text.lower()
                     assert "traceback" not in error_text

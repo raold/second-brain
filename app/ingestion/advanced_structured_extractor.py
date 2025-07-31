@@ -703,7 +703,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                         "shape": df.shape
                     }
                     tables.append(table)
-                except:
+                except Exception:
                     pass
             else:
                 # Manual CSV parsing
@@ -762,7 +762,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                                 "headers": headers,
                                 "rows": rows
                             })
-                except:
+                except Exception:
                     pass
             else:
                 # Basic HTML parsing without BeautifulSoup
@@ -878,7 +878,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                 xml_dict = self._xml_to_dict(root)
                 if xml_dict:
                     configs[root.tag] = xml_dict
-            except:
+            except Exception:
                 pass
 
         return configs
@@ -965,7 +965,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                     "data": response_data,
                     "status": 200  # Default assumption
                 })
-            except:
+            except Exception:
                 pass
 
         return responses

@@ -84,7 +84,7 @@ def main():
             sys.exit(0)
         else:
             sys.exit(1)
-    except:
+    except Exception:
         # Fall back to sync
         if wait_for_postgres_sync():
             sys.exit(0)

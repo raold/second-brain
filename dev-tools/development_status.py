@@ -88,7 +88,7 @@ def get_ci_cd_status():
         git_status = subprocess.run(['git', 'status', '--porcelain'],
                                   capture_output=True, text=True, cwd=os.getcwd())
         has_changes = bool(git_status.stdout.strip())
-    except:
+    except Exception:
         has_changes = False
 
     # Determine deployment readiness based on branch and changes

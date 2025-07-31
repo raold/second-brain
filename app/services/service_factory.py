@@ -57,7 +57,7 @@ class GitService:
                     cwd=os.getcwd(),
                     stderr=subprocess.DEVNULL
                 ).decode().strip()
-            except:
+            except Exception:
                 branch = "unknown"
 
             # Get last commit
@@ -67,7 +67,7 @@ class GitService:
                     cwd=os.getcwd(),
                     stderr=subprocess.DEVNULL
                 ).decode().strip()
-            except:
+            except Exception:
                 last_commit = "No commits"
 
             # Get status
@@ -82,7 +82,7 @@ class GitService:
                     status_summary = f"{len(status.splitlines())} files changed"
                 else:
                     status_summary = "Clean working directory"
-            except:
+            except Exception:
                 status_summary = "Unknown"
 
             return {

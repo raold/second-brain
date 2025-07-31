@@ -256,7 +256,7 @@ class TestMonitoringEndpoints:
                 try:
                     error_data = response.json()
                     assert "detail" in error_data or "error" in error_data
-                except:
+                except Exception:
                     # Non-JSON error response is also acceptable
                     assert len(response.text) > 0
 

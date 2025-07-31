@@ -330,7 +330,7 @@ class TestPasswordHashing:
         try:
             hasher.verify(hashed, "wrongpassword")
             raise AssertionError("Should have raised exception")
-        except:
+        except Exception:
             pass  # Expected
 
     def test_password_hash_uniqueness(self):

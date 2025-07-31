@@ -265,7 +265,7 @@ class TestAPIErrorHandling:
             try:
                 error_data = response.json()
                 assert "detail" in error_data or "error" in error_data
-            except:
+            except Exception:
                 # If response isn't JSON, should still be a proper error
                 assert "error" in response.text.lower() or "invalid" in response.text.lower()
 
@@ -355,7 +355,7 @@ class TestAPIErrorHandling:
             try:
                 error_data = response.json()
                 assert "detail" in error_data
-            except:
+            except Exception:
                 # If not JSON, should still be a proper error response
                 assert len(response.text) > 0
 

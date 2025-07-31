@@ -73,7 +73,7 @@ def start_application():
         if response.status_code == 200:
             print("✅ Application already running on http://localhost:8000")
             return None
-    except:
+    except Exception:
         pass
 
     # Start application
@@ -95,7 +95,7 @@ def start_application():
                 if response.status_code == 200:
                     print("✅ Application started successfully")
                     return process
-            except:
+            except Exception:
                 time.sleep(1)
 
         print("❌ Application failed to start within 30 seconds")

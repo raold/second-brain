@@ -452,7 +452,7 @@ class MarkdownParser(FileParser):
                     frontmatter = yaml.safe_load(parts[1])
                     metadata['frontmatter'] = frontmatter
                     content = parts[2]
-            except:
+            except Exception:
                 pass
 
         # Count various elements

@@ -524,7 +524,7 @@ class StructuredDataExtractor:
             try:
                 json.loads(code)
                 return "json"
-            except:
+            except Exception:
                 pass
 
         # HTML/XML
@@ -547,7 +547,7 @@ class StructuredDataExtractor:
                 data = json.loads(match.group(0))
                 if isinstance(data, dict):
                     return data
-            except:
+            except Exception:
                 continue
 
         return None
@@ -566,7 +566,7 @@ class StructuredDataExtractor:
                 data = yaml.safe_load(match.group(1))
                 if isinstance(data, dict):
                     return data
-            except:
+            except Exception:
                 pass
 
         return None

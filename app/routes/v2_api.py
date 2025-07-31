@@ -27,7 +27,7 @@ class ConnectionManager:
         for connection in self.active_connections:
             try:
                 await connection.send_json(message)
-            except:
+            except Exception:
                 pass
 
 manager = ConnectionManager()
@@ -51,7 +51,7 @@ async def get_metrics():
                     if "tests collected" in line:
                         test_count = int(line.split()[0])
                         break
-        except:
+        except Exception:
             pass
 
         # Pattern count (mock for now)

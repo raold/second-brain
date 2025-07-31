@@ -169,7 +169,7 @@ def status():
     try:
         result = run_command(compose_cmd + ['ps'], capture_output=True)
         click.echo(result.stdout)
-    except:
+    except Exception:
         click.echo("❌ Failed to get service status")
 
 

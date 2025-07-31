@@ -85,7 +85,7 @@ async def upload_file(
         try:
             import json
             meta_dict = json.loads(metadata)
-        except:
+        except Exception:
             logger.warning(f"Failed to parse metadata: {metadata}")
 
     # Create job ID

@@ -271,7 +271,7 @@ class PerformanceLogger:
         try:
             process = psutil.Process()
             self.start_memory = process.memory_info().rss / 1024 / 1024  # MB
-        except:
+        except Exception:
             self.start_memory = None
 
         self.logger.debug(f"Starting operation: {self.operation}")
@@ -293,7 +293,7 @@ class PerformanceLogger:
                 memory_delta = current_memory - self.start_memory
                 extra['memory_mb'] = current_memory
                 extra['memory_delta_mb'] = memory_delta
-            except:
+            except Exception:
                 pass
 
         if exc_type:
