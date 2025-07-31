@@ -638,11 +638,12 @@ class SessionService:
 # DEPRECATED: Use app.core.dependencies instead
 # This module is kept for backward compatibility
 
-# Import from the new centralized dependency injection system
-from app.core.dependencies import (
 from typing import List
 from typing import Any
 from datetime import datetime
+
+# Import from the new centralized dependency injection system
+from app.core.dependencies import (
     get_dashboard_service as _get_dashboard_service,
     get_git_service as _get_git_service,
     get_health_service as _get_health_service,

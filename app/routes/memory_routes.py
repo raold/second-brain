@@ -22,6 +22,19 @@ from fastapi import HTTPException
 from fastapi import APIRouter
 from pydantic import BaseModel
 from pydantic import Field
+
+class MemoryResponse(BaseModel):
+    """Memory response model"""
+    id: str
+    user_id: str
+    content: str
+    memory_type: str
+    importance_score: float
+    created_at: str
+    updated_at: str
+    metadata: Optional[Dict[str, Any]] = None
+    tags: Optional[List[str]] = None
+
 logger = get_logger(__name__)
 router = APIRouter(prefix="/memories", tags=["Memories"])
 
