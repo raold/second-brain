@@ -18,7 +18,7 @@ archive/
 logs/
 tests/logs/
 
-# Test artifacts  
+# Test artifacts
 htmlcov/
 .coverage
 coverage.xml
@@ -29,6 +29,9 @@ coverage.xml
 .env
 .env.local
 .env.*.local
+.venv
+.venvLibsite-packages
+.gitconfig.no-coauthor
 
 # IDE
 .vscode/

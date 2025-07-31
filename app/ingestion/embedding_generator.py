@@ -4,11 +4,39 @@ Embedding generation component for automatic vector embeddings
 
 import asyncio
 import hashlib
-from app.utils.logging_config import get_logger
-from typing import Any
-from typing import Tuple
+from typing import Any, Tuple, Optional
 from datetime import datetime
+from dataclasses import dataclass
+
+# Optional imports
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    np = None
+
+try:
+    from sentence_transformers import SentenceTransformer
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    SentenceTransformer = None
+
+from app.utils.logging_config import get_logger
+from app.utils.openai_client import get_openai_client
+
 logger = get_logger(__name__)
+
+
+@dataclass
+class EmbeddingMetadata:
+    """Metadata about generated embeddings"""
+    model: str
+    dimensions: int
+    chunk_id: Optional[int] = None
+    chunk_overlap: Optional[int] = None
+    generated_at: Optional[datetime] = None
 
 
 class EmbeddingGenerator:
@@ -176,17 +204,14 @@ class EmbeddingGenerator:
     async def _generate_openai_embedding(self, text: str) -> list[float]:
         """Generate embedding using OpenAI API"""
         try:
-
-            client = OpenAIClient()
-            if client._client:
-                response = await client.embeddings.create(
-                    model="text-embedding-ada-002",
-                    input=text
-                )
-                return response.data[0].embedding
+            client = get_openai_client()
+            embedding = await client.get_embedding(text)
+            
+            if embedding:
+                return embedding
             else:
-                logger.warning("OpenAI client not available, using sentence-transformers")
-                return await self._generate_sentence_transformer_embedding(text)
+                logger.warning("OpenAI embedding generation failed, falling back to mock")
+                return self._generate_mock_embedding(text)
         except Exception as e:
             logger.error(f"Error generating OpenAI embedding: {e}")
             return self._generate_mock_embedding(text)
