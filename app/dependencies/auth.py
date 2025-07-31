@@ -58,6 +58,11 @@ async def get_db_instance():
     return None
 
 
+async def get_db():
+    """Get database instance - alias for get_db_instance"""
+    return await get_db_instance()
+
+
 async def get_redis_instance():
     """
     Get Redis instance

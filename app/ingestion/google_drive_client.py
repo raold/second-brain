@@ -11,11 +11,20 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+# Optional Google Drive dependencies
+try:
+    from google.auth.transport.requests import Request
+    from google.oauth2.credentials import Credentials
+    from google_auth_oauthlib.flow import Flow
+    from googleapiclient.discovery import build
+    from googleapiclient.http import MediaIoBaseDownload
+    GOOGLE_DRIVE_AVAILABLE = True
+except ImportError:
+    GOOGLE_DRIVE_AVAILABLE = False
+    # Create stub classes
+    Request = None
+    Credentials = None
+    Flow = None
 
 from app.utils.logger import get_logger
 
@@ -93,6 +102,9 @@ class GoogleDriveClient:
     }
 
     def __init__(self, credentials_path: Path | None = None):
+        if not GOOGLE_DRIVE_AVAILABLE:
+            raise ImportError("Google Drive dependencies not available. Install with: pip install google-auth google-auth-oauthlib google-api-python-client")
+        
         self.credentials_path = credentials_path or Path("credentials/google_drive_creds.pickle")
         self.credentials_path.parent.mkdir(parents=True, exist_ok=True)
         self.creds: Credentials | None = None
