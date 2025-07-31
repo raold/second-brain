@@ -266,6 +266,7 @@ setup_openapi_documentation(app)
 
 # Register exception handlers from the new exception handling system
 from app.core.exceptions import register_exception_handlers
+
 register_exception_handlers(app)
 
 

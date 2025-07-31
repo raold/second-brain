@@ -9,6 +9,7 @@ This module provides:
 - Audit logging
 """
 
+import asyncio
 import logging
 import sys
 import time
@@ -330,9 +331,4 @@ def setup_structlog():
 
 
 # Initialize logging on import
-import asyncio
-from typing import Any
-
-from pydantic import BaseModel
-
 setup_structlog()

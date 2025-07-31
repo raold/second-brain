@@ -75,7 +75,7 @@ class PasswordPolicy:
             try:
                 with open(banned_passwords_file) as f:
                     self.banned_passwords = {line.strip().lower() for line in f}
-            except:
+            except Exception:
                 pass
 
     def validate(self, password: str) -> tuple[bool, list[str]]:
@@ -270,7 +270,7 @@ class DataEncryption:
             salt, hash_b64 = hashed.split('$')
             expected_hash = hashlib.pbkdf2_hmac('sha256', data.encode(), salt.encode(), 100000)
             return hmac.compare_digest(base64.b64decode(hash_b64), expected_hash)
-        except:
+        except Exception:
             return False
 
 

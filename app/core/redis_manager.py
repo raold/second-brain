@@ -84,7 +84,7 @@ class RedisManager:
         try:
             await self.client.ping()
             return True
-        except:
+        except Exception:
             return False
 
 

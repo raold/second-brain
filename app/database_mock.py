@@ -2,6 +2,7 @@
 Mock version of the database for testing without OpenAI API calls or database connection.
 """
 
+import uuid
 from datetime import datetime
 from typing import Any
 
