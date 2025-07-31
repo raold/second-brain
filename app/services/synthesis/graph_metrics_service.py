@@ -6,11 +6,29 @@ knowledge graph formed by memories and their relationships.
 
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from uuid import UUID
 
-import networkx as nx
-import numpy as np
+# Optional dependencies
+try:
+    import networkx as nx
+    NETWORKX_AVAILABLE = True
+except ImportError:
+    NETWORKX_AVAILABLE = False
+    nx = None
+
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    np = None
+
+# Type checking imports
+if TYPE_CHECKING and NETWORKX_AVAILABLE:
+    from networkx import Graph
+else:
+    Graph = Any
 
 from app.models.synthesis.metrics_models import (
     ClusterMetrics,
@@ -43,12 +61,17 @@ class GraphMetricsService:
     """Service for analyzing knowledge graph structure and metrics"""
 
     def __init__(self, db, memory_service, relationship_analyzer):
+        if not NETWORKX_AVAILABLE:
+            raise ImportError("NetworkX is required for graph metrics. Install with: pip install networkx")
+        if not NUMPY_AVAILABLE:
+            raise ImportError("NumPy is required for graph metrics. Install with: pip install numpy")
+            
         self.db = db
         self.memory_service = memory_service
         self.relationship_analyzer = relationship_analyzer
 
         # Graph cache
-        self._graph_cache: nx.Graph | None = None
+        self._graph_cache: Graph | None = None
         self._cache_timestamp: datetime | None = None
         self._cache_ttl = timedelta(minutes=15)
 
@@ -205,7 +228,7 @@ class GraphMetricsService:
             logger.error(f"Cluster finding failed: {e}")
             return []
 
-    async def _build_knowledge_graph(self, memory_ids: list[UUID] | None = None) -> nx.Graph:
+    async def _build_knowledge_graph(self, memory_ids: list[UUID] | None = None) -> Graph:
         """Build or retrieve the knowledge graph"""
         # Check cache
         if (self._graph_cache is not None and
@@ -296,7 +319,7 @@ class GraphMetricsService:
 
         return [dict(r) for r in relationships]
 
-    async def _calculate_node_metrics(self, graph: nx.Graph) -> dict[str, Any]:
+    async def _calculate_node_metrics(self, graph: Graph) -> dict[str, Any]:
         """Calculate node-level metrics"""
         # Degree distribution
         degrees = [d for n, d in graph.degree()]
@@ -328,7 +351,7 @@ class GraphMetricsService:
             'node_connectivity': nx.node_connectivity(graph) if graph.number_of_nodes() > 1 else 0
         }
 
-    async def _calculate_cluster_metrics(self, graph: nx.Graph) -> dict[str, Any]:
+    async def _calculate_cluster_metrics(self, graph: Graph) -> dict[str, Any]:
         """Calculate cluster-level metrics"""
         # Find communities using different algorithms
         try:
@@ -377,7 +400,7 @@ class GraphMetricsService:
 
         return cluster_metrics
 
-    async def _calculate_connectivity_metrics(self, graph: nx.Graph) -> ConnectivityMetrics:
+    async def _calculate_connectivity_metrics(self, graph: Graph) -> ConnectivityMetrics:
         """Calculate connectivity metrics"""
         # Basic connectivity
         is_connected = nx.is_connected(graph.to_undirected())
@@ -413,7 +436,7 @@ class GraphMetricsService:
             }
         )
 
-    async def _calculate_temporal_metrics(self, graph: nx.Graph) -> TemporalMetrics:
+    async def _calculate_temporal_metrics(self, graph: Graph) -> TemporalMetrics:
         """Calculate temporal metrics"""
         # Extract creation times
         creation_times = []
@@ -540,7 +563,7 @@ class GraphMetricsService:
 
         return periods
 
-    def _infer_cluster_theme(self, tags: set[str], subgraph: nx.Graph) -> str:
+    def _infer_cluster_theme(self, tags: set[str], subgraph: Graph) -> str:
         """Infer theme of a cluster from tags and content"""
         if not tags:
             return "General Knowledge"
@@ -552,7 +575,7 @@ class GraphMetricsService:
         else:
             return f"{', '.join(tag_list[:3])} and {len(tag_list)-3} more"
 
-    def _calculate_cluster_modularity(self, graph: nx.Graph, cluster_nodes: set[UUID]) -> float:
+    def _calculate_cluster_modularity(self, graph: Graph, cluster_nodes: set[UUID]) -> float:
         """Calculate modularity score for a specific cluster"""
         # Simplified modularity calculation
         internal_edges = 0
