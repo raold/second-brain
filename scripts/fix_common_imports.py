@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Add common missing imports to files."""
 
-import os
 import re
 from pathlib import Path
 
@@ -26,9 +25,9 @@ COMMON_IMPORTS = {
 
 def add_missing_imports(file_path):
     """Add missing imports to a file."""
-    with open(file_path, 'r') as f:
+    with open(file_path) as f:
         content = f.read()
-    
+
     # Find which imports are needed
     needed_imports = []
     for name, import_stmt in COMMON_IMPORTS.items():
@@ -40,15 +39,15 @@ def add_missing_imports(file_path):
                 if 'from typing import' in content:
                     continue
             needed_imports.append(import_stmt)
-    
+
     if not needed_imports:
         return False
-    
+
     # Find where to insert imports (after docstring and existing imports)
     lines = content.split('\n')
     insert_pos = 0
     in_docstring = False
-    
+
     for i, line in enumerate(lines):
         if i == 0 and (line.strip().startswith('"""') or line.strip().startswith("'''")):
             in_docstring = True
@@ -62,28 +61,28 @@ def add_missing_imports(file_path):
             break
         if line.startswith('import') or line.startswith('from'):
             insert_pos = i + 1
-    
+
     # Insert the imports
     for imp in needed_imports:
         lines.insert(insert_pos, imp)
         insert_pos += 1
-    
+
     # Write back
     with open(file_path, 'w') as f:
         f.write('\n'.join(lines))
-    
+
     return True
 
 def main():
     """Fix common imports in all Python files."""
     root = Path('app')
     fixed_count = 0
-    
+
     for file_path in root.rglob('*.py'):
         if add_missing_imports(file_path):
             print(f"Fixed: {file_path}")
             fixed_count += 1
-    
+
     print(f"\nFixed {fixed_count} files with missing imports.")
 
 if __name__ == "__main__":
