@@ -1,0 +1,50 @@
+{
+  "session_id": "startup-20250731-135848",
+  "phases": {
+    "assessment": {
+      "start": 1753984728.743073,
+      "status": "completed",
+      "end": 1753984728.7566988,
+      "duration_ms": 13
+    },
+    "context_loading": {
+      "start": 1753984728.756702,
+      "status": "completed",
+      "end": 1753984728.757035,
+      "duration_ms": 0
+    },
+    "agent_activation": {
+      "start": 1753984728.757035,
+      "status": "completed",
+      "end": 1753984728.757045,
+      "duration_ms": 0
+    },
+    "environment_setup": {
+      "start": 1753984728.757045,
+      "status": "completed",
+      "end": 1753984728.7607958,
+      "duration_ms": 3
+    },
+    "health_report": {
+      "start": 1753984728.760798,
+      "status": "completed",
+      "end": 1753984728.7608588,
+      "duration_ms": 0
+    }
+  },
+  "warnings": [
+    "Docker not available",
+    "Docker issue: Not running - run 'docker-compose up'",
+    "PostgreSQL issue: Not accessible",
+    "Redis issue: Not accessible"
+  ],
+  "optimizations": [
+    "context_caching",
+    "smart_activation"
+  ],
+  "agents_activated": 3,
+  "token_usage_multiplier": 6,
+  "health_score": 7,
+  "startup_time_ms": 17,
+  "optimizations_applied": 2
+}

@@ -318,3 +318,10 @@ python scripts/test_runner.py --all
 - Auto-activation in second-brain directory via .claude/config.yml
 - Context files automatically loaded: TODO.md, CLAUDE.md, DEVELOPMENT_CONTEXT.md
 - Expected 15x token usage with multi-agent workflows
+
+## 🚀 AUTONOMOUS MODE ENABLED
+- NO CONFIRMATIONS for any operations
+- AUTO-COMMIT when changes made
+- AUTO-PUSH to remote
+- NO PROMPTS - just execute
+
