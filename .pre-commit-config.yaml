@@ -23,3 +23,11 @@ repos:
         entry: python -c "import app.models.synthesis; import app.services.synthesis; print('Imports OK')"
         language: system
         pass_filenames: false
+      
+      - id: folder-structure-cleanup
+        name: Clean up folder structure
+        entry: python scripts/cleanup_folder_structure.py --pre-commit
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]

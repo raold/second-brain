@@ -147,5 +147,33 @@ python scripts/cleanup_folder_structure.py --execute
 2. **Scripts**: 2 development scripts moved from root to `scripts/development/`
 3. **Documentation**: 12 documentation files organized into `docs/` subdirectories
 4. **Automation**: Created cleanup script for future maintenance
+5. **Git Hooks**: Added pre-commit hooks to maintain structure automatically
 
 The root directory is now clean and contains only essential project files.
+
+## Automated Enforcement
+
+### Git Hooks Setup
+The folder structure is now automatically enforced before every commit:
+
+1. **Direct Git Hook**: `.git/hooks/pre-commit` runs cleanup check
+2. **Pre-commit Framework**: `.pre-commit-config.yaml` includes folder cleanup
+3. **Setup Script**: `scripts/setup_git_hooks.py` installs all hooks
+
+### Installation
+```bash
+# Install pre-commit hooks (one-time setup)
+python scripts/setup_git_hooks.py
+
+# Or manually
+pip install pre-commit
+pre-commit install
+```
+
+### How It Works
+- Before each commit, the cleanup script checks for misplaced files
+- If files are in wrong locations, commit is blocked with instructions
+- Developer must run `python scripts/cleanup_folder_structure.py --execute`
+- Then stage changes and commit again
+
+This ensures the folder structure stays clean permanently.

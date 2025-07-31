@@ -106,13 +106,14 @@ def find_misplaced_files() -> List[Tuple[str, str]]:
     return misplaced
 
 
-def cleanup_structure(dry_run: bool = True):
+def cleanup_structure(dry_run: bool = True, pre_commit: bool = False):
     """Clean up the folder structure."""
     misplaced = find_misplaced_files()
     
     if not misplaced:
-        print("✅ All files are in their correct locations!")
-        return
+        if not pre_commit:
+            print("✅ All files are in their correct locations!")
+        return 0
     
     print(f"Found {len(misplaced)} misplaced files:")
     print()
@@ -120,9 +121,16 @@ def cleanup_structure(dry_run: bool = True):
     for file, dest_dir in misplaced:
         print(f"  {file} → {dest_dir}")
     
-    if dry_run:
+    if dry_run and not pre_commit:
         print("\nThis is a dry run. Use --execute to actually move files.")
-        return
+        return 1
+    
+    if pre_commit:
+        print("\n⚠️  Pre-commit hook found misplaced files!")
+        print("Please run the following command to fix:")
+        print("  python scripts/cleanup_folder_structure.py --execute")
+        print("\nThen stage the changes and commit again.")
+        return 1
     
     print("\nMoving files...")
     for file, dest_dir in misplaced:
@@ -135,15 +143,20 @@ def cleanup_structure(dry_run: bool = True):
         print(f"  ✓ Moved {file} to {dest_path}")
     
     print("\n✅ Cleanup complete!")
+    return 0
 
 
 if __name__ == "__main__":
     import sys
     
     if "--help" in sys.argv:
-        print("Usage: python scripts/cleanup_folder_structure.py [--execute]")
+        print("Usage: python scripts/cleanup_folder_structure.py [--execute] [--pre-commit]")
         print("  --execute: Actually move files (default is dry run)")
+        print("  --pre-commit: Run in pre-commit mode (exits with error if files need moving)")
         sys.exit(0)
     
     dry_run = "--execute" not in sys.argv
-    cleanup_structure(dry_run)
+    pre_commit = "--pre-commit" in sys.argv or os.environ.get("PRE_COMMIT", "0") == "1"
+    
+    exit_code = cleanup_structure(dry_run, pre_commit)
+    sys.exit(exit_code)
