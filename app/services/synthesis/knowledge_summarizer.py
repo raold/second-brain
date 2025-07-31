@@ -6,15 +6,18 @@ topics, and memory collections using advanced NLP techniques.
 
 import asyncio
 import json
-from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from typing import Tuple
-from datetime import datetime
-from datetime import timedelta
+from typing import Optional, Dict, List, Any, Tuple, Set
+from datetime import datetime, timedelta
 from collections import defaultdict
+
+from app.utils.logging_config import get_logger
+from app.models.synthesis.summary_models import (
+    SummaryType,
+    SummaryRequest,
+    SummaryResponse,
+    FormatType
+)
+
 logger = get_logger(__name__)
 
 

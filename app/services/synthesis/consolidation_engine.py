@@ -6,13 +6,19 @@ them intelligently while preserving important information.
 
 import asyncio
 import json
-from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
+from typing import Optional, Dict, List, Any
 from datetime import datetime
 from collections import defaultdict
+from uuid import UUID
+
+from app.utils.logging_config import get_logger
+from app.models.synthesis.consolidation_models import (
+    MergeStrategy,
+    ConsolidationRequest,
+    ConsolidationResult,
+    DuplicateGroup
+)
+
 logger = get_logger(__name__)
 
 

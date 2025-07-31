@@ -1,10 +1,16 @@
 """WebSocket service for real-time communication"""
 
 from typing import Dict, Set, Optional, Any
+from fastapi import WebSocket
+
 from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Dict
-from typing import Any
+from app.models.synthesis.websocket_models import (
+    EventType,
+    WebSocketEvent,
+    WebSocketMessage,
+    ConnectionStatus
+)
+
 logger = get_logger(__name__)
 
 

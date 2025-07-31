@@ -7,11 +7,6 @@ from enum import Enum
 from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
-from typing import Any
-from datetime import datetime
-from enum import Enum
-from pydantic import BaseModel
 
 
 class User(BaseModel):
@@ -60,8 +55,6 @@ class Memory(BaseModel):
             updated_at=now,
             user_id=user_id
         )
-
-
 
 
 class MemoryMetrics(BaseModel):

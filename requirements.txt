@@ -18,6 +18,8 @@ openai==1.3.8
 numpy==1.24.3
 pandas==2.0.3
 scikit-learn==1.3.2
+networkx==3.2.1
+python-louvain==0.16
 
 # System monitoring
 psutil==5.9.0

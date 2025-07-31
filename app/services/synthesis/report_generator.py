@@ -2,12 +2,16 @@
 
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+
 from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from datetime import datetime
+from app.models.synthesis.report_models import (
+    ReportType,
+    ReportFormat,
+    ReportRequest,
+    ReportResponse,
+    ReportConfig
+)
+
 logger = get_logger(__name__)
 
 

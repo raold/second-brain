@@ -6,15 +6,19 @@ knowledge exploration, and learning paths based on user behavior and content ana
 
 import asyncio
 import json
+from typing import Optional, Dict, List, Any
+from datetime import datetime, timedelta
+from collections import Counter, defaultdict
+
 from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from datetime import datetime
-from datetime import timedelta
-from collections import Counter
-from collections import defaultdict
+from app.models.synthesis.suggestion_models import (
+    SuggestionType,
+    ActionType,
+    Suggestion,
+    SuggestionRequest,
+    SuggestionResponse
+)
+
 logger = get_logger(__name__)
 
 

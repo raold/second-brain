@@ -2,13 +2,16 @@
 
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
+
 from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from datetime import datetime
-from datetime import timedelta
+from app.models.synthesis.repetition_models import (
+    RepetitionAlgorithm,
+    ReviewDifficulty,
+    ReviewStatus,
+    ReviewSchedule,
+    RepetitionConfig
+)
+
 logger = get_logger(__name__)
 
 

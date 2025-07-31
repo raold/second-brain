@@ -5,6 +5,7 @@ Thin controllers that delegate business logic to service layer.
 
 from .analysis_routes import router as analysis_router
 from .bulk_operations_routes import bulk_router as bulk_operations_router
+from .dashboard_routes import router as dashboard_router
 from .google_drive_routes import router as google_drive_router
 from .graph_routes import router as graph_router
 from .health_routes import router as health_router
@@ -16,12 +17,14 @@ from .relationship_routes import router as relationship_router
 from .report_routes import router as report_router
 from .session_routes import router as session_router
 from .synthesis_routes import router as synthesis_router
+from .v2_api import router as v2_router
 from .visualization_routes import router as visualization_router
 from .websocket_routes import router as websocket_router
 
 __all__ = [
     "analysis_router",
     "bulk_operations_router", 
+    "dashboard_router",
     "google_drive_router",
     "graph_router",
     "health_router",
@@ -33,6 +36,7 @@ __all__ = [
     "report_router",
     "session_router",
     "synthesis_router",
+    "v2_router",
     "visualization_router",
     "websocket_router",
 ]

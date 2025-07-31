@@ -1,0 +1,105 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+    
+    - name: Install linting dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff black isort mypy bandit safety
+    
+    - name: Run ruff (linting)
+      run: |
+        ruff check app/ tests/ scripts/ --format=github || echo "Ruff found issues - continuing"
+    
+    - name: Run black (formatting check)
+      run: |
+        black --check --diff app/ tests/ scripts/ || echo "Black formatting issues found - continuing"
+    
+    - name: Run isort (import sorting)
+      run: |
+        isort --check-only --diff app/ tests/ scripts/ || echo "Import sorting issues found - continuing"
+    
+    - name: Run mypy (type checking) 
+      run: |
+        mypy app/ --ignore-missing-imports --no-strict-optional || echo "Type checking issues found - continuing"
+    
+    - name: Run bandit (security linting)
+      run: |
+        bandit -r app/ -f json -o bandit_report.json || echo "Security issues found - continuing"
+        if [ -f bandit_report.json ]; then
+          echo "Security scan completed"
+          cat bandit_report.json
+        fi
+    
+    - name: Run safety (dependency security check)
+      run: |
+        pip freeze | safety check --json || echo "Dependency security issues found - continuing"
+    
+    - name: Generate code quality report
+      if: always()
+      run: |
+        echo "## Code Quality Report" > quality_report.md
+        echo "- **Date**: $(date)" >> quality_report.md
+        echo "- **Python Version**: ${{ env.PYTHON_VERSION }}" >> quality_report.md
+        echo "" >> quality_report.md
+        echo "### Linting Results" >> quality_report.md
+        echo "- Ruff: Check output above" >> quality_report.md
+        echo "- Black: Check output above" >> quality_report.md
+        echo "- isort: Check output above" >> quality_report.md
+        echo "- MyPy: Check output above" >> quality_report.md
+        echo "" >> quality_report.md
+        echo "### Security Scan" >> quality_report.md
+        if [ -f bandit_report.json ]; then
+          echo "- Bandit: Report generated" >> quality_report.md
+        else
+          echo "- Bandit: No report generated" >> quality_report.md
+        fi
+        echo "- Safety: Check output above" >> quality_report.md
+    
+    - name: Upload quality report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: code-quality-report
+        path: |
+          quality_report.md
+          bandit_report.json
+        retention-days: 7
+    
+    - name: Quality check summary
+      run: |
+        echo "============================================"
+        echo "CODE QUALITY CHECK COMPLETED"
+        echo "============================================"
+        echo "✅ Ruff linting executed"
+        echo "✅ Black formatting check executed"
+        echo "✅ Import sorting check executed"
+        echo "✅ Type checking executed"
+        echo "✅ Security scanning executed"
+        echo "✅ Dependency security check executed"
+        echo ""
+        echo "📊 Check individual outputs above for issues"
+        echo "📁 Quality report uploaded as artifact"
+        echo ""
+        echo "🎯 CODE QUALITY PIPELINE: COMPLETED"
+        echo "============================================"

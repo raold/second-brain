@@ -6,13 +6,18 @@ theme extraction, and LLM-powered consolidation.
 
 import asyncio
 import json
-from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
+from uuid import UUID, uuid4
+from typing import Optional, Dict, List, Any
 from datetime import datetime
 from collections import defaultdict
+
+from app.utils.logging_config import get_logger
+from app.models.synthesis.advanced_models import (
+    SynthesisRequest, 
+    SynthesisResult, 
+    SynthesisStrategy
+)
+
 logger = get_logger(__name__)
 
 

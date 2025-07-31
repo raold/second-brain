@@ -11,14 +11,6 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from datetime import datetime
-from enum import Enum
-from pydantic import BaseModel
-from pydantic import Field
 
 
 class KnowledgeMapReport(BaseModel):

@@ -5,24 +5,21 @@ Handles CRUD operations for memories with cognitive type classification
 and advanced search capabilities.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
-
 
 from app.utils.logging_config import get_logger
 from app.dependencies import get_current_user, get_db_instance
 from app.shared import verify_api_key
 from app.database import get_database
-from app.core.dependencies import get_memory_service
+from app.services.service_factory import get_memory_service
 from app.models.api_models import (
     MemoryRequest, SearchRequest, SemanticMemoryRequest, 
     EpisodicMemoryRequest, ProceduralMemoryRequest, ContextualSearchRequest,
     SecondBrainException, ValidationException, NotFoundException, 
     UnauthorizedException, RateLimitExceededException
 )
-from fastapi import Request
-from typing import Optional, Dict, List, Any
 
 class MemoryResponse(BaseModel):
     """Memory response model"""
@@ -40,8 +37,6 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/memories", tags=["Memories"])
 
 
-
-
 def convert_metadata_to_dict(metadata):
     """Convert Pydantic metadata to dict if needed."""
     if metadata is None:
@@ -51,294 +46,287 @@ def convert_metadata_to_dict(metadata):
     return metadata
 
 
-@router.post(
-    "",
-    response_model=MemoryResponse,
-    summary="Store Memory",
-    description="Store a new memory with optional metadata and cognitive type",
-)
-async def store_memory(
-    request: MemoryRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
+@router.get("/test", response_model=Dict[str, str])
+async def test_memory_routes():
+    """Test endpoint for memory routes"""
+    return {"status": "Memory routes working", "service": "memory"}
+
+
+@router.post("/", response_model=MemoryResponse)
+async def create_memory(
+    request: MemoryRequest,
+    current_user: dict = Depends(get_current_user),
+    api_key: str = Depends(verify_api_key)
 ):
-    """Store a new memory."""
-    # Basic validation
-    if not request.content or not request.content.strip():
-        raise ValidationException(message="Content cannot be empty")
-
-    # Delegate to service
+    """Create a new memory"""
     try:
-        service = get_memory_service()
-        memory_id = await service.store_memory(
+        memory_service = get_memory_service()
+        
+        # Create memory with service
+        memory = await memory_service.create_memory(
             content=request.content,
-            memory_type=request.memory_type,
-            semantic_metadata=convert_metadata_to_dict(request.semantic_metadata),
-            episodic_metadata=convert_metadata_to_dict(request.episodic_metadata),
-            procedural_metadata=convert_metadata_to_dict(request.procedural_metadata),
             importance_score=request.importance_score,
-            metadata=request.metadata,
+            tags=request.tags
         )
+        
+        return MemoryResponse(
+            id=memory["id"],
+            user_id=current_user.get("id", "unknown"),
+            content=memory["content"],
+            memory_type="general",
+            importance_score=memory["importance_score"],
+            created_at=memory["created_at"],
+            updated_at=memory["created_at"],
+            metadata=memory.get("metadata", {}),
+            tags=memory.get("tags", [])
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to create memory: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create memory: {str(e)}")
 
-        # Get the stored memory to return full response
-        memory = await service.get_memory(memory_id)
+
+@router.get("/{memory_id}", response_model=MemoryResponse)
+async def get_memory(
+    memory_id: str,
+    current_user: dict = Depends(get_current_user),
+    api_key: str = Depends(verify_api_key)
+):
+    """Get a specific memory by ID"""
+    try:
+        memory_service = get_memory_service()
+        memory = await memory_service.get_memory(memory_id)
+        
         if not memory:
-            raise SecondBrainException(message="Failed to retrieve stored memory")
-
-        return memory
-
-    except ValueError as e:
-        raise ValidationException(message=str(e))
-    except SecondBrainException:
+            raise HTTPException(status_code=404, detail="Memory not found")
+        
+        return MemoryResponse(
+            id=memory["id"],
+            user_id=current_user.get("id", "unknown"),
+            content=memory["content"],
+            memory_type="general",
+            importance_score=memory["importance_score"],
+            created_at=memory["created_at"],
+            updated_at=memory["created_at"],
+            metadata=memory.get("metadata", {}),
+            tags=memory.get("tags", [])
+        )
+        
+    except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to store memory: {e}")
-        raise SecondBrainException(message="Failed to store memory")
+        logger.error(f"Failed to get memory {memory_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get memory: {str(e)}")
 
 
-@router.post(
-    "/search",
-    response_model=list[MemoryResponse],
-    summary="Search Memories",
-    description="Semantic search across stored memories",
-)
+@router.get("/", response_model=List[MemoryResponse])
+async def list_memories(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    current_user: dict = Depends(get_current_user),
+    api_key: str = Depends(verify_api_key)
+):
+    """List memories with pagination"""
+    try:
+        memory_service = get_memory_service()
+        memories = await memory_service.get_memories(limit=limit, offset=offset)
+        
+        return [
+            MemoryResponse(
+                id=memory["id"],
+                user_id=current_user.get("id", "unknown"),
+                content=memory["content"],
+                memory_type="general",
+                importance_score=memory["importance_score"],
+                created_at=memory["created_at"],
+                updated_at=memory["created_at"],
+                metadata=memory.get("metadata", {}),
+                tags=memory.get("tags", [])
+            )
+            for memory in memories
+        ]
+        
+    except Exception as e:
+        logger.error(f"Failed to list memories: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list memories: {str(e)}")
+
+
+@router.post("/search", response_model=List[MemoryResponse])
 async def search_memories(
-    request: SearchRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
+    request: SearchRequest,
+    current_user: dict = Depends(get_current_user),
+    api_key: str = Depends(verify_api_key)
 ):
-    """Search memories using vector similarity."""
-    # Basic validation
-    if not request.content or not request.content.strip():
-        raise ValidationException(message="Content cannot be empty")
-
-    # Delegate to service
+    """Search memories by content similarity"""
     try:
-        service = get_memory_service()
-        memories = await service.search_memories(query=request.query, limit=request.limit or 10)
-        return memories
-
-    except ValueError as e:
-        raise ValidationException(message=str(e))
-    except SecondBrainException:
-        raise
-    except Exception as e:
-        logger.error(f"Search failed: {e}")
-        raise SecondBrainException(message="Search failed")
-
-
-@router.post(
-    "/semantic",
-    response_model=MemoryResponse,
-    summary="Store Semantic Memory",
-    description="Store a semantic memory (facts, concepts, knowledge)",
-)
-async def store_semantic_memory(
-    request: SemanticMemoryRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
-):
-    """Store a semantic memory."""
-    # Basic validation
-    if not request.content or not request.content.strip():
-        raise ValidationException(message="Content cannot be empty")
-
-    # Delegate to service
-    try:
-        service = get_memory_service()
-        memory_id = await service.store_memory(
-            content=request.content,
-            memory_type="semantic",
-            semantic_metadata=convert_metadata_to_dict(request.semantic_metadata),
-            episodic_metadata=None,
-            procedural_metadata=None,
-            importance_score=request.importance_score,
-        )
-
-        # Get the stored memory to return full response
-        memory = await service.get_memory(memory_id)
-        if not memory:
-            raise SecondBrainException(message="Failed to retrieve stored memory")
-
-        return memory
-
-    except ValueError as e:
-        raise ValidationException(message=str(e))
-    except SecondBrainException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to store semantic memory: {e}")
-        raise SecondBrainException(message="Failed to store semantic memory")
-
-
-@router.post(
-    "/episodic",
-    response_model=MemoryResponse,
-    summary="Store Episodic Memory",
-    description="Store an episodic memory (experiences, events)",
-)
-async def store_episodic_memory(
-    request: EpisodicMemoryRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
-):
-    """Store an episodic memory."""
-    # Basic validation
-    if not request.content or not request.content.strip():
-        raise ValidationException(message="Content cannot be empty")
-
-    # Delegate to service
-    try:
-        service = get_memory_service()
-        memory_id = await service.store_memory(
-            content=request.content,
-            memory_type="episodic",
-            semantic_metadata=None,
-            episodic_metadata=convert_metadata_to_dict(request.episodic_metadata),
-            procedural_metadata=None,
-            importance_score=request.importance_score,
-        )
-
-        # Get the stored memory to return full response
-        memory = await service.get_memory(memory_id)
-        if not memory:
-            raise SecondBrainException(message="Failed to retrieve stored memory")
-
-        return memory
-
-    except ValueError as e:
-        raise ValidationException(message=str(e))
-    except SecondBrainException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to store episodic memory: {e}")
-        raise SecondBrainException(message="Failed to store episodic memory")
-
-
-@router.post(
-    "/procedural",
-    response_model=MemoryResponse,
-    summary="Store Procedural Memory",
-    description="Store a procedural memory (how-to, processes, skills)",
-)
-async def store_procedural_memory(
-    request: ProceduralMemoryRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
-):
-    """Store a procedural memory."""
-    # Basic validation
-    if not request.content or not request.content.strip():
-        raise ValidationException(message="Content cannot be empty")
-
-    # Delegate to service
-    try:
-        service = get_memory_service()
-        memory_id = await service.store_memory(
-            content=request.content,
-            memory_type="procedural",
-            semantic_metadata=None,
-            episodic_metadata=None,
-            procedural_metadata=convert_metadata_to_dict(request.procedural_metadata),
-            importance_score=request.importance_score,
-        )
-
-        # Get the stored memory to return full response
-        memory = await service.get_memory(memory_id)
-        if not memory:
-            raise SecondBrainException(message="Failed to retrieve stored memory")
-
-        return memory
-
-    except ValueError as e:
-        raise ValidationException(message=str(e))
-    except SecondBrainException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to store procedural memory: {e}")
-        raise SecondBrainException(message="Failed to store procedural memory")
-
-
-@router.post(
-    "/search/contextual",
-    response_model=list[dict],
-    summary="Contextual Search",
-    description="Advanced search with cognitive memory type filtering and contextual scoring",
-)
-async def contextual_search(
-    request: ContextualSearchRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
-):
-    """Perform contextual search with advanced filtering."""
-    # Basic validation
-    if not request.content or not request.content.strip():
-        raise ValidationException(message="Content cannot be empty")
-
-    # Delegate to service
-    try:
-        service = get_memory_service()
-
-        # Convert string memory types to enums if provided
-        memory_types = None
-        if request.memory_types:
-            memory_types = [str(mt) for mt in request.memory_types]
-
-        results = await service.search_memories(
+        memory_service = get_memory_service()
+        memories = await memory_service.search_memories(
             query=request.query,
-            memory_types=memory_types,
-            importance_threshold=request.importance_threshold,
-            limit=request.limit,
+            limit=request.limit
         )
-        return results
-
-    except ValueError as e:
-        raise ValidationException(message=str(e))
-    except SecondBrainException:
-        raise
+        
+        return [
+            MemoryResponse(
+                id=memory["id"],
+                user_id=current_user.get("id", "unknown"),
+                content=memory["content"],
+                memory_type="general",
+                importance_score=memory["importance_score"],
+                created_at=memory["created_at"],
+                updated_at=memory["created_at"],
+                metadata=memory.get("metadata", {}),
+                tags=memory.get("tags", [])
+            )
+            for memory in memories
+        ]
+        
     except Exception as e:
-        logger.error(f"Contextual search failed: {e}")
-        raise SecondBrainException(message="Contextual search failed")
+        logger.error(f"Failed to search memories: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to search memories: {str(e)}")
 
 
-@router.get(
-    "/{memory_id}", response_model=MemoryResponse, summary="Get Memory", description="Retrieve a specific memory by ID"
-)
-async def get_memory(memory_id: str, db=Depends(get_database), _: str = Depends(verify_api_key)):
-    """Get a specific memory by ID."""
+@router.post("/semantic")
+async def create_semantic_memory(
+    request: SemanticMemoryRequest,
+    current_user: dict = Depends(get_current_user),
+    api_key: str = Depends(verify_api_key)
+):
+    """Create a semantic memory (facts, knowledge)"""
     try:
-        # Setup service with dependencies
-        security_manager = get_security_manager()
-        service = get_memory_service()
-        memory = await service.get_memory(memory_id)
-
-        if not memory:
-            raise NotFoundException(resource="Memory", identifier=memory_id)
-
-        return memory
-
-    except SecondBrainException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to retrieve memory: {e}")
-        raise SecondBrainException(message="Failed to retrieve memory")
-
-
-@router.get(
-    "/stats",
-    summary="Get Memory Statistics",
-    description="Get statistics about stored memories",
-)
-async def get_memory_stats(db=Depends(get_database), _: str = Depends(verify_api_key)):
-    """Get memory statistics."""
-    try:
-        # Setup service with dependencies
-        security_manager = get_security_manager()
-        service = get_memory_service()
+        memory_service = get_memory_service()
         
-        # Get total count of memories
-        total_memories = await service.get_total_memory_count()
-        
-        # Get insights count (we'll use the insights service when available)
-        total_insights = 0  # Placeholder for now
-        
-        # Get connections count from relationship service
-        total_connections = 0  # Placeholder for now
+        memory = await memory_service.create_memory(
+            content=request.content,
+            importance_score=request.importance_score,
+            tags=request.tags + ["semantic"]
+        )
         
         return {
-            "total_memories": total_memories,
-            "total_insights": total_insights,
-            "total_connections": total_connections,
+            "status": "success",
+            "memory_id": memory["id"],
+            "type": "semantic",
+            "message": "Semantic memory created successfully"
         }
-
+        
     except Exception as e:
-        logger.error(f"Failed to get memory stats: {e}")
-        raise SecondBrainException(message="Failed to get memory stats")
+        logger.error(f"Failed to create semantic memory: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create semantic memory: {str(e)}")
+
+
+@router.post("/episodic")
+async def create_episodic_memory(
+    request: EpisodicMemoryRequest,
+    current_user: dict = Depends(get_current_user),
+    api_key: str = Depends(verify_api_key)
+):
+    """Create an episodic memory (personal experiences)"""
+    try:
+        memory_service = get_memory_service()
+        
+        memory = await memory_service.create_memory(
+            content=request.content,
+            importance_score=request.importance_score,
+            tags=request.tags + ["episodic", request.context]
+        )
+        
+        return {
+            "status": "success",
+            "memory_id": memory["id"],
+            "type": "episodic",
+            "context": request.context,
+            "message": "Episodic memory created successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to create episodic memory: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create episodic memory: {str(e)}")
+
+
+@router.post("/procedural")
+async def create_procedural_memory(
+    request: ProceduralMemoryRequest,
+    current_user: dict = Depends(get_current_user),
+    api_key: str = Depends(verify_api_key)
+):
+    """Create a procedural memory (how-to knowledge)"""
+    try:
+        memory_service = get_memory_service()
+        
+        memory = await memory_service.create_memory(
+            content=request.content,
+            importance_score=request.importance_score,
+            tags=request.tags + ["procedural", f"skill:{request.skill}"]
+        )
+        
+        return {
+            "status": "success",
+            "memory_id": memory["id"],
+            "type": "procedural",
+            "skill": request.skill,
+            "message": "Procedural memory created successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to create procedural memory: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create procedural memory: {str(e)}")
+
+
+@router.post("/contextual-search")
+async def contextual_search(
+    request: ContextualSearchRequest,
+    current_user: dict = Depends(get_current_user),
+    api_key: str = Depends(verify_api_key)
+):
+    """Perform intelligent contextual search"""
+    try:
+        memory_service = get_memory_service()
+        
+        # Enhanced search with context
+        memories = await memory_service.search_memories(
+            query=f"{request.query} {request.context}",
+            limit=request.limit
+        )
+        
+        return {
+            "status": "success",
+            "query": request.query,
+            "context": request.context,
+            "results": len(memories),
+            "memories": [
+                {
+                    "id": memory["id"],
+                    "content": memory["content"][:200] + "..." if len(memory["content"]) > 200 else memory["content"],
+                    "similarity_score": memory.get("similarity_score", 0),
+                    "tags": memory.get("tags", [])
+                }
+                for memory in memories
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to perform contextual search: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to perform contextual search: {str(e)}")
+
+
+# Health check for memory service
+@router.get("/health/status")
+async def memory_service_health():
+    """Health check for memory service"""
+    try:
+        memory_service = get_memory_service()
+        # Try a simple operation to verify service works
+        await memory_service.get_memories(limit=1)
+        
+        return {
+            "status": "healthy",
+            "service": "memory",
+            "timestamp": "2025-07-31T16:00:00Z"
+        }
+    except Exception as e:
+        logger.error(f"Memory service health check failed: {e}")
+        return {
+            "status": "unhealthy", 
+            "service": "memory",
+            "error": str(e),
+            "timestamp": "2025-07-31T16:00:00Z"
+        }

@@ -3,28 +3,6 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from datetime import datetime
-from pydantic import BaseModel
-from pydantic import Field
-
-
-class GraphMetrics(BaseModel):
-    node_count: int = Field(default=0, ge=0)
-    edge_count: int = Field(default=0, ge=0)
-    average_degree: float = Field(default=0.0, ge=0)
-    avg_degree: float = Field(default=0.0, ge=0)  # Alias for compatibility
-    density: float = Field(default=0.0, ge=0, le=1)
-    connected_components: int = Field(default=0, ge=0)
-    components: int = Field(default=0, ge=0)  # Alias for compatibility
-    clustering_coefficient: float = Field(default=0.0, ge=0, le=1)
-    diameter: Optional[int] = Field(default=None, ge=0)
-    centrality_scores: Dict[str, float] = Field(default_factory=dict)
-    community_count: int = Field(default=0, ge=0)
-    modularity: float = Field(default=0.0, ge=-1, le=1)
 
 
 class NodeMetrics(BaseModel):
@@ -33,6 +11,65 @@ class NodeMetrics(BaseModel):
     betweenness_centrality: float = Field(default=0.0, ge=0, le=1)
     closeness_centrality: float = Field(default=0.0, ge=0, le=1)
     pagerank: float = Field(default=0.0, ge=0, le=1)
+
+
+class ConnectivityMetrics(BaseModel):
+    """Connectivity metrics for the graph"""
+    is_connected: bool = Field(default=False)
+    num_connected_components: int = Field(default=0, ge=0)
+    largest_component_size: int = Field(default=0, ge=0)
+    average_path_length: float = Field(default=0.0, ge=0)
+    diameter: int = Field(default=0, ge=0)
+    edge_connectivity: int = Field(default=0, ge=0)
+    node_connectivity: int = Field(default=0, ge=0)
+    num_bridges: int = Field(default=0, ge=0)
+    num_articulation_points: int = Field(default=0, ge=0)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class TemporalMetrics(BaseModel):
+    """Temporal metrics for memory creation patterns"""
+    growth_rate: float = Field(default=0.0)  # memories per day
+    recent_activity_score: float = Field(default=0.0, ge=0, le=1)
+    temporal_clusters: List[Dict[str, Any]] = Field(default_factory=list)
+    activity_periods: List[str] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class KnowledgeCluster(BaseModel):
+    """Represents a cluster of related knowledge"""
+    cluster_id: str
+    cluster_theme: str
+    size: int = Field(ge=1)
+    density: float = Field(ge=0, le=1)
+    central_nodes: List[UUID]
+    member_nodes: List[UUID]
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ClusterMetrics(BaseModel):
+    """Metrics for knowledge clusters"""
+    clusters: List[KnowledgeCluster] = Field(default_factory=list)
+    modularity: float = Field(default=0.0, ge=-1, le=1)
+    num_clusters: int = Field(default=0, ge=0)
+    largest_cluster_size: int = Field(default=0, ge=0)
+    avg_cluster_size: float = Field(default=0.0, ge=0)
+    inter_cluster_connections: int = Field(default=0, ge=0)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphMetrics(BaseModel):
+    """Extended graph metrics with all fields"""
+    total_nodes: int = Field(default=0, ge=0)
+    total_edges: int = Field(default=0, ge=0)
+    graph_density: float = Field(default=0.0, ge=0, le=1)
+    average_degree: float = Field(default=0.0, ge=0)
+    clustering_coefficient: float = Field(default=0.0, ge=0, le=1)
+    node_metrics: Dict[str, NodeMetrics] = Field(default_factory=dict)
+    connectivity_metrics: Optional[ConnectivityMetrics] = None
+    temporal_metrics: Optional[TemporalMetrics] = None
+    health_score: float = Field(default=0.0, ge=0, le=1)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class MetricsReport(BaseModel):
@@ -103,62 +140,3 @@ class MetricsRequest(BaseModel):
     include_temporal: bool = Field(default=True)
     time_window_days: Optional[int] = None
     user_id: Optional[str] = None
-
-
-class ConnectivityMetrics(BaseModel):
-    """Connectivity metrics for the graph"""
-    is_connected: bool = Field(default=False)
-    num_connected_components: int = Field(default=0, ge=0)
-    largest_component_size: int = Field(default=0, ge=0)
-    average_path_length: float = Field(default=0.0, ge=0)
-    diameter: int = Field(default=0, ge=0)
-    edge_connectivity: int = Field(default=0, ge=0)
-    node_connectivity: int = Field(default=0, ge=0)
-    num_bridges: int = Field(default=0, ge=0)
-    num_articulation_points: int = Field(default=0, ge=0)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-
-
-class TemporalMetrics(BaseModel):
-    """Temporal metrics for memory creation patterns"""
-    growth_rate: float = Field(default=0.0)  # memories per day
-    recent_activity_score: float = Field(default=0.0, ge=0, le=1)
-    temporal_clusters: List[Dict[str, Any]] = Field(default_factory=list)
-    activity_periods: List[str] = Field(default_factory=list)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-
-
-class KnowledgeCluster(BaseModel):
-    """Represents a cluster of related knowledge"""
-    cluster_id: str
-    cluster_theme: str
-    size: int = Field(ge=1)
-    density: float = Field(ge=0, le=1)
-    central_nodes: List[UUID]
-    member_nodes: List[UUID]
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-
-
-class ClusterMetrics(BaseModel):
-    """Metrics for knowledge clusters"""
-    clusters: List[KnowledgeCluster] = Field(default_factory=list)
-    modularity: float = Field(default=0.0, ge=-1, le=1)
-    num_clusters: int = Field(default=0, ge=0)
-    largest_cluster_size: int = Field(default=0, ge=0)
-    avg_cluster_size: float = Field(default=0.0, ge=0)
-    inter_cluster_connections: int = Field(default=0, ge=0)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-
-
-class GraphMetrics(BaseModel):
-    """Extended graph metrics with all fields"""
-    total_nodes: int = Field(default=0, ge=0)
-    total_edges: int = Field(default=0, ge=0)
-    graph_density: float = Field(default=0.0, ge=0, le=1)
-    average_degree: float = Field(default=0.0, ge=0)
-    clustering_coefficient: float = Field(default=0.0, ge=0, le=1)
-    node_metrics: Dict[str, NodeMetrics] = Field(default_factory=dict)
-    connectivity_metrics: Optional[ConnectivityMetrics] = None
-    temporal_metrics: Optional[TemporalMetrics] = None
-    health_score: float = Field(default=0.0, ge=0, le=1)
-    metadata: Dict[str, Any] = Field(default_factory=dict)

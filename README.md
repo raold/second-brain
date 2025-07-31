@@ -16,7 +16,7 @@ Second Brain v3.0.0 is built on **developer-first principles** that eliminate en
 
 ### **🐳 Docker-First Architecture**
 - **Zero Host Dependencies**: No Python, PostgreSQL, or Redis installation required
-- **Identical Environments**: Same containers run on Windows, macOS, and Linux  
+- **Identical Environments**: Same containers run on Windows, macOS, and Linux
 - **One-Command Setup**: `make setup` gets you developing in minutes
 - **Production Parity**: Development mirrors production exactly
 
@@ -28,7 +28,7 @@ Second Brain v3.0.0 is built on **developer-first principles** that eliminate en
 
 ### **🛠️ Developer Experience**
 - **Intelligent Makefile**: Commands work everywhere, adapt to your environment
-- **Real-Time Feedback**: Hot reload, live logs, instant test results  
+- **Real-Time Feedback**: Hot reload, live logs, instant test results
 - **Clear Status**: Always know your environment health at a glance
 - **No Configuration**: Sensible defaults, minimal setup required
 
@@ -78,7 +78,7 @@ main.py             # Application entry point
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/second-brain.git
+git clone https://github.com/raold/second-brain.git
 cd second-brain
 
 # One-command setup (Docker + fallback .venv)
@@ -99,7 +99,7 @@ make test
 The setup automatically:
 - ✅ Detects if Docker is available and running
 - ✅ Starts PostgreSQL, Redis, and application containers
-- ✅ Creates bulletproof .venv if Docker unavailable  
+- ✅ Creates bulletproof .venv if Docker unavailable
 - ✅ Installs all dependencies correctly
 - ✅ Validates environment health
 - ✅ Provides activation scripts for your OS
@@ -124,7 +124,7 @@ open http://localhost:8000
 
 ```bash
 # Core workflow
-make dev           # Start development environment  
+make dev           # Start development environment
 make test          # Run all tests
 make shell         # Open development shell
 make dev-logs      # Show application logs
@@ -132,7 +132,7 @@ make dev-stop      # Stop development environment
 
 # Testing options
 make test-unit           # Unit tests only
-make test-integration    # Integration tests only  
+make test-integration    # Integration tests only
 make test-validation     # Environment validation
 
 # Status and health
@@ -238,7 +238,7 @@ make test-integration       # Integration tests only
 make test-validation        # Environment validation
 
 # Direct script access (cross-platform)
-python scripts/dev test --test-type all         # All tests  
+python scripts/dev test --test-type all         # All tests
 python scripts/dev test --test-type unit        # Unit tests
 python scripts/dev test --test-type integration # Integration tests
 python scripts/dev test --test-type validation  # Validation tests
@@ -251,7 +251,7 @@ python scripts/dev test --test-type validation  # Validation tests
 ### **🔍 Test Categories**
 
 - **Validation**: Environment health, dependency checks, basic imports
-- **Unit**: Fast isolated tests, no external dependencies  
+- **Unit**: Fast isolated tests, no external dependencies
 - **Integration**: Database, API, service integration tests
 - **Comprehensive**: Full end-to-end testing (slower)
 
@@ -338,8 +338,8 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 ## 📞 **Support**
 
 - **Documentation**: [/docs](./docs)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/second-brain/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/second-brain/discussions)
+- **Issues**: [GitHub Issues](https://github.com/raold/second-brain/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/raold/second-brain/discussions)
 
 ---
 

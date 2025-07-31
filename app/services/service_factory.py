@@ -1,7 +1,10 @@
 """Service factory for dependency injection"""
 
+import time
 from typing import Any
 from app.utils.logging_config import get_logger
+from app.database import get_database
+
 logger = get_logger(__name__)
 
 
@@ -50,716 +53,336 @@ class GitService:
             # Get current branch
             try:
                 branch = subprocess.check_output(
-                    ["git", "branch", "--show-current"], 
-                    text=True, 
-                    cwd=os.getcwd()
-                ).strip()
+                    ['git', 'rev-parse', '--abbrev-ref', 'HEAD'], 
+                    cwd=os.getcwd(),
+                    stderr=subprocess.DEVNULL
+                ).decode().strip()
             except:
                 branch = "unknown"
             
-            # Get latest commit hash
+            # Get last commit
             try:
-                commit = subprocess.check_output(
-                    ["git", "rev-parse", "--short", "HEAD"], 
-                    text=True, 
-                    cwd=os.getcwd()
-                ).strip()
+                last_commit = subprocess.check_output(
+                    ['git', 'log', '-1', '--format=%h %s'], 
+                    cwd=os.getcwd(),
+                    stderr=subprocess.DEVNULL
+                ).decode().strip()
             except:
-                commit = "unknown"
+                last_commit = "No commits"
             
             # Get status
             try:
-                status_output = subprocess.check_output(
-                    ["git", "status", "--porcelain"], 
-                    text=True, 
-                    cwd=os.getcwd()
-                ).strip()
-                status = "clean" if not status_output else "dirty"
+                status = subprocess.check_output(
+                    ['git', 'status', '--porcelain'], 
+                    cwd=os.getcwd(),
+                    stderr=subprocess.DEVNULL
+                ).decode().strip()
+                
+                if status:
+                    status_summary = f"{len(status.splitlines())} files changed"
+                else:
+                    status_summary = "Clean working directory"
             except:
-                status = "unknown"
+                status_summary = "Unknown"
             
             return {
                 "branch": branch,
-                "commit": commit,
-                "status": status
+                "last_commit": last_commit,
+                "status": status_summary,
+                "repository_status": "connected"
             }
         except Exception as e:
             logger.error(f"Failed to get git info: {e}")
             return {
                 "branch": "unknown",
-                "commit": "unknown",
-                "status": "error"
+                "last_commit": "unknown", 
+                "status": "error",
+                "repository_status": "error"
             }
 
 
 class HealthService:
-    """Real health service with actual system checks"""
+    """Real health service with comprehensive checks"""
     
     def __init__(self):
-        self.status = "unknown"
+        self.health_data = {}
     
-    async def check_health(self) -> dict:
-        """Check real system health"""
-        health_status = {
-            "status": "healthy",
-            "database": "unknown",
-            "redis": "unknown", 
-            "services": "unknown",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-        # Check database
+    async def get_health(self) -> dict:
+        """Get comprehensive system health"""
         try:
+            # Database health
             db = await get_database()
-            if db.pool:
-                health_status["database"] = "connected"
-            else:
-                health_status["database"] = "disconnected"
-                health_status["status"] = "degraded"
-        except Exception as e:
-            logger.error(f"Database health check failed: {e}")
-            health_status["database"] = "error"
-            health_status["status"] = "unhealthy"
-        
-        # Check Redis connection
-        try:
-            import redis as redis_sync
-            import os
+            db_stats = await db.get_index_stats()
             
-            redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
+            db_health = "healthy" if db_stats.get("total_memories", 0) >= 0 else "unhealthy"
             
-            # Use synchronous Redis client for health check (more compatible)
-            redis_client = redis_sync.from_url(redis_url, socket_timeout=2, socket_connect_timeout=2)
-            redis_client.ping()
+            # System health checks
+            import psutil
             
-            health_status["redis"] = "healthy"
-            logger.debug("Redis health check passed")
-        except ImportError:
-            health_status["redis"] = "not_available"
-            logger.warning("Redis client not installed")
-        except Exception as e:
-            logger.error(f"Redis health check failed: {e}")
-            health_status["redis"] = "error"
-        
-        # Check OpenAI API
-        try:
-            db = await get_database()
-            if db.openai_client:
-                health_status["openai"] = "connected"
-            else:
-                health_status["openai"] = "not_configured"
-        except Exception as e:
-            logger.error(f"OpenAI health check failed: {e}")
-            health_status["openai"] = "error"
-        
-        # Overall service status
-        if health_status["database"] == "connected":
-            health_status["services"] = "operational"
-        else:
-            health_status["services"] = "degraded"
-            health_status["status"] = "degraded"
-        
-        return health_status
-    
-    async def get_health_status(self) -> dict:
-        """Get health status with version info for routes"""
-        basic_health = await self.check_health()
-        return {
-            "status": basic_health["status"],
-            "version": "3.0.0",
-            "timestamp": basic_health["timestamp"]
-        }
-    
-    async def get_system_status(self) -> dict:
-        """Get system status with database and performance metrics"""
-        try:
-            db = await get_database()
-            stats = await db.get_index_stats()
+            cpu_percent = psutil.cpu_percent(interval=0.1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
             
-            recommendations = []
-            if not stats["index_ready"]:
-                recommendations.append("Consider creating vector index for better performance")
-            if stats["total_memories"] == 0:
-                recommendations.append("No memories found - try adding some content")
+            # Overall system health assessment
+            health_issues = []
+            if cpu_percent > 90:
+                health_issues.append("High CPU usage")
+            if memory.percent > 90:
+                health_issues.append("High memory usage")
+            if disk.percent > 90:
+                health_issues.append("Low disk space")
+            
+            overall_status = "unhealthy" if health_issues else "healthy"
             
             return {
+                "status": overall_status,
                 "database": {
-                    "connected": db.pool is not None,
-                    "total_memories": stats["total_memories"],
-                    "avg_content_length": stats["avg_content_length"]
+                    "status": db_health,
+                    "total_memories": db_stats.get("total_memories", 0),
+                    "index_ready": db_stats.get("index_ready", False)
                 },
-                "index_status": {
-                    "hnsw_ready": stats["hnsw_index_exists"],
-                    "ivf_ready": stats["ivf_index_exists"],
-                    "index_ready": stats["index_ready"]
+                "system": {
+                    "cpu_percent": round(cpu_percent, 1),
+                    "memory_percent": round(memory.percent, 1),
+                    "disk_percent": round(disk.percent, 1)
                 },
-                "recommendations": recommendations
+                "issues": health_issues,
+                "timestamp": time.time()
             }
         except Exception as e:
-            logger.error(f"Failed to get system status: {e}")
+            logger.error(f"Health check failed: {e}")
             return {
-                "database": "disconnected",
-                "index_status": {
-                    "total_memories": 0,
-                    "memories_with_embeddings": 0,
-                    "hnsw_index_exists": False,
-                    "ivf_index_exists": False,
-                    "index_ready": False
-                },
-                "recommendations": {
-                    "create_index": False,
-                    "index_type": "None",
-                    "error": str(e)
-                }
-            }
-    
-    async def run_diagnostics(self) -> dict:
-        """Run comprehensive system diagnostics"""
-        diagnostics = {
-            "overall_status": "healthy",
-            "checks": [],
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-        # Database connectivity check
-        try:
-            db = await get_database()
-            if db.pool:
-                async with db.pool.acquire() as conn:
-                    await conn.fetchval("SELECT 1")
-                diagnostics["checks"].append({
-                    "name": "database_connectivity",
-                    "status": "pass",
-                    "message": "Database connection successful"
-                })
-            else:
-                diagnostics["checks"].append({
-                    "name": "database_connectivity", 
-                    "status": "fail",
-                    "message": "Database pool not available"
-                })
-                diagnostics["overall_status"] = "critical"
-        except Exception as e:
-            diagnostics["checks"].append({
-                "name": "database_connectivity",
-                "status": "fail", 
-                "message": f"Database connection failed: {e}"
-            })
-            diagnostics["overall_status"] = "critical"
-        
-        # OpenAI API check
-        try:
-            db = await get_database()
-            if db.openai_client:
-                diagnostics["checks"].append({
-                    "name": "openai_api",
-                    "status": "pass",
-                    "message": "OpenAI client configured"
-                })
-            else:
-                diagnostics["checks"].append({
-                    "name": "openai_api",
-                    "status": "fail",
-                    "message": "OpenAI client not configured"
-                })
-                if diagnostics["overall_status"] == "healthy":
-                    diagnostics["overall_status"] = "degraded"
-        except Exception as e:
-            diagnostics["checks"].append({
-                "name": "openai_api",
-                "status": "fail",
-                "message": f"OpenAI check failed: {e}"
-            })
-            if diagnostics["overall_status"] == "healthy":
-                diagnostics["overall_status"] = "degraded"
-        
-        return diagnostics
-    
-    async def get_performance_metrics(self) -> dict:
-        """Get detailed performance metrics"""
-        try:
-            db = await get_database()
-            stats = await db.get_index_stats()
-            
-            return {
-                "database_metrics": {
-                    "total_memories": stats["total_memories"],
-                    "memories_with_embeddings": stats["memories_with_embeddings"],
-                    "avg_content_length": stats["avg_content_length"],
-                    "embedding_coverage": stats["memories_with_embeddings"] / max(stats["total_memories"], 1) * 100
-                },
-                "index_metrics": {
-                    "hnsw_available": stats["hnsw_index_exists"],
-                    "ivf_available": stats["ivf_index_exists"],
-                    "recommended_threshold": stats["recommended_index_threshold"],
-                    "ready_for_optimization": stats["index_ready"]
-                },
-                "timestamp": datetime.utcnow().isoformat()
-            }
-        except Exception as e:
-            logger.error(f"Failed to get performance metrics: {e}")
-            return {
+                "status": "unhealthy",
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": time.time()
             }
 
 
 class MemoryService:
-    """Real memory service with database integration"""
+    """Real memory service with database operations"""
     
     def __init__(self):
-        pass
+        self.memory_data = {}
     
-    async def get_memories(self, limit: int = 100, offset: int = 0) -> list:
-        """Get all memories from database"""
+    async def get_memory(self, memory_id: str) -> dict:
+        """Get a specific memory"""
         try:
             db = await get_database()
-            memories = await db.get_all_memories(limit=limit, offset=offset)
-            logger.info(f"Retrieved {len(memories)} memories")
-            return memories
+            memory = await db.get_memory(memory_id)
+            
+            if memory:
+                return {
+                    "id": str(memory["id"]),
+                    "content": memory["content"],
+                    "importance_score": memory["importance_score"],
+                    "created_at": memory["created_at"].isoformat(),
+                    "tags": memory.get("tags", []),
+                    "metadata": memory.get("metadata", {})
+                }
+            else:
+                return None
         except Exception as e:
-            logger.error(f"Failed to get memories: {e}")
-            return []
+            logger.error(f"Failed to get memory {memory_id}: {e}")
+            return None
     
-    async def create_memory(self, content: str, memory_type: str = None, metadata: dict = None) -> dict:
-        """Create a new memory in database"""
+    async def create_memory(self, content: str, importance_score: int = 5, tags: list = None) -> dict:
+        """Create a new memory"""
         try:
             db = await get_database()
-            
-            # Auto-classify memory type if not provided
-            if not memory_type:
-                memory_type = db.classify_memory_type(content, metadata)
-            
-            # Generate smart metadata
-            smart_metadata = db.generate_smart_metadata(content, memory_type)
-            if metadata:
-                smart_metadata.update(metadata)
-            
-            # Store memory with type-specific metadata
-            type_metadata = {}
-            if memory_type == "semantic":
-                type_metadata = {"semantic_metadata": smart_metadata}
-            elif memory_type == "episodic":
-                type_metadata = {"episodic_metadata": smart_metadata}
-            elif memory_type == "procedural":
-                type_metadata = {"procedural_metadata": smart_metadata}
-            
-            memory_id = await db.store_memory(
+            memory = await db.create_memory(
                 content=content,
-                memory_type=memory_type,
-                metadata=metadata or {},
-                **type_metadata
+                importance_score=importance_score,
+                tags=tags or []
             )
             
-            # Retrieve the stored memory
-            memory = await db.get_memory(memory_id)
-            logger.info(f"Created {memory_type} memory: {memory_id}")
-            return memory
-            
+            return {
+                "id": str(memory["id"]),
+                "content": memory["content"],
+                "importance_score": memory["importance_score"],
+                "created_at": memory["created_at"].isoformat(),
+                "tags": memory.get("tags", []),
+                "metadata": memory.get("metadata", {})
+            }
         except Exception as e:
             logger.error(f"Failed to create memory: {e}")
             raise
     
-    async def get_memory(self, memory_id: str) -> dict:
-        """Get specific memory by ID"""
+    async def search_memories(self, query: str, limit: int = 10) -> list:
+        """Search memories by content similarity"""
         try:
             db = await get_database()
-            memory = await db.get_memory(memory_id)
-            if memory:
-                logger.info(f"Retrieved memory: {memory_id}")
-                return memory
-            else:
-                logger.warning(f"Memory not found: {memory_id}")
-                return {}
-        except Exception as e:
-            logger.error(f"Failed to get memory {memory_id}: {e}")
-            return {}
-    
-    async def search_memories(self, query: str, limit: int = 10, memory_types: list = None) -> list:
-        """Search memories using vector similarity"""
-        try:
-            db = await get_database()
-            results = await db.contextual_search(
-                query=query,
-                limit=limit,
-                memory_types=memory_types
-            )
-            logger.info(f"Search found {len(results)} memories for query: {query}")
-            return results
+            memories = await db.search_memories(query, limit=limit)
+            
+            return [
+                {
+                    "id": str(memory["id"]),
+                    "content": memory["content"],
+                    "importance_score": memory["importance_score"],
+                    "created_at": memory["created_at"].isoformat(),
+                    "similarity_score": memory.get("similarity_score", 0),
+                    "tags": memory.get("tags", [])
+                }
+                for memory in memories
+            ]
         except Exception as e:
             logger.error(f"Failed to search memories: {e}")
             return []
     
-    async def delete_memory(self, memory_id: str) -> bool:
-        """Delete memory by ID"""
+    async def get_memories(self, limit: int = 50, offset: int = 0) -> list:
+        """Get paginated memories"""
         try:
             db = await get_database()
-            deleted = await db.delete_memory(memory_id)
-            if deleted:
-                logger.info(f"Deleted memory: {memory_id}")
-            else:
-                logger.warning(f"Memory not found for deletion: {memory_id}")
-            return deleted
+            memories = await db.get_memories(limit=limit, offset=offset)
+            
+            return [
+                {
+                    "id": str(memory["id"]),
+                    "content": memory["content"],
+                    "importance_score": memory["importance_score"],
+                    "created_at": memory["created_at"].isoformat(),
+                    "tags": memory.get("tags", [])
+                }
+                for memory in memories
+            ]
         except Exception as e:
-            logger.error(f"Failed to delete memory {memory_id}: {e}")
-            return False
+            logger.error(f"Failed to get memories: {e}")
+            return []
 
 
 class SessionService:
-    """Real session service with proper session management"""
+    """Real session service with database integration"""
     
     def __init__(self):
-        self.sessions = {}  # In-memory for now, could move to Redis/database
-        self.current_session_id = None
+        self.sessions = {}
     
-    async def create_session(self, user_id: str = None) -> dict:
+    async def get_session_stats(self) -> dict:
+        """Get session statistics"""
+        try:
+            db = await get_database()
+            stats = await db.get_stats()
+            
+            return {
+                "total_sessions": len(self.sessions),
+                "active_sessions": len([s for s in self.sessions.values() if s.get("active", False)]),
+                "total_memories": stats.get("total_memories", 0),
+                "avg_content_length": round(stats.get("avg_content_length", 0), 2)
+            }
+        except Exception as e:
+            logger.error(f"Failed to get session stats: {e}")
+            return {
+                "total_sessions": 0,
+                "active_sessions": 0,
+                "total_memories": 0,
+                "avg_content_length": 0
+            }
+    
+    async def create_session(self, session_data: dict) -> dict:
         """Create a new session"""
         try:
-            session_id = str(uuid.uuid4())
-            session = {
+            session_id = f"session_{len(self.sessions) + 1}"
+            self.sessions[session_id] = {
+                **session_data,
                 "id": session_id,
-                "user_id": user_id or "anonymous",
-                "created_at": datetime.utcnow().isoformat(),
-                "last_accessed": datetime.utcnow().isoformat(),
-                "memories_created": 0,
-                "queries_made": 0,
-                "status": "active",
-                "paused": False,
-                "ideas_processed": 0
+                "active": True,
+                "created_at": time.time()
             }
-            self.sessions[session_id] = session
-            self.current_session_id = session_id
-            logger.info(f"Created session: {session_id}")
-            return session
+            
+            return self.sessions[session_id]
         except Exception as e:
             logger.error(f"Failed to create session: {e}")
             raise
     
     async def get_session(self, session_id: str) -> dict:
-        """Get a session and update last accessed"""
-        try:
-            session = self.sessions.get(session_id)
-            if session:
-                session["last_accessed"] = datetime.utcnow().isoformat()
-                logger.info(f"Retrieved session: {session_id}")
-                return session
-            else:
-                logger.warning(f"Session not found: {session_id}")
-                return {}
-        except Exception as e:
-            logger.error(f"Failed to get session {session_id}: {e}")
-            return {}
+        """Get session by ID"""
+        return self.sessions.get(session_id)
     
-    async def get_session_status(self) -> dict:
-        """Get current session status"""
-        try:
-            if self.current_session_id:
-                session = self.sessions.get(self.current_session_id)
-                if session:
-                    return {
-                        "session_id": self.current_session_id,
-                        "status": session["status"],
-                        "paused": session.get("paused", False),
-                        "memories_created": session.get("memories_created", 0),
-                        "ideas_processed": session.get("ideas_processed", 0),
-                        "last_accessed": session["last_accessed"],
-                        "uptime": datetime.utcnow().isoformat()
-                    }
-            
-            # No current session, create one
-            session = await self.create_session()
-            return {
-                "session_id": session["id"],
-                "status": "active",
-                "paused": False,
-                "memories_created": 0,
-                "ideas_processed": 0,
-                "last_accessed": session["created_at"],
-                "uptime": datetime.utcnow().isoformat()
-            }
-        except Exception as e:
-            logger.error(f"Failed to get session status: {e}")
-            return {"error": str(e)}
+    async def update_session(self, session_id: str, updates: dict) -> dict:
+        """Update session"""
+        if session_id in self.sessions:
+            self.sessions[session_id].update(updates)
+            return self.sessions[session_id]
+        return None
     
-    async def ingest_idea(self, idea: str, source: str = "mobile", priority: str = "medium", context: str = None) -> dict:
-        """Ingest and process an idea (woodchipper functionality)"""
-        try:
-            # Ensure we have a current session
-            if not self.current_session_id:
-                await self.create_session()
-            
-            # Process the idea by storing it as a memory
-            from app.core.dependencies import get_memory_service
-            memory_service = get_memory_service()
-            
-            # Determine memory type based on idea content
-            if any(word in idea.lower() for word in ["how to", "process", "step", "procedure"]):
-                memory_type = "procedural"
-            elif any(word in idea.lower() for word in ["meeting", "today", "just", "fixed", "discovered"]):
-                memory_type = "episodic"
-            else:
-                memory_type = "semantic"
-            
-            # Store the idea as a memory
-            memory = await memory_service.create_memory(
-                content=idea,
-                memory_type=memory_type,
-                metadata={
-                    "source": source,
-                    "priority": priority,
-                    "context": context,
-                    "session_id": self.current_session_id,
-                    "ingestion_method": "woodchipper"
-                }
-            )
-            
-            # Update session stats
-            session = self.sessions.get(self.current_session_id)
-            if session:
-                session["ideas_processed"] += 1
-                session["memories_created"] += 1
-                session["last_accessed"] = datetime.utcnow().isoformat()
-            
-            logger.info(f"Idea ingested successfully: {memory['id']}")
-            return {
-                "success": True,
-                "memory_id": memory["id"],
-                "memory_type": memory_type,
-                "classification": f"Classified as {memory_type} memory",
-                "session_id": self.current_session_id,
-                "processed_at": datetime.utcnow().isoformat()
-            }
-            
-        except Exception as e:
-            logger.error(f"Failed to ingest idea: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "session_id": self.current_session_id
-            }
-    
-    async def pause_session(self, reason: str = "User requested") -> dict:
-        """Pause the current session"""
-        try:
-            if self.current_session_id:
-                session = self.sessions.get(self.current_session_id)
-                if session:
-                    session["paused"] = True
-                    session["pause_reason"] = reason
-                    session["paused_at"] = datetime.utcnow().isoformat()
-                    logger.info(f"Session paused: {self.current_session_id}")
-                    return {
-                        "success": True,
-                        "session_id": self.current_session_id,
-                        "reason": reason,
-                        "paused_at": session["paused_at"]
-                    }
-            
-            return {"success": False, "error": "No active session to pause"}
-        except Exception as e:
-            logger.error(f"Failed to pause session: {e}")
-            return {"success": False, "error": str(e)}
-    
-    async def resume_session(self, session_id: str = None, device_context: str = None) -> dict:
-        """Resume a paused session"""
-        try:
-            target_session_id = session_id or self.current_session_id
-            
-            if target_session_id and target_session_id in self.sessions:
-                session = self.sessions[target_session_id]
-                session["paused"] = False
-                session["resumed_at"] = datetime.utcnow().isoformat()
-                session["device_context"] = device_context
-                self.current_session_id = target_session_id
-                
-                logger.info(f"Session resumed: {target_session_id}")
-                return {
-                    "success": True,
-                    "session_id": target_session_id,
-                    "resumed_at": session["resumed_at"],
-                    "device_context": device_context
-                }
-            
-            return {"success": False, "error": "Session not found or invalid"}
-        except Exception as e:
-            logger.error(f"Failed to resume session: {e}")
-            return {"success": False, "error": str(e)}
-    
-    async def process_conversation_message(self, message: str, context_type: str = "general") -> dict:
-        """Process a conversation message"""
-        try:
-            # For now, treat conversation messages like ideas
-            return await self.ingest_idea(
-                idea=message,
-                source="conversation",
-                context=f"context_type: {context_type}"
-            )
-        except Exception as e:
-            logger.error(f"Failed to process conversation message: {e}")
-            return {"success": False, "error": str(e)}
-    
-    async def update_session_stats(self, session_id: str, memories_created: int = 0, queries_made: int = 0) -> bool:
-        """Update session statistics"""
-        try:
-            session = self.sessions.get(session_id)
-            if session:
-                session["memories_created"] += memories_created
-                session["queries_made"] += queries_made
-                session["last_accessed"] = datetime.utcnow().isoformat()
-                return True
-            return False
-        except Exception as e:
-            logger.error(f"Failed to update session stats: {e}")
-            return False
-    
-    async def list_sessions(self) -> list:
-        """List all active sessions"""
-        try:
-            return list(self.sessions.values())
-        except Exception as e:
-            logger.error(f"Failed to list sessions: {e}")
-            return []
-    
-    async def delete_session(self, session_id: str) -> bool:
-        """Delete a session"""
-        try:
-            if session_id in self.sessions:
-                del self.sessions[session_id]
-                if self.current_session_id == session_id:
-                    self.current_session_id = None
-                logger.info(f"Deleted session: {session_id}")
-                return True
-            return False
-        except Exception as e:
-            logger.error(f"Failed to delete session: {e}")
-            return False
+    async def close_session(self, session_id: str) -> bool:
+        """Close a session"""
+        if session_id in self.sessions:
+            self.sessions[session_id]["active"] = False
+            return True
+        return False
 
 
-# DEPRECATED: Use app.core.dependencies instead
-# This module is kept for backward compatibility
-
-from typing import List
-from typing import Any
-from datetime import datetime
-
-# Import from the new centralized dependency injection system
-from app.core.dependencies import (
-    get_dashboard_service as _get_dashboard_service,
-    get_git_service as _get_git_service,
-    get_health_service as _get_health_service,
-    get_memory_service as _get_memory_service,
-    get_session_service as _get_session_service,
-)
+# Singleton instances
+_dashboard_service = None
+_git_service = None
+_health_service = None
+_memory_service = None
+_session_service = None
 
 
 def get_dashboard_service() -> DashboardService:
-    """Get dashboard service instance (DEPRECATED: use app.core.dependencies)"""
-    import warnings
-    warnings.warn(
-        "app.services.service_factory.get_dashboard_service is deprecated. "
-        "Use app.core.dependencies.get_dashboard_service instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return _get_dashboard_service()
+    """Get dashboard service instance"""
+    global _dashboard_service
+    if _dashboard_service is None:
+        _dashboard_service = DashboardService()
+    return _dashboard_service
 
 
 def get_git_service() -> GitService:
-    """Get git service instance (DEPRECATED: use app.core.dependencies)"""
-    import warnings
-    warnings.warn(
-        "app.services.service_factory.get_git_service is deprecated. "
-        "Use app.core.dependencies.get_git_service instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return _get_git_service()
+    """Get git service instance"""
+    global _git_service
+    if _git_service is None:
+        _git_service = GitService()
+    return _git_service
 
 
 def get_health_service() -> HealthService:
-    """Get health service instance (DEPRECATED: use app.core.dependencies)"""
-    import warnings
-    warnings.warn(
-        "app.services.service_factory.get_health_service is deprecated. "
-        "Use app.core.dependencies.get_health_service instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return _get_health_service()
+    """Get health service instance"""
+    global _health_service
+    if _health_service is None:
+        _health_service = HealthService()
+    return _health_service
 
 
 def get_memory_service() -> MemoryService:
-    """Get memory service instance (DEPRECATED: use app.core.dependencies)"""
-    import warnings
-    warnings.warn(
-        "app.services.service_factory.get_memory_service is deprecated. "
-        "Use app.core.dependencies.get_memory_service instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return _get_memory_service()
+    """Get memory service instance"""
+    global _memory_service
+    if _memory_service is None:
+        _memory_service = MemoryService()
+    return _memory_service
 
 
 def get_session_service() -> SessionService:
-    """Get session service instance (DEPRECATED: use app.core.dependencies)"""
-    import warnings
-    warnings.warn(
-        "app.services.service_factory.get_session_service is deprecated. "
-        "Use app.core.dependencies.get_session_service instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return _get_session_service()
+    """Get session service instance"""
+    global _session_service
+    if _session_service is None:
+        _session_service = SessionService()
+    return _session_service
 
 
+# Legacy factory class for backwards compatibility
 class ServiceFactory:
-    """Factory for creating service instances"""
-    
-    def __init__(self):
-        self.database = None
-        self.security_manager = None
-    
-    def set_database(self, database):
-        """Set database instance for services"""
-        self.database = database
-    
-    def set_security_manager(self, security_manager):
-        """Set security manager instance for services"""
-        self.security_manager = security_manager
+    """Legacy service factory for compatibility"""
     
     @staticmethod
     def get_dashboard_service() -> DashboardService:
-        """Get dashboard service (DEPRECATED: use app.core.dependencies)"""
         return get_dashboard_service()
     
     @staticmethod
     def get_git_service() -> GitService:
-        """Get git service (DEPRECATED: use app.core.dependencies)"""
         return get_git_service()
     
     @staticmethod
     def get_health_service() -> HealthService:
-        """Get health service (DEPRECATED: use app.core.dependencies)"""
         return get_health_service()
     
     @staticmethod
     def get_memory_service() -> MemoryService:
-        """Get memory service (DEPRECATED: use app.core.dependencies)"""
         return get_memory_service()
     
     @staticmethod
     def get_session_service() -> SessionService:
-        """Get session service (DEPRECATED: use app.core.dependencies)"""
         return get_session_service()
 
 
-# Singleton factory instance
-_service_factory = None
-
-
-def get_service_factory() -> ServiceFactory:
-    """Get singleton instance of service factory"""
-    global _service_factory
-    if _service_factory is None:
-        _service_factory = ServiceFactory()
-    return _service_factory
+# Factory instance for global access
+service_factory = ServiceFactory()

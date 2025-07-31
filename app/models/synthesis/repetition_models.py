@@ -10,12 +10,6 @@ from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional
-from typing import List
-from datetime import datetime
-from enum import Enum
-from pydantic import BaseModel
-from pydantic import Field
 
 
 class RepetitionAlgorithm(str, Enum):

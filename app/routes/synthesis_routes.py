@@ -8,24 +8,20 @@ spaced repetition, and WebSocket connections.
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
-
+from datetime import datetime
 
 from app.utils.logging_config import get_logger
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_db
 from app.shared import verify_api_key
-from app.dependencies import get_db
-from app.models.api_models import ReportRequest, ReportResponse, BulkReviewRequest, SubscriptionRequest
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from fastapi import Query
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import APIRouter
-from datetime import datetime
-from pydantic import BaseModel
-from pydantic import Field
+from app.models.synthesis import (
+    SynthesisRequest,
+    SynthesisResult,
+    ReportRequest,
+    ReportResponse,
+    BulkReviewRequest,
+    SubscriptionRequest
+)
+
 logger = get_logger(__name__)
 
 # Create router
