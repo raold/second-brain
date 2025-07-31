@@ -194,7 +194,7 @@ class Database:
             await self.pool.close()
 
     async def _get_embedding(self, text: str) -> list[float]:
-        """Get embedding for text using OpenAI API."""
+        """Get embedding for text using OpenAI API with caching."""
         # In test environment, return mock embeddings
         if os.getenv("ENVIRONMENT") == "test" and not os.getenv("OPENAI_API_KEY", "").startswith("sk-"):
             # Generate deterministic mock embedding based on text hash
@@ -206,11 +206,20 @@ class Database:
         if not self.openai_client:
             raise RuntimeError("OpenAI client not initialized")
 
-        try:
+        # Use embedding cache for production
+        from app.utils.embedding_cache import get_embedding_cache
+        cache = get_embedding_cache(redis_url=os.getenv("REDIS_URL"))
+        
+        model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+        
+        async def generate_embedding(text: str) -> list[float]:
             response = await self.openai_client.embeddings.create(
-                model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"), input=text
+                model=model, input=text
             )
             return response.data[0].embedding
+        
+        try:
+            return await cache.get_embedding(text, model, generate_embedding)
         except Exception as e:
             logger.error(f"Failed to get embedding: {e}")
             raise
