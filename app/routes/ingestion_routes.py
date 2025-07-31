@@ -8,7 +8,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
-from app.dependencies import get_current_user, get_db
+from app.dependencies import get_current_user, get_db_instance
 from app.ingestion.engine import IngestionEngine
 from app.models.memory import User
 from app.repositories.memory_repository import MemoryRepository
@@ -23,6 +23,7 @@ from fastapi import APIRouter
 from datetime import datetime
 from pydantic import BaseModel
 from pydantic import Field
+from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
 
 logger = get_logger(__name__)
 
@@ -66,7 +67,7 @@ async def upload_file(
     tags: Optional[str] = Form(None),
     metadata: Optional[str] = Form(None),
     current_user: User = Depends(get_current_user),
-    db=Depends(get_db)
+    db=Depends(get_db_instance)
 ):
     """
     Upload and ingest a single file
@@ -134,7 +135,7 @@ async def upload_files_batch(
     files: list[UploadFile] = File(...),
     request: BatchIngestionRequest = BatchIngestionRequest(),
     current_user: User = Depends(get_current_user),
-    db=Depends(get_db)
+    db=Depends(get_db_instance)
 ):
     """
     Upload and ingest multiple files in batch

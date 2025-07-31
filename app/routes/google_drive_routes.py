@@ -7,7 +7,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from app.dependencies import get_current_user, get_db
+from app.dependencies import get_current_user, get_db_instance
 from app.ingestion.engine import IngestionEngine
 from app.ingestion.google_drive_client import DriveFile, GoogleDriveClient
 from app.models import User
@@ -22,6 +22,7 @@ from fastapi import HTTPException
 from fastapi import APIRouter
 from pydantic import BaseModel
 from pydantic import Field
+from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
 
 logger = get_logger(__name__)
 
@@ -217,7 +218,7 @@ async def ingest_drive_files(
     background_tasks: BackgroundTasks,
     request: GoogleDriveIngestionRequest,
     current_user: User = Depends(get_current_user),
-    db=Depends(get_db)
+    db=Depends(get_db_instance)
 ):
     """Ingest files from Google Drive into Second Brain"""
     client = get_drive_client(current_user.id)
@@ -251,7 +252,7 @@ async def monitor_folder(
     background_tasks: BackgroundTasks,
     request: FolderMonitorRequest,
     current_user: User = Depends(get_current_user),
-    db=Depends(get_db)
+    db=Depends(get_db_instance)
 ):
     """Monitor a Google Drive folder for new files"""
     client = get_drive_client(current_user.id)

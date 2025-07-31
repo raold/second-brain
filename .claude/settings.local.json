@@ -45,7 +45,10 @@
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m pip list)",
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m pip install pyyaml)",
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m pip install --upgrade pip)",
-      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python .claude/scripts/startup-check.py)"
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python .claude/scripts/startup-check.py)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m pip install:*)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/pip install pydantic==2.10.5 asyncpg==0.29.0)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/pip list)"
     ],
     "deny": []
   },

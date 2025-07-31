@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Any
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from app.utils.logging_config import get_logger
+from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
 from typing import Optional
 from typing import Dict
 from typing import List

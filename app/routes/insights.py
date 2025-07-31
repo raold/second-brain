@@ -23,6 +23,7 @@ from fastapi import Query
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import APIRouter
+from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
 
 router = APIRouter(
     prefix="/insights",
