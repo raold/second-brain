@@ -6,6 +6,13 @@ knowledge graph formed by memories and their relationships.
 
 import asyncio
 from app.utils.logging_config import get_logger
+from typing import Optional
+from typing import Dict
+from typing import List
+from typing import Any
+from datetime import datetime
+from datetime import timedelta
+from collections import defaultdict
 logger = get_logger(__name__)
 
 

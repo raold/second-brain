@@ -1,0 +1,45 @@
+{
+  "session_id": "startup-20250731-155929",
+  "phases": {
+    "assessment": {
+      "start": 1753991969.887307,
+      "status": "completed",
+      "end": 1753991969.930049,
+      "duration_ms": 42
+    },
+    "context_loading": {
+      "start": 1753991969.930055,
+      "status": "completed",
+      "end": 1753991969.930727,
+      "duration_ms": 0
+    },
+    "agent_activation": {
+      "start": 1753991969.930729,
+      "status": "completed",
+      "end": 1753991969.9307442,
+      "duration_ms": 0
+    },
+    "environment_setup": {
+      "start": 1753991969.9307442,
+      "status": "completed",
+      "end": 1753991969.969514,
+      "duration_ms": 38
+    },
+    "health_report": {
+      "start": 1753991969.969517,
+      "status": "completed",
+      "end": 1753991969.9696481,
+      "duration_ms": 0
+    }
+  },
+  "warnings": [],
+  "optimizations": [
+    "context_caching",
+    "smart_activation"
+  ],
+  "agents_activated": 3,
+  "token_usage_multiplier": 6,
+  "health_score": 10,
+  "startup_time_ms": 82,
+  "optimizations_applied": 2
+}

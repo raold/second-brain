@@ -4,7 +4,13 @@ Implements the Service Factory pattern for clean, testable dependency management
 """
 
 from typing import Any, Dict, Optional, TypeVar, Callable
+from functools import lru_cache
 from app.utils.logging_config import get_logger
+from typing import Callable
+from typing import TypeVar
+from typing import Optional
+from typing import Dict
+from typing import Any
 logger = get_logger(__name__)
 
 T = TypeVar('T')

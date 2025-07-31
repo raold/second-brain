@@ -6,6 +6,9 @@ from typing import Optional
 from fastapi import Depends, HTTPException, Header
 from app.models.memory import User
 from app.shared import get_db_instance
+from typing import Optional
+from fastapi import Depends
+from fastapi import HTTPException
 
 
 async def get_db():

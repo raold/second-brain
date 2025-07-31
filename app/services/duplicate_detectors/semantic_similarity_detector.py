@@ -6,6 +6,10 @@ Handles conceptual similarity beyond lexical matching.
 """
 
 from app.utils.logging_config import get_logger
+from typing import Optional
+from typing import List
+from typing import Any
+from collections import defaultdict
 logger = get_logger(__name__)
 
 

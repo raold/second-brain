@@ -16,6 +16,13 @@ from app.core.exceptions import SecondBrainException, UnauthorizedException
 from app.database import get_database
 from app.services.service_factory import get_memory_service, get_health_service
 from app.utils.logging_config import get_logger
+from typing import Dict
+from typing import List
+from typing import Any
+from fastapi import Query
+from fastapi import Depends
+from fastapi import APIRouter
+from datetime import datetime
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/v1/dashboard", tags=["Dashboard"])

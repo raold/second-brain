@@ -4,6 +4,12 @@ Enables complex queries that traverse multiple memories to find connections and 
 """
 
 from app.utils.logging_config import get_logger
+from typing import List
+from typing import Any
+from fastapi import Query
+from datetime import datetime
+from enum import Enum
+from dataclasses import dataclass
 logger = get_logger(__name__)
 
 

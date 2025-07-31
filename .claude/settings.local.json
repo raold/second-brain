@@ -34,7 +34,18 @@
       "Bash(ls:*)",
       "Bash(.venv/bin/pip install:*)",
       "Bash(rm:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(docker-compose:*)",
+      "Bash(git checkout:*)",
+      "Bash(docker exec:*)",
+      "Bash(mv:*)",
+      "Bash(docker inspect:*)",
+      "Bash(python:*)",
+      "Bash(.venv/Scripts/python.exe -m pip list:*)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m pip list)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m pip install pyyaml)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m pip install --upgrade pip)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python .claude/scripts/startup-check.py)"
     ],
     "deny": []
   },

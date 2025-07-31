@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
 from app.core.logging import get_logger
+from typing import Optional
 
 logger = get_logger(__name__)
 

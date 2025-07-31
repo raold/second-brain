@@ -6,7 +6,15 @@ database concerns from business logic.
 """
 
 import json
+from abc import abstractmethod
+from typing import Optional, List, Any
+from datetime import datetime
+import asyncpg
 from app.utils.logging_config import get_logger
+from app.repositories.base_repository import BaseRepository
+from app.models.memory import Memory, MemoryType, MemoryMetrics
+from app.models.search import SearchCriteria
+
 logger = get_logger(__name__)
 
 

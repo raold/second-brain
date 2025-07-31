@@ -7,6 +7,12 @@ them intelligently while preserving important information.
 import asyncio
 import json
 from app.utils.logging_config import get_logger
+from typing import Optional
+from typing import Dict
+from typing import List
+from typing import Any
+from datetime import datetime
+from collections import defaultdict
 logger = get_logger(__name__)
 
 

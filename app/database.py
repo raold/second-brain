@@ -4,7 +4,13 @@ Single source of truth for all data operations.
 """
 
 import json
+from typing import Any, Dict, List, Optional
+import asyncpg
 from app.utils.logging_config import get_logger
+from typing import Optional
+from typing import Dict
+from typing import List
+from typing import Any
 logger = get_logger(__name__)
 
 

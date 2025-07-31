@@ -3,6 +3,9 @@ Intelligent content classifier for automatic categorization and quality assessme
 """
 
 from app.utils.logging_config import get_logger
+from typing import Any
+from collections import Counter
+from collections import defaultdict
 logger = get_logger(__name__)
 
 

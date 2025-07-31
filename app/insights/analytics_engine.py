@@ -22,6 +22,9 @@ from .models import (
     TimeFrame,
 )
 from .pattern_detector import PatternDetector
+from typing import Any
+from datetime import datetime
+from datetime import timedelta
 
 
 class AnalyticsEngine:

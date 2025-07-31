@@ -20,6 +20,12 @@ from app.ingestion.core_extraction_pipeline import CoreExtractionPipeline
 from app.models.memory import Memory
 from app.repositories.memory_repository import MemoryRepository
 from app.utils.logger import get_logger
+from typing import Optional
+from typing import List
+from typing import Any
+from typing import Union
+from datetime import datetime
+from dataclasses import dataclass
 
 logger = get_logger(__name__)
 

@@ -6,6 +6,9 @@ enabling modular, testable, and extensible detection methods.
 """
 
 from app.utils.logging_config import get_logger
+from typing import Optional
+from typing import List
+from typing import Any
 logger = get_logger(__name__)
 
 

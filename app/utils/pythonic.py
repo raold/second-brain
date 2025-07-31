@@ -12,6 +12,14 @@ This module demonstrates idiomatic Python usage including:
 import asyncio
 import functools
 from app.utils.logging_config import get_logger
+from typing import Protocol
+from typing import Callable
+from typing import TypeVar
+from typing import Optional
+from typing import Any
+from typing import Tuple
+from enum import Enum
+from dataclasses import dataclass
 logger = get_logger(__name__)
 
 T = TypeVar('T')

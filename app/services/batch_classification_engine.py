@@ -3,8 +3,17 @@ Enhanced Batch Classification Engine for bulk memory operations
 Supports multiple classification methods and parallel processing
 """
 
+import re
 from typing import List, Dict, Any, Optional
 from app.utils.logging_config import get_logger
+from typing import Optional
+from typing import Dict
+from typing import List
+from typing import Any
+from datetime import datetime
+from enum import Enum
+from pydantic import BaseModel
+from pydantic import Field
 logger = get_logger(__name__)
 
 

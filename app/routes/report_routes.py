@@ -21,6 +21,12 @@ from app.routes.auth import get_current_user
 from app.services.service_factory import ServiceFactory
 from app.services.synthesis.report_generator import ReportGenerator
 from app.shared import get_db_instance as get_db
+from typing import Optional
+from fastapi import Query
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import APIRouter
+from datetime import datetime
 
 router = APIRouter(prefix="/synthesis/reports", tags=["Reports"])
 

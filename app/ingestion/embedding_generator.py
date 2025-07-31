@@ -5,6 +5,9 @@ Embedding generation component for automatic vector embeddings
 import asyncio
 import hashlib
 from app.utils.logging_config import get_logger
+from typing import Any
+from typing import Tuple
+from datetime import datetime
 logger = get_logger(__name__)
 
 

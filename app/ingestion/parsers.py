@@ -44,6 +44,8 @@ except ImportError:
 
 from app.ingestion.engine import FileParser
 from app.utils.logger import get_logger
+from typing import List
+from typing import Any
 
 logger = get_logger(__name__)
 

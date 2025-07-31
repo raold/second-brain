@@ -201,6 +201,11 @@ asyncio.run(client())
 
 ```jsx
 import { useEffect, useState, useCallback } from 'react';
+from typing import Optional
+from fastapi import Query
+from fastapi import Depends
+from fastapi import APIRouter
+from datetime import datetime
 
 function useWebSocket(token) {
     const [ws, setWs] = useState(null);

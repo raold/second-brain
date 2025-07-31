@@ -4,7 +4,10 @@ Core extraction pipeline that integrates all enhanced NLP components
 
 import asyncio
 import hashlib
+from typing import List, Any, Optional, Dict
 from app.utils.logging_config import get_logger
+from app.ingestion.models import IngestionConfig, ProcessedContent, IngestionRequest, IngestionResponse, ContentQuality
+
 logger = get_logger(__name__)
 
 

@@ -3,6 +3,9 @@ Relationship detection component for identifying connections between entities
 """
 
 from app.utils.logging_config import get_logger
+from typing import List
+from typing import Any
+from collections import defaultdict
 logger = get_logger(__name__)
 
 

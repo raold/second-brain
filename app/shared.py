@@ -6,6 +6,8 @@ from typing import Optional
 from fastapi import HTTPException, Header
 from app.config import get_settings
 from app.database import Database
+from typing import Optional
+from fastapi import HTTPException
 
 
 # Simple replacements for archived functions

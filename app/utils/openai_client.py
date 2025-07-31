@@ -10,6 +10,7 @@ from openai import AsyncOpenAI
 
 from app.config import Config
 from app.utils.logging_config import get_logger
+from typing import Optional
 logger = get_logger(__name__)
 
 

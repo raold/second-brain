@@ -33,6 +33,16 @@ from argon2 import PasswordHasher
 
 from app.core.logging import get_logger, get_audit_logger
 from app.core.exceptions import UnauthorizedException, ForbiddenException
+from typing import Optional
+from typing import Dict
+from typing import List
+from typing import Any
+from typing import Tuple
+from fastapi import HTTPException
+from datetime import datetime
+from datetime import timedelta
+from enum import Enum
+from dataclasses import dataclass
 
 
 class SecurityLevel(str, Enum):

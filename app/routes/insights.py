@@ -19,6 +19,10 @@ from app.insights import (
     TimeFrame,
 )
 from app.shared import get_db_instance, verify_api_key
+from fastapi import Query
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import APIRouter
 
 router = APIRouter(
     prefix="/insights",

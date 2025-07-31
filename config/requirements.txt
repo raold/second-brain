@@ -50,6 +50,7 @@ aiofiles==23.2.1
 
 # Environment and configuration
 python-dotenv==1.0.0
+pyyaml==6.0.2
 
 # Testing
 pytest==7.4.3

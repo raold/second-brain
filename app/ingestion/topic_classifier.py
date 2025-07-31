@@ -3,6 +3,11 @@ Topic modeling and classification component for the ingestion engine
 """
 
 from app.utils.logging_config import get_logger
+from typing import List
+from typing import Any
+from typing import Union
+from collections import Counter
+from collections import defaultdict
 logger = get_logger(__name__)
 
 

@@ -7,6 +7,11 @@ from enum import Enum
 from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict
+from typing import Optional
+from typing import Any
+from datetime import datetime
+from enum import Enum
+from pydantic import BaseModel
 
 
 class User(BaseModel):
@@ -57,16 +62,6 @@ class Memory(BaseModel):
         )
 
 
-class SearchCriteria(BaseModel):
-    """Search criteria for memory queries"""
-    query: Optional[str] = None
-    memory_type: Optional[MemoryType] = None
-    user_id: Optional[str] = None
-    min_importance: Optional[float] = None
-    created_after: Optional[datetime] = None
-    created_before: Optional[datetime] = None
-    limit: int = 50
-    offset: Optional[int] = None
 
 
 class MemoryMetrics(BaseModel):

@@ -24,6 +24,17 @@ from prometheus_client import (
     generate_latest, CONTENT_TYPE_LATEST
 )
 from fastapi import Response
+from typing import Callable
+from typing import Optional
+from typing import Dict
+from typing import List
+from typing import Any
+from datetime import datetime
+from datetime import timedelta
+from enum import Enum
+from dataclasses import dataclass
+from collections import Counter
+from collections import defaultdict
 
 # Optional Redis dependency
 try:

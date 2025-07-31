@@ -3,6 +3,12 @@ Advanced topic modeling with transformer-based models and hierarchical clusterin
 """
 
 from app.utils.logging_config import get_logger
+from typing import List
+from typing import Any
+from typing import Union
+from collections import Counter
+from collections import defaultdict
+from pydantic import Field
 logger = get_logger(__name__)
 
 

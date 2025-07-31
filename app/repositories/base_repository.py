@@ -2,7 +2,14 @@
 Base repository pattern implementation with common functionality.
 """
 
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar, Optional, List, Any
+import asyncpg
 from app.utils.logging_config import get_logger
+from fastapi import Query
+
+T = TypeVar('T')
+
 logger = get_logger(__name__)
 
 

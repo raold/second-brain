@@ -17,6 +17,11 @@ Refactored: ~200 lines, testable, modular
 """
 
 from app.utils.logging_config import get_logger
+from typing import Optional
+from typing import Any
+from datetime import datetime
+from collections import Counter
+from collections import defaultdict
 logger = get_logger(__name__)
 
 

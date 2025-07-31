@@ -42,6 +42,15 @@ from app.memory_migration_tools import (
     get_migration_manager,
 )
 from app.shared import verify_api_key
+from typing import List
+from typing import Any
+from typing import Union
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import APIRouter
+from datetime import datetime
+from pydantic import BaseModel
+from pydantic import Field
 
 # Create router
 bulk_router = APIRouter(prefix="/bulk", tags=["Bulk Operations"])

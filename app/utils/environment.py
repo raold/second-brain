@@ -6,6 +6,7 @@ import os
 from typing import Any
 
 from app.config import Config
+from typing import Any
 
 
 def validate_test_environment() -> dict[str, Any]:

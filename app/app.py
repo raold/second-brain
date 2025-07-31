@@ -282,6 +282,13 @@ setup_openapi_documentation(app)
 
 # Register exception handlers from the new exception handling system
 from app.core.exceptions import register_exception_handlers
+from typing import List
+from fastapi import Query
+from fastapi import Depends
+from fastapi import HTTPException
+from datetime import datetime
+from pydantic import BaseModel
+from pydantic import Field
 register_exception_handlers(app)
 
 

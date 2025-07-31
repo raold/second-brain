@@ -11,6 +11,11 @@ from uuid import uuid4
 import numpy as np
 
 from .models import Insight, InsightRequest, InsightType, TimeFrame, UsageStatistics
+from typing import Any
+from datetime import datetime
+from datetime import timedelta
+from collections import Counter
+from collections import defaultdict
 
 
 class InsightGenerator:

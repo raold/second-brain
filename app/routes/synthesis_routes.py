@@ -5,7 +5,23 @@ API endpoints for synthesis features including report generation,
 spaced repetition, and WebSocket connections.
 """
 
+from fastapi import APIRouter, HTTPException, Depends, Query
+from pydantic import BaseModel, Field
+from typing import Dict, List, Optional, Any
+
+
 from app.utils.logging_config import get_logger
+from typing import Optional
+from typing import Dict
+from typing import List
+from typing import Any
+from fastapi import Query
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import APIRouter
+from datetime import datetime
+from pydantic import BaseModel
+from pydantic import Field
 logger = get_logger(__name__)
 
 # Create router

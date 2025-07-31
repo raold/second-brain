@@ -3,7 +3,17 @@ Health Service - Handles health check and system status business logic.
 Provides system health information and diagnostics.
 """
 
+from typing import Any, Dict, List, Optional
+from datetime import datetime
 from app.utils.logging_config import get_logger
+from app.database import Database
+from app.utils.version import get_version_info
+from typing import Optional
+from typing import Dict
+from typing import List
+from typing import Any
+from datetime import datetime
+
 logger = get_logger(__name__)
 
 
