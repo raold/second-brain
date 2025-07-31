@@ -32,7 +32,8 @@
       "Bash(echo:*)",
       "WebFetch(domain:docs.anthropic.com)",
       "Bash(ls:*)",
-      "Bash(.venv/bin/pip install:*)"
+      "Bash(.venv/bin/pip install:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   },

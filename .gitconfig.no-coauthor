@@ -1,0 +1,15 @@
+# Git configuration to disable co-authorship
+# Add this to your global .gitconfig with:
+# git config --global include.path ~/.gitconfig.no-coauthor
+
+[alias]
+    # Override commit to strip co-author lines
+    commit-no-coauthor = !git commit "$@" && git log -1 --pretty=%B | sed '/Co-[Aa]uthored-[Bb]y:/d' | git commit --amend -F -
+
+[commit]
+    # Disable any commit templates that might add co-authorship
+    template = 
+
+[user]
+    # Ensure no co-author in user config
+    useConfigOnly = true
