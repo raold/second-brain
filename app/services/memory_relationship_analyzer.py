@@ -16,12 +16,12 @@ Original: 870 lines, 12% coverage, monolithic
 Refactored: ~200 lines, testable, modular
 """
 
-from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Any
+from collections import Counter, defaultdict
 from datetime import datetime
-from collections import Counter
-from collections import defaultdict
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 
@@ -56,7 +56,7 @@ class MemoryRelationshipAnalyzer:
         }
 
     async def analyze_memory_relationships(
-        self, memory_id: str, relationship_types: Optional[list[str]] = None, depth: int = 2, max_connections: int = 50
+        self, memory_id: str, relationship_types: list[str] | None = None, depth: int = 2, max_connections: int = 50
     ) -> dict[str, Any]:
         """
         Perform comprehensive relationship analysis for a specific memory.
@@ -325,7 +325,7 @@ class MemoryRelationshipAnalyzer:
             logger.warning(f"Failed to generate relationship insights: {e}")
             return {"error": "Failed to generate insights", "message": str(e)}
 
-    def _parse_embedding(self, embedding: Any) -> Optional[list[float]]:
+    def _parse_embedding(self, embedding: Any) -> list[float] | None:
         """Parse embedding from various formats."""
         # Handle None explicitly
         if embedding is None:
@@ -340,7 +340,7 @@ class MemoryRelationshipAnalyzer:
             return None
 
         try:
-            if isinstance(embedding, (list, tuple)):
+            if isinstance(embedding, list | tuple):
                 return [float(x) for x in embedding]
             elif isinstance(embedding, str):
                 # Try to parse as JSON

@@ -1,14 +1,15 @@
 """Initial schema creation
 
 Revision ID: 001
-Revises: 
+Revises:
 Create Date: 2024-01-01 00:00:00.000000
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
+from typing import Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
@@ -45,7 +46,7 @@ def upgrade() -> None:
     op.create_index('idx_users_role_active', 'users', ['role', 'is_active'], unique=False)
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
     op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
-    
+
     # Create memories table
     op.create_table('memories',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -71,7 +72,7 @@ def upgrade() -> None:
     op.create_index('idx_memories_created', 'memories', ['created_at'], unique=False)
     op.create_index('idx_memories_user_status', 'memories', ['user_id', 'status'], unique=False)
     op.create_index('idx_memories_user_type', 'memories', ['user_id', 'memory_type'], unique=False)
-    
+
     # Create sessions table
     op.create_table('sessions',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -91,7 +92,7 @@ def upgrade() -> None:
     )
     op.create_index('idx_sessions_last_activity', 'sessions', ['last_activity_at'], unique=False)
     op.create_index('idx_sessions_user_active', 'sessions', ['user_id', 'is_active'], unique=False)
-    
+
     # Create tags table
     op.create_table('tags',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -111,7 +112,7 @@ def upgrade() -> None:
         sa.UniqueConstraint('user_id', 'name', name='uq_user_tag_name')
     )
     op.create_index('idx_tags_user_usage', 'tags', ['user_id', 'usage_count'], unique=False)
-    
+
     # Create events table
     op.create_table('events',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -132,7 +133,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_events_correlation_id'), 'events', ['correlation_id'], unique=False)
     op.create_index(op.f('ix_events_created_at'), 'events', ['created_at'], unique=False)
     op.create_index(op.f('ix_events_event_type'), 'events', ['event_type'], unique=False)
-    
+
     # Create snapshots table
     op.create_table('snapshots',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -144,7 +145,7 @@ def upgrade() -> None:
         sa.UniqueConstraint('aggregate_id', 'version', name='uq_snapshot_version')
     )
     op.create_index(op.f('ix_snapshots_aggregate_id'), 'snapshots', ['aggregate_id'], unique=False)
-    
+
     # Create memory_links table
     op.create_table('memory_links',
         sa.Column('from_memory_id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -154,7 +155,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['to_memory_id'], ['memories.id'], ondelete='CASCADE'),
         sa.UniqueConstraint('from_memory_id', 'to_memory_id', name='uq_memory_links')
     )
-    
+
     # Create memory_tags table
     op.create_table('memory_tags',
         sa.Column('memory_id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -163,7 +164,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['tag_id'], ['tags.id'], ondelete='CASCADE'),
         sa.UniqueConstraint('memory_id', 'tag_id', name='uq_memory_tags')
     )
-    
+
     # Create session_memories table
     op.create_table('session_memories',
         sa.Column('session_id', postgresql.UUID(as_uuid=True), nullable=False),

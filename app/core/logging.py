@@ -12,27 +12,26 @@ This module provides:
 import logging
 import sys
 import time
-import json
-from datetime import datetime
-from typing import Any, Dict, Optional, Union
-from contextvars import ContextVar
-from functools import wraps
 import traceback
+from contextvars import ContextVar
+from datetime import datetime
+from functools import wraps
+from typing import Any
 
+import structlog
 from fastapi import Request, Response
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
-import structlog
 from pythonjsonlogger import jsonlogger
 
 # Context variables for request tracking
-request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
-user_id_var: ContextVar[Optional[str]] = ContextVar("user_id", default=None)
+request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
+user_id_var: ContextVar[str | None] = ContextVar("user_id", default=None)
 
 
 class LogConfig(BaseModel):
     """Logging configuration"""
-    
+
     level: str = "INFO"
     format: str = "json"  # json or text
     enable_console: bool = True
@@ -48,18 +47,18 @@ class LogConfig(BaseModel):
 
 class StructuredLogger:
     """Structured logger with context support"""
-    
+
     def __init__(self, name: str, config: LogConfig):
         self.name = name
         self.config = config
         self.logger = self._setup_logger()
-    
+
     def _setup_logger(self) -> logging.Logger:
         """Set up the logger with handlers"""
         logger = logging.getLogger(self.name)
         logger.setLevel(getattr(logging, self.config.level))
         logger.handlers = []  # Clear existing handlers
-        
+
         # Console handler
         if self.config.enable_console:
             console_handler = logging.StreamHandler(sys.stdout)
@@ -74,23 +73,23 @@ class StructuredLogger:
                 )
             console_handler.setFormatter(formatter)
             logger.addHandler(console_handler)
-        
+
         # File handler
         if self.config.enable_file:
-            from logging.handlers import RotatingFileHandler
             import os
-            
+            from logging.handlers import RotatingFileHandler
+
             # Create log directory if it doesn't exist
             log_dir = os.path.dirname(self.config.file_path)
             if log_dir and not os.path.exists(log_dir):
                 os.makedirs(log_dir)
-            
+
             file_handler = RotatingFileHandler(
                 self.config.file_path,
                 maxBytes=self.config.max_file_size,
                 backupCount=self.config.backup_count
             )
-            
+
             if self.config.format == "json":
                 formatter = jsonlogger.JsonFormatter(
                     "%(timestamp)s %(level)s %(name)s %(message)s",
@@ -102,10 +101,10 @@ class StructuredLogger:
                 )
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
-        
+
         return logger
-    
-    def _add_context(self, extra: Dict[str, Any]) -> Dict[str, Any]:
+
+    def _add_context(self, extra: dict[str, Any]) -> dict[str, Any]:
         """Add request context to log data"""
         context = {
             "request_id": request_id_var.get(),
@@ -114,23 +113,23 @@ class StructuredLogger:
         }
         context.update(extra)
         return context
-    
+
     def debug(self, message: str, **kwargs):
         """Log debug message with context"""
         extra = self._add_context(kwargs)
         self.logger.debug(message, extra={"structured": extra})
-    
+
     def info(self, message: str, **kwargs):
         """Log info message with context"""
         extra = self._add_context(kwargs)
         self.logger.info(message, extra={"structured": extra})
-    
+
     def warning(self, message: str, **kwargs):
         """Log warning message with context"""
         extra = self._add_context(kwargs)
         self.logger.warning(message, extra={"structured": extra})
-    
-    def error(self, message: str, exception: Optional[Exception] = None, **kwargs):
+
+    def error(self, message: str, exception: Exception | None = None, **kwargs):
         """Log error message with context and exception details"""
         extra = self._add_context(kwargs)
         if exception:
@@ -138,7 +137,7 @@ class StructuredLogger:
             extra["error_message"] = str(exception)
             extra["traceback"] = traceback.format_exc()
         self.logger.error(message, extra={"structured": extra})
-    
+
     def critical(self, message: str, **kwargs):
         """Log critical message with context"""
         extra = self._add_context(kwargs)
@@ -147,21 +146,21 @@ class StructuredLogger:
 
 class PerformanceLogger:
     """Context manager for performance logging"""
-    
+
     def __init__(self, operation: str, logger: StructuredLogger, **kwargs):
         self.operation = operation
         self.logger = logger
         self.extra = kwargs
         self.start_time = None
-    
+
     def __enter__(self):
         self.start_time = time.time()
         self.logger.debug(f"Starting {self.operation}", operation=self.operation, **self.extra)
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         duration = time.time() - self.start_time
-        
+
         if exc_type:
             self.logger.error(
                 f"{self.operation} failed",
@@ -182,18 +181,18 @@ class PerformanceLogger:
 
 class AuditLogger:
     """Logger for audit events"""
-    
+
     def __init__(self, logger: StructuredLogger):
         self.logger = logger
-    
+
     def log_event(
         self,
         event_type: str,
         resource: str,
         action: str,
         result: str,
-        user_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        user_id: str | None = None,
+        details: dict[str, Any] | None = None
     ):
         """Log an audit event"""
         self.logger.info(
@@ -210,18 +209,18 @@ class AuditLogger:
 
 class LoggingRoute(APIRoute):
     """Custom route class that logs requests and responses"""
-    
+
     def get_route_handler(self):
         original_route_handler = super().get_route_handler()
-        
+
         async def logging_route_handler(request: Request) -> Response:
             # Extract request ID
             request_id = request.headers.get("X-Request-ID", str(time.time()))
             request_id_var.set(request_id)
-            
+
             # Get logger
             logger = get_logger("api.request")
-            
+
             # Log request
             start_time = time.time()
             logger.info(
@@ -231,11 +230,11 @@ class LoggingRoute(APIRoute):
                 query_params=dict(request.query_params),
                 client_host=request.client.host if request.client else None
             )
-            
+
             try:
                 # Call the actual route
                 response = await original_route_handler(request)
-                
+
                 # Log response
                 duration = time.time() - start_time
                 logger.info(
@@ -245,12 +244,12 @@ class LoggingRoute(APIRoute):
                     status_code=response.status_code,
                     duration_ms=duration * 1000
                 )
-                
+
                 # Add request ID to response headers
                 response.headers["X-Request-ID"] = request_id
-                
+
                 return response
-                
+
             except Exception as e:
                 # Log error
                 duration = time.time() - start_time
@@ -262,12 +261,12 @@ class LoggingRoute(APIRoute):
                     duration_ms=duration * 1000
                 )
                 raise
-        
+
         return logging_route_handler
 
 
 # Global logger instances
-_loggers: Dict[str, StructuredLogger] = {}
+_loggers: dict[str, StructuredLogger] = {}
 _config: LogConfig = LogConfig()
 
 
@@ -296,13 +295,13 @@ def log_function_call(func):
         logger = get_logger(func.__module__)
         with PerformanceLogger(f"{func.__name__}", logger, args=str(args), kwargs=str(kwargs)):
             return await func(*args, **kwargs)
-    
+
     @wraps(func)
     def sync_wrapper(*args, **kwargs):
         logger = get_logger(func.__module__)
         with PerformanceLogger(f"{func.__name__}", logger, args=str(args), kwargs=str(kwargs)):
             return func(*args, **kwargs)
-    
+
     if asyncio.iscoroutinefunction(func):
         return async_wrapper
     else:
@@ -332,10 +331,8 @@ def setup_structlog():
 
 # Initialize logging on import
 import asyncio
-from typing import Optional
-from typing import Dict
 from typing import Any
-from typing import Union
-from datetime import datetime
+
 from pydantic import BaseModel
+
 setup_structlog()

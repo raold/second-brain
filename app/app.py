@@ -12,25 +12,31 @@ It handles:
 The application is initialized and run from main.py in the project root.
 """
 
-import logging
 import os
-import time
-import traceback
 from contextlib import asynccontextmanager
 from datetime import datetime
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
-from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
-from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import Response
 
 from app.connection_pool import PoolConfig, close_pool, get_pool_manager, initialize_pool
 from app.conversation_processor import setup_conversation_monitoring
-
+from app.core.logging import LogConfig, LoggingRoute, configure_logging, get_logger
+from app.core.monitoring import (
+    MetricDefinition,
+    MetricType,
+    export_metrics,
+    get_health_checker,
+    get_metrics_collector,
+    get_request_tracker,
+)
+from app.core.rate_limiting import setup_rate_limiting
+from app.core.redis_manager import cleanup_redis, get_redis_client, get_redis_manager, redis_health_check
+from app.core.security_audit import SecurityHeadersManager, get_security_auditor, get_security_monitor
 from app.database import get_database
 from app.docs import (
     ContextualSearchRequest,
@@ -52,39 +58,17 @@ from app.routes import (
     session_router as new_session_router,
 )
 from app.routes.analysis_routes import router as analysis_router
-
 from app.routes.bulk_operations_routes import bulk_router
+from app.routes.dashboard_routes import router as dashboard_router
+from app.routes.google_drive_routes import router as google_drive_router
 from app.routes.graph_routes import router as graph_router
-
 from app.routes.importance_routes import router as importance_router
+from app.routes.ingestion_routes import router as ingestion_router
 from app.routes.insights import router as insights_router
-
 from app.routes.relationship_routes import router as relationship_router
 from app.routes.synthesis_routes import router as synthesis_router
-from app.routes.ingestion_routes import router as ingestion_router
-from app.routes.google_drive_routes import router as google_drive_router
-from app.routes.dashboard_routes import router as dashboard_router
 from app.routes.v2_api import router as v2_router
 from app.security import SecurityConfig, SecurityManager
-from app.core.logging import (
-    LogConfig, configure_logging, get_logger, LoggingRoute,
-    request_id_var, user_id_var
-)
-from app.core.monitoring import (
-    get_metrics_collector, get_health_checker, get_request_tracker,
-    export_metrics, MetricDefinition, MetricType
-)
-from app.core.security_audit import (
-    SecurityHeadersManager, get_security_auditor,
-    get_security_monitor
-)
-from app.core.redis_manager import (
-    get_redis_manager, get_redis_client, cleanup_redis, redis_health_check
-)
-from app.core.rate_limiting import (
-    RateLimitMiddleware, setup_rate_limiting
-)
-
 from app.services.service_factory import get_service_factory
 from app.session_manager import get_session_manager
 
@@ -156,7 +140,7 @@ class SearchRequest(BaseModel):
 async def lifespan(app: FastAPI):
     """Handle application startup and shutdown."""
     logger.info("Starting Second Brain application", version=__version__, environment=os.getenv("ENVIRONMENT", "production"))
-    
+
     # Register custom metrics
     metrics_collector.register_custom_metric(
         MetricDefinition(
@@ -166,7 +150,7 @@ async def lifespan(app: FastAPI):
             labels=["query_type"]
         )
     )
-    
+
     metrics_collector.register_custom_metric(
         MetricDefinition(
             name="operation_duration",
@@ -176,7 +160,7 @@ async def lifespan(app: FastAPI):
             buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 2.5, 5.0]
         )
     )
-    
+
     metrics_collector.register_custom_metric(
         MetricDefinition(
             name="operation_errors",
@@ -207,7 +191,7 @@ async def lifespan(app: FastAPI):
         try:
             await initialize_pool(database_url, pool_config)
             logger.info("Database connection pool initialized", min_connections=pool_config.min_connections, max_connections=pool_config.max_connections)
-            
+
             # Register database health check
             async def check_db():
                 return await health_checker.check_database(db)
@@ -220,16 +204,16 @@ async def lifespan(app: FastAPI):
             logger.info("Database initialized (fallback mode)")
 
     # Initialize Redis for caching and rate limiting
-    redis_manager = await get_redis_manager()
+    await get_redis_manager()
     redis_client = await get_redis_client()
-    
+
     if redis_client:
         logger.info("Redis initialized for caching and rate limiting")
         # Register Redis health check
         health_checker.register_check("redis", redis_health_check)
     else:
         logger.warning("Redis not available - rate limiting will be disabled")
-    
+
     # Initialize service factory with dependencies
     service_factory = get_service_factory()
     service_factory.set_database(db)
@@ -256,7 +240,7 @@ async def lifespan(app: FastAPI):
                 logger.info("Database closed (fallback mode)")
             except Exception as cleanup_error:
                 logger.error(f"Error in fallback cleanup: {cleanup_error}")
-    
+
     # Cleanup Redis
     try:
         await cleanup_redis()
@@ -282,13 +266,6 @@ setup_openapi_documentation(app)
 
 # Register exception handlers from the new exception handling system
 from app.core.exceptions import register_exception_handlers
-from typing import List
-from fastapi import Query
-from fastapi import Depends
-from fastapi import HTTPException
-from datetime import datetime
-from pydantic import BaseModel
-from pydantic import Field
 register_exception_handlers(app)
 
 
@@ -310,10 +287,10 @@ async def setup_rate_limiting_if_redis():
 async def track_requests(request: Request, call_next):
     # Track request
     response = await request_tracker.track_request(request, call_next)
-    
+
     # Apply security headers
     SecurityHeadersManager.apply_security_headers(response)
-    
+
     # Monitor for suspicious activity
     security_monitor = get_security_monitor()
     if request.method in ["POST", "PUT", "PATCH"]:
@@ -328,9 +305,9 @@ async def track_requests(request: Request, call_next):
                         source_ip=request.client.host if request.client else "unknown",
                         details={"activities": activities}
                     )
-        except:
+        except Exception:
             pass  # Don't break request processing
-    
+
     return response
 
 # Add security middleware
@@ -341,7 +318,7 @@ for middleware_class, middleware_kwargs in security_manager.get_security_middlew
 allowed_origins = security_config.allowed_origins or []
 if not allowed_origins:
     # Default to localhost for development only
-    if Config.ENVIRONMENT == "development":
+    if os.getenv("ENVIRONMENT", "development") == "development":
         allowed_origins = ["http://localhost:3000", "http://localhost:8000", "http://127.0.0.1:8000"]
     else:
         # Production requires explicit origins
@@ -453,13 +430,12 @@ async def documentation_library():
 @app.get("/docs/{file_path:path}")
 async def serve_doc_file(file_path: str):
     """Serve documentation markdown files"""
-    import os
     from pathlib import Path
-    
+
     # Security: prevent directory traversal
     safe_path = Path(file_path).resolve()
     docs_root = Path("docs").resolve()
-    
+
     # Handle root docs directory files
     if file_path and not file_path.startswith("docs/"):
         # Check if it's a root level file like README.md or CHANGELOG.md
@@ -472,16 +448,16 @@ async def serve_doc_file(file_path: str):
             except Exception as e:
                 logger.error(f"Error reading doc file: {e}")
                 raise HTTPException(status_code=404, detail="Documentation file not found")
-    
+
     # Handle docs directory files
     full_path = docs_root / safe_path
-    
+
     # Ensure the path is within docs directory
     try:
         full_path.relative_to(docs_root)
     except ValueError:
         raise HTTPException(status_code=403, detail="Access denied")
-    
+
     if full_path.exists() and full_path.is_file():
         try:
             with open(full_path, encoding="utf-8") as f:
@@ -1065,10 +1041,10 @@ async def monitoring_summary():
     """Get monitoring metrics summary"""
     # Collect system metrics
     await metrics_collector.collect_system_metrics()
-    
+
     # Get summary
     summary = metrics_collector.get_metrics_summary()
-    
+
     # Add request stats
     if request_tracker.request_history:
         recent_requests = list(request_tracker.request_history)[-100:]
@@ -1078,7 +1054,7 @@ async def monitoring_summary():
             "recent_count": len(recent_requests),
             "average_duration_ms": avg_duration
         }
-    
+
     return summary
 
 
@@ -1087,13 +1063,13 @@ async def monitoring_summary():
 async def run_security_audit(_: str = Depends(verify_api_key)):
     """Run comprehensive security audit"""
     auditor = get_security_auditor()
-    
+
     # Run audit
     results = await auditor.run_full_audit()
-    
+
     # Generate report
     report = auditor.generate_audit_report(results)
-    
+
     return report
 
 

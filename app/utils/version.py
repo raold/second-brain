@@ -3,14 +3,13 @@ Version information utility for Second Brain
 """
 
 import os
-from typing import Dict, Any
-from typing import Dict
 from typing import Any
 
-def get_version_info() -> Dict[str, Any]:
+
+def get_version_info() -> dict[str, Any]:
     """
     Get version information for the application
-    
+
     Returns:
         Dictionary containing version information
     """

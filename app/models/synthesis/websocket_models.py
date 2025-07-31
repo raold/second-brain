@@ -7,7 +7,7 @@ subscriptions, and connection management.
 
 from datetime import datetime
 from enum import Enum, IntEnum
-from typing import Any, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -18,7 +18,7 @@ class EventPriority(IntEnum):
     MEDIUM = 2
     HIGH = 3
     CRITICAL = 4
-    
+
     @property
     def value_str(self):
         """Get string representation for backwards compatibility"""
@@ -28,15 +28,15 @@ class EventPriority(IntEnum):
 class BroadcastMessage(BaseModel):
     """Message to broadcast via websocket"""
     event_type: str
-    
+
     # Support both field names for compatibility
-    payload: Optional[Any] = None
-    data: Optional[Any] = None
-    
-    broadcast_to: Optional[List[str]] = Field(None, description="List of user IDs to broadcast to")
+    payload: Any | None = None
+    data: Any | None = None
+
+    broadcast_to: list[str] | None = Field(None, description="List of user IDs to broadcast to")
     priority: EventPriority = Field(default=EventPriority.MEDIUM)
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    
+
     @field_validator('data', mode='before')
     def set_payload_from_data(cls, v, info):
         """Support data field as alias for payload"""
@@ -118,22 +118,22 @@ class WebSocketEvent(BaseModel):
     """Base event model for WebSocket messages."""
 
     id: str = Field(..., description="Unique event ID")
-    type: Optional[str] = Field(None, description="Event type")
-    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    type: str | None = Field(None, description="Event type")
+    created_at: datetime | None = Field(None, description="Creation timestamp")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Event timestamp")
 
     # Event data
-    resource_type: Optional[str] = Field(None, description="Type of resource (memory, report, etc.)")
-    resource_id: Optional[str] = Field(None, description="ID of the resource")
-    user_id: Optional[str] = Field(None, description="User who triggered the event")
+    resource_type: str | None = Field(None, description="Type of resource (memory, report, etc.)")
+    resource_id: str | None = Field(None, description="ID of the resource")
+    user_id: str | None = Field(None, description="User who triggered the event")
 
     # Payload
-    payload: Optional[dict[str, Any]] = Field(None, description="Event payload for tests")
+    payload: dict[str, Any] | None = Field(None, description="Event payload for tests")
     data: dict[str, Any] = Field(default_factory=dict, description="Event-specific data")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     # Routing
-    channel: Optional[str] = Field(None, description="Channel for routing")
+    channel: str | None = Field(None, description="Channel for routing")
     broadcast: bool = Field(False, description="Whether to broadcast to all users")
     target_users: list[str] = Field(default_factory=list, description="Specific users to notify")
 
@@ -142,31 +142,31 @@ class WebSocketMessage(BaseModel):
     """Message format for WebSocket communication."""
 
     type: str = Field(..., description="Message type: event, request, response, error")
-    id: Optional[str] = Field(None, description="Message ID for request/response matching")
+    id: str | None = Field(None, description="Message ID for request/response matching")
 
     # Content
-    event: Optional[WebSocketEvent] = Field(None, description="Event data (for event messages)")
-    action: Optional[str] = Field(None, description="Action to perform (for requests)")
-    payload: Optional[dict[str, Any]] = Field(None, description="Message payload")
+    event: WebSocketEvent | None = Field(None, description="Event data (for event messages)")
+    action: str | None = Field(None, description="Action to perform (for requests)")
+    payload: dict[str, Any] | None = Field(None, description="Message payload")
 
     # Response data
-    success: Optional[bool] = Field(None, description="Success status (for responses)")
-    error: Optional[str] = Field(None, description="Error message (for error messages)")
-    error_code: Optional[str] = Field(None, description="Error code")
+    success: bool | None = Field(None, description="Success status (for responses)")
+    error: str | None = Field(None, description="Error message (for error messages)")
+    error_code: str | None = Field(None, description="Error code")
 
     # Metadata
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    correlation_id: Optional[str] = Field(None, description="For request/response correlation")
+    correlation_id: str | None = Field(None, description="For request/response correlation")
 
 
 class SubscriptionRequest(BaseModel):
     """Request to subscribe to specific events."""
-    
+
     # Fields expected by tests
-    client_id: Optional[str] = Field(None, description="Client ID")
+    client_id: str | None = Field(None, description="Client ID")
     event_types: list[str] = Field(..., description="Event types to subscribe to")
-    filters: Optional[dict[str, Any]] = Field(None, description="Subscription filters")
-    
+    filters: dict[str, Any] | None = Field(None, description="Subscription filters")
+
     # Original fields
     action: str = Field("subscribe", description="Action: subscribe or unsubscribe")
     channels: list[str] = Field(default_factory=list, description="Specific channels")
@@ -197,12 +197,12 @@ class EventSubscription(BaseModel):
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    last_event_at: Optional[datetime] = Field(None, description="Last event delivered")
+    last_event_at: datetime | None = Field(None, description="Last event delivered")
     events_delivered: int = Field(0, description="Total events delivered")
 
     # Status
     active: bool = Field(True, description="Whether subscription is active")
-    paused_at: Optional[datetime] = Field(None, description="When subscription was paused")
+    paused_at: datetime | None = Field(None, description="When subscription was paused")
 
 
 class ConnectionInfo(BaseModel):
@@ -214,12 +214,12 @@ class ConnectionInfo(BaseModel):
     # Connection details
     status: ConnectionStatusEnum = Field(..., description="Connection status")
     connected_at: datetime = Field(default_factory=datetime.utcnow)
-    last_ping: Optional[datetime] = Field(None, description="Last ping received")
+    last_ping: datetime | None = Field(None, description="Last ping received")
 
     # Client info
-    client_version: Optional[str] = Field(None, description="Client version")
-    user_agent: Optional[str] = Field(None, description="User agent string")
-    ip_address: Optional[str] = Field(None, description="Client IP address")
+    client_version: str | None = Field(None, description="Client version")
+    user_agent: str | None = Field(None, description="User agent string")
+    ip_address: str | None = Field(None, description="Client IP address")
 
     # Subscriptions
     subscriptions: list[EventSubscription] = Field(
@@ -235,7 +235,7 @@ class ConnectionInfo(BaseModel):
 
     # Rate limiting
     rate_limit_remaining: int = Field(100, description="Remaining rate limit")
-    rate_limit_reset: Optional[datetime] = Field(None, description="Rate limit reset time")
+    rate_limit_reset: datetime | None = Field(None, description="Rate limit reset time")
 
 
 class EventBatch(BaseModel):
@@ -282,7 +282,7 @@ class BroadcastRequest(BaseModel):
 
     # Options
     require_acknowledgment: bool = Field(False, description="Require client acknowledgment")
-    ttl_seconds: Optional[int] = Field(None, description="Message TTL")
+    ttl_seconds: int | None = Field(None, description="Message TTL")
     priority: str = Field("normal", description="Delivery priority: low, normal, high")
 
     @field_validator('broadcast_type')
@@ -335,10 +335,10 @@ class SystemNotification(BaseModel):
     message: str
     notification_type: str  # "info", "warning", "error", "success"
     priority: EventPriority = Field(default=EventPriority.MEDIUM)
-    target_users: Optional[list[str]] = None  # None means all users
-    expires_at: Optional[datetime] = None
-    action_url: Optional[str] = None
-    action_label: Optional[str] = None
+    target_users: list[str] | None = None  # None means all users
+    expires_at: datetime | None = None
+    action_url: str | None = None
+    action_label: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -348,6 +348,6 @@ class ConnectionStatus(BaseModel):
     """Connection status tracking (test compatibility)"""
     client_id: str
     connected: bool
-    connected_at: Optional[datetime] = None
-    last_ping: Optional[datetime] = None
-    subscriptions: List[str] = Field(default_factory=list)
+    connected_at: datetime | None = None
+    last_ping: datetime | None = None
+    subscriptions: list[str] = Field(default_factory=list)

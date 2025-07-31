@@ -14,12 +14,6 @@ from typing import Any
 from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
-from typing import Any
-from fastapi import HTTPException
-from datetime import datetime
-from datetime import timedelta
-from dataclasses import dataclass
-from collections import defaultdict
 
 
 @dataclass
@@ -298,9 +292,9 @@ class InputValidator:
         # Remove null bytes
         text = text.replace("\x00", "")
 
-        # Remove control characters except newlines and tabs  
+        # Remove control characters except newlines and tabs
         text = "".join(char for char in text if ord(char) >= 32 or char in "\n\t")
-        
+
         # Normalize multiple spaces (but preserve newlines and tabs)
         import re
         text = re.sub(r' +', ' ', text)

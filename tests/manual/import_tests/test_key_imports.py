@@ -4,7 +4,6 @@ Test key imports that are most likely to have issues
 """
 
 import sys
-import os
 
 # Add the project root to sys.path
 sys.path.insert(0, '/Users/dro/Documents/second-brain')
@@ -24,9 +23,9 @@ def main():
     """Test critical imports"""
     print("Testing critical imports...")
     print("=" * 60)
-    
+
     failed_imports = []
-    
+
     # Test key modules
     tests = [
         ("app.app", "Main FastAPI app"),
@@ -38,16 +37,16 @@ def main():
         ("app.database", "Database module"),
         ("app.config", "Configuration"),
     ]
-    
+
     for module_name, description in tests:
         if not test_import(module_name, description):
             failed_imports.append(module_name)
-    
+
     print("\n" + "=" * 60)
     print(f"Results: {len(tests) - len(failed_imports)}/{len(tests)} imports successful")
-    
+
     if failed_imports:
-        print(f"\nFailed imports:")
+        print("\nFailed imports:")
         for module in failed_imports:
             print(f"  - {module}")
         return 1

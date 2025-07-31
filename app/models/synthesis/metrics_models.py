@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -24,16 +24,16 @@ class ConnectivityMetrics(BaseModel):
     node_connectivity: int = Field(default=0, ge=0)
     num_bridges: int = Field(default=0, ge=0)
     num_articulation_points: int = Field(default=0, ge=0)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class TemporalMetrics(BaseModel):
     """Temporal metrics for memory creation patterns"""
     growth_rate: float = Field(default=0.0)  # memories per day
     recent_activity_score: float = Field(default=0.0, ge=0, le=1)
-    temporal_clusters: List[Dict[str, Any]] = Field(default_factory=list)
-    activity_periods: List[str] = Field(default_factory=list)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    temporal_clusters: list[dict[str, Any]] = Field(default_factory=list)
+    activity_periods: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class KnowledgeCluster(BaseModel):
@@ -42,20 +42,20 @@ class KnowledgeCluster(BaseModel):
     cluster_theme: str
     size: int = Field(ge=1)
     density: float = Field(ge=0, le=1)
-    central_nodes: List[UUID]
-    member_nodes: List[UUID]
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    central_nodes: list[UUID]
+    member_nodes: list[UUID]
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ClusterMetrics(BaseModel):
     """Metrics for knowledge clusters"""
-    clusters: List[KnowledgeCluster] = Field(default_factory=list)
+    clusters: list[KnowledgeCluster] = Field(default_factory=list)
     modularity: float = Field(default=0.0, ge=-1, le=1)
     num_clusters: int = Field(default=0, ge=0)
     largest_cluster_size: int = Field(default=0, ge=0)
     avg_cluster_size: float = Field(default=0.0, ge=0)
     inter_cluster_connections: int = Field(default=0, ge=0)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class GraphMetrics(BaseModel):
@@ -65,16 +65,16 @@ class GraphMetrics(BaseModel):
     graph_density: float = Field(default=0.0, ge=0, le=1)
     average_degree: float = Field(default=0.0, ge=0)
     clustering_coefficient: float = Field(default=0.0, ge=0, le=1)
-    node_metrics: Dict[str, NodeMetrics] = Field(default_factory=dict)
-    connectivity_metrics: Optional[ConnectivityMetrics] = None
-    temporal_metrics: Optional[TemporalMetrics] = None
+    node_metrics: dict[str, NodeMetrics] = Field(default_factory=dict)
+    connectivity_metrics: ConnectivityMetrics | None = None
+    temporal_metrics: TemporalMetrics | None = None
     health_score: float = Field(default=0.0, ge=0, le=1)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class MetricsReport(BaseModel):
     graph_metrics: GraphMetrics
-    top_nodes: List[NodeMetrics] = Field(default_factory=list)
+    top_nodes: list[NodeMetrics] = Field(default_factory=list)
     generated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -86,24 +86,24 @@ class MetricsAlert(BaseModel):
     severity: str = Field(default="info")  # "low", "medium", "high"
     current_value: float
     actual_value: float = Field(default=0.0)  # Alias for compatibility
-    previous_value: Optional[float] = None
-    change_percentage: Optional[float] = None
-    threshold: Optional[float] = None
-    threshold_value: Optional[float] = None  # Alias for compatibility
+    previous_value: float | None = None
+    change_percentage: float | None = None
+    threshold: float | None = None
+    threshold_value: float | None = None  # Alias for compatibility
     message: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     created_at: datetime = Field(default_factory=datetime.utcnow)  # Alias
-    resolved_at: Optional[datetime] = None
+    resolved_at: datetime | None = None
 
 
 class MetricsTrend(BaseModel):
     """Trend data for a metric over time"""
     metric_name: str
-    time_points: List[datetime]
-    values: List[float]
+    time_points: list[datetime]
+    values: list[float]
     trend_direction: str = Field(default="stable")  # "increasing", "decreasing", "stable"
     change_rate: float = Field(default=0.0)
-    forecast: Optional[List[float]] = None
+    forecast: list[float] | None = None
 
 
 class MetricsSnapshot(BaseModel):
@@ -112,10 +112,10 @@ class MetricsSnapshot(BaseModel):
     user_id: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     graph_metrics: GraphMetrics
-    memory_metrics: Dict[str, Any] = Field(default_factory=dict)
-    performance_metrics: Dict[str, Any] = Field(default_factory=dict)
-    usage_metrics: Dict[str, Any] = Field(default_factory=dict)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    memory_metrics: dict[str, Any] = Field(default_factory=dict)
+    performance_metrics: dict[str, Any] = Field(default_factory=dict)
+    usage_metrics: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class MetricsDashboard(BaseModel):
@@ -123,20 +123,20 @@ class MetricsDashboard(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     user_id: str
     name: str
-    description: Optional[str] = None
-    widgets: List[Dict[str, Any]] = Field(default_factory=list)
-    layout: Dict[str, Any] = Field(default_factory=dict)
+    description: str | None = None
+    widgets: list[dict[str, Any]] = Field(default_factory=list)
+    layout: dict[str, Any] = Field(default_factory=dict)
     refresh_interval: int = Field(default=60, gt=0)  # seconds
-    snapshots: List[MetricsSnapshot] = Field(default_factory=list)
-    alerts: List[MetricsAlert] = Field(default_factory=list)
+    snapshots: list[MetricsSnapshot] = Field(default_factory=list)
+    alerts: list[MetricsAlert] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class MetricsRequest(BaseModel):
     """Request for graph metrics calculation"""
-    memory_ids: Optional[List[UUID]] = None
+    memory_ids: list[UUID] | None = None
     include_relationships: bool = Field(default=True)
     include_temporal: bool = Field(default=True)
-    time_window_days: Optional[int] = None
-    user_id: Optional[str] = None
+    time_window_days: int | None = None
+    user_id: str | None = None

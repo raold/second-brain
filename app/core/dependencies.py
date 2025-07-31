@@ -3,14 +3,12 @@ Centralized Dependency Injection Container
 Implements the Service Factory pattern for clean, testable dependency management
 """
 
-from typing import Any, Dict, Optional, TypeVar, Callable
+from collections.abc import Callable
 from functools import lru_cache
+from typing import Any, TypeVar
+
 from app.utils.logging_config import get_logger
-from typing import Callable
-from typing import TypeVar
-from typing import Optional
-from typing import Dict
-from typing import Any
+
 logger = get_logger(__name__)
 
 T = TypeVar('T')
@@ -18,48 +16,48 @@ T = TypeVar('T')
 
 class DependencyContainer:
     """Centralized container for managing service dependencies"""
-    
+
     def __init__(self):
-        self._services: Dict[str, Any] = {}
-        self._factories: Dict[str, Callable] = {}
-        self._singletons: Dict[str, Any] = {}
-        
+        self._services: dict[str, Any] = {}
+        self._factories: dict[str, Callable] = {}
+        self._singletons: dict[str, Any] = {}
+
     def register_factory(self, service_name: str, factory: Callable) -> None:
         """Register a factory function for a service"""
         self._factories[service_name] = factory
         logger.debug(f"Registered factory for {service_name}")
-    
+
     def register_singleton(self, service_name: str, instance: Any) -> None:
         """Register a singleton instance"""
         self._singletons[service_name] = instance
         logger.debug(f"Registered singleton for {service_name}")
-    
+
     def get_service(self, service_name: str) -> Any:
         """Get a service instance"""
         # Check if it's a registered singleton
         if service_name in self._singletons:
             return self._singletons[service_name]
-        
+
         # Check if it's in the services cache
         if service_name in self._services:
             return self._services[service_name]
-        
+
         # Create from factory
         if service_name in self._factories:
             service = self._factories[service_name]()
             self._services[service_name] = service
             logger.debug(f"Created service instance for {service_name}")
             return service
-        
+
         raise ValueError(f"No factory or instance registered for service: {service_name}")
-    
+
     def clear_cache(self) -> None:
         """Clear all cached service instances (including singletons for testing)"""
         self._services.clear()
         # Also clear singletons for testing purposes
         self._singletons.clear()
         logger.debug("Cleared service cache")
-    
+
     def reset(self) -> None:
         """Reset the entire container"""
         self._services.clear()
@@ -81,9 +79,10 @@ def get_container() -> DependencyContainer:
 @lru_cache(maxsize=1)
 def get_database():
     """Get database instance (cached)"""
-    from app.database import get_database as _get_database
     import asyncio
-    
+
+    from app.database import get_database as _get_database
+
     # Handle async database initialization in sync context
     try:
         loop = asyncio.get_event_loop()
@@ -214,10 +213,10 @@ def get_metrics_collector_dep():
 def initialize_dependencies():
     """Initialize the dependency container with default services"""
     logger.info("Initializing dependency injection container")
-    
+
     # The get_* functions handle their own registration, so no need to pre-register
     # This avoids circular dependency issues
-    
+
     logger.info("Dependency injection container initialized")
 
 

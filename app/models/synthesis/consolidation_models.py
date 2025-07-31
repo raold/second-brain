@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -25,26 +25,26 @@ class MergeStrategy(str, Enum):
 
 
 class ConsolidationRequest(BaseModel):
-    memory_ids: Optional[List[UUID]] = None
+    memory_ids: list[UUID] | None = None
     similarity_threshold: float = Field(default=0.85, ge=0, le=1)
     auto_merge: bool = Field(default=False)
-    merge_strategy: Optional[MergeStrategy] = None
+    merge_strategy: MergeStrategy | None = None
     include_metadata: bool = Field(default=True)
-    options: Dict[str, Any] = Field(default_factory=dict)
+    options: dict[str, Any] = Field(default_factory=dict)
 
 
 class ConsolidationResult(BaseModel):
-    kept_memory_id: Optional[UUID] = None
-    removed_memory_ids: List[UUID] = Field(default_factory=list)
-    new_content: Optional[str] = None
-    merge_metadata: Dict[str, Any] = Field(default_factory=dict)
+    kept_memory_id: UUID | None = None
+    removed_memory_ids: list[UUID] = Field(default_factory=list)
+    new_content: str | None = None
+    merge_metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class ConsolidationStatus(BaseModel):
     status: str
     progress: float = Field(default=0.0, ge=0, le=1)
-    message: Optional[str] = None
+    message: str | None = None
 
 
 class ConsolidatedMemory(BaseModel):
@@ -52,17 +52,17 @@ class ConsolidatedMemory(BaseModel):
     id: UUID
     title: str
     content: str
-    original_memory_ids: List[UUID]
+    original_memory_ids: list[UUID]
     consolidation_strategy: ConsolidationStrategy
     importance_score: float = Field(ge=0, le=1)
     quality_score: float = Field(ge=0, le=1)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class ConsolidationCandidate(BaseModel):
     """Candidate memories for consolidation"""
-    memory_ids: List[UUID]
+    memory_ids: list[UUID]
     similarity_score: float = Field(ge=0, le=1)
     reason: str
     suggested_strategy: ConsolidationStrategy
@@ -74,7 +74,7 @@ class ConsolidationPreview(BaseModel):
     candidate: ConsolidationCandidate
     preview_content: str
     estimated_reduction: float = Field(ge=0, le=1)
-    quality_assessment: Dict[str, Any]
+    quality_assessment: dict[str, Any]
 
 
 class QualityAssessment(BaseModel):
@@ -83,15 +83,15 @@ class QualityAssessment(BaseModel):
     completeness_score: float = Field(ge=0, le=1)
     accuracy_score: float = Field(ge=0, le=1)
     overall_score: float = Field(ge=0, le=1)
-    issues: List[str] = Field(default_factory=list)
-    recommendations: List[str] = Field(default_factory=list)
+    issues: list[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
 
 
 class DuplicateGroup(BaseModel):
     """Group of duplicate or similar memories"""
-    memory_ids: List[UUID]
+    memory_ids: list[UUID]
     similarity_score: float = Field(ge=0, le=1)
     duplicate_type: str  # "exact", "near_duplicate", "similar"
-    group_summary: Optional[str] = None
-    suggested_action: Optional[MergeStrategy] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    group_summary: str | None = None
+    suggested_action: MergeStrategy | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)

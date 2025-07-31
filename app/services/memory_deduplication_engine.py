@@ -16,13 +16,6 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from app.database import get_database
-from typing import Any
-from datetime import datetime
-from enum import Enum
-from dataclasses import dataclass
-from collections import defaultdict
-from pydantic import BaseModel
-from pydantic import Field
 
 
 class SimilarityMethod(str, Enum):

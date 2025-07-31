@@ -10,11 +10,6 @@ from uuid import uuid4
 import numpy as np
 
 from .models import GapAnalysisRequest, KnowledgeGap
-from typing import Any
-from fastapi import Query
-from datetime import datetime
-from datetime import timedelta
-from collections import defaultdict
 
 
 class KnowledgeGapDetector:

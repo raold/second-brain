@@ -2,37 +2,23 @@
 API routes for advanced analysis features including domain classification
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Any
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
-from app.utils.logging_config import get_logger
-from app.shared import verify_api_key
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+
 from app.dependencies import get_current_user, get_db_instance
-from app.database import get_database
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from fastapi import Query
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import APIRouter
-from datetime import datetime
-from datetime import timedelta
-from collections import Counter
-from collections import defaultdict
-from pydantic import BaseModel
-from pydantic import Field
+from app.shared import verify_api_key
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 # Import missing services and dependencies
 try:
-    from app.services.memory_service import MemoryService
-    from app.services.topic_classifier import TopicClassifier
-    from app.services.structured_data_extractor import StructuredDataExtractor
     from app.services.domain_classifier import DomainClassifier
+    from app.services.memory_service import MemoryService
+    from app.services.structured_data_extractor import StructuredDataExtractor
+    from app.services.topic_classifier import TopicClassifier
 except ImportError as e:
     logger.warning(f"Could not import services: {e}")
     # Stub classes for missing services
@@ -41,10 +27,10 @@ except ImportError as e:
         def extract_topics(self, content): return []
         def extract_advanced_topics(self, content): return []
         def get_topic_statistics(self, topics): return {}
-    
+
     class StructuredDataExtractor:
         def __init__(self): pass
-        def extract_structured_data(self, content): 
+        def extract_structured_data(self, content):
             return type('obj', (object,), {
                 'key_value_pairs': {},
                 'lists': [],
@@ -55,13 +41,13 @@ except ImportError as e:
         def extract_advanced_structured_data(self, content):
             return self.extract_structured_data(content)
         def get_extraction_statistics(self, data): return {}
-    
+
     class DomainClassifier:
         def __init__(self, **kwargs): pass
-        def classify_domain(self, content, **kwargs): 
+        def classify_domain(self, content, **kwargs):
             return {"domains": [], "confidence_scores": {}}
         def get_domain_statistics(self, domains): return {}
-    
+
     class MemoryService:
         def __init__(self, db): pass
         async def get_memory(self, memory_id, user_id): return None

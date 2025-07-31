@@ -7,7 +7,7 @@ templates, and scheduling options.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator
@@ -15,10 +15,10 @@ from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 class KnowledgeMapReport(BaseModel):
     """Report containing knowledge map visualization data"""
-    nodes: List[Dict[str, Any]] = Field(default_factory=list)
-    edges: List[Dict[str, Any]] = Field(default_factory=list)
-    clusters: List[Dict[str, Any]] = Field(default_factory=list)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    nodes: list[dict[str, Any]] = Field(default_factory=list)
+    edges: list[dict[str, Any]] = Field(default_factory=list)
+    clusters: list[dict[str, Any]] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     generated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -59,20 +59,20 @@ class ReportSection(BaseModel):
     content: str = Field(..., description="Section content")
     order: int = Field(1, description="Display order")
     include_visualization: bool = Field(False, description="Include charts/graphs")
-    visualization_type: Optional[str] = Field(None, description="Type of visualization")
+    visualization_type: str | None = Field(None, description="Type of visualization")
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ReportTemplate(BaseModel):
     """Reusable report template."""
 
-    id: Optional[str] = Field(None, description="Template ID")
+    id: str | None = Field(None, description="Template ID")
     name: str = Field(..., description="Template name")
-    description: Optional[str] = Field(None, description="Template description")
+    description: str | None = Field(None, description="Template description")
     report_type: ReportType = Field(..., description="Type of report")
     sections: list[str] = Field(..., description="Section identifiers to include")
     default_format: ReportFormat = Field(ReportFormat.PDF)
-    custom_css: Optional[str] = Field(None, description="Custom styling for HTML/PDF")
+    custom_css: str | None = Field(None, description="Custom styling for HTML/PDF")
     include_summary: bool = Field(True, description="Include AI-generated summary")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -83,12 +83,12 @@ class ReportConfig(BaseModel):
 
     report_type: ReportType = Field(..., description="Type of report to generate")
     format: ReportFormat = Field(ReportFormat.PDF, description="Output format")
-    template_id: Optional[str] = Field(None, description="Template to use")
+    template_id: str | None = Field(None, description="Template to use")
 
     # Time range configuration
-    start_date: Optional[datetime] = Field(None, description="Report start date")
-    end_date: Optional[datetime] = Field(None, description="Report end date")
-    relative_timeframe: Optional[str] = Field(
+    start_date: datetime | None = Field(None, description="Report start date")
+    end_date: datetime | None = Field(None, description="Report end date")
+    relative_timeframe: str | None = Field(
         None,
         description="Relative timeframe (e.g., 'last_7_days', 'last_month')"
     )
@@ -106,7 +106,7 @@ class ReportConfig(BaseModel):
 
     # Delivery configuration
     email_recipients: list[str] = Field(default_factory=list, description="Email recipients")
-    webhook_url: Optional[HttpUrl] = Field(None, description="Webhook for delivery")
+    webhook_url: HttpUrl | None = Field(None, description="Webhook for delivery")
 
     @field_validator('relative_timeframe')
     def validate_timeframe(cls, v):
@@ -123,23 +123,23 @@ class ReportConfig(BaseModel):
 
 class ReportSchedule(BaseModel):
     """Schedule configuration for automated reports."""
-    
+
     # Fields expected by tests
-    schedule_id: Optional[str] = Field(None, description="Schedule ID")
+    schedule_id: str | None = Field(None, description="Schedule ID")
     report_type: ReportType = Field(..., description="Type of report")
     is_active: bool = Field(True, description="Whether schedule is active")
-    last_run: Optional[datetime] = Field(None, description="Last run time")
-    next_run: Optional[datetime] = Field(None, description="Next scheduled run")
-    
+    last_run: datetime | None = Field(None, description="Last run time")
+    next_run: datetime | None = Field(None, description="Next scheduled run")
+
     # Original fields
-    id: Optional[str] = Field(None, description="Schedule ID (legacy)")
-    name: Optional[str] = Field(None, description="Schedule name")
-    config: Optional[ReportConfig] = Field(None, description="Report configuration")
+    id: str | None = Field(None, description="Schedule ID (legacy)")
+    name: str | None = Field(None, description="Schedule name")
+    config: ReportConfig | None = Field(None, description="Report configuration")
     enabled: bool = Field(True, description="Whether schedule is active")
     cron_expression: str = Field(..., description="Cron expression for scheduling")
     timezone: str = Field("UTC", description="Timezone for schedule")
     auto_deliver: bool = Field(True, description="Automatically deliver reports")
-    delivery_format: Optional[ReportFormat] = Field(None, description="Delivery format")
+    delivery_format: ReportFormat | None = Field(None, description="Delivery format")
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -156,17 +156,17 @@ class ReportSchedule(BaseModel):
 
 class ReportRequest(BaseModel):
     """Request to generate a report."""
-    
+
     # Fields expected by tests
     report_type: ReportType = Field(..., description="Type of report")
     format: ReportFormat = Field(ReportFormat.MARKDOWN, description="Output format")
-    user_id: Optional[str] = Field(None, description="User ID")
-    
+    user_id: str | None = Field(None, description="User ID")
+
     # Original fields
-    config: Optional[ReportConfig] = Field(None, description="Report configuration")
+    config: ReportConfig | None = Field(None, description="Report configuration")
     immediate: bool = Field(True, description="Generate immediately")
     priority: str = Field("normal", description="Priority: low, normal, high")
-    callback_url: Optional[HttpUrl] = Field(
+    callback_url: HttpUrl | None = Field(
         None,
         description="URL to call when report is ready"
     )
@@ -181,7 +181,7 @@ class ReportMetrics(BaseModel):
 
     # Activity metrics
     active_days: int = Field(0, description="Days with activity")
-    peak_activity_time: Optional[str] = Field(None, description="Most active time")
+    peak_activity_time: str | None = Field(None, description="Most active time")
     average_daily_memories: float = Field(0.0, description="Average memories per day")
 
     # Knowledge metrics
@@ -202,38 +202,38 @@ class ReportMetrics(BaseModel):
 
 class ReportResponse(BaseModel):
     """Response containing generated report."""
-    
+
     # Fields expected by tests
     report_id: str = Field(..., description="Report ID")
     report_type: ReportType = Field(..., description="Type of report")
     format: ReportFormat = Field(..., description="Report format")
     sections: list[ReportSection] = Field(default_factory=list, description="Report sections")
-    
+
     # Original fields
-    id: Optional[str] = Field(None, description="Report ID (legacy)")
-    config: Optional[ReportConfig] = Field(None, description="Configuration used")
-    title: Optional[str] = Field(None, description="Report title")
-    summary: Optional[str] = Field(None, description="Executive summary")
-    metrics: Optional[ReportMetrics] = Field(None, description="Report metrics")
+    id: str | None = Field(None, description="Report ID (legacy)")
+    config: ReportConfig | None = Field(None, description="Configuration used")
+    title: str | None = Field(None, description="Report title")
+    summary: str | None = Field(None, description="Executive summary")
+    metrics: ReportMetrics | None = Field(None, description="Report metrics")
     generated_at: datetime = Field(default_factory=datetime.utcnow)
-    generation_time_ms: Optional[int] = Field(None, description="Generation time in milliseconds")
-    content: Optional[str] = Field(None, description="Report content (for text formats)")
-    file_url: Optional[HttpUrl] = Field(None, description="Download URL (for file formats)")
-    file_size_bytes: Optional[int] = Field(None, description="File size in bytes")
+    generation_time_ms: int | None = Field(None, description="Generation time in milliseconds")
+    content: str | None = Field(None, description="Report content (for text formats)")
+    file_url: HttpUrl | None = Field(None, description="Download URL (for file formats)")
+    file_size_bytes: int | None = Field(None, description="File size in bytes")
 
     # Delivery status
     delivered: bool = Field(False, description="Whether report was delivered")
-    delivery_status: Optional[str] = Field(None, description="Delivery status message")
+    delivery_status: str | None = Field(None, description="Delivery status message")
 
 
 class ReportFilter(BaseModel):
     """Filters for querying reports."""
 
-    report_type: Optional[ReportType] = Field(None, description="Filter by type")
-    format: Optional[ReportFormat] = Field(None, description="Filter by format")
-    start_date: Optional[datetime] = Field(None, description="Reports after this date")
-    end_date: Optional[datetime] = Field(None, description="Reports before this date")
-    delivered: Optional[bool] = Field(None, description="Filter by delivery status")
+    report_type: ReportType | None = Field(None, description="Filter by type")
+    format: ReportFormat | None = Field(None, description="Filter by format")
+    start_date: datetime | None = Field(None, description="Reports after this date")
+    end_date: datetime | None = Field(None, description="Reports before this date")
+    delivered: bool | None = Field(None, description="Filter by delivery status")
     limit: int = Field(10, ge=1, le=100, description="Maximum results")
     offset: int = Field(0, ge=0, description="Offset for pagination")
 
@@ -244,12 +244,12 @@ class LearningPathReport(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     user_id: str
     title: str
-    current_progress: Dict[str, Any]
-    completed_topics: List[str] = Field(default_factory=list)
-    recommended_topics: List[str] = Field(default_factory=list)
+    current_progress: dict[str, Any]
+    completed_topics: list[str] = Field(default_factory=list)
+    recommended_topics: list[str] = Field(default_factory=list)
     learning_velocity: float = Field(ge=0)
-    estimated_completion: Optional[datetime] = None
-    milestones: List[Dict[str, Any]] = Field(default_factory=list)
+    estimated_completion: datetime | None = None
+    milestones: list[dict[str, Any]] = Field(default_factory=list)
     generated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -258,12 +258,12 @@ class ProgressReport(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     user_id: str
     title: str
-    time_period: Dict[str, datetime]
-    metrics: Dict[str, Any]
-    achievements: List[str] = Field(default_factory=list)
-    improvements: List[str] = Field(default_factory=list)
-    comparisons: Dict[str, Any] = Field(default_factory=dict)
-    visualizations: List[Dict[str, Any]] = Field(default_factory=list)
+    time_period: dict[str, datetime]
+    metrics: dict[str, Any]
+    achievements: list[str] = Field(default_factory=list)
+    improvements: list[str] = Field(default_factory=list)
+    comparisons: dict[str, Any] = Field(default_factory=dict)
+    visualizations: list[dict[str, Any]] = Field(default_factory=list)
     generated_at: datetime = Field(default_factory=datetime.utcnow)
 
 

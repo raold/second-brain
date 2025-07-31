@@ -17,10 +17,6 @@ from pathlib import Path
 from typing import Any
 
 from app.conversation_processor import get_conversation_processor
-from typing import Any
-from datetime import datetime
-from enum import Enum
-from dataclasses import dataclass
 
 
 class SessionState(Enum):
@@ -138,7 +134,6 @@ class SessionManager:
         session_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
 
         # Get current project state
-        dashboard = None
         dashboard_state = {}
 
         # Initialize momentum tracker
@@ -515,7 +510,7 @@ TO RESUME SEAMLESSLY:
 
             # Convert to dict for JSON serialization with enum handling
             session_dict = asdict(self.current_session)
-            
+
             # Convert enum to string value for JSON serialization
             if isinstance(session_dict.get('state'), SessionState):
                 session_dict['state'] = session_dict['state'].value
@@ -541,7 +536,7 @@ TO RESUME SEAMLESSLY:
 
         except Exception as e:
             print(f"Error saving session state: {e}")
-    
+
     def _json_serializer(self, obj):
         """Custom JSON serializer for complex objects"""
         if isinstance(obj, SessionState):
@@ -581,20 +576,20 @@ TO RESUME SEAMLESSLY:
         except Exception as e:
             print(f"Warning: Could not load last session: {e}")
             return None
-    
+
     def _deserialize_session_data(self, session_data: dict) -> dict:
         """Convert serialized session data back to proper types"""
         # Convert project_momentum dict back to ProjectMomentum object
         if isinstance(session_data.get('project_momentum'), dict):
             session_data['project_momentum'] = ProjectMomentum(**session_data['project_momentum'])
-        
+
         # Convert state string back to enum
         if isinstance(session_data.get('state'), str):
             try:
                 session_data['state'] = SessionState(session_data['state'])
             except ValueError:
                 session_data['state'] = SessionState.ACTIVE  # Default fallback
-        
+
         # Convert conversation_history dicts back to ConversationMessage objects
         if 'conversation_history' in session_data and isinstance(session_data['conversation_history'], list):
             converted_messages = []
@@ -609,7 +604,7 @@ TO RESUME SEAMLESSLY:
                 else:
                     converted_messages.append(msg)
             session_data['conversation_history'] = converted_messages
-        
+
         return session_data
 
     def generate_sync_hash(self) -> str:
@@ -683,7 +678,6 @@ TO RESUME SEAMLESSLY:
             momentum.current_focus = f"Last discussed: {last_message.semantic_summary}"
 
         # Update technical context
-        dashboard = None
         dashboard_summary = {}
         momentum.technical_context = f"Dashboard state at pause: {dashboard_summary['overall_health']['status']}"
 

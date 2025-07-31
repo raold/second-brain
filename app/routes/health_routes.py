@@ -2,9 +2,10 @@
 Health Routes - Simple health check endpoint.
 """
 
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Dict, Any
 
 from app.utils.logging_config import get_logger
 
@@ -15,7 +16,7 @@ class HealthResponse(BaseModel):
     """Health check response model"""
     status: str
     version: str
-    services: Dict[str, Any]
+    services: dict[str, Any]
 
 
 @router.get(

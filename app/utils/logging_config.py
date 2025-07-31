@@ -18,17 +18,14 @@ import traceback
 import uuid
 from contextvars import ContextVar
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from app.config import Config
-from typing import Optional
-from typing import Any
-from datetime import datetime
 
 # Context variables for request tracing
-request_id_var: ContextVar[Optional[str]] = ContextVar('request_id', default=None)
-user_id_var: ContextVar[Optional[str]] = ContextVar('user_id', default=None)
-operation_var: ContextVar[Optional[str]] = ContextVar('operation', default=None)
+request_id_var: ContextVar[str | None] = ContextVar('request_id', default=None)
+user_id_var: ContextVar[str | None] = ContextVar('user_id', default=None)
+operation_var: ContextVar[str | None] = ContextVar('operation', default=None)
 
 
 class StructuredFormatter(logging.Formatter):

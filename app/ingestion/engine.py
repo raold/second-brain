@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, BinaryIO, Optional, Union
+from typing import Any, BinaryIO, Union
 
 import aiofiles
 
@@ -20,12 +20,6 @@ from app.ingestion.core_extraction_pipeline import CoreExtractionPipeline
 from app.models.memory import Memory
 from app.repositories.memory_repository import MemoryRepository
 from app.utils.logger import get_logger
-from typing import Optional
-from typing import List
-from typing import Any
-from typing import Union
-from datetime import datetime
-from dataclasses import dataclass
 
 logger = get_logger(__name__)
 
@@ -39,7 +33,7 @@ class FileMetadata:
     hash: str
     created_at: datetime = field(default_factory=datetime.utcnow)
     source: str = "upload"  # upload, google_drive, dropbox, etc.
-    source_id: Optional[str] = None  # ID from external source
+    source_id: str | None = None  # ID from external source
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -63,7 +57,7 @@ class FileParser(ABC):
         pass
 
     @abstractmethod
-    def supports(self, mime_type: str, file_path: Optional[Path] = None) -> bool:
+    def supports(self, mime_type: str, file_path: Path | None = None) -> bool:
         """Check if parser supports given mime type or file extension"""
         pass
 
@@ -80,7 +74,7 @@ class TextFileParser(FileParser):
 
     async def parse(self, file_path: Path) -> dict[str, Any]:
         """Parse text file"""
-        async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
+        async with aiofiles.open(file_path, encoding='utf-8') as f:
             content = await f.read()
 
         return {
@@ -91,7 +85,7 @@ class TextFileParser(FileParser):
             }
         }
 
-    def supports(self, mime_type: str, file_path: Optional[Path] = None) -> bool:
+    def supports(self, mime_type: str, file_path: Path | None = None) -> bool:
         return mime_type in self.SUPPORTED_TYPES
 
 
@@ -103,22 +97,22 @@ class IngestionEngine:
     def __init__(
         self,
         memory_repository: MemoryRepository,
-        extraction_pipeline: Optional[CoreExtractionPipeline] = None,
-        temp_dir: Optional[Path] = None
+        extraction_pipeline: CoreExtractionPipeline | None = None,
+        temp_dir: Path | None = None
     ):
         self.memory_repository = memory_repository
         self.extraction_pipeline = extraction_pipeline or CoreExtractionPipeline()
-        
+
         # Use platform-appropriate temp directory
         if temp_dir:
             self.temp_dir = temp_dir
         else:
-            import tempfile
             import os
+            import tempfile
             # Use environment variable if set (for Docker), otherwise use system temp
             base_temp = os.environ.get('TEMP_DIR', tempfile.gettempdir())
             self.temp_dir = Path(base_temp) / "secondbrain" / "ingestion"
-        
+
         self.temp_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize parsers
@@ -147,15 +141,15 @@ class IngestionEngine:
                     logger.warning(f"Could not load {parser_class.__name__}: {e}")
         except ImportError:
             logger.warning("Additional parsers not available")
-        
+
         # Add multimedia parsers
         try:
             from app.ingestion.multimedia_parsers import (
                 AudioParser,
-                VideoParser,
                 SubtitleParser,
+                VideoParser,
             )
-            
+
             for parser_class in [AudioParser, VideoParser, SubtitleParser]:
                 try:
                     self.parsers.append(parser_class())
@@ -174,8 +168,8 @@ class IngestionEngine:
         file: Union[BinaryIO, Path, str],
         filename: str,
         user_id: str,
-        tags: Optional[list[str]] = None,
-        metadata: Optional[dict[str, Any]] = None
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None
     ) -> IngestionResult:
         """
         Ingest a file into Second Brain
@@ -312,7 +306,7 @@ class IngestionEngine:
 
         # Add more validation as needed (file type restrictions, etc.)
 
-    def _get_parser(self, mime_type: str, file_path: Optional[Path] = None) -> Optional[FileParser]:
+    def _get_parser(self, mime_type: str, file_path: Path | None = None) -> FileParser | None:
         """Get appropriate parser for mime type or file extension"""
         for parser in self.parsers:
             if parser.supports(mime_type, file_path):
@@ -324,8 +318,8 @@ class IngestionEngine:
         content: str,
         user_id: str,
         filename: str,
-        tags: Optional[list[str]] = None,
-        metadata: Optional[dict[str, Any]] = None
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None
     ) -> list[Memory]:
         """Process content through NLP pipeline and create memories"""
         # Split content into chunks if needed
@@ -389,8 +383,8 @@ class IngestionEngine:
         file_id: str,
         user_id: str,
         drive_service: Any,  # Google Drive service instance
-        tags: Optional[list[str]] = None,
-        metadata: Optional[dict[str, Any]] = None
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None
     ) -> IngestionResult:
         """
         Ingest a file from Google Drive
@@ -405,26 +399,27 @@ class IngestionEngine:
         Returns:
             IngestionResult
         """
-        import tempfile
         import os
+        import tempfile
+
         from app.ingestion.google_drive_client import GoogleDriveClient
-        
+
         try:
             # Create Google Drive client with provided service
             drive_client = GoogleDriveClient()
             drive_client.service = drive_service
-            
+
             # Get file metadata
             file_info = await drive_client.get_file_info(file_id)
-            
+
             # Download file content
             file_content = await drive_client.download_file(file_id, file_info.name)
-            
+
             # Create temporary file for processing
             with tempfile.NamedTemporaryFile(suffix=Path(file_info.name).suffix, delete=False) as tmp_file:
                 tmp_file.write(file_content.getvalue())
                 tmp_path = Path(tmp_file.name)
-            
+
             try:
                 # Process the file using standard ingestion
                 result = await self.ingest_file(
@@ -440,14 +435,14 @@ class IngestionEngine:
                         'original_mime_type': file_info.mime_type
                     }
                 )
-                
+
                 logger.info(f"Successfully ingested Google Drive file: {file_info.name}")
                 return result
-                
+
             finally:
                 # Clean up temporary file
                 os.unlink(tmp_path)
-                
+
         except Exception as e:
             logger.error(f"Failed to ingest Google Drive file {file_id}: {e}")
             return IngestionResult(
@@ -467,7 +462,7 @@ class IngestionEngine:
         self,
         files: list[dict[str, Any]],
         user_id: str,
-        tags: Optional[list[str]] = None
+        tags: list[str] | None = None
     ) -> list[IngestionResult]:
         """
         Ingest multiple files in batch

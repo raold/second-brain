@@ -9,13 +9,12 @@ real problems and enhances developer experience without being overly clever.
 import asyncio
 import functools
 import inspect
-from app.utils.logging_config import get_logger
-from typing import Callable
-from typing import TypeVar
-from typing import Optional
-from typing import Any
-from typing import Union
 from collections import defaultdict
+from collections.abc import Callable
+from typing import Any, TypeVar, Union
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 T = TypeVar('T')
@@ -72,7 +71,7 @@ class RegistryMeta(type):
         return mcs._registries.get(registry_name, {}).copy()
 
     @classmethod
-    def get_class(mcs, registry_name: str, class_key: str) -> Optional[type]:
+    def get_class(mcs, registry_name: str, class_key: str) -> type | None:
         """Get specific class from registry."""
         return mcs._registries.get(registry_name, {}).get(class_key)
 
@@ -148,7 +147,7 @@ class SingletonMeta(type):
         if cls not in cls._instances:
             # For sync classes, we use a simple approach
             # In a real app, you might want threading.Lock instead
-            cls._instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super().__call__(*args, **kwargs)
 
         return cls._instances[cls]
 
@@ -159,7 +158,7 @@ class SingletonMeta(type):
         mcs._locks.clear()
 
     @classmethod
-    def get_instance(mcs, cls: type) -> Optional[Any]:
+    def get_instance(mcs, cls: type) -> Any | None:
         """Get singleton instance if it exists."""
         return mcs._instances.get(cls)
 
@@ -419,7 +418,7 @@ class ConfigMeta(type):
     def _add_config_loading(mcs, cls: type, env_var_support: bool) -> None:
         """Add configuration loading methods to the class."""
 
-        def load_config(self, config_dict: Optional[dict[str, Any]] = None) -> None:
+        def load_config(self, config_dict: dict[str, Any] | None = None) -> None:
             """Load configuration from dictionary and environment variables."""
             import os
 

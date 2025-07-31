@@ -4,13 +4,14 @@ Constructs and manages entity-relationship graphs from memories
 """
 
 import json
-from app.utils.logging_config import get_logger
-from typing import List
-from typing import Any
+from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from dataclasses import dataclass
-from collections import defaultdict
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 
@@ -348,7 +349,7 @@ class KnowledgeGraphBuilder:
         # Handle empty strings
         if not phrase or not phrase.strip():
             return False
-            
+
         # Simple heuristics
         words = phrase.lower().split()
 

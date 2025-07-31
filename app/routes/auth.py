@@ -1,4 +1,5 @@
-from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
+from app.dependencies.auth import get_current_user
+
 """
 Auth utilities for API routes
 """

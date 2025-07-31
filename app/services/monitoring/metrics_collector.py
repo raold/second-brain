@@ -10,15 +10,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Any
-from datetime import datetime
-from enum import Enum
-from dataclasses import dataclass
-from collections import defaultdict
 
 logger = get_logger(__name__)
 
@@ -88,11 +82,11 @@ class MetricsCollector:
     async def record_operation(
         self,
         operation: str,
-        duration_ms: Optional[float] = None,
-        memory_mb: Optional[float] = None,
-        user_id: Optional[str] = None,
+        duration_ms: float | None = None,
+        memory_mb: float | None = None,
+        user_id: str | None = None,
         success: bool = True,
-        labels: Optional[dict[str, str]] = None
+        labels: dict[str, str] | None = None
     ):
         """Record an operation metric."""
         base_labels = {"operation": operation}
@@ -148,7 +142,7 @@ class MetricsCollector:
         path: str,
         status_code: int,
         duration_ms: float,
-        user_id: Optional[str] = None
+        user_id: str | None = None
     ):
         """Record HTTP request metrics."""
         labels = {
@@ -175,8 +169,8 @@ class MetricsCollector:
         operation_type: str,
         memory_type: str,
         success: bool = True,
-        duration_ms: Optional[float] = None,
-        user_id: Optional[str] = None
+        duration_ms: float | None = None,
+        user_id: str | None = None
     ):
         """Record memory-specific operations."""
         labels = {
@@ -350,7 +344,7 @@ class MetricsCollector:
 
 
 # Global metrics collector instance
-_metrics_collector: Optional[MetricsCollector] = None
+_metrics_collector: MetricsCollector | None = None
 
 
 def get_metrics_collector() -> MetricsCollector:

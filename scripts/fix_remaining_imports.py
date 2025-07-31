@@ -3,13 +3,13 @@
 Fix remaining import issues based on common patterns
 """
 
-import os
 import re
 import subprocess
 
+
 def fix_missing_imports():
     """Fix remaining import issues"""
-    
+
     # Run docker logs to find errors
     print("Checking for import errors...")
     while True:
@@ -17,33 +17,33 @@ def fix_missing_imports():
         subprocess.run(["docker", "restart", "secondbrain-app"], capture_output=True)
         import time
         time.sleep(5)
-        
+
         # Get logs
         result = subprocess.run(
             ["docker", "logs", "secondbrain-app", "--tail", "50"],
             capture_output=True,
             text=True
         )
-        
+
         # Look for NameError in both stdout and stderr
         output = result.stdout + result.stderr
         error_match = re.search(r'NameError: name \'(\w+)\' is not defined', output)
         if not error_match:
             print("No more NameErrors found!")
             break
-            
+
         missing_name = error_match.group(1)
-        
+
         # Find the file with the error
         file_match = re.search(r'File "(/app/[^"]+)", line \d+', output)
         if not file_match:
             print(f"Could not find file for error: {missing_name}")
             break
-            
+
         error_file = file_match.group(1).replace('/app/', '/Users/dro/Documents/second-brain/')
-        
+
         print(f"\nFound missing import: {missing_name} in {error_file}")
-        
+
         # Common imports to try
         import_map = {
             # Typing imports
@@ -68,7 +68,7 @@ def fix_missing_imports():
             'Final': 'from typing import Final',
             'Literal': 'from typing import Literal',
             'ClassVar': 'from typing import ClassVar',
-            
+
             # Standard library
             'ABC': 'from abc import ABC',
             'abstractmethod': 'from abc import abstractmethod',
@@ -151,7 +151,7 @@ def fix_missing_imports():
             'cProfile': 'import cProfile',
             'timeit': 'import timeit',
             'time': 'import time',
-            
+
             # Third party
             'asyncpg': 'import asyncpg',
             'HTTPException': 'from fastapi import HTTPException',
@@ -192,7 +192,7 @@ def fix_missing_imports():
             'AnyHttpUrl': 'from pydantic import AnyHttpUrl',
             'PostgresDsn': 'from pydantic import PostgresDsn',
             'RedisDsn': 'from pydantic import RedisDsn',
-            
+
             # App specific - these might need adjustment based on actual module structure
             'MemoryType': 'from app.models.memory import MemoryType',
             'MemoryCreate': 'from app.models.memory import MemoryCreate',
@@ -214,36 +214,36 @@ def fix_missing_imports():
             'UnauthorizedException': 'from app.core.exceptions import UnauthorizedException',
             'ForbiddenException': 'from app.core.exceptions import ForbiddenException',
         }
-        
+
         if missing_name in import_map:
             import_line = import_map[missing_name]
-            
+
             # Read the file
             try:
-                with open(error_file, 'r') as f:
+                with open(error_file) as f:
                     content = f.read()
-                
+
                 # Check if import already exists
                 if import_line in content:
                     print(f"Import already exists: {import_line}")
                     continue
-                
+
                 # Add import after other imports
                 lines = content.split('\n')
                 last_import_idx = 0
                 for i, line in enumerate(lines):
                     if line.startswith('import ') or line.startswith('from '):
                         last_import_idx = i
-                
+
                 # Insert the import
                 lines.insert(last_import_idx + 1, import_line)
-                
+
                 # Write back
                 with open(error_file, 'w') as f:
                     f.write('\n'.join(lines))
-                
+
                 print(f"Added import: {import_line}")
-                
+
             except Exception as e:
                 print(f"Error fixing {error_file}: {e}")
         else:

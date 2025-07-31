@@ -5,7 +5,6 @@ Provides commands for database operations.
 """
 
 import asyncio
-import os
 import sys
 from pathlib import Path
 
@@ -16,9 +15,7 @@ import click
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import text
-
 from src.infrastructure.database import get_connection
-from src.infrastructure.database.models import Base
 
 
 def get_alembic_config():
@@ -37,11 +34,11 @@ def cli():
 def init():
     """Initialize database with migrations."""
     click.echo("Initializing database...")
-    
+
     # Run migrations
     config = get_alembic_config()
     command.upgrade(config, "head")
-    
+
     click.echo("Database initialized successfully!")
 
 
@@ -49,10 +46,10 @@ def init():
 def migrate():
     """Create a new migration."""
     message = click.prompt("Migration message")
-    
+
     config = get_alembic_config()
     command.revision(config, autogenerate=True, message=message)
-    
+
     click.echo(f"Migration created: {message}")
 
 
@@ -60,10 +57,10 @@ def migrate():
 def upgrade():
     """Apply pending migrations."""
     click.echo("Applying migrations...")
-    
+
     config = get_alembic_config()
     command.upgrade(config, "head")
-    
+
     click.echo("Migrations applied successfully!")
 
 
@@ -73,7 +70,7 @@ def downgrade():
     if click.confirm("Are you sure you want to rollback?"):
         config = get_alembic_config()
         command.downgrade(config, "-1")
-        
+
         click.echo("Rollback completed!")
 
 
@@ -89,10 +86,10 @@ def reset():
     """Reset database (DANGEROUS!)."""
     if not click.confirm("This will DELETE ALL DATA. Are you sure?"):
         return
-    
+
     if not click.confirm("Are you REALLY sure? This cannot be undone!"):
         return
-    
+
     async def drop_all():
         conn = await get_connection()
         async with conn.get_session() as session:
@@ -100,10 +97,10 @@ def reset():
             await session.execute(text("DROP SCHEMA public CASCADE"))
             await session.execute(text("CREATE SCHEMA public"))
             await session.commit()
-    
+
     asyncio.run(drop_all())
     click.echo("Database reset completed!")
-    
+
     # Re-initialize
     init()
 
@@ -112,16 +109,17 @@ def reset():
 def seed():
     """Seed database with sample data."""
     click.echo("Seeding database...")
-    
+
     async def seed_data():
         from uuid import uuid4
+
         import bcrypt
-        
+
         conn = await get_connection()
         async with conn.get_session() as session:
             # Create admin user
             from src.infrastructure.database.models import UserModel
-            
+
             admin = UserModel(
                 id=uuid4(),
                 email="admin@secondbrain.com",
@@ -136,12 +134,12 @@ def seed():
                 storage_limit_mb=50000,
                 api_rate_limit=10000,
             )
-            
+
             session.add(admin)
             await session.commit()
-            
+
             click.echo(f"Created admin user: {admin.email}")
-    
+
     asyncio.run(seed_data())
     click.echo("Database seeded successfully!")
 

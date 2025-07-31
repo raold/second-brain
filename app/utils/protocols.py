@@ -7,20 +7,16 @@ without sacrificing type safety.
 """
 
 import asyncio
-from typing import TypeVar, Protocol, Optional, Dict, List, Any, runtime_checkable, Callable, Union, Tuple, Set, AsyncIterable, Awaitable
-from datetime import datetime
-from app.utils.logging_config import get_logger
-from typing import Protocol
-from typing import Callable
-from typing import TypeVar
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from typing import Union
-from typing import Tuple
-from datetime import datetime
+from collections.abc import AsyncIterable, Awaitable, Callable
 from dataclasses import dataclass
+from typing import (
+    Any,
+    Protocol,
+    TypeVar,
+    runtime_checkable,
+)
+
+from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -53,7 +49,7 @@ class Timestamped(Protocol):
         ...
 
     @property
-    def updated_at(self) -> Optional[float]:
+    def updated_at(self) -> float | None:
         """Return last update timestamp."""
         ...
 
@@ -179,7 +175,7 @@ class MemoryLike(Protocol):
         """Return importance score between 0.0 and 1.0."""
         ...
 
-    def get_embedding(self) -> Optional[list[float]]:
+    def get_embedding(self) -> list[float] | None:
         """Return vector embedding if available."""
         ...
 
@@ -222,11 +218,11 @@ class Embeddable(Protocol):
 class Retrievable(Protocol[T]):
     """Protocol for objects that can retrieve other objects."""
 
-    async def retrieve(self, query: str, context: Optional[dict[str, Any]] = None) -> list[T]:
+    async def retrieve(self, query: str, context: dict[str, Any] | None = None) -> list[T]:
         """Retrieve objects based on query and context."""
         ...
 
-    async def retrieve_by_id(self, object_id: str) -> Optional[T]:
+    async def retrieve_by_id(self, object_id: str) -> T | None:
         """Retrieve object by its identifier."""
         ...
 
@@ -294,7 +290,7 @@ class Filterable(Protocol[T]):
 class Sortable(Protocol[T]):
     """Protocol for objects that can sort collections."""
 
-    def sort(self, items: list[T], key: Optional[Callable[[T], Any]] = None, reverse: bool = False) -> list[T]:
+    def sort(self, items: list[T], key: Callable[[T], Any] | None = None, reverse: bool = False) -> list[T]:
         """Sort items using optional key function."""
         ...
 
@@ -403,11 +399,11 @@ class Repository(Protocol[T]):
         """Save entity and return updated version."""
         ...
 
-    async def find_by_id(self, entity_id: str) -> Optional[T]:
+    async def find_by_id(self, entity_id: str) -> T | None:
         """Find entity by ID."""
         ...
 
-    async def find_all(self, limit: Optional[int] = None, offset: int = 0) -> list[T]:
+    async def find_all(self, limit: int | None = None, offset: int = 0) -> list[T]:
         """Find all entities with pagination."""
         ...
 
@@ -424,11 +420,11 @@ class Repository(Protocol[T]):
 class Cache(Protocol[K, V]):
     """Protocol for cache implementations."""
 
-    async def get(self, key: K) -> Optional[V]:
+    async def get(self, key: K) -> V | None:
         """Get value by key."""
         ...
 
-    async def set(self, key: K, value: V, ttl: Optional[int] = None) -> None:
+    async def set(self, key: K, value: V, ttl: int | None = None) -> None:
         """Set value with optional TTL."""
         ...
 
@@ -453,7 +449,7 @@ class Storage(Protocol):
         """Store binary data."""
         ...
 
-    async def retrieve(self, key: str) -> Optional[bytes]:
+    async def retrieve(self, key: str) -> bytes | None:
         """Retrieve binary data."""
         ...
 
@@ -461,11 +457,11 @@ class Storage(Protocol):
         """Delete stored data."""
         ...
 
-    async def list_keys(self, prefix: Optional[str] = None) -> list[str]:
+    async def list_keys(self, prefix: str | None = None) -> list[str]:
         """List all keys with optional prefix filter."""
         ...
 
-    async def get_metadata(self, key: str) -> Optional[dict[str, Any]]:
+    async def get_metadata(self, key: str) -> dict[str, Any] | None:
         """Get metadata for stored object."""
         ...
 
@@ -492,7 +488,7 @@ class ProtocolChecker:
         try:
             protocol_annotations = get_type_hints(protocol)
 
-            for attr_name, attr_type in protocol_annotations.items():
+            for attr_name, _attr_type in protocol_annotations.items():
                 if not hasattr(obj, attr_name):
                     return False
 
@@ -602,7 +598,7 @@ class ProtocolAdapter:
 # Duck Typing Helper Functions
 # ============================================================================
 
-def duck_type_check(obj: Any, required_methods: list[str], required_properties: Optional[list[str]] = None) -> bool:
+def duck_type_check(obj: Any, required_methods: list[str], required_properties: list[str] | None = None) -> bool:
     """Check if object has required methods and properties (duck typing)."""
     required_properties = required_properties or []
 
@@ -669,7 +665,7 @@ def get_protocol_methods(protocol: type) -> list[str]:
     try:
         annotations = get_type_hints(protocol)
 
-        for name, annotation in annotations.items():
+        for name, _annotation in annotations.items():
             if hasattr(protocol, name):
                 attr = getattr(protocol, name)
                 if callable(attr) or isinstance(attr, property):
@@ -701,8 +697,8 @@ class UniversalMemory:
     memory_type: str
     importance_score: float
     created_at: float
-    updated_at: Optional[float] = None
-    embedding: Optional[list[float]] = None
+    updated_at: float | None = None
+    embedding: list[float] | None = None
     metadata: dict[str, Any] = None
 
     def __post_init__(self):
@@ -747,7 +743,7 @@ class UniversalMemory:
     # MemoryLike protocol
     # (content, memory_type, importance_score already defined)
 
-    def get_embedding(self) -> Optional[list[float]]:
+    def get_embedding(self) -> list[float] | None:
         return self.embedding
 
     # Validatable protocol
@@ -848,7 +844,7 @@ def test_protocol_implementations():
     results = checker.validate_protocol_implementations(memory, *protocols_to_test)
 
     print("Protocol compliance results for UniversalMemory:")
-    for protocol, result in results.items():
+    for _protocol, result in results.items():
         status = "✓" if result['implements'] else "✗"
         print(f"  {status} {result['protocol_name']}")
         if result['missing_methods']:
@@ -861,7 +857,7 @@ def test_protocol_implementations():
     service_results = checker.validate_protocol_implementations(service, *service_protocols)
 
     print("\nProtocol compliance results for ProcessingService:")
-    for protocol, result in service_results.items():
+    for _protocol, result in service_results.items():
         status = "✓" if result['implements'] else "✗"
         print(f"  {status} {result['protocol_name']}")
         if result['missing_methods']:

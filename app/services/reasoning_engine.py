@@ -3,13 +3,13 @@ Multi-hop Reasoning Engine for Second Brain
 Enables complex queries that traverse multiple memories to find connections and insights
 """
 
-from app.utils.logging_config import get_logger
-from typing import List
-from typing import Any
-from fastapi import Query
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from dataclasses import dataclass
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 

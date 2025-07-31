@@ -42,10 +42,9 @@ try:
 except ImportError:
     HAS_SPREADSHEET = False
 
+
 from app.ingestion.engine import FileParser
 from app.utils.logger import get_logger
-from typing import List
-from typing import Any
 
 logger = get_logger(__name__)
 
@@ -228,7 +227,7 @@ class HTMLParser(FileParser):
 
     async def parse(self, file_path: Path) -> dict[str, Any]:
         """Parse HTML file and extract text"""
-        async with aiofiles.open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        async with aiofiles.open(file_path, encoding='utf-8', errors='ignore') as f:
             html_content = await f.read()
 
         # Parse with BeautifulSoup for metadata
@@ -415,7 +414,7 @@ class SpreadsheetParser(FileParser):
             logger.error(f"Failed to parse spreadsheet: {e}")
             # Try simpler CSV parsing
             if file_path.suffix.lower() == '.csv':
-                async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
+                async with aiofiles.open(file_path, encoding='utf-8') as f:
                     content = await f.read()
                 content_parts.append(content)
 
@@ -439,7 +438,7 @@ class MarkdownParser(FileParser):
 
     async def parse(self, file_path: Path) -> dict[str, Any]:
         """Parse Markdown file"""
-        async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
+        async with aiofiles.open(file_path, encoding='utf-8') as f:
             content = await f.read()
 
         # Extract metadata from frontmatter if present

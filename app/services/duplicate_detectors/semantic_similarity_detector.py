@@ -5,11 +5,11 @@ Detects semantically similar content using vector embeddings.
 Handles conceptual similarity beyond lexical matching.
 """
 
-from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import List
-from typing import Any
 from collections import defaultdict
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 
@@ -382,7 +382,6 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
             List of duplicate groups
         """
         # Use same grouping logic as fuzzy detector but with semantic context
-        from collections import defaultdict
 
         # Build adjacency map
         adjacency_map = defaultdict(set)
@@ -524,7 +523,7 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
 
         return duplicate_group
 
-    async def get_embedding(self, content: str, config: DeduplicationConfig) -> Optional[list[float]]:
+    async def get_embedding(self, content: str, config: DeduplicationConfig) -> list[float] | None:
         """
         Get embedding for a single piece of content.
 

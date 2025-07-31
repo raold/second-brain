@@ -3,27 +3,18 @@ Ingestion routes for file upload and processing
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 from app.dependencies import get_current_user, get_db_instance
+from app.dependencies.auth import get_current_user, get_db_instance
 from app.ingestion.engine import IngestionEngine
 from app.models.memory import User
 from app.repositories.memory_repository import MemoryRepository
 from app.services.service_factory import ServiceFactory
 from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import List
-from typing import Any
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import APIRouter
-from datetime import datetime
-from pydantic import BaseModel
-from pydantic import Field
-from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
 
 logger = get_logger(__name__)
 
@@ -37,9 +28,9 @@ class IngestionStatus(BaseModel):
     filename: str
     file_type: str
     created_at: datetime
-    completed_at: Optional[datetime] = None
-    result: Optional[dict[str, Any]] = None
-    error: Optional[str] = None
+    completed_at: datetime | None = None
+    result: dict[str, Any] | None = None
+    error: str | None = None
 
 
 class IngestionResponse(BaseModel):
@@ -47,13 +38,13 @@ class IngestionResponse(BaseModel):
     success: bool
     job_id: str
     message: str
-    result: Optional[dict[str, Any]] = None
+    result: dict[str, Any] | None = None
 
 
 class BatchIngestionRequest(BaseModel):
     """Request for batch file ingestion"""
-    tags: Optional[list[str]] = Field(default_factory=list)
-    metadata: Optional[dict[str, Any]] = Field(default_factory=dict)
+    tags: list[str] | None = Field(default_factory=list)
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
 
 
 # In-memory job tracking (replace with Redis in production)
@@ -64,8 +55,8 @@ ingestion_jobs: dict[str, IngestionStatus] = {}
 async def upload_file(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    tags: Optional[str] = Form(None),
-    metadata: Optional[str] = Form(None),
+    tags: str | None = Form(None),
+    metadata: str | None = Form(None),
     current_user: User = Depends(get_current_user),
     db=Depends(get_db_instance)
 ):

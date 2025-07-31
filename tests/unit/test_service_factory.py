@@ -2,8 +2,8 @@
 Unit tests for service factory and dependency injection
 """
 
+
 import pytest
-from unittest.mock import Mock, patch
 
 
 class TestServiceFactory:
@@ -22,10 +22,10 @@ class TestServiceFactory:
         """Test getting memory service from factory"""
         try:
             from app.services.service_factory import get_memory_service
-            
+
             service = get_memory_service()
             assert service is not None
-            
+
         except ImportError:
             pytest.skip("Memory service factory not implemented")
         except Exception as e:
@@ -36,10 +36,10 @@ class TestServiceFactory:
         """Test getting session service from factory"""
         try:
             from app.services.service_factory import get_session_service
-            
+
             service = get_session_service()
             assert service is not None
-            
+
         except ImportError:
             pytest.skip("Session service factory not implemented")
         except Exception as e:
@@ -54,13 +54,13 @@ class TestDependencyInjection:
         """Test that services follow singleton pattern"""
         try:
             from app.services.service_factory import get_memory_service
-            
+
             service1 = get_memory_service()
             service2 = get_memory_service()
-            
+
             # Should return same instance (singleton)
             assert service1 is service2
-            
+
         except ImportError:
             pytest.skip("Memory service factory not implemented")
         except Exception:
@@ -71,15 +71,15 @@ class TestDependencyInjection:
         """Test that services can handle dependencies"""
         try:
             from app.services.service_factory import get_memory_service
-            
+
             service = get_memory_service()
-            
+
             # Service should have required methods
             expected_methods = ["create_memory", "get_memory", "list_memories"]
             for method in expected_methods:
                 if hasattr(service, method):
                     assert callable(getattr(service, method))
-            
+
         except ImportError:
             pytest.skip("Memory service not implemented")
         except Exception:
@@ -96,18 +96,18 @@ class TestMockServices:
         class MockMemoryService:
             def __init__(self):
                 self.memories = {}
-            
+
             async def create_memory(self, memory_data):
                 memory_id = f"mock-{len(self.memories)}"
                 self.memories[memory_id] = {**memory_data, "id": memory_id}
                 return self.memories[memory_id]
-            
+
             async def get_memory(self, memory_id):
                 return self.memories.get(memory_id)
-            
+
             async def list_memories(self):
                 return list(self.memories.values())
-        
+
         service = MockMemoryService()
         assert service is not None
         assert hasattr(service, 'create_memory')
@@ -120,34 +120,34 @@ class TestMockServices:
         class MockMemoryService:
             def __init__(self):
                 self.memories = {}
-            
+
             async def create_memory(self, memory_data):
                 memory_id = f"mock-{len(self.memories)}"
                 self.memories[memory_id] = {**memory_data, "id": memory_id}
                 return self.memories[memory_id]
-            
+
             async def get_memory(self, memory_id):
                 return self.memories.get(memory_id)
-            
+
             async def list_memories(self):
                 return list(self.memories.values())
-        
+
         service = MockMemoryService()
-        
+
         # Create a memory
         memory_data = {
             "content": "Test memory",
             "memory_type": "factual"
         }
-        
+
         created_memory = await service.create_memory(memory_data)
         assert created_memory["content"] == "Test memory"
         assert "id" in created_memory
-        
+
         # Retrieve the memory
         retrieved_memory = await service.get_memory(created_memory["id"])
         assert retrieved_memory == created_memory
-        
+
         # List all memories
         all_memories = await service.list_memories()
         assert len(all_memories) == 1
@@ -164,7 +164,7 @@ class TestServiceConfiguration:
             from app.config import Config
             config = Config()
             assert config is not None
-            
+
         except ImportError:
             # Config might not be implemented as a class
             try:
@@ -176,11 +176,11 @@ class TestServiceConfiguration:
     def test_environment_based_configuration(self):
         """Test environment-based service configuration"""
         import os
-        
+
         # Test environment should use mock services
         assert os.environ.get("USE_MOCK_DATABASE") == "true"
         assert os.environ.get("ENVIRONMENT") == "test"
-        
+
         # Configuration should respect environment
         if os.environ.get("USE_MOCK_DATABASE") == "true":
             # Should use mock implementations
@@ -200,9 +200,9 @@ class TestServiceHealthChecks:
         """Test that services can report health status"""
         try:
             from app.services.service_factory import get_memory_service
-            
+
             service = get_memory_service()
-            
+
             # Check if service has health check method
             if hasattr(service, 'health_check'):
                 health = await service.health_check()
@@ -211,7 +211,7 @@ class TestServiceHealthChecks:
             else:
                 # Health check not implemented, which is okay
                 pass
-                
+
         except ImportError:
             pytest.skip("Memory service not implemented")
         except Exception:
@@ -222,14 +222,14 @@ class TestServiceHealthChecks:
         """Test service initialization"""
         try:
             from app.services.service_factory import get_memory_service
-            
+
             # Service should initialize without errors
             service = get_memory_service()
             assert service is not None
-            
+
             # Should have basic attributes
             assert hasattr(service, '__class__')
-            
+
         except ImportError:
             pytest.skip("Memory service not implemented")
         except Exception as e:
@@ -244,32 +244,32 @@ class TestServiceIntegration:
     async def test_service_database_integration(self):
         """Test service integration with database"""
         try:
-            from app.services.service_factory import get_memory_service
             from app.database_mock import MockDatabase
-            
+            from app.services.service_factory import get_memory_service
+
             # Initialize mock database
             mock_db = MockDatabase()
             await mock_db.initialize()
-            
+
             # Get service (should work with mock database)
             service = get_memory_service()
-            
+
             # Test basic operation
             if hasattr(service, 'create_memory'):
                 memory_data = {
                     "content": "Integration test memory",
                     "memory_type": "factual"
                 }
-                
+
                 try:
                     result = await service.create_memory(memory_data)
                     assert result is not None
                 except NotImplementedError:
                     # Method exists but not implemented
                     pass
-            
+
             await mock_db.close()
-            
+
         except ImportError:
             pytest.skip("Service or database components not implemented")
         except Exception:
@@ -280,26 +280,26 @@ class TestServiceIntegration:
         """Test service error handling"""
         try:
             from app.services.service_factory import get_memory_service
-            
+
             service = get_memory_service()
-            
+
             # Service should handle errors gracefully
             if hasattr(service, 'get_memory'):
                 try:
                     # This should either work or raise a proper exception
                     import asyncio
                     result = asyncio.run(service.get_memory("nonexistent-id"))
-                    
+
                     # Either returns None or raises specific exception
                     assert result is None or isinstance(result, dict)
-                    
+
                 except (NotImplementedError, ValueError, KeyError):
                     # These are acceptable exceptions
                     pass
                 except Exception as e:
                     # Should not raise generic exceptions
                     assert "not implemented" in str(e).lower() or "not found" in str(e).lower()
-            
+
         except ImportError:
             pytest.skip("Memory service not implemented")
         except Exception:

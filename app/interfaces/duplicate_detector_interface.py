@@ -5,10 +5,10 @@ Abstract interface for all duplicate detection algorithms,
 enabling modular, testable, and extensible detection methods.
 """
 
-from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import List
 from typing import Any
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 
@@ -69,7 +69,7 @@ class DuplicateDetectorInterface(ABC):
         """
         return ["id", "content"]
 
-    def get_optimal_batch_size(self) -> Optional[int]:
+    def get_optimal_batch_size(self) -> int | None:
         """
         Get optimal batch size for this detector.
 
@@ -132,7 +132,7 @@ class BaseDuplicateDetector(DuplicateDetectorInterface):
         ids = sorted([memory_id_1, memory_id_2])
         return f"{ids[0]}:{ids[1]}:{self.get_similarity_method().value}"
 
-    def _get_cached_similarity(self, memory_id_1: str, memory_id_2: str) -> Optional[float]:
+    def _get_cached_similarity(self, memory_id_1: str, memory_id_2: str) -> float | None:
         """
         Get cached similarity score.
 
@@ -294,7 +294,7 @@ class BaseDuplicateDetector(DuplicateDetectorInterface):
 
             if val1 == val2:
                 similarities.append(1.0)
-            elif isinstance(val1, (int, float)) and isinstance(val2, (int, float)):
+            elif isinstance(val1, int | float) and isinstance(val2, int | float):
                 # Numeric similarity
                 max_val = max(abs(val1), abs(val2))
                 if max_val == 0:

@@ -3,26 +3,15 @@ Memory Visualization API Routes.
 Provides endpoints for interactive memory graphs, advanced search, and relationship analysis.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Any
-
-
-from app.utils.logging_config import get_logger
-from app.shared import verify_api_key
-from app.dependencies import get_current_user, get_db_instance
-from app.database import get_database
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from fastapi import Query
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import APIRouter
 from datetime import datetime
-from pydantic import BaseModel
-from pydantic import Field
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
+
+from app.database import get_database
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/visualization", tags=["visualization"])

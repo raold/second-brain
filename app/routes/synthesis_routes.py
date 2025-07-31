@@ -5,22 +5,19 @@ API endpoints for synthesis features including report generation,
 spaced repetition, and WebSocket connections.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Any
 from datetime import datetime
 
-from app.utils.logging_config import get_logger
-from app.dependencies import get_current_user, get_db
-from app.shared import verify_api_key
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from app.dependencies import get_db
 from app.models.synthesis import (
-    SynthesisRequest,
-    SynthesisResult,
+    BulkReviewRequest,
     ReportRequest,
     ReportResponse,
-    BulkReviewRequest,
-    SubscriptionRequest
+    SubscriptionRequest,
 )
+from app.shared import verify_api_key
+from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -113,7 +110,7 @@ async def get_report(
 @router.get("/reports/{report_id}/download")
 async def download_report(
     report_id: str,
-    format: Optional[ReportFormat] = Query(None),
+    format: ReportFormat | None = Query(None),
     api_key: str = Depends(verify_api_key),
 ):
     """
@@ -191,7 +188,7 @@ async def list_templates(
 async def schedule_review(
     memory_id: str,
     algorithm: RepetitionAlgorithm = RepetitionAlgorithm.SM2,
-    config: Optional[RepetitionConfig] = None,
+    config: RepetitionConfig | None = None,
     api_key: str = Depends(verify_api_key),
     scheduler: RepetitionScheduler = Depends(get_repetition_scheduler),
 ):
@@ -298,8 +295,8 @@ async def record_review(
     session_id: str,
     difficulty: ReviewDifficulty,
     time_taken_seconds: int,
-    confidence_level: Optional[float] = None,
-    notes: Optional[str] = None,
+    confidence_level: float | None = None,
+    notes: str | None = None,
     api_key: str = Depends(verify_api_key),
     scheduler: RepetitionScheduler = Depends(get_repetition_scheduler),
 ):

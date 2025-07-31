@@ -2,7 +2,7 @@
 Google Drive integration routes
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -13,7 +13,6 @@ from app.ingestion.google_drive_client import DriveFile, GoogleDriveClient
 from app.models.memory import User
 from app.repositories.memory_repository import MemoryRepository
 from app.utils.logging_config import get_logger
-from typing import Optional, List, Any
 
 logger = get_logger(__name__)
 
@@ -30,10 +29,10 @@ class GoogleDriveFileResponse(BaseModel):
     id: str
     name: str
     mime_type: str
-    size: Optional[int] = None
-    created_time: Optional[str] = None
-    modified_time: Optional[str] = None
-    web_view_link: Optional[str] = None
+    size: int | None = None
+    created_time: str | None = None
+    modified_time: str | None = None
+    web_view_link: str | None = None
     is_folder: bool = False
     is_supported: bool = True
 
@@ -41,8 +40,8 @@ class GoogleDriveFileResponse(BaseModel):
 class GoogleDriveIngestionRequest(BaseModel):
     """Request for ingesting files from Google Drive"""
     file_ids: list[str] = Field(..., description="List of Google Drive file IDs to ingest")
-    tags: Optional[list[str]] = Field(default_factory=list)
-    metadata: Optional[dict[str, Any]] = Field(default_factory=dict)
+    tags: list[str] | None = Field(default_factory=list)
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
 
 
 class FolderMonitorRequest(BaseModel):
@@ -50,7 +49,7 @@ class FolderMonitorRequest(BaseModel):
     folder_id: str = Field(..., description="Google Drive folder ID to monitor")
     check_interval: int = Field(default=300, ge=60, le=3600, description="Check interval in seconds")
     auto_ingest: bool = Field(default=True, description="Automatically ingest new files")
-    tags: Optional[list[str]] = Field(default_factory=list)
+    tags: list[str] | None = Field(default_factory=list)
 
 
 # Global client instance (per-user in production)
@@ -119,9 +118,9 @@ async def get_auth_status(current_user: User = Depends(get_current_user)):
 
 @router.get("/files", response_model=dict[str, Any])
 async def list_files(
-    folder_id: Optional[str] = Query(None, description="Google Drive folder ID"),
+    folder_id: str | None = Query(None, description="Google Drive folder ID"),
     page_size: int = Query(50, ge=1, le=100),
-    page_token: Optional[str] = Query(None),
+    page_token: str | None = Query(None),
     current_user: User = Depends(get_current_user)
 ):
     """List files from Google Drive"""

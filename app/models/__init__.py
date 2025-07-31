@@ -2,7 +2,7 @@
 Models package for Second Brain
 """
 
-from .user import User
 from .memory import Memory
+from .user import User
 
 __all__ = ["User", "Memory"]

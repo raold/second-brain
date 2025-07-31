@@ -1,36 +1,29 @@
 """Report generator for memory synthesis"""
 
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any
 
 from app.utils.logging_config import get_logger
-from app.models.synthesis.report_models import (
-    ReportType,
-    ReportFormat,
-    ReportRequest,
-    ReportResponse,
-    ReportConfig
-)
 
 logger = get_logger(__name__)
 
 
 class ReportGenerator:
     """Generate various types of reports from memory data"""
-    
+
     def __init__(self):
         self.report_templates = {
             "summary": self._generate_summary_report,
             "detailed": self._generate_detailed_report,
             "insights": self._generate_insights_report
         }
-    
-    async def generate_report(self, report_type: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def generate_report(self, report_type: str, parameters: dict[str, Any]) -> dict[str, Any]:
         """Generate a report based on type and parameters"""
         generator = self.report_templates.get(report_type, self._generate_summary_report)
         return await generator(parameters)
-    
-    async def _generate_summary_report(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def _generate_summary_report(self, parameters: dict[str, Any]) -> dict[str, Any]:
         """Generate a summary report"""
         return {
             "type": "summary",
@@ -42,8 +35,8 @@ class ReportGenerator:
                 "top_tags": ["learning", "work", "ideas"]
             }
         }
-    
-    async def _generate_detailed_report(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def _generate_detailed_report(self, parameters: dict[str, Any]) -> dict[str, Any]:
         """Generate a detailed report"""
         return {
             "type": "detailed",
@@ -51,8 +44,8 @@ class ReportGenerator:
             "content": "Detailed report placeholder",
             "sections": []
         }
-    
-    async def _generate_insights_report(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def _generate_insights_report(self, parameters: dict[str, Any]) -> dict[str, Any]:
         """Generate an insights report"""
         return {
             "type": "insights",
@@ -60,8 +53,8 @@ class ReportGenerator:
             "insights": [],
             "recommendations": []
         }
-    
-    async def get_available_templates(self) -> List[str]:
+
+    async def get_available_templates(self) -> list[str]:
         """Get list of available report templates"""
         return list(self.report_templates.keys())
 

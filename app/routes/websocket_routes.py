@@ -4,13 +4,12 @@ WebSocket routes for real-time updates
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.synthesis.websocket_service import get_websocket_service
 from app.dependencies import get_db
+from app.services.synthesis.websocket_service import get_websocket_service
 from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -21,7 +20,7 @@ router = APIRouter(prefix="/ws", tags=["WebSocket"])
 @router.websocket("/connect")
 async def websocket_endpoint(
     websocket: WebSocket,
-    token: Optional[str] = Query(None, description="Authentication token"),
+    token: str | None = Query(None, description="Authentication token"),
     db: AsyncSession = Depends(get_db)
 ):
     """

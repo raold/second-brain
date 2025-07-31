@@ -11,15 +11,13 @@ This module demonstrates idiomatic Python usage including:
 
 import asyncio
 import functools
-from app.utils.logging_config import get_logger
-from typing import Protocol
-from typing import Callable
-from typing import TypeVar
-from typing import Optional
-from typing import Any
-from typing import Tuple
-from enum import Enum
+from collections.abc import Callable
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Optional, Protocol, TypeVar
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 T = TypeVar('T')
@@ -188,8 +186,8 @@ class ProcessingTask:
 
     # Computed fields
     attempts: int = field(default=0, init=False)
-    last_error: Optional[str] = field(default=None, init=False)
-    completed_at: Optional[float] = field(default=None, init=False)
+    last_error: str | None = field(default=None, init=False)
+    completed_at: float | None = field(default=None, init=False)
 
     # Metadata
     context: dict[str, Any] = field(default_factory=dict)
@@ -232,7 +230,7 @@ class ProcessingTask:
         self.transition_to(ProcessingStatus.FAILED)
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Calculate task duration if completed."""
         if self.completed_at:
             return self.completed_at - self.created_at
@@ -265,8 +263,8 @@ class ValidatedField(Generic[T]):
         self,
         validator: Callable[[T], bool],
         error_message: str,
-        default: Optional[T] = None,
-        transform: Optional[Callable[[T], T]] = None
+        default: T | None = None,
+        transform: Callable[[T], T] | None = None
     ):
         self.validator = validator
         self.error_message = error_message
@@ -301,7 +299,7 @@ class PositiveFloat(ValidatedField[float]):
 
     def __init__(self, default: float = 0.0):
         super().__init__(
-            validator=lambda x: isinstance(x, (int, float)) and x >= 0,
+            validator=lambda x: isinstance(x, int | float) and x >= 0,
             error_message="Value must be a positive number",
             default=default,
             transform=float
@@ -461,7 +459,7 @@ class BatchProcessor(Generic[T]):
     def __init__(
         self,
         batch_size: int = 100,
-        processor: Optional[Callable[[list[T]], list[T]]] = None
+        processor: Callable[[list[T]], list[T]] | None = None
     ):
         self.batch_size = batch_size
         self.processor = processor or (lambda x: x)

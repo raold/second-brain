@@ -8,56 +8,35 @@ This module contains data models for the synthesis features including:
 """
 
 from .advanced_models import (
-    SynthesisStrategy,
-    ExportFormat,
-    SynthesisRequest,
-    SynthesisResult,
     AdvancedSynthesisRequest,
     AdvancedSynthesisResult,
+    ExportFormat,
     SynthesisOptions,
+    SynthesisRequest,
+    SynthesisResult,
+    SynthesisStrategy,
     ThemeAnalysis,
 )
 from .consolidation_models import (
-    ConsolidationStrategy,
-    MergeStrategy,
-    ConsolidationRequest,
-    ConsolidationResult,
-    ConsolidationStatus,
     ConsolidatedMemory,
     ConsolidationCandidate,
     ConsolidationPreview,
-    QualityAssessment,
+    ConsolidationRequest,
+    ConsolidationResult,
+    ConsolidationStatus,
+    ConsolidationStrategy,
     DuplicateGroup,
-)
-from .summary_models import (
-    SummaryType,
-    FormatType,
-    SummaryRequest,
-    SummarySegment,
-    SummaryResponse,
-    SummaryResult,
-    TopicSummary,
-    DomainOverview,
-    KeyInsight,
-)
-from .suggestion_models import (
-    SuggestionType,
-    ActionType,
-    Suggestion,
-    LearningPathSuggestion,
-    ContentSuggestion,
-    OrganizationSuggestion,
-    SuggestionRequest,
-    SuggestionResponse,
+    MergeStrategy,
+    QualityAssessment,
 )
 from .metrics_models import (
-    GraphMetrics,
-    NodeMetrics,
-    MetricsRequest,
     ClusterMetrics,
     ConnectivityMetrics,
-    TemporalMetrics,
+    GraphMetrics,
     KnowledgeCluster,
+    MetricsRequest,
+    NodeMetrics,
+    TemporalMetrics,
 )
 from .repetition_models import (
     BulkReviewRequest,
@@ -79,6 +58,27 @@ from .report_models import (
     ReportSchedule,
     ReportTemplate,
     ReportType,
+)
+from .suggestion_models import (
+    ActionType,
+    ContentSuggestion,
+    LearningPathSuggestion,
+    OrganizationSuggestion,
+    Suggestion,
+    SuggestionRequest,
+    SuggestionResponse,
+    SuggestionType,
+)
+from .summary_models import (
+    DomainOverview,
+    FormatType,
+    KeyInsight,
+    SummaryRequest,
+    SummaryResponse,
+    SummaryResult,
+    SummarySegment,
+    SummaryType,
+    TopicSummary,
 )
 from .websocket_models import (
     ConnectionStatus,

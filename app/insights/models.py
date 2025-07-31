@@ -4,16 +4,10 @@ Data models for AI insights and pattern discovery
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional
-from typing import Any
-from datetime import datetime
-from enum import Enum
-from pydantic import BaseModel
-from pydantic import Field
 
 
 class InsightType(str, Enum):
@@ -225,7 +219,7 @@ class TrendAnalysis(BaseModel):
     trend_direction: Literal["increasing", "decreasing", "stable"]
     confidence: float = Field(ge=0.0, le=1.0)
     data_points: list[dict[str, Any]]
-    forecast: Optional[dict[str, Any]] = None
+    forecast: dict[str, Any] | None = None
     insights: list[str]
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
 

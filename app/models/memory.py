@@ -4,7 +4,7 @@ Memory models for Second Brain
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -27,23 +27,23 @@ class MemoryType(str, Enum):
 class Memory(BaseModel):
     """Memory model for Second Brain"""
 
-    id: Optional[str] = None
+    id: str | None = None
     content: str
     memory_type: MemoryType = MemoryType.FACTUAL
     importance_score: float = 0.5
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    user_id: Optional[str] = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    user_id: str | None = None
     tags: list[str] = []
     metadata: dict[str, Any] = {}
-    embedding: Optional[list[float]] = None
+    embedding: list[float] | None = None
     access_count: int = 0
-    last_accessed: Optional[datetime] = None
+    last_accessed: datetime | None = None
 
     model_config = ConfigDict(use_enum_values=True)
 
     @classmethod
-    def create(cls, content: str, memory_type: MemoryType, user_id: Optional[str] = None) -> 'Memory':
+    def create(cls, content: str, memory_type: MemoryType, user_id: str | None = None) -> 'Memory':
         """Create a new memory with default values."""
         from uuid import uuid4
         now = datetime.utcnow()

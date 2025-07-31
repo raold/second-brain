@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -27,14 +27,14 @@ class ExportFormat(str, Enum):
 
 class SynthesisRequest(BaseModel):
     """Request for advanced synthesis"""
-    memory_ids: List[UUID]
+    memory_ids: list[UUID]
     strategy: SynthesisStrategy = Field(default=SynthesisStrategy.SUMMARY)
     max_tokens: int = Field(default=1000, gt=0)
     temperature: float = Field(default=0.7, ge=0, le=2)
     include_references: bool = Field(default=True)
     include_metadata: bool = Field(default=True)
-    user_id: Optional[str] = None
-    options: Dict[str, Any] = Field(default_factory=dict)
+    user_id: str | None = None
+    options: dict[str, Any] = Field(default_factory=dict)
 
 
 class SynthesisResult(BaseModel):
@@ -42,26 +42,26 @@ class SynthesisResult(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     synthesis_type: str
     content: str
-    source_memory_ids: List[UUID]
+    source_memory_ids: list[UUID]
     confidence_score: float = Field(ge=0, le=1)
-    themes: List[str] = Field(default_factory=list)
-    references: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    themes: list[str] = Field(default_factory=list)
+    references: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class AdvancedSynthesisRequest(BaseModel):
     """Legacy request model for compatibility"""
-    memory_ids: List[UUID]
+    memory_ids: list[UUID]
     synthesis_type: str = Field(default="default")
-    parameters: Dict[str, Any] = Field(default_factory=dict)
+    parameters: dict[str, Any] = Field(default_factory=dict)
 
 
 class AdvancedSynthesisResult(BaseModel):
     """Legacy result model for compatibility"""
     id: UUID
     synthesis: str
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -80,6 +80,6 @@ class ThemeAnalysis(BaseModel):
     theme_name: str
     frequency: int = Field(ge=0)
     importance: float = Field(ge=0, le=1)
-    related_themes: List[str] = Field(default_factory=list)
-    example_memories: List[UUID] = Field(default_factory=list)
-    insights: List[str] = Field(default_factory=list)
+    related_themes: list[str] = Field(default_factory=list)
+    example_memories: list[UUID] = Field(default_factory=list)
+    insights: list[str] = Field(default_factory=list)

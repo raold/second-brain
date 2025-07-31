@@ -9,6 +9,7 @@ Thin controllers that delegate business logic to service layer.
 # DISABLED: from .google_drive_routes import router as google_drive_router
 # DISABLED: from .graph_routes import router as graph_router
 from .health_routes import router as health_router
+
 # DISABLED: from .importance_routes import router as importance_router
 # DISABLED: from .ingestion_routes import router as ingestion_router
 # DISABLED: from .insights import router as insights_router
@@ -23,7 +24,7 @@ from .health_routes import router as health_router
 
 __all__ = [
     "analysis_router",
-    "bulk_operations_router", 
+    "bulk_operations_router",
     "dashboard_router",
     "google_drive_router",
     "graph_router",

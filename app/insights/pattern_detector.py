@@ -12,12 +12,6 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 
 from .models import Pattern, PatternDetectionRequest, PatternType, TimeFrame
-from typing import Any
-from fastapi import Query
-from datetime import datetime
-from datetime import timedelta
-from collections import Counter
-from collections import defaultdict
 
 
 class PatternDetector:

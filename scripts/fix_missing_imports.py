@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 """Fix missing response model imports in route files"""
 
-import os
-import re
 
 def fix_memory_routes():
     """Add missing MemoryResponse model"""
     file_path = "/Users/dro/Documents/second-brain/app/routes/memory_routes.py"
-    
+
     # Read file
-    with open(file_path, 'r') as f:
+    with open(file_path) as f:
         content = f.read()
-    
+
     # Find where to insert the model
     import_section_end = content.find('logger = get_logger(__name__)')
-    
+
     if 'class MemoryResponse' not in content and import_section_end > 0:
         # Add the model definition
         model_def = '''
@@ -31,14 +29,14 @@ class MemoryResponse(BaseModel):
     tags: Optional[List[str]] = None
 
 '''
-        
+
         # Insert before logger
         content = content[:import_section_end] + model_def + content[import_section_end:]
-        
+
         # Write back
         with open(file_path, 'w') as f:
             f.write(content)
-        
+
         print(f"✅ Fixed {file_path}")
 
 def main():

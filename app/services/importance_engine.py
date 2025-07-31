@@ -4,21 +4,12 @@ Automated Importance Scoring Engine for Second Brain
 Intelligent memory importance calculation based on access patterns, content analysis, and temporal factors
 """
 
-from enum import Enum
-from typing import Dict, Any, Optional, List
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from collections import defaultdict
-from dataclasses import dataclass
-from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from datetime import datetime
-from datetime import timedelta
 from enum import Enum
-from dataclasses import dataclass
-from collections import defaultdict
+from typing import Any
+
+from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 

@@ -3,16 +3,14 @@ Session Routes - Thin route handlers for session operations.
 All business logic is delegated to SessionService.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query
 from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Any
 
-
-from app.utils.logging_config import get_logger
 from app.core.dependencies import get_session_service_dep
 from app.models.api_models import SecondBrainException
-from fastapi import BackgroundTasks, Form
-from typing import Optional, Dict, List, Any
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 router = APIRouter(prefix="/session", tags=["Session"])
 
@@ -154,9 +152,9 @@ async def get_current_context(session_service=Depends(get_session_service_dep)):
     """
     try:
         context = await session_service.get_session_status()
-        
+
         return {"status": "success", "current_context": context}
-        
+
     except Exception as e:
         logger.error(f"Context retrieval failed: {e}")
         raise HTTPException(status_code=500, detail=f"Context retrieval failed: {str(e)}")
@@ -173,7 +171,7 @@ async def get_session_history(limit: int = Query(default=50, ge=1, le=1000), ses
             "history": [],
             "message": "History endpoint needs service implementation"
         }
-        
+
     except Exception as e:
         logger.error(f"History retrieval failed: {e}")
         raise HTTPException(status_code=500, detail=f"History retrieval failed: {str(e)}")
@@ -193,7 +191,7 @@ async def sync_session(target_device: str = "cloud", session_service=Depends(get
             "message": f"Session sync to {target_device} initiated",
             "note": "Sync endpoint needs service implementation"
         }
-        
+
     except Exception as e:
         logger.error(f"Session sync failed: {e}")
         raise HTTPException(status_code=500, detail=f"Session sync failed: {str(e)}")
@@ -211,14 +209,14 @@ async def mobile_idea_quick_drop(idea: str = Form(...), voice_note: str | None =
         full_idea = f"{idea}"
         if voice_note:
             full_idea += f" [Voice note: {voice_note}]"
-            
+
         result = await session_service.ingest_idea(
             idea=full_idea,
             source="mobile_quick",
             priority="medium",
             context=None
         )
-        
+
         return {
             "status": "success",
             "message": "💡 Idea captured and processing!",
@@ -226,7 +224,7 @@ async def mobile_idea_quick_drop(idea: str = Form(...), voice_note: str | None =
             "features_detected": len(result.get("detected_features", [])),
             "quick_summary": f"Added {len(result.get('detected_features', []))} features to roadmap"
         }
-        
+
     except Exception as e:
         logger.error(f"Mobile idea drop failed: {e}")
         raise HTTPException(status_code=500, detail=f"Mobile idea drop failed: {str(e)}")
@@ -237,7 +235,7 @@ async def mobile_status_check(session_service=Depends(get_session_service_dep)):
     """Quick status check optimized for mobile."""
     try:
         status = await session_service.get_session_status()
-        
+
         # Extract mobile-friendly summary
         return {
             "session_active": True,  # Simplified for mobile
@@ -245,7 +243,7 @@ async def mobile_status_check(session_service=Depends(get_session_service_dep)):
             "project_health": "healthy",  # Simplified
             "recent_features": []  # Simplified
         }
-        
+
     except Exception as e:
         logger.error(f"Mobile status failed: {e}")
         raise HTTPException(status_code=500, detail=f"Mobile status failed: {str(e)}")

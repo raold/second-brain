@@ -5,6 +5,7 @@ API routes for AI-powered insights and analytics
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.dependencies import get_db_instance
 from app.insights import (
     AnalyticsEngine,
     ClusteringRequest,
@@ -19,7 +20,6 @@ from app.insights import (
     TimeFrame,
 )
 from app.shared import verify_api_key
-from app.dependencies import get_current_user, get_db_instance
 
 router = APIRouter(
     prefix="/insights",

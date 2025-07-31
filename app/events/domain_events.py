@@ -8,12 +8,8 @@ parts of the system might be interested in handling.
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
-from uuid import uuid4
-from typing import Optional
 from typing import Any
-from datetime import datetime
-from dataclasses import dataclass
+from uuid import uuid4
 
 
 @dataclass
@@ -28,8 +24,8 @@ class DomainEvent(ABC):
     event_id: str = field(default_factory=lambda: str(uuid4()))
     occurred_at: datetime = field(default_factory=datetime.utcnow)
     event_version: str = "1.0"
-    correlation_id: Optional[str] = None
-    causation_id: Optional[str] = None
+    correlation_id: str | None = None
+    causation_id: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -85,7 +81,7 @@ class MemoryAccessedEvent(DomainEvent):
     memory_id: str = ""
     user_id: str = ""
     access_type: str = "view"  # 'view', 'search_result', 'related_fetch'
-    access_context: Optional[str] = None
+    access_context: str | None = None
 
     def __post_init__(self):
         self.metadata.update({
@@ -104,7 +100,7 @@ class ImportanceUpdatedEvent(DomainEvent):
     old_score: float = 0.0
     new_score: float = 0.0
     reason: str = "manual"  # 'manual', 'access_pattern', 'time_decay', 'algorithm'
-    algorithm_version: Optional[str] = None
+    algorithm_version: str | None = None
 
     def __post_init__(self):
         score_change = self.new_score - self.old_score
@@ -145,8 +141,8 @@ class SessionCreatedEvent(DomainEvent):
     """
     session_id: str = ""
     user_id: str = ""
-    ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
+    ip_address: str | None = None
+    user_agent: str | None = None
 
     def __post_init__(self):
         self.metadata.update({
@@ -180,7 +176,7 @@ class SystemHealthEvent(DomainEvent):
     component: str = ""  # 'database', 'memory_service', 'search_engine', 'api'
     health_status: str = "healthy"  # 'healthy', 'degraded', 'unhealthy'
     metrics: dict[str, float] = field(default_factory=dict)
-    previous_status: Optional[str] = None
+    previous_status: str | None = None
 
     def __post_init__(self):
         self.metadata.update({
@@ -200,7 +196,7 @@ class UserAnalyticsEvent(DomainEvent):
     user_id: str = ""
     action: str = ""  # 'login', 'memory_created', 'search', 'view_dashboard'
     context: dict[str, Any] = field(default_factory=dict)
-    duration_ms: Optional[float] = None
+    duration_ms: float | None = None
 
     def __post_init__(self):
         self.metadata.update({
@@ -231,9 +227,9 @@ class ErrorOccurredEvent(DomainEvent):
     error_type: str = ""
     error_message: str = ""
     component: str = ""
-    user_id: Optional[str] = None
-    request_id: Optional[str] = None
-    stack_trace: Optional[str] = None
+    user_id: str | None = None
+    request_id: str | None = None
+    stack_trace: str | None = None
 
     def __post_init__(self):
         self.metadata.update({

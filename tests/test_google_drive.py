@@ -269,7 +269,7 @@ class TestGoogleDriveClient:
             mock_downloader.next_chunk.return_value = (None, True)
             MockDownloader.return_value = mock_downloader
 
-            content = await client.download_file("doc123", "My Document")
+            await client.download_file("doc123", "My Document")
 
             # Should export as DOCX
             client.service.files().export_media.assert_called_once_with(
@@ -466,11 +466,11 @@ class TestGoogleDriveClient:
             mock_downloader = MagicMock()
             mock_downloader.next_chunk.return_value = (None, True)
             MockDownloader.return_value = mock_downloader
-            
+
             # Mock the download_file to return a stream
             async def mock_download_file(*args, **kwargs):
                 return mock_file_stream
-            
+
             client.download_file = mock_download_file
 
             # Mock the ingestion engine

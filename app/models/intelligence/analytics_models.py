@@ -7,17 +7,10 @@ dashboard metrics, trend analysis, and performance tracking.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, validator
-from typing import Optional
-from typing import Any
-from fastapi import Query
-from datetime import datetime
-from enum import Enum
-from pydantic import BaseModel
-from pydantic import Field
 
 
 class MetricType(str, Enum):
@@ -78,7 +71,7 @@ class MetricPoint(BaseModel):
 
     timestamp: datetime
     value: float
-    metadata: Optional[dict[str, Any]] = Field(default_factory=dict)
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
 
     @validator('value')
     def validate_value(cls, v):
@@ -151,7 +144,7 @@ class Anomaly(BaseModel):
     actual_value: float
     confidence: float = Field(ge=0.0, le=1.0)
     description: str
-    metadata: Optional[dict[str, Any]] = Field(default_factory=dict)
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
 
 
 class PredictiveInsight(BaseModel):
@@ -167,7 +160,7 @@ class PredictiveInsight(BaseModel):
     timeframe: str  # e.g., "next 7 days", "within 24 hours"
     recommendations: list[str]
     supporting_metrics: list[MetricType]
-    metadata: Optional[dict[str, Any]] = Field(default_factory=dict)
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -227,14 +220,14 @@ class AnalyticsQuery(BaseModel):
     """Query parameters for analytics data."""
     model_config = ConfigDict(from_attributes=True)
 
-    metrics: Optional[list[MetricType]] = None
+    metrics: list[MetricType] | None = None
     granularity: TimeGranularity = TimeGranularity.DAY
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
     include_anomalies: bool = True
     include_insights: bool = True
     include_knowledge_gaps: bool = True
-    user_id: Optional[str] = None
+    user_id: str | None = None
 
     @validator('end_date')
     def validate_date_range(cls, v, values):
@@ -249,8 +242,8 @@ class MetricThreshold(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     metric_type: MetricType
-    min_value: Optional[float] = None
-    max_value: Optional[float] = None
+    min_value: float | None = None
+    max_value: float | None = None
     alert_on_breach: bool = True
     breach_duration_minutes: int = 5
 

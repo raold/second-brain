@@ -7,26 +7,26 @@ from .cluster_analyzer import ClusterAnalyzer
 from .gap_detector import KnowledgeGapDetector as GapDetector
 from .insight_generator import InsightGenerator
 from .models import (
-    Insight,
-    InsightType,
-    InsightRequest,
-    InsightResponse,
-    TrendAnalysis,
-    PatternDetection,
     ClusteringRequest,
     ClusterResponse,
     GapAnalysisRequest,
     GapAnalysisResponse,
+    Insight,
+    InsightRequest,
+    InsightResponse,
+    InsightType,
     LearningProgress,
+    PatternDetection,
     PatternDetectionRequest,
     PatternResponse,
-    TimeFrame
+    TimeFrame,
+    TrendAnalysis,
 )
 from .pattern_detector import PatternDetector
 
 __all__ = [
     "AnalyticsEngine",
-    "ClusterAnalyzer", 
+    "ClusterAnalyzer",
     "GapDetector",
     "InsightGenerator",
     "Insight",

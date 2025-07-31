@@ -6,11 +6,13 @@ Provides data access abstraction for Session entities.
 
 import json
 from abc import abstractmethod
-from typing import Optional, Any
 from datetime import datetime
+from typing import Any
+
 import asyncpg
-from app.utils.logging_config import get_logger
+
 from app.repositories.base_repository import BaseRepository
+from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -24,7 +26,7 @@ class Session:
         user_id: str,
         created_at: datetime,
         last_accessed: datetime,
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
         is_active: bool = True
     ):
         self.session_id = session_id
@@ -57,12 +59,12 @@ class SessionRepository(BaseRepository[Session]):
     """
 
     @abstractmethod
-    async def create_session(self, user_id: str, metadata: Optional[dict[str, Any]] = None) -> str:
+    async def create_session(self, user_id: str, metadata: dict[str, Any] | None = None) -> str:
         """Create a new session and return session ID."""
         pass
 
     @abstractmethod
-    async def find_by_session_id(self, session_id: str) -> Optional[Session]:
+    async def find_by_session_id(self, session_id: str) -> Session | None:
         """Find session by session ID."""
         pass
 
@@ -118,7 +120,7 @@ class PostgreSQLSessionRepository(SessionRepository):
             'is_active': session.is_active
         }
 
-    async def create_session(self, user_id: str, metadata: Optional[dict[str, Any]] = None) -> str:
+    async def create_session(self, user_id: str, metadata: dict[str, Any] | None = None) -> str:
         """Create a new session and return session ID."""
         from uuid import uuid4
 
@@ -157,7 +159,7 @@ class PostgreSQLSessionRepository(SessionRepository):
             await self._log_operation('create_session', session_id, user_id=user_id)
             return result
 
-    async def find_by_session_id(self, session_id: str) -> Optional[Session]:
+    async def find_by_session_id(self, session_id: str) -> Session | None:
         """Find session by session ID."""
         session = await self.find_by_id(session_id)
         if session:
@@ -218,12 +220,12 @@ class PostgreSQLSessionRepository(SessionRepository):
         """Remove expired sessions and return count of removed sessions."""
         async with self.pool.acquire() as conn:
             # First deactivate expired sessions
-            deactivate_query = """
+            deactivate_query = f"""
                 UPDATE sessions
                 SET is_active = FALSE
                 WHERE is_active = TRUE
-                  AND last_accessed < NOW() - INTERVAL '%s minutes'
-            """ % timeout_minutes
+                  AND last_accessed < NOW() - INTERVAL '{timeout_minutes} minutes'
+            """
 
             deactivate_result = await conn.execute(deactivate_query)
             deactivated_count = int(deactivate_result.split()[-1]) if deactivate_result.split() else 0

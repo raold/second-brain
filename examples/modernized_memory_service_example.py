@@ -5,7 +5,7 @@ This shows how to migrate the memory service to use the new logging system.
 This is an EXAMPLE file - not for production use.
 """
 
-from typing import Optional, Union
+from typing import Union
 
 from app.database import Database
 from app.database_mock import MockDatabase
@@ -132,7 +132,7 @@ class ModernizedMemoryService:
             })
 
             try:
-                with PerformanceLogger("memory_search", logger) as perf:
+                with PerformanceLogger("memory_search", logger):
                     # Search logic here
                     results = await self._execute_search(query, limit)
 
@@ -170,7 +170,7 @@ class ModernizedMemoryService:
                 })
                 raise
 
-    async def get_memory(self, memory_id: str, user_id: str = None) -> Optional[Memory]:
+    async def get_memory(self, memory_id: str, user_id: str = None) -> Memory | None:
         """Get memory by ID with access logging."""
 
         with LogContext(operation="get_memory", user_id=user_id):
@@ -265,7 +265,7 @@ class ModernizedMemoryService:
         """Execute search query."""
         return []  # Stub
 
-    async def _fetch_memory_by_id(self, memory_id: str) -> Optional[Memory]:
+    async def _fetch_memory_by_id(self, memory_id: str) -> Memory | None:
         """Fetch memory by ID."""
         return None  # Stub
 

@@ -15,7 +15,7 @@ from sqlalchemy.exc import OperationalError
 async def wait_for_postgres():
     """Wait for PostgreSQL to be ready"""
     database_url = os.getenv("DATABASE_URL", "postgresql://secondbrain:changeme@localhost:5432/secondbrain")
-    
+
     # Convert to asyncpg format
     if database_url.startswith("postgresql://"):
         asyncpg_url = database_url.replace("postgresql://", "postgresql://")
@@ -23,10 +23,10 @@ async def wait_for_postgres():
         asyncpg_url = database_url.replace("postgresql+asyncpg://", "postgresql://")
     else:
         asyncpg_url = database_url
-    
+
     max_retries = 30
     retry_interval = 2
-    
+
     for attempt in range(max_retries):
         try:
             # Try to connect
@@ -42,21 +42,21 @@ async def wait_for_postgres():
             else:
                 print(f"✗ Database failed to become ready after {max_retries} attempts")
                 return False
-    
+
     return False
 
 
 def wait_for_postgres_sync():
     """Synchronous version for compatibility"""
     database_url = os.getenv("DATABASE_URL", "postgresql://secondbrain:changeme@localhost:5432/secondbrain")
-    
+
     # Convert to SQLAlchemy format
     if not database_url.startswith("postgresql+"):
         database_url = database_url.replace("postgresql://", "postgresql+psycopg2://")
-    
+
     max_retries = 30
     retry_interval = 2
-    
+
     for attempt in range(max_retries):
         try:
             engine = create_engine(database_url)
@@ -72,7 +72,7 @@ def wait_for_postgres_sync():
             else:
                 print(f"✗ Database failed to become ready after {max_retries} attempts")
                 return False
-    
+
     return False
 
 

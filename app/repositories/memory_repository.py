@@ -7,13 +7,15 @@ database concerns from business logic.
 
 import json
 from abc import abstractmethod
-from typing import Optional, List, Any
 from datetime import datetime
+from typing import Any
+
 import asyncpg
-from app.utils.logging_config import get_logger
-from app.repositories.base_repository import BaseRepository
-from app.models.memory import Memory, MemoryType, MemoryMetrics
+
+from app.models.memory import Memory, MemoryMetrics, MemoryType
 from app.models.search import SearchCriteria
+from app.repositories.base_repository import BaseRepository
+from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -41,8 +43,8 @@ class MemoryRepository(BaseRepository[Memory]):
         self,
         query: str,
         limit: int = 50,
-        memory_type: Optional[MemoryType] = None,
-        user_id: Optional[str] = None
+        memory_type: MemoryType | None = None,
+        user_id: str | None = None
     ) -> list[Memory]:
         """Search memories by content similarity."""
         pass
@@ -63,7 +65,7 @@ class MemoryRepository(BaseRepository[Memory]):
         pass
 
     @abstractmethod
-    async def get_metrics(self, user_id: Optional[str] = None) -> MemoryMetrics:
+    async def get_metrics(self, user_id: str | None = None) -> MemoryMetrics:
         """Get memory statistics and metrics."""
         pass
 
@@ -214,8 +216,8 @@ class PostgreSQLMemoryRepository(MemoryRepository):
         self,
         query: str,
         limit: int = 50,
-        memory_type: Optional[MemoryType] = None,
-        user_id: Optional[str] = None
+        memory_type: MemoryType | None = None,
+        user_id: str | None = None
     ) -> list[Memory]:
         """
         Search memories by content using full-text search.
@@ -364,7 +366,7 @@ class PostgreSQLMemoryRepository(MemoryRepository):
             await self._log_operation('find_related', memory_id=memory_id, results_count=len(memories))
             return memories
 
-    async def get_metrics(self, user_id: Optional[str] = None) -> MemoryMetrics:
+    async def get_metrics(self, user_id: str | None = None) -> MemoryMetrics:
         """Get memory statistics and metrics."""
         async with self.pool.acquire() as conn:
             if user_id:

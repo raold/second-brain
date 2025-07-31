@@ -5,21 +5,24 @@ Handles CRUD operations for memories with cognitive type classification
 and advanced search capabilities.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Request
-from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Any
+from typing import Any
 
-from app.utils.logging_config import get_logger
-from app.dependencies import get_current_user, get_db_instance
-from app.shared import verify_api_key
-from app.database import get_database
-from app.services.service_factory import get_memory_service
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+
+from app.dependencies import get_current_user
 from app.models.api_models import (
-    MemoryRequest, SearchRequest, SemanticMemoryRequest, 
-    EpisodicMemoryRequest, ProceduralMemoryRequest, ContextualSearchRequest,
-    SecondBrainException, ValidationException, NotFoundException, 
-    UnauthorizedException, RateLimitExceededException
+    ContextualSearchRequest,
+    EpisodicMemoryRequest,
+    MemoryRequest,
+    ProceduralMemoryRequest,
+    SearchRequest,
+    SemanticMemoryRequest,
 )
+from app.services.service_factory import get_memory_service
+from app.shared import verify_api_key
+from app.utils.logging_config import get_logger
+
 
 class MemoryResponse(BaseModel):
     """Memory response model"""
@@ -30,8 +33,8 @@ class MemoryResponse(BaseModel):
     importance_score: float
     created_at: str
     updated_at: str
-    metadata: Optional[Dict[str, Any]] = None
-    tags: Optional[List[str]] = None
+    metadata: dict[str, Any] | None = None
+    tags: list[str] | None = None
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/memories", tags=["Memories"])
@@ -46,7 +49,7 @@ def convert_metadata_to_dict(metadata):
     return metadata
 
 
-@router.get("/test", response_model=Dict[str, str])
+@router.get("/test", response_model=dict[str, str])
 async def test_memory_routes():
     """Test endpoint for memory routes"""
     return {"status": "Memory routes working", "service": "memory"}
@@ -61,14 +64,14 @@ async def create_memory(
     """Create a new memory"""
     try:
         memory_service = get_memory_service()
-        
+
         # Create memory with service
         memory = await memory_service.create_memory(
             content=request.content,
             importance_score=request.importance_score,
             tags=request.tags
         )
-        
+
         return MemoryResponse(
             id=memory["id"],
             user_id=current_user.get("id", "unknown"),
@@ -80,7 +83,7 @@ async def create_memory(
             metadata=memory.get("metadata", {}),
             tags=memory.get("tags", [])
         )
-        
+
     except Exception as e:
         logger.error(f"Failed to create memory: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create memory: {str(e)}")
@@ -96,10 +99,10 @@ async def get_memory(
     try:
         memory_service = get_memory_service()
         memory = await memory_service.get_memory(memory_id)
-        
+
         if not memory:
             raise HTTPException(status_code=404, detail="Memory not found")
-        
+
         return MemoryResponse(
             id=memory["id"],
             user_id=current_user.get("id", "unknown"),
@@ -111,7 +114,7 @@ async def get_memory(
             metadata=memory.get("metadata", {}),
             tags=memory.get("tags", [])
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -119,7 +122,7 @@ async def get_memory(
         raise HTTPException(status_code=500, detail=f"Failed to get memory: {str(e)}")
 
 
-@router.get("/", response_model=List[MemoryResponse])
+@router.get("/", response_model=list[MemoryResponse])
 async def list_memories(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
@@ -130,7 +133,7 @@ async def list_memories(
     try:
         memory_service = get_memory_service()
         memories = await memory_service.get_memories(limit=limit, offset=offset)
-        
+
         return [
             MemoryResponse(
                 id=memory["id"],
@@ -145,13 +148,13 @@ async def list_memories(
             )
             for memory in memories
         ]
-        
+
     except Exception as e:
         logger.error(f"Failed to list memories: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to list memories: {str(e)}")
 
 
-@router.post("/search", response_model=List[MemoryResponse])
+@router.post("/search", response_model=list[MemoryResponse])
 async def search_memories(
     request: SearchRequest,
     current_user: dict = Depends(get_current_user),
@@ -164,7 +167,7 @@ async def search_memories(
             query=request.query,
             limit=request.limit
         )
-        
+
         return [
             MemoryResponse(
                 id=memory["id"],
@@ -179,7 +182,7 @@ async def search_memories(
             )
             for memory in memories
         ]
-        
+
     except Exception as e:
         logger.error(f"Failed to search memories: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to search memories: {str(e)}")
@@ -194,20 +197,20 @@ async def create_semantic_memory(
     """Create a semantic memory (facts, knowledge)"""
     try:
         memory_service = get_memory_service()
-        
+
         memory = await memory_service.create_memory(
             content=request.content,
             importance_score=request.importance_score,
             tags=request.tags + ["semantic"]
         )
-        
+
         return {
             "status": "success",
             "memory_id": memory["id"],
             "type": "semantic",
             "message": "Semantic memory created successfully"
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to create semantic memory: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create semantic memory: {str(e)}")
@@ -222,13 +225,13 @@ async def create_episodic_memory(
     """Create an episodic memory (personal experiences)"""
     try:
         memory_service = get_memory_service()
-        
+
         memory = await memory_service.create_memory(
             content=request.content,
             importance_score=request.importance_score,
             tags=request.tags + ["episodic", request.context]
         )
-        
+
         return {
             "status": "success",
             "memory_id": memory["id"],
@@ -236,7 +239,7 @@ async def create_episodic_memory(
             "context": request.context,
             "message": "Episodic memory created successfully"
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to create episodic memory: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create episodic memory: {str(e)}")
@@ -251,13 +254,13 @@ async def create_procedural_memory(
     """Create a procedural memory (how-to knowledge)"""
     try:
         memory_service = get_memory_service()
-        
+
         memory = await memory_service.create_memory(
             content=request.content,
             importance_score=request.importance_score,
             tags=request.tags + ["procedural", f"skill:{request.skill}"]
         )
-        
+
         return {
             "status": "success",
             "memory_id": memory["id"],
@@ -265,7 +268,7 @@ async def create_procedural_memory(
             "skill": request.skill,
             "message": "Procedural memory created successfully"
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to create procedural memory: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create procedural memory: {str(e)}")
@@ -280,13 +283,13 @@ async def contextual_search(
     """Perform intelligent contextual search"""
     try:
         memory_service = get_memory_service()
-        
+
         # Enhanced search with context
         memories = await memory_service.search_memories(
             query=f"{request.query} {request.context}",
             limit=request.limit
         )
-        
+
         return {
             "status": "success",
             "query": request.query,
@@ -302,7 +305,7 @@ async def contextual_search(
                 for memory in memories
             ]
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to perform contextual search: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to perform contextual search: {str(e)}")
@@ -316,7 +319,7 @@ async def memory_service_health():
         memory_service = get_memory_service()
         # Try a simple operation to verify service works
         await memory_service.get_memories(limit=1)
-        
+
         return {
             "status": "healthy",
             "service": "memory",
@@ -325,7 +328,7 @@ async def memory_service_health():
     except Exception as e:
         logger.error(f"Memory service health check failed: {e}")
         return {
-            "status": "unhealthy", 
+            "status": "unhealthy",
             "service": "memory",
             "error": str(e),
             "timestamp": "2025-07-31T16:00:00Z"

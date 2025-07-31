@@ -2,9 +2,11 @@
 Mock version of the database for testing without OpenAI API calls or database connection.
 """
 
-from app.utils.logging_config import get_logger
-from typing import Any
 from datetime import datetime
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 
@@ -106,7 +108,7 @@ class MockDatabase:
         # Convert to list and apply pagination
         all_memories = list(self.memories.values())
         all_memories.sort(key=lambda m: m["created_at"], reverse=True)
-        
+
         return all_memories[offset:offset + limit]
 
     async def delete_memory(self, memory_id: str) -> bool:
@@ -135,15 +137,15 @@ class MockDatabase:
 
         # Use basic search and apply filters
         results = await self.search_memories(query, limit=limit*2)  # Get more for filtering
-        
+
         # Apply memory type filter
         if memory_types:
             results = [r for r in results if r.get("memory_type") in memory_types]
-        
+
         # Apply importance filter
         if importance_threshold is not None:
             results = [r for r in results if r.get("importance_score", 0) >= importance_threshold]
-        
+
         return results[:limit]
 
     async def get_index_stats(self) -> dict[str, Any]:
@@ -163,7 +165,7 @@ class MockDatabase:
         """Mock execute method for compatibility."""
         if not self.is_initialized:
             raise RuntimeError("Database not initialized")
-        
+
         # Return mock results based on query patterns
         if "COUNT(*)" in query:
             return [(len(self.memories),)]
@@ -175,5 +177,5 @@ class MockDatabase:
         """Mock fetch method for compatibility."""
         if not self.is_initialized:
             raise RuntimeError("Database not initialized")
-        
+
         return []

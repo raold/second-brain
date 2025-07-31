@@ -2,12 +2,12 @@
 Pytest configuration and fixtures for the entire test suite.
 """
 
+import asyncio
 import os
 import sys
-import pytest
-import asyncio
 from pathlib import Path
-from typing import Generator, AsyncGenerator
+
+import pytest
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
@@ -43,10 +43,10 @@ def mock_env_vars(monkeypatch):
         'JWT_SECRET_KEY': 'test-secret-key',
         'USE_MOCK_DATABASE': 'true',
     }
-    
+
     for key, value in test_vars.items():
         monkeypatch.setenv(key, value)
-    
+
     return test_vars
 
 @pytest.fixture
@@ -63,7 +63,7 @@ def pytest_configure(config):
         "markers", "unit: Unit tests that don't require external dependencies"
     )
     config.addinivalue_line(
-        "markers", "integration: Integration tests that require external services"  
+        "markers", "integration: Integration tests that require external services"
     )
     config.addinivalue_line(
         "markers", "e2e: End-to-end tests"

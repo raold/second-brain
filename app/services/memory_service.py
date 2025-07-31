@@ -5,10 +5,12 @@ Separates concerns from route handlers, making the code more testable and mainta
 Enhanced with protocol-based interfaces and duck typing for maximum flexibility.
 """
 
-from typing import Any, Optional, Union
+from typing import Any
 
+from app.core.exceptions import DatabaseException
 from app.database import Database, get_database
 from app.database_importance_schema import setup_importance_tracking_schema
+
 # MockDatabase removed - using real database only
 from app.services.importance_engine import ImportanceEngine, get_importance_engine
 from app.services.monitoring import get_metrics_collector
@@ -22,12 +24,6 @@ from app.utils.protocols import (
     Service,
     call_if_callable,
     duck_type_check,
-)
-from app.core.exceptions import (
-    SecondBrainException,
-    NotFoundException,
-    ValidationException,
-    DatabaseException
 )
 
 logger = get_logger(__name__)
@@ -68,7 +64,7 @@ class MemoryService:
         self.importance_engine: ImportanceEngine | None = None
         self._initialized = False
         self._running = False
-        self._start_time: Optional[float] = None
+        self._start_time: float | None = None
         self._protocol_checker = ProtocolChecker()
 
     async def initialize(self):
@@ -940,7 +936,7 @@ class MemoryService:
 
         return entity
 
-    async def find_by_id(self, entity_id: str) -> Optional[MemoryLike]:
+    async def find_by_id(self, entity_id: str) -> MemoryLike | None:
         """Find memory by ID (Repository protocol)."""
         memory_data = await self.get_memory(entity_id)
 
@@ -961,7 +957,7 @@ class MemoryService:
 
         return None
 
-    async def find_all(self, limit: Optional[int] = None, offset: int = 0) -> list[MemoryLike]:
+    async def find_all(self, limit: int | None = None, offset: int = 0) -> list[MemoryLike]:
         """Find all memories (Repository protocol)."""
         await self.initialize()
 
@@ -1141,7 +1137,7 @@ class MemoryServiceFactory:
         if validate_protocols:
             validation_results = service.validate_protocols()
 
-            for protocol_name, result in validation_results.items():
+            for _protocol_name, result in validation_results.items():
                 if not result['implements']:
                     logger.warning(f"Service does not fully implement {result['protocol_name']}", extra={
                         "missing_methods": result['missing_methods']
@@ -1177,7 +1173,7 @@ class MemoryServiceFactory:
             if not self.database:
                 logger.warning("No database connection available")
                 return 0
-            
+
             # Get total count from database
             # Using raw SQL for efficiency
             pool = getattr(self.database, 'pool', None)
@@ -1190,7 +1186,7 @@ class MemoryServiceFactory:
                 memories = await self.database.get_all_memories(limit=1, offset=0)
                 # This is inefficient but works as fallback
                 return len(memories)
-                
+
         except Exception as e:
             logger.error(f"Failed to get memory count: {e}")
             return 0

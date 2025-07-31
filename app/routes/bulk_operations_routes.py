@@ -12,6 +12,12 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPExcepti
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
+from app.memory_migration_tools import (
+    MigrationConfig,
+    MigrationManager,
+    MigrationResult,
+    get_migration_manager,
+)
 from app.services.batch_classification_engine import (
     BatchClassificationEngine,
     BatchClassificationResult,
@@ -35,24 +41,7 @@ from app.services.memory_deduplication_engine import (
     SimilarityMethod,
     get_memory_deduplication_engine,
 )
-from app.memory_migration_tools import (
-    MigrationConfig,
-    MigrationManager,
-    MigrationResult,
-    get_migration_manager,
-)
 from app.shared import verify_api_key
-from typing import List
-from typing import Any
-from typing import Union
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import APIRouter
-from datetime import datetime
-from pydantic import BaseModel
-from pydantic import Field
-from app.dependencies import get_current_user
-from app.dependencies import get_db_instance
 
 # Create router
 bulk_router = APIRouter(prefix="/bulk", tags=["Bulk Operations"])

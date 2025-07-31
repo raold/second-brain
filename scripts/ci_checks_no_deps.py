@@ -245,7 +245,7 @@ def check_code_quality():
         print_ok("No debug code found in synthesis files")
     else:
         for filepath, issues in debug_issues:
-            for line_no, pattern, line in issues:
+            for line_no, pattern, _line in issues:
                 print_warning(f"{filepath}:{line_no} - Found {pattern}")
 
     if not whitespace_issues:
@@ -337,7 +337,7 @@ def main():
         ("Requirements", check_requirements),
     ]
 
-    for check_name, check_func in checks:
+    for _check_name, check_func in checks:
         check_func()
 
     # Summary

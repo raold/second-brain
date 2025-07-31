@@ -2,9 +2,10 @@
 Common request and response models for API routes
 """
 
-from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Any
+from typing import Any
+
 from fastapi import HTTPException
+from pydantic import BaseModel, Field
 
 
 class SecondBrainException(HTTPException):
@@ -43,45 +44,45 @@ class MemoryRequest(BaseModel):
     content: str
     memory_type: str = "semantic"
     importance_score: float = Field(default=0.5, ge=0.0, le=1.0)
-    metadata: Optional[Dict[str, Any]] = None
-    semantic_metadata: Optional[Dict[str, Any]] = None
-    episodic_metadata: Optional[Dict[str, Any]] = None
-    procedural_metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
+    semantic_metadata: dict[str, Any] | None = None
+    episodic_metadata: dict[str, Any] | None = None
+    procedural_metadata: dict[str, Any] | None = None
 
 
 class SearchRequest(BaseModel):
     """Request model for memory search"""
     query: str
-    limit: Optional[int] = 10
-    memory_types: Optional[List[str]] = None
+    limit: int | None = 10
+    memory_types: list[str] | None = None
 
 
 class SemanticMemoryRequest(BaseModel):
     """Request model for semantic memories"""
     content: str
     importance_score: float = Field(default=0.5, ge=0.0, le=1.0)
-    semantic_metadata: Optional[Dict[str, Any]] = None
+    semantic_metadata: dict[str, Any] | None = None
 
 
 class EpisodicMemoryRequest(BaseModel):
     """Request model for episodic memories"""
     content: str
     importance_score: float = Field(default=0.5, ge=0.0, le=1.0)
-    episodic_metadata: Optional[Dict[str, Any]] = None
+    episodic_metadata: dict[str, Any] | None = None
 
 
 class ProceduralMemoryRequest(BaseModel):
     """Request model for procedural memories"""
     content: str
     importance_score: float = Field(default=0.5, ge=0.0, le=1.0)
-    procedural_metadata: Optional[Dict[str, Any]] = None
+    procedural_metadata: dict[str, Any] | None = None
 
 
 class ContextualSearchRequest(BaseModel):
     """Request model for contextual search"""
     query: str
-    memory_types: Optional[List[str]] = None
-    importance_threshold: Optional[float] = None
+    memory_types: list[str] | None = None
+    importance_threshold: float | None = None
     limit: int = 10
 
 
@@ -89,8 +90,8 @@ class ContextualSearchRequest(BaseModel):
 class ReportRequest(BaseModel):
     """Request model for report generation"""
     report_type: str = "summary"
-    memory_types: Optional[List[str]] = None
-    date_range: Optional[Dict[str, str]] = None
+    memory_types: list[str] | None = None
+    date_range: dict[str, str] | None = None
     include_insights: bool = True
 
 
@@ -100,18 +101,18 @@ class ReportResponse(BaseModel):
     report_type: str
     content: str
     created_at: str
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 class BulkReviewRequest(BaseModel):
     """Request model for bulk review operations"""
-    memory_ids: List[str]
+    memory_ids: list[str]
     action: str = "review"
-    criteria: Optional[Dict[str, Any]] = None
+    criteria: dict[str, Any] | None = None
 
 
 class SubscriptionRequest(BaseModel):
     """Request model for subscriptions"""
     endpoint: str
-    event_types: List[str]
-    filters: Optional[Dict[str, Any]] = None
+    event_types: list[str]
+    filters: dict[str, Any] | None = None

@@ -2,7 +2,6 @@
 """
 Cleanup script to archive or delete pre-v3.0.0 files and stubs
 """
-import os
 import shutil
 from pathlib import Path
 
@@ -33,7 +32,7 @@ ARCHIVE_FILES = {
         "app/ingestion/engine.py",
         "app/insights/__init__.py",
     ],
-    
+
     # v2.8.2 synthesis features
     "v2.8.2-synthesis": [
         "app/models/synthesis/repetition_models.py",
@@ -45,7 +44,7 @@ ARCHIVE_FILES = {
         "app/routes/synthesis_routes.py",
         "app/routes/advanced_synthesis_routes.py",
     ],
-    
+
     # v2.8.3 intelligence features
     "v2.8.3-intelligence": [
         "app/models/intelligence/analytics_models.py",
@@ -55,7 +54,7 @@ ARCHIVE_FILES = {
         "app/services/intelligence/knowledge_gap_analysis.py",
         "app/routes/intelligence_routes.py",
     ],
-    
+
     # Test files for non-existent features
     "tests-for-removed-features": [
         "tests/unit/test_consolidation_engine.py",
@@ -79,10 +78,10 @@ ARCHIVE_DIRS = {
 
 def main():
     print("=== Pre-v3.0.0 Cleanup Script ===\n")
-    
+
     base_path = Path(".")
     archive_base = Path("archive/pre-v3")
-    
+
     # Delete empty stub files
     print("1. Deleting empty stub files...")
     deleted_count = 0
@@ -97,17 +96,17 @@ def main():
                 print(f"   [ERROR] deleting {file_path}: {e}")
         else:
             print(f"   - Not found: {file_path}")
-    
+
     print(f"\n   Deleted {deleted_count} files.\n")
-    
+
     # Archive pre-v3 files
     print("2. Archiving pre-v3.0.0 files...")
     archived_count = 0
-    
+
     for category, files in ARCHIVE_FILES.items():
         category_dir = archive_base / category
         category_dir.mkdir(parents=True, exist_ok=True)
-        
+
         print(f"\n   Category: {category}")
         for file_path in files:
             src = base_path / file_path
@@ -117,7 +116,7 @@ def main():
                 dst_dir = category_dir / Path(*relative_parts[:-1])
                 dst_dir.mkdir(parents=True, exist_ok=True)
                 dst = dst_dir / relative_parts[-1]
-                
+
                 try:
                     shutil.move(str(src), str(dst))
                     print(f"   [OK] Archived: {file_path}")
@@ -126,7 +125,7 @@ def main():
                     print(f"   [ERROR] Error archiving {file_path}: {e}")
             else:
                 print(f"   - Not found: {file_path}")
-    
+
     # Archive entire directories
     print("\n3. Archiving entire directories...")
     for category, dir_path in ARCHIVE_DIRS.items():
@@ -141,13 +140,13 @@ def main():
                 print(f"   [ERROR] Error archiving directory {dir_path}: {e}")
         else:
             print(f"   - Directory not found: {dir_path}")
-    
+
     print(f"\n   Archived {archived_count} files/directories.\n")
-    
+
     # Clean up empty directories
     print("4. Cleaning up empty directories...")
     empty_dirs = []
-    
+
     # Directories that might now be empty
     check_dirs = [
         "app/storage",
@@ -159,7 +158,7 @@ def main():
         "app/models/intelligence",
         "app/routes",
     ]
-    
+
     for dir_path in check_dirs:
         full_dir = base_path / dir_path
         if full_dir.exists() and full_dir.is_dir():
@@ -171,16 +170,16 @@ def main():
                     print(f"   [OK] Removed empty directory: {dir_path}")
                 except Exception as e:
                     print(f"   [ERROR] Error removing directory {dir_path}: {e}")
-    
+
     print(f"\n   Removed {len(empty_dirs)} empty directories.\n")
-    
+
     # Summary
     print("=== Cleanup Summary ===")
     print(f"Files deleted: {deleted_count}")
     print(f"Files/directories archived: {archived_count}")
     print(f"Empty directories removed: {len(empty_dirs)}")
     print(f"\nArchived files can be found in: {archive_base}")
-    
+
     # Create summary file
     summary_file = archive_base / "CLEANUP_SUMMARY.md"
     with open(summary_file, "w") as f:
@@ -191,21 +190,21 @@ def main():
         for file in DELETE_FILES:
             f.write(f"- {file}\n")
         f.write(f"\nTotal: {deleted_count} files\n\n")
-        
+
         f.write("## Files Archived\n")
         for category, files in ARCHIVE_FILES.items():
             f.write(f"\n### {category}\n")
             for file in files:
                 f.write(f"- {file}\n")
-        
+
         f.write("\n## Directories Archived\n")
         for category, dir_path in ARCHIVE_DIRS.items():
             f.write(f"- {dir_path} -> {category}\n")
-        
-        f.write(f"\n## Empty Directories Removed\n")
+
+        f.write("\n## Empty Directories Removed\n")
         for dir_path in empty_dirs:
             f.write(f"- {dir_path}\n")
-    
+
     print(f"\nCleanup summary written to: {summary_file}")
 
 

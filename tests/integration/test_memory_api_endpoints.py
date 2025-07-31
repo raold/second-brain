@@ -3,9 +3,10 @@ Comprehensive Integration Tests for Memory API Endpoints
 Tests all memory-related endpoints with real FastAPI client
 """
 
+from unittest.mock import patch
+
 import pytest
 from httpx import AsyncClient
-from unittest.mock import AsyncMock, patch
 
 
 class TestMemoryAPIEndpoints:
@@ -23,13 +24,13 @@ class TestMemoryAPIEndpoints:
             },
             "importance_score": 0.8
         }
-        
+
         response = await client.post(
             "/memories/semantic",
             json=payload,
             params={"api_key": api_key}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "id" in data
@@ -50,13 +51,13 @@ class TestMemoryAPIEndpoints:
             },
             "importance_score": 0.7
         }
-        
+
         response = await client.post(
             "/memories/episodic",
             json=payload,
             params={"api_key": api_key}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "id" in data
@@ -77,13 +78,13 @@ class TestMemoryAPIEndpoints:
             },
             "importance_score": 0.9
         }
-        
+
         response = await client.post(
             "/memories/procedural",
             json=payload,
             params={"api_key": api_key}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "id" in data
@@ -104,7 +105,7 @@ class TestMemoryAPIEndpoints:
                 }
             },
             {
-                "endpoint": "/memories/episodic", 
+                "endpoint": "/memories/episodic",
                 "payload": {
                     "content": "Attended ML conference yesterday",
                     "episodic_metadata": {"event_type": "conference", "location": "San Francisco"},
@@ -112,7 +113,7 @@ class TestMemoryAPIEndpoints:
                 }
             }
         ]
-        
+
         # Store test memories
         for memory in memories:
             await client.post(
@@ -120,7 +121,7 @@ class TestMemoryAPIEndpoints:
                 json=memory["payload"],
                 params={"api_key": api_key}
             )
-        
+
         # Test contextual search
         search_payload = {
             "query": "machine learning",
@@ -129,13 +130,13 @@ class TestMemoryAPIEndpoints:
             "importance_threshold": 0.5,
             "include_archived": False
         }
-        
+
         response = await client.post(
             "/memories/search/contextual",
             json=search_payload,
             params={"api_key": api_key}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
@@ -153,7 +154,7 @@ class TestMemoryAPIEndpoints:
             params={"api_key": api_key}
         )
         assert response.status_code in [400, 422]  # Validation error
-        
+
         # Test invalid importance score
         response = await client.post(
             "/memories/semantic",
@@ -170,42 +171,42 @@ class TestMemoryAPIEndpoints:
             "content": "Test memory for CRUD operations",
             "importance_score": 0.7
         }
-        
+
         create_response = await client.post(
             "/memories/semantic",
             json=create_payload,
             params={"api_key": api_key}
         )
-        
+
         assert create_response.status_code == 200
         memory = create_response.json()
         memory_id = memory["id"]
-        
+
         # Read
         read_response = await client.get(
             f"/memories/{memory_id}",
             params={"api_key": api_key}
         )
-        
+
         assert read_response.status_code == 200
         retrieved_memory = read_response.json()
         assert retrieved_memory["id"] == memory_id
         assert retrieved_memory["content"] == create_payload["content"]
-        
+
         # Delete
         delete_response = await client.delete(
             f"/memories/{memory_id}",
             params={"api_key": api_key}
         )
-        
+
         assert delete_response.status_code == 200
-        
+
         # Verify deletion
         verify_response = await client.get(
             f"/memories/{memory_id}",
             params={"api_key": api_key}
         )
-        
+
         assert verify_response.status_code == 404
 
     @pytest.mark.asyncio
@@ -222,24 +223,24 @@ class TestMemoryAPIEndpoints:
                 json=payload,
                 params={"api_key": api_key}
             )
-        
+
         # Test pagination
         response = await client.get(
             "/memories",
             params={"api_key": api_key, "limit": 3, "offset": 0}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
         assert len(data) <= 3
-        
+
         # Test second page
         response = await client.get(
             "/memories",
             params={"api_key": api_key, "limit": 3, "offset": 3}
         )
-        
+
         assert response.status_code == 200
 
     @pytest.mark.asyncio
@@ -250,25 +251,25 @@ class TestMemoryAPIEndpoints:
             "content": "Artificial intelligence and machine learning are transforming technology",
             "importance_score": 0.8
         }
-        
+
         await client.post(
             "/memories/semantic",
             json=payload,
             params={"api_key": api_key}
         )
-        
+
         # Search for the memory
         search_payload = {
             "query": "artificial intelligence technology",
             "limit": 10
         }
-        
+
         response = await client.post(
             "/memories/search",
             json=search_payload,
             params={"api_key": api_key}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
@@ -281,7 +282,7 @@ class TestMemoryAPIEndpoints:
         # Test without API key
         response = await client.get("/memories")
         assert response.status_code in [401, 422]  # Unauthorized or validation error
-        
+
         # Test with invalid API key
         response = await client.get(
             "/memories",
@@ -302,27 +303,27 @@ class TestMemoryAPIEndpoints:
             },
             "importance_score": 0.9
         }
-        
+
         # Store memory
         response = await client.post(
             "/memories/semantic",
             json=payload,
             params={"api_key": api_key}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         memory_id = data["id"]
-        
+
         # Retrieve and verify metadata
         response = await client.get(
             f"/memories/{memory_id}",
             params={"api_key": api_key}
         )
-        
+
         assert response.status_code == 200
         retrieved = response.json()
-        
+
         # Verify semantic metadata is preserved
         if "semantic_metadata" in retrieved:
             metadata = retrieved["semantic_metadata"]
@@ -340,28 +341,28 @@ class TestMemoryAPIEndpoints:
                 params={"api_key": api_key}
             )
             responses.append(response.status_code)
-        
+
         # Most should succeed, but might hit rate limits
         success_count = sum(1 for status in responses if status == 200)
         assert success_count >= 5  # At least some should succeed
 
-    @pytest.mark.asyncio 
+    @pytest.mark.asyncio
     async def test_error_handling_database_failures(self, client: AsyncClient, api_key: str):
         """Test error handling when database operations fail"""
         with patch('app.database.Database.store_memory') as mock_store:
             mock_store.side_effect = Exception("Database connection failed")
-            
+
             payload = {
                 "content": "Test memory that should fail",
                 "importance_score": 0.5
             }
-            
+
             response = await client.post(
                 "/memories/semantic",
                 json=payload,
                 params={"api_key": api_key}
             )
-            
+
             # Should return server error
             assert response.status_code == 500
 
@@ -375,22 +376,22 @@ class TestMemoryAPIEndpoints:
             "Content with unicode: 🧠🤖",
             "Very long content: " + "A" * 10000
         ]
-        
+
         for content in dangerous_contents:
             payload = {
                 "content": content,
                 "importance_score": 0.5
             }
-            
+
             response = await client.post(
-                "/memories/semantic", 
+                "/memories/semantic",
                 json=payload,
                 params={"api_key": api_key}
             )
-            
+
             # Should either succeed (sanitized) or fail with validation error
             assert response.status_code in [200, 400, 422]
-            
+
             if response.status_code == 200:
                 # If successful, content should be stored
                 data = response.json()

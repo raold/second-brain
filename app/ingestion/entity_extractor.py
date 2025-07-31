@@ -2,9 +2,10 @@
 Entity extraction component for the sophisticated ingestion engine
 """
 
-from app.utils.logging_config import get_logger
-from typing import List
 from typing import Any
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 

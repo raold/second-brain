@@ -4,20 +4,20 @@ FINAL FIX - GET THE APP RUNNING NOW
 This script will fix ALL remaining issues and get the app running
 """
 
-import os
 import re
 import subprocess
 from pathlib import Path
 
+
 def add_missing_import(file_path, model_name, import_line):
     """Add missing import to a file"""
-    with open(file_path, 'r') as f:
+    with open(file_path) as f:
         content = f.read()
-    
+
     if model_name not in content:
         print(f"❌ {model_name} not found in {file_path}")
         return False
-    
+
     # Find where to add the import (after other imports)
     import_section = re.search(r'(from .+ import .+\n)+', content)
     if import_section:
@@ -31,26 +31,26 @@ def add_missing_import(file_path, model_name, import_line):
                 lines.insert(i, import_line)
                 break
         content = '\n'.join(lines)
-    
+
     with open(file_path, 'w') as f:
         f.write(content)
-    
+
     print(f"✅ Added {model_name} import to {file_path}")
     return True
 
 def fix_suggestion_engine():
     """Fix LearningPathSuggestion import in suggestion_engine.py"""
     file_path = Path("/Users/dro/Documents/second-brain/app/services/synthesis/suggestion_engine.py")
-    
+
     # Read the file
-    with open(file_path, 'r') as f:
+    with open(file_path) as f:
         content = f.read()
-    
+
     # Check if LearningPathSuggestion is already imported
     if "from app.models.synthesis.suggestion_models import" in content and "LearningPathSuggestion" in content:
         print("✅ LearningPathSuggestion already imported")
         return
-    
+
     # Find the existing imports from suggestion_models
     import_match = re.search(r'from app\.models\.synthesis\.suggestion_models import \((.*?)\)', content, re.DOTALL)
     if import_match:
@@ -67,39 +67,39 @@ def fix_suggestion_engine():
             r'\1from app.models.synthesis.suggestion_models import LearningPathSuggestion\n',
             content
         )
-    
+
     # Write back
     with open(file_path, 'w') as f:
         f.write(content)
-    
+
     print("✅ Fixed LearningPathSuggestion import")
 
 def check_all_models_defined():
     """Verify all models are properly defined"""
     suggestion_models = Path("/Users/dro/Documents/second-brain/app/models/synthesis/suggestion_models.py")
-    
-    with open(suggestion_models, 'r') as f:
+
+    with open(suggestion_models) as f:
         content = f.read()
-    
+
     required_models = [
         "LearningPathSuggestion",
-        "SuggestionBase", 
+        "SuggestionBase",
         "ContentSuggestion",
         "QuerySuggestion",
         "ActionSuggestion",
         "SuggestionResponse"
     ]
-    
+
     missing = []
     for model in required_models:
         if f"class {model}" not in content:
             missing.append(model)
-    
+
     if missing:
         print(f"⚠️  Missing models in suggestion_models.py: {missing}")
         # Add missing models
         models_to_add = []
-        
+
         if "LearningPathSuggestion" in missing:
             models_to_add.append('''
 class LearningPathSuggestion(BaseModel):
@@ -116,18 +116,18 @@ class LearningPathSuggestion(BaseModel):
     confidence: float = Field(default=0.8, ge=0, le=1)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 ''')
-        
+
         if models_to_add:
             # Add imports if needed
             if "UUID" not in content:
                 content = "from uuid import UUID, uuid4\n" + content
-            
+
             # Add models at the end
             content += '\n'.join(models_to_add)
-            
+
             with open(suggestion_models, 'w') as f:
                 f.write(content)
-            
+
             print(f"✅ Added missing models: {missing}")
     else:
         print("✅ All required models are defined")
@@ -143,7 +143,7 @@ def check_app_status():
     import time
     print("\n⏳ Waiting for app to start...")
     time.sleep(10)
-    
+
     try:
         result = subprocess.run(
             ["curl", "-s", "http://localhost:8000/health"],
@@ -151,7 +151,7 @@ def check_app_status():
             text=True,
             timeout=5
         )
-        
+
         if result.returncode == 0 and result.stdout:
             print("✅ APP IS RUNNING!")
             print(f"Health check response: {result.stdout}")
@@ -175,17 +175,17 @@ def main():
     """Run all fixes"""
     print("🚀 FINAL APP FIX - GETTING IT RUNNING NOW")
     print("="*50)
-    
+
     # Fix known issues
     print("\n1. Fixing suggestion_engine.py...")
     fix_suggestion_engine()
-    
+
     print("\n2. Checking all models are defined...")
     check_all_models_defined()
-    
+
     print("\n3. Restarting app...")
     restart_app()
-    
+
     print("\n4. Checking app status...")
     if check_app_status():
         print("\n🎉 SUCCESS! The app is running!")

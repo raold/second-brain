@@ -6,7 +6,6 @@ It requires the cairosvg library: pip install cairosvg
 The Second Brain favicon features a pink brain design with AI neural nodes.
 """
 
-import os
 from pathlib import Path
 
 # For environments without cairosvg, we'll provide instructions
@@ -18,7 +17,7 @@ except ImportError:
 
 def generate_favicon_pngs():
     """Generate PNG versions of the favicon from SVG"""
-    
+
     if not CAIROSVG_AVAILABLE:
         print("Error: cairosvg is not installed.")
         print("\nTo generate PNG favicons, install cairosvg:")
@@ -28,23 +27,23 @@ def generate_favicon_pngs():
         print("  - Design tools like Inkscape, GIMP, or Figma")
         print("  - Browser developer tools (save SVG as image)")
         return
-    
+
     # Path to SVG and output directory
     svg_path = Path("static/favicon.svg")
     output_dir = Path("static")
-    
+
     if not svg_path.exists():
         print(f"Error: {svg_path} not found!")
         return
-    
+
     # Sizes to generate
     sizes = [16, 32, 48, 64, 128, 180, 192, 512]
-    
+
     print("Generating favicon PNGs from SVG...")
-    
+
     for size in sizes:
         output_path = output_dir / f"favicon-{size}.png"
-        
+
         try:
             cairosvg.svg2png(
                 url=str(svg_path),
@@ -55,14 +54,14 @@ def generate_favicon_pngs():
             print(f"✓ Generated {output_path} ({size}x{size})")
         except Exception as e:
             print(f"✗ Failed to generate {size}x{size}: {e}")
-    
+
     # Special files
     special_files = {
         "apple-touch-icon.png": 180,
         "favicon-192.png": 192,  # Android Chrome
         "favicon-512.png": 512   # PWA
     }
-    
+
     for filename, size in special_files.items():
         output_path = output_dir / filename
         try:
@@ -75,7 +74,7 @@ def generate_favicon_pngs():
             print(f"✓ Generated {output_path} ({size}x{size})")
         except Exception as e:
             print(f"✗ Failed to generate {filename}: {e}")
-    
+
     print("\nFavicon generation complete!")
     print("\nTo use these in your HTML, add:")
     print("""
@@ -114,13 +113,13 @@ def create_web_manifest():
             }
         ]
     }
-    
+
     import json
     manifest_path = Path("static/manifest.json")
-    
+
     with open(manifest_path, 'w') as f:
         json.dump(manifest, f, indent=2)
-    
+
     print(f"\n✓ Created {manifest_path}")
     print("\nTo enable PWA support, add to your HTML:")
     print('    <link rel="manifest" href="/static/manifest.json">')
@@ -129,8 +128,8 @@ def create_web_manifest():
 if __name__ == "__main__":
     print("Second Brain v3 - Favicon Generator")
     print("===================================\n")
-    
+
     generate_favicon_pngs()
     create_web_manifest()
-    
+
     print("\n✨ Done! Your favicons are ready.")

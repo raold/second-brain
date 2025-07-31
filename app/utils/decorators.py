@@ -9,11 +9,12 @@ architectural needs while maintaining readability and debuggability.
 import asyncio
 import functools
 import inspect
-from app.utils.logging_config import get_logger
-from typing import Callable
-from typing import Optional
-from typing import Union
 from collections import defaultdict
+from collections.abc import Callable
+from typing import Union
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 
@@ -22,7 +23,7 @@ logger = get_logger(__name__)
 # ============================================================================
 
 def measure_performance(
-    operation_name: Optional[str] = None,
+    operation_name: str | None = None,
     log_slow_queries: bool = True,
     slow_threshold_ms: float = 1000.0,
     include_args: bool = False
@@ -204,7 +205,7 @@ def retry(
     delay: float = 1.0,
     backoff: float = 2.0,
     exceptions: Union[type[Exception], tuple] = Exception,
-    on_retry: Optional[Callable] = None
+    on_retry: Callable | None = None
 ):
     """
     Retry decorator with exponential backoff and customizable behavior.
@@ -330,8 +331,8 @@ def circuit_breaker(
 # ============================================================================
 
 def memoize(
-    max_size: Optional[int] = 128,
-    ttl: Optional[float] = None,
+    max_size: int | None = 128,
+    ttl: float | None = None,
     typed: bool = False
 ):
     """
@@ -558,10 +559,10 @@ def compose_decorators(*decorators):
 
 # Common decorator combinations
 def robust_api_endpoint(
-    operation_name: Optional[str] = None,
+    operation_name: str | None = None,
     max_attempts: int = 3,
     rate_limit_calls: int = 100,
-    cache_ttl: Optional[float] = None
+    cache_ttl: float | None = None
 ):
     """
     Pre-composed decorator for robust API endpoints.
@@ -620,7 +621,7 @@ if __name__ == "__main__":
 
         try:
             create_user("", 30)  # Should fail validation
-            assert False, "Should have raised ValueError"
+            raise AssertionError("Should have raised ValueError")
         except ValueError:
             pass
 

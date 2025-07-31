@@ -16,7 +16,7 @@ This module contains service implementations for synthesis features including:
 from .advanced_synthesis import AdvancedSynthesisEngine, ThemeCluster
 from .consolidation_engine import ConsolidationEngine, MemorySimilarity
 from .graph_metrics_service import GraphMetricsService, GraphNode
-from .knowledge_summarizer import KnowledgeSummarizer, KnowledgeDomain
+from .knowledge_summarizer import KnowledgeDomain, KnowledgeSummarizer
 from .suggestion_engine import SuggestionEngine, UserBehaviorProfile
 
 # Legacy services (kept for compatibility)

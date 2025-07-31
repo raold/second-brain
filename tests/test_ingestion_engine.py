@@ -4,7 +4,7 @@ Unit tests for the ingestion engine
 
 import io
 from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -232,20 +232,20 @@ class TestIngestionEngine:
             # Create paragraphs of varying sizes
             para_content = f"This is paragraph {i}. " * (10 + i % 5)
             paragraphs.append(para_content)
-        
+
         large_content = "\n\n".join(paragraphs)
 
         chunks = engine._split_content(large_content, max_chunk_size=500)
 
         assert len(chunks) > 1
-        
+
         # Verify all content is preserved
         joined = "\n\n".join(chunks)
-        
+
         # Check that all original paragraphs are preserved
         for i in range(20):
             assert f"This is paragraph {i}" in joined
-        
+
         # Verify no content is duplicated or lost
         for para in paragraphs:
             assert para in joined
@@ -262,7 +262,7 @@ class TestIngestionEngine:
         parser = engine._get_parser('text/markdown')
         assert parser is not None
         assert parser.supports('text/markdown')
-        
+
         # Unsupported type
         parser = engine._get_parser('application/octet-stream')
         assert parser is None
@@ -320,7 +320,7 @@ class TestIngestionEngine:
         # Create test file
         test_file = tmp_path / "error_test.txt"
         test_file.write_text("Test content")
-        
+
         # Mock repository to raise error
         engine.memory_repository.create.side_effect = Exception("Database error")
 
@@ -339,7 +339,7 @@ class TestIngestionEngine:
         """Test that temporary files are cleaned up"""
         test_content = "Temporary file content"
 
-        result = await engine.ingest_file(
+        await engine.ingest_file(
             file=test_content,
             filename="temp.txt",
             user_id="user123"
@@ -368,10 +368,10 @@ class TestIngestionEngineWithParsers:
             extraction_pipeline=pipeline,
             temp_dir=tmp_path / "ingestion"
         )
-        
+
         # Clear existing parsers and add mocked ones
         engine.parsers = []
-        
+
         # Mock parser instances
         pdf_parser = AsyncMock()
         pdf_parser.supports = Mock(side_effect=lambda mt: mt == 'application/pdf')
@@ -398,7 +398,7 @@ class TestIngestionEngineWithParsers:
         # Create dummy PDF file
         pdf_file = tmp_path / "test.pdf"
         pdf_file.write_bytes(b"dummy pdf content")
-        
+
         # Mock memory creation
         mock_memory = Mock(spec=Memory)
         mock_memory.id = "mem-pdf-123"

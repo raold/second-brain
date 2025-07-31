@@ -148,7 +148,7 @@ def main():
     ]
 
     all_passed = True
-    for check_name, check_func in checks:
+    for _check_name, check_func in checks:
         if not check_func():
             all_passed = False
 

@@ -47,6 +47,7 @@ for module in modules_to_clear:
 
 # Import after environment setup
 from app.app import app
+
 # MockDatabase removed - using real database with test environment
 
 

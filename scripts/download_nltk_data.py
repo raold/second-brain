@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Download required NLTK data."""
 
-import nltk
 import ssl
+
+import nltk
 
 # Handle SSL certificate issues
 try:

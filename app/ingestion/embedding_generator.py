@@ -4,9 +4,9 @@ Embedding generation component for automatic vector embeddings
 
 import asyncio
 import hashlib
-from typing import Any, Tuple, Optional
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
 
 # Optional imports
 try:
@@ -34,9 +34,9 @@ class EmbeddingMetadata:
     """Metadata about generated embeddings"""
     model: str
     dimensions: int
-    chunk_id: Optional[int] = None
-    chunk_overlap: Optional[int] = None
-    generated_at: Optional[datetime] = None
+    chunk_id: int | None = None
+    chunk_overlap: int | None = None
+    generated_at: datetime | None = None
 
 
 class EmbeddingGenerator:
@@ -206,7 +206,7 @@ class EmbeddingGenerator:
         try:
             client = get_openai_client()
             embedding = await client.get_embedding(text)
-            
+
             if embedding:
                 return embedding
             else:

@@ -2,11 +2,10 @@
 Unit tests for core models in Second Brain
 """
 
-import pytest
 from datetime import datetime
 from uuid import UUID
 
-from app.models.memory import Memory, MemoryType, MemoryMetrics
+from app.models.memory import Memory, MemoryMetrics, MemoryType
 
 
 class TestMemoryModel:
@@ -42,7 +41,7 @@ class TestMemoryModel:
             access_count=5,
             last_accessed=now
         )
-        
+
         assert memory.id == "test-id"
         assert memory.content == "Test content"
         assert memory.memory_type == MemoryType.SEMANTIC
@@ -63,7 +62,7 @@ class TestMemoryModel:
             memory_type=MemoryType.EPISODIC,
             user_id="user-456"
         )
-        
+
         assert memory.content == "Created memory"
         assert memory.memory_type == MemoryType.EPISODIC
         assert memory.user_id == "user-456"
@@ -95,7 +94,7 @@ class TestMemoryModel:
             tags=["test"],
             metadata={"key": "value"}
         )
-        
+
         data = memory.model_dump()
         assert isinstance(data, dict)
         assert data["content"] == "Test content"
@@ -112,7 +111,7 @@ class TestMemoryModel:
             "tags": ["deserialized"],
             "metadata": {"test": True}
         }
-        
+
         memory = Memory(**data)
         assert memory.content == "Deserialized content"
         assert memory.memory_type == MemoryType.SEMANTIC
@@ -135,7 +134,7 @@ class TestMemoryMetrics:
             total_access_count=500,
             last_updated=now
         )
-        
+
         assert metrics.total_memories == 100
         assert metrics.memories_by_type == {"factual": 50, "semantic": 30, "episodic": 20}
         assert metrics.average_importance == 0.65
@@ -154,7 +153,7 @@ class TestMemoryMetrics:
             total_access_count=0,
             last_updated=now
         )
-        
+
         data = metrics.model_dump()
         assert isinstance(data, dict)
         assert data["total_memories"] == 50

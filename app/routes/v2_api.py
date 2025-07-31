@@ -2,27 +2,19 @@
 Second Brain v2.0 API Routes
 Provides endpoints for the new interface
 """
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
-from datetime import datetime, timedelta
-import json
 import asyncio
-from typing import List, Dict, Any
-import subprocess
 import os
-from typing import Dict
-from typing import List
-from typing import Any
-from fastapi import HTTPException
-from fastapi import APIRouter
-from datetime import datetime
-from datetime import timedelta
+import subprocess
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
 router = APIRouter(prefix="/api/v2")
 
 # WebSocket connection manager
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.active_connections: list[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -85,7 +77,7 @@ async def get_git_activity():
             capture_output=True,
             text=True
         )
-        
+
         commits = []
         if result.returncode == 0:
             for line in result.stdout.strip().split('\n'):
@@ -121,11 +113,11 @@ async def get_todos():
     try:
         todos = []
         todo_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "TODO.md")
-        
+
         if os.path.exists(todo_file):
-            with open(todo_file, 'r') as f:
+            with open(todo_file) as f:
                 content = f.read()
-                
+
             # Parse TODO items (simplified)
             lines = content.split('\n')
             for line in lines:
@@ -141,12 +133,12 @@ async def get_todos():
                         "status": "completed",
                         "priority": "medium"
                     })
-        
+
         # Calculate progress
         total = len(todos)
         completed = len([t for t in todos if t["status"] == "completed"])
         progress = int((completed / total * 100) if total > 0 else 0)
-        
+
         return {
             "todos": todos[:10],  # Return first 10
             "progress": progress,
@@ -189,7 +181,7 @@ async def websocket_endpoint(websocket: WebSocket):
             "type": "connection",
             "status": "connected"
         })
-        
+
         # Keep connection alive
         while True:
             # Wait for messages or send periodic updates

@@ -5,10 +5,11 @@ These handlers implement cross-cutting concerns like analytics,
 notifications, and system monitoring triggered by domain events.
 """
 
-from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Any
 from datetime import datetime
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 
@@ -47,7 +48,7 @@ class ImportanceTrackingHandler(EventHandler):
 
     async def can_handle(self, event: DomainEvent) -> bool:
         """Only handle memory and search related events."""
-        return isinstance(event, (MemoryAccessedEvent, MemoryCreatedEvent, SearchPerformedEvent))
+        return isinstance(event, MemoryAccessedEvent | MemoryCreatedEvent | SearchPerformedEvent)
 
     async def _handle_memory_accessed(self, event: MemoryAccessedEvent) -> None:
         """Handle memory access events to update importance."""
@@ -429,7 +430,7 @@ class NotificationHandler(EventHandler):
 
         return False
 
-    async def _create_notification(self, event: DomainEvent) -> Optional[dict[str, Any]]:
+    async def _create_notification(self, event: DomainEvent) -> dict[str, Any] | None:
         """Create notification from event."""
         notification_templates = {
             ImportanceUpdatedEvent: {

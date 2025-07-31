@@ -6,10 +6,11 @@ Intelligently weights and combines results from exact, fuzzy, and semantic detec
 """
 
 import asyncio
-from app.utils.logging_config import get_logger
-from typing import List
-from typing import Any
 from collections import defaultdict
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 

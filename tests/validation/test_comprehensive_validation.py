@@ -2,10 +2,11 @@
 Comprehensive validation tests for CI/CD readiness
 """
 
-import pytest
-import sys
 import os
+import sys
 from pathlib import Path
+
+import pytest
 
 
 class TestEnvironmentValidation:
@@ -22,10 +23,10 @@ class TestEnvironmentValidation:
             "USE_MOCK_DATABASE",
             "API_TOKENS",
         ]
-        
+
         for var in required_vars:
             assert os.environ.get(var) is not None, f"Environment variable {var} not set"
-        
+
         # Test specific values
         assert os.environ.get("ENVIRONMENT") == "test"
         assert os.environ.get("USE_MOCK_DATABASE") == "true"
@@ -33,7 +34,7 @@ class TestEnvironmentValidation:
     def test_project_structure(self):
         """Test that required project files exist"""
         project_root = Path(__file__).parent.parent.parent
-        
+
         required_files = [
             "app/__init__.py",
             "app/app.py",
@@ -42,7 +43,7 @@ class TestEnvironmentValidation:
             "requirements.txt",
             "docker-compose.yml",
         ]
-        
+
         for file_path in required_files:
             full_path = project_root / file_path
             assert full_path.exists(), f"Required file missing: {file_path}"
@@ -50,13 +51,13 @@ class TestEnvironmentValidation:
     def test_test_structure(self):
         """Test that test structure is correct"""
         project_root = Path(__file__).parent.parent.parent
-        
+
         test_dirs = [
             "tests/unit",
-            "tests/integration", 
+            "tests/integration",
             "tests/validation",
         ]
-        
+
         for test_dir in test_dirs:
             dir_path = project_root / test_dir
             assert dir_path.exists(), f"Test directory missing: {test_dir}"
@@ -69,7 +70,7 @@ class TestDependencyValidation:
         """Test core application dependencies"""
         dependencies = [
             "fastapi",
-            "uvicorn", 
+            "uvicorn",
             "pydantic",
             "sqlalchemy",
             "asyncpg",
@@ -77,7 +78,7 @@ class TestDependencyValidation:
             "redis",
             "openai",
         ]
-        
+
         for dep in dependencies:
             try:
                 __import__(dep)
@@ -90,7 +91,7 @@ class TestDependencyValidation:
             "pytest",
             "pytest_asyncio",
         ]
-        
+
         for dep in test_dependencies:
             try:
                 __import__(dep)
@@ -104,14 +105,14 @@ class TestDependencyValidation:
             "black",
             "mypy",
         ]
-        
+
         missing_deps = []
         for dep in dev_dependencies:
             try:
                 __import__(dep)
             except ImportError:
                 missing_deps.append(dep)
-        
+
         if missing_deps:
             print(f"Optional dev dependencies missing: {missing_deps}")
             # Don't fail for missing dev deps, just warn
@@ -131,7 +132,7 @@ class TestApplicationValidation:
     def test_models_import(self):
         """Test that models can be imported"""
         try:
-            from app.models.memory import Memory, MemoryType, MemoryMetrics
+            from app.models.memory import Memory, MemoryMetrics, MemoryType
             assert Memory is not None
             assert MemoryType is not None
             assert MemoryMetrics is not None
@@ -150,10 +151,11 @@ class TestApplicationValidation:
     async def test_app_startup(self):
         """Test that the app can start up"""
         try:
-            from app.app import app
             # Try to create a test client
             from httpx import AsyncClient
-            
+
+            from app.app import app
+
             async with AsyncClient(app=app, base_url="http://test") as client:
                 response = await client.get("/health")
                 # Should either work or fail gracefully
@@ -168,25 +170,25 @@ class TestConfigurationValidation:
     def test_pytest_configuration(self):
         """Test pytest configuration"""
         project_root = Path(__file__).parent.parent.parent
-        
+
         # Check for pytest configuration
         config_files = [
             "pytest.ini",
             "pyproject.toml",
         ]
-        
+
         has_config = any((project_root / config).exists() for config in config_files)
         assert has_config, "No pytest configuration found"
 
     def test_docker_configuration(self):
         """Test Docker configuration"""
         project_root = Path(__file__).parent.parent.parent
-        
+
         docker_files = [
             "docker-compose.yml",
             "Dockerfile",
         ]
-        
+
         for docker_file in docker_files:
             if (project_root / docker_file).exists():
                 with open(project_root / docker_file) as f:
@@ -196,13 +198,13 @@ class TestConfigurationValidation:
     def test_requirements_files(self):
         """Test requirements files"""
         project_root = Path(__file__).parent.parent.parent
-        
+
         # Check for requirements files
         req_patterns = [
             "requirements.txt",
             "config/requirements*.txt",
         ]
-        
+
         found_requirements = False
         for pattern in req_patterns:
             if "*" in pattern:
@@ -215,7 +217,7 @@ class TestConfigurationValidation:
                 if (project_root / pattern).exists():
                     found_requirements = True
                     break
-        
+
         assert found_requirements, "No requirements files found"
 
 
@@ -226,11 +228,11 @@ class TestSecurityValidation:
         """Test API key configuration"""
         api_tokens = os.environ.get("API_TOKENS", "")
         assert len(api_tokens) > 0, "API_TOKENS not configured"
-        
+
         # Should be comma-separated tokens
         tokens = [token.strip() for token in api_tokens.split(",")]
         assert len(tokens) > 0, "No API tokens found"
-        
+
         # Each token should be reasonably long
         for token in tokens:
             assert len(token) >= 32, f"API token too short: {token[:10]}..."
@@ -239,13 +241,13 @@ class TestSecurityValidation:
         """Test that test environment is isolated"""
         assert os.environ.get("ENVIRONMENT") == "test"
         assert os.environ.get("USE_MOCK_DATABASE") == "true"
-        
+
         # Should not use production settings in tests
         production_indicators = [
             "PRODUCTION",
             "PROD",
         ]
-        
+
         for indicator in production_indicators:
             env_value = os.environ.get(indicator, "").lower()
             assert env_value not in ["true", "1", "yes"], f"Production setting {indicator} enabled in tests"
@@ -257,16 +259,13 @@ class TestPerformanceValidation:
     def test_import_performance(self):
         """Test that imports don't take too long"""
         import time
-        
+
         start_time = time.time()
-        
+
         # Test critical imports
-        from app.models.memory import Memory
-        from app.database_mock import MockDatabase
-        from app.app import app
-        
+
         import_time = time.time() - start_time
-        
+
         # Imports should be fast (less than 5 seconds)
         assert import_time < 5.0, f"Imports took too long: {import_time:.2f}s"
 
@@ -274,20 +273,22 @@ class TestPerformanceValidation:
     async def test_basic_response_time(self):
         """Test basic response time"""
         import time
+
         from httpx import AsyncClient
+
         from app.app import app
-        
+
         start_time = time.time()
-        
+
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-                response = await client.get("/health")
-                
+                await client.get("/health")
+
             response_time = time.time() - start_time
-            
+
             # Health check should be fast (less than 2 seconds)
             assert response_time < 2.0, f"Health check too slow: {response_time:.2f}s"
-            
+
         except Exception:
             # If health check fails, that's a separate issue
             # Don't fail performance test for functionality issues
@@ -301,16 +302,13 @@ class TestCICompatibility:
         """Test that code doesn't require interactive input"""
         # This is more of a static check - code should not use input()
         # or other interactive functions in production paths
-        
+
         # Import main modules and ensure they don't hang
         try:
-            from app.app import app
-            from app.models.memory import Memory
-            from app.database_mock import MockDatabase
-            
+
             # If we get here without hanging, we're good
             assert True
-            
+
         except Exception as e:
             # Check if it's a timeout or hanging issue
             if "timeout" in str(e).lower():
@@ -322,7 +320,7 @@ class TestCICompatibility:
     def test_deterministic_behavior(self):
         """Test that behavior is deterministic for CI"""
         from app.models.memory import Memory, MemoryType
-        
+
         # Create same memory multiple times
         memories = []
         for _ in range(3):
@@ -332,7 +330,7 @@ class TestCICompatibility:
                 importance_score=0.7
             )
             memories.append(memory)
-        
+
         # All should have same content and properties
         for memory in memories[1:]:
             assert memory.content == memories[0].content
@@ -342,14 +340,14 @@ class TestCICompatibility:
     def test_cleanup_behavior(self):
         """Test that resources are cleaned up properly"""
         # Test that mock database can be created and cleaned up
-        from app.database_mock import MockDatabase
-        
         import asyncio
-        
+
+        from app.database_mock import MockDatabase
+
         async def test_cleanup():
             mock_db = MockDatabase()
             await mock_db.initialize()
-            
+
             # Add some data
             memory_data = {
                 "id": "test-cleanup",
@@ -357,12 +355,12 @@ class TestCICompatibility:
                 "memory_type": "factual"
             }
             await mock_db.create_memory(memory_data)
-            
+
             # Clean up
             await mock_db.close()
-            
+
             # Should not leave hanging resources
             return True
-        
+
         result = asyncio.run(test_cleanup())
         assert result is True

@@ -2,10 +2,11 @@
 Intelligent content classifier for automatic categorization and quality assessment
 """
 
-from app.utils.logging_config import get_logger
+from collections import Counter, defaultdict
 from typing import Any
-from collections import Counter
-from collections import defaultdict
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 

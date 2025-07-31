@@ -1,12 +1,13 @@
 """Database schema setup for importance tracking"""
 
 from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 
 async def setup_importance_tracking_schema(db):
     """Setup database schema for importance tracking
-    
+
     Args:
         db: Database connection
     """

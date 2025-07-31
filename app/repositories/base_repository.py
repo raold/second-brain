@@ -3,10 +3,11 @@ Base repository pattern implementation with common functionality.
 """
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Optional, List, Any
+from typing import Any, Generic, TypeVar
+
 import asyncpg
+
 from app.utils.logging_config import get_logger
-from fastapi import Query
 
 T = TypeVar('T')
 
@@ -41,7 +42,7 @@ class BaseRepository(ABC, Generic[T]):
         """Map domain entity to database values."""
         pass
 
-    async def find_by_id(self, entity_id: str) -> Optional[T]:
+    async def find_by_id(self, entity_id: str) -> T | None:
         """
         Find entity by ID.
 
@@ -59,7 +60,7 @@ class BaseRepository(ABC, Generic[T]):
                 return await self._map_row_to_entity(row)
             return None
 
-    async def find_all(self, limit: Optional[int] = None, offset: int = 0) -> list[T]:
+    async def find_all(self, limit: int | None = None, offset: int = 0) -> list[T]:
         """
         Find all entities with optional pagination.
 
@@ -95,7 +96,7 @@ class BaseRepository(ABC, Generic[T]):
             count = await conn.fetchval(query, entity_id)
             return count > 0
 
-    async def count(self, where_clause: Optional[str] = None, params: Optional[list[Any]] = None) -> int:
+    async def count(self, where_clause: str | None = None, params: list[Any] | None = None) -> int:
         """
         Count entities with optional filtering.
 
@@ -138,7 +139,7 @@ class BaseRepository(ABC, Generic[T]):
         self,
         where_clause: str,
         params: list[Any],
-        limit: Optional[int] = None,
+        limit: int | None = None,
         offset: int = 0,
         order_by: str = "created_at DESC"
     ) -> list[T]:
@@ -169,7 +170,7 @@ class BaseRepository(ABC, Generic[T]):
     async def execute_query(
         self,
         query: str,
-        params: Optional[list[Any]] = None
+        params: list[Any] | None = None
     ) -> list[asyncpg.Record]:
         """
         Execute custom query and return raw results.
@@ -205,7 +206,7 @@ class BaseRepository(ABC, Generic[T]):
                     else:
                         await conn.execute(query)
 
-    async def _log_operation(self, operation: str, entity_id: Optional[str] = None, **kwargs):
+    async def _log_operation(self, operation: str, entity_id: str | None = None, **kwargs):
         """Log repository operations for debugging and monitoring."""
         log_data = {
             'repository': self.__class__.__name__,

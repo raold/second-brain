@@ -13,10 +13,6 @@ from sklearn.metrics import calinski_harabasz_score, silhouette_score
 from sklearn.preprocessing import StandardScaler
 
 from .models import ClusteringRequest, MemoryCluster
-from typing import Any
-from datetime import datetime
-from collections import Counter
-from collections import defaultdict
 
 
 class ClusterAnalyzer:

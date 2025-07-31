@@ -5,32 +5,32 @@ Fix all common import issues across the codebase
 
 import os
 import re
-import subprocess
+
 
 def add_missing_import(filepath, missing_name, import_line):
     """Add a missing import to a file"""
     try:
-        with open(filepath, 'r') as f:
+        with open(filepath) as f:
             content = f.read()
-        
+
         # Check if already imported
         if missing_name in content.split('\n')[0:50]:  # Check first 50 lines
             return False
-            
+
         lines = content.split('\n')
-        
+
         # Find where to insert import
         last_import_idx = 0
         for i, line in enumerate(lines):
             if line.startswith('import ') or line.startswith('from '):
                 last_import_idx = i
-        
+
         # Insert after last import
         lines.insert(last_import_idx + 1, import_line)
-        
+
         with open(filepath, 'w') as f:
             f.write('\n'.join(lines))
-        
+
         print(f"Fixed {filepath}: Added {missing_name}")
         return True
     except Exception as e:
@@ -150,23 +150,23 @@ def fix_common_imports():
             'name': 'Field'
         }
     ]
-    
+
     # Find all Python files
     python_files = []
-    for root, dirs, files in os.walk('/Users/dro/Documents/second-brain/app'):
+    for root, _dirs, files in os.walk('/Users/dro/Documents/second-brain/app'):
         for file in files:
             if file.endswith('.py'):
                 python_files.append(os.path.join(root, file))
-    
+
     print(f"Found {len(python_files)} Python files to check")
-    
+
     # Check each file for missing imports
     fixed_count = 0
     for filepath in python_files:
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath) as f:
                 content = f.read()
-            
+
             for fix in fixes:
                 if re.search(fix['pattern'], content):
                     # Check if import is missing
@@ -175,7 +175,7 @@ def fix_common_imports():
                             fixed_count += 1
         except Exception as e:
             print(f"Error checking {filepath}: {e}")
-    
+
     print(f"\nFixed {fixed_count} import issues")
 
 if __name__ == "__main__":

@@ -2,8 +2,8 @@
 Basic functionality tests for Second Brain application
 """
 
+
 import pytest
-from unittest.mock import Mock, patch
 
 
 class TestBasicImports:
@@ -28,7 +28,7 @@ class TestBasicImports:
         """Test app module import"""
         from app import app
         assert hasattr(app, 'app')
-        
+
     def test_models_import(self):
         """Test models import"""
         from app.models.memory import Memory, MemoryType
@@ -54,11 +54,11 @@ class TestAppInitialization:
     def test_pydantic_model_creation(self):
         """Test Pydantic model creation"""
         from pydantic import BaseModel
-        
+
         class TestModel(BaseModel):
             name: str
             value: int = 0
-        
+
         model = TestModel(name="test")
         assert model.name == "test"
         assert model.value == 0
@@ -67,14 +67,14 @@ class TestAppInitialization:
     async def test_mock_database_initialization(self):
         """Test mock database initialization"""
         from app.database_mock import MockDatabase
-        
+
         mock_db = MockDatabase()
         await mock_db.initialize()
-        
+
         assert mock_db.memories == {}
         assert mock_db.users == {}
         assert mock_db.sessions == {}
-        
+
         await mock_db.close()
 
 
@@ -84,7 +84,7 @@ class TestEnvironmentSetup:
     def test_environment_variables(self):
         """Test required environment variables are set"""
         import os
-        
+
         # These should be set by conftest.py
         assert os.environ.get("ENVIRONMENT") == "test"
         assert os.environ.get("USE_MOCK_DATABASE") == "true"
@@ -94,7 +94,7 @@ class TestEnvironmentSetup:
         """Test Python path is set correctly"""
         import sys
         from pathlib import Path
-        
+
         project_root = Path(__file__).parent.parent.parent
         assert str(project_root) in sys.path
 
@@ -106,22 +106,22 @@ class TestErrorHandling:
         """Test handling of import errors"""
         try:
             import nonexistent_module
-            assert False, "Should have raised ImportError"
+            raise AssertionError("Should have raised ImportError")
         except ImportError:
             pass  # Expected
 
     def test_pydantic_validation_error(self):
         """Test Pydantic validation error handling"""
         from pydantic import BaseModel, ValidationError
-        
+
         class StrictModel(BaseModel):
             required_field: str
             number_field: int
-        
+
         # Missing required field
         with pytest.raises(ValidationError):
             StrictModel(number_field=42)
-        
+
         # Wrong type
         with pytest.raises(ValidationError):
             StrictModel(required_field="test", number_field="not_a_number")
@@ -154,10 +154,10 @@ class TestBasicDataStructures:
     def test_datetime_operations(self):
         """Test datetime operations"""
         from datetime import datetime, timedelta
-        
+
         now = datetime.utcnow()
         future = now + timedelta(hours=1)
-        
+
         assert future > now
         assert isinstance(now.isoformat(), str)
 
@@ -167,11 +167,11 @@ class TestUtilityFunctions:
 
     def test_uuid_generation(self):
         """Test UUID generation"""
-        from uuid import uuid4, UUID
-        
+        from uuid import UUID, uuid4
+
         id1 = uuid4()
         id2 = uuid4()
-        
+
         assert id1 != id2
         assert isinstance(id1, UUID)
         assert len(str(id1)) == 36  # Standard UUID string length
@@ -179,17 +179,17 @@ class TestUtilityFunctions:
     def test_json_serialization(self):
         """Test JSON serialization"""
         import json
-        
+
         data = {"test": True, "number": 42, "list": [1, 2, 3]}
         json_str = json.dumps(data)
         parsed = json.loads(json_str)
-        
+
         assert parsed == data
 
     def test_path_operations(self):
         """Test path operations"""
         from pathlib import Path
-        
+
         current_file = Path(__file__)
         assert current_file.exists()
         assert current_file.is_file()

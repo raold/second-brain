@@ -3,12 +3,12 @@ API routes for automated report generation
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.dependencies import get_current_user
 from app.models.synthesis.report_models import (
     GeneratedReport,
     ReportFormat,
@@ -17,7 +17,6 @@ from app.models.synthesis.report_models import (
     ReportTemplate,
     ReportType,
 )
-from app.dependencies import get_current_user, get_db_instance
 from app.services.service_factory import ServiceFactory
 from app.services.synthesis.report_generator import ReportGenerator
 
@@ -205,7 +204,7 @@ async def delete_report_schedule(
 
 @router.get("/history", response_model=list[GeneratedReport])
 async def get_report_history(
-    report_type: Optional[ReportType] = None,
+    report_type: ReportType | None = None,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     current_user: str = Depends(get_current_user),
@@ -263,7 +262,7 @@ async def get_report(
 @router.get("/{report_id}/download")
 async def download_report(
     report_id: UUID,
-    format: Optional[ReportFormat] = None,
+    format: ReportFormat | None = None,
     current_user: str = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -280,7 +279,7 @@ async def download_report(
 async def share_report(
     report_id: UUID,
     recipients: list[str],
-    message: Optional[str] = None,
+    message: str | None = None,
     current_user: str = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> dict:

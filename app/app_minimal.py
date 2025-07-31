@@ -3,6 +3,7 @@ Minimal Second Brain App - Just get it running
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.routes.health_routes import router as health_router
 
 # Create app

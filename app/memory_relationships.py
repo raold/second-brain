@@ -4,12 +4,12 @@ Analyzes and manages complex relationships between memories including semantic s
 temporal connections, causal relationships, and conceptual hierarchies.
 """
 
-from app.utils.logging_config import get_logger
+from collections import Counter, defaultdict
+from datetime import datetime, timedelta
 from typing import Any
-from datetime import datetime
-from datetime import timedelta
-from collections import Counter
-from collections import defaultdict
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 

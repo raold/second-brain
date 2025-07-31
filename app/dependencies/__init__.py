@@ -2,11 +2,11 @@
 Dependencies module for FastAPI dependency injection
 """
 
-from .auth import verify_api_key, get_current_user, get_db_instance, get_redis_instance
+from .auth import get_current_user, get_db_instance, get_redis_instance, verify_api_key
 
 __all__ = [
     "verify_api_key",
-    "get_current_user", 
+    "get_current_user",
     "get_db_instance",
     "get_redis_instance"
 ]

@@ -13,17 +13,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from app.utils.logging_config import get_logger
-from typing import Callable
-from typing import Optional
-from typing import Any
-from datetime import datetime
-from datetime import timedelta
-from enum import Enum
-from dataclasses import dataclass
-from collections import defaultdict
 
 logger = get_logger(__name__)
 
@@ -42,10 +34,10 @@ class LogMetric:
     timestamp: datetime
     level: str
     operation: str
-    duration_ms: Optional[float] = None
-    memory_mb: Optional[float] = None
-    user_id: Optional[str] = None
-    request_id: Optional[str] = None
+    duration_ms: float | None = None
+    memory_mb: float | None = None
+    user_id: str | None = None
+    request_id: str | None = None
     extra_data: dict[str, Any] = field(default_factory=dict)
 
 
@@ -98,7 +90,7 @@ class LogAnalyticsService:
 
         # Background processing
         self._processing = False
-        self._processor_task: Optional[asyncio.Task] = None
+        self._processor_task: asyncio.Task | None = None
 
     async def start_monitoring(self):
         """Start real-time log monitoring."""
@@ -421,7 +413,7 @@ class StructuredLogHandler(logging.Handler):
 
 
 # Global analytics service instance
-_analytics_service: Optional[LogAnalyticsService] = None
+_analytics_service: LogAnalyticsService | None = None
 
 
 def get_analytics_service() -> LogAnalyticsService:

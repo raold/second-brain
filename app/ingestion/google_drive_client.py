@@ -9,7 +9,7 @@ import pickle
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -18,11 +18,6 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
 from app.utils.logger import get_logger
-from typing import Optional
-from typing import List
-from typing import Any
-from datetime import datetime
-from dataclasses import dataclass
 
 logger = get_logger(__name__)
 
@@ -33,12 +28,12 @@ class DriveFile:
     id: str
     name: str
     mime_type: str
-    size: Optional[int] = None
-    created_time: Optional[datetime] = None
-    modified_time: Optional[datetime] = None
+    size: int | None = None
+    created_time: datetime | None = None
+    modified_time: datetime | None = None
     parents: list[str] = None
-    web_view_link: Optional[str] = None
-    download_link: Optional[str] = None
+    web_view_link: str | None = None
+    download_link: str | None = None
     is_folder: bool = False
 
 
@@ -97,10 +92,10 @@ class GoogleDriveClient:
         }
     }
 
-    def __init__(self, credentials_path: Optional[Path] = None):
+    def __init__(self, credentials_path: Path | None = None):
         self.credentials_path = credentials_path or Path("credentials/google_drive_creds.pickle")
         self.credentials_path.parent.mkdir(parents=True, exist_ok=True)
-        self.creds: Optional[Credentials] = None
+        self.creds: Credentials | None = None
         self.service = None
 
     def get_auth_url(self) -> str:
@@ -121,7 +116,7 @@ class GoogleDriveClient:
 
         return auth_url
 
-    async def authenticate(self, auth_code: Optional[str] = None) -> bool:
+    async def authenticate(self, auth_code: str | None = None) -> bool:
         """
         Authenticate with Google Drive
 
@@ -167,9 +162,9 @@ class GoogleDriveClient:
 
     async def list_files(
         self,
-        folder_id: Optional[str] = None,
+        folder_id: str | None = None,
         page_size: int = 100,
-        page_token: Optional[str] = None,
+        page_token: str | None = None,
         only_supported: bool = True
     ) -> dict[str, Any]:
         """

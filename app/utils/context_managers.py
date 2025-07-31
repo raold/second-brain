@@ -8,13 +8,12 @@ and cleanup semantics.
 
 import asyncio
 import contextlib
-from app.utils.logging_config import get_logger
-from typing import TypeVar
-from typing import Optional
-from typing import Any
-from typing import Union
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any, TypeVar, Union
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 T = TypeVar('T')
@@ -54,9 +53,9 @@ class ManagedResource(ABC, Generic[T]):
         self.max_retries = max_retries
         self.state = ResourceState.UNINITIALIZED
         self.metrics = ResourceMetrics()
-        self._resource: Optional[T] = None
-        self._acquisition_start: Optional[float] = None
-        self._usage_start: Optional[float] = None
+        self._resource: T | None = None
+        self._acquisition_start: float | None = None
+        self._usage_start: float | None = None
         self._error_history: list[Exception] = []
 
     @abstractmethod
@@ -174,7 +173,7 @@ async def managed_resource(resource: ManagedResource[T]) -> AsyncGenerator[T, No
 class DatabaseTransaction:
     """Context manager for database transactions with sophisticated error handling."""
 
-    def __init__(self, connection, isolation_level: str = "READ_COMMITTED", timeout: Optional[float] = None):
+    def __init__(self, connection, isolation_level: str = "READ_COMMITTED", timeout: float | None = None):
         self.connection = connection
         self.isolation_level = isolation_level
         self.timeout = timeout
@@ -260,7 +259,7 @@ class DatabaseTransaction:
 async def database_transaction(
     connection,
     isolation_level: str = "READ_COMMITTED",
-    timeout: Optional[float] = None,
+    timeout: float | None = None,
     max_retries: int = 3
 ) -> AsyncGenerator[DatabaseTransaction, None]:
     """Enhanced database transaction context manager with retry logic."""
@@ -301,16 +300,16 @@ class ProcessingContext:
     operation_id: str
     operation_name: str
     priority: Priority = Priority.MEDIUM
-    timeout: Optional[float] = None
-    progress_callback: Optional[callable] = None
+    timeout: float | None = None
+    progress_callback: callable | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     # Runtime state
-    start_time: Optional[float] = field(default=None, init=False)
+    start_time: float | None = field(default=None, init=False)
     current_step: str = field(default="", init=False)
     progress_percent: float = field(default=0.0, init=False)
     steps_completed: int = field(default=0, init=False)
-    total_steps: Optional[int] = field(default=None, init=False)
+    total_steps: int | None = field(default=None, init=False)
 
 
 class ProcessingManager(Observable):
@@ -432,8 +431,8 @@ async def processing_operation(
     manager: ProcessingManager,
     operation_name: str,
     priority: Priority = Priority.MEDIUM,
-    timeout: Optional[float] = None,
-    progress_callback: Optional[callable] = None,
+    timeout: float | None = None,
+    progress_callback: callable | None = None,
     **metadata
 ) -> AsyncGenerator[ProcessingContext, None]:
     """Context manager for processing operations with automatic lifecycle management."""
@@ -458,7 +457,7 @@ async def processing_operation(
             try:
                 async with asyncio.timeout(timeout):
                     yield context
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.error(f"Operation '{operation_name}' ({operation_id}) timed out after {timeout}s")
                 raise
         else:
@@ -541,7 +540,7 @@ def atomic_file_write(
 async def temporary_directory(
     prefix: str = 'temp_',
     cleanup: bool = True,
-    base_dir: Optional[Path] = None
+    base_dir: Path | None = None
 ) -> AsyncGenerator[Path, None]:
     """Context manager for temporary directories with async cleanup."""
 
@@ -590,7 +589,7 @@ class ResourceMonitor:
         self.sample_interval = sample_interval
         self.snapshots: list[ResourceSnapshot] = []
         self.monitoring = False
-        self._monitor_task: Optional[asyncio.Task] = None
+        self._monitor_task: asyncio.Task | None = None
 
     async def start_monitoring(self) -> None:
         """Start resource monitoring."""

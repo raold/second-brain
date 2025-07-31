@@ -5,7 +5,6 @@ Handles environment variables and application settings.
 
 import os
 from dataclasses import dataclass
-from dataclasses import dataclass
 
 
 @dataclass

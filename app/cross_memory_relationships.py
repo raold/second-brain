@@ -1,26 +1,24 @@
 """Cross memory relationship engine"""
 
-from typing import List, Dict, Any, Optional
-from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Dict
-from typing import List
 from typing import Any
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 
 class CrossMemoryRelationshipEngine:
     """Engine for managing relationships between memories"""
-    
+
     def __init__(self):
         self.relationships = {}
-    
-    async def detect_relationships(self, memory_ids: List[str]) -> List[Dict[str, Any]]:
+
+    async def detect_relationships(self, memory_ids: list[str]) -> list[dict[str, Any]]:
         """Detect relationships between memories"""
         # Stub implementation
         return []
-    
-    async def create_relationship(self, source_id: str, target_id: str, relationship_type: str) -> Dict[str, Any]:
+
+    async def create_relationship(self, source_id: str, target_id: str, relationship_type: str) -> dict[str, Any]:
         """Create a relationship between two memories"""
         relationship = {
             "source_id": source_id,
@@ -29,16 +27,16 @@ class CrossMemoryRelationshipEngine:
             "strength": 0.8
         }
         return relationship
-    
-    async def get_relationships(self, memory_id: str) -> List[Dict[str, Any]]:
+
+    async def get_relationships(self, memory_id: str) -> list[dict[str, Any]]:
         """Get all relationships for a memory"""
         return self.relationships.get(memory_id, [])
-    
-    async def update_relationship(self, relationship_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def update_relationship(self, relationship_id: str, updates: dict[str, Any]) -> dict[str, Any]:
         """Update a relationship"""
         # Stub implementation
         return {"id": relationship_id, **updates}
-    
+
     async def delete_relationship(self, relationship_id: str) -> bool:
         """Delete a relationship"""
         return True

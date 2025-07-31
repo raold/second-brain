@@ -608,7 +608,7 @@ def main():
         cleanup_type = sys.argv[2] if len(sys.argv) > 2 else "full"
         if cleanup_type == "full":
             version = sys.argv[3] if len(sys.argv) > 3 else None
-            report = vm.cleanup_manager.full_cleanup_for_release(version)
+            vm.cleanup_manager.full_cleanup_for_release(version)
             print("✅ Full cleanup completed. Report saved.")
         elif cleanup_type == "quick":
             vm.cleanup_manager.quick_cleanup()

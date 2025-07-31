@@ -3,7 +3,7 @@ Main analytics engine that coordinates all insight generation components
 """
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from .cluster_analyzer import ClusterAnalyzer
@@ -22,9 +22,6 @@ from .models import (
     TimeFrame,
 )
 from .pattern_detector import PatternDetector
-from typing import Any
-from datetime import datetime
-from datetime import timedelta
 
 
 class AnalyticsEngine:
@@ -347,7 +344,6 @@ class AnalyticsEngine:
         time_frame: TimeFrame
     ) -> list[dict[str, Any]]:
         """Get memories for specified timeframe"""
-        from datetime import timedelta
 
         now = datetime.utcnow()
 
@@ -377,7 +373,6 @@ class AnalyticsEngine:
         time_frame: TimeFrame
     ) -> int:
         """Get count of accessed memories in timeframe"""
-        from datetime import timedelta
 
         now = datetime.utcnow()
 

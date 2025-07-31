@@ -10,7 +10,7 @@ from openai import AsyncOpenAI
 
 from app.config import Config
 from app.utils.logging_config import get_logger
-from typing import Optional
+
 logger = get_logger(__name__)
 
 
@@ -54,7 +54,7 @@ class OpenAIClient:
         except Exception as e:
             logger.error(f"Failed to get embedding: {e}")
             return None
-    
+
     async def generate_text(self, prompt: str, system_prompt: str = None, max_tokens: int = 1000, temperature: float = 0.7) -> str | None:
         """Generate text using OpenAI API."""
         if not self._client:
@@ -66,7 +66,7 @@ class OpenAIClient:
             if system_prompt:
                 messages.append({"role": "system", "content": system_prompt})
             messages.append({"role": "user", "content": prompt})
-            
+
             response = await self._client.chat.completions.create(
                 model=os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
                 messages=messages,
@@ -77,7 +77,7 @@ class OpenAIClient:
         except Exception as e:
             logger.error(f"Failed to generate text: {e}")
             return None
-    
+
     async def analyze_content(self, content: str, analysis_type: str = "summary") -> dict | None:
         """Analyze content using OpenAI API for various NLP tasks."""
         if not self._client:
@@ -92,9 +92,9 @@ class OpenAIClient:
             "topics": "Identify the main topics discussed in this content:",
             "structure": "Analyze the structure of this content and identify key sections:"
         }
-        
+
         prompt = analysis_prompts.get(analysis_type, analysis_prompts["summary"])
-        
+
         try:
             response = await self._client.chat.completions.create(
                 model=os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
@@ -105,9 +105,9 @@ class OpenAIClient:
                 max_tokens=500,
                 temperature=0.3  # Lower temperature for more consistent analysis
             )
-            
+
             result = response.choices[0].message.content
-            
+
             # Structure the response
             return {
                 "analysis_type": analysis_type,
@@ -115,11 +115,11 @@ class OpenAIClient:
                 "model_used": response.model,
                 "tokens_used": response.usage.total_tokens if hasattr(response, 'usage') else None
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to analyze content: {e}")
             return None
-    
+
     async def enhance_topics(self, topics: list[dict]) -> list[dict] | None:
         """Enhance extracted topics with better names and descriptions."""
         if not self._client:
@@ -128,7 +128,7 @@ class OpenAIClient:
 
         try:
             topics_text = "\n".join([f"- {t.get('name', 'Unknown')}: {', '.join(t.get('keywords', [])[:5])}" for t in topics])
-            
+
             response = await self._client.chat.completions.create(
                 model=os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
                 messages=[
@@ -139,23 +139,23 @@ class OpenAIClient:
                 temperature=0.5,
                 response_format={"type": "json_object"}
             )
-            
+
             import json
             result = json.loads(response.choices[0].message.content)
-            
+
             # Merge enhanced data back into topics
             enhanced_topics = topics.copy()
             if "topics" in result:
                 for i, enhanced in enumerate(result["topics"]):
                     if i < len(enhanced_topics):
                         enhanced_topics[i].update(enhanced)
-            
+
             return enhanced_topics
-            
+
         except Exception as e:
             logger.error(f"Failed to enhance topics: {e}")
             return topics  # Return original topics on failure
-    
+
     async def classify_content(self, content: str, categories: list[str]) -> dict | None:
         """Classify content into provided categories."""
         if not self._client:
@@ -164,7 +164,7 @@ class OpenAIClient:
 
         try:
             categories_text = ", ".join(categories)
-            
+
             response = await self._client.chat.completions.create(
                 model=os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
                 messages=[
@@ -175,10 +175,10 @@ class OpenAIClient:
                 temperature=0.3,
                 response_format={"type": "json_object"}
             )
-            
+
             import json
             return json.loads(response.choices[0].message.content)
-            
+
         except Exception as e:
             logger.error(f"Failed to classify content: {e}")
             return None

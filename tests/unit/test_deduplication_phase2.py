@@ -203,7 +203,6 @@ class TestDeduplicationIntegration:
 # Updated structure validation test
 def test_phase_2_advanced_structure():
     """Test that Phase 2 advanced modular structure is complete."""
-    import os
     from pathlib import Path
 
     # Get the project root directory dynamically
@@ -233,7 +232,7 @@ def test_phase_2_advanced_structure():
 
     # Skip file size checks - they vary between systems and cause CI failures
     # The important thing is that the files exist and have content
-    
+
     print("[OK] Phase 2 advanced modular structure validation passed!")
     print("[INFO] Created 8 comprehensive modular components")
     print("[BUILD] Database abstraction layer complete")

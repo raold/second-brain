@@ -2,25 +2,15 @@
 API routes for advanced relationship graph functionality
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Any
 
-
-from app.utils.logging_config import get_logger
-from app.shared import verify_api_key
 from app.dependencies import get_current_user, get_db_instance
 from app.services.memory_service import MemoryService
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from fastapi import Query
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import APIRouter
-from pydantic import BaseModel
-from pydantic import Field
+from app.shared import verify_api_key
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 router = APIRouter(

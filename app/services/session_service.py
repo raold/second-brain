@@ -11,8 +11,6 @@ from app.conversation_processor import ConversationProcessor
 from app.services.monitoring import get_metrics_collector
 from app.session_manager import SessionManager
 from app.utils.logging_config import PerformanceLogger, get_logger
-from typing import Any
-from datetime import datetime
 
 logger = get_logger(__name__)
 

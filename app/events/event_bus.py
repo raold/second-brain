@@ -6,13 +6,13 @@ the Observer pattern for loose coupling between components.
 """
 
 import asyncio
-from app.utils.logging_config import get_logger
-from typing import Callable
-from typing import Optional
-from typing import List
-from typing import Any
-from datetime import datetime
 from collections import defaultdict
+from collections.abc import Callable
+from datetime import datetime
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 logger = get_logger(__name__)
 
 
@@ -190,7 +190,7 @@ class EventBus:
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # Log any exceptions
-            for i, result in enumerate(results):
+            for _i, result in enumerate(results):
                 if isinstance(result, Exception):
                     logger.error(f"Event handler failed: {result}")
 
@@ -206,7 +206,6 @@ class EventBus:
             event: The domain event
             handler: The event handler
         """
-        last_exception = None
 
         for attempt in range(self._max_retry_attempts + 1):
             try:
@@ -228,7 +227,6 @@ class EventBus:
                 return  # Success, no retry needed
 
             except Exception as e:
-                last_exception = e
                 self._handler_stats[handler.handler_name]['error'] += 1
 
                 if attempt < self._max_retry_attempts:
@@ -328,7 +326,7 @@ class EventBus:
 
 
 # Global event bus instance
-_event_bus: Optional[EventBus] = None
+_event_bus: EventBus | None = None
 
 
 def get_event_bus() -> EventBus:

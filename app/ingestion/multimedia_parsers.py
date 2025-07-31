@@ -4,10 +4,8 @@ Supports transcription and metadata extraction
 """
 
 import os
-import json
 from pathlib import Path
-from typing import Any, Optional
-import logging
+from typing import Any
 
 # Audio/Video processing libraries
 try:
@@ -38,8 +36,6 @@ except ImportError:
 
 from app.ingestion.engine import FileParser
 from app.utils.logger import get_logger
-from typing import Optional
-from typing import Any
 
 logger = get_logger(__name__)
 
@@ -112,7 +108,7 @@ class AudioParser(FileParser):
                     # Use Whisper
                     result = self.transcriber.transcribe(str(file_path))
                     transcript = result['text']
-                    
+
                     # Add segments with timestamps if available
                     if 'segments' in result:
                         segments = []
@@ -168,7 +164,7 @@ class VideoParser(FileParser):
                 "MoviePy not installed. Video parsing will be limited. "
                 "Install with: pip install moviepy"
             )
-        
+
         # Initialize audio parser for video audio extraction
         self.audio_parser = AudioParser() if (HAS_WHISPER or HAS_SPEECH_RECOGNITION) else None
 
@@ -189,7 +185,7 @@ class VideoParser(FileParser):
             try:
                 logger.info(f"Processing video file: {file_path.name} ({file_path.suffix.lower()})")
                 video = mp.VideoFileClip(str(file_path))
-                
+
                 # Extract metadata
                 metadata.update({
                     'duration': video.duration,
@@ -206,16 +202,16 @@ class VideoParser(FileParser):
                         import tempfile
                         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_audio:
                             video.audio.write_audiofile(tmp_audio.name, logger=None)
-                            
+
                             # Transcribe audio
                             audio_result = await self.audio_parser.parse(Path(tmp_audio.name))
                             if audio_result['content']:
                                 content_parts.append(f"[Audio Transcript]\n{audio_result['content']}")
-                                
+
                                 # Include segment data if available
                                 if 'segments' in audio_result['metadata']:
                                     metadata['audio_segments'] = audio_result['metadata']['segments']
-                            
+
                             # Clean up temp file
                             os.unlink(tmp_audio.name)
                     except Exception as e:
@@ -240,17 +236,17 @@ class VideoParser(FileParser):
             'metadata': metadata
         }
 
-    def supports(self, mime_type: str, file_path: Optional[Path] = None) -> bool:
+    def supports(self, mime_type: str, file_path: Path | None = None) -> bool:
         """Check if this parser supports the given MIME type or file extension"""
         # Primary check: MIME type
         if mime_type in self.SUPPORTED_TYPES:
             return True
-        
+
         # Fallback: check file extension for cases where MIME detection fails
         if file_path and file_path.suffix.lower() in self.SUPPORTED_EXTENSIONS:
             logger.info(f"Supporting {file_path.suffix} file via extension fallback")
             return True
-            
+
         return False
 
 
@@ -275,7 +271,7 @@ class SubtitleParser(FileParser):
         }
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 content = f.read()
 
             if file_path.suffix.lower() == '.srt':
@@ -285,12 +281,12 @@ class SubtitleParser(FileParser):
                     r'(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})\n(.*?)(?=\n\n|\Z)',
                     re.DOTALL
                 )
-                
+
                 for match in srt_pattern.finditer(content):
                     index, start_time, end_time, text = match.groups()
                     clean_text = text.strip().replace('\n', ' ')
                     content_parts.append(clean_text)
-                    
+
                     metadata['segments'].append({
                         'index': int(index),
                         'start': start_time,
@@ -303,7 +299,7 @@ class SubtitleParser(FileParser):
                 lines = content.split('\n')
                 in_cue = False
                 current_text = []
-                
+
                 for line in lines:
                     if '-->' in line:
                         in_cue = True

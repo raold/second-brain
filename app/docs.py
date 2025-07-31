@@ -10,12 +10,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from app.version import get_version_info
-from typing import Optional
-from typing import Any
-from datetime import datetime
-from enum import Enum
-from pydantic import BaseModel
-from pydantic import Field
 
 
 # Memory type enumeration
