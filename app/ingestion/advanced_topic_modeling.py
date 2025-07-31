@@ -2,35 +2,8 @@
 Advanced topic modeling with transformer-based models and hierarchical clustering
 """
 
-import logging
-from collections import Counter, defaultdict
-from typing import Any, Union
-
-try:
-    import numpy as np
-    from sklearn.cluster import AgglomerativeClustering
-    from sklearn.metrics.pairwise import cosine_similarity
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-
-try:
-    from bertopic import BERTopic
-    from sentence_transformers import SentenceTransformer
-    BERTOPIC_AVAILABLE = True
-except ImportError:
-    BERTOPIC_AVAILABLE = False
-
-try:
-    import torch
-    TORCH_AVAILABLE = True
-except ImportError:
-    TORCH_AVAILABLE = False
-
-from app.ingestion.models import Topic
-from app.ingestion.topic_classifier import TopicClassifier
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class AdvancedTopicModeling:

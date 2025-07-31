@@ -2,25 +2,8 @@
 Relationship detection component for identifying connections between entities
 """
 
-import logging
-import re
-from collections import defaultdict
-from typing import Any
-
-try:
-    import spacy
-    from spacy.tokens import Doc, Span, Token
-    SPACY_AVAILABLE = True
-except ImportError:
-    SPACY_AVAILABLE = False
-    # Define dummy types for when SpaCy is not available
-    Doc = Any
-    Token = Any
-    Span = Any
-
-from app.ingestion.models import Entity, Relationship, RelationshipType
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class RelationshipDetector:

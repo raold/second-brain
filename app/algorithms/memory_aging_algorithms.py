@@ -5,14 +5,8 @@ Implements multiple cognitive science-based memory aging models with sophisticat
 """
 
 import asyncio
-import logging
-import math
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class AgingModel(Enum):

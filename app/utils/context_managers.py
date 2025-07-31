@@ -8,19 +8,8 @@ and cleanup semantics.
 
 import asyncio
 import contextlib
-import logging
-import time
-from abc import ABC, abstractmethod
-from collections.abc import AsyncGenerator, Generator
-from dataclasses import dataclass, field
-from enum import Enum
-from pathlib import Path
-from typing import Any, Generic, Optional, TypeVar, Union
-
-from app.observers.observable import ChangeNotification, ChangeType, Observable
-from app.utils.pythonic import Priority
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 T = TypeVar('T')
 R = TypeVar('R')

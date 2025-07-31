@@ -1,13 +1,8 @@
 """Service factory for dependency injection"""
 
 from typing import Any
-import logging
-import json
-import uuid
-from datetime import datetime
-from app.database import get_database
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class DashboardService:

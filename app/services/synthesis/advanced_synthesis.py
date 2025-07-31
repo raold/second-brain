@@ -6,22 +6,8 @@ theme extraction, and LLM-powered consolidation.
 
 import asyncio
 import json
-import logging
-from collections import defaultdict
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple
-from uuid import UUID, uuid4
-
-import numpy as np
-from pydantic import BaseModel
-
-from app.models.synthesis.advanced_models import (
-    SynthesisRequest,
-    SynthesisResult,
-    SynthesisStrategy,
-)
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class ThemeCluster:

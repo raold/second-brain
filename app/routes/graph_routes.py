@@ -2,23 +2,8 @@
 API routes for advanced relationship graph functionality
 """
 
-import logging
-
-from fastapi import APIRouter, Depends, HTTPException, Query
-
-# Database imports handled by shared module
-from pydantic import BaseModel, Field
-
-from app.ingestion.entity_extractor import EntityExtractor
-from app.ingestion.relationship_detector import RelationshipDetector
-from app.routes.auth import get_current_user
-from app.services.memory_service import MemoryService
-from app.shared import get_db_instance, verify_api_key
-from app.visualization.relationship_graph import RelationshipGraph
-
-# Authentication handled by shared verify_api_key
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 router = APIRouter(
     prefix="/graph",

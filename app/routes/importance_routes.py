@@ -3,17 +3,8 @@ Importance Scoring API Routes
 Provides endpoints for automated importance scoring features
 """
 
-import logging
-from typing import Any
-
-from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
-
-from app.database import get_database
-from app.database_importance_schema import setup_importance_tracking_schema
-from app.services.importance_engine import get_importance_engine
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/importance", tags=["importance"])
 

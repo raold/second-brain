@@ -6,25 +6,8 @@ topics, and memory collections using advanced NLP techniques.
 
 import asyncio
 import json
-import logging
-from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Tuple
-from uuid import UUID
-
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import LatentDirichletAllocation
-
-from app.models.synthesis.summary_models import (
-    SummaryRequest,
-    SummaryResponse,
-    SummaryType,
-    SummarySegment,
-    FormatType
-)
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class KnowledgeDomain:

@@ -3,18 +3,8 @@ Health Service - Handles health check and system status business logic.
 Provides system health information and diagnostics.
 """
 
-import logging
-import os
-from datetime import datetime
-from typing import Any
-
-import psutil
-
-from app.database import Database
-from app.database_mock import MockDatabase
-from app.version import get_version_info
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class HealthService:

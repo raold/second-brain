@@ -2,26 +2,8 @@
 Intent recognition component for understanding user intent in content
 """
 
-import logging
-import re
-from collections import defaultdict
-from typing import Any
-
-try:
-    from textblob import TextBlob
-    TEXTBLOB_AVAILABLE = True
-except ImportError:
-    TEXTBLOB_AVAILABLE = False
-
-try:
-    import spacy
-    SPACY_AVAILABLE = True
-except ImportError:
-    SPACY_AVAILABLE = False
-
-from app.ingestion.models import Intent, IntentType
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class IntentRecognizer:

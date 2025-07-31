@@ -6,27 +6,8 @@ knowledge exploration, and learning paths based on user behavior and content ana
 
 import asyncio
 import json
-import logging
-from collections import defaultdict, Counter
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Tuple
-from uuid import UUID
-
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-
-from app.models.synthesis.suggestion_models import (
-    Suggestion,
-    SuggestionRequest,
-    SuggestionResponse,
-    SuggestionType,
-    ActionType,
-    LearningPathSuggestion,
-    ContentSuggestion,
-    OrganizationSuggestion
-)
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class UserBehaviorProfile:

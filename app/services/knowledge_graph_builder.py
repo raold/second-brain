@@ -4,20 +4,8 @@ Constructs and manages entity-relationship graphs from memories
 """
 
 import json
-import logging
-import re
-from collections import defaultdict
-from dataclasses import dataclass
-from datetime import datetime
-from enum import Enum
-from typing import Any
-
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-
-from app.database import Database
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class EntityType(Enum):

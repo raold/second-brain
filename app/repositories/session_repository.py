@@ -5,16 +5,8 @@ Provides data access abstraction for Session entities.
 """
 
 import json
-import logging
-from abc import abstractmethod
-from datetime import datetime
-from typing import Any, Optional
-
-import asyncpg
-
-from .base_repository import BaseRepository
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class Session:

@@ -2,15 +2,8 @@
 Base repository pattern implementation with common functionality.
 """
 
-import logging
-from abc import ABC, abstractmethod
-from typing import Any, Generic, Optional, TypeVar
-
-import asyncpg
-
-T = TypeVar('T')
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class BaseRepository(ABC, Generic[T]):

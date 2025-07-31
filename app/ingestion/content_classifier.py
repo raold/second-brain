@@ -2,14 +2,8 @@
 Intelligent content classifier for automatic categorization and quality assessment
 """
 
-import logging
-import re
-from collections import Counter, defaultdict
-from typing import Any
-
-from app.ingestion.models import ContentQuality, IntentType, ProcessedContent
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class ContentClassifier:

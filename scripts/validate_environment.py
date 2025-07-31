@@ -5,26 +5,8 @@ Follows PEP8 and Pythonic best practices.
 """
 
 import json
-import logging
-import os
-import platform
-import subprocess
-import sys
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Set
-import pkg_resources
-from collections import defaultdict
-
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('venv_validation.log'),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class VirtualEnvironmentValidator:

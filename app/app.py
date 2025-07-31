@@ -329,13 +329,23 @@ async def track_requests(request: Request, call_next):
 for middleware_class, middleware_kwargs in security_manager.get_security_middleware():
     app.add_middleware(middleware_class, **middleware_kwargs)
 
-# Add CORS middleware
+# Add CORS middleware with secure configuration
+allowed_origins = security_config.allowed_origins or []
+if not allowed_origins:
+    # Default to localhost for development only
+    if Config.ENVIRONMENT == "development":
+        allowed_origins = ["http://localhost:3000", "http://localhost:8000", "http://127.0.0.1:8000"]
+    else:
+        # Production requires explicit origins
+        allowed_origins = []
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=security_config.allowed_origins or ["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
+    expose_headers=["X-Total-Count", "X-Request-ID"],
 )
 
 # Include refactored routers with API version prefix

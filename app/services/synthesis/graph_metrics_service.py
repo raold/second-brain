@@ -5,27 +5,8 @@ knowledge graph formed by memories and their relationships.
 """
 
 import asyncio
-import logging
-from collections import defaultdict, deque
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Tuple
-from uuid import UUID
-
-import networkx as nx
-import numpy as np
-from scipy import stats
-
-from app.models.synthesis.metrics_models import (
-    GraphMetrics,
-    MetricsRequest,
-    NodeMetrics,
-    ClusterMetrics,
-    ConnectivityMetrics,
-    TemporalMetrics,
-    KnowledgeCluster
-)
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class GraphNode:

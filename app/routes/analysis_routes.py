@@ -2,22 +2,8 @@
 API routes for advanced analysis features including domain classification
 """
 
-import logging
-from collections import Counter, defaultdict
-
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
-
-from app.ingestion.domain_classifier import DomainClassifier
-from app.ingestion.structured_extractor import StructuredDataExtractor
-from app.ingestion.topic_classifier import TopicClassifier
-from app.shared import get_db_instance, verify_api_key
-from app.services.memory_service import MemoryService
-from app.routes.auth import get_current_user
-
-# Authentication handled by shared verify_api_key
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 router = APIRouter(
     prefix="/analysis",

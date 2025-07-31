@@ -11,26 +11,8 @@ This module demonstrates idiomatic Python usage including:
 
 import asyncio
 import functools
-import logging
-import time
-from collections.abc import AsyncIterator, Callable, Iterator
-from dataclasses import dataclass, field
-from enum import Enum, auto, unique
-from itertools import chain, groupby, islice
-from operator import attrgetter
-from typing import (
-    Any,
-    ClassVar,
-    Generic,
-    NamedTuple,
-    Optional,
-    Protocol,
-    TypeVar,
-    runtime_checkable,
-)
-from weakref import WeakKeyDictionary
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 T = TypeVar('T')
 P = TypeVar('P')

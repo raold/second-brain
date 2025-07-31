@@ -6,15 +6,8 @@ Handles minor variations, typos, and formatting differences.
 """
 
 import difflib
-import logging
-import re
-from collections import defaultdict
-from typing import Any
-
-from app.interfaces.duplicate_detector_interface import BaseDuplicateDetector
-from app.models.deduplication_models import DeduplicationConfig, DuplicateGroup, SimilarityMethod, SimilarityScore
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class FuzzyMatchDetector(BaseDuplicateDetector):

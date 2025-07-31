@@ -4,26 +4,8 @@ Core extraction pipeline that integrates all enhanced NLP components
 
 import asyncio
 import hashlib
-import logging
-import time
-from typing import Any
-from uuid import uuid4
-
-from app.ingestion.embedding_generator import EmbeddingGenerator
-from app.ingestion.entity_extractor import EntityExtractor
-from app.ingestion.intent_recognizer import IntentRecognizer
-from app.ingestion.models import (
-    ContentQuality,
-    IngestionConfig,
-    IngestionRequest,
-    IngestionResponse,
-    ProcessedContent,
-)
-from app.ingestion.relationship_detector import RelationshipDetector
-from app.ingestion.structured_extractor import StructuredDataExtractor
-from app.ingestion.topic_classifier import TopicClassifier
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class CoreExtractionPipeline:

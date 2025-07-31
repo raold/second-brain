@@ -3,20 +3,8 @@ Structured data extraction component for extracting tables, lists, key-value pai
 """
 
 import json
-import logging
-import re
-from collections import defaultdict
-from typing import Any
-
-try:
-    import yaml
-    YAML_AVAILABLE = True
-except ImportError:
-    YAML_AVAILABLE = False
-
-from app.ingestion.models import StructuredData
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class StructuredDataExtractor:

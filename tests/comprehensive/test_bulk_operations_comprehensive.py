@@ -11,17 +11,8 @@ Tests all aspects of the bulk operations system:
 """
 
 import asyncio
-import logging
-import random
-import time
-from datetime import datetime
-from typing import Any
-
-import pytest
-
-# Set up logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 # Test data generator

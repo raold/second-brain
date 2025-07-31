@@ -2,27 +2,8 @@
 Advanced relationship graph visualization and analysis
 """
 
-import logging
-import math
-from collections import Counter, defaultdict
-from typing import Any, Union
-
-try:
-    import networkx as nx
-    NETWORKX_AVAILABLE = True
-except ImportError:
-    NETWORKX_AVAILABLE = False
-
-try:
-    import numpy as np
-    from sklearn.cluster import SpectralClustering
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-
-from app.ingestion.models import Entity, Relationship
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class RelationshipGraph:

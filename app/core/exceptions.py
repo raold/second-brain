@@ -13,11 +13,8 @@ from typing import Any, Dict, Optional
 from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-import logging
-import traceback
-from datetime import datetime
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class ErrorCode(str, Enum):

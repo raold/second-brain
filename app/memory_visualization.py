@@ -4,19 +4,8 @@ Provides graph data generation, relationship extraction, and semantic clustering
 """
 
 import json
-import logging
-from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Any
-
-import numpy as np
-from sklearn.cluster import DBSCAN, KMeans
-from sklearn.decomposition import PCA
-from sklearn.metrics.pairwise import cosine_similarity
-
-from app.database import get_database
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class MemoryVisualizationEngine:

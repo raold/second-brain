@@ -5,13 +5,8 @@ Detects semantically similar content using vector embeddings.
 Handles conceptual similarity beyond lexical matching.
 """
 
-import logging
-from typing import Any, Optional
-
-from app.interfaces.duplicate_detector_interface import BaseDuplicateDetector
-from app.models.deduplication_models import DeduplicationConfig, DuplicateGroup, SimilarityMethod, SimilarityScore
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class SemanticSimilarityDetector(BaseDuplicateDetector):

@@ -16,21 +16,8 @@ Original: 870 lines, 12% coverage, monolithic
 Refactored: ~200 lines, testable, modular
 """
 
-import logging
-from collections import Counter, defaultdict
-from datetime import datetime
-from typing import Any, Optional
-
-import numpy as np
-
-from app.interfaces.memory_database_interface import MemoryDatabaseInterface
-from app.services.similarity_analyzers import (
-    SimilarityAnalyzers,
-    calculate_composite_score,
-    categorize_relationship_strength,
-)
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class MemoryRelationshipAnalyzer:

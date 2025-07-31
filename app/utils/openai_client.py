@@ -9,7 +9,8 @@ from typing import Optional
 from openai import AsyncOpenAI
 
 from app.config import Config
-from app.utils.logger import logger
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class OpenAIClient:

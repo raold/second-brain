@@ -6,23 +6,8 @@ Intelligently weights and combines results from exact, fuzzy, and semantic detec
 """
 
 import asyncio
-import logging
-from collections import defaultdict
-from typing import Any
-
-from app.interfaces.duplicate_detector_interface import BaseDuplicateDetector
-from app.models.deduplication_models import (
-    DeduplicationConfig,
-    DetectionStats,
-    DuplicateGroup,
-    SimilarityMethod,
-    SimilarityScore,
-)
-from app.services.duplicate_detectors.exact_match_detector import ExactMatchDetector
-from app.services.duplicate_detectors.fuzzy_match_detector import FuzzyMatchDetector
-from app.services.duplicate_detectors.semantic_similarity_detector import SemanticSimilarityDetector
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class HybridDetector(BaseDuplicateDetector):

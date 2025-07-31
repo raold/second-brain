@@ -5,45 +5,8 @@ Handles CRUD operations for memories with cognitive type classification
 and advanced search capabilities.
 """
 
-import logging
-
-from fastapi import APIRouter, Depends, Query, Request
-
-from app.docs import (
-    ContextualSearchRequest,
-    EpisodicMemoryRequest,
-    MemoryRequest,
-    MemoryResponse,
-    MemoryType,
-    ProceduralMemoryRequest,
-    SearchRequest,
-    SemanticMemoryRequest,
-)
-from app.security import get_security_manager
-from app.services.service_factory import get_memory_service
-from app.shared import get_db_instance
-from app.core.exceptions import (
-    UnauthorizedException,
-    NotFoundException,
-    ValidationException,
-    RateLimitExceededException,
-    SecondBrainException
-)
-
-# For compatibility with existing code, alias the shared instance
-get_database = get_db_instance
-
-
-def setup_memory_service_factory(db, security_manager):
-    """Set up the service factory with database and security manager."""
-    from app.services.service_factory import get_service_factory
-
-    factory = get_service_factory()
-    factory.set_database(db)
-    factory.set_security_manager(security_manager)
-
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 router = APIRouter(prefix="/memories", tags=["Memories"])
 
 

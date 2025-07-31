@@ -4,20 +4,8 @@ Analyzes and manages complex relationships between memories including semantic s
 temporal connections, causal relationships, and conceptual hierarchies.
 """
 
-import logging
-import math
-from collections import Counter, defaultdict
-from datetime import datetime, timedelta
-from typing import Any
-
-import numpy as np
-from sklearn.cluster import AgglomerativeClustering
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-
-from app.database import get_database
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class MemoryRelationshipAnalyzer:

@@ -3,16 +3,8 @@ Cross-Memory Relationship API Routes
 Provides endpoints for analyzing relationships between different memory types
 """
 
-import logging
-from typing import Any
-
-from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
-
-from app.cross_memory_relationships import CrossMemoryRelationshipEngine
-from app.database import get_database
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/relationships", tags=["relationships"])
 

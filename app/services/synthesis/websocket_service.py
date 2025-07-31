@@ -1,11 +1,8 @@
 """WebSocket service for real-time communication"""
 
 from typing import Dict, Set, Optional, Any
-import logging
-from fastapi import WebSocket
-import asyncio
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class ConnectionManager:

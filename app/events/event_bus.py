@@ -6,17 +6,8 @@ the Observer pattern for loose coupling between components.
 """
 
 import asyncio
-import logging
-import traceback
-from abc import ABC, abstractmethod
-from collections import defaultdict
-from collections.abc import Callable
-from datetime import datetime
-from typing import Any, Optional
-
-from .domain_events import DomainEvent
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class EventHandler(ABC):

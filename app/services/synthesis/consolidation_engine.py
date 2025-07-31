@@ -6,23 +6,8 @@ them intelligently while preserving important information.
 
 import asyncio
 import json
-import logging
-from collections import defaultdict
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple
-from uuid import UUID, uuid4
-
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-
-from app.models.synthesis.consolidation_models import (
-    ConsolidationRequest,
-    ConsolidationResult,
-    DuplicateGroup,
-    MergeStrategy,
-)
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class MemorySimilarity:

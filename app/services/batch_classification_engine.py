@@ -4,16 +4,8 @@ Supports multiple classification methods and parallel processing
 """
 
 from typing import List, Dict, Any, Optional
-import logging
-from pydantic import BaseModel, Field
-from enum import Enum
-from datetime import datetime
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-import re
-from collections import Counter
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class ClassificationMethod(str, Enum):

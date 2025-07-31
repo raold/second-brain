@@ -4,7 +4,8 @@ Tests for the logger utility.
 
 import logging
 
-from app.utils.logger import logger
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class TestLogger:

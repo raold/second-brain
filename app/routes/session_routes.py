@@ -3,15 +3,8 @@ Session Routes - Thin route handlers for session operations.
 All business logic is delegated to SessionService.
 """
 
-import logging
-
-from fastapi import APIRouter, BackgroundTasks, Query, Form, Depends
-from pydantic import BaseModel, Field
-
-from app.core.dependencies import get_session_service_dep
-from app.core.exceptions import SecondBrainException, NotFoundException
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 router = APIRouter(prefix="/session", tags=["Session"])
 
 

@@ -5,22 +5,8 @@ These handlers implement cross-cutting concerns like analytics,
 notifications, and system monitoring triggered by domain events.
 """
 
-import logging
-from datetime import datetime
-from typing import Any, Optional
-
-from .domain_events import (
-    DomainEvent,
-    ErrorOccurredEvent,
-    ImportanceUpdatedEvent,
-    MemoryAccessedEvent,
-    MemoryCreatedEvent,
-    SearchPerformedEvent,
-    SystemHealthEvent,
-)
-from .event_bus import EventHandler
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class ImportanceTrackingHandler(EventHandler):

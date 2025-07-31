@@ -2,22 +2,8 @@
 Advanced validation framework for ingestion pipeline
 """
 
-import logging
-import re
-from collections import defaultdict
-from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import datetime
-from enum import Enum
-from typing import Any
-
-from app.ingestion.models import (
-    ContentQuality,
-    EntityType,
-    ProcessedContent,
-)
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class ValidationLevel(str, Enum):

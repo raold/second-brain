@@ -5,14 +5,8 @@ Tests all aspects of the importance engine and API integration
 """
 
 import asyncio
-import logging
-import os
-
-import httpx
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class ImportanceSystemTester:

@@ -7,19 +7,8 @@ without sacrificing type safety.
 """
 
 import asyncio
-import logging
-from collections.abc import AsyncIterable, Awaitable, Callable
-from dataclasses import dataclass
-from typing import (
-    Any,
-    Optional,
-    Protocol,
-    TypeVar,
-    get_type_hints,
-    runtime_checkable,
-)
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 T = TypeVar('T')
 K = TypeVar('K')

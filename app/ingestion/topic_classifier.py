@@ -2,23 +2,8 @@
 Topic modeling and classification component for the ingestion engine
 """
 
-import logging
-import re
-from collections import Counter, defaultdict
-from typing import Any, Union
-
-try:
-    import numpy as np
-    from sklearn.cluster import KMeans
-    from sklearn.decomposition import LatentDirichletAllocation
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-
-from app.ingestion.models import Topic
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class TopicClassifier:

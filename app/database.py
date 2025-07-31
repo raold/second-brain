@@ -4,15 +4,8 @@ Single source of truth for all data operations.
 """
 
 import json
-import logging
-import os
-import re
-from typing import Any
-
-import asyncpg
-from openai import AsyncOpenAI
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class Database:

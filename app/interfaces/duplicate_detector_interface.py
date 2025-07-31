@@ -5,14 +5,8 @@ Abstract interface for all duplicate detection algorithms,
 enabling modular, testable, and extensible detection methods.
 """
 
-import logging
-import time
-from abc import ABC, abstractmethod
-from typing import Any, Optional
-
-from app.models.deduplication_models import DeduplicationConfig, DetectionStats, DuplicateGroup, SimilarityMethod
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class DuplicateDetectorInterface(ABC):

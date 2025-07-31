@@ -3,16 +3,8 @@ Health Routes - Thin route handlers for health and status operations.
 All business logic is delegated to HealthService.
 """
 
-import logging
-
-from fastapi import APIRouter, Depends, HTTPException
-
-from app.docs import HealthResponse, StatusResponse
-from app.core.dependencies import get_health_service_dep
-from app.shared import get_db_instance, verify_api_key
-from app.core.exceptions import SecondBrainException
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 router = APIRouter(tags=["Health"])
 
 

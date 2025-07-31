@@ -4,15 +4,8 @@ Demo script for the enhanced core extraction pipeline with transformers
 
 import asyncio
 import json
-import logging
-from datetime import datetime
-
-from app.ingestion.core_extraction_pipeline import CoreExtractionPipeline
-from app.ingestion.models import IngestionConfig, IngestionRequest
-
-# Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 async def demo_extraction():

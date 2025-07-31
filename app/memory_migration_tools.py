@@ -1,10 +1,8 @@
 """Memory migration tools for bulk operations"""
 
 from typing import Dict, Any, List
-import logging
-from pydantic import BaseModel
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class MigrationPlan:

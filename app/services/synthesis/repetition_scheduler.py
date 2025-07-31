@@ -2,9 +2,8 @@
 
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
-import logging
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class SpacedRepetitionEngine:

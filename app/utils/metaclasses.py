@@ -9,13 +9,8 @@ real problems and enhances developer experience without being overly clever.
 import asyncio
 import functools
 import inspect
-import logging
-import time
-from collections import defaultdict
-from collections.abc import Callable
-from typing import Any, Optional, TypeVar, Union, get_type_hints
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 T = TypeVar('T')
 C = TypeVar('C', bound=type)

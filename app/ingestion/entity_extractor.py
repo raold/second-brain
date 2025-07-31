@@ -2,20 +2,8 @@
 Entity extraction component for the sophisticated ingestion engine
 """
 
-import logging
-import re
-from typing import Any
-
-try:
-    import spacy
-    from spacy.tokens import Doc, Span
-    SPACY_AVAILABLE = True
-except ImportError:
-    SPACY_AVAILABLE = False
-
-from app.ingestion.models import Entity, EntityType
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class EntityExtractor:

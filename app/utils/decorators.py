@@ -9,19 +9,8 @@ architectural needs while maintaining readability and debuggability.
 import asyncio
 import functools
 import inspect
-import logging
-import time
-from collections import defaultdict
-from collections.abc import Callable
-from typing import Any, Optional, ParamSpec, TypeVar, Union
-from uuid import uuid4
-
-# Type variables for generic decorators
-F = TypeVar('F', bound=Callable[..., Any])
-P = ParamSpec('P')
-T = TypeVar('T')
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 # ============================================================================

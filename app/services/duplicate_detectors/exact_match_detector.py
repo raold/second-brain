@@ -6,14 +6,8 @@ Fast and highly accurate for identical content matches.
 """
 
 import hashlib
-import logging
-from collections import defaultdict
-from typing import Any
-
-from app.interfaces.duplicate_detector_interface import BaseDuplicateDetector
-from app.models.deduplication_models import DeduplicationConfig, DuplicateGroup, SimilarityMethod, SimilarityScore
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class ExactMatchDetector(BaseDuplicateDetector):

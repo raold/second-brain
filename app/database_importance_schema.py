@@ -1,8 +1,7 @@
 """Database schema setup for importance tracking"""
 
-import logging
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 async def setup_importance_tracking_schema(db):

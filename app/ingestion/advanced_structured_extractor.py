@@ -4,34 +4,8 @@ Advanced structured data extraction with enhanced parsing capabilities
 
 import ast
 import json
-import logging
-import re
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from typing import Any
-
-try:
-    import yaml  # noqa: F401
-    YAML_AVAILABLE = True
-except ImportError:
-    YAML_AVAILABLE = False
-
-try:
-    import pandas as pd
-    PANDAS_AVAILABLE = True
-except ImportError:
-    PANDAS_AVAILABLE = False
-
-try:
-    from bs4 import BeautifulSoup
-    BS4_AVAILABLE = True
-except ImportError:
-    BS4_AVAILABLE = False
-
-from app.ingestion.models import StructuredData
-from app.ingestion.structured_extractor import StructuredDataExtractor
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 
 class AdvancedStructuredExtractor(StructuredDataExtractor):

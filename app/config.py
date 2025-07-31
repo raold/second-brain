@@ -25,14 +25,14 @@ class Config:
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
     # Database Configuration
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://brain:brain_password@localhost:5432/brain")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
 
     # PostgreSQL Configuration
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "brain")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "brain_password")
+    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "")
     POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "brain")
+    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "")
 
     # OpenAI Configuration
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
@@ -118,9 +118,10 @@ class Config:
 
         # Validate database configuration for non-mock environments
         if not cls.should_use_mock_database():
-            if not cls.POSTGRES_PASSWORD or cls.POSTGRES_PASSWORD == "brain_password":
-                if cls.ENVIRONMENT == "production":
-                    issues.append("Default PostgreSQL password should not be used in production")
+            if not cls.DATABASE_URL and (not cls.POSTGRES_USER or not cls.POSTGRES_PASSWORD or not cls.POSTGRES_DB):
+                issues.append("Database configuration required: Set DATABASE_URL or POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB")
+            if cls.POSTGRES_PASSWORD == "brain_password":
+                issues.append("Default PostgreSQL password detected - please set a secure password")
 
         return issues
 

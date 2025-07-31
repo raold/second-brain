@@ -5,44 +5,8 @@ API endpoints for synthesis features including report generation,
 spaced repetition, and WebSocket connections.
 """
 
-import logging
-from datetime import datetime
-from typing import Optional
-
-from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket
-from fastapi.responses import StreamingResponse
-
-from app.models.synthesis.repetition_models import (
-    BulkReviewRequest,
-    LearningStatistics,
-    RepetitionAlgorithm,
-    RepetitionConfig,
-    ReviewDifficulty,
-    ReviewSchedule,
-    ReviewSession,
-)
-from app.models.synthesis.report_models import (
-    ReportFilter,
-    ReportFormat,
-    ReportRequest,
-    ReportResponse,
-    ReportSchedule,
-    ReportTemplate,
-)
-from app.models.synthesis.websocket_models import (
-    EventType,
-    SubscriptionRequest,
-    WebSocketMetrics,
-)
-from app.services.synthesis import (
-    RepetitionScheduler,
-    ReportGenerator,
-    ReportGeneratorConfig,
-    WebSocketService,
-)
-from app.shared import get_db_instance, verify_api_key
-
-logger = logging.getLogger(__name__)
+from app.utils.logging_config import get_logger
+logger = get_logger(__name__)
 
 # Create router
 router = APIRouter(prefix="/api/v1/synthesis", tags=["synthesis"])
