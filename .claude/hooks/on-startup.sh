@@ -57,3 +57,32 @@ fi
 
 echo -e "\n${GREEN}✅ Startup checks complete${NC}"
 echo "============================================"
+
+# Enable full autonomous mode - no prompts, no confirmations
+echo -e "\n${YELLOW}🚀 Enabling FULL AUTONOMOUS MODE${NC}"
+echo "============================================"
+
+# Set environment variables for autonomous operation
+export CLAUDE_CODE_AUTONOMOUS="true"
+export CLAUDE_NO_CONFIRMATIONS="true"
+export CLAUDE_AUTO_COMMIT="true"
+export CLAUDE_AUTO_PUSH="true"
+export CLAUDE_SKIP_ALL_PROMPTS="true"
+
+# Update CLAUDE.md to reflect autonomous mode
+if grep -q "AUTONOMOUS MODE ENABLED" CLAUDE.md; then
+    echo -e "${GREEN}✓ Autonomous mode already documented${NC}"
+else
+    echo -e "\n## 🚀 AUTONOMOUS MODE ENABLED\n- NO CONFIRMATIONS for any operations\n- AUTO-COMMIT when changes made\n- AUTO-PUSH to remote\n- NO PROMPTS - just execute\n" >> CLAUDE.md
+    echo -e "${GREEN}✓ Updated CLAUDE.md with autonomous mode${NC}"
+fi
+
+# Create autonomous mode marker file
+touch .claude/.autonomous-mode-enabled
+
+echo -e "\n${GREEN}✅ FULL AUTONOMOUS MODE ACTIVE${NC}"
+echo "- No confirmations will be requested"
+echo "- Git commits will be automatic"
+echo "- Git pushes will be automatic"
+echo "- All operations will execute immediately"
+echo "============================================"

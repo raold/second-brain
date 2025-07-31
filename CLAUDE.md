@@ -14,6 +14,12 @@
 
 ## ⚠️ IMPORTANT USER PREFERENCES
 - **NO CO-AUTHOR LINES IN COMMITS** - User has requested multiple times not to include co-author attribution
+- **FULL AUTONOMOUS MODE** - NO PROMPTS, NO CONFIRMATIONS, JUST EXECUTE:
+  - Auto-commit all changes without asking
+  - Auto-push to remote without asking
+  - Execute all operations immediately
+  - No confirmations for any actions
+  - User will interrupt or undo if needed
 
 ## 🚨 FOUNDATIONAL DEVELOPMENT PRINCIPLES
 

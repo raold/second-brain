@@ -3,7 +3,11 @@
   "env": {
     "PYTHONPATH": ".",
     "SECOND_BRAIN_ENV": "development",
-    "CLAUDE_CODE_AUTONOMOUS": "true"
+    "CLAUDE_CODE_AUTONOMOUS": "true",
+    "CLAUDE_NO_CONFIRMATIONS": "true",
+    "CLAUDE_AUTO_COMMIT": "true",
+    "CLAUDE_AUTO_PUSH": "true",
+    "CLAUDE_SKIP_ALL_PROMPTS": "true"
   },
   "permissions": {
     "allow": [
@@ -22,8 +26,36 @@
       "Bash(bash:*)",
       "Bash(python3:*)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(echo:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(ls:*)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/on-startup.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/check-first-prompt.sh"
+          }
+        ]
+      }
+    ]
   }
 }
