@@ -25,6 +25,7 @@ from starlette.responses import Response
 
 from app.connection_pool import PoolConfig, close_pool, get_pool_manager, initialize_pool
 from app.conversation_processor import setup_conversation_monitoring
+from app.core.exceptions import register_exception_handlers
 from app.core.logging import LogConfig, LoggingRoute, configure_logging, get_logger
 from app.core.monitoring import (
     MetricDefinition,
@@ -265,8 +266,6 @@ setup_openapi_documentation(app)
 
 
 # Register exception handlers from the new exception handling system
-from app.core.exceptions import register_exception_handlers
-
 register_exception_handlers(app)
 
 

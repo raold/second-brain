@@ -10,6 +10,7 @@ def test_imports():
     try:
         import fastapi
         print("[OK] FastAPI")
+        del fastapi  # Satisfy linter
     except ImportError as e:
         print(f"[FAIL] FastAPI: {e}")
         return False
@@ -24,6 +25,7 @@ def test_imports():
     try:
         import uvicorn
         print("[OK] Uvicorn")
+        del uvicorn  # Satisfy linter
     except ImportError as e:
         print(f"[FAIL] Uvicorn: {e}")
         return False
@@ -31,6 +33,7 @@ def test_imports():
     try:
         import sqlalchemy
         print("[OK] SQLAlchemy")
+        del sqlalchemy  # Satisfy linter
     except ImportError as e:
         print(f"[FAIL] SQLAlchemy: {e}")
         return False
@@ -38,6 +41,7 @@ def test_imports():
     try:
         import asyncpg
         print("[OK] AsyncPG")
+        del asyncpg  # Satisfy linter
     except ImportError as e:
         print(f"[FAIL] AsyncPG: {e}")
         return False
@@ -45,6 +49,7 @@ def test_imports():
     try:
         import httpx
         print("[OK] HTTPX")
+        del httpx  # Satisfy linter
     except ImportError as e:
         print(f"[FAIL] HTTPX: {e}")
         return False
@@ -52,6 +57,7 @@ def test_imports():
     try:
         import redis
         print("[OK] Redis")
+        del redis  # Satisfy linter
     except ImportError as e:
         print(f"[FAIL] Redis: {e}")
         return False
@@ -59,6 +65,7 @@ def test_imports():
     try:
         import openai
         print("[OK] OpenAI")
+        del openai  # Satisfy linter
     except ImportError as e:
         print(f"[FAIL] OpenAI: {e}")
         return False
