@@ -5,9 +5,25 @@ Intent recognition component for understanding user intent in content
 from collections import defaultdict
 from typing import Any
 
+from app.ingestion.models import IntentType
 from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
+
+# Check for optional dependencies
+try:
+    import spacy
+    SPACY_AVAILABLE = True
+except ImportError:
+    SPACY_AVAILABLE = False
+    logger.info("SpaCy not available - using basic intent recognition")
+
+try:
+    from textblob import TextBlob
+    TEXTBLOB_AVAILABLE = True
+except ImportError:
+    TEXTBLOB_AVAILABLE = False
+    logger.info("TextBlob not available - sentiment analysis disabled")
 
 
 class IntentRecognizer:

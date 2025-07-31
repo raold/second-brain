@@ -4,9 +4,12 @@ Advanced structured data extraction with enhanced parsing capabilities
 
 import ast
 import json
+import re
 from datetime import datetime
 from typing import Any
 
+from app.models.ingestion import StructuredData
+from app.services.structured_data_extractor import StructuredDataExtractor
 from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
