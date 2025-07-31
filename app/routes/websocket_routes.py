@@ -10,8 +10,8 @@ from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.synthesis.websocket_service import get_websocket_service
-from app.dependencies import get_db_instance
-from app.utils.logger import get_logger
+from app.dependencies import get_db
+from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/ws", tags=["WebSocket"])
 async def websocket_endpoint(
     websocket: WebSocket,
     token: Optional[str] = Query(None, description="Authentication token"),
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     WebSocket endpoint for real-time updates.
@@ -89,7 +89,7 @@ async def websocket_endpoint(
 
 @router.get("/status")
 async def get_websocket_status(
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ) -> dict:
     """Get WebSocket service status and statistics."""
     ws_service = await get_websocket_service(db)
@@ -201,12 +201,6 @@ asyncio.run(client())
 
 ```jsx
 import { useEffect, useState, useCallback } from 'react';
-from typing import Optional
-from fastapi import Query
-from fastapi import Depends
-from fastapi import APIRouter
-from datetime import datetime
-from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
 
 function useWebSocket(token) {
     const [ws, setWs] = useState(null);

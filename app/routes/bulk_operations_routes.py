@@ -51,7 +51,8 @@ from fastapi import APIRouter
 from datetime import datetime
 from pydantic import BaseModel
 from pydantic import Field
-from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
+from app.dependencies import get_current_user
+from app.dependencies import get_db_instance
 
 # Create router
 bulk_router = APIRouter(prefix="/bulk", tags=["Bulk Operations"])

@@ -16,6 +16,10 @@ async def get_db():
     return await get_db_instance()
 
 
+# Alias for backwards compatibility
+get_database = get_db_instance
+
+
 async def get_current_user(
     authorization: Optional[str] = Header(None)
 ) -> User:

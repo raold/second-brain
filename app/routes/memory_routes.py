@@ -11,17 +11,18 @@ from typing import Dict, List, Optional, Any
 
 
 from app.utils.logging_config import get_logger
-from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from fastapi import Query
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import APIRouter
-from pydantic import BaseModel
-from pydantic import Field
+from app.dependencies import get_current_user, get_db_instance
+from app.shared import verify_api_key
+from app.database import get_database
+from app.core.dependencies import get_memory_service
+from app.models.api_models import (
+    MemoryRequest, SearchRequest, SemanticMemoryRequest, 
+    EpisodicMemoryRequest, ProceduralMemoryRequest, ContextualSearchRequest,
+    SecondBrainException, ValidationException, NotFoundException, 
+    UnauthorizedException, RateLimitExceededException
+)
+from fastapi import Request
+from typing import Optional, Dict, List, Any
 
 class MemoryResponse(BaseModel):
     """Memory response model"""
@@ -39,21 +40,6 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/memories", tags=["Memories"])
 
 
-# Local API key verification to avoid circular imports
-async def verify_api_key(api_key: str = Query(..., alias="api_key")):
-    """Verify API key for memory operations."""
-    import os
-
-    valid_tokens = os.getenv("API_TOKENS", "").split(",")
-    valid_tokens = [token.strip() for token in valid_tokens if token.strip()]
-
-    if not valid_tokens:
-        raise SecondBrainException(message="No API tokens configured")
-
-    if api_key not in valid_tokens:
-        raise UnauthorizedException(message="Invalid API key")
-
-    return api_key
 
 
 def convert_metadata_to_dict(metadata):
@@ -75,14 +61,12 @@ async def store_memory(
     request: MemoryRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
 ):
     """Store a new memory."""
-    # Security validation
-    security_manager = get_security_manager()
-    if not security_manager.validate_request(request_obj):
-        raise RateLimitExceededException(limit=100, window="minute")
+    # Basic validation
+    if not request.content or not request.content.strip():
+        raise ValidationException(message="Content cannot be empty")
 
     # Delegate to service
     try:
-        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         memory_id = await service.store_memory(
             content=request.content,
@@ -120,14 +104,12 @@ async def search_memories(
     request: SearchRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
 ):
     """Search memories using vector similarity."""
-    # Security validation
-    security_manager = get_security_manager()
-    if not security_manager.validate_request(request_obj):
-        raise RateLimitExceededException(limit=100, window="minute")
+    # Basic validation
+    if not request.content or not request.content.strip():
+        raise ValidationException(message="Content cannot be empty")
 
     # Delegate to service
     try:
-        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         memories = await service.search_memories(query=request.query, limit=request.limit or 10)
         return memories
@@ -151,18 +133,16 @@ async def store_semantic_memory(
     request: SemanticMemoryRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
 ):
     """Store a semantic memory."""
-    # Security validation
-    security_manager = get_security_manager()
-    if not security_manager.validate_request(request_obj):
-        raise RateLimitExceededException(limit=100, window="minute")
+    # Basic validation
+    if not request.content or not request.content.strip():
+        raise ValidationException(message="Content cannot be empty")
 
     # Delegate to service
     try:
-        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         memory_id = await service.store_memory(
             content=request.content,
-            memory_type=MemoryType.SEMANTIC,
+            memory_type="semantic",
             semantic_metadata=convert_metadata_to_dict(request.semantic_metadata),
             episodic_metadata=None,
             procedural_metadata=None,
@@ -195,18 +175,16 @@ async def store_episodic_memory(
     request: EpisodicMemoryRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
 ):
     """Store an episodic memory."""
-    # Security validation
-    security_manager = get_security_manager()
-    if not security_manager.validate_request(request_obj):
-        raise RateLimitExceededException(limit=100, window="minute")
+    # Basic validation
+    if not request.content or not request.content.strip():
+        raise ValidationException(message="Content cannot be empty")
 
     # Delegate to service
     try:
-        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         memory_id = await service.store_memory(
             content=request.content,
-            memory_type=MemoryType.EPISODIC,
+            memory_type="episodic",
             semantic_metadata=None,
             episodic_metadata=convert_metadata_to_dict(request.episodic_metadata),
             procedural_metadata=None,
@@ -239,18 +217,16 @@ async def store_procedural_memory(
     request: ProceduralMemoryRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
 ):
     """Store a procedural memory."""
-    # Security validation
-    security_manager = get_security_manager()
-    if not security_manager.validate_request(request_obj):
-        raise RateLimitExceededException(limit=100, window="minute")
+    # Basic validation
+    if not request.content or not request.content.strip():
+        raise ValidationException(message="Content cannot be empty")
 
     # Delegate to service
     try:
-        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         memory_id = await service.store_memory(
             content=request.content,
-            memory_type=MemoryType.PROCEDURAL,
+            memory_type="procedural",
             semantic_metadata=None,
             episodic_metadata=None,
             procedural_metadata=convert_metadata_to_dict(request.procedural_metadata),
@@ -283,14 +259,12 @@ async def contextual_search(
     request: ContextualSearchRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
 ):
     """Perform contextual search with advanced filtering."""
-    # Security validation
-    security_manager = get_security_manager()
-    if not security_manager.validate_request(request_obj):
-        raise RateLimitExceededException(limit=100, window="minute")
+    # Basic validation
+    if not request.content or not request.content.strip():
+        raise ValidationException(message="Content cannot be empty")
 
     # Delegate to service
     try:
-        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
 
         # Convert string memory types to enums if provided
@@ -323,7 +297,6 @@ async def get_memory(memory_id: str, db=Depends(get_database), _: str = Depends(
     try:
         # Setup service with dependencies
         security_manager = get_security_manager()
-        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         memory = await service.get_memory(memory_id)
 
@@ -349,7 +322,6 @@ async def get_memory_stats(db=Depends(get_database), _: str = Depends(verify_api
     try:
         # Setup service with dependencies
         security_manager = get_security_manager()
-        setup_memory_service_factory(db, security_manager)
         service = get_memory_service()
         
         # Get total count of memories

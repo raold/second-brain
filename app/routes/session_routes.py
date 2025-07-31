@@ -9,16 +9,10 @@ from typing import Dict, List, Optional, Any
 
 
 from app.utils.logging_config import get_logger
-from typing import Optional
-from typing import Dict
-from typing import List
-from typing import Any
-from fastapi import Query
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import APIRouter
-from pydantic import BaseModel
-from pydantic import Field
+from app.core.dependencies import get_session_service_dep
+from app.models.api_models import SecondBrainException
+from fastapi import BackgroundTasks, Form
+from typing import Optional, Dict, List, Any
 logger = get_logger(__name__)
 router = APIRouter(prefix="/session", tags=["Session"])
 

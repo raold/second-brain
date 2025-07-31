@@ -13,7 +13,7 @@ from app.ingestion.engine import IngestionEngine
 from app.models.memory import User
 from app.repositories.memory_repository import MemoryRepository
 from app.services.service_factory import ServiceFactory
-from app.utils.logger import get_logger
+from app.utils.logging_config import get_logger
 from typing import Optional
 from typing import List
 from typing import Any

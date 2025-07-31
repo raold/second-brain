@@ -16,7 +16,8 @@ from app.core.exceptions import SecondBrainException, UnauthorizedException
 from app.database import get_database
 from app.services.service_factory import get_memory_service, get_health_service
 from app.utils.logging_config import get_logger
-from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
+from app.shared import verify_api_key
+from app.dependencies import get_current_user, get_db_instance
 from typing import Dict
 from typing import List
 from typing import Any

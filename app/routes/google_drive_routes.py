@@ -10,19 +10,10 @@ from pydantic import BaseModel, Field
 from app.dependencies import get_current_user, get_db_instance
 from app.ingestion.engine import IngestionEngine
 from app.ingestion.google_drive_client import DriveFile, GoogleDriveClient
-from app.models import User
+from app.models.memory import User
 from app.repositories.memory_repository import MemoryRepository
-from app.utils.logger import get_logger
-from typing import Optional
-from typing import List
-from typing import Any
-from fastapi import Query
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import APIRouter
-from pydantic import BaseModel
-from pydantic import Field
-from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
+from app.utils.logging_config import get_logger
+from typing import Optional, List, Any
 
 logger = get_logger(__name__)
 

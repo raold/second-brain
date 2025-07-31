@@ -11,7 +11,10 @@ from typing import Dict, List, Optional, Any
 
 
 from app.utils.logging_config import get_logger
-from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
+from app.dependencies import get_current_user
+from app.shared import verify_api_key
+from app.dependencies import get_db
+from app.models.api_models import ReportRequest, ReportResponse, BulkReviewRequest, SubscriptionRequest
 from typing import Optional
 from typing import Dict
 from typing import List
@@ -38,7 +41,7 @@ async def get_report_generator() -> ReportGenerator:
     """Get report generator instance."""
     global report_generator
     if not report_generator:
-        db = await get_db_instance()
+        db = await get_db()
         config = ReportGeneratorConfig()
         # Would get memory service from dependency injection
         from app.services.memory_service import MemoryService
@@ -51,7 +54,7 @@ async def get_repetition_scheduler() -> RepetitionScheduler:
     """Get repetition scheduler instance."""
     global repetition_scheduler
     if not repetition_scheduler:
-        db = await get_db_instance()
+        db = await get_db()
         repetition_scheduler = RepetitionScheduler(db.pool)
     return repetition_scheduler
 

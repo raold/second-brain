@@ -17,17 +17,9 @@ from app.models.synthesis.report_models import (
     ReportTemplate,
     ReportType,
 )
-from app.routes.auth import get_current_user
+from app.dependencies import get_current_user, get_db_instance
 from app.services.service_factory import ServiceFactory
 from app.services.synthesis.report_generator import ReportGenerator
-from app.dependencies import get_db_instance
-from typing import Optional
-from fastapi import Query
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import APIRouter
-from datetime import datetime
-from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
 
 router = APIRouter(prefix="/synthesis/reports", tags=["Reports"])
 
@@ -36,7 +28,7 @@ router = APIRouter(prefix="/synthesis/reports", tags=["Reports"])
 async def generate_report(
     request: ReportRequest,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_instance),
+    db: AsyncSession = Depends(get_db),
     services: ServiceFactory = Depends(ServiceFactory)
 ) -> GeneratedReport:
     """
@@ -78,7 +70,7 @@ async def generate_report(
 @router.get("/templates", response_model=list[ReportTemplate])
 async def get_report_templates(
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ) -> list[ReportTemplate]:
     """Get available report templates."""
     # In production, load from database
@@ -119,7 +111,7 @@ async def get_report_templates(
 async def create_report_template(
     template: ReportTemplate,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ) -> ReportTemplate:
     """Create a custom report template."""
     # In production, save to database
@@ -133,7 +125,7 @@ async def create_report_template(
 async def get_report_schedules(
     enabled_only: bool = Query(True, description="Only return enabled schedules"),
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ) -> list[ReportSchedule]:
     """Get user's report schedules."""
     # In production, load from database
@@ -161,7 +153,7 @@ async def get_report_schedules(
 async def create_report_schedule(
     schedule: ReportSchedule,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ) -> ReportSchedule:
     """Schedule automated report generation."""
     schedule.user_id = current_user
@@ -177,7 +169,7 @@ async def update_report_schedule(
     schedule_id: UUID,
     updates: dict,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ) -> ReportSchedule:
     """Update a report schedule."""
     # In production, update in database
@@ -203,7 +195,7 @@ async def update_report_schedule(
 async def delete_report_schedule(
     schedule_id: UUID,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ) -> dict:
     """Delete a report schedule."""
     # In production, delete from database
@@ -217,7 +209,7 @@ async def get_report_history(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ) -> list[GeneratedReport]:
     """Get user's report generation history."""
     # In production, load from database
@@ -246,7 +238,7 @@ async def get_report_history(
 async def get_report(
     report_id: UUID,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ) -> GeneratedReport:
     """Get a specific generated report."""
     # In production, load from database
@@ -273,7 +265,7 @@ async def download_report(
     report_id: UUID,
     format: Optional[ReportFormat] = None,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ):
     """Download a generated report in specified format."""
     # In production, return file response
@@ -290,7 +282,7 @@ async def share_report(
     recipients: list[str],
     message: Optional[str] = None,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_instance)
+    db: AsyncSession = Depends(get_db)
 ) -> dict:
     """Share a report with other users."""
     # In production, send emails or create share links
