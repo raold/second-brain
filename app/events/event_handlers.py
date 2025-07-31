@@ -8,6 +8,8 @@ notifications, and system monitoring triggered by domain events.
 from datetime import datetime
 from typing import Any
 
+from app.events.domain_events import DomainEvent, MemoryAccessedEvent, MemoryCreatedEvent
+from app.events.event_bus import EventHandler
 from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)

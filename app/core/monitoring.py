@@ -12,7 +12,7 @@ This module provides:
 import asyncio
 import json
 import time
-from collections import Counter as StdCounter, defaultdict, deque
+from collections import defaultdict, deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime

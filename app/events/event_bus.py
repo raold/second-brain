@@ -6,6 +6,7 @@ the Observer pattern for loose coupling between components.
 """
 
 import asyncio
+import traceback
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable
