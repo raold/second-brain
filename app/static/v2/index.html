@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Brain v2.0</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="app-title">◉ Second Brain</h1>
+                <div class="connection-status" id="connection-status">
+                    <span class="status-text">Connected</span>
+                    <span class="status-dot"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Status Cards Row -->
+            <section class="status-row">
+                <div class="status-card" id="tests-card">
+                    <div class="metric-value" id="test-count">430</div>
+                    <div class="metric-label">Tests</div>
+                </div>
+                
+                <div class="status-card dropzone" id="dropzone">
+                    <div class="drop-content">
+                        <div class="drop-label">Drop Zone</div>
+                        <input type="file" id="file-input" hidden>
+                    </div>
+                </div>
+                
+                <div class="status-card" id="patterns-card">
+                    <div class="metric-value" id="pattern-count">24</div>
+                    <div class="metric-label">Patterns</div>
+                </div>
+            </section>
+
+            <!-- Activity Section -->
+            <section class="activity-section">
+                <h2 class="section-title">Recent Activity</h2>
+                <div class="activity-list" id="activity-list">
+                    <div class="activity-item">
+                        <span class="activity-indicator"></span>
+                        <span class="activity-text">Enable autonomous mode</span>
+                        <span class="activity-time">2h</span>
+                    </div>
+                    <div class="activity-item">
+                        <span class="activity-indicator"></span>
+                        <span class="activity-text">Optimize agent system</span>
+                        <span class="activity-time">1d</span>
+                    </div>
+                    <div class="activity-item">
+                        <span class="activity-indicator"></span>
+                        <span class="activity-text">Add documentation</span>
+                        <span class="activity-time">3d</span>
+                    </div>
+                </div>
+                <div class="view-all-container">
+                    <button class="view-all-button" id="view-all">View All</button>
+                </div>
+            </section>
+
+            <!-- Workspace Tabs -->
+            <section class="workspace-section" id="workspace">
+                <nav class="workspace-tabs">
+                    <button class="tab-button active" data-tab="git">Git Activity</button>
+                    <button class="tab-button" data-tab="todo">TODO List</button>
+                    <button class="tab-button" data-tab="api">API Health</button>
+                    <button class="tab-button" data-tab="docs">Documentation</button>
+                </nav>
+                
+                <div class="tab-content">
+                    <!-- Git Activity Tab -->
+                    <div class="tab-panel active" id="git-tab">
+                        <div class="git-timeline">
+                            <div class="timeline-header">
+                                <h3>Git Timeline</h3>
+                                <span class="branch-info">main</span>
+                            </div>
+                            <div class="timeline-graph" id="git-timeline">
+                                <!-- Timeline visualization will be rendered here -->
+                            </div>
+                            <div class="commit-list" id="commit-list">
+                                <!-- Recent commits will be listed here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TODO Tab -->
+                    <div class="tab-panel" id="todo-tab">
+                        <div class="todo-container">
+                            <div class="todo-header">
+                                <h3>TODO Progress</h3>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 68%"></div>
+                                </div>
+                                <span class="progress-text">68%</span>
+                            </div>
+                            <div class="todo-list" id="todo-list">
+                                <!-- TODO items will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Health Tab -->
+                    <div class="tab-panel" id="api-tab">
+                        <div class="health-metrics">
+                            <h3>API Health Metrics</h3>
+                            <div class="metric-grid">
+                                <div class="health-metric">
+                                    <span class="metric-name">Uptime</span>
+                                    <div class="metric-bar">
+                                        <div class="metric-fill" style="width: 99.9%"></div>
+                                    </div>
+                                    <span class="metric-percent">99.9%</span>
+                                </div>
+                                <div class="health-metric">
+                                    <span class="metric-name">Response Time</span>
+                                    <div class="metric-bar">
+                                        <div class="metric-fill" style="width: 92%"></div>
+                                    </div>
+                                    <span class="metric-percent">0.2s</span>
+                                </div>
+                                <div class="health-metric">
+                                    <span class="metric-name">Memory Usage</span>
+                                    <div class="metric-bar">
+                                        <div class="metric-fill" style="width: 42%"></div>
+                                    </div>
+                                    <span class="metric-percent">42%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documentation Tab -->
+                    <div class="tab-panel" id="docs-tab">
+                        <div class="docs-container">
+                            <h3>Documentation</h3>
+                            <div class="docs-grid">
+                                <a href="/docs/api" class="doc-card">
+                                    <h4>API Reference</h4>
+                                    <p>Complete API documentation</p>
+                                </a>
+                                <a href="/docs/architecture" class="doc-card">
+                                    <h4>Architecture</h4>
+                                    <p>System design and patterns</p>
+                                </a>
+                                <a href="/docs/guides" class="doc-card">
+                                    <h4>Guides</h4>
+                                    <p>How-to tutorials</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

@@ -64,6 +64,7 @@ from app.routes.synthesis_routes import router as synthesis_router
 from app.routes.ingestion_routes import router as ingestion_router
 from app.routes.google_drive_routes import router as google_drive_router
 from app.routes.dashboard_routes import router as dashboard_router
+from app.routes.v2_api import router as v2_router
 from app.security import SecurityConfig, SecurityManager
 from app.core.logging import (
     LogConfig, configure_logging, get_logger, LoggingRoute,
@@ -376,6 +377,9 @@ app.include_router(google_drive_router, prefix="/api/v1")
 # Include Dashboard routes (v3.0.0)
 app.include_router(dashboard_router)
 
+# Include v2 API routes (already has /api/v2 prefix)
+app.include_router(v2_router)
+
 # Setup conversation monitoring
 setup_conversation_monitoring()
 
@@ -389,26 +393,32 @@ try:
 except Exception as e:
     logger.warning(f"Could not mount static files: {e}")
 
+# Serve v2 static files
+try:
+    app.mount("/v2", StaticFiles(directory="app/static/v2", html=True), name="v2")
+except Exception as e:
+    logger.warning(f"Could not mount v2 static files: {e}")
+
 
 # Landing page
 @app.get("/", response_class=HTMLResponse)
 async def landing_page():
     """Serve the main landing page"""
-    try:
-        with open("static/index.html", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-    except FileNotFoundError:
-        return HTMLResponse(
-            content="""
+    # For now, redirect to v2 interface
+    return HTMLResponse(
+        content="""
         <html>
-        <head><title>Second Brain v3.0.0</title></head>
+        <head>
+            <title>Second Brain v3.0.0</title>
+            <meta http-equiv="refresh" content="0; url=/v2">
+        </head>
         <body>
-        <h1>🧠 Second Brain</h1>
-        <p>Landing page is initializing... Please visit <a href="/docs">/docs</a> for the API documentation.</p>
+            <h1>🧠 Second Brain</h1>
+            <p>Redirecting to v2 interface... <a href="/v2">Click here if not redirected</a></p>
         </body>
         </html>
         """
-        )
+    )
 
 
 # Documentation library

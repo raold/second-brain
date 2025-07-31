@@ -1,0 +1,272 @@
+/**
+ * Second Brain Design Tokens
+ * 
+ * This file contains all design decisions as CSS custom properties.
+ * These tokens ensure consistency across all interfaces.
+ * 
+ * Based on principles from:
+ * - Swiss Design (mathematical precision)
+ * - Dieter Rams (functional minimalism)
+ * - Edward Tufte (information density)
+ * - Apple (intuitive simplicity)
+ */
+
+:root {
+  /* ===== COLOR TOKENS ===== */
+  
+  /* Neutral Palette - The foundation */
+  --color-neutral-0: #FFFFFF;
+  --color-neutral-50: #FAFAFA;
+  --color-neutral-100: #F4F4F5;
+  --color-neutral-200: #E4E4E7;
+  --color-neutral-300: #D4D4D8;
+  --color-neutral-400: #A1A1AA;
+  --color-neutral-500: #71717A;
+  --color-neutral-600: #52525B;
+  --color-neutral-700: #3F3F46;
+  --color-neutral-800: #27272A;
+  --color-neutral-900: #18181B;
+  --color-neutral-950: #0A0A0A;
+  
+  /* Primary - Action and focus */
+  --color-primary-light: #60A5FA;
+  --color-primary: #2563EB;
+  --color-primary-dark: #1D4ED8;
+  --color-primary-darker: #1E40AF;
+  
+  /* Semantic Colors - Function over decoration */
+  --color-success: #059669;
+  --color-success-light: #10B981;
+  --color-warning: #D97706;
+  --color-warning-light: #F59E0B;
+  --color-error: #DC2626;
+  --color-error-light: #EF4444;
+  --color-info: #0891B2;
+  --color-info-light: #06B6D4;
+  
+  /* Applied Colors */
+  --color-background: var(--color-neutral-0);
+  --color-background-subtle: var(--color-neutral-50);
+  --color-surface: var(--color-neutral-0);
+  --color-surface-raised: var(--color-neutral-0);
+  --color-border: var(--color-neutral-200);
+  --color-border-subtle: var(--color-neutral-100);
+  --color-text: var(--color-neutral-950);
+  --color-text-secondary: var(--color-neutral-600);
+  --color-text-tertiary: var(--color-neutral-500);
+  --color-text-on-primary: var(--color-neutral-0);
+  
+  /* ===== TYPOGRAPHY TOKENS ===== */
+  
+  /* Font Families */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  
+  /* Font Sizes - 1.25 scale */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-4xl: 2.25rem;    /* 36px */
+  --text-5xl: 3rem;       /* 48px */
+  
+  /* Line Heights */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.33;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+  
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  
+  /* Letter Spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+  
+  /* ===== SPACING TOKENS ===== */
+  /* 8px baseline grid */
+  
+  --space-px: 1px;
+  --space-0-5: 0.25rem;   /* 4px */
+  --space-1: 0.5rem;      /* 8px */
+  --space-1-5: 0.75rem;   /* 12px */
+  --space-2: 1rem;        /* 16px */
+  --space-2-5: 1.25rem;   /* 20px */
+  --space-3: 1.5rem;      /* 24px */
+  --space-4: 2rem;        /* 32px */
+  --space-5: 2.5rem;      /* 40px */
+  --space-6: 3rem;        /* 48px */
+  --space-7: 3.5rem;      /* 56px */
+  --space-8: 4rem;        /* 64px */
+  --space-9: 4.5rem;      /* 72px */
+  --space-10: 5rem;       /* 80px */
+  --space-12: 6rem;       /* 96px */
+  --space-16: 8rem;       /* 128px */
+  --space-20: 10rem;      /* 160px */
+  --space-24: 12rem;      /* 192px */
+  
+  /* ===== SIZING TOKENS ===== */
+  
+  /* Container Widths */
+  --size-xs: 20rem;       /* 320px */
+  --size-sm: 24rem;       /* 384px */
+  --size-md: 28rem;       /* 448px */
+  --size-lg: 32rem;       /* 512px */
+  --size-xl: 36rem;       /* 576px */
+  --size-2xl: 42rem;      /* 672px */
+  --size-3xl: 48rem;      /* 768px */
+  --size-4xl: 56rem;      /* 896px */
+  --size-5xl: 64rem;      /* 1024px */
+  --size-6xl: 72rem;      /* 1152px */
+  --size-7xl: 80rem;      /* 1280px */
+  --size-full: 100%;
+  
+  /* ===== RADIUS TOKENS ===== */
+  
+  --radius-none: 0;
+  --radius-sm: 0.25rem;   /* 4px */
+  --radius-base: 0.375rem; /* 6px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  --radius-2xl: 1.5rem;   /* 24px */
+  --radius-full: 9999px;
+  
+  /* ===== SHADOW TOKENS ===== */
+  /* Subtle, functional shadows */
+  
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-base: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+  --shadow-none: none;
+  
+  /* Focus shadow */
+  --shadow-focus: 0 0 0 3px rgb(37 99 235 / 0.1);
+  
+  /* ===== MOTION TOKENS ===== */
+  
+  /* Durations */
+  --duration-instant: 0ms;
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-moderate: 300ms;
+  --duration-slow: 450ms;
+  --duration-slower: 600ms;
+  
+  /* Easings */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* ===== BREAKPOINT TOKENS ===== */
+  
+  --screen-xs: 320px;
+  --screen-sm: 640px;
+  --screen-md: 768px;
+  --screen-lg: 1024px;
+  --screen-xl: 1280px;
+  --screen-2xl: 1536px;
+  
+  /* ===== Z-INDEX TOKENS ===== */
+  
+  --z-auto: auto;
+  --z-0: 0;
+  --z-10: 10;
+  --z-20: 20;
+  --z-30: 30;
+  --z-40: 40;
+  --z-50: 50;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  
+  /* ===== GRID TOKENS ===== */
+  
+  --grid-cols-1: repeat(1, minmax(0, 1fr));
+  --grid-cols-2: repeat(2, minmax(0, 1fr));
+  --grid-cols-3: repeat(3, minmax(0, 1fr));
+  --grid-cols-4: repeat(4, minmax(0, 1fr));
+  --grid-cols-5: repeat(5, minmax(0, 1fr));
+  --grid-cols-6: repeat(6, minmax(0, 1fr));
+  --grid-cols-12: repeat(12, minmax(0, 1fr));
+}
+
+/* ===== DARK MODE TOKENS ===== */
+/* Minimal dark theme - only if explicitly needed */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="auto"] {
+    --color-background: var(--color-neutral-950);
+    --color-background-subtle: var(--color-neutral-900);
+    --color-surface: var(--color-neutral-900);
+    --color-surface-raised: var(--color-neutral-800);
+    --color-border: var(--color-neutral-700);
+    --color-border-subtle: var(--color-neutral-800);
+    --color-text: var(--color-neutral-50);
+    --color-text-secondary: var(--color-neutral-400);
+    --color-text-tertiary: var(--color-neutral-500);
+  }
+}
+
+/* ===== SEMANTIC TOKENS ===== */
+/* Component-specific tokens that reference base tokens */
+
+:root {
+  /* Buttons */
+  --button-height-sm: 2rem;        /* 32px */
+  --button-height-base: 2.5rem;    /* 40px */
+  --button-height-lg: 3rem;        /* 48px */
+  --button-padding-x: var(--space-4);
+  --button-padding-y: var(--space-2);
+  --button-radius: var(--radius-base);
+  --button-font-weight: var(--font-medium);
+  
+  /* Forms */
+  --input-height: 2.5rem;          /* 40px */
+  --input-padding-x: var(--space-3);
+  --input-padding-y: var(--space-2);
+  --input-radius: var(--radius-base);
+  --input-border-width: 1px;
+  
+  /* Cards */
+  --card-padding: var(--space-4);
+  --card-radius: var(--radius-lg);
+  --card-shadow: var(--shadow-sm);
+  
+  /* Modals */
+  --modal-padding: var(--space-6);
+  --modal-radius: var(--radius-lg);
+  --modal-max-width: var(--size-2xl);
+  --modal-shadow: var(--shadow-xl);
+  
+  /* Navigation */
+  --nav-height: 4rem;              /* 64px */
+  --nav-item-padding: var(--space-3);
+  --sidebar-width: 17.5rem;        /* 280px */
+  
+  /* Content */
+  --content-max-width: var(--size-7xl);
+  --article-max-width: 45rem;      /* 720px */
+  --line-length-optimal: 66ch;
+}

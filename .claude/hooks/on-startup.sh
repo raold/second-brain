@@ -58,6 +58,12 @@ fi
 echo -e "\n${GREEN}✅ Startup checks complete${NC}"
 echo "============================================"
 
+# Loading shell utility functions
+if [ -f ".claude/shell-utils.sh" ]; then
+    echo "Loading shell utility functions"
+    source ".claude/shell-utils.sh"
+fi
+
 # Enable full autonomous mode - no prompts, no confirmations
 echo -e "\n${YELLOW}🚀 Enabling FULL AUTONOMOUS MODE${NC}"
 echo "============================================"
