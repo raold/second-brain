@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Any
 
 from app.utils.logging_config import get_logger
 from app.dependencies.auth import verify_api_key, get_current_user, get_db_instance
+from app.services.health_service import HealthService, get_health_service_dep
 from typing import Optional
 from typing import Dict
 from typing import List
@@ -20,8 +21,15 @@ from fastapi import HTTPException
 from fastapi import APIRouter
 from pydantic import BaseModel
 from pydantic import Field
+
 logger = get_logger(__name__)
 router = APIRouter(tags=["Health"])
+
+class HealthResponse(BaseModel):
+    """Health check response model"""
+    status: str
+    version: str
+    services: Dict[str, Any]
 
 
 @router.get(
