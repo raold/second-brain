@@ -2,8 +2,6 @@ import time
 from datetime import datetime
 from typing import Any
 
-from app.utils.logging_config import get_logger
-
 """
 Rate Limiting Middleware for Second Brain v3.0.0
 Enterprise-grade rate limiting with Redis backend and configurable limits

@@ -202,7 +202,7 @@ async def get_detailed_metrics(db=Depends(get_database), _: str = Depends(verify
                 )
             else:
                 cache_hit_rate = 0
-        except:
+        except Exception as e:
             cache_hit_rate = 0
 
         # Get database statistics
@@ -442,7 +442,7 @@ async def get_health_status(db=Depends(get_database), _: str = Depends(verify_ap
         try:
             await db.pool.fetchval("SELECT 1")
             health_checks["database"] = "healthy"
-        except:
+        except Exception as e:
             health_checks["database"] = "unhealthy"
 
         # Check Redis
@@ -455,7 +455,7 @@ async def get_health_status(db=Depends(get_database), _: str = Depends(verify_ap
                 health_checks["redis"] = "healthy"
             else:
                 health_checks["redis"] = "unavailable"
-        except:
+        except Exception as e:
             health_checks["redis"] = "unhealthy"
 
         # Check system resources

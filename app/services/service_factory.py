@@ -1,7 +1,6 @@
 import time
 
 from app.database import get_database
-from app.services.service_factory import get_health_service, get_memory_service, get_session_service
 from app.utils.logging_config import get_logger
 
 """Service factory for dependency injection"""

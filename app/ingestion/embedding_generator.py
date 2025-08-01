@@ -229,7 +229,7 @@ class EmbeddingGenerator:
     def _generate_mock_embedding(self, text: str) -> list[float]:
         """Generate deterministic mock embedding from text"""
         # Create deterministic embedding based on text content
-        text_hash = hashlib.md5(text.encode()).hexdigest()
+        text_hash = hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()
 
         # Generate values from hash
         embedding = []
@@ -309,7 +309,7 @@ class EmbeddingGenerator:
 
     def _get_cache_id(self, text: str, key: str) -> str:
         """Generate cache ID for text"""
-        text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
+        text_hash = hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()[:8]
         return f"{self.model_name}_{key}_{text_hash}"
 
     def generate_embedding_similarity(

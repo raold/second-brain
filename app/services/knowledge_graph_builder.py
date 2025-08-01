@@ -6,6 +6,13 @@ from typing import Any
 
 from app.database import Database
 from app.utils.logging_config import get_logger
+try:
+    import networkx as nx
+    NETWORKX_AVAILABLE = True
+except ImportError:
+    NETWORKX_AVAILABLE = False
+    nx = None
+
 
 """
 Knowledge Graph Builder for Second Brain

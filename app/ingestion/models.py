@@ -1,19 +1,13 @@
-from datetime import datetime
-from typing import Any
-from uuid import UUID
-
-from pydantic import BaseModel, Field
-
-from app.ingestion.models import StructuredData
-
 """
 Data models for the sophisticated ingestion engine
 """
 
+from datetime import datetime
+from typing import Any
+from uuid import UUID
+from pydantic import BaseModel, Field
 from enum import Enum
-
 from pydantic import field_validator
-
 
 class EntityType(str, Enum):
     """Types of entities that can be extracted"""
@@ -31,7 +25,6 @@ class EntityType(str, Enum):
     PHONE = "phone"
     CUSTOM = "custom"
 
-
 class RelationshipType(str, Enum):
     """Types of relationships between entities"""
 
@@ -48,7 +41,6 @@ class RelationshipType(str, Enum):
     DEPENDS_ON = "depends_on"
     SIMILAR_TO = "similar_to"
 
-
 class IntentType(str, Enum):
     """Types of user intent in content"""
 
@@ -64,7 +56,6 @@ class IntentType(str, Enum):
     PROBLEM = "problem"
     SOLUTION = "solution"
 
-
 class ContentQuality(str, Enum):
     """Quality assessment of content"""
 
@@ -72,7 +63,6 @@ class ContentQuality(str, Enum):
     MEDIUM = "medium"
     LOW = "low"
     INCOMPLETE = "incomplete"
-
 
 class Entity(BaseModel):
     """Represents an extracted entity"""
@@ -90,7 +80,6 @@ class Entity(BaseModel):
     def validate_confidence(cls, v: float) -> float:
         return max(0.0, min(1.0, v))
 
-
 class Relationship(BaseModel):
     """Represents a relationship between entities"""
 
@@ -101,7 +90,6 @@ class Relationship(BaseModel):
     evidence: str | None = Field(None, description="Text evidence for relationship")
     metadata: dict[str, Any] = Field(default_factory=dict)
 
-
 class Topic(BaseModel):
     """Represents an extracted topic"""
 
@@ -110,7 +98,6 @@ class Topic(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0, description="Topic confidence")
     relevance: float = Field(..., ge=0.0, le=1.0, description="Relevance to content")
     hierarchy: list[str] | None = Field(None, description="Topic hierarchy path")
-
 
 class Intent(BaseModel):
     """Represents extracted user intent"""
@@ -121,7 +108,6 @@ class Intent(BaseModel):
     urgency: float | None = Field(None, ge=0.0, le=1.0, description="Urgency score")
     sentiment: float | None = Field(None, ge=-1.0, le=1.0, description="Sentiment score")
 
-
 class StructuredData(BaseModel):
     """Represents extracted structured data"""
 
@@ -131,7 +117,6 @@ class StructuredData(BaseModel):
     code_snippets: list[dict[str, str]] = Field(default_factory=list)
     metadata_fields: dict[str, Any] = Field(default_factory=dict)
 
-
 class EmbeddingMetadata(BaseModel):
     """Metadata for generated embeddings"""
 
@@ -140,7 +125,6 @@ class EmbeddingMetadata(BaseModel):
     chunk_id: int | None = Field(None, description="Chunk ID if content was chunked")
     chunk_overlap: int | None = Field(None, description="Overlap between chunks")
     generated_at: datetime = Field(default_factory=datetime.utcnow)
-
 
 class ProcessedContent(BaseModel):
     """Complete processed content with all extractions"""
@@ -180,7 +164,6 @@ class ProcessedContent(BaseModel):
     suggested_memory_type: str | None = None
     suggested_importance: float = Field(default=0.5, ge=0.0, le=1.0)
 
-
 class IngestionRequest(BaseModel):
     """Request model for content ingestion"""
 
@@ -205,7 +188,6 @@ class IngestionRequest(BaseModel):
     fast_mode: bool = Field(default=False, description="Use faster, less accurate models")
     max_processing_time: int | None = Field(None, description="Max processing time in ms")
 
-
 class IngestionResponse(BaseModel):
     """Response model for content ingestion"""
 
@@ -216,7 +198,6 @@ class IngestionResponse(BaseModel):
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     processing_stats: dict[str, Any] = Field(default_factory=dict)
-
 
 class IngestionConfig(BaseModel):
     """Configuration for the ingestion engine"""

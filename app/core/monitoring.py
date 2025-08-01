@@ -32,10 +32,10 @@ from prometheus_client import (
     Summary,
     generate_latest,
 )
+import redis.asyncio as redis
 
 # Optional Redis dependency
 try:
-    import redis.asyncio as redis
 
     HAS_REDIS = True
 except ImportError:

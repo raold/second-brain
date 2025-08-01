@@ -1,17 +1,10 @@
-from datetime import datetime
-
-from pydantic import BaseModel, Field
-
-from app.models.memory import MemoryType
-from app.models.search import SearchResult
-
 """
 Search-related models for Second Brain
 """
 
-
-
-
+from datetime import datetime
+from pydantic import BaseModel, Field
+from app.models.memory import MemoryType
 
 class SearchCriteria(BaseModel):
     """Criteria for searching memories"""
@@ -34,7 +27,6 @@ class SearchCriteria(BaseModel):
                 "limit": 50,
             }
         }
-
 
 class SearchResult(BaseModel):
     """Search result with memory and relevance score"""

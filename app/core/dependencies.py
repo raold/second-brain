@@ -14,6 +14,15 @@ from collections.abc import Callable
 from functools import lru_cache
 from typing import TypeVar
 
+import asyncio
+from app.services.service_factory import DashboardService
+from app.services.service_factory import GitService
+from app.services.service_factory import HealthService
+from app.services.memory_service import MemoryService
+from app.services.service_factory import SessionService
+from app.services.importance_engine import get_importance_engine as _get_importance_engine
+from app.services.monitoring import get_metrics_collector as _get_metrics_collector
+
 logger = get_logger(__name__)
 
 T = TypeVar("T")
@@ -85,7 +94,6 @@ def get_container() -> DependencyContainer:
 def get_database():
     """Get database instance (cached)"""
 
-    from app.database import get_database as _get_database
 
     # Handle async database initialization in sync context
     try:
@@ -93,7 +101,6 @@ def get_database():
         return loop.run_until_complete(_get_database())
     except RuntimeError:
         # No event loop, create one
-        import asyncio
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -105,7 +112,6 @@ def get_dashboard_service():
     try:
         return _container.get_service("dashboard_service")
     except ValueError:
-        from app.services.service_factory import DashboardService
 
         service = DashboardService()
         _container.register_singleton("dashboard_service", service)
@@ -117,7 +123,6 @@ def get_git_service():
     try:
         return _container.get_service("git_service")
     except ValueError:
-        from app.services.service_factory import GitService
 
         service = GitService()
         _container.register_singleton("git_service", service)
@@ -129,7 +134,6 @@ def get_health_service():
     try:
         return _container.get_service("health_service")
     except ValueError:
-        from app.services.service_factory import HealthService
 
         service = HealthService()
         _container.register_singleton("health_service", service)
@@ -141,7 +145,6 @@ def get_memory_service():
     try:
         return _container.get_service("memory_service")
     except ValueError:
-        from app.services.memory_service import MemoryService
 
         service = MemoryService()
         _container.register_singleton("memory_service", service)
@@ -153,7 +156,6 @@ def get_session_service():
     try:
         return _container.get_service("session_service")
     except ValueError:
-        from app.services.service_factory import SessionService
 
         service = SessionService()
         _container.register_singleton("session_service", service)
@@ -165,7 +167,6 @@ def get_importance_engine():
     try:
         return _container.get_service("importance_engine")
     except ValueError:
-        from app.services.importance_engine import get_importance_engine as _get_importance_engine
 
         db = get_database()
         engine = _get_importance_engine(db)
@@ -178,7 +179,6 @@ def get_metrics_collector():
     try:
         return _container.get_service("metrics_collector")
     except ValueError:
-        from app.services.monitoring import get_metrics_collector as _get_metrics_collector
 
         collector = _get_metrics_collector()
         _container.register_singleton("metrics_collector", collector)

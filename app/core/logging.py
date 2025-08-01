@@ -30,6 +30,9 @@ from fastapi.routing import APIRoute
 from pythonjsonlogger import jsonlogger
 
 # Context variables for request tracking
+import os
+from logging.handlers import RotatingFileHandler
+
 request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
 user_id_var: ContextVar[str | None] = ContextVar("user_id", default=None)
 
@@ -81,8 +84,6 @@ class StructuredLogger:
 
         # File handler
         if self.config.enable_file:
-            import os
-            from logging.handlers import RotatingFileHandler
 
             # Create log directory if it doesn't exist
             log_dir = os.path.dirname(self.config.file_path)

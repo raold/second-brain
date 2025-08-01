@@ -5,6 +5,9 @@ from typing import Any
 from uuid import uuid4
 
 from app.utils.logging_config import get_logger
+from app.ingestion.models import ExtractedData, ProcessingResult
+from app.services.monitoring.metrics_collector import MetricsCollector
+
 
 """
 Core extraction pipeline that integrates all enhanced NLP components

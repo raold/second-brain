@@ -165,7 +165,7 @@ async def get_performance_metrics(db=Depends(get_database), _: str = Depends(ver
                 )
             else:
                 cache_hit_rate = 0
-        except:
+        except Exception as e:
             cache_hit_rate = 0
 
         # Format memory statistics
@@ -425,7 +425,7 @@ async def get_docker_status(_: str = Depends(verify_api_key)):
                         "uptime": "Direct connection",
                     }
                 )
-            except:
+            except Exception:
                 containers.append(
                     {
                         "name": "PostgreSQL",
@@ -452,7 +452,7 @@ async def get_docker_status(_: str = Depends(verify_api_key)):
                     )
                 else:
                     raise Exception("Redis not configured")
-            except:
+            except Exception:
                 containers.append(
                     {
                         "name": "Redis",

@@ -1,13 +1,3 @@
-import json
-import logging
-import os
-import sys
-import time
-from datetime import datetime
-from typing import Any
-
-from app.utils.logging_config import get_logger
-
 """
 Modern structured logging configuration for Second Brain.
 
@@ -17,6 +7,14 @@ Provides centralized logging configuration with:
 - Request correlation tracking
 - Performance metrics integration
 """
+
+import json
+import logging
+import os
+import sys
+import time
+from datetime import datetime
+from typing import Any
 
 import logging.config
 import logging.handlers

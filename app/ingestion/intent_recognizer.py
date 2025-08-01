@@ -2,6 +2,8 @@ import re
 from typing import Any
 
 from app.utils.logging_config import get_logger
+from app.ingestion.models import Intent, IntentType
+
 
 """
 Intent recognition component for understanding user intent in content
@@ -9,7 +11,6 @@ Intent recognition component for understanding user intent in content
 
 from collections import defaultdict
 
-from app.ingestion.models import IntentType
 
 logger = get_logger(__name__)
 

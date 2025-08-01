@@ -1,27 +1,27 @@
-from datetime import datetime
-from typing import Any
-
-from fastapi import HTTPException
-from pydantic import BaseModel
-
-from app.core.exceptions import DatabaseException, SecondBrainException, UnauthorizedException, ValidationException
-from app.utils.logging_config import get_logger
-
 """
 Centralized exception handling for Second Brain v3.0.0
 
 This module provides:
 - Custom exception hierarchy
 - Error codes and messages
-- Exception handlers for FastAPI
+- FastAPI exception handlers
 - Structured error responses
 """
+
+from datetime import datetime
+from typing import Any
+
+from fastapi import HTTPException
+from pydantic import BaseModel
+
+from app.utils.logging_config import get_logger
 
 import traceback
 from enum import Enum
 
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
 logger = get_logger(__name__)
 
@@ -107,7 +107,6 @@ class SecondBrainException(Exception):
         )
 
 
-# Authentication & Authorization Exceptions
 class UnauthorizedException(SecondBrainException):
     """Raised when authentication is required but not provided"""
 
@@ -425,7 +424,6 @@ async def validation_exception_handler(request: Request, exc: Exception) -> JSON
 
 def register_exception_handlers(app):
     """Register all exception handlers with the FastAPI app"""
-    from fastapi.exceptions import RequestValidationError
 
     app.add_exception_handler(SecondBrainException, second_brain_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)

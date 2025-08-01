@@ -8,6 +8,8 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from app.database import get_database
+from app.events.domain_events import DuplicatesDetectedEvent
+
 
 #!/usr/bin/env python3
 """

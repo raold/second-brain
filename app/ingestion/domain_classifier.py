@@ -1,4 +1,6 @@
 from app.utils.logging_config import get_logger
+from app.ingestion.models import Domain, DomainClassification
+
 
 """Domain classifier for content categorization"""
 

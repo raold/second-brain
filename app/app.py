@@ -1,14 +1,3 @@
-import os
-from datetime import datetime
-
-from fastapi import Depends, HTTPException, Query
-from pydantic import BaseModel, Field
-
-from app.core.redis_manager import get_redis_client
-from app.database import get_database
-from app.models.memory import MemoryType
-from app.utils.logging_config import get_logger
-
 """
 Second Brain API Application Module
 
@@ -23,6 +12,17 @@ It handles:
 The application is initialized and run from main.py in the project root.
 """
 
+import os
+from datetime import datetime
+
+from fastapi import Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+
+from app.core.redis_manager import get_redis_client
+from app.database import get_database
+from app.models.memory import MemoryType
+from app.utils.logging_config import get_logger
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -34,7 +34,7 @@ from starlette.responses import Response
 from app.connection_pool import PoolConfig, close_pool, get_pool_manager, initialize_pool
 from app.conversation_processor import setup_conversation_monitoring
 from app.core.exceptions import register_exception_handlers
-from app.core.logging import LogConfig, LoggingRoute, configure_logging, get_logger
+from app.core.logging import LogConfig, LoggingRoute, configure_logging
 from app.core.monitoring import (
     MetricDefinition,
     MetricType,
@@ -59,7 +59,6 @@ from app.docs import (
     EpisodicMemoryRequest,
     HealthResponse,
     MemoryResponse,
-    MemoryType,
     ProceduralMemoryRequest,
     SemanticMemoryRequest,
     StatusResponse,

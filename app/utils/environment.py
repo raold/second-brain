@@ -1,111 +1,122 @@
-from typing import Any
-import os
-
 """
-Environment configuration validation and testing utilities.
+Environment utilities for configuration and setup.
 """
 
 import os
-from typing import Any
+from pathlib import Path
+from typing import Optional
 
-from app.config import Config
+from app.utils.logging_config import get_logger
 
-
-def validate_test_environment() -> dict[str, Any]:
-    """Validate and setup test environment configuration."""
-    # Set test environment
-    os.environ["ENVIRONMENT"] = "test"
-        os.environ["API_TOKENS"] = "test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba"
-
-    # Use real OpenAI key if available (from GitHub secrets), otherwise use mock
-    if "OPENAI_API_KEY" not in os.environ:
-        os.environ["OPENAI_API_KEY"] = "test-key-mock"
-
-    # Validate configuration
-    issues = Config.validate_configuration()
-
-    return {
-        "environment": Config.ENVIRONMENT,
-        "use_mock_database": Config.should_use_mock_database(),
-        "require_openai": Config.should_require_openai(),
-        "debug_mode": Config.is_debug_mode(),
-        "log_level": Config.get_effective_log_level(),
-        "validation_issues": issues,
-        "api_tokens": Config.get_api_tokens(),
-    }
+logger = get_logger(__name__)
 
 
-def validate_ci_environment() -> dict[str, Any]:
-    """Validate and setup CI environment configuration."""
-    # Set CI environment
-    os.environ["ENVIRONMENT"] = "ci"
-        os.environ["DEBUG"] = "false"
-    os.environ["LOG_LEVEL"] = "WARNING"
+def get_env_var(key: str, default: Optional[str] = None, required: bool = False) -> Optional[str]:
+    """
+    Get environment variable with optional default and validation.
+    
+    Args:
+        key: Environment variable name
+        default: Default value if not found
+        required: Whether the variable is required
+        
+    Returns:
+        Environment variable value or default
+        
+    Raises:
+        ValueError: If required variable is not found
+    """
+    value = os.getenv(key, default)
+    
+    if required and value is None:
+        raise ValueError(f"Required environment variable {key} not found")
+    
+    return value
 
-    # Validate configuration
-    issues = Config.validate_configuration()
 
-    return {
-        "environment": Config.ENVIRONMENT,
-        "use_mock_database": Config.should_use_mock_database(),
-        "require_openai": Config.should_require_openai(),
-        "debug_mode": Config.is_debug_mode(),
-        "log_level": Config.get_effective_log_level(),
-        "validation_issues": issues,
-    }
+def get_env_bool(key: str, default: bool = False) -> bool:
+    """
+    Get boolean environment variable.
+    
+    Args:
+        key: Environment variable name
+        default: Default value if not found
+        
+    Returns:
+        Boolean value
+    """
+    value = os.getenv(key, "").lower()
+    
+    if not value:
+        return default
+    
+    return value in ("true", "1", "yes", "on")
 
 
-def validate_production_environment() -> dict[str, Any]:
-    """Validate production environment configuration."""
-    # Validate production configuration without changing environment
-    current_env = Config.ENVIRONMENT
-    if current_env != "production":
-        # Temporarily set to production for validation
-        os.environ["ENVIRONMENT"] = "production"
-
+def get_env_int(key: str, default: int = 0) -> int:
+    """
+    Get integer environment variable.
+    
+    Args:
+        key: Environment variable name
+        default: Default value if not found
+        
+    Returns:
+        Integer value
+    """
+    value = os.getenv(key)
+    
+    if not value:
+        return default
+    
     try:
-        issues = Config.validate_configuration()
-
-        return {
-            "environment": "production",
-            "use_mock_database": Config.should_use_mock_database(),
-            "require_openai": Config.should_require_openai(),
-            "debug_mode": Config.is_debug_mode(),
-            "log_level": Config.get_effective_log_level(),
-            "validation_issues": issues,
-            "api_tokens_configured": len(Config.get_api_tokens()) > 0,
-            "openai_key_configured": bool(Config.OPENAI_API_KEY),
-            "database_url_configured": bool(Config.DATABASE_URL),
-        }
-    finally:
-        # Restore original environment
-        if current_env != "production":
-            os.environ["ENVIRONMENT"] = current_env
+        return int(value)
+    except ValueError:
+        logger.warning(f"Invalid integer value for {key}: {value}, using default: {default}")
+        return default
 
 
-def get_environment_summary() -> dict[str, Any]:
-    """Get a summary of the current environment configuration."""
-    env_config = Config.get_environment_config()
+def get_project_root() -> Path:
+    """Get the project root directory."""
+    current = Path(__file__).resolve()
+    
+    # Walk up until we find a directory with key project files
+    while current != current.parent:
+        if (current / "pyproject.toml").exists() or (current / "setup.py").exists():
+            return current
+        current = current.parent
+    
+    # Fallback to 2 levels up from this file
+    return Path(__file__).resolve().parent.parent.parent
 
-    return {
-        "current_environment": Config.ENVIRONMENT,
-        "environment_config": {
-            "name": env_config.name,
-            "use_mock_database": env_config.use_mock_database,
-            "require_openai": env_config.require_openai,
-            "debug_mode": env_config.debug_mode,
-            "log_level": env_config.log_level,
-        },
-        "effective_settings": {
-            "use_mock_database": Config.should_use_mock_database(),
-            "require_openai": Config.should_require_openai(),
-            "debug_mode": Config.is_debug_mode(),
-            "log_level": Config.get_effective_log_level(),
-        },
-        "configuration_status": {
-            "openai_configured": bool(Config.OPENAI_API_KEY),
-            "api_tokens_count": len(Config.get_api_tokens()),
-            "database_url_configured": bool(Config.DATABASE_URL),
-            "validation_issues": Config.validate_configuration(),
-        },
-    }
+
+def load_env_file(env_file: Optional[Path] = None) -> None:
+    """
+    Load environment variables from a .env file.
+    
+    Args:
+        env_file: Path to .env file (defaults to project root/.env)
+    """
+    if env_file is None:
+        env_file = get_project_root() / ".env"
+    
+    if not env_file.exists():
+        logger.debug(f"Environment file not found: {env_file}")
+        return
+    
+    try:
+        with open(env_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    
+                    # Only set if not already in environment
+                    if key not in os.environ:
+                        os.environ[key] = value
+                        logger.debug(f"Loaded {key} from {env_file}")
+    
+    except Exception as e:
+        logger.error(f"Error loading environment file {env_file}: {e}")

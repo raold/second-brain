@@ -4,6 +4,8 @@ from typing import Any, Union
 import numpy as np
 
 from app.utils.logging_config import get_logger
+from app.ingestion.models import Topic, TopicClassification
+
 
 """
 Topic modeling and classification component for the ingestion engine

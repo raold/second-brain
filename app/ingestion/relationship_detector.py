@@ -2,6 +2,8 @@ import re
 from typing import Any
 
 from app.utils.logging_config import get_logger
+from app.ingestion.models import Relationship, RelationshipType, Entity
+
 
 """
 Relationship detection component for identifying connections between entities

@@ -6,6 +6,8 @@ import numpy as np
 
 from app.models.synthesis.consolidation_models import ConsolidationResult
 from app.utils.logging_config import get_logger
+from app.events.domain_events import MemoryConsolidatedEvent, ConsolidationEvent
+
 
 """Consolidation Engine for Memory Deduplication and Merging
 

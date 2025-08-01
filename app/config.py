@@ -44,7 +44,7 @@ class Config:
     API_TOKENS: str = os.getenv("API_TOKENS", "")
 
     # Application Configuration
-    HOST: str = os.getenv("HOST", "0.0.0.0")
+    HOST: str = os.getenv("HOST", "127.0.0.1")  # Changed from 0.0.0.0 for security
     PORT: int = int(os.getenv("PORT", "8000"))
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")

@@ -1,17 +1,16 @@
+"""
+Metrics Collector - Prometheus-style metrics from structured logs.
+
+This module provides enterprise-grade metrics collection that can be
+consumed by Prometheus or logged to CloudWatch/DataDog.
+"""
+
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from app.services.monitoring.metrics_collector import MetricsCollector
 from app.utils.logging_config import get_logger
-
-"""
-Metrics Collector - Prometheus-style metrics from structured logs.
-
-This service converts structured log data into time-series metrics
-compatible with Prometheus, Grafana, and other monitoring systems.
-"""
 
 from collections import defaultdict
 from enum import Enum

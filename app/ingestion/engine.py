@@ -282,7 +282,7 @@ class IngestionEngine:
         stat = file_path.stat()
 
         # Calculate file hash
-        hash_md5 = hashlib.md5()
+        hash_md5 = hashlib.md5(usedforsecurity=False)
         async with aiofiles.open(file_path, "rb") as f:
             while chunk := await f.read(self.chunk_size):
                 hash_md5.update(chunk)

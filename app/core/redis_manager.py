@@ -1,21 +1,14 @@
-import os
-
-from app.core.redis_manager import get_redis_client
-from app.utils.logging_config import get_logger
-
 """
 Redis Connection Manager for Second Brain v3.0.0
 Handles Redis connections for caching and rate limiting
 """
 
+import os
 from contextlib import asynccontextmanager
-
 import redis.asyncio as redis
-
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
-
 
 class RedisManager:
     """Redis connection manager"""
@@ -91,10 +84,8 @@ class RedisManager:
         except Exception:
             return False
 
-
 # Global Redis manager instance
 _redis_manager: RedisManager | None = None
-
 
 async def get_redis_manager() -> RedisManager:
     """Get global Redis manager instance"""
@@ -106,12 +97,10 @@ async def get_redis_manager() -> RedisManager:
 
     return _redis_manager
 
-
 async def get_redis_client() -> redis.Redis | None:
     """Get Redis client for rate limiting"""
     manager = await get_redis_manager()
     return manager.get_client()
-
 
 @asynccontextmanager
 async def redis_connection():
@@ -127,7 +116,6 @@ async def redis_connection():
         logger.error(f"Redis operation error: {e}")
         yield None
 
-
 async def cleanup_redis():
     """Cleanup Redis connections"""
     global _redis_manager
@@ -135,7 +123,6 @@ async def cleanup_redis():
     if _redis_manager:
         await _redis_manager.close()
         _redis_manager = None
-
 
 # Health check for Redis
 async def redis_health_check() -> dict:

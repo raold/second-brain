@@ -2,7 +2,6 @@ import json
 import os
 from typing import Any
 
-from app.database import Database, get_database
 from app.utils.logging_config import get_logger
 
 """

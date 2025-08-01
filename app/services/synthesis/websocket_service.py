@@ -3,6 +3,8 @@ from typing import Any
 from fastapi import WebSocket
 
 from app.utils.logging_config import get_logger
+from app.events.domain_events import SystemHealthEvent
+
 
 """WebSocket service for real-time communication"""
 

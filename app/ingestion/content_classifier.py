@@ -2,6 +2,8 @@ import re
 from typing import Any
 
 from app.utils.logging_config import get_logger
+from app.ingestion.models import ProcessedContent, ContentQuality, IntentType
+
 
 """
 Intelligent content classifier for automatic categorization and quality assessment

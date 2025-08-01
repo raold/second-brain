@@ -1,10 +1,3 @@
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any
-from uuid import uuid4
-
-from app.events.domain_events import ErrorOccurredEvent, SearchPerformedEvent, SystemHealthEvent
-
 """
 Domain events for the Second Brain application.
 
@@ -12,8 +5,11 @@ Domain events represent significant business occurrences that other
 parts of the system might be interested in handling.
 """
 
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
+from uuid import uuid4
 from abc import ABC
-
 
 @dataclass
 class DomainEvent(ABC):
@@ -37,7 +33,6 @@ class DomainEvent(ABC):
         """Return the event type name."""
         return self.__class__.__name__
 
-
 @dataclass
 class MemoryCreatedEvent(DomainEvent):
     """
@@ -57,7 +52,6 @@ class MemoryCreatedEvent(DomainEvent):
                 "has_high_importance": self.importance_score > 0.8,
             }
         )
-
 
 @dataclass
 class MemoryUpdatedEvent(DomainEvent):
@@ -82,7 +76,6 @@ class MemoryUpdatedEvent(DomainEvent):
             }
         )
 
-
 @dataclass
 class MemoryAccessedEvent(DomainEvent):
     """
@@ -101,7 +94,6 @@ class MemoryAccessedEvent(DomainEvent):
                 "is_search_related": self.access_type in ["search_result", "related_fetch"],
             }
         )
-
 
 @dataclass
 class ImportanceUpdatedEvent(DomainEvent):
@@ -127,7 +119,6 @@ class ImportanceUpdatedEvent(DomainEvent):
                 or (self.new_score < 0.8 <= self.old_score),
             }
         )
-
 
 @dataclass
 class SearchPerformedEvent(DomainEvent):
@@ -157,7 +148,6 @@ class SearchPerformedEvent(DomainEvent):
             }
         )
 
-
 @dataclass
 class SessionCreatedEvent(DomainEvent):
     """
@@ -173,7 +163,6 @@ class SessionCreatedEvent(DomainEvent):
         self.metadata.update(
             {"has_ip": self.ip_address is not None, "has_user_agent": self.user_agent is not None}
         )
-
 
 @dataclass
 class SessionExpiredEvent(DomainEvent):
@@ -193,7 +182,6 @@ class SessionExpiredEvent(DomainEvent):
                 "premature_end": self.reason in ["manual_logout", "forced_logout"],
             }
         )
-
 
 @dataclass
 class SystemHealthEvent(DomainEvent):
@@ -219,7 +207,6 @@ class SystemHealthEvent(DomainEvent):
                 "has_metrics": bool(self.metrics),
             }
         )
-
 
 @dataclass
 class UserAnalyticsEvent(DomainEvent):
@@ -253,7 +240,6 @@ class UserAnalyticsEvent(DomainEvent):
             return "analytics"
         else:
             return "other"
-
 
 @dataclass
 class ErrorOccurredEvent(DomainEvent):
@@ -289,9 +275,7 @@ class ErrorOccurredEvent(DomainEvent):
         else:
             return "medium"
 
-
 # Factory functions for common event creation scenarios
-
 
 def create_memory_event(memory_id: str, user_id: str, event_type: str, **kwargs) -> DomainEvent:
     """Factory function to create memory-related events."""
@@ -308,7 +292,6 @@ def create_memory_event(memory_id: str, user_id: str, event_type: str, **kwargs)
 
     return event_class(memory_id=memory_id, user_id=user_id, **kwargs)
 
-
 def create_session_event(session_id: str, user_id: str, event_type: str, **kwargs) -> DomainEvent:
     """Factory function to create session-related events."""
     event_map = {"created": SessionCreatedEvent, "expired": SessionExpiredEvent}
@@ -318,7 +301,6 @@ def create_session_event(session_id: str, user_id: str, event_type: str, **kwarg
         raise ValueError(f"Unknown session event type: {event_type}")
 
     return event_class(session_id=session_id, user_id=user_id, **kwargs)
-
 
 def create_system_event(component: str, health_status: str, **kwargs) -> SystemHealthEvent:
     """Factory function to create system health events."""

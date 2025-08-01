@@ -3,6 +3,8 @@ from typing import Any
 
 from app.events.domain_events import ErrorOccurredEvent, SearchPerformedEvent, SystemHealthEvent
 from app.utils.logging_config import get_logger
+from app.events.domain_events import ImportanceUpdatedEvent
+
 
 """
 Concrete event handlers for various domain events.

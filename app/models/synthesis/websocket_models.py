@@ -1,10 +1,3 @@
-from datetime import datetime
-from typing import Any
-
-from pydantic import BaseModel, Field
-
-from app.models.synthesis.websocket_models import WebSocketMessage
-
 """
 WebSocket Event Models - v2.8.2
 
@@ -12,10 +5,11 @@ Data models for real-time WebSocket communication including events,
 subscriptions, and connection management.
 """
 
+from datetime import datetime
+from typing import Any
+from pydantic import BaseModel, Field
 from enum import Enum, IntEnum
-
 from pydantic import field_validator
-
 
 class EventPriority(IntEnum):
     """Priority levels for websocket events"""
@@ -29,7 +23,6 @@ class EventPriority(IntEnum):
     def value_str(self):
         """Get string representation for backwards compatibility"""
         return self.name.lower()
-
 
 class BroadcastMessage(BaseModel):
     """Message to broadcast via websocket"""
@@ -51,7 +44,6 @@ class BroadcastMessage(BaseModel):
             info.data["payload"] = v
         return v
 
-
 class ConnectionState(str, Enum):
     """WebSocket connection states"""
 
@@ -59,7 +51,6 @@ class ConnectionState(str, Enum):
     CONNECTED = "connected"
     DISCONNECTED = "disconnected"
     ERROR = "error"
-
 
 class SubscriptionType(str, Enum):
     """Types of subscriptions for websocket updates"""
@@ -70,7 +61,6 @@ class SubscriptionType(str, Enum):
     REPORT = "report"
     USER = "user"
     SYSTEM = "system"
-
 
 class EventType(str, Enum):
     """Types of events that can be broadcast."""
@@ -112,7 +102,6 @@ class EventType(str, Enum):
     SYNTHESIS_COMPLETED = "synthesis.completed"
     SYNTHESIS_ERROR = "synthesis.error"
 
-
 class ConnectionStatusEnum(str, Enum):
     """WebSocket connection status."""
 
@@ -121,7 +110,6 @@ class ConnectionStatusEnum(str, Enum):
     AUTHENTICATED = "authenticated"
     DISCONNECTED = "disconnected"
     ERROR = "error"
-
 
 class WebSocketEvent(BaseModel):
     """Base event model for WebSocket messages."""
@@ -146,7 +134,6 @@ class WebSocketEvent(BaseModel):
     broadcast: bool = Field(False, description="Whether to broadcast to all users")
     target_users: list[str] = Field(default_factory=list, description="Specific users to notify")
 
-
 class WebSocketMessage(BaseModel):
     """Message format for WebSocket communication."""
 
@@ -166,7 +153,6 @@ class WebSocketMessage(BaseModel):
     # Metadata
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     correlation_id: str | None = Field(None, description="For request/response correlation")
-
 
 class SubscriptionRequest(BaseModel):
     """Request to subscribe to specific events."""
@@ -191,7 +177,6 @@ class SubscriptionRequest(BaseModel):
             raise ValueError("Action must be 'subscribe' or 'unsubscribe'")
         return v
 
-
 class EventSubscription(BaseModel):
     """Active event subscription."""
 
@@ -212,7 +197,6 @@ class EventSubscription(BaseModel):
     # Status
     active: bool = Field(True, description="Whether subscription is active")
     paused_at: datetime | None = Field(None, description="When subscription was paused")
-
 
 class ConnectionInfo(BaseModel):
     """WebSocket connection information."""
@@ -245,7 +229,6 @@ class ConnectionInfo(BaseModel):
     rate_limit_remaining: int = Field(100, description="Remaining rate limit")
     rate_limit_reset: datetime | None = Field(None, description="Rate limit reset time")
 
-
 class EventBatch(BaseModel):
     """Batch of events for efficient delivery."""
 
@@ -266,7 +249,6 @@ class EventBatch(BaseModel):
         if len(v) > 100:
             raise ValueError("Batch size cannot exceed 100 events")
         return v
-
 
 class BroadcastRequest(BaseModel):
     """Request to broadcast an event."""
@@ -295,7 +277,6 @@ class BroadcastRequest(BaseModel):
         if v not in valid_types:
             raise ValueError(f"Invalid broadcast type. Must be one of: {valid_types}")
         return v
-
 
 class WebSocketMetrics(BaseModel):
     """Metrics for WebSocket connections."""
@@ -327,7 +308,6 @@ class WebSocketMetrics(BaseModel):
     # Timestamp
     measured_at: datetime = Field(default_factory=datetime.utcnow)
 
-
 class SystemNotification(BaseModel):
     """System-wide notification for WebSocket clients"""
 
@@ -342,7 +322,6 @@ class SystemNotification(BaseModel):
     action_label: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-
 
 # Models expected by tests (aliases for backward compatibility)
 class ConnectionStatus(BaseModel):
