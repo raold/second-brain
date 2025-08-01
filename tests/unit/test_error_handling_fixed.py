@@ -138,10 +138,10 @@ class TestInputValidationErrors:
 
     def test_pydantic_validation_errors(self):
         """Test Pydantic validation error handling"""
-        from pydantic import BaseModel, ValidationError
+        from pydantic import BaseModel, ValidationError, Field
 
         class TestModel(BaseModel):
-            name: str
+            name: str = Field(..., min_length=1)  # Require non-empty string
             age: int
 
         with pytest.raises(ValidationError):
@@ -180,7 +180,7 @@ class TestRecoveryMechanisms:
         """Test automatic retry mechanism"""
         attempt_count = 0
 
-        async def failing_then_succeeding():
+        async def failing_then_succeeding(memory_id):
             nonlocal attempt_count
             attempt_count += 1
             if attempt_count < 3:

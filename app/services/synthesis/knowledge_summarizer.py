@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
 
 from app.utils.logging_config import get_logger
 

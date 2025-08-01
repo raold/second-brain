@@ -116,6 +116,22 @@ def include_routers():
         except Exception as e:
             print(f"⚠️ Memory routes error: {e}")
         
+        # V2 API routes - the excellent new implementation
+        try:
+            from app.routes import v2_api_new
+            app.include_router(v2_api_new.router, prefix="")
+            print("✅ V2 API routes included")
+        except Exception as e:
+            print(f"⚠️ V2 API routes error: {e}")
+        
+        # V2 unified API routes for backwards compatibility
+        try:
+            from app.routes import v2_unified_api
+            app.include_router(v2_unified_api.router, prefix="")
+            print("✅ V2 unified API routes included")
+        except Exception as e:
+            print(f"⚠️ V2 unified API routes error: {e}")
+        
         # More routes can be added incrementally
         print("✅ Routers included successfully")
     except Exception as e:

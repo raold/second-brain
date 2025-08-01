@@ -5,8 +5,7 @@ import numpy as np
 from app.models.synthesis.suggestion_models import SuggestionType
 from app.utils.logging_config import get_logger
 from collections import Counter, defaultdict
-from app.models.synthesis.suggestion_models import (
-        from app.insights.models import InsightRequest, TimeFrame
+from app.insights.models import InsightRequest, TimeFrame
 
 """Suggestion Engine for Smart Recommendations
 
@@ -14,6 +13,7 @@ Real implementation that provides intelligent suggestions for memory organizatio
 knowledge exploration, and learning paths based on user behavior and content analysis.
 """
 
+from app.models.synthesis.suggestion_models import (
     ActionType,
     ContentSuggestion,
     LearningPathSuggestion,

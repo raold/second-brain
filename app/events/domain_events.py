@@ -275,6 +275,36 @@ class ErrorOccurredEvent(DomainEvent):
         else:
             return "medium"
 
+@dataclass
+class MemoryConsolidatedEvent(DomainEvent):
+    """Event raised when memories are consolidated."""
+    
+    memory_ids: list[str] = field(default_factory=list)
+    consolidated_memory_id: str = ""
+    consolidation_type: str = "merge"  # 'merge', 'archive', 'deduplicate'
+    
+    def __post_init__(self):
+        self.metadata.update({
+            "memory_count": len(self.memory_ids),
+            "consolidation_type": self.consolidation_type
+        })
+
+
+@dataclass  
+class ConsolidationEvent(DomainEvent):
+    """Generic consolidation event."""
+    
+    event_type: str = "consolidation"
+    affected_items: list[str] = field(default_factory=list)
+    result: str = ""
+    
+    def __post_init__(self):
+        self.metadata.update({
+            "item_count": len(self.affected_items),
+            "result": self.result
+        })
+
+
 # Factory functions for common event creation scenarios
 
 

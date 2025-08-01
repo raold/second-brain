@@ -146,7 +146,7 @@ async def app_with_mocks(mock_database, mock_openai_client, mock_redis):
     with (
         patch("app.database.get_database", return_value=mock_database),
         patch("app.utils.openai_client.get_openai_client", return_value=mock_openai_client),
-        patch("app.core.redis_manager.get_redis", return_value=mock_redis),
+        patch("app.core.redis_manager.get_redis_client", return_value=mock_redis),
     ):
 
         from app.app import app

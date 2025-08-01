@@ -9,10 +9,10 @@ from typing import TypeVar
 from app.services.service_factory import DashboardService
 from app.services.service_factory import GitService
 from app.services.service_factory import HealthService
-from app.services.memory_service import MemoryService
 from app.services.service_factory import SessionService
-from app.services.importance_engine import get_importance_engine as _get_importance_engine
-from app.services.monitoring import get_metrics_collector as _get_metrics_collector
+# Removed direct import of MemoryService to avoid circular dependency
+# from app.services.importance_engine import get_importance_engine as _get_importance_engine
+# from app.services.monitoring import get_metrics_collector as _get_metrics_collector
 
 """
 Centralized Dependency Injection Container
@@ -138,7 +138,8 @@ def get_memory_service():
     try:
         return _container.get_service("memory_service")
     except ValueError:
-
+        # Import locally to avoid circular dependency
+        from app.services.memory_service import MemoryService
         service = MemoryService()
         _container.register_singleton("memory_service", service)
         return service
@@ -158,7 +159,8 @@ def get_importance_engine():
     try:
         return _container.get_service("importance_engine")
     except ValueError:
-
+        # Import locally to avoid circular dependency
+        from app.services.importance_engine import get_importance_engine as _get_importance_engine
         db = get_database()
         engine = _get_importance_engine(db)
         _container.register_singleton("importance_engine", engine)
@@ -169,7 +171,8 @@ def get_metrics_collector():
     try:
         return _container.get_service("metrics_collector")
     except ValueError:
-
+        # Import locally to avoid circular dependency
+        from app.services.monitoring import get_metrics_collector as _get_metrics_collector
         collector = _get_metrics_collector()
         _container.register_singleton("metrics_collector", collector)
         return collector
