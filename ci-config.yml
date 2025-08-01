@@ -1,0 +1,302 @@
+# Second Brain CI/CD Configuration
+# Comprehensive configuration for the enhanced CI/CD system
+
+version: "1.0"
+
+# Global CI/CD Settings
+global:
+  timeout: 1800  # 30 minutes global timeout
+  python_version: "3.11"
+  max_workers: 4
+  fail_fast: false
+  verbose: true
+  
+# Test Stage Configuration
+stages:
+  smoke:
+    name: "Smoke Tests"
+    description: "Critical path validation"
+    timeout: 60
+    fail_fast: true
+    groups:
+      - validation
+    markers:
+      - "smoke"
+      - "ci_smoke"
+    coverage_threshold: 60
+    
+  fast:
+    name: "Fast Feedback Tests"
+    description: "Core functionality validation"
+    timeout: 300
+    fail_fast: true
+    groups:
+      - unit
+      - integration-basic
+      - api-core
+    markers:
+      - "fast"
+      - "ci_fast"
+      - "unit"
+      - "integration and not slow"
+    coverage_threshold: 70
+    parallel: true
+    
+  comprehensive:
+    name: "Comprehensive Tests"
+    description: "Full system validation"
+    timeout: 900
+    fail_fast: false
+    groups:
+      - unit
+      - integration
+      - comprehensive
+      - validation
+    markers:
+      - "ci_comprehensive"
+      - "not performance"
+    coverage_threshold: 80
+    parallel: true
+    
+  performance:
+    name: "Performance Tests"
+    description: "Performance benchmarks and load testing"
+    timeout: 1200
+    fail_fast: false
+    groups:
+      - performance
+      - load
+    markers:
+      - "performance"
+      - "ci_performance"
+    coverage_threshold: 50
+    
+  security:
+    name: "Security Scans"
+    description: "Security vulnerability scanning"
+    timeout: 900
+    fail_fast: false
+    tools:
+      - bandit
+      - safety
+      - semgrep
+      - pip-audit
+    
+  license-check:
+    name: "License Compliance"
+    description: "License compatibility validation"
+    timeout: 300
+    fail_fast: true
+    allowed_licenses:
+      - MIT
+      - Apache-2.0
+      - BSD-3-Clause
+      - BSD-2-Clause
+      - ISC
+    denied_licenses:
+      - GPL-3.0
+      - AGPL-3.0
+      - LGPL-3.0
+
+# Test Group Definitions
+test_groups:
+  unit:
+    description: "Fast, isolated unit tests"
+    path: "tests/unit/"
+    markers: ["unit", "not slow"]
+    timeout: 60
+    parallel: true
+    
+  integration-basic:
+    description: "Basic integration tests"
+    path: "tests/integration/"
+    markers: ["integration", "not slow", "not requires_api_key"]
+    timeout: 180
+    parallel: true
+    
+  integration:
+    description: "Full integration tests"
+    path: "tests/integration/"
+    markers: ["integration"]
+    timeout: 300
+    parallel: true
+    
+  api-core:
+    description: "Core API endpoint tests"
+    path: "tests/integration/"
+    markers: ["integration", "not slow"]
+    filter: "*api*"
+    timeout: 120
+    parallel: true
+    
+  validation:
+    description: "Environment and import validation"
+    path: "tests/validation/"
+    markers: ["validation"]
+    timeout: 60
+    parallel: false
+    
+  comprehensive:
+    description: "Comprehensive workflow tests"
+    path: "tests/comprehensive/"
+    markers: ["comprehensive"]
+    timeout: 600
+    parallel: true
+    
+  performance:
+    description: "Performance benchmark tests"
+    path: "tests/performance/"
+    markers: ["performance"]
+    timeout: 900
+    parallel: false
+
+# Code Quality Configuration
+quality:
+  linting:
+    tools:
+      ruff:
+        enabled: true
+        config: "ruff.toml"
+        fail_on_error: true
+      black:
+        enabled: true
+        line_length: 100
+        fail_on_error: true
+      isort:
+        enabled: true
+        profile: "black"
+        fail_on_error: true
+    
+  type_checking:
+    mypy:
+      enabled: true
+      strict: true
+      show_error_codes: true
+      fail_on_error: false  # Type errors are warnings, not failures
+      
+  complexity:
+    mccabe:
+      enabled: true
+      max_complexity: 10
+      fail_on_error: false
+      
+  dead_code:
+    vulture:
+      enabled: true
+      fail_on_error: false
+
+# Security Configuration
+security:
+  bandit:
+    enabled: true
+    config: "bandit.yaml"
+    severity_threshold: "medium"
+    fail_on_error: true
+    exclude_dirs:
+      - tests
+      - migrations
+      - archive
+      
+  safety:
+    enabled: true
+    fail_on_error: true
+    ignore_vulnerabilities: []
+    
+  semgrep:
+    enabled: true
+    config: "auto"
+    fail_on_error: false
+    
+  pip_audit:
+    enabled: true
+    fail_on_error: true
+    ignore_vulnerabilities: []
+
+# Performance Testing Configuration
+performance:
+  load_testing:
+    tool: "locust"
+    duration: 60
+    users: 10
+    spawn_rate: 2
+    host: "http://localhost:8000"
+    
+  benchmarking:
+    tool: "pytest-benchmark"
+    enabled: true
+    save_data: true
+    compare_baseline: true
+    
+  profiling:
+    memory:
+      enabled: true
+      tool: "memory_profiler"
+    cpu:
+      enabled: true
+      tool: "py-spy"
+
+# Coverage Configuration
+coverage:
+  threshold:
+    line: 80
+    branch: 75
+  exclude_paths:
+    - "*/tests/*"
+    - "*/migrations/*"
+    - "*/__init__.py"
+    - "*/archive/*"
+    - "*/scripts/*"
+    - "*/examples/*"
+    - "*/demos/*"
+  fail_under: true
+  
+# Reporting Configuration
+reporting:
+  formats:
+    - html
+    - xml
+    - json
+    - term
+  output_dir: "ci_reports"
+  save_artifacts: true
+  retention_days: 30
+  
+  notifications:
+    slack:
+      enabled: false
+      webhook_url: ""
+    email:
+      enabled: false
+      recipients: []
+      
+# Docker Configuration
+docker:
+  test_compose_file: "docker-compose.test.yml"
+  security_scanning:
+    enabled: true
+    tool: "trivy"
+    fail_on_critical: true
+    
+# Environment Configuration
+environment:
+  test:
+    database_url: "postgresql://test:test@localhost:5432/secondbrain_test"
+    redis_url: "redis://localhost:6379/1"
+    
+  required_services:
+    - postgres
+    - redis
+    
+  optional_services:
+    - prometheus
+    - grafana
+
+# Retry Configuration
+retry:
+  max_attempts: 3
+  delay_seconds: 5
+  backoff_multiplier: 2
+  retry_on:
+    - network_error
+    - database_timeout
+    - service_unavailable

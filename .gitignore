@@ -89,3 +89,38 @@ DEVELOPMENT_CONTEXT.md
 
 # Cipher installation
 cipher/
+
+
+# CI/CD artifacts
+ci_reports/
+ci_simulation_report.json
+local_ci_report.json
+comprehensive_test_report.json
+test_summary.html
+performance_report.json
+security_report.json
+lint_report.json
+coverage_report/
+test_results/
+junit.xml
+test-results.xml
+coverage.json
+
+# Load testing artifacts
+locust_reports/
+load_test_results/
+
+# Performance profiling
+*.prof
+profiling_results/
+memory_profiles/
+
+# Static analysis
+.semgrep/
+bandit_results/
+safety_results/
+mypy_results/
+
+# License scanning
+license_report.json
+license_check_results/

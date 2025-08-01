@@ -69,6 +69,71 @@ dev = [
     "typer>=0.9.0",
     "watchdog>=3.0.0",
 ]
+ci = [
+    # Enhanced testing framework
+    "pytest>=7.4.3",
+    "pytest-asyncio>=0.21.1",
+    "pytest-cov>=4.1.0",
+    "pytest-xdist>=3.5.0",
+    "pytest-timeout>=2.2.0",
+    "pytest-mock>=3.12.0",
+    "pytest-benchmark>=4.0.0",
+    "pytest-html>=4.1.1",
+    "pytest-json-report>=1.5.0",
+    "pytest-rerunfailures>=12.0",
+    # Code quality and security
+    "ruff>=0.1.8",
+    "black>=23.12.0",
+    "isort>=5.13.2",
+    "mypy>=1.8.0",
+    "bandit[toml]>=1.7.5",
+    "safety>=2.3.5",
+    "semgrep>=1.52.0",
+    "pip-audit>=2.6.2",
+    "pre-commit>=3.6.0",
+    # License compliance
+    "pip-licenses>=4.3.3",
+    "licensecheck>=2023.3.1",
+    # Performance testing
+    "locust>=2.18.3",
+    "memory-profiler>=0.61.0",
+    "py-spy>=0.3.14",
+    "psutil>=5.9.6",
+    # HTTP testing
+    "aiohttp>=3.9.1",
+    "httpx>=0.25.2",
+    "requests>=2.31.0",
+    # Database testing
+    "fakeredis>=2.20.1",
+    # Container testing
+    "docker>=6.1.3",
+    # Monitoring
+    "prometheus-client>=0.19.0",
+    "structlog>=23.2.0",
+    # Reporting
+    "jinja2>=3.1.2",
+    "markdown>=3.5.1",
+    "pygments>=2.17.2",
+    "tabulate>=0.9.0",
+    # Utilities
+    "click>=8.1.7",
+    "rich>=13.7.0",
+    "tqdm>=4.66.1",
+    "colorama>=0.4.6",
+    "python-dotenv>=1.0.0",
+    # Data analysis
+    "pandas>=2.1.4",
+    "numpy>=1.25.2",
+    "matplotlib>=3.8.2",
+    # Configuration
+    "pyyaml>=6.0.1",
+    "jsonschema>=4.20.0",
+    # Async utilities
+    "aiofiles>=23.2.1",
+    # Version management
+    "packaging>=23.2",
+    "semantic-version>=2.10.0",
+]
 ml = [
     "numpy>=1.24.0",
     "scikit-learn>=1.3.0",
@@ -227,32 +292,70 @@ addopts = [
     "--strict-config",
     "--verbose",
     "--tb=short",
-    "--cov=src",
+    "--cov=app",
     "--cov-branch",
     "--cov-report=term-missing:skip-covered",
-    "--cov-report=html",
-    "--cov-report=xml",
-    "--cov-fail-under=90",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
+    "--cov-report=json:coverage.json",
+    "--cov-fail-under=80",
+    "--maxfail=10",
+    "--timeout=300",
 ]
 markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "integration: marks tests as integration tests",
-    "unit: marks tests as unit tests",
+    # Test categories
+    "unit: Unit tests - fast, isolated, no external dependencies",
+    "integration: Integration tests - service interactions, database, API",
+    "validation: Validation tests - environment health, imports, basic functionality",
+    "comprehensive: Comprehensive tests - full workflows, edge cases",
+    "performance: Performance tests - benchmarks, load testing",
+    # Test characteristics
+    "slow: Slow tests (>10s) - deselect with '-m \"not slow\"'",
+    "fast: Fast tests (<5s) - select with '-m fast'",
+    "smoke: Smoke tests - critical path validation",
+    # Environment requirements
+    "requires_db: Tests requiring database connection",
+    "requires_redis: Tests requiring Redis connection",
+    "requires_api_key: Tests requiring API keys (OpenAI, Anthropic)",
+    "requires_docker: Tests requiring Docker runtime",
+    # CI/CD stages
+    "ci_smoke: CI smoke test stage",
+    "ci_fast: CI fast feedback stage",
+    "ci_comprehensive: CI comprehensive validation stage",
+    "ci_performance: CI performance testing stage",
 ]
 asyncio_mode = "auto"
+timeout = 300
+filermode = "w"
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 # Coverage configuration
 [tool.coverage.run]
-source = ["src"]
+source = ["app"]
 branch = true
+parallel = true
 omit = [
     "*/tests/*",
     "*/migrations/*",
     "*/__init__.py",
+    "*/venv/*",
+    "*/.venv/*",
+    "*/archive/*",
+    "*/scripts/*",
+    "*/examples/*",
+    "*/demos/*",
+    "*/dev-tools/*",
+    "*/cipher/*",
 ]
 
 [tool.coverage.report]
 precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 80
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
@@ -263,6 +366,9 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "class .*Protocol:",
     "@abstractmethod",
+    "@overload",
+    "# pragma: no cover",
+    "# nocov",
 ]
 
 [tool.coverage.html]

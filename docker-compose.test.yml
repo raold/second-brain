@@ -1,0 +1,124 @@
+# Docker Compose configuration for CI/CD testing
+# Optimized for automated testing environments
+
+version: '3.8'
+
+services:
+  app-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: secondbrain-app-test
+    environment:
+      - DATABASE_URL=postgresql://test:test@postgres-test:5432/secondbrain_test
+      - REDIS_URL=redis://redis-test:6379/1
+      - ENVIRONMENT=test
+      - CI_MODE=true
+      - PYTEST_WORKERS=auto
+      - COVERAGE_THRESHOLD=80
+      - TEST_TIMEOUT=300
+    volumes:
+      - .:/app:ro  # Read-only mount for tests
+      - test_cache:/app/.pytest_cache
+      - test_coverage:/app/htmlcov
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    networks:
+      - test-network
+    command: [
+      "python", "scripts/ci_runner.py", 
+      "--stage", "all", 
+      "--save-report", "ci_test_report.json",
+      "--exit-on-failure"
+    ]
+
+  postgres-test:
+    image: pgvector/pgvector:pg16
+    container_name: secondbrain-postgres-test
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: secondbrain_test
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: secondbrain-redis-test
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    command: redis-server --appendonly no --save ""  # No persistence for tests
+    volumes:
+      - redis_test_data:/data
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  # Performance testing service
+  locust-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.performance
+    container_name: secondbrain-locust-test
+    environment:
+      - TARGET_HOST=http://app-test:8000
+      - LOAD_TEST_USERS=10
+      - LOAD_TEST_SPAWN_RATE=2
+      - LOAD_TEST_DURATION=60
+    volumes:
+      - ./tests/performance:/app/performance_tests
+      - locust_reports:/app/reports
+    networks:
+      - test-network
+    depends_on:
+      - app-test
+    profiles:
+      - performance
+
+  # Security scanning service
+  security-scanner:
+    image: owasp/zap2docker-stable
+    container_name: secondbrain-security-scanner
+    command: [
+      "zap-baseline.py", 
+      "-t", "http://app-test:8000",
+      "-J", "/zap/wrk/security_report.json"
+    ]
+    volumes:
+      - security_reports:/zap/wrk
+    networks:
+      - test-network
+    depends_on:
+      - app-test
+    profiles:
+      - security
+
+volumes:
+  postgres_test_data:
+  redis_test_data:
+  test_cache:
+  test_coverage:
+  locust_reports:
+  security_reports:
+
+networks:
+  test-network:
+    driver: bridge
+    name: secondbrain-test-network

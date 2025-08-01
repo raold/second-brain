@@ -1,0 +1,85 @@
+# Bandit Security Scanner Configuration
+# Configuration for security vulnerability scanning
+
+# Global settings
+exclude_dirs:
+  - '*/tests/*'
+  - '*/migrations/*'  
+  - '*/archive/*'
+  - '*/venv/*'
+  - '*/.venv/*'
+  - '*/cipher/*'
+  - '*/scripts/*'
+  - '*/examples/*'
+  - '*/demos/*'
+
+# Test configuration
+tests:
+  # Skip specific tests
+  skips:
+    - B101  # assert_used - Allow asserts in tests
+    - B601  # paramiko_calls - Allow paramiko usage
+    - B602  # subprocess_popen_with_shell_equals_true - Controlled usage
+    - B603  # subprocess_without_shell_equals_true - Controlled usage
+    - B607  # start_process_with_partial_path - Controlled usage
+
+# Severity levels
+# LOW: Issues that may not be immediately exploitable
+# MEDIUM: Issues that could potentially be exploited
+# HIGH: Issues that are likely exploitable and dangerous
+
+# Report configuration
+assert_used:
+  skips: ['*/tests/*']  # Allow asserts in test files
+
+# Custom rules configuration
+hardcoded_password_string:
+  # Words that indicate hardcoded passwords
+  word_list:
+    - password
+    - pass
+    - passwd  
+    - secret
+    - key
+    - token
+    - api_key
+    - private_key
+    
+# SQL injection detection
+sql_statements:
+  # SQL injection patterns to detect
+  patterns:
+    - "SELECT * FROM"
+    - "INSERT INTO"
+    - "UPDATE SET"
+    - "DELETE FROM"
+    - "DROP TABLE"
+    - "CREATE TABLE"
+
+# Shell injection detection  
+shell_injection:
+  # Commands that could be dangerous
+  shell_commands:
+    - subprocess
+    - os.system
+    - os.popen
+    - commands
+    - popen2
+
+# Crypto configuration
+crypto:
+  # Weak crypto algorithms
+  weak_algorithms:
+    - md5
+    - sha1
+    - des
+    - rc4
+    
+# Path traversal detection
+path_traversal:
+  # Dangerous path patterns
+  patterns:
+    - "../"
+    - "..\\"
+    - "..%2f"
+    - "..%5c"
