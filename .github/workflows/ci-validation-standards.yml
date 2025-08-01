@@ -1,0 +1,291 @@
+# CI: Validation Standards - Project Standards and Conventions (<5min)
+# Validates naming conventions, documentation consistency, and configuration standards
+name: "CI: Validation Standards"
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+      - '**.yml'
+      - '**.yaml'
+      - '**.toml'
+      - '**.ini'
+      - '**.txt'
+      - 'scripts/**'
+      - 'docs/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+      - '**.yml'
+      - '**.yaml'
+      - '**.toml'
+      - '**.ini'
+      - '**.txt'
+      - 'scripts/**'
+      - 'docs/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+# Optimize for speed - fail fast on standards violations
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+  UV_SYSTEM_PYTHON: 1
+
+jobs:
+  naming-conventions:
+    name: "📋 Naming Conventions"
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    
+    steps:
+      - name: "📥 Checkout Code"
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          fetch-depth: 1  # Shallow clone for speed
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4.5.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: |
+            config/requirements-ci.txt
+
+      - name: "⚡ Install Validation Dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml tomli
+
+      - name: "📋 Validate Naming Conventions"
+        run: |
+          echo "🔍 Validating naming conventions across entire project..."
+          python scripts/validate_naming_conventions.py --verbose
+
+      - name: "📄 Generate Naming Report"
+        if: always()
+        run: |
+          echo "Generating detailed naming convention report..."
+          python scripts/validate_naming_conventions.py --json-report naming_validation_report.json || true
+          
+          echo "## 📋 Naming Convention Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "naming_validation_report.json" ]; then
+            TOTAL_VIOLATIONS=$(python -c "import json; data=json.load(open('naming_validation_report.json')); print(data['total_violations'])")
+            
+            if [ "$TOTAL_VIOLATIONS" -eq 0 ]; then
+              echo "✅ **All naming conventions validated successfully**" >> $GITHUB_STEP_SUMMARY
+              echo "- No violations found across the project" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ **Found $TOTAL_VIOLATIONS naming convention violations**" >> $GITHUB_STEP_SUMMARY
+              echo "- Check the detailed report for specific issues" >> $GITHUB_STEP_SUMMARY
+              echo "- Reference: docs/development/NAMING_CONVENTIONS.md" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ **Could not generate naming validation report**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: "📋 Upload Naming Report"
+        if: always()
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: naming-validation-report
+          path: naming_validation_report.json
+          retention-days: 30
+
+  documentation-consistency:
+    name: "📚 Documentation Consistency"
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    
+    steps:
+      - name: "📥 Checkout Code"
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          fetch-depth: 1
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4.5.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: "⚡ Install Validation Dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: "📚 Validate Documentation Consistency"
+        run: |
+          echo "🔍 Validating documentation consistency and cross-references..."
+          python scripts/validate_documentation.py --verbose
+
+      - name: "📄 Generate Documentation Report"
+        if: always()
+        run: |
+          echo "Generating detailed documentation consistency report..."
+          python scripts/validate_documentation.py --json-report doc_validation_report.json || true
+          
+          echo "## 📚 Documentation Consistency Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "doc_validation_report.json" ]; then
+            TOTAL_ISSUES=$(python -c "import json; data=json.load(open('doc_validation_report.json')); print(data['total_issues'])")
+            
+            if [ "$TOTAL_ISSUES" -eq 0 ]; then
+              echo "✅ **All documentation validations passed**" >> $GITHUB_STEP_SUMMARY
+              echo "- No consistency issues found" >> $GITHUB_STEP_SUMMARY
+              echo "- All cross-references are valid" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ **Found $TOTAL_ISSUES documentation issues**" >> $GITHUB_STEP_SUMMARY
+              echo "- Check broken links and missing references" >> $GITHUB_STEP_SUMMARY
+              echo "- Update table of contents if needed" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ **Could not generate documentation validation report**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: "📋 Upload Documentation Report"
+        if: always()
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: documentation-validation-report
+          path: doc_validation_report.json
+          retention-days: 30
+
+  configuration-consistency:
+    name: "⚙️ Configuration Consistency"
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    
+    steps:
+      - name: "📥 Checkout Code"
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          fetch-depth: 1
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4.5.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: "⚡ Install Validation Dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml tomli
+
+      - name: "⚙️ Validate Configuration Consistency"
+        run: |
+          echo "🔍 Validating configuration files and consistency..."
+          python scripts/validate_configurations.py --check-security --verbose
+
+      - name: "📄 Generate Configuration Report"
+        if: always()
+        run: |
+          echo "Generating detailed configuration validation report..."
+          python scripts/validate_configurations.py --json-report config_validation_report.json || true
+          
+          echo "## ⚙️ Configuration Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "config_validation_report.json" ]; then
+            TOTAL_ISSUES=$(python -c "import json; data=json.load(open('config_validation_report.json')); print(data['total_issues'])")
+            
+            if [ "$TOTAL_ISSUES" -eq 0 ]; then
+              echo "✅ **All configuration validations passed**" >> $GITHUB_STEP_SUMMARY
+              echo "- No configuration issues found" >> $GITHUB_STEP_SUMMARY
+              echo "- All security checks passed" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ **Found $TOTAL_ISSUES configuration issues**" >> $GITHUB_STEP_SUMMARY
+              echo "- Check for security vulnerabilities" >> $GITHUB_STEP_SUMMARY
+              echo "- Verify configuration consistency" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ **Could not generate configuration validation report**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: "📋 Upload Configuration Report"
+        if: always()
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: configuration-validation-report
+          path: config_validation_report.json
+          retention-days: 30
+
+  standards-summary:
+    name: "📊 Standards Validation Summary"
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [naming-conventions, documentation-consistency, configuration-consistency]
+    
+    steps:
+      - name: "📊 Generate Overall Summary"
+        run: |
+          echo "## 🎯 Project Standards Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This workflow validates project standards and conventions to ensure consistency." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Validation Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Naming Conventions**: ${{ needs.naming-conventions.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Documentation Consistency**: ${{ needs.documentation-consistency.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Configuration Consistency**: ${{ needs.configuration-consistency.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Determine overall status
+          if [[ "${{ needs.naming-conventions.result }}" == "success" && \
+                "${{ needs.documentation-consistency.result }}" == "success" && \
+                "${{ needs.configuration-consistency.result }}" == "success" ]]; then
+            echo "🎉 **Overall Status: ALL STANDARDS VALIDATED**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Project follows all established conventions and standards" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Documentation is consistent and up-to-date" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Configuration files are properly formatted and secure" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Overall Status: STANDARDS VALIDATION FAILED**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ Some project standards need attention:" >> $GITHUB_STEP_SUMMARY
+            
+            if [[ "${{ needs.naming-conventions.result }}" != "success" ]]; then
+              echo "- Fix naming convention violations" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            if [[ "${{ needs.documentation-consistency.result }}" != "success" ]]; then
+              echo "- Update documentation consistency issues" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            if [[ "${{ needs.configuration-consistency.result }}" != "success" ]]; then
+              echo "- Resolve configuration inconsistencies" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📚 References:" >> $GITHUB_STEP_SUMMARY
+          echo "- [Naming Conventions](docs/development/NAMING_CONVENTIONS.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [CI/CD Documentation](docs/CI_CD_COMPREHENSIVE_GUIDE.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Project Standards](docs/development/)" >> $GITHUB_STEP_SUMMARY
+
+      - name: "🔔 Standards Validation Complete"
+        run: |
+          echo "🎯 Project standards validation completed"
+          echo "📊 Check the summary above for detailed results"
+          echo "📁 Detailed reports available in workflow artifacts"
+          
+          # Set exit code based on overall success
+          if [[ "${{ needs.naming-conventions.result }}" == "success" && \
+                "${{ needs.documentation-consistency.result }}" == "success" && \
+                "${{ needs.configuration-consistency.result }}" == "success" ]]; then
+            echo "✅ All standards validation checks passed!"
+            exit 0
+          else
+            echo "❌ Some standards validation checks failed!"
+            exit 1
+          fi

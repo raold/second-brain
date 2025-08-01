@@ -1,4 +1,8 @@
 """
+import pytest
+
+pytestmark = pytest.mark.unit
+
 Tests for memory relationships module.
 Simple tests focusing on import, instantiation, and basic functionality.
 """

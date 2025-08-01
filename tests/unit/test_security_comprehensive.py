@@ -8,6 +8,9 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock
 
 import pytest
+
+pytestmark = pytest.mark.unit
+
 from fastapi import HTTPException, Request
 from starlette.responses import JSONResponse
 

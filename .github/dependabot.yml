@@ -1,0 +1,104 @@
+# Dependabot configuration for Second Brain
+# Automated dependency updates with security focus
+
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    target-branch: "develop"
+    reviewers:
+      - "dro"
+    assignees:  
+      - "dro"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "automated"
+    open-pull-requests-limit: 5
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    ignore:
+      # Ignore major version updates for stable dependencies
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "postgresql"
+        update-types: ["version-update:semver-major"]
+    groups:
+      security-updates:
+        patterns:
+          - "bandit"
+          - "safety"
+          - "cryptography"
+          - "certifi"
+          - "urllib3"
+          - "requests"
+        update-types:
+          - "security-update"
+      testing-framework:
+        patterns:
+          - "pytest*"
+          - "*test*"
+        update-types:
+          - "minor"
+          - "patch"
+      code-quality:
+        patterns:
+          - "ruff"
+          - "black"
+          - "mypy"
+          - "isort"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    target-branch: "develop"
+    reviewers:
+      - "dro"
+    assignees:
+      - "dro"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "ci-cd"  
+      - "automated"
+    open-pull-requests-limit: 3
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    target-branch: "develop"
+    reviewers:
+      - "dro"
+    assignees:
+      - "dro"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    labels:
+      - "docker"
+      - "automated"
+    open-pull-requests-limit: 2

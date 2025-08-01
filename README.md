@@ -226,6 +226,84 @@ curl -X POST "http://localhost:8000/api/v1/ingest/upload" \
 docker build -f Dockerfile.multimodal -t secondbrain:multimodal .
 ```
 
+## 📖 **Comprehensive Documentation**
+
+Second Brain v3.0.0 provides extensive documentation for all aspects of development, deployment, and integration:
+
+### **🚀 Quick Start Guides**
+
+| Guide | Purpose | Time | Audience |
+|-------|---------|------|----------|
+| **[📋 Documentation Index](docs/DOCUMENTATION_INDEX.md)** | Complete documentation hub | 5 min | Everyone |
+| **[🚀 CI/CD Quick Reference](docs/CI_CD_DEVELOPER_QUICK_REFERENCE.md)** | Daily CI/CD commands | 5 min | Developers |
+| **[🌐 API Documentation](docs/API_DOCUMENTATION_INDEX.md)** | API integration guide | 10 min | Frontend devs |
+| **[🔧 Development Guide](docs/development/DEVELOPMENT_GUIDE_v3.0.0.md)** | Local development setup | 15 min | New developers |
+
+### **🎯 Documentation by Role**
+
+**👨‍💻 New Developers**:
+1. [Setup Guide](docs/SETUP.md) - Get environment running (20 min)
+2. [CI/CD Quick Reference](docs/CI_CD_DEVELOPER_QUICK_REFERENCE.md) - Essential commands (5 min)
+3. [Development Guide](docs/development/DEVELOPMENT_GUIDE_v3.0.0.md) - Learn workflow (15 min)
+
+**🔧 DevOps Engineers**:
+1. [CI/CD Comprehensive Guide](docs/CI_CD_COMPREHENSIVE_GUIDE.md) - Complete CI/CD system (30 min)
+2. [CI/CD Workflow Documentation](docs/CI_CD_WORKFLOW_DOCUMENTATION.md) - GitHub Actions (20 min)
+3. [Deployment Guide](docs/deployment/DEPLOYMENT_V3.md) - Production deployment (45 min)
+
+**🌐 Frontend Developers**:
+1. [API Documentation Index](docs/API_DOCUMENTATION_INDEX.md) - API overview (10 min)
+2. [API Usage Examples](docs/API_USAGE_EXAMPLES.md) - Integration examples (15 min)
+3. [WebSocket Events](docs/WEBSOCKET_EVENTS_SPECIFICATION.md) - Real-time features (20 min)
+
+### **🤖 CI/CD System**
+
+Our tiered CI/CD pipeline ensures fast feedback and reliable deployments:
+
+```
+🔥 Smoke Tests (30-60s) → ⚡ Fast Feedback (2-5min) → 🔍 Comprehensive (10-15min) → 📊 Performance (5-20min) → 🚀 Deploy
+```
+
+**Essential Commands**:
+```bash
+make test-smoke        # Quick validation (< 1 min)
+make test-fast         # Core functionality (< 5 min)
+make test-comprehensive # Full validation (< 15 min)
+make ci-full          # Complete pipeline simulation
+```
+
+**Documentation**:
+- **[CI/CD Developer Quick Reference](docs/CI_CD_DEVELOPER_QUICK_REFERENCE.md)** - Daily commands and troubleshooting
+- **[CI/CD Comprehensive Guide](docs/CI_CD_COMPREHENSIVE_GUIDE.md)** - Complete system documentation
+- **[CI/CD Troubleshooting Guide](docs/CI_CD_TROUBLESHOOTING_GUIDE.md)** - Problem diagnosis and solutions
+
+### **🌐 API Integration**
+
+Complete API documentation with real-time WebSocket support:
+
+**Key Resources**:
+- **[API Documentation Index](docs/API_DOCUMENTATION_INDEX.md)** - Complete API overview
+- **[API v2 Specification](docs/API_V2_UNIFIED_SPECIFICATION.md)** - Detailed API reference
+- **[API Usage Examples](docs/API_USAGE_EXAMPLES.md)** - Framework-specific examples
+- **[WebSocket Events](docs/WEBSOCKET_EVENTS_SPECIFICATION.md)** - Real-time communication
+
+**Quick Start**:
+```javascript
+const api = new SecondBrainAPI('your-api-key');
+const metrics = await api.getMetrics();
+const ws = api.connectWebSocket(handleUpdate);
+```
+
+### **📚 Complete Documentation Index**
+
+All documentation is organized in [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md):
+
+- **🔧 Development**: Setup, architecture, contributing guidelines
+- **🤖 CI/CD**: Automated testing, deployment, troubleshooting
+- **🌐 API**: Integration guides, specifications, examples
+- **🧪 Testing**: Testing strategies, performance benchmarks
+- **🚢 Deployment**: Production deployment, monitoring, operations
+
 ## 🧪 **Testing**
 
 ```bash

@@ -6,6 +6,7 @@ Comprehensive test coverage for all components
 import os
 
 import pytest
+pytestmark = pytest.mark.integration
 
 from app.version import get_version_info
 

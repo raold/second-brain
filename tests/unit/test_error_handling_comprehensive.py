@@ -7,6 +7,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import asyncpg
 import pytest
+
+pytestmark = pytest.mark.unit
+
 from httpx import AsyncClient
 
 from app.core.exceptions import ValidationException

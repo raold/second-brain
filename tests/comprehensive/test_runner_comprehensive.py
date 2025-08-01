@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+import pytest
+
+pytestmark = pytest.mark.comprehensive
+
 Comprehensive Test Runner for Second Brain v2.2.0
 Bypasses virtual environment issues and runs all tests systematically
 """

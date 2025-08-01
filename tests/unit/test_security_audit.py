@@ -6,6 +6,9 @@ from datetime import timedelta
 from unittest.mock import Mock
 
 import pytest
+
+pytestmark = pytest.mark.unit
+
 from fastapi import Response
 
 from app.core.exceptions import UnauthorizedException

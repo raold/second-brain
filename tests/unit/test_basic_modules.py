@@ -5,6 +5,7 @@ Basic functionality tests to improve coverage.
 
 
 import pytest
+pytestmark = pytest.mark.unit
 
 # Since the module might not be importable due to dependencies,
 # let's create basic tests that at least import and test basic functionality

@@ -7,6 +7,7 @@ import time
 from unittest.mock import Mock
 
 import pytest
+pytestmark = pytest.mark.unit
 
 from app.core.logging import AuditLogger, LogConfig, PerformanceLogger, StructuredLogger, get_logger
 from app.core.monitoring import (

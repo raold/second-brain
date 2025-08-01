@@ -1,6 +1,10 @@
 """Simple test to verify pytest discovery is working."""
 
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 def test_simple():
     """A simple test to verify pytest is working."""
     assert True

@@ -45,7 +45,8 @@ COPY config/requirements-*.txt ./config/
 # Install Python dependencies (including dev tools)
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir -r config/requirements-production.txt
+    pip install --no-cache-dir -r config/requirements-production.txt && \
+    pip install --no-cache-dir -r config/requirements-ci-cd.txt
 
 # Copy application code
 COPY . .

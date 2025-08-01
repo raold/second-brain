@@ -9,6 +9,9 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+pytestmark = pytest.mark.unit
+
 from fastapi import WebSocket, WebSocketDisconnect
 
 from app.models.synthesis.websocket_models import (

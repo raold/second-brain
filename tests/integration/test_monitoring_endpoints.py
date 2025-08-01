@@ -7,6 +7,9 @@ import time
 from unittest.mock import patch
 
 import pytest
+
+pytestmark = pytest.mark.integration
+
 from httpx import AsyncClient
 
 

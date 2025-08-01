@@ -18,6 +18,9 @@ def test_python_environment():
     # Test that pytest can be imported
     try:
         import pytest
+
+pytestmark = pytest.mark.validation
+
         print(f"pytest version: {pytest.__version__}")
     except ImportError as e:
         print(f"Failed to import pytest: {e}")

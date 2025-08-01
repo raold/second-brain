@@ -5,6 +5,7 @@ import os
 from unittest.mock import patch
 
 import pytest
+pytestmark = pytest.mark.unit
 
 from app.utils.openai_client import OpenAIClient
 

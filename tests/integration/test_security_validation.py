@@ -6,6 +6,9 @@ Tests security features, input validation, and attack prevention
 from unittest.mock import patch
 
 import pytest
+
+pytestmark = pytest.mark.integration
+
 from httpx import AsyncClient
 
 

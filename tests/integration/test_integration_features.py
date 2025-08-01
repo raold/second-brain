@@ -1,4 +1,8 @@
 """
+import pytest
+
+pytestmark = pytest.mark.integration
+
 Integration test for all three v2.8.0 features
 Tests reasoning engine, knowledge graph builder, and visualization together
 """

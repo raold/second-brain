@@ -5,6 +5,9 @@ Test exception handling system
 import json
 
 import pytest
+
+pytestmark = pytest.mark.unit
+
 from fastapi import Request
 from fastapi.testclient import TestClient
 

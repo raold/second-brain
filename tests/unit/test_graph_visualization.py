@@ -5,6 +5,7 @@ Tests for graph visualization and D3.js integration
 import json
 
 import pytest
+pytestmark = pytest.mark.unit
 
 
 class TestGraphVisualization:

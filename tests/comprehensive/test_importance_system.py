@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+import pytest
+
+pytestmark = pytest.mark.comprehensive
+
 Comprehensive Test Suite for Automated Importance Scoring System
 Tests all aspects of the importance engine and API integration
 """

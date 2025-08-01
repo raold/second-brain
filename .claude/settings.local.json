@@ -65,7 +65,8 @@
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"import tests.unit.test_service_factory; print(''Service factory test import successful'')\")",
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m pytest tests/unit/test_basic_functionality.py -v --tb=no -q)",
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"import ast; ast.parse(open(''tests/unit/test_websocket_functionality.py'').read()); print(''WebSocket test syntax is valid'')\")",
-      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"import ast; ast.parse(open(''tests/unit/test_service_factory.py'').read()); print(''Service factory test syntax is valid'')\")"
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"import ast; ast.parse(open(''tests/unit/test_service_factory.py'').read()); print(''Service factory test syntax is valid'')\")",
+      "Bash(sed:*)"
     ],
     "deny": []
   },

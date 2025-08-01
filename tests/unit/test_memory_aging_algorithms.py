@@ -1,4 +1,8 @@
 """
+import pytest
+
+pytestmark = pytest.mark.unit
+
 Test suite for memory aging algorithms module.
 Tests the sophisticated memory aging system with multiple cognitive science models.
 """

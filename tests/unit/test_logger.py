@@ -1,4 +1,8 @@
 """
+import pytest
+
+pytestmark = pytest.mark.unit
+
 Tests for the logger utility.
 """
 

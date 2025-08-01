@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+import pytest
+
+pytestmark = pytest.mark.validation
+
 Test domain models directly without pytest conftest complications.
 """
 

@@ -6,6 +6,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+pytestmark = pytest.mark.unit
 
 from app.services.health_service import HealthService
 

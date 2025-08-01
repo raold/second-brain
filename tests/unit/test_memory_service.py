@@ -7,6 +7,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+pytestmark = pytest.mark.unit
 
 from app.services.memory_service import MemoryService
 

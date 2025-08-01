@@ -1,5 +1,9 @@
 """Simple test to verify the environment is working."""
 
+import pytest
+
+pytestmark = pytest.mark.validation
+
 def test_imports():
     """Test that critical imports work."""
 

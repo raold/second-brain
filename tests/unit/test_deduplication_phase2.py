@@ -10,6 +10,7 @@ Tests the new modular deduplication architecture including:
 
 
 import pytest
+pytestmark = pytest.mark.unit
 
 # We'll import our modules once they're fully created
 # For now, this shows the test structure we'll implement

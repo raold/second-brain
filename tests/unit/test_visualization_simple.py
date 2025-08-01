@@ -1,4 +1,8 @@
 """
+import pytest
+
+pytestmark = pytest.mark.unit
+
 Simple test for visualization feature v2.6.2-visualization
 """
 

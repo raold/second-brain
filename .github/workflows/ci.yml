@@ -53,8 +53,8 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
+          POSTGRES_USER: secondbrain
+          POSTGRES_PASSWORD: test_password
           POSTGRES_DB: secondbrain_test
         options: >-
           --health-cmd pg_isready
@@ -91,7 +91,7 @@ jobs:
           
       - name: Run smoke tests
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/secondbrain_test
+          DATABASE_URL: postgresql://secondbrain:test_password@localhost:5432/secondbrain_test
           REDIS_URL: redis://localhost:6379/1
           CI_MODE: true
         run: |
@@ -122,8 +122,8 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
+          POSTGRES_USER: secondbrain
+          POSTGRES_PASSWORD: test_password
           POSTGRES_DB: secondbrain_test
         options: >-
           --health-cmd pg_isready
@@ -160,7 +160,7 @@ jobs:
           
       - name: Run fast feedback tests
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/secondbrain_test
+          DATABASE_URL: postgresql://secondbrain:test_password@localhost:5432/secondbrain_test
           REDIS_URL: redis://localhost:6379/1
           CI_MODE: true
           PYTEST_WORKERS: auto
@@ -268,8 +268,8 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
+          POSTGRES_USER: secondbrain
+          POSTGRES_PASSWORD: test_password
           POSTGRES_DB: secondbrain_test
         options: >-
           --health-cmd pg_isready
@@ -306,7 +306,7 @@ jobs:
           
       - name: Run comprehensive tests
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/secondbrain_test
+          DATABASE_URL: postgresql://secondbrain:test_password@localhost:5432/secondbrain_test
           REDIS_URL: redis://localhost:6379/1
           CI_MODE: true
           PYTEST_WORKERS: auto
@@ -345,8 +345,8 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
+          POSTGRES_USER: secondbrain
+          POSTGRES_PASSWORD: test_password
           POSTGRES_DB: secondbrain_test
         options: >-
           --health-cmd pg_isready
@@ -383,7 +383,7 @@ jobs:
           
       - name: Run performance tests
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/secondbrain_test
+          DATABASE_URL: postgresql://secondbrain:test_password@localhost:5432/secondbrain_test
           REDIS_URL: redis://localhost:6379/1
           CI_MODE: true
           LOAD_TEST_DURATION: 60

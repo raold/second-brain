@@ -6,6 +6,9 @@ Tests all memory-related endpoints with real FastAPI client
 from unittest.mock import patch
 
 import pytest
+
+pytestmark = pytest.mark.integration
+
 from httpx import AsyncClient
 
 

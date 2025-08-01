@@ -1,4 +1,8 @@
 """
+import pytest
+
+pytestmark = pytest.mark.integration
+
 OpenAPI Documentation Validation Test
 Tests comprehensive OpenAPI documentation functionality
 """

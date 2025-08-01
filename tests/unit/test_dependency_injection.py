@@ -5,6 +5,7 @@ Test the standardized dependency injection system
 from unittest.mock import MagicMock
 
 import pytest
+pytestmark = pytest.mark.unit
 
 from app.core.dependencies import (
     clear_service_cache,

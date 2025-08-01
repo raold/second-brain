@@ -7,6 +7,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+pytestmark = pytest.mark.unit
 
 from app.services.knowledge_graph_builder import (
     Entity,

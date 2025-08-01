@@ -1,0 +1,277 @@
+# CI: Core Validation - Main Testing Pipeline (<10min)
+# Comprehensive testing with proper error recovery and reporting
+name: "CI: Core Validation"
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PYTHON_VERSION: "3.11"
+  UV_SYSTEM_PYTHON: 1
+  TESTING: true
+  DATABASE_URL: "postgresql://secondbrain:test_password@localhost:5432/secondbrain_test"
+  REDIS_URL: "redis://localhost:6379"
+
+jobs:
+  test-matrix:
+    name: "🧪 Test Suite"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        test-group: [
+          "unit-fast",
+          "unit-medium", 
+          "integration-basic",
+          "validation"
+        ]
+    
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: secondbrain
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: secondbrain_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: "📥 Checkout Code"
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4.5.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: |
+            config/requirements.txt
+            config/requirements-ci.txt
+
+      - name: "📦 Install Dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r config/requirements-ci.txt
+          pip install -e .
+
+      - name: "📋 Validate Naming Conventions"
+        run: |
+          echo "Validating naming conventions across project..."
+          python scripts/validate_naming_conventions.py
+          
+      - name: "📚 Validate Documentation Consistency"
+        run: |
+          echo "Validating documentation consistency..."
+          python scripts/validate_documentation.py
+          
+      - name: "⚙️ Validate Configuration Files"
+        run: |
+          echo "Validating configuration consistency..."
+          python scripts/validate_configurations.py
+
+      - name: "🔄 Wait for Services"
+        run: |
+          timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U secondbrain; do sleep 1; done'
+          timeout 30 bash -c 'until redis-cli -h localhost -p 6379 ping; do sleep 1; done'
+
+      - name: "🧪 Run Test Group: ${{ matrix.test-group }}"
+        run: |
+          case "${{ matrix.test-group }}" in
+            "unit-fast")
+              python -m pytest tests/unit/ \
+                -m "unit and fast and not requires_external" \
+                --tb=short --maxfail=5 -v \
+                --cov=app --cov-report=xml:coverage-unit-fast.xml
+              ;;
+            "unit-medium")  
+              python -m pytest tests/unit/ \
+                -m "unit and (medium or slow) and not requires_external" \
+                --tb=short --maxfail=3 -v \
+                --cov=app --cov-report=xml:coverage-unit-medium.xml
+              ;;
+            "integration-basic")
+              python -m pytest tests/integration/ \
+                -m "integration and not slow" \
+                --tb=short --maxfail=3 -v \
+                --cov=app --cov-report=xml:coverage-integration.xml
+              ;;
+            "validation")
+              python -m pytest tests/validation/ \
+                --tb=short --maxfail=5 -v
+              ;;
+          esac
+
+      - name: "📊 Upload Coverage"
+        if: contains(matrix.test-group, 'unit') || contains(matrix.test-group, 'integration')
+        uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
+        with:
+          file: ./coverage-${{ matrix.test-group }}.xml
+          flags: ${{ matrix.test-group }}
+          name: codecov-${{ matrix.test-group }}
+          fail_ci_if_error: false
+
+      - name: "📋 Upload Test Results"
+        if: always()
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: test-results-${{ matrix.test-group }}
+          path: |
+            coverage-*.xml
+            junit-*.xml
+            .pytest_cache/
+          retention-days: 7
+
+  api-integration:
+    name: "🌐 API Integration Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    needs: [test-matrix]
+    if: success() || failure()  # Run even if some tests failed
+    
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: secondbrain
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: secondbrain_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: "📥 Checkout Code"
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4.5.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: "📦 Install Dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r config/requirements-ci.txt
+          pip install -e .
+
+      - name: "🚀 Start Application"
+        run: |
+          uvicorn main:app --host 0.0.0.0 --port 8000 &
+          sleep 10
+          curl -f http://localhost:8000/health
+
+      - name: "🧪 API Endpoint Tests"
+        run: |
+          python -m pytest tests/integration/ \
+            -m "api" \
+            --tb=short -v \
+            --maxfail=5
+
+      - name: "📈 Performance Smoke Test"
+        run: |
+          echo "Running basic performance checks..."
+          time curl -s http://localhost:8000/health
+          time curl -s http://localhost:8000/docs
+
+  build-test:
+    name: "🐳 Docker Build Test"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: "📥 Checkout Code"
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+
+      - name: "🐳 Build Docker Image"
+        run: |
+          docker build --target development -t secondbrain:test .
+
+      - name: "🧪 Test Docker Container"
+        run: |
+          docker run --rm -d --name test-container \
+            -p 8000:8000 \
+            -e DATABASE_URL="sqlite:///test.db" \
+            secondbrain:test
+          
+          sleep 15
+          
+          # Test health endpoint
+          curl -f http://localhost:8000/health
+          
+          docker stop test-container
+
+  summary:
+    name: "📋 Test Summary"
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [test-matrix, api-integration, build-test]
+    
+    steps:
+      - name: "📊 Generate Summary"
+        run: |
+          echo "## 🧪 Core Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Test Matrix Results
+          echo "### Test Matrix:" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit Fast: ${{ needs.test-matrix.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit Medium: ${{ needs.test-matrix.result }}" >> $GITHUB_STEP_SUMMARY  
+          echo "- Integration Basic: ${{ needs.test-matrix.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Validation: ${{ needs.test-matrix.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Other Tests
+          echo "### Additional Tests:" >> $GITHUB_STEP_SUMMARY
+          echo "- API Integration: ${{ needs.api-integration.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker Build: ${{ needs.build-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Overall Status
+          if [[ "${{ needs.test-matrix.result }}" == "success" && "${{ needs.api-integration.result }}" == "success" && "${{ needs.build-test.result }}" == "success" ]]; then
+            echo "✅ **Overall Status: PASSED**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Overall Status: FAILED**" >> $GITHUB_STEP_SUMMARY
+          fi

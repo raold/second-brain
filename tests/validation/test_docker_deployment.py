@@ -10,6 +10,9 @@ import subprocess
 import time
 
 import pytest
+
+pytestmark = pytest.mark.validation
+
 import requests
 
 

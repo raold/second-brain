@@ -19,6 +19,7 @@ from typing import Any
 import httpx
 import psutil
 import pytest
+pytestmark = pytest.mark.performance
 
 # Configure pytest for performance testing
 pytest_plugins = ["pytest_asyncio"]

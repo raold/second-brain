@@ -8,6 +8,9 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+pytestmark = pytest.mark.unit
+
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 

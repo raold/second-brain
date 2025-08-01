@@ -5,6 +5,7 @@ Comprehensive testing of all major features.
 
 
 import pytest
+pytestmark = pytest.mark.unit
 
 
 class TestAPI:

@@ -13,6 +13,9 @@ from datetime import datetime
 from unittest.mock import AsyncMock
 
 import pytest
+
+pytestmark = pytest.mark.performance
+
 from httpx import AsyncClient
 
 from app.services.structured_data_extractor import StructuredDataExtractor

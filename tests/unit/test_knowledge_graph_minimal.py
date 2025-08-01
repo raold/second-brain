@@ -1,4 +1,8 @@
 """
+import pytest
+
+pytestmark = pytest.mark.unit
+
 Minimal test for knowledge graph builder feature branch
 """
 

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+import pytest
+
+pytestmark = pytest.mark.comprehensive
+
 Comprehensive Test Suite for Bulk Memory Operations
 
 Tests all aspects of the bulk operations system:

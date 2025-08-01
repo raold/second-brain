@@ -4,6 +4,9 @@ Integration tests for memory workflow
 
 
 import pytest
+
+pytestmark = pytest.mark.integration
+
 from httpx import AsyncClient
 
 

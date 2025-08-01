@@ -5,6 +5,7 @@ Tests for the multi-hop reasoning engine
 from unittest.mock import AsyncMock
 
 import pytest
+pytestmark = pytest.mark.unit
 
 from app.services.reasoning_engine import ReasoningEngine, ReasoningNode, ReasoningPath, ReasoningQuery, ReasoningType
 

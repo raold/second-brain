@@ -8,6 +8,9 @@ import statistics
 import time
 
 import pytest
+
+pytestmark = pytest.mark.performance
+
 from httpx import AsyncClient
 
 

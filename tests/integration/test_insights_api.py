@@ -5,6 +5,7 @@ Integration tests for AI insights API endpoints
 from datetime import datetime
 
 import pytest
+pytestmark = pytest.mark.integration
 
 
 class TestInsightsAPI:

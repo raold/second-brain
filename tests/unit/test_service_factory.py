@@ -4,6 +4,7 @@ Unit tests for service factory and dependency injection
 
 
 import pytest
+pytestmark = pytest.mark.unit
 
 
 class TestServiceFactory:
