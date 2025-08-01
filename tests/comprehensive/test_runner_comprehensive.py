@@ -69,7 +69,10 @@ class ComprehensiveTestRunner:
             except Exception as e:
                 self.results.append(
                     TestResult(
-                        f"{category_name} (CRITICAL ERROR)", False, f"Category failed: {str(e)}", traceback.format_exc()
+                        f"{category_name} (CRITICAL ERROR)",
+                        False,
+                        f"Category failed: {str(e)}",
+                        traceback.format_exc(),
                     )
                 )
 
@@ -84,25 +87,33 @@ class ComprehensiveTestRunner:
 
             # Test database imports
 
-            self.results.append(TestResult("Mock Database Import", True, "Mock database imported successfully"))
+            self.results.append(
+                TestResult("Mock Database Import", True, "Mock database imported successfully")
+            )
 
             # Test docs imports
 
-            self.results.append(TestResult("Docs Import", True, "Priority and MemoryType enums imported"))
+            self.results.append(
+                TestResult("Docs Import", True, "Priority and MemoryType enums imported")
+            )
 
             # Test version import
             from app.version import get_version_info
 
             version = get_version_info()
-            self.results.append(TestResult("Version Import", True, f"Version {version['version']} loaded"))
+            self.results.append(
+                TestResult("Version Import", True, f"Version {version['version']} loaded")
+            )
 
         except Exception as e:
-            self.results.append(TestResult("Basic Imports", False, f"Import failed: {e}", traceback.format_exc()))
+            self.results.append(
+                TestResult("Basic Imports", False, f"Import failed: {e}", traceback.format_exc())
+            )
 
     async def test_mock_database(self):
         """Test mock database functionality"""
         try:
-            
+
             # Initialize mock database
             db = await get_mock_database()
             self.results.append(TestResult("Mock DB Init", True, "Mock database initialized"))
@@ -111,18 +122,24 @@ class ComprehensiveTestRunner:
             memory_id = await db.store_memory(
                 "Test memory for comprehensive testing", {"type": "test", "category": "automated"}
             )
-            self.results.append(TestResult("Store Memory", True, f"Memory stored with ID: {memory_id}"))
+            self.results.append(
+                TestResult("Store Memory", True, f"Memory stored with ID: {memory_id}")
+            )
 
             # Test retrieve memory
             memory = await db.get_memory(memory_id)
             if memory and memory["content"] == "Test memory for comprehensive testing":
-                self.results.append(TestResult("Retrieve Memory", True, "Memory retrieved successfully"))
+                self.results.append(
+                    TestResult("Retrieve Memory", True, "Memory retrieved successfully")
+                )
             else:
                 self.results.append(TestResult("Retrieve Memory", False, "Memory retrieval failed"))
 
             # Test search
             results = await db.search_memories("test", limit=5)
-            self.results.append(TestResult("Search Memories", True, f"Found {len(results)} memories"))
+            self.results.append(
+                TestResult("Search Memories", True, f"Found {len(results)} memories")
+            )
 
             # Test stats
             stats = await db.get_index_stats()
@@ -132,7 +149,9 @@ class ComprehensiveTestRunner:
 
         except Exception as e:
             self.results.append(
-                TestResult("Mock Database", False, f"Database test failed: {e}", traceback.format_exc())
+                TestResult(
+                    "Mock Database", False, f"Database test failed: {e}", traceback.format_exc()
+                )
             )
 
     async def test_app_configuration(self):
@@ -142,12 +161,16 @@ class ComprehensiveTestRunner:
 
             # Test app creation
             assert app is not None
-            self.results.append(TestResult("App Creation", True, "FastAPI app created successfully"))
+            self.results.append(
+                TestResult("App Creation", True, "FastAPI app created successfully")
+            )
 
             # Test middleware setup
             middleware_count = len(app.user_middleware)
             self.results.append(
-                TestResult("Middleware Setup", True, f"{middleware_count} middleware components loaded")
+                TestResult(
+                    "Middleware Setup", True, f"{middleware_count} middleware components loaded"
+                )
             )
 
             # Test route registration
@@ -156,13 +179,22 @@ class ComprehensiveTestRunner:
             missing_routes = [route for route in critical_routes if route not in str(routes)]
 
             if not missing_routes:
-                self.results.append(TestResult("Route Registration", True, f"{len(routes)} routes registered"))
+                self.results.append(
+                    TestResult("Route Registration", True, f"{len(routes)} routes registered")
+                )
             else:
-                self.results.append(TestResult("Route Registration", False, f"Missing routes: {missing_routes}"))
+                self.results.append(
+                    TestResult("Route Registration", False, f"Missing routes: {missing_routes}")
+                )
 
         except Exception as e:
             self.results.append(
-                TestResult("App Configuration", False, f"Configuration test failed: {e}", traceback.format_exc())
+                TestResult(
+                    "App Configuration",
+                    False,
+                    f"Configuration test failed: {e}",
+                    traceback.format_exc(),
+                )
             )
 
     async def test_api_endpoints(self):
@@ -178,28 +210,44 @@ class ComprehensiveTestRunner:
                 if response.status_code == 200:
                     data = response.json()
                     self.results.append(
-                        TestResult("Health Endpoint", True, f"Status: {data['status']}, Version: {data['version']}")
+                        TestResult(
+                            "Health Endpoint",
+                            True,
+                            f"Status: {data['status']}, Version: {data['version']}",
+                        )
                     )
                 else:
-                    self.results.append(TestResult("Health Endpoint", False, f"Status code: {response.status_code}"))
+                    self.results.append(
+                        TestResult("Health Endpoint", False, f"Status code: {response.status_code}")
+                    )
 
                 # Test status endpoint with auth
                 response = await client.get("/status", params={"api_key": "test-key-1"})
                 if response.status_code == 200:
-                    self.results.append(TestResult("Status Endpoint", True, "Status endpoint working with auth"))
+                    self.results.append(
+                        TestResult("Status Endpoint", True, "Status endpoint working with auth")
+                    )
                 else:
-                    self.results.append(TestResult("Status Endpoint", False, f"Status code: {response.status_code}"))
+                    self.results.append(
+                        TestResult("Status Endpoint", False, f"Status code: {response.status_code}")
+                    )
 
                 # Test memory storage
                 memory_data = {"content": "API test memory", "metadata": {"test": True}}
-                response = await client.post("/memories", json=memory_data, params={"api_key": "test-key-1"})
+                response = await client.post(
+                    "/memories", json=memory_data, params={"api_key": "test-key-1"}
+                )
                 if response.status_code == 200:
                     self.results.append(TestResult("Memory Storage", True, "Memory stored via API"))
                 else:
-                    self.results.append(TestResult("Memory Storage", False, f"Status code: {response.status_code}"))
+                    self.results.append(
+                        TestResult("Memory Storage", False, f"Status code: {response.status_code}")
+                    )
 
         except Exception as e:
-            self.results.append(TestResult("API Endpoints", False, f"API test failed: {e}", traceback.format_exc()))
+            self.results.append(
+                TestResult("API Endpoints", False, f"API test failed: {e}", traceback.format_exc())
+            )
 
     async def test_dashboard_system(self):
         """Test dashboard system functionality"""
@@ -208,23 +256,33 @@ class ComprehensiveTestRunner:
 
             # Initialize dashboard
             dashboard = ProjectDashboard()
-            self.results.append(TestResult("Dashboard Init", True, "Dashboard initialized successfully"))
+            self.results.append(
+                TestResult("Dashboard Init", True, "Dashboard initialized successfully")
+            )
 
             # Test milestone loading
             milestones = dashboard.get_upcoming_milestones(limit=3)
-            self.results.append(TestResult("Milestone Loading", True, f"Loaded {len(milestones)} milestones"))
+            self.results.append(
+                TestResult("Milestone Loading", True, f"Loaded {len(milestones)} milestones")
+            )
 
             # Test metrics
             metrics = dashboard.get_latest_metrics()
-            self.results.append(TestResult("Metrics Loading", True, f"Loaded {len(metrics)} metrics"))
+            self.results.append(
+                TestResult("Metrics Loading", True, f"Loaded {len(metrics)} metrics")
+            )
 
             # Test summary generation
             dashboard.get_dashboard_summary()
-            self.results.append(TestResult("Dashboard Summary", True, "Summary generated successfully"))
+            self.results.append(
+                TestResult("Dashboard Summary", True, "Summary generated successfully")
+            )
 
         except Exception as e:
             self.results.append(
-                TestResult("Dashboard System", False, f"Dashboard test failed: {e}", traceback.format_exc())
+                TestResult(
+                    "Dashboard System", False, f"Dashboard test failed: {e}", traceback.format_exc()
+                )
             )
 
     async def test_memory_visualization(self):
@@ -232,13 +290,17 @@ class ComprehensiveTestRunner:
         try:
             # Test visualization routes import
 
-            self.results.append(TestResult("Visualization Routes", True, "Visualization routes imported"))
+            self.results.append(
+                TestResult("Visualization Routes", True, "Visualization routes imported")
+            )
 
             # Test memory visualization engine
             from app.memory_visualization import MemoryVisualizationEngine
 
             viz_engine = MemoryVisualizationEngine()
-            self.results.append(TestResult("Visualization Engine", True, "Visualization engine created"))
+            self.results.append(
+                TestResult("Visualization Engine", True, "Visualization engine created")
+            )
 
             # Test with mock data
             mock_memories = [
@@ -248,18 +310,30 @@ class ComprehensiveTestRunner:
 
             graph_data = await viz_engine.generate_memory_graph(mock_memories)
             self.results.append(
-                TestResult("Graph Generation", True, f"Generated graph with {len(graph_data.get('nodes', []))} nodes")
+                TestResult(
+                    "Graph Generation",
+                    True,
+                    f"Generated graph with {len(graph_data.get('nodes', []))} nodes",
+                )
             )
 
         except Exception as e:
             self.results.append(
-                TestResult("Memory Visualization", False, f"Visualization test failed: {e}", traceback.format_exc())
+                TestResult(
+                    "Memory Visualization",
+                    False,
+                    f"Visualization test failed: {e}",
+                    traceback.format_exc(),
+                )
             )
 
     async def test_performance_benchmarks(self):
         """Test performance benchmark functionality"""
         try:
-            from tests.performance.test_performance_benchmark import BenchmarkResult, PerformanceMetrics
+            from tests.performance.test_performance_benchmark import (
+                BenchmarkResult,
+                PerformanceMetrics,
+            )
 
             # Test performance classes
             PerformanceMetrics(
@@ -270,7 +344,9 @@ class ComprehensiveTestRunner:
                 error_rate=0.0,
                 throughput=100.0,
             )
-            self.results.append(TestResult("Performance Metrics", True, "Performance metrics class working"))
+            self.results.append(
+                TestResult("Performance Metrics", True, "Performance metrics class working")
+            )
 
             BenchmarkResult(
                 test_name="test",
@@ -289,11 +365,18 @@ class ComprehensiveTestRunner:
                 total_requests=10,
                 passed=True,
             )
-            self.results.append(TestResult("Benchmark Result", True, "Benchmark result class working"))
+            self.results.append(
+                TestResult("Benchmark Result", True, "Benchmark result class working")
+            )
 
         except Exception as e:
             self.results.append(
-                TestResult("Performance Benchmarks", False, f"Performance test failed: {e}", traceback.format_exc())
+                TestResult(
+                    "Performance Benchmarks",
+                    False,
+                    f"Performance test failed: {e}",
+                    traceback.format_exc(),
+                )
             )
 
     async def test_security_features(self):
@@ -302,25 +385,37 @@ class ComprehensiveTestRunner:
             from app.security import verify_api_key
 
             # Test middleware import
-            self.results.append(TestResult("Security Middleware", True, "Security middleware imported"))
+            self.results.append(
+                TestResult("Security Middleware", True, "Security middleware imported")
+            )
 
             # Test API key verification
             is_valid = verify_api_key("test-key-1")
             if is_valid:
-                self.results.append(TestResult("API Key Verification", True, "Valid API key accepted"))
+                self.results.append(
+                    TestResult("API Key Verification", True, "Valid API key accepted")
+                )
             else:
-                self.results.append(TestResult("API Key Verification", False, "Valid API key rejected"))
+                self.results.append(
+                    TestResult("API Key Verification", False, "Valid API key rejected")
+                )
 
             # Test invalid key rejection
             is_invalid = verify_api_key("invalid-key")
             if not is_invalid:
-                self.results.append(TestResult("Invalid Key Rejection", True, "Invalid API key rejected"))
+                self.results.append(
+                    TestResult("Invalid Key Rejection", True, "Invalid API key rejected")
+                )
             else:
-                self.results.append(TestResult("Invalid Key Rejection", False, "Invalid API key accepted"))
+                self.results.append(
+                    TestResult("Invalid Key Rejection", False, "Invalid API key accepted")
+                )
 
         except Exception as e:
             self.results.append(
-                TestResult("Security Features", False, f"Security test failed: {e}", traceback.format_exc())
+                TestResult(
+                    "Security Features", False, f"Security test failed: {e}", traceback.format_exc()
+                )
             )
 
     async def test_version_management(self):
@@ -329,7 +424,9 @@ class ComprehensiveTestRunner:
             from app.version import BUILD_TYPE, VERSION, get_version_info
 
             # Test version constants
-            self.results.append(TestResult("Version Constants", True, f"VERSION: {VERSION}, BUILD: {BUILD_TYPE}"))
+            self.results.append(
+                TestResult("Version Constants", True, f"VERSION: {VERSION}, BUILD: {BUILD_TYPE}")
+            )
 
             # Test version info function
             version_info = get_version_info()
@@ -337,13 +434,19 @@ class ComprehensiveTestRunner:
             missing_keys = [key for key in expected_keys if key not in version_info]
 
             if not missing_keys:
-                self.results.append(TestResult("Version Info", True, "All version info fields present"))
+                self.results.append(
+                    TestResult("Version Info", True, "All version info fields present")
+                )
             else:
-                self.results.append(TestResult("Version Info", False, f"Missing fields: {missing_keys}"))
+                self.results.append(
+                    TestResult("Version Info", False, f"Missing fields: {missing_keys}")
+                )
 
         except Exception as e:
             self.results.append(
-                TestResult("Version Management", False, f"Version test failed: {e}", traceback.format_exc())
+                TestResult(
+                    "Version Management", False, f"Version test failed: {e}", traceback.format_exc()
+                )
             )
 
     def generate_report(self) -> dict[str, Any]:

@@ -61,25 +61,21 @@ class TestIngestionRoutes:
         assert data["max_file_size_mb"] == 100
         assert "notes" in data
 
-    @patch('app.routes.ingestion_routes.get_current_user')
-    @patch('app.routes.ingestion_routes.process_file_ingestion')
-    def test_upload_single_file(self, mock_process, mock_user, client, auth_headers, mock_current_user):
+    @patch("app.routes.ingestion_routes.get_current_user")
+    @patch("app.routes.ingestion_routes.process_file_ingestion")
+    def test_upload_single_file(
+        self, mock_process, mock_user, client, auth_headers, mock_current_user
+    ):
         """Test single file upload"""
         mock_user.return_value = mock_current_user
 
         # Create test file
         file_content = b"Test file content"
         files = {"file": ("test.txt", file_content, "text/plain")}
-        data = {
-            "tags": "test,upload",
-            "metadata": json.dumps({"source": "test"})
-        }
+        data = {"tags": "test,upload", "metadata": json.dumps({"source": "test"})}
 
         response = client.post(
-            "/api/v1/ingest/upload",
-            files=files,
-            data=data,
-            headers=auth_headers
+            "/api/v1/ingest/upload", files=files, data=data, headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -95,9 +91,11 @@ class TestIngestionRoutes:
         assert job.status == "pending"
         assert job.filename == "test.txt"
 
-    @patch('app.routes.ingestion_routes.get_current_user')
-    @patch('app.routes.ingestion_routes.process_batch_ingestion')
-    def test_upload_batch_files(self, mock_process, mock_user, client, auth_headers, mock_current_user):
+    @patch("app.routes.ingestion_routes.get_current_user")
+    @patch("app.routes.ingestion_routes.process_batch_ingestion")
+    def test_upload_batch_files(
+        self, mock_process, mock_user, client, auth_headers, mock_current_user
+    ):
         """Test batch file upload"""
         mock_user.return_value = mock_current_user
 
@@ -105,21 +103,20 @@ class TestIngestionRoutes:
         files = [
             ("files", ("test1.txt", b"Content 1", "text/plain")),
             ("files", ("test2.pdf", b"Content 2", "application/pdf")),
-            ("files", ("test3.docx", b"Content 3", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+            (
+                "files",
+                (
+                    "test3.docx",
+                    b"Content 3",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ),
+            ),
         ]
 
-        data = {
-            "request": json.dumps({
-                "tags": ["batch", "test"],
-                "metadata": {"batch": True}
-            })
-        }
+        data = {"request": json.dumps({"tags": ["batch", "test"], "metadata": {"batch": True}})}
 
         response = client.post(
-            "/api/v1/ingest/upload/batch",
-            files=files,
-            data=data,
-            headers=auth_headers
+            "/api/v1/ingest/upload/batch", files=files, data=data, headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -129,20 +126,16 @@ class TestIngestionRoutes:
         assert "job_id" in result
         assert result["message"] == "Batch of 3 files queued for processing"
 
-    @patch('app.routes.ingestion_routes.get_current_user')
+    @patch("app.routes.ingestion_routes.get_current_user")
     def test_upload_without_file(self, mock_user, client, auth_headers, mock_current_user):
         """Test upload without file"""
         mock_user.return_value = mock_current_user
 
-        response = client.post(
-            "/api/v1/ingest/upload",
-            data={"tags": "test"},
-            headers=auth_headers
-        )
+        response = client.post("/api/v1/ingest/upload", data={"tags": "test"}, headers=auth_headers)
 
         assert response.status_code == 422  # Validation error
 
-    @patch('app.routes.ingestion_routes.get_current_user')
+    @patch("app.routes.ingestion_routes.get_current_user")
     def test_get_job_status(self, mock_user, client, auth_headers, mock_current_user):
         """Test getting job status"""
         mock_user.return_value = mock_current_user
@@ -161,15 +154,12 @@ class TestIngestionRoutes:
                 "memories_created": 5,
                 "chunks_processed": 5,
                 "processing_time": 2.5,
-                "file_hash": "abc123"
-            }
+                "file_hash": "abc123",
+            },
         )
         ingestion_jobs[job_id] = test_job
 
-        response = client.get(
-            f"/api/v1/ingest/status/{job_id}",
-            headers=auth_headers
-        )
+        response = client.get(f"/api/v1/ingest/status/{job_id}", headers=auth_headers)
 
         assert response.status_code == 200
         result = response.json()
@@ -179,7 +169,7 @@ class TestIngestionRoutes:
         assert result["filename"] == "test.pdf"
         assert result["result"]["memories_created"] == 5
 
-    @patch('app.routes.ingestion_routes.get_current_user')
+    @patch("app.routes.ingestion_routes.get_current_user")
     def test_get_job_status_unauthorized(self, mock_user, client, auth_headers, mock_current_user):
         """Test getting job status for another user's job"""
         mock_user.return_value = mock_current_user
@@ -191,19 +181,16 @@ class TestIngestionRoutes:
             status="processing",
             filename="secret.pdf",
             file_type="application/pdf",
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
         ingestion_jobs[job_id] = test_job
 
-        response = client.get(
-            f"/api/v1/ingest/status/{job_id}",
-            headers=auth_headers
-        )
+        response = client.get(f"/api/v1/ingest/status/{job_id}", headers=auth_headers)
 
         assert response.status_code == 403
         assert response.json()["detail"] == "Access denied"
 
-    @patch('app.routes.ingestion_routes.get_current_user')
+    @patch("app.routes.ingestion_routes.get_current_user")
     def test_list_ingestion_jobs(self, mock_user, client, auth_headers, mock_current_user):
         """Test listing user's ingestion jobs"""
         mock_user.return_value = mock_current_user
@@ -219,7 +206,7 @@ class TestIngestionRoutes:
                 status="completed",
                 filename=f"test{i}.txt",
                 file_type="text/plain",
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
 
         # Add job for different user
@@ -228,13 +215,10 @@ class TestIngestionRoutes:
             status="pending",
             filename="other.txt",
             file_type="text/plain",
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
 
-        response = client.get(
-            "/api/v1/ingest/jobs",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/ingest/jobs", headers=auth_headers)
 
         assert response.status_code == 200
         jobs = response.json()
@@ -247,9 +231,9 @@ class TestIngestionProcessing:
     """Test ingestion processing functions"""
 
     @pytest.mark.asyncio
-    @patch('app.routes.ingestion_routes.IngestionEngine')
-    @patch('app.routes.ingestion_routes.MemoryRepository')
-    @patch('app.routes.ingestion_routes.ServiceFactory')
+    @patch("app.routes.ingestion_routes.IngestionEngine")
+    @patch("app.routes.ingestion_routes.MemoryRepository")
+    @patch("app.routes.ingestion_routes.ServiceFactory")
     async def test_process_file_ingestion_success(self, mock_factory, mock_repo, mock_engine):
         """Test successful file processing"""
         from app.routes.ingestion_routes import process_file_ingestion
@@ -259,14 +243,11 @@ class TestIngestionProcessing:
         mock_result = IngestionResult(
             success=True,
             file_metadata=FileMetadata(
-                filename="test.pdf",
-                file_type="application/pdf",
-                size=1024,
-                hash="abc123"
+                filename="test.pdf", file_type="application/pdf", size=1024, hash="abc123"
             ),
             memories_created=[Mock(), Mock()],
             chunks_processed=2,
-            processing_time=1.5
+            processing_time=1.5,
         )
         mock_ingestion_engine.ingest_file.return_value = mock_result
         mock_engine.return_value = mock_ingestion_engine
@@ -282,7 +263,7 @@ class TestIngestionProcessing:
             status="pending",
             filename="test.pdf",
             file_type="application/pdf",
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
 
         # Process file
@@ -293,7 +274,7 @@ class TestIngestionProcessing:
             user_id="user123",
             tags=["test"],
             metadata={"key": "value"},
-            db=Mock()
+            db=Mock(),
         )
 
         # Check job was updated
@@ -304,7 +285,7 @@ class TestIngestionProcessing:
         assert job.result["file_hash"] == "abc123"
 
     @pytest.mark.asyncio
-    @patch('app.routes.ingestion_routes.IngestionEngine')
+    @patch("app.routes.ingestion_routes.IngestionEngine")
     async def test_process_file_ingestion_failure(self, mock_engine):
         """Test failed file processing"""
         from app.routes.ingestion_routes import process_file_ingestion
@@ -319,7 +300,7 @@ class TestIngestionProcessing:
             status="pending",
             filename="bad.pdf",
             file_type="application/pdf",
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
 
         # Mock file
@@ -334,7 +315,7 @@ class TestIngestionProcessing:
             user_id="user123",
             tags=[],
             metadata={},
-            db=Mock()
+            db=Mock(),
         )
 
         # Check job was marked as failed
@@ -344,7 +325,7 @@ class TestIngestionProcessing:
         assert job.completed_at is not None
 
     @pytest.mark.asyncio
-    @patch('app.routes.ingestion_routes.IngestionEngine')
+    @patch("app.routes.ingestion_routes.IngestionEngine")
     async def test_process_batch_ingestion(self, mock_engine):
         """Test batch file processing"""
         from app.routes.ingestion_routes import process_batch_ingestion
@@ -358,14 +339,11 @@ class TestIngestionProcessing:
             result = IngestionResult(
                 success=True if i < 2 else False,
                 file_metadata=FileMetadata(
-                    filename=f"file{i}.txt",
-                    file_type="text/plain",
-                    size=100,
-                    hash=f"hash{i}"
+                    filename=f"file{i}.txt", file_type="text/plain", size=100, hash=f"hash{i}"
                 ),
                 memories_created=[Mock()] if i < 2 else [],
                 chunks_processed=1 if i < 2 else 0,
-                errors=[] if i < 2 else ["Failed to process"]
+                errors=[] if i < 2 else ["Failed to process"],
             )
             results.append(result)
 
@@ -379,7 +357,7 @@ class TestIngestionProcessing:
             status="pending",
             filename="3 files",
             file_type="batch",
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
 
         # Mock files
@@ -397,7 +375,7 @@ class TestIngestionProcessing:
             user_id="user123",
             tags=["batch"],
             metadata={},
-            db=Mock()
+            db=Mock(),
         )
 
         # Check job results
@@ -413,7 +391,7 @@ class TestIngestionProcessing:
 class TestIngestionValidation:
     """Test input validation for ingestion routes"""
 
-    @patch('app.routes.ingestion_routes.get_current_user')
+    @patch("app.routes.ingestion_routes.get_current_user")
     def test_upload_empty_filename(self, mock_user, client, auth_headers, mock_current_user):
         """Test upload with empty filename"""
         mock_user.return_value = mock_current_user
@@ -421,38 +399,25 @@ class TestIngestionValidation:
         # Create file with empty filename
         files = {"file": ("", b"content", "text/plain")}
 
-        response = client.post(
-            "/api/v1/ingest/upload",
-            files=files,
-            headers=auth_headers
-        )
+        response = client.post("/api/v1/ingest/upload", files=files, headers=auth_headers)
 
         assert response.status_code == 400
         assert response.json()["detail"] == "No filename provided"
 
-    @patch('app.routes.ingestion_routes.get_current_user')
+    @patch("app.routes.ingestion_routes.get_current_user")
     def test_batch_upload_no_files(self, mock_user, client, auth_headers, mock_current_user):
         """Test batch upload without files"""
         mock_user.return_value = mock_current_user
 
-        data = {
-            "request": json.dumps({"tags": ["test"]})
-        }
+        data = {"request": json.dumps({"tags": ["test"]})}
 
-        response = client.post(
-            "/api/v1/ingest/upload/batch",
-            data=data,
-            headers=auth_headers
-        )
+        response = client.post("/api/v1/ingest/upload/batch", data=data, headers=auth_headers)
 
         assert response.status_code == 422  # No files provided
 
     def test_invalid_job_id(self, client, auth_headers):
         """Test getting status for non-existent job"""
-        response = client.get(
-            "/api/v1/ingest/status/nonexistent_job",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/ingest/status/nonexistent_job", headers=auth_headers)
 
         assert response.status_code == 404
         assert response.json()["detail"] == "Job not found"

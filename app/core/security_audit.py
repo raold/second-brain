@@ -1,3 +1,13 @@
+import hashlib
+import json
+import re
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
+
+from app.core.exceptions import UnauthorizedException
+from app.utils.logging_config import get_logger
+
 """
 Security Audit and Hardening for Second Brain v3.0.0
 
@@ -11,27 +21,21 @@ This module provides:
 """
 
 import base64
-import hashlib
 import hmac
-import json
-import re
 import secrets
-from dataclasses import dataclass
-from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
 
 from argon2 import PasswordHasher
 from cryptography.fernet import Fernet
 from fastapi import Request, Response
 from jose import JWTError, jwt
 
-from app.core.exceptions import UnauthorizedException
 from app.core.logging import get_audit_logger, get_logger
 
 
 class SecurityLevel(str, Enum):
     """Security levels for different operations"""
+
     PUBLIC = "public"
     AUTHENTICATED = "authenticated"
     ADMIN = "admin"
@@ -41,6 +45,7 @@ class SecurityLevel(str, Enum):
 @dataclass
 class SecurityAuditResult:
     """Result of a security audit check"""
+
     check_name: str
     passed: bool
     severity: str  # LOW, MEDIUM, HIGH, CRITICAL
@@ -60,7 +65,7 @@ class PasswordPolicy:
         require_digits: bool = True,
         require_special: bool = True,
         max_length: int = 128,
-        banned_passwords_file: str | None = None
+        banned_passwords_file: str | None = None,
     ):
         self.min_length = min_length
         self.max_length = max_length
@@ -121,17 +126,17 @@ class PasswordPolicy:
     def _has_sequential_characters(self, password: str, max_sequence: int = 3) -> bool:
         """Check for sequential characters like 'abc' or '123'"""
         for i in range(len(password) - max_sequence + 1):
-            sequence = password[i:i + max_sequence]
-            if all(ord(sequence[j]) == ord(sequence[j-1]) + 1 for j in range(1, len(sequence))):
+            sequence = password[i : i + max_sequence]
+            if all(ord(sequence[j]) == ord(sequence[j - 1]) + 1 for j in range(1, len(sequence))):
                 return True
-            if all(ord(sequence[j]) == ord(sequence[j-1]) - 1 for j in range(1, len(sequence))):
+            if all(ord(sequence[j]) == ord(sequence[j - 1]) - 1 for j in range(1, len(sequence))):
                 return True
         return False
 
     def _has_repeated_characters(self, password: str, max_repeat: int = 3) -> bool:
         """Check for repeated characters like 'aaa'"""
         for i in range(len(password) - max_repeat + 1):
-            if len(set(password[i:i + max_repeat])) == 1:
+            if len(set(password[i : i + max_repeat])) == 1:
                 return True
         return False
 
@@ -146,7 +151,9 @@ class SecureTokenManager:
         self.logger = get_logger(__name__)
         self.audit_logger = get_audit_logger()
 
-    def create_access_token(self, data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
+    def create_access_token(
+        self, data: dict[str, Any], expires_delta: timedelta | None = None
+    ) -> str:
         """Create a JWT access token"""
         to_encode = data.copy()
 
@@ -155,11 +162,13 @@ class SecureTokenManager:
         else:
             expire = datetime.utcnow() + timedelta(minutes=self.token_expiry_minutes)
 
-        to_encode.update({
-            "exp": expire,
-            "iat": datetime.utcnow(),
-            "jti": secrets.token_urlsafe(16)  # Unique token ID
-        })
+        to_encode.update(
+            {
+                "exp": expire,
+                "iat": datetime.utcnow(),
+                "jti": secrets.token_urlsafe(16),  # Unique token ID
+            }
+        )
 
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
 
@@ -170,7 +179,7 @@ class SecureTokenManager:
             action="create",
             result="success",
             user_id=data.get("sub"),
-            details={"expires_at": expire.isoformat()}
+            details={"expires_at": expire.isoformat()},
         )
 
         return encoded_jwt
@@ -196,7 +205,7 @@ class SecureTokenManager:
         token_data = {
             "user_id": user_id,
             "token_id": secrets.token_urlsafe(32),
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
         }
 
         # Store in database (implement based on your storage)
@@ -211,7 +220,7 @@ class SecureTokenManager:
             resource="token",
             action="revoke",
             result="success",
-            details={"token_id": token_id}
+            details={"token_id": token_id},
         )
 
 
@@ -261,14 +270,14 @@ class DataEncryption:
         if salt is None:
             salt = secrets.token_hex(16)
 
-        hash_obj = hashlib.pbkdf2_hmac('sha256', data.encode(), salt.encode(), 100000)
+        hash_obj = hashlib.pbkdf2_hmac("sha256", data.encode(), salt.encode(), 100000)
         return f"{salt}${base64.b64encode(hash_obj).decode()}"
 
     def verify_hash(self, data: str, hashed: str) -> bool:
         """Verify data against hash"""
         try:
-            salt, hash_b64 = hashed.split('$')
-            expected_hash = hashlib.pbkdf2_hmac('sha256', data.encode(), salt.encode(), 100000)
+            salt, hash_b64 = hashed.split("$")
+            expected_hash = hashlib.pbkdf2_hmac("sha256", data.encode(), salt.encode(), 100000)
             return hmac.compare_digest(base64.b64decode(hash_b64), expected_hash)
         except Exception:
             return False
@@ -283,16 +292,12 @@ class SecurityHeadersManager:
         headers = {
             # Prevent XSS attacks
             "X-XSS-Protection": "1; mode=block",
-
             # Prevent clickjacking
             "X-Frame-Options": "DENY",
-
             # Prevent MIME type sniffing
             "X-Content-Type-Options": "nosniff",
-
             # Control referrer information
             "Referrer-Policy": "strict-origin-when-cross-origin",
-
             # Content Security Policy
             "Content-Security-Policy": (
                 "default-src 'self'; "
@@ -305,10 +310,8 @@ class SecurityHeadersManager:
                 "base-uri 'self'; "
                 "form-action 'self'"
             ),
-
             # HTTP Strict Transport Security
             "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-
             # Permissions Policy
             "Permissions-Policy": (
                 "geolocation=(), "
@@ -318,7 +321,7 @@ class SecurityHeadersManager:
                 "usb=(), "
                 "magnetometer=(), "
                 "accelerometer=()"
-            )
+            ),
         }
 
         for header, value in headers.items():
@@ -361,31 +364,37 @@ class SecurityAuditor:
         results = []
 
         # Check for strong password policy
-        results.append(SecurityAuditResult(
-            check_name="Strong Password Policy",
-            passed=True,  # Implement actual check
-            severity="HIGH",
-            message="Password policy enforces strong passwords",
-            recommendation="Ensure minimum 12 characters with complexity requirements"
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="Strong Password Policy",
+                passed=True,  # Implement actual check
+                severity="HIGH",
+                message="Password policy enforces strong passwords",
+                recommendation="Ensure minimum 12 characters with complexity requirements",
+            )
+        )
 
         # Check for multi-factor authentication
-        results.append(SecurityAuditResult(
-            check_name="Multi-Factor Authentication",
-            passed=False,  # MFA not implemented
-            severity="MEDIUM",
-            message="Multi-factor authentication not enabled",
-            recommendation="Implement TOTP-based 2FA for enhanced security"
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="Multi-Factor Authentication",
+                passed=False,  # MFA not implemented
+                severity="MEDIUM",
+                message="Multi-factor authentication not enabled",
+                recommendation="Implement TOTP-based 2FA for enhanced security",
+            )
+        )
 
         # Check for account lockout
-        results.append(SecurityAuditResult(
-            check_name="Account Lockout Policy",
-            passed=True,
-            severity="MEDIUM",
-            message="Account lockout after failed attempts implemented",
-            details={"max_attempts": 5, "lockout_duration": "15 minutes"}
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="Account Lockout Policy",
+                passed=True,
+                severity="MEDIUM",
+                message="Account lockout after failed attempts implemented",
+                details={"max_attempts": 5, "lockout_duration": "15 minutes"},
+            )
+        )
 
         return results
 
@@ -394,22 +403,26 @@ class SecurityAuditor:
         results = []
 
         # Check for proper role-based access control
-        results.append(SecurityAuditResult(
-            check_name="Role-Based Access Control",
-            passed=True,
-            severity="HIGH",
-            message="RBAC implemented with proper permission checks",
-            details={"roles": ["admin", "user", "guest"]}
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="Role-Based Access Control",
+                passed=True,
+                severity="HIGH",
+                message="RBAC implemented with proper permission checks",
+                details={"roles": ["admin", "user", "guest"]},
+            )
+        )
 
         # Check for API key rotation
-        results.append(SecurityAuditResult(
-            check_name="API Key Rotation",
-            passed=False,
-            severity="MEDIUM",
-            message="API keys do not have automatic rotation",
-            recommendation="Implement API key rotation every 90 days"
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="API Key Rotation",
+                passed=False,
+                severity="MEDIUM",
+                message="API keys do not have automatic rotation",
+                recommendation="Implement API key rotation every 90 days",
+            )
+        )
 
         return results
 
@@ -418,21 +431,25 @@ class SecurityAuditor:
         results = []
 
         # Check for SQL injection protection
-        results.append(SecurityAuditResult(
-            check_name="SQL Injection Protection",
-            passed=True,
-            severity="CRITICAL",
-            message="Parameterized queries used throughout application",
-            details={"orm": "SQLAlchemy", "prepared_statements": True}
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="SQL Injection Protection",
+                passed=True,
+                severity="CRITICAL",
+                message="Parameterized queries used throughout application",
+                details={"orm": "SQLAlchemy", "prepared_statements": True},
+            )
+        )
 
         # Check for XSS protection
-        results.append(SecurityAuditResult(
-            check_name="XSS Protection",
-            passed=True,
-            severity="HIGH",
-            message="Input sanitization and output encoding implemented"
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="XSS Protection",
+                passed=True,
+                severity="HIGH",
+                message="Input sanitization and output encoding implemented",
+            )
+        )
 
         return results
 
@@ -441,22 +458,26 @@ class SecurityAuditor:
         results = []
 
         # Check for data at rest encryption
-        results.append(SecurityAuditResult(
-            check_name="Data at Rest Encryption",
-            passed=True,
-            severity="HIGH",
-            message="Sensitive data encrypted at rest",
-            details={"algorithm": "AES-256", "key_management": "secure"}
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="Data at Rest Encryption",
+                passed=True,
+                severity="HIGH",
+                message="Sensitive data encrypted at rest",
+                details={"algorithm": "AES-256", "key_management": "secure"},
+            )
+        )
 
         # Check for data in transit encryption
-        results.append(SecurityAuditResult(
-            check_name="Data in Transit Encryption",
-            passed=True,
-            severity="HIGH",
-            message="All API communications use HTTPS",
-            details={"tls_version": "1.3", "cipher_suites": "strong"}
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="Data in Transit Encryption",
+                passed=True,
+                severity="HIGH",
+                message="All API communications use HTTPS",
+                details={"tls_version": "1.3", "cipher_suites": "strong"},
+            )
+        )
 
         return results
 
@@ -465,28 +486,34 @@ class SecurityAuditor:
         results = []
 
         # A01:2021 - Broken Access Control
-        results.append(SecurityAuditResult(
-            check_name="OWASP A01 - Broken Access Control",
-            passed=True,
-            severity="CRITICAL",
-            message="Access control properly implemented"
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="OWASP A01 - Broken Access Control",
+                passed=True,
+                severity="CRITICAL",
+                message="Access control properly implemented",
+            )
+        )
 
         # A02:2021 - Cryptographic Failures
-        results.append(SecurityAuditResult(
-            check_name="OWASP A02 - Cryptographic Failures",
-            passed=True,
-            severity="CRITICAL",
-            message="Strong cryptography used throughout"
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="OWASP A02 - Cryptographic Failures",
+                passed=True,
+                severity="CRITICAL",
+                message="Strong cryptography used throughout",
+            )
+        )
 
         # A03:2021 - Injection
-        results.append(SecurityAuditResult(
-            check_name="OWASP A03 - Injection",
-            passed=True,
-            severity="CRITICAL",
-            message="Protected against injection attacks"
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="OWASP A03 - Injection",
+                passed=True,
+                severity="CRITICAL",
+                message="Protected against injection attacks",
+            )
+        )
 
         # Continue with other OWASP checks...
 
@@ -497,28 +524,34 @@ class SecurityAuditor:
         results = []
 
         # Check for secure defaults
-        results.append(SecurityAuditResult(
-            check_name="Secure Defaults",
-            passed=True,
-            severity="MEDIUM",
-            message="Application uses secure default configurations"
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="Secure Defaults",
+                passed=True,
+                severity="MEDIUM",
+                message="Application uses secure default configurations",
+            )
+        )
 
         # Check for exposed debug endpoints
-        results.append(SecurityAuditResult(
-            check_name="Debug Endpoints",
-            passed=True,
-            severity="HIGH",
-            message="No debug endpoints exposed in production"
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="Debug Endpoints",
+                passed=True,
+                severity="HIGH",
+                message="No debug endpoints exposed in production",
+            )
+        )
 
         # Check for proper error handling
-        results.append(SecurityAuditResult(
-            check_name="Error Information Disclosure",
-            passed=True,
-            severity="MEDIUM",
-            message="Error messages do not expose sensitive information"
-        ))
+        results.append(
+            SecurityAuditResult(
+                check_name="Error Information Disclosure",
+                passed=True,
+                severity="MEDIUM",
+                message="Error messages do not expose sensitive information",
+            )
+        )
 
         return results
 
@@ -528,12 +561,7 @@ class SecurityAuditor:
         passed_checks = sum(1 for r in results if r.passed)
 
         # Group by severity
-        by_severity = {
-            "CRITICAL": [],
-            "HIGH": [],
-            "MEDIUM": [],
-            "LOW": []
-        }
+        by_severity = {"CRITICAL": [], "HIGH": [], "MEDIUM": [], "LOW": []}
 
         for result in results:
             by_severity[result.severity].append(result)
@@ -556,17 +584,15 @@ class SecurityAuditor:
                         "check": r.check_name,
                         "passed": r.passed,
                         "message": r.message,
-                        "recommendation": r.recommendation
+                        "recommendation": r.recommendation,
                     }
                     for r in checks
                 ]
                 for severity, checks in by_severity.items()
             },
             "recommendations": [
-                r.recommendation
-                for r in results
-                if not r.passed and r.recommendation
-            ]
+                r.recommendation for r in results if not r.passed and r.recommendation
+            ],
         }
 
 
@@ -580,7 +606,7 @@ class SecurityEventMonitor:
             "sql_injection": re.compile(r"(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION)\b)", re.I),
             "path_traversal": re.compile(r"\.\.\/|\.\.\\"),
             "command_injection": re.compile(r"[;&|`$]"),
-            "excessive_requests": 100  # requests per minute threshold
+            "excessive_requests": 100,  # requests per minute threshold
         }
 
     async def log_security_event(
@@ -589,7 +615,7 @@ class SecurityEventMonitor:
         severity: str,
         source_ip: str,
         user_id: str | None = None,
-        details: dict[str, Any] | None = None
+        details: dict[str, Any] | None = None,
     ):
         """Log a security event"""
         event = {
@@ -598,7 +624,7 @@ class SecurityEventMonitor:
             "severity": severity,
             "source_ip": source_ip,
             "user_id": user_id,
-            "details": details or {}
+            "details": details or {},
         }
 
         # Log to audit logger
@@ -608,7 +634,7 @@ class SecurityEventMonitor:
             action="alert",
             result="logged",
             user_id=user_id,
-            details=event
+            details=event,
         )
 
         # For critical events, trigger additional actions
@@ -622,7 +648,7 @@ class SecurityEventMonitor:
             "Critical security event detected",
             event_type=event["event_type"],
             source_ip=event["source_ip"],
-            details=event["details"]
+            details=event["details"],
         )
 
     def detect_suspicious_activity(self, request: Request, content: str) -> list[str]:

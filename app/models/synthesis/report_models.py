@@ -1,3 +1,9 @@
+from datetime import datetime
+from typing import Any
+from uuid import UUID, uuid4
+
+from pydantic import BaseModel, Field
+
 """
 Report Generation Models - v2.8.2
 
@@ -5,16 +11,14 @@ Data models for automated report generation including configurations,
 templates, and scheduling options.
 """
 
-from datetime import datetime
 from enum import Enum
-from typing import Any
-from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import HttpUrl, field_validator
 
 
 class KnowledgeMapReport(BaseModel):
     """Report containing knowledge map visualization data"""
+
     nodes: list[dict[str, Any]] = Field(default_factory=list)
     edges: list[dict[str, Any]] = Field(default_factory=list)
     clusters: list[dict[str, Any]] = Field(default_factory=list)
@@ -89,8 +93,7 @@ class ReportConfig(BaseModel):
     start_date: datetime | None = Field(None, description="Report start date")
     end_date: datetime | None = Field(None, description="Report end date")
     relative_timeframe: str | None = Field(
-        None,
-        description="Relative timeframe (e.g., 'last_7_days', 'last_month')"
+        None, description="Relative timeframe (e.g., 'last_7_days', 'last_month')"
     )
 
     # Content configuration
@@ -108,13 +111,20 @@ class ReportConfig(BaseModel):
     email_recipients: list[str] = Field(default_factory=list, description="Email recipients")
     webhook_url: HttpUrl | None = Field(None, description="Webhook for delivery")
 
-    @field_validator('relative_timeframe')
+    @field_validator("relative_timeframe")
     def validate_timeframe(cls, v):
         """Validate relative timeframe format."""
         valid_timeframes = [
-            "last_24_hours", "last_7_days", "last_30_days",
-            "last_month", "last_quarter", "last_year",
-            "this_week", "this_month", "this_quarter", "this_year"
+            "last_24_hours",
+            "last_7_days",
+            "last_30_days",
+            "last_month",
+            "last_quarter",
+            "last_year",
+            "this_week",
+            "this_month",
+            "this_quarter",
+            "this_year",
         ]
         if v and v not in valid_timeframes:
             raise ValueError(f"Invalid timeframe. Must be one of: {valid_timeframes}")
@@ -144,7 +154,7 @@ class ReportSchedule(BaseModel):
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    @field_validator('cron_expression')
+    @field_validator("cron_expression")
     def validate_cron(cls, v):
         """Validate cron expression format."""
         # Basic validation - in production, use croniter
@@ -166,10 +176,7 @@ class ReportRequest(BaseModel):
     config: ReportConfig | None = Field(None, description="Report configuration")
     immediate: bool = Field(True, description="Generate immediately")
     priority: str = Field("normal", description="Priority: low, normal, high")
-    callback_url: HttpUrl | None = Field(
-        None,
-        description="URL to call when report is ready"
-    )
+    callback_url: HttpUrl | None = Field(None, description="URL to call when report is ready")
 
 
 class ReportMetrics(BaseModel):
@@ -191,12 +198,10 @@ class ReportMetrics(BaseModel):
 
     # Insights
     top_insights: list[dict[str, Any]] = Field(
-        default_factory=list,
-        description="Top insights discovered"
+        default_factory=list, description="Top insights discovered"
     )
     recommendations: list[str] = Field(
-        default_factory=list,
-        description="Recommendations for improvement"
+        default_factory=list, description="Recommendations for improvement"
     )
 
 
@@ -241,6 +246,7 @@ class ReportFilter(BaseModel):
 # Additional report types expected by tests
 class LearningPathReport(BaseModel):
     """Report for learning progress and recommendations"""
+
     id: UUID = Field(default_factory=uuid4)
     user_id: str
     title: str
@@ -255,6 +261,7 @@ class LearningPathReport(BaseModel):
 
 class ProgressReport(BaseModel):
     """Report tracking progress over time"""
+
     id: UUID = Field(default_factory=uuid4)
     user_id: str
     title: str

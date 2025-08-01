@@ -19,6 +19,7 @@ from typing import Any
 import httpx
 import psutil
 import pytest
+
 pytestmark = pytest.mark.performance
 
 # Configure pytest for performance testing
@@ -28,11 +29,12 @@ pytest_plugins = ["pytest_asyncio"]
 @dataclass
 class LoadTestConfig:
     """Load test configuration"""
+
     base_url: str = "http://localhost:8000"
     api_key: str = "test-load-key"
     concurrent_users: int = 50
     test_duration: int = 60  # seconds
-    ramp_up_time: int = 10   # seconds
+    ramp_up_time: int = 10  # seconds
     memory_threshold_mb: int = 512
     cpu_threshold_percent: float = 80.0
     response_time_threshold_ms: int = 1000
@@ -42,6 +44,7 @@ class LoadTestConfig:
 @dataclass
 class PerformanceMetrics:
     """Enhanced performance metrics"""
+
     timestamp: datetime
     endpoint: str
     response_time_ms: float
@@ -57,6 +60,7 @@ class PerformanceMetrics:
 @dataclass
 class LoadTestResult:
     """Comprehensive load test result"""
+
     test_name: str
     config: LoadTestConfig
     start_time: datetime
@@ -162,17 +166,29 @@ class EnterpriseLoadTester:
             base_url=self.config.base_url,
             api_key=self.config.api_key,
             concurrent_users=1,
-            test_duration=30
+            test_duration=30,
         )
 
-        return await self._execute_load_test("Baseline Performance", config, [
-            {"endpoint": "/health", "method": "GET", "weight": 0.3},
-            {"endpoint": "/memories", "method": "GET", "weight": 0.3},
-            {"endpoint": "/memories", "method": "POST", "weight": 0.2,
-             "data": {"content": "Baseline test memory", "memory_type": "semantic"}},
-            {"endpoint": "/memories/search", "method": "POST", "weight": 0.2,
-             "data": {"query": "baseline", "limit": 10}}
-        ])
+        return await self._execute_load_test(
+            "Baseline Performance",
+            config,
+            [
+                {"endpoint": "/health", "method": "GET", "weight": 0.3},
+                {"endpoint": "/memories", "method": "GET", "weight": 0.3},
+                {
+                    "endpoint": "/memories",
+                    "method": "POST",
+                    "weight": 0.2,
+                    "data": {"content": "Baseline test memory", "memory_type": "semantic"},
+                },
+                {
+                    "endpoint": "/memories/search",
+                    "method": "POST",
+                    "weight": 0.2,
+                    "data": {"query": "baseline", "limit": 10},
+                },
+            ],
+        )
 
     async def _run_concurrent_load_test(self) -> LoadTestResult:
         """Run concurrent user load test"""
@@ -183,17 +199,29 @@ class EnterpriseLoadTester:
             api_key=self.config.api_key,
             concurrent_users=25,
             test_duration=60,
-            ramp_up_time=15
+            ramp_up_time=15,
         )
 
-        return await self._execute_load_test("Concurrent Load", config, [
-            {"endpoint": "/health", "method": "GET", "weight": 0.2},
-            {"endpoint": "/memories", "method": "GET", "weight": 0.3},
-            {"endpoint": "/memories", "method": "POST", "weight": 0.25,
-             "data": {"content": "Load test memory {i}", "memory_type": "semantic"}},
-            {"endpoint": "/memories/search", "method": "POST", "weight": 0.25,
-             "data": {"query": "load test", "limit": 10}}
-        ])
+        return await self._execute_load_test(
+            "Concurrent Load",
+            config,
+            [
+                {"endpoint": "/health", "method": "GET", "weight": 0.2},
+                {"endpoint": "/memories", "method": "GET", "weight": 0.3},
+                {
+                    "endpoint": "/memories",
+                    "method": "POST",
+                    "weight": 0.25,
+                    "data": {"content": "Load test memory {i}", "memory_type": "semantic"},
+                },
+                {
+                    "endpoint": "/memories/search",
+                    "method": "POST",
+                    "weight": 0.25,
+                    "data": {"query": "load test", "limit": 10},
+                },
+            ],
+        )
 
     async def _run_stress_test(self) -> LoadTestResult:
         """Run stress test to find breaking point"""
@@ -206,17 +234,29 @@ class EnterpriseLoadTester:
             test_duration=120,
             ramp_up_time=30,
             response_time_threshold_ms=2000,
-            error_rate_threshold=0.10
+            error_rate_threshold=0.10,
         )
 
-        return await self._execute_load_test("Stress Test", config, [
-            {"endpoint": "/health", "method": "GET", "weight": 0.1},
-            {"endpoint": "/memories", "method": "GET", "weight": 0.4},
-            {"endpoint": "/memories", "method": "POST", "weight": 0.3,
-             "data": {"content": "Stress test memory {i}", "memory_type": "semantic"}},
-            {"endpoint": "/memories/search", "method": "POST", "weight": 0.2,
-             "data": {"query": "stress", "limit": 20}}
-        ])
+        return await self._execute_load_test(
+            "Stress Test",
+            config,
+            [
+                {"endpoint": "/health", "method": "GET", "weight": 0.1},
+                {"endpoint": "/memories", "method": "GET", "weight": 0.4},
+                {
+                    "endpoint": "/memories",
+                    "method": "POST",
+                    "weight": 0.3,
+                    "data": {"content": "Stress test memory {i}", "memory_type": "semantic"},
+                },
+                {
+                    "endpoint": "/memories/search",
+                    "method": "POST",
+                    "weight": 0.2,
+                    "data": {"query": "stress", "limit": 20},
+                },
+            ],
+        )
 
     async def _run_endurance_test(self) -> LoadTestResult:
         """Run endurance test for sustained load"""
@@ -227,17 +267,29 @@ class EnterpriseLoadTester:
             api_key=self.config.api_key,
             concurrent_users=15,
             test_duration=300,  # 5 minutes
-            ramp_up_time=30
+            ramp_up_time=30,
         )
 
-        return await self._execute_load_test("Endurance Test", config, [
-            {"endpoint": "/health", "method": "GET", "weight": 0.3},
-            {"endpoint": "/memories", "method": "GET", "weight": 0.4},
-            {"endpoint": "/memories", "method": "POST", "weight": 0.2,
-             "data": {"content": "Endurance test memory {i}", "memory_type": "semantic"}},
-            {"endpoint": "/memories/search", "method": "POST", "weight": 0.1,
-             "data": {"query": "endurance", "limit": 5}}
-        ])
+        return await self._execute_load_test(
+            "Endurance Test",
+            config,
+            [
+                {"endpoint": "/health", "method": "GET", "weight": 0.3},
+                {"endpoint": "/memories", "method": "GET", "weight": 0.4},
+                {
+                    "endpoint": "/memories",
+                    "method": "POST",
+                    "weight": 0.2,
+                    "data": {"content": "Endurance test memory {i}", "memory_type": "semantic"},
+                },
+                {
+                    "endpoint": "/memories/search",
+                    "method": "POST",
+                    "weight": 0.1,
+                    "data": {"query": "endurance", "limit": 5},
+                },
+            ],
+        )
 
     async def _run_spike_test(self) -> LoadTestResult:
         """Run spike test with sudden load increases"""
@@ -249,15 +301,23 @@ class EnterpriseLoadTester:
             api_key=self.config.api_key,
             concurrent_users=50,
             test_duration=90,
-            ramp_up_time=5  # Very fast ramp-up
+            ramp_up_time=5,  # Very fast ramp-up
         )
 
-        return await self._execute_load_test("Spike Test", config, [
-            {"endpoint": "/health", "method": "GET", "weight": 0.5},
-            {"endpoint": "/memories", "method": "GET", "weight": 0.3},
-            {"endpoint": "/memories/search", "method": "POST", "weight": 0.2,
-             "data": {"query": "spike", "limit": 10}}
-        ])
+        return await self._execute_load_test(
+            "Spike Test",
+            config,
+            [
+                {"endpoint": "/health", "method": "GET", "weight": 0.5},
+                {"endpoint": "/memories", "method": "GET", "weight": 0.3},
+                {
+                    "endpoint": "/memories/search",
+                    "method": "POST",
+                    "weight": 0.2,
+                    "data": {"query": "spike", "limit": 10},
+                },
+            ],
+        )
 
     async def _run_memory_leak_test(self) -> LoadTestResult:
         """Run memory leak detection test"""
@@ -268,17 +328,29 @@ class EnterpriseLoadTester:
             api_key=self.config.api_key,
             concurrent_users=10,
             test_duration=180,  # 3 minutes
-            memory_threshold_mb=256
+            memory_threshold_mb=256,
         )
 
-        return await self._execute_load_test("Memory Leak Test", config, [
-            {"endpoint": "/memories", "method": "POST", "weight": 0.7,
-             "data": {"content": "Memory leak test {i} " + "x" * 1000, "memory_type": "semantic"}},
-            {"endpoint": "/memories", "method": "GET", "weight": 0.3}
-        ])
+        return await self._execute_load_test(
+            "Memory Leak Test",
+            config,
+            [
+                {
+                    "endpoint": "/memories",
+                    "method": "POST",
+                    "weight": 0.7,
+                    "data": {
+                        "content": "Memory leak test {i} " + "x" * 1000,
+                        "memory_type": "semantic",
+                    },
+                },
+                {"endpoint": "/memories", "method": "GET", "weight": 0.3},
+            ],
+        )
 
-    async def _execute_load_test(self, test_name: str, config: LoadTestConfig,
-                                scenarios: list[dict]) -> LoadTestResult:
+    async def _execute_load_test(
+        self, test_name: str, config: LoadTestConfig, scenarios: list[dict]
+    ) -> LoadTestResult:
         """Execute a specific load test scenario"""
         print(f"   Running {test_name} with {config.concurrent_users} users...")
 
@@ -296,9 +368,7 @@ class EnterpriseLoadTester:
             for user_id in range(config.concurrent_users):
                 # Stagger user start times for ramp-up
                 delay = (config.ramp_up_time * user_id) / config.concurrent_users
-                task = asyncio.create_task(
-                    self._simulate_user(user_id, config, scenarios, delay)
-                )
+                task = asyncio.create_task(self._simulate_user(user_id, config, scenarios, delay))
                 tasks.append(task)
 
             # Wait for test duration
@@ -321,8 +391,9 @@ class EnterpriseLoadTester:
         # Analyze results
         return self._analyze_results(test_name, config, start_time, end_time)
 
-    async def _simulate_user(self, user_id: int, config: LoadTestConfig,
-                           scenarios: list[dict], delay: float):
+    async def _simulate_user(
+        self, user_id: int, config: LoadTestConfig, scenarios: list[dict], delay: float
+    ):
         """Simulate a single user's behavior"""
         # Wait for ramp-up delay
         await asyncio.sleep(delay)
@@ -336,6 +407,7 @@ class EnterpriseLoadTester:
 
                     # Skip based on weight probability
                     import random
+
                     if random.random() > scenario["weight"]:
                         continue
 
@@ -345,8 +417,9 @@ class EnterpriseLoadTester:
                     # Small delay between requests (realistic user behavior)
                     await asyncio.sleep(random.uniform(0.1, 0.5))
 
-    async def _make_request(self, client: httpx.AsyncClient, scenario: dict,
-                          user_id: int, request_count: int):
+    async def _make_request(
+        self, client: httpx.AsyncClient, scenario: dict, user_id: int, request_count: int
+    ):
         """Make a single request and record metrics"""
         start_time = time.time()
 
@@ -354,19 +427,21 @@ class EnterpriseLoadTester:
             if scenario["method"] == "GET":
                 response = await client.get(
                     f"{self.config.base_url}{scenario['endpoint']}",
-                    params={"api_key": self.config.api_key}
+                    params={"api_key": self.config.api_key},
                 )
             elif scenario["method"] == "POST":
                 data = scenario.get("data", {})
                 # Replace placeholders
                 if isinstance(data, dict):
-                    data = {k: str(v).format(i=request_count) if isinstance(v, str) else v
-                           for k, v in data.items()}
+                    data = {
+                        k: str(v).format(i=request_count) if isinstance(v, str) else v
+                        for k, v in data.items()
+                    }
 
                 response = await client.post(
                     f"{self.config.base_url}{scenario['endpoint']}",
                     params={"api_key": self.config.api_key},
-                    json=data
+                    json=data,
                 )
 
             response_time = (time.time() - start_time) * 1000  # Convert to ms
@@ -382,7 +457,7 @@ class EnterpriseLoadTester:
                 concurrent_users=self.config.concurrent_users,
                 requests_per_second=0.0,  # Will be calculated later
                 error_count=1 if response.status_code >= 400 else 0,
-                success_count=1 if response.status_code < 400 else 0
+                success_count=1 if response.status_code < 400 else 0,
             )
 
             self.metrics.append(metrics)
@@ -401,7 +476,7 @@ class EnterpriseLoadTester:
                 concurrent_users=self.config.concurrent_users,
                 requests_per_second=0.0,
                 error_count=1,
-                success_count=0
+                success_count=0,
             )
 
             self.metrics.append(metrics)
@@ -416,8 +491,9 @@ class EnterpriseLoadTester:
             except asyncio.CancelledError:
                 break
 
-    def _analyze_results(self, test_name: str, config: LoadTestConfig,
-                        start_time: datetime, end_time: datetime) -> LoadTestResult:
+    def _analyze_results(
+        self, test_name: str, config: LoadTestConfig, start_time: datetime, end_time: datetime
+    ) -> LoadTestResult:
         """Analyze load test results and generate summary"""
         if not self.metrics:
             return LoadTestResult(
@@ -445,7 +521,7 @@ class EnterpriseLoadTester:
                 performance_grade="F",
                 passed=False,
                 failure_reasons=["No metrics collected"],
-                metrics=[]
+                metrics=[],
             )
 
         # Extract data for analysis
@@ -514,7 +590,7 @@ class EnterpriseLoadTester:
             performance_grade=grade,
             passed=passed,
             failure_reasons=failure_reasons,
-            metrics=self.metrics[:100]  # Keep sample of metrics
+            metrics=self.metrics[:100],  # Keep sample of metrics
         )
 
     def _percentile(self, data: list[float], percentile: int) -> float:
@@ -525,8 +601,9 @@ class EnterpriseLoadTester:
         index = int(len(sorted_data) * percentile / 100)
         return sorted_data[min(index, len(sorted_data) - 1)]
 
-    def _calculate_performance_grade(self, avg_response_time: float,
-                                   error_rate: float, memory_leaked: bool) -> str:
+    def _calculate_performance_grade(
+        self, avg_response_time: float, error_rate: float, memory_leaked: bool
+    ) -> str:
         """Calculate performance grade A-F"""
         if memory_leaked or error_rate > 0.1:
             return "F"
@@ -542,7 +619,9 @@ class EnterpriseLoadTester:
     def _generate_enterprise_report(self, results: dict[str, LoadTestResult]) -> dict[str, Any]:
         """Generate comprehensive enterprise load test report"""
         overall_passed = all(result.passed for result in results.values())
-        overall_grade = min([result.performance_grade for result in results.values()]) if results else "F"
+        overall_grade = (
+            min([result.performance_grade for result in results.values()]) if results else "F"
+        )
 
         # Calculate aggregate metrics
         total_requests = sum(result.total_requests for result in results.values())
@@ -563,18 +642,17 @@ class EnterpriseLoadTester:
                 "total_failures": total_failures,
                 "overall_error_rate": avg_error_rate,
                 "test_duration_minutes": sum(
-                    (r.end_time - r.start_time).total_seconds() / 60
-                    for r in results.values()
-                )
+                    (r.end_time - r.start_time).total_seconds() / 60 for r in results.values()
+                ),
             },
             "performance_thresholds": {
                 "response_time_ms": 1000,
                 "error_rate": 0.05,
                 "memory_threshold_mb": 512,
-                "cpu_threshold_percent": 80.0
+                "cpu_threshold_percent": 80.0,
             },
             "test_results": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Add individual test results
@@ -594,7 +672,7 @@ class EnterpriseLoadTester:
                 "memory_leaked": result.memory_leaked,
                 "failure_reasons": result.failure_reasons,
                 "concurrent_users": result.config.concurrent_users,
-                "test_duration_seconds": result.config.test_duration
+                "test_duration_seconds": result.config.test_duration,
             }
 
         # Generate recommendations
@@ -608,8 +686,7 @@ class EnterpriseLoadTester:
 
         # Analyze response times
         high_response_time_tests = [
-            name for name, result in results.items()
-            if result.avg_response_time_ms > 1000
+            name for name, result in results.items() if result.avg_response_time_ms > 1000
         ]
         if high_response_time_tests:
             recommendations.append(
@@ -619,8 +696,7 @@ class EnterpriseLoadTester:
 
         # Analyze error rates
         high_error_rate_tests = [
-            name for name, result in results.items()
-            if result.error_rate > 0.05
+            name for name, result in results.items() if result.error_rate > 0.05
         ]
         if high_error_rate_tests:
             recommendations.append(
@@ -630,8 +706,7 @@ class EnterpriseLoadTester:
 
         # Analyze memory usage
         high_memory_tests = [
-            name for name, result in results.items()
-            if result.peak_memory_mb > 512
+            name for name, result in results.items() if result.peak_memory_mb > 512
         ]
         if high_memory_tests:
             recommendations.append(
@@ -640,10 +715,7 @@ class EnterpriseLoadTester:
             )
 
         # Check for memory leaks
-        memory_leak_tests = [
-            name for name, result in results.items()
-            if result.memory_leaked
-        ]
+        memory_leak_tests = [name for name, result in results.items() if result.memory_leaked]
         if memory_leak_tests:
             recommendations.append(
                 f"Memory leaks detected in: {', '.join(memory_leak_tests)}. "
@@ -679,7 +751,9 @@ class EnterpriseLoadTester:
         print("=" * 80)
         print(f"Overall Status: {report['summary']['overall_status']}")
         print(f"Overall Grade: {report['summary']['overall_grade']}")
-        print(f"Tests Passed: {report['summary']['passed_tests']}/{report['summary']['total_tests']}")
+        print(
+            f"Tests Passed: {report['summary']['passed_tests']}/{report['summary']['total_tests']}"
+        )
         print(f"Total Requests: {report['summary']['total_requests']:,}")
         print(f"Overall Error Rate: {report['summary']['overall_error_rate']:.2%}")
         print(f"Total Test Duration: {report['summary']['test_duration_minutes']:.1f} minutes")
@@ -691,14 +765,20 @@ class EnterpriseLoadTester:
         for test_name, result in report["test_results"].items():
             status_icon = "✅" if result["status"] == "PASS" else "❌"
             print(f"{status_icon} {test_name} (Grade: {result['grade']})")
-            print(f"   Users: {result['concurrent_users']}, "
-                  f"Requests: {result['total_requests']:,}, "
-                  f"RPS: {result['requests_per_second']:.1f}")
-            print(f"   Avg Response: {result['avg_response_time_ms']:.1f}ms, "
-                  f"P95: {result['p95_response_time_ms']:.1f}ms, "
-                  f"P99: {result['p99_response_time_ms']:.1f}ms")
-            print(f"   Error Rate: {result['error_rate']:.2%}, "
-                  f"Peak Memory: {result['peak_memory_mb']:.1f}MB")
+            print(
+                f"   Users: {result['concurrent_users']}, "
+                f"Requests: {result['total_requests']:,}, "
+                f"RPS: {result['requests_per_second']:.1f}"
+            )
+            print(
+                f"   Avg Response: {result['avg_response_time_ms']:.1f}ms, "
+                f"P95: {result['p95_response_time_ms']:.1f}ms, "
+                f"P99: {result['p99_response_time_ms']:.1f}ms"
+            )
+            print(
+                f"   Error Rate: {result['error_rate']:.2%}, "
+                f"Peak Memory: {result['peak_memory_mb']:.1f}MB"
+            )
 
             if result["failure_reasons"]:
                 print(f"   Issues: {'; '.join(result['failure_reasons'])}")
@@ -716,11 +796,7 @@ class EnterpriseLoadTester:
 @pytest.mark.asyncio
 async def test_enterprise_load_suite():
     """Test enterprise load testing suite"""
-    config = LoadTestConfig(
-        concurrent_users=2,
-        test_duration=10,
-        ramp_up_time=2
-    )
+    config = LoadTestConfig(concurrent_users=2, test_duration=10, ramp_up_time=2)
 
     tester = EnterpriseLoadTester(config)
 
@@ -735,11 +811,7 @@ async def test_enterprise_load_suite():
 @pytest.mark.asyncio
 async def test_load_test_config():
     """Test load test configuration"""
-    config = LoadTestConfig(
-        concurrent_users=10,
-        test_duration=30,
-        memory_threshold_mb=256
-    )
+    config = LoadTestConfig(concurrent_users=10, test_duration=30, memory_threshold_mb=256)
 
     assert config.concurrent_users == 10
     assert config.test_duration == 30
@@ -747,6 +819,7 @@ async def test_load_test_config():
 
 
 if __name__ == "__main__":
+
     async def main():
         """Main load testing function"""
         print("Second Brain v3.0.0 - Enterprise Load Testing")
@@ -757,7 +830,7 @@ if __name__ == "__main__":
             base_url=os.getenv("LOAD_TEST_URL", "http://localhost:8000"),
             api_key=os.getenv("LOAD_TEST_API_KEY", "test-load-key"),
             concurrent_users=int(os.getenv("LOAD_TEST_USERS", "25")),
-            test_duration=int(os.getenv("LOAD_TEST_DURATION", "60"))
+            test_duration=int(os.getenv("LOAD_TEST_DURATION", "60")),
         )
 
         tester = EnterpriseLoadTester(config)

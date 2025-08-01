@@ -18,10 +18,7 @@ class TestFileMetadata:
     def test_file_metadata_creation(self):
         """Test creating FileMetadata instance"""
         metadata = FileMetadata(
-            filename="test.pdf",
-            file_type="application/pdf",
-            size=1024,
-            hash="abc123"
+            filename="test.pdf", file_type="application/pdf", size=1024, hash="abc123"
         )
 
         assert metadata.filename == "test.pdf"
@@ -40,7 +37,7 @@ class TestFileMetadata:
             hash="def456",
             source="google_drive",
             source_id="drive_123",
-            metadata={"author": "John Doe"}
+            metadata={"author": "John Doe"},
         )
 
         assert metadata.source == "google_drive"
@@ -54,10 +51,7 @@ class TestIngestionResult:
     def test_successful_ingestion_result(self):
         """Test successful ingestion result"""
         file_metadata = FileMetadata(
-            filename="test.txt",
-            file_type="text/plain",
-            size=100,
-            hash="xyz789"
+            filename="test.txt", file_type="text/plain", size=100, hash="xyz789"
         )
 
         result = IngestionResult(
@@ -65,7 +59,7 @@ class TestIngestionResult:
             file_metadata=file_metadata,
             memories_created=[Mock(spec=Memory)],
             chunks_processed=1,
-            processing_time=1.5
+            processing_time=1.5,
         )
 
         assert result.success is True
@@ -78,16 +72,13 @@ class TestIngestionResult:
     def test_failed_ingestion_result(self):
         """Test failed ingestion result"""
         file_metadata = FileMetadata(
-            filename="test.pdf",
-            file_type="application/pdf",
-            size=0,
-            hash=""
+            filename="test.pdf", file_type="application/pdf", size=0, hash=""
         )
 
         result = IngestionResult(
             success=False,
             file_metadata=file_metadata,
-            errors=["Failed to parse PDF", "Invalid file format"]
+            errors=["Failed to parse PDF", "Invalid file format"],
         )
 
         assert result.success is False
@@ -103,11 +94,11 @@ class TestTextFileParser:
         """Test that parser supports text mime types"""
         parser = TextFileParser()
 
-        assert parser.supports('text/plain')
-        assert parser.supports('text/markdown')
-        assert parser.supports('text/x-markdown')
-        assert parser.supports('application/x-markdown')
-        assert not parser.supports('application/pdf')
+        assert parser.supports("text/plain")
+        assert parser.supports("text/markdown")
+        assert parser.supports("text/x-markdown")
+        assert parser.supports("application/x-markdown")
+        assert not parser.supports("application/pdf")
 
     @pytest.mark.asyncio
     async def test_parse_text_file(self, tmp_path):
@@ -115,14 +106,14 @@ class TestTextFileParser:
         # Create test file
         test_file = tmp_path / "test.txt"
         test_content = "This is a test file.\nWith multiple lines."
-        test_file.write_text(test_content, encoding='utf-8')
+        test_file.write_text(test_content, encoding="utf-8")
 
         parser = TextFileParser()
         result = await parser.parse(test_file)
 
-        assert result['content'] == test_content
-        assert result['metadata']['format'] == 'text'
-        assert result['metadata']['encoding'] == 'utf-8'
+        assert result["content"] == test_content
+        assert result["metadata"]["format"] == "text"
+        assert result["metadata"]["encoding"] == "utf-8"
 
 
 class TestIngestionEngine:
@@ -139,11 +130,7 @@ class TestIngestionEngine:
     def mock_extraction_pipeline(self):
         """Create mock extraction pipeline"""
         pipeline = AsyncMock()
-        pipeline.process = AsyncMock(return_value={
-            'entities': [],
-            'topics': [],
-            'intent': None
-        })
+        pipeline.process = AsyncMock(return_value={"entities": [], "topics": [], "intent": None})
         return pipeline
 
     @pytest.fixture
@@ -152,7 +139,7 @@ class TestIngestionEngine:
         return IngestionEngine(
             memory_repository=mock_memory_repository,
             extraction_pipeline=mock_extraction_pipeline,
-            temp_dir=tmp_path / "ingestion"
+            temp_dir=tmp_path / "ingestion",
         )
 
     @pytest.mark.asyncio
@@ -175,7 +162,7 @@ class TestIngestionEngine:
             filename="test.txt",
             user_id="user123",
             tags=["test"],
-            metadata={"source": "unit_test"}
+            metadata={"source": "unit_test"},
         )
 
         assert result.success is True
@@ -196,11 +183,7 @@ class TestIngestionEngine:
         # Mock to simulate no parser available
         engine._get_parser = Mock(return_value=None)
 
-        result = await engine.ingest_file(
-            file=file_obj,
-            filename="test.bin",
-            user_id="user123"
-        )
+        result = await engine.ingest_file(file=file_obj, filename="test.bin", user_id="user123")
 
         # For binary files without parser, should handle gracefully
         assert result.success is False
@@ -216,9 +199,7 @@ class TestIngestionEngine:
         large_content = "x" * 100
 
         result = await engine.ingest_file(
-            file=large_content,
-            filename="large.txt",
-            user_id="user123"
+            file=large_content, filename="large.txt", user_id="user123"
         )
 
         assert result.success is False
@@ -253,18 +234,18 @@ class TestIngestionEngine:
     def test_get_parser(self, engine):
         """Test getting appropriate parser"""
         # Text parser should be available
-        parser = engine._get_parser('text/plain')
+        parser = engine._get_parser("text/plain")
         assert parser is not None
         # Check that it's a parser that supports text/plain
-        assert parser.supports('text/plain')
+        assert parser.supports("text/plain")
 
         # Markdown parser should be available (it's loaded)
-        parser = engine._get_parser('text/markdown')
+        parser = engine._get_parser("text/markdown")
         assert parser is not None
-        assert parser.supports('text/markdown')
+        assert parser.supports("text/markdown")
 
         # Unsupported type
-        parser = engine._get_parser('application/octet-stream')
+        parser = engine._get_parser("application/octet-stream")
         assert parser is None
 
     @pytest.mark.asyncio
@@ -275,17 +256,9 @@ class TestIngestionEngine:
         for i in range(3):
             test_file = tmp_path / f"test{i}.txt"
             test_file.write_text(f"Content {i}")
-            files.append({
-                'file': test_file,
-                'filename': f"test{i}.txt",
-                'metadata': {'index': i}
-            })
+            files.append({"file": test_file, "filename": f"test{i}.txt", "metadata": {"index": i}})
 
-        results = await engine.batch_ingest(
-            files=files,
-            user_id="user123",
-            tags=["batch"]
-        )
+        results = await engine.batch_ingest(files=files, user_id="user123", tags=["batch"])
 
         assert len(results) == 3
         assert all(r.success for r in results)
@@ -295,8 +268,8 @@ class TestIngestionEngine:
         """Test getting supported file types"""
         supported = engine.get_supported_types()
 
-        assert 'text/plain' in supported
-        assert 'text/markdown' in supported
+        assert "text/plain" in supported
+        assert "text/markdown" in supported
         assert len(supported) >= 4  # At least the text types
 
     @pytest.mark.asyncio
@@ -307,7 +280,7 @@ class TestIngestionEngine:
             user_id="user123",
             filename="test.txt",
             tags=["test"],
-            metadata={"key": "value"}
+            metadata={"key": "value"},
         )
 
         assert len(memories) == 1
@@ -325,9 +298,7 @@ class TestIngestionEngine:
         engine.memory_repository.create.side_effect = Exception("Database error")
 
         result = await engine.ingest_file(
-            file=test_file,
-            filename="error_test.txt",
-            user_id="user123"
+            file=test_file, filename="error_test.txt", user_id="user123"
         )
 
         assert result.success is False
@@ -339,11 +310,7 @@ class TestIngestionEngine:
         """Test that temporary files are cleaned up"""
         test_content = "Temporary file content"
 
-        await engine.ingest_file(
-            file=test_content,
-            filename="temp.txt",
-            user_id="user123"
-        )
+        await engine.ingest_file(file=test_content, filename="temp.txt", user_id="user123")
 
         # Check that no temp files remain
         temp_files = list(engine.temp_dir.glob("*"))
@@ -364,9 +331,7 @@ class TestIngestionEngineWithParsers:
 
         # Create engine without loading parsers
         engine = IngestionEngine(
-            memory_repository=repo,
-            extraction_pipeline=pipeline,
-            temp_dir=tmp_path / "ingestion"
+            memory_repository=repo, extraction_pipeline=pipeline, temp_dir=tmp_path / "ingestion"
         )
 
         # Clear existing parsers and add mocked ones
@@ -374,18 +339,22 @@ class TestIngestionEngineWithParsers:
 
         # Mock parser instances
         pdf_parser = AsyncMock()
-        pdf_parser.supports = Mock(side_effect=lambda mt: mt == 'application/pdf')
-        pdf_parser.parse = AsyncMock(return_value={
-            'content': 'PDF content',
-            'metadata': {'pages': 5}
-        })
+        pdf_parser.supports = Mock(side_effect=lambda mt: mt == "application/pdf")
+        pdf_parser.parse = AsyncMock(
+            return_value={"content": "PDF content", "metadata": {"pages": 5}}
+        )
 
         docx_parser = AsyncMock()
-        docx_parser.supports = Mock(side_effect=lambda mt: mt in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/docx'])
-        docx_parser.parse = AsyncMock(return_value={
-            'content': 'DOCX content',
-            'metadata': {'paragraphs': 10}
-        })
+        docx_parser.supports = Mock(
+            side_effect=lambda mt: mt
+            in [
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/docx",
+            ]
+        )
+        docx_parser.parse = AsyncMock(
+            return_value={"content": "DOCX content", "metadata": {"paragraphs": 10}}
+        )
 
         # Add parsers for testing
         engine.parsers.extend([pdf_parser, docx_parser])
@@ -405,9 +374,7 @@ class TestIngestionEngineWithParsers:
         engine_with_parsers.memory_repository.create.return_value = mock_memory
 
         result = await engine_with_parsers.ingest_file(
-            file=pdf_file,
-            filename="test.pdf",
-            user_id="user123"
+            file=pdf_file, filename="test.pdf", user_id="user123"
         )
 
         assert result.success is True
@@ -424,20 +391,12 @@ class TestFileValidation:
     def engine(self, tmp_path):
         """Create basic engine"""
         repo = AsyncMock()
-        return IngestionEngine(
-            memory_repository=repo,
-            temp_dir=tmp_path / "ingestion"
-        )
+        return IngestionEngine(memory_repository=repo, temp_dir=tmp_path / "ingestion")
 
     def test_validate_file_size(self, engine):
         """Test file size validation"""
         # Valid size
-        metadata = FileMetadata(
-            filename="test.txt",
-            file_type="text/plain",
-            size=1024,
-            hash="abc"
-        )
+        metadata = FileMetadata(filename="test.txt", file_type="text/plain", size=1024, hash="abc")
         engine._validate_file(metadata)  # Should not raise
 
         # Too large

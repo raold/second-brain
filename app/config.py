@@ -1,10 +1,11 @@
+import os
+from dataclasses import dataclass
+
 """
 Configuration management for Second Brain application.
 Handles environment variables and application settings.
 """
 
-import os
-from dataclasses import dataclass
 
 
 @dataclass
@@ -49,20 +50,36 @@ class Config:
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
     # Test Configuration
-    
+
     # Environment Configurations
     ENVIRONMENTS = {
         "development": EnvironmentConfig(
-            name="development", use_mock_database=False, require_openai=False, debug_mode=True, log_level="DEBUG"
+            name="development",
+            use_mock_database=False,
+            require_openai=False,
+            debug_mode=True,
+            log_level="DEBUG",
         ),
         "testing": EnvironmentConfig(
-            name="testing", use_mock_database=True, require_openai=False, debug_mode=True, log_level="INFO"
+            name="testing",
+            use_mock_database=True,
+            require_openai=False,
+            debug_mode=True,
+            log_level="INFO",
         ),
         "ci": EnvironmentConfig(
-            name="ci", use_mock_database=True, require_openai=False, debug_mode=False, log_level="WARNING"
+            name="ci",
+            use_mock_database=True,
+            require_openai=False,
+            debug_mode=False,
+            log_level="WARNING",
         ),
         "production": EnvironmentConfig(
-            name="production", use_mock_database=False, require_openai=True, debug_mode=False, log_level="WARNING"
+            name="production",
+            use_mock_database=False,
+            require_openai=True,
+            debug_mode=False,
+            log_level="WARNING",
         ),
     }
 
@@ -113,8 +130,12 @@ class Config:
 
         # Validate database configuration for non-mock environments
         if not cls.should_use_mock_database():
-            if not cls.DATABASE_URL and (not cls.POSTGRES_USER or not cls.POSTGRES_PASSWORD or not cls.POSTGRES_DB):
-                issues.append("Database configuration required: Set DATABASE_URL or POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB")
+            if not cls.DATABASE_URL and (
+                not cls.POSTGRES_USER or not cls.POSTGRES_PASSWORD or not cls.POSTGRES_DB
+            ):
+                issues.append(
+                    "Database configuration required: Set DATABASE_URL or POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB"
+                )
             if cls.POSTGRES_PASSWORD == "brain_password":
                 issues.append("Default PostgreSQL password detected - please set a secure password")
 

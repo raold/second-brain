@@ -2,7 +2,6 @@
 Integration tests for memory workflow
 """
 
-
 import pytest
 
 pytestmark = pytest.mark.integration
@@ -22,7 +21,7 @@ class TestMemoryWorkflow:
         memory_data = {
             "content": "Test integration memory",
             "memory_type": "factual",
-            "tags": ["integration", "test"]
+            "tags": ["integration", "test"],
         }
 
         create_response = await client.post("/memories", json=memory_data, headers=headers)
@@ -70,10 +69,7 @@ class TestMemoryWorkflow:
         headers = {"X-API-Key": api_key}
 
         # Create a memory first
-        memory_data = {
-            "content": "Original content",
-            "memory_type": "factual"
-        }
+        memory_data = {"content": "Original content", "memory_type": "factual"}
 
         create_response = await client.post("/memories", json=memory_data, headers=headers)
 
@@ -87,12 +83,11 @@ class TestMemoryWorkflow:
         memory_id = created_memory["id"]
 
         # Update the memory
-        update_data = {
-            "content": "Updated content",
-            "memory_type": "semantic"
-        }
+        update_data = {"content": "Updated content", "memory_type": "semantic"}
 
-        update_response = await client.put(f"/memories/{memory_id}", json=update_data, headers=headers)
+        update_response = await client.put(
+            f"/memories/{memory_id}", json=update_data, headers=headers
+        )
 
         # Skip if update not implemented
         if update_response.status_code in [404, 501]:
@@ -115,11 +110,13 @@ class TestBulkOperations:
         memories_data = [
             {"content": "Bulk memory 1", "memory_type": "factual"},
             {"content": "Bulk memory 2", "memory_type": "semantic"},
-            {"content": "Bulk memory 3", "memory_type": "episodic"}
+            {"content": "Bulk memory 3", "memory_type": "episodic"},
         ]
 
         # Try bulk creation endpoint
-        response = await client.post("/memories/bulk", json={"memories": memories_data}, headers=headers)
+        response = await client.post(
+            "/memories/bulk", json={"memories": memories_data}, headers=headers
+        )
 
         # Skip if bulk creation not implemented
         if response.status_code in [404, 501]:
@@ -223,10 +220,7 @@ class TestErrorRecovery:
         import asyncio
 
         async def create_memory(index: int):
-            memory_data = {
-                "content": f"Concurrent memory {index}",
-                "memory_type": "factual"
-            }
+            memory_data = {"content": f"Concurrent memory {index}", "memory_type": "factual"}
             return await client.post("/memories", json=memory_data, headers=headers)
 
         # Create multiple memories concurrently

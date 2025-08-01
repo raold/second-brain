@@ -66,7 +66,13 @@
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m pytest tests/unit/test_basic_functionality.py -v --tb=no -q)",
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"import ast; ast.parse(open(''tests/unit/test_websocket_functionality.py'').read()); print(''WebSocket test syntax is valid'')\")",
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"import ast; ast.parse(open(''tests/unit/test_service_factory.py'').read()); print(''Service factory test syntax is valid'')\")",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(pip install:*)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m ruff check app/ --fix)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m black app/ tests/)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python /Users/dro/Documents/second-brain/scripts/fix_critical_imports.py)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m ruff check app/ --statistics)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m ruff check app/ --fix --unsafe-fixes)"
     ],
     "deny": []
   },

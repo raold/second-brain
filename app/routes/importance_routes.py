@@ -1,14 +1,18 @@
-"""
-Importance Scoring API Routes
-Provides endpoints for automated importance scoring features
-"""
-
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from app.database import get_database
 from app.utils.logging_config import get_logger
+
+"""
+Importance Scoring API Routes
+Provides endpoints for automated importance scoring features
+"""
+
+
+
 
 logger = get_logger(__name__)
 
@@ -57,7 +61,9 @@ async def setup_importance_tracking():
                     ],
                 }
             else:
-                raise HTTPException(status_code=500, detail="Failed to setup importance tracking schema")
+                raise HTTPException(
+                    status_code=500, detail="Failed to setup importance tracking schema"
+                )
         else:
             return {
                 "status": "mock_mode",
@@ -97,7 +103,11 @@ async def get_importance_analytics():
                 },
             }
 
-        return {"status": "success", "analytics": analytics, "insights": _generate_analytics_insights(analytics)}
+        return {
+            "status": "success",
+            "analytics": analytics,
+            "insights": _generate_analytics_insights(analytics),
+        }
 
     except Exception as e:
         logger.error(f"Error getting importance analytics: {e}")
@@ -174,7 +184,8 @@ async def add_user_feedback(feedback: UserFeedbackRequest):
         valid_feedback_types = ["upvote", "downvote", "save", "share", "edit", "delete"]
         if feedback.feedback_type not in valid_feedback_types:
             raise HTTPException(
-                status_code=400, detail=f"Invalid feedback type. Must be one of: {', '.join(valid_feedback_types)}"
+                status_code=400,
+                detail=f"Invalid feedback type. Must be one of: {', '.join(valid_feedback_types)}",
             )
 
         # Check if memory exists
@@ -200,7 +211,9 @@ async def add_user_feedback(feedback: UserFeedbackRequest):
 
                 # Log as access for importance calculation
                 await engine.log_memory_access(
-                    memory_id=feedback.memory_id, access_type="user_feedback", user_action=feedback.feedback_type
+                    memory_id=feedback.memory_id,
+                    access_type="user_feedback",
+                    user_action=feedback.feedback_type,
                 )
 
                 return {
@@ -297,7 +310,10 @@ async def get_high_importance_memories(
             return {
                 "status": "mock_mode",
                 "message": "High importance memories not available in mock database mode",
-                "mock_data": {"memories": [], "note": "Connect to PostgreSQL database to see real importance rankings"},
+                "mock_data": {
+                    "memories": [],
+                    "note": "Connect to PostgreSQL database to see real importance rankings",
+                },
             }
 
     except Exception as e:
@@ -327,7 +343,10 @@ async def log_memory_access(
 
         # Log the access
         await engine.log_memory_access(
-            memory_id=memory_id, access_type=access_type, search_position=search_position, user_action=user_action
+            memory_id=memory_id,
+            access_type=access_type,
+            search_position=search_position,
+            user_action=user_action,
         )
 
         return {
@@ -349,7 +368,9 @@ async def log_memory_access(
 
 
 @router.delete("/cleanup-logs")
-async def cleanup_old_logs(days_to_keep: int = Query(default=90, description="Days of logs to keep", ge=7, le=365)):
+async def cleanup_old_logs(
+    days_to_keep: int = Query(default=90, description="Days of logs to keep", ge=7, le=365)
+):
     """
     Clean up old access logs to prevent database bloat
     Removes detailed logs older than specified days while preserving summary data
@@ -399,9 +420,13 @@ def _generate_analytics_insights(analytics: dict[str, Any]) -> list[str]:
     if "total_memories" in analytics:
         total = analytics["total_memories"]
         if total > 1000:
-            insights.append("Large memory collection detected - importance scoring helps prioritize content")
+            insights.append(
+                "Large memory collection detected - importance scoring helps prioritize content"
+            )
         elif total < 50:
-            insights.append("Small memory collection - importance scores will improve with more usage data")
+            insights.append(
+                "Small memory collection - importance scores will improve with more usage data"
+            )
 
     if "type_analysis" in analytics:
         for type_info in analytics["type_analysis"]:
@@ -410,4 +435,8 @@ def _generate_analytics_insights(analytics: dict[str, Any]) -> list[str]:
             if avg_importance > 0.8:
                 insights.append(f"{memory_type.title()} memories show high importance on average")
 
-    return insights if insights else ["Importance analytics available - system learning from usage patterns"]
+    return (
+        insights
+        if insights
+        else ["Importance analytics available - system learning from usage patterns"]
+    )

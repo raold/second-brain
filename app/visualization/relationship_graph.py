@@ -1,11 +1,15 @@
+import math
+from typing import Any, Union
+
+import networkx as nx
+
+from app.utils.logging_config import get_logger
+
 """
 Advanced relationship graph visualization and analysis
 """
 
 from collections import Counter, defaultdict
-from typing import Any, Union
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -13,11 +17,13 @@ logger = get_logger(__name__)
 class RelationshipGraph:
     """Advanced relationship graph for entity network analysis and visualization"""
 
-    def __init__(self,
-                 enable_clustering: bool = True,
-                 enable_centrality: bool = True,
-                 enable_pathfinding: bool = True,
-                 layout_algorithm: str = "spring"):
+    def __init__(
+        self,
+        enable_clustering: bool = True,
+        enable_centrality: bool = True,
+        enable_pathfinding: bool = True,
+        layout_algorithm: str = "spring",
+    ):
         """
         Initialize relationship graph
 
@@ -44,10 +50,9 @@ class RelationshipGraph:
         self._community_cache = {}
         self._layout_cache = {}
 
-    def build_graph(self,
-                   entities: list[Entity],
-                   relationships: list[Relationship],
-                   min_confidence: float = 0.5) -> dict[str, Any]:
+    def build_graph(
+        self, entities: list[Entity], relationships: list[Relationship], min_confidence: float = 0.5
+    ) -> dict[str, Any]:
         """
         Build graph from entities and relationships
 
@@ -74,7 +79,7 @@ class RelationshipGraph:
                 type=entity.type.value,
                 normalized=entity.normalized,
                 confidence=entity.confidence,
-                metadata=entity.metadata or {}
+                metadata=entity.metadata or {},
             )
 
         # Add edges (relationships)
@@ -86,7 +91,7 @@ class RelationshipGraph:
                     type=rel.type.value,
                     confidence=rel.confidence,
                     evidence=rel.evidence,
-                    metadata=rel.metadata or {}
+                    metadata=rel.metadata or {},
                 )
 
         # Compute graph statistics
@@ -114,7 +119,7 @@ class RelationshipGraph:
             "num_entities": num_nodes,
             "num_relationships": num_edges,
             "density": nx.density(self.graph) if num_nodes > 0 else 0,
-            "is_connected": nx.is_weakly_connected(self.graph) if num_nodes > 0 else False
+            "is_connected": nx.is_weakly_connected(self.graph) if num_nodes > 0 else False,
         }
 
         # Degree distribution
@@ -123,7 +128,7 @@ class RelationshipGraph:
             stats["degree_distribution"] = {
                 "mean": sum(degrees.values()) / len(degrees),
                 "max": max(degrees.values()),
-                "min": min(degrees.values())
+                "min": min(degrees.values()),
             }
 
         # Relationship type distribution
@@ -164,7 +169,9 @@ class RelationshipGraph:
             # Eigenvector centrality (importance based on neighbor importance)
             if nx.is_weakly_connected(self.graph):
                 try:
-                    eigenvector = nx.eigenvector_centrality(self.graph.to_undirected(), max_iter=100)
+                    eigenvector = nx.eigenvector_centrality(
+                        self.graph.to_undirected(), max_iter=100
+                    )
                     metrics["eigenvector_centrality"] = self._get_top_nodes(eigenvector, top_n)
                 except Exception:
                     logger.warning("Eigenvector centrality computation failed")
@@ -205,8 +212,8 @@ class RelationshipGraph:
                 adj_matrix = nx.adjacency_matrix(undirected)
                 clustering = SpectralClustering(
                     n_clusters=min(5, self.graph.number_of_nodes() // 3),
-                    affinity='precomputed',
-                    random_state=42
+                    affinity="precomputed",
+                    random_state=42,
                 )
                 labels = clustering.fit_predict(adj_matrix)
 
@@ -221,6 +228,7 @@ class RelationshipGraph:
                 # Louvain method (if python-louvain is available)
                 try:
                     import community as community_louvain
+
                     partition = community_louvain.best_partition(undirected)
 
                     community_map = defaultdict(list)
@@ -253,23 +261,25 @@ class RelationshipGraph:
                     entity_types = [self.graph.nodes[n]["type"] for n in community]
                     type_distribution = dict(Counter(entity_types))
 
-                    community_data.append({
-                        "id": i,
-                        "size": len(community),
-                        "central_entity": {
-                            "id": central_node,
-                            "label": self.graph.nodes[central_node]["label"]
-                        },
-                        "entity_types": type_distribution,
-                        "density": nx.density(subgraph)
-                    })
+                    community_data.append(
+                        {
+                            "id": i,
+                            "size": len(community),
+                            "central_entity": {
+                                "id": central_node,
+                                "label": self.graph.nodes[central_node]["label"],
+                            },
+                            "entity_types": type_distribution,
+                            "density": nx.density(subgraph),
+                        }
+                    )
 
             # Cache results
             self._community_cache = {
                 "algorithm": algorithm,
                 "num_communities": len(community_data),
                 "communities": community_data,
-                "modularity": self._calculate_modularity(communities, undirected)
+                "modularity": self._calculate_modularity(communities, undirected),
             }
 
             return self._community_cache
@@ -278,11 +288,9 @@ class RelationshipGraph:
             logger.error(f"Error detecting communities: {e}")
             return {}
 
-    def find_paths(self,
-                  source_id: str,
-                  target_id: str,
-                  max_paths: int = 5,
-                  max_length: int = 5) -> list[dict[str, Any]]:
+    def find_paths(
+        self, source_id: str, target_id: str, max_paths: int = 5, max_length: int = 5
+    ) -> list[dict[str, Any]]:
         """
         Find paths between two entities
 
@@ -305,12 +313,7 @@ class RelationshipGraph:
 
         try:
             # Find all simple paths
-            all_paths = nx.all_simple_paths(
-                self.graph,
-                source_id,
-                target_id,
-                cutoff=max_length
-            )
+            all_paths = nx.all_simple_paths(self.graph, source_id, target_id, cutoff=max_length)
 
             # Process paths
             for i, path in enumerate(all_paths):
@@ -323,28 +326,25 @@ class RelationshipGraph:
                     "length": len(path) - 1,
                     "entities": [],
                     "relationships": [],
-                    "confidence": 1.0
+                    "confidence": 1.0,
                 }
 
                 # Add entity information
                 for node_id in path:
                     node_data = self.graph.nodes[node_id]
-                    path_info["entities"].append({
-                        "id": node_id,
-                        "label": node_data["label"],
-                        "type": node_data["type"]
-                    })
+                    path_info["entities"].append(
+                        {"id": node_id, "label": node_data["label"], "type": node_data["type"]}
+                    )
 
                 # Add relationship information
                 for i in range(len(path) - 1):
-                    edge_data = self.graph.get_edge_data(path[i], path[i+1])
+                    edge_data = self.graph.get_edge_data(path[i], path[i + 1])
                     if edge_data:
                         # Handle multiple edges
                         for edge in edge_data.values():
-                            path_info["relationships"].append({
-                                "type": edge["type"],
-                                "confidence": edge["confidence"]
-                            })
+                            path_info["relationships"].append(
+                                {"type": edge["type"], "confidence": edge["confidence"]}
+                            )
                             path_info["confidence"] *= edge["confidence"]
 
                 paths.append(path_info)
@@ -357,10 +357,9 @@ class RelationshipGraph:
 
         return paths
 
-    def get_entity_neighborhood(self,
-                               entity_id: str,
-                               depth: int = 2,
-                               min_confidence: float = 0.5) -> dict[str, Any]:
+    def get_entity_neighborhood(
+        self, entity_id: str, depth: int = 2, min_confidence: float = 0.5
+    ) -> dict[str, Any]:
         """
         Get the neighborhood of an entity up to specified depth
 
@@ -377,45 +376,47 @@ class RelationshipGraph:
 
         try:
             # Get all nodes within depth
-            neighbors = nx.single_source_shortest_path_length(
-                self.graph, entity_id, cutoff=depth
-            )
+            neighbors = nx.single_source_shortest_path_length(self.graph, entity_id, cutoff=depth)
 
             # Create subgraph
             subgraph = self.graph.subgraph(neighbors.keys())
 
             # Filter by confidence
             edges_to_keep = [
-                (u, v, k) for u, v, k, data in subgraph.edges(keys=True, data=True)
+                (u, v, k)
+                for u, v, k, data in subgraph.edges(keys=True, data=True)
                 if data.get("confidence", 0) >= min_confidence
             ]
 
             filtered_subgraph = nx.MultiDiGraph()
             filtered_subgraph.add_nodes_from(subgraph.nodes(data=True))
-            filtered_subgraph.add_edges_from([
-                (u, v, subgraph.edges[u, v, k])
-                for u, v, k in edges_to_keep
-            ])
+            filtered_subgraph.add_edges_from(
+                [(u, v, subgraph.edges[u, v, k]) for u, v, k in edges_to_keep]
+            )
 
             # Prepare visualization data
             nodes = []
             edges = []
 
             for node_id, data in filtered_subgraph.nodes(data=True):
-                nodes.append({
-                    "id": node_id,
-                    "label": data["label"],
-                    "type": data["type"],
-                    "distance": neighbors[node_id]
-                })
+                nodes.append(
+                    {
+                        "id": node_id,
+                        "label": data["label"],
+                        "type": data["type"],
+                        "distance": neighbors[node_id],
+                    }
+                )
 
             for u, v, data in filtered_subgraph.edges(data=True):
-                edges.append({
-                    "source": u,
-                    "target": v,
-                    "type": data["type"],
-                    "confidence": data["confidence"]
-                })
+                edges.append(
+                    {
+                        "source": u,
+                        "target": v,
+                        "type": data["type"],
+                        "confidence": data["confidence"],
+                    }
+                )
 
             return {
                 "center": entity_id,
@@ -424,8 +425,8 @@ class RelationshipGraph:
                 "stats": {
                     "total_nodes": len(nodes),
                     "total_edges": len(edges),
-                    "max_distance": max(neighbors.values()) if neighbors else 0
-                }
+                    "max_distance": max(neighbors.values()) if neighbors else 0,
+                },
             }
 
         except Exception as e:
@@ -453,7 +454,7 @@ class RelationshipGraph:
 
         try:
             if algorithm == "spring":
-                pos = nx.spring_layout(self.graph, k=1/math.sqrt(self.graph.number_of_nodes()))
+                pos = nx.spring_layout(self.graph, k=1 / math.sqrt(self.graph.number_of_nodes()))
             elif algorithm == "circular":
                 pos = nx.circular_layout(self.graph)
             elif algorithm == "hierarchical":
@@ -471,7 +472,7 @@ class RelationshipGraph:
 
                     # Compute hierarchical positions
                     if dag.number_of_edges() > 0:
-                        pos = nx.nx_agraph.graphviz_layout(dag, prog='dot')
+                        pos = nx.nx_agraph.graphviz_layout(dag, prog="dot")
                     else:
                         pos = nx.spring_layout(self.graph)
                 except Exception:
@@ -493,10 +494,7 @@ class RelationshipGraph:
                 y_range = y_max - y_min if y_max - y_min > 0 else 1
 
                 normalized_pos = {
-                    node: (
-                        (x - x_min) / x_range,
-                        (y - y_min) / y_range
-                    )
+                    node: ((x - x_min) / x_range, (y - y_min) / y_range)
                     for node, (x, y) in pos.items()
                 }
 
@@ -531,24 +529,17 @@ class RelationshipGraph:
                     "edges": [],
                     "metadata": {
                         "num_nodes": self.graph.number_of_nodes(),
-                        "num_edges": self.graph.number_of_edges()
-                    }
+                        "num_edges": self.graph.number_of_edges(),
+                    },
                 }
 
                 # Add nodes
                 for node_id, node_data in self.graph.nodes(data=True):
-                    data["nodes"].append({
-                        "id": node_id,
-                        **node_data
-                    })
+                    data["nodes"].append({"id": node_id, **node_data})
 
                 # Add edges
                 for u, v, edge_data in self.graph.edges(data=True):
-                    data["edges"].append({
-                        "source": u,
-                        "target": v,
-                        **edge_data
-                    })
+                    data["edges"].append({"source": u, "target": v, **edge_data})
 
                 # Add layout if computed
                 if self._layout_cache:
@@ -568,12 +559,14 @@ class RelationshipGraph:
 
             elif format == "graphml":
                 import io
+
                 buffer = io.StringIO()
                 nx.write_graphml(self.graph, buffer)
                 return buffer.getvalue()
 
             elif format == "gexf":
                 import io
+
                 buffer = io.StringIO()
                 nx.write_gexf(self.graph, buffer)
                 return buffer.getvalue()
@@ -595,7 +588,7 @@ class RelationshipGraph:
                 "id": node_id,
                 "label": self.graph.nodes[node_id]["label"],
                 "type": self.graph.nodes[node_id]["type"],
-                "score": score
+                "score": score,
             }
             for node_id, score in sorted_nodes
         ]
@@ -613,6 +606,7 @@ class RelationshipGraph:
             if len(partition) == len(graph):
                 try:
                     import community as community_louvain
+
                     return community_louvain.modularity(partition, graph)
                 except ImportError:
                     # Simple modularity calculation

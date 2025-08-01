@@ -28,20 +28,23 @@ from app.security import (
 class TestSecurityConfig:
     """Test security configuration."""
 
-    @pytest.mark.parametrize("max_requests,max_hour,max_content,valid", [
-        (60, 1000, 10000, True),    # Default values
-        (1, 10, 100, True),         # Minimal values
-        (0, 1000, 10000, False),    # Invalid max_requests
-        (60, 0, 10000, False),      # Invalid max_hour
-        (60, 1000, 0, False),       # Invalid max_content
-    ])
+    @pytest.mark.parametrize(
+        "max_requests,max_hour,max_content,valid",
+        [
+            (60, 1000, 10000, True),  # Default values
+            (1, 10, 100, True),  # Minimal values
+            (0, 1000, 10000, False),  # Invalid max_requests
+            (60, 0, 10000, False),  # Invalid max_hour
+            (60, 1000, 0, False),  # Invalid max_content
+        ],
+    )
     def test_security_config_validation(self, max_requests, max_hour, max_content, valid):
         """Test security config parameter validation."""
         if valid:
             config = SecurityConfig(
                 max_requests_per_minute=max_requests,
                 max_requests_per_hour=max_hour,
-                max_content_length=max_content
+                max_content_length=max_content,
             )
             assert config.max_requests_per_minute == max_requests
             assert config.max_requests_per_hour == max_hour
@@ -58,10 +61,7 @@ class TestRateLimiter:
     @pytest.fixture
     def rate_limiter(self):
         """Create rate limiter with test config."""
-        config = SecurityConfig(
-            max_requests_per_minute=5,
-            max_requests_per_hour=50
-        )
+        config = SecurityConfig(max_requests_per_minute=5, max_requests_per_hour=50)
         return RateLimiter(config)
 
     @pytest.fixture
@@ -73,11 +73,14 @@ class TestRateLimiter:
         request.headers = {}
         return request
 
-    @pytest.mark.parametrize("ip_header,header_value,expected_ip", [
-        ("X-Forwarded-For", "192.168.1.1, 10.0.0.1", "192.168.1.1"),
-        ("X-Real-IP", "192.168.1.1", "192.168.1.1"),
-        (None, None, "127.0.0.1"),
-    ])
+    @pytest.mark.parametrize(
+        "ip_header,header_value,expected_ip",
+        [
+            ("X-Forwarded-For", "192.168.1.1, 10.0.0.1", "192.168.1.1"),
+            ("X-Real-IP", "192.168.1.1", "192.168.1.1"),
+            (None, None, "127.0.0.1"),
+        ],
+    )
     def test_get_client_ip(self, rate_limiter, mock_request, ip_header, header_value, expected_ip):
         """Test client IP extraction from various headers."""
         if ip_header and header_value:
@@ -152,17 +155,20 @@ class TestInputValidator:
         config = SecurityConfig(max_content_length=1000, max_metadata_fields=10)
         return InputValidator(config)
 
-    @pytest.mark.parametrize("content,should_pass", [
-        ("Valid content", True),
-        ("", False),  # Empty content
-        ("A" * 500, True),  # Within limits
-        ("A" * 1500, False),  # Too long
-        ("DROP TABLE users;", False),  # SQL injection
-        ("<script>alert('xss')</script>", False),  # XSS
-        ("javascript:alert(1)", False),  # JavaScript
-        ("Normal text with numbers 123", True),
-        ("Text with symbols !@#$%", True),
-    ])
+    @pytest.mark.parametrize(
+        "content,should_pass",
+        [
+            ("Valid content", True),
+            ("", False),  # Empty content
+            ("A" * 500, True),  # Within limits
+            ("A" * 1500, False),  # Too long
+            ("DROP TABLE users;", False),  # SQL injection
+            ("<script>alert('xss')</script>", False),  # XSS
+            ("javascript:alert(1)", False),  # JavaScript
+            ("Normal text with numbers 123", True),
+            ("Text with symbols !@#$%", True),
+        ],
+    )
     def test_validate_memory_content(self, validator, content, should_pass):
         """Test memory content validation with various inputs."""
         if should_pass:
@@ -173,19 +179,22 @@ class TestInputValidator:
             with pytest.raises(HTTPException):
                 validator.validate_memory_content(content)
 
-    @pytest.mark.parametrize("metadata,should_pass", [
-        ({"key": "value"}, True),
-        ({"key1": "value1", "key2": 42}, True),
-        ({}, True),  # Empty metadata
-        ({"key": None}, True),  # Null value
-        ({"key": True}, True),  # Boolean value
-        ({"key": 3.14}, True),  # Float value
-        ({f"key{i}": f"value{i}" for i in range(15)}, False),  # Too many fields
-        ({"": "value"}, True),  # Empty key (will be sanitized)
-        ({"key": "x" * 1500}, False),  # Value too long
-        ({"key": {"nested": "object"}}, False),  # Invalid nested object
-        ({"key": ["list", "values"]}, False),  # Invalid list value
-    ])
+    @pytest.mark.parametrize(
+        "metadata,should_pass",
+        [
+            ({"key": "value"}, True),
+            ({"key1": "value1", "key2": 42}, True),
+            ({}, True),  # Empty metadata
+            ({"key": None}, True),  # Null value
+            ({"key": True}, True),  # Boolean value
+            ({"key": 3.14}, True),  # Float value
+            ({f"key{i}": f"value{i}" for i in range(15)}, False),  # Too many fields
+            ({"": "value"}, True),  # Empty key (will be sanitized)
+            ({"key": "x" * 1500}, False),  # Value too long
+            ({"key": {"nested": "object"}}, False),  # Invalid nested object
+            ({"key": ["list", "values"]}, False),  # Invalid list value
+        ],
+    )
     def test_validate_metadata(self, validator, metadata, should_pass):
         """Test metadata validation with various inputs."""
         if should_pass:
@@ -196,15 +205,18 @@ class TestInputValidator:
             with pytest.raises(HTTPException):
                 validator.validate_metadata(metadata)
 
-    @pytest.mark.parametrize("query,should_pass", [
-        ("search query", True),
-        ("", False),  # Empty query
-        ("x" * 500, True),  # Normal length
-        ("x" * 1500, False),  # Too long
-        ("SELECT * FROM table", False),  # SQL injection
-        ("search for something", True),
-        ("query with 123 numbers", True),
-    ])
+    @pytest.mark.parametrize(
+        "query,should_pass",
+        [
+            ("search query", True),
+            ("", False),  # Empty query
+            ("x" * 500, True),  # Normal length
+            ("x" * 1500, False),  # Too long
+            ("SELECT * FROM table", False),  # SQL injection
+            ("search for something", True),
+            ("query with 123 numbers", True),
+        ],
+    )
     def test_validate_search_query(self, validator, query, should_pass):
         """Test search query validation."""
         if should_pass:
@@ -215,14 +227,17 @@ class TestInputValidator:
             with pytest.raises(HTTPException):
                 validator.validate_search_query(query)
 
-    @pytest.mark.parametrize("limit,should_pass", [
-        (10, True),
-        (1, True),
-        (100, True),
-        (0, False),  # Invalid
-        (-1, False),  # Invalid
-        (1000, False),  # Too high
-    ])
+    @pytest.mark.parametrize(
+        "limit,should_pass",
+        [
+            (10, True),
+            (1, True),
+            (100, True),
+            (0, False),  # Invalid
+            (-1, False),  # Invalid
+            (1000, False),  # Too high
+        ],
+    )
     def test_validate_search_limit(self, validator, limit, should_pass):
         """Test search limit validation."""
         if should_pass:
@@ -232,27 +247,33 @@ class TestInputValidator:
             with pytest.raises(HTTPException):
                 validator.validate_search_limit(limit)
 
-    @pytest.mark.parametrize("token,is_valid", [
-        ("valid_token_123456", True),
-        ("short", False),  # Too short
-        ("", False),  # Empty
-        ("a" * 20, True),  # Valid length
-        ("DROP TABLE; --", False),  # SQL injection
-        ("<script>alert(1)</script>", False),  # XSS
-    ])
+    @pytest.mark.parametrize(
+        "token,is_valid",
+        [
+            ("valid_token_123456", True),
+            ("short", False),  # Too short
+            ("", False),  # Empty
+            ("a" * 20, True),  # Valid length
+            ("DROP TABLE; --", False),  # SQL injection
+            ("<script>alert(1)</script>", False),  # XSS
+        ],
+    )
     def test_validate_api_token(self, validator, token, is_valid):
         """Test API token validation."""
         result = validator.validate_api_token(token)
         assert result == is_valid
 
-    @pytest.mark.parametrize("input_text,expected", [
-        ("normal text", "normal text"),
-        ("  extra  spaces  ", "extra spaces"),
-        ("text\x00with\x00nulls", "textwithnulls"),
-        ("text\nwith\nnewlines", "text\nwith\nnewlines"),
-        ("text\twith\ttabs", "text\twith\ttabs"),
-        ("\x01\x02control\x03chars\x04", "controlchars"),
-    ])
+    @pytest.mark.parametrize(
+        "input_text,expected",
+        [
+            ("normal text", "normal text"),
+            ("  extra  spaces  ", "extra spaces"),
+            ("text\x00with\x00nulls", "textwithnulls"),
+            ("text\nwith\nnewlines", "text\nwith\nnewlines"),
+            ("text\twith\ttabs", "text\twith\ttabs"),
+            ("\x01\x02control\x03chars\x04", "controlchars"),
+        ],
+    )
     def test_sanitize_string(self, validator, input_text, expected):
         """Test string sanitization."""
         result = validator._sanitize_string(input_text)
@@ -265,8 +286,10 @@ class TestSecurityMiddleware:
     @pytest.fixture
     def mock_app(self):
         """Create mock FastAPI app."""
+
         async def app(request):
             return JSONResponse({"status": "ok"})
+
         return app
 
     @pytest.fixture
@@ -408,7 +431,7 @@ class TestSecurityIntegration:
             max_requests_per_minute=10,
             max_content_length=500,
             enable_input_validation=True,
-            enable_rate_limiting=True
+            enable_rate_limiting=True,
         )
 
         security_manager = SecurityManager(config)
@@ -433,13 +456,16 @@ class TestSecurityIntegration:
         assert manager1 is manager2
         assert isinstance(manager1, SecurityManager)
 
-    @pytest.mark.parametrize("attack_vector,content", [
-        ("sql_injection", "'; DROP TABLE users; --"),
-        ("xss", "<script>alert('xss')</script>"),
-        ("javascript", "javascript:alert(1)"),
-        ("null_bytes", "content\x00with\x00nulls"),
-        ("oversized", "x" * 20000),
-    ])
+    @pytest.mark.parametrize(
+        "attack_vector,content",
+        [
+            ("sql_injection", "'; DROP TABLE users; --"),
+            ("xss", "<script>alert('xss')</script>"),
+            ("javascript", "javascript:alert(1)"),
+            ("null_bytes", "content\x00with\x00nulls"),
+            ("oversized", "x" * 20000),
+        ],
+    )
     def test_attack_vector_protection(self, attack_vector, content):
         """Test protection against common attack vectors."""
         config = SecurityConfig(max_content_length=1000)
@@ -449,7 +475,10 @@ class TestSecurityIntegration:
             validator.validate_memory_content(content)
 
         assert exc_info.value.status_code == 400
-        assert "dangerous" in exc_info.value.detail.lower() or "too long" in exc_info.value.detail.lower()
+        assert (
+            "dangerous" in exc_info.value.detail.lower()
+            or "too long" in exc_info.value.detail.lower()
+        )
 
 
 if __name__ == "__main__":

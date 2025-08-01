@@ -1,14 +1,16 @@
-"""
-Pattern detection algorithms for memory analysis
-"""
-
 import asyncio
-from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
 import numpy as np
+
+"""
+Pattern detection algorithms for memory analysis
+"""
+
+from collections import Counter, defaultdict
+
 from sklearn.cluster import DBSCAN
 
 from .models import Pattern, PatternDetectionRequest, PatternType, TimeFrame
@@ -21,10 +23,7 @@ class PatternDetector:
         self.db = database
         self.min_pattern_confidence = 0.5
 
-    async def detect_patterns(
-        self,
-        request: PatternDetectionRequest
-    ) -> list[Pattern]:
+    async def detect_patterns(self, request: PatternDetectionRequest) -> list[Pattern]:
         """Main method to detect all requested pattern types"""
         patterns = []
 
@@ -40,25 +39,15 @@ class PatternDetector:
         detection_tasks = []
         for pattern_type in pattern_types:
             if pattern_type == PatternType.TEMPORAL:
-                detection_tasks.append(
-                    self._detect_temporal_patterns(memories, request)
-                )
+                detection_tasks.append(self._detect_temporal_patterns(memories, request))
             elif pattern_type == PatternType.SEMANTIC:
-                detection_tasks.append(
-                    self._detect_semantic_patterns(memories, request)
-                )
+                detection_tasks.append(self._detect_semantic_patterns(memories, request))
             elif pattern_type == PatternType.BEHAVIORAL:
-                detection_tasks.append(
-                    self._detect_behavioral_patterns(memories, request)
-                )
+                detection_tasks.append(self._detect_behavioral_patterns(memories, request))
             elif pattern_type == PatternType.STRUCTURAL:
-                detection_tasks.append(
-                    self._detect_structural_patterns(memories, request)
-                )
+                detection_tasks.append(self._detect_structural_patterns(memories, request))
             elif pattern_type == PatternType.EVOLUTIONARY:
-                detection_tasks.append(
-                    self._detect_evolutionary_patterns(memories, request)
-                )
+                detection_tasks.append(self._detect_evolutionary_patterns(memories, request))
 
         # Run all detection tasks concurrently
         pattern_results = await asyncio.gather(*detection_tasks)
@@ -71,10 +60,7 @@ class PatternDetector:
 
         return sorted(patterns, key=lambda p: p.strength, reverse=True)
 
-    async def _get_memories_for_timeframe(
-        self,
-        time_frame: TimeFrame
-    ) -> list[dict[str, Any]]:
+    async def _get_memories_for_timeframe(self, time_frame: TimeFrame) -> list[dict[str, Any]]:
         """Get memories within specified timeframe"""
         now = datetime.utcnow()
 
@@ -107,9 +93,7 @@ class PatternDetector:
         return await self.db.fetch_all(query, start_date)
 
     async def _detect_temporal_patterns(
-        self,
-        memories: list[dict[str, Any]],
-        request: PatternDetectionRequest
+        self, memories: list[dict[str, Any]], request: PatternDetectionRequest
     ) -> list[Pattern]:
         """Detect time-based patterns in memory creation and access"""
         patterns = []
@@ -119,16 +103,12 @@ class PatternDetector:
         creation_days = defaultdict(int)
 
         for memory in memories:
-            created = memory['created_at']
+            created = memory["created_at"]
             creation_hours[created.hour] += 1
             creation_days[created.weekday()] += 1
 
         # Find peak hours
-        peak_hours = sorted(
-            creation_hours.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )[:3]
+        peak_hours = sorted(creation_hours.items(), key=lambda x: x[1], reverse=True)[:3]
 
         if peak_hours and peak_hours[0][1] >= request.min_occurrences:
             pattern = Pattern(
@@ -138,17 +118,13 @@ class PatternDetector:
                 description=f"Most memories created during hours {', '.join(str(h[0]) for h in peak_hours)}",
                 strength=self._calculate_concentration_score(creation_hours.values()),
                 occurrences=sum(h[1] for h in peak_hours),
-                first_seen=min(m['created_at'] for m in memories),
-                last_seen=max(m['created_at'] for m in memories),
+                first_seen=min(m["created_at"] for m in memories),
+                last_seen=max(m["created_at"] for m in memories),
                 examples=[
-                    {
-                        'hour': hour,
-                        'count': count,
-                        'percentage': count / len(memories) * 100
-                    }
+                    {"hour": hour, "count": count, "percentage": count / len(memories) * 100}
                     for hour, count in peak_hours
                 ],
-                metadata={'distribution': dict(creation_hours)}
+                metadata={"distribution": dict(creation_hours)},
             )
             patterns.append(pattern)
 
@@ -159,9 +135,7 @@ class PatternDetector:
         return patterns
 
     async def _detect_semantic_patterns(
-        self,
-        memories: list[dict[str, Any]],
-        request: PatternDetectionRequest
+        self, memories: list[dict[str, Any]], request: PatternDetectionRequest
     ) -> list[Pattern]:
         """Detect patterns in content similarity"""
         patterns = []
@@ -175,8 +149,8 @@ class PatternDetector:
         valid_memories = []
 
         for memory in memories:
-            if memory.get('content_vector'):
-                embeddings.append(memory['content_vector'])
+            if memory.get("content_vector"):
+                embeddings.append(memory["content_vector"])
                 valid_memories.append(memory)
 
         if len(embeddings) < 10:
@@ -199,8 +173,8 @@ class PatternDetector:
                 # Extract common themes
                 all_tags = []
                 for mem in cluster_memories:
-                    if mem.get('tags'):
-                        all_tags.extend(mem['tags'])
+                    if mem.get("tags"):
+                        all_tags.extend(mem["tags"])
 
                 common_tags = Counter(all_tags).most_common(5)
 
@@ -211,29 +185,27 @@ class PatternDetector:
                     description=f"Group of {len(cluster_memories)} semantically similar memories",
                     strength=self._calculate_cluster_coherence(cluster_memories, embeddings_array),
                     occurrences=len(cluster_memories),
-                    first_seen=min(m['created_at'] for m in cluster_memories),
-                    last_seen=max(m['created_at'] for m in cluster_memories),
+                    first_seen=min(m["created_at"] for m in cluster_memories),
+                    last_seen=max(m["created_at"] for m in cluster_memories),
                     examples=[
                         {
-                            'memory_id': str(m['id']),
-                            'content_preview': m['content'][:100],
-                            'importance': m.get('importance', 0)
+                            "memory_id": str(m["id"]),
+                            "content_preview": m["content"][:100],
+                            "importance": m.get("importance", 0),
                         }
                         for m in cluster_memories[:5]
                     ],
                     metadata={
-                        'common_tags': dict(common_tags),
-                        'cluster_size': len(cluster_memories)
-                    }
+                        "common_tags": dict(common_tags),
+                        "cluster_size": len(cluster_memories),
+                    },
                 )
                 patterns.append(pattern)
 
         return patterns
 
     async def _detect_behavioral_patterns(
-        self,
-        memories: list[dict[str, Any]],
-        request: PatternDetectionRequest
+        self, memories: list[dict[str, Any]], request: PatternDetectionRequest
     ) -> list[Pattern]:
         """Detect patterns in user behavior"""
         patterns = []
@@ -242,17 +214,18 @@ class PatternDetector:
         access_sequences = defaultdict(list)
 
         for memory in memories:
-            if memory.get('total_accesses', 0) > 0:
-                access_sequences[memory['id']].append({
-                    'accesses': memory['total_accesses'],
-                    'importance': memory.get('importance', 0),
-                    'tags': memory.get('tags', [])
-                })
+            if memory.get("total_accesses", 0) > 0:
+                access_sequences[memory["id"]].append(
+                    {
+                        "accesses": memory["total_accesses"],
+                        "importance": memory.get("importance", 0),
+                        "tags": memory.get("tags", []),
+                    }
+                )
 
         # Detect frequently accessed memories
         high_access_memories = [
-            m for m in memories
-            if m.get('total_accesses', 0) >= request.min_occurrences
+            m for m in memories if m.get("total_accesses", 0) >= request.min_occurrences
         ]
 
         if high_access_memories:
@@ -262,32 +235,32 @@ class PatternDetector:
                 name="High-Access Memories",
                 description=f"Memories accessed frequently ({len(high_access_memories)} memories)",
                 strength=self._calculate_access_concentration(memories),
-                occurrences=sum(m['total_accesses'] for m in high_access_memories),
-                first_seen=min(m['created_at'] for m in high_access_memories),
+                occurrences=sum(m["total_accesses"] for m in high_access_memories),
+                first_seen=min(m["created_at"] for m in high_access_memories),
                 last_seen=datetime.utcnow(),
                 examples=[
                     {
-                        'memory_id': str(m['id']),
-                        'content_preview': m['content'][:100],
-                        'access_count': m['total_accesses']
+                        "memory_id": str(m["id"]),
+                        "content_preview": m["content"][:100],
+                        "access_count": m["total_accesses"],
                     }
-                    for m in sorted(high_access_memories,
-                                  key=lambda x: x['total_accesses'],
-                                  reverse=True)[:5]
+                    for m in sorted(
+                        high_access_memories, key=lambda x: x["total_accesses"], reverse=True
+                    )[:5]
                 ],
                 metadata={
-                    'total_high_access': len(high_access_memories),
-                    'average_accesses': np.mean([m['total_accesses'] for m in high_access_memories])
-                }
+                    "total_high_access": len(high_access_memories),
+                    "average_accesses": np.mean(
+                        [m["total_accesses"] for m in high_access_memories]
+                    ),
+                },
             )
             patterns.append(pattern)
 
         return patterns
 
     async def _detect_structural_patterns(
-        self,
-        memories: list[dict[str, Any]],
-        request: PatternDetectionRequest
+        self, memories: list[dict[str, Any]], request: PatternDetectionRequest
     ) -> list[Pattern]:
         """Detect patterns in memory organization (tags, metadata)"""
         patterns = []
@@ -297,20 +270,19 @@ class PatternDetector:
         tag_frequency = defaultdict(int)
 
         for memory in memories:
-            tags = memory.get('tags', [])
+            tags = memory.get("tags", [])
             for tag in tags:
                 tag_frequency[tag] += 1
 
             # Count tag pairs
             for i, tag1 in enumerate(tags):
-                for tag2 in tags[i+1:]:
+                for tag2 in tags[i + 1 :]:
                     pair = tuple(sorted([tag1, tag2]))
                     tag_pairs[pair] += 1
 
         # Find frequently co-occurring tags
         frequent_pairs = [
-            (pair, count) for pair, count in tag_pairs.items()
-            if count >= request.min_occurrences
+            (pair, count) for pair, count in tag_pairs.items() if count >= request.min_occurrences
         ]
 
         if frequent_pairs:
@@ -323,33 +295,30 @@ class PatternDetector:
                 description="Frequently paired tags in memories",
                 strength=self._calculate_association_strength(frequent_pairs, tag_frequency),
                 occurrences=sum(count for _, count in frequent_pairs),
-                first_seen=min(m['created_at'] for m in memories),
-                last_seen=max(m['created_at'] for m in memories),
+                first_seen=min(m["created_at"] for m in memories),
+                last_seen=max(m["created_at"] for m in memories),
                 examples=[
                     {
-                        'tag_pair': list(pair),
-                        'count': count,
-                        'lift': count / (tag_frequency[pair[0]] * tag_frequency[pair[1]] / len(memories))
+                        "tag_pair": list(pair),
+                        "count": count,
+                        "lift": count
+                        / (tag_frequency[pair[0]] * tag_frequency[pair[1]] / len(memories)),
                     }
                     for pair, count in frequent_pairs[:5]
                 ],
                 metadata={
-                    'total_pairs': len(frequent_pairs),
-                    'tag_frequencies': dict(sorted(
-                        tag_frequency.items(),
-                        key=lambda x: x[1],
-                        reverse=True
-                    )[:10])
-                }
+                    "total_pairs": len(frequent_pairs),
+                    "tag_frequencies": dict(
+                        sorted(tag_frequency.items(), key=lambda x: x[1], reverse=True)[:10]
+                    ),
+                },
             )
             patterns.append(pattern)
 
         return patterns
 
     async def _detect_evolutionary_patterns(
-        self,
-        memories: list[dict[str, Any]],
-        request: PatternDetectionRequest
+        self, memories: list[dict[str, Any]], request: PatternDetectionRequest
     ) -> list[Pattern]:
         """Detect how knowledge evolves over time"""
         patterns = []
@@ -359,8 +328,8 @@ class PatternDetector:
 
         for memory in memories:
             # Bucket by week
-            week_start = memory['created_at'].date() - timedelta(
-                days=memory['created_at'].weekday()
+            week_start = memory["created_at"].date() - timedelta(
+                days=memory["created_at"].weekday()
             )
             time_buckets[week_start].append(memory)
 
@@ -372,7 +341,7 @@ class PatternDetector:
         for week, week_memories in sorted(time_buckets.items()):
             tags = []
             for mem in week_memories:
-                tags.extend(mem.get('tags', []))
+                tags.extend(mem.get("tags", []))
             weekly_tags[week] = Counter(tags)
 
         # Detect emerging topics
@@ -390,31 +359,29 @@ class PatternDetector:
                 last_seen=max(time_buckets.keys()),
                 examples=[
                     {
-                        'topic': topic,
-                        'growth_rate': growth,
-                        'timeline': self._get_topic_timeline(topic, weekly_tags)
+                        "topic": topic,
+                        "growth_rate": growth,
+                        "timeline": self._get_topic_timeline(topic, weekly_tags),
                     }
                     for topic, growth in emerging_topics[:5]
                 ],
                 metadata={
-                    'time_periods': len(time_buckets),
-                    'total_emerging': len(emerging_topics)
-                }
+                    "time_periods": len(time_buckets),
+                    "total_emerging": len(emerging_topics),
+                },
             )
             patterns.append(pattern)
 
         return patterns
 
     def _detect_burst_patterns(
-        self,
-        memories: list[dict[str, Any]],
-        min_burst_size: int
+        self, memories: list[dict[str, Any]], min_burst_size: int
     ) -> list[Pattern]:
         """Detect bursts in memory creation"""
         patterns = []
 
         # Sort by creation time
-        sorted_memories = sorted(memories, key=lambda m: m['created_at'])
+        sorted_memories = sorted(memories, key=lambda m: m["created_at"])
 
         # Detect bursts (many memories in short time)
         bursts = []
@@ -424,7 +391,7 @@ class PatternDetector:
             if not current_burst:
                 current_burst.append(memory)
             else:
-                time_diff = (memory['created_at'] - current_burst[-1]['created_at']).total_seconds()
+                time_diff = (memory["created_at"] - current_burst[-1]["created_at"]).total_seconds()
 
                 if time_diff <= 3600:  # Within 1 hour
                     current_burst.append(memory)
@@ -439,7 +406,7 @@ class PatternDetector:
 
         # Create patterns for bursts
         for burst in bursts:
-            duration = (burst[-1]['created_at'] - burst[0]['created_at']).total_seconds() / 60
+            duration = (burst[-1]["created_at"] - burst[0]["created_at"]).total_seconds() / 60
 
             pattern = Pattern(
                 id=uuid4(),
@@ -448,20 +415,20 @@ class PatternDetector:
                 description=f"Rapid creation of {len(burst)} memories in {duration:.1f} minutes",
                 strength=len(burst) / max(duration, 1) * 0.1,  # Normalize
                 occurrences=len(burst),
-                first_seen=burst[0]['created_at'],
-                last_seen=burst[-1]['created_at'],
+                first_seen=burst[0]["created_at"],
+                last_seen=burst[-1]["created_at"],
                 examples=[
                     {
-                        'memory_id': str(m['id']),
-                        'content_preview': m['content'][:50],
-                        'created_at': m['created_at'].isoformat()
+                        "memory_id": str(m["id"]),
+                        "content_preview": m["content"][:50],
+                        "created_at": m["created_at"].isoformat(),
                     }
                     for m in burst[:5]
                 ],
                 metadata={
-                    'burst_duration_minutes': duration,
-                    'memories_per_minute': len(burst) / max(duration, 1)
-                }
+                    "burst_duration_minutes": duration,
+                    "memories_per_minute": len(burst) / max(duration, 1),
+                },
             )
             patterns.append(pattern)
 
@@ -477,7 +444,7 @@ class PatternDetector:
             return 0.0
 
         # Calculate entropy
-        probs = [v/total for v in values if v > 0]
+        probs = [v / total for v in values if v > 0]
         entropy = -sum(p * np.log2(p) for p in probs)
         max_entropy = np.log2(len(values))
 
@@ -485,21 +452,19 @@ class PatternDetector:
         return 1 - (entropy / max_entropy) if max_entropy > 0 else 0.0
 
     def _calculate_cluster_coherence(
-        self,
-        cluster_memories: list[dict[str, Any]],
-        all_embeddings: np.ndarray
+        self, cluster_memories: list[dict[str, Any]], all_embeddings: np.ndarray
     ) -> float:
         """Calculate coherence of a cluster"""
         # Simplified coherence based on cluster size and importance
         size_factor = min(len(cluster_memories) / 20, 1.0)
-        avg_importance = np.mean([m.get('importance', 0) for m in cluster_memories])
+        avg_importance = np.mean([m.get("importance", 0) for m in cluster_memories])
         importance_factor = avg_importance / 10.0
 
         return (size_factor + importance_factor) / 2
 
     def _calculate_access_concentration(self, memories: list[dict[str, Any]]) -> float:
         """Calculate concentration of accesses"""
-        accesses = [m.get('total_accesses', 0) for m in memories]
+        accesses = [m.get("total_accesses", 0) for m in memories]
         if not accesses or sum(accesses) == 0:
             return 0.0
 
@@ -512,9 +477,7 @@ class PatternDetector:
         return gini
 
     def _calculate_association_strength(
-        self,
-        pairs: list[tuple[tuple[str, str], int]],
-        frequencies: dict[str, int]
+        self, pairs: list[tuple[tuple[str, str], int]], frequencies: dict[str, int]
     ) -> float:
         """Calculate strength of tag associations"""
         if not pairs:
@@ -532,10 +495,7 @@ class PatternDetector:
 
         return np.mean(lifts) if lifts else 0.0
 
-    def _find_emerging_topics(
-        self,
-        weekly_tags: dict[Any, Counter]
-    ) -> list[tuple[str, float]]:
+    def _find_emerging_topics(self, weekly_tags: dict[Any, Counter]) -> list[tuple[str, float]]:
         """Find topics with increasing frequency"""
         emerging = []
         weeks = sorted(weekly_tags.keys())
@@ -571,9 +531,7 @@ class PatternDetector:
         return sorted(emerging, key=lambda x: x[1], reverse=True)
 
     def _calculate_trend_strength(
-        self,
-        trends: list[tuple[str, float]],
-        weekly_data: dict[Any, Counter]
+        self, trends: list[tuple[str, float]], weekly_data: dict[Any, Counter]
     ) -> float:
         """Calculate strength of trend patterns"""
         if not trends:
@@ -589,18 +547,13 @@ class PatternDetector:
         return np.mean(strengths)
 
     def _get_topic_timeline(
-        self,
-        topic: str,
-        weekly_tags: dict[Any, Counter]
+        self, topic: str, weekly_tags: dict[Any, Counter]
     ) -> list[dict[str, Any]]:
         """Get timeline of topic frequency"""
         timeline = []
 
         for week in sorted(weekly_tags.keys()):
             count = weekly_tags[week].get(topic, 0)
-            timeline.append({
-                'week': week.isoformat(),
-                'count': count
-            })
+            timeline.append({"week": week.isoformat(), "count": count})
 
         return timeline

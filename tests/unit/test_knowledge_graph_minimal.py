@@ -29,21 +29,13 @@ async def test_knowledge_graph_basic():
             return {
                 "id": memory_id,
                 "content": "John Smith works at OpenAI developing ChatGPT in San Francisco",
-                "metadata": {}
+                "metadata": {},
             }
 
         async def get_memories(self, memory_ids=None, limit=10):
             return [
-                {
-                    "id": "1",
-                    "content": "Python programming is powerful",
-                    "metadata": {}
-                },
-                {
-                    "id": "2",
-                    "content": "Python is used for machine learning",
-                    "metadata": {}
-                }
+                {"id": "1", "content": "Python programming is powerful", "metadata": {}},
+                {"id": "2", "content": "Python is used for machine learning", "metadata": {}},
             ]
 
     db = MockDB()
@@ -53,7 +45,7 @@ async def test_knowledge_graph_basic():
     memory = {
         "id": "test1",
         "content": "John Smith works at OpenAI developing ChatGPT",
-        "metadata": {}
+        "metadata": {},
     }
 
     entity_mentions = await builder._extract_entities_from_memory(memory)
@@ -71,7 +63,7 @@ async def test_knowledge_graph_basic():
     memories = [
         {"id": "1", "content": "Python programming is powerful"},
         {"id": "2", "content": "Python is used for data science"},
-        {"id": "3", "content": "JavaScript for web development"}
+        {"id": "3", "content": "JavaScript for web development"},
     ]
 
     try:
@@ -115,6 +107,7 @@ async def main():
     except Exception as e:
         print(f"\n❌ Knowledge Graph Builder Feature Test: FAILED - {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

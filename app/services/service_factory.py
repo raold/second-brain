@@ -1,9 +1,12 @@
-"""Service factory for dependency injection"""
-
 import time
 
 from app.database import get_database
+from app.services.service_factory import get_health_service, get_memory_service, get_session_service
 from app.utils.logging_config import get_logger
+
+"""Service factory for dependency injection"""
+
+
 
 logger = get_logger(__name__)
 
@@ -25,7 +28,7 @@ class DashboardService:
                 "memories_with_embeddings": stats["memories_with_embeddings"],
                 "avg_content_length": round(stats["avg_content_length"], 2),
                 "hnsw_index_ready": stats["index_ready"],
-                "database_status": "connected"
+                "database_status": "connected",
             }
         except Exception as e:
             logger.error(f"Failed to get metrics: {e}")
@@ -34,7 +37,7 @@ class DashboardService:
                 "memories_with_embeddings": 0,
                 "avg_content_length": 0,
                 "hnsw_index_ready": False,
-                "database_status": "error"
+                "database_status": "error",
             }
 
 
@@ -52,31 +55,41 @@ class GitService:
 
             # Get current branch
             try:
-                branch = subprocess.check_output(
-                    ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
-                    cwd=os.getcwd(),
-                    stderr=subprocess.DEVNULL
-                ).decode().strip()
+                branch = (
+                    subprocess.check_output(
+                        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                        cwd=os.getcwd(),
+                        stderr=subprocess.DEVNULL,
+                    )
+                    .decode()
+                    .strip()
+                )
             except Exception:
                 branch = "unknown"
 
             # Get last commit
             try:
-                last_commit = subprocess.check_output(
-                    ['git', 'log', '-1', '--format=%h %s'],
-                    cwd=os.getcwd(),
-                    stderr=subprocess.DEVNULL
-                ).decode().strip()
+                last_commit = (
+                    subprocess.check_output(
+                        ["git", "log", "-1", "--format=%h %s"],
+                        cwd=os.getcwd(),
+                        stderr=subprocess.DEVNULL,
+                    )
+                    .decode()
+                    .strip()
+                )
             except Exception:
                 last_commit = "No commits"
 
             # Get status
             try:
-                status = subprocess.check_output(
-                    ['git', 'status', '--porcelain'],
-                    cwd=os.getcwd(),
-                    stderr=subprocess.DEVNULL
-                ).decode().strip()
+                status = (
+                    subprocess.check_output(
+                        ["git", "status", "--porcelain"], cwd=os.getcwd(), stderr=subprocess.DEVNULL
+                    )
+                    .decode()
+                    .strip()
+                )
 
                 if status:
                     status_summary = f"{len(status.splitlines())} files changed"
@@ -89,7 +102,7 @@ class GitService:
                 "branch": branch,
                 "last_commit": last_commit,
                 "status": status_summary,
-                "repository_status": "connected"
+                "repository_status": "connected",
             }
         except Exception as e:
             logger.error(f"Failed to get git info: {e}")
@@ -97,7 +110,7 @@ class GitService:
                 "branch": "unknown",
                 "last_commit": "unknown",
                 "status": "error",
-                "repository_status": "error"
+                "repository_status": "error",
             }
 
 
@@ -121,7 +134,7 @@ class HealthService:
 
             cpu_percent = psutil.cpu_percent(interval=0.1)
             memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
 
             # Overall system health assessment
             health_issues = []
@@ -139,23 +152,19 @@ class HealthService:
                 "database": {
                     "status": db_health,
                     "total_memories": db_stats.get("total_memories", 0),
-                    "index_ready": db_stats.get("index_ready", False)
+                    "index_ready": db_stats.get("index_ready", False),
                 },
                 "system": {
                     "cpu_percent": round(cpu_percent, 1),
                     "memory_percent": round(memory.percent, 1),
-                    "disk_percent": round(disk.percent, 1)
+                    "disk_percent": round(disk.percent, 1),
                 },
                 "issues": health_issues,
-                "timestamp": time.time()
+                "timestamp": time.time(),
             }
         except Exception as e:
             logger.error(f"Health check failed: {e}")
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "timestamp": time.time()
-            }
+            return {"status": "unhealthy", "error": str(e), "timestamp": time.time()}
 
 
 class MemoryService:
@@ -177,7 +186,7 @@ class MemoryService:
                     "importance_score": memory["importance_score"],
                     "created_at": memory["created_at"].isoformat(),
                     "tags": memory.get("tags", []),
-                    "metadata": memory.get("metadata", {})
+                    "metadata": memory.get("metadata", {}),
                 }
             else:
                 return None
@@ -185,14 +194,14 @@ class MemoryService:
             logger.error(f"Failed to get memory {memory_id}: {e}")
             return None
 
-    async def create_memory(self, content: str, importance_score: int = 5, tags: list = None) -> dict:
+    async def create_memory(
+        self, content: str, importance_score: int = 5, tags: list = None
+    ) -> dict:
         """Create a new memory"""
         try:
             db = await get_database()
             memory = await db.create_memory(
-                content=content,
-                importance_score=importance_score,
-                tags=tags or []
+                content=content, importance_score=importance_score, tags=tags or []
             )
 
             return {
@@ -201,7 +210,7 @@ class MemoryService:
                 "importance_score": memory["importance_score"],
                 "created_at": memory["created_at"].isoformat(),
                 "tags": memory.get("tags", []),
-                "metadata": memory.get("metadata", {})
+                "metadata": memory.get("metadata", {}),
             }
         except Exception as e:
             logger.error(f"Failed to create memory: {e}")
@@ -220,7 +229,7 @@ class MemoryService:
                     "importance_score": memory["importance_score"],
                     "created_at": memory["created_at"].isoformat(),
                     "similarity_score": memory.get("similarity_score", 0),
-                    "tags": memory.get("tags", [])
+                    "tags": memory.get("tags", []),
                 }
                 for memory in memories
             ]
@@ -240,7 +249,7 @@ class MemoryService:
                     "content": memory["content"],
                     "importance_score": memory["importance_score"],
                     "created_at": memory["created_at"].isoformat(),
-                    "tags": memory.get("tags", [])
+                    "tags": memory.get("tags", []),
                 }
                 for memory in memories
             ]
@@ -263,9 +272,11 @@ class SessionService:
 
             return {
                 "total_sessions": len(self.sessions),
-                "active_sessions": len([s for s in self.sessions.values() if s.get("active", False)]),
+                "active_sessions": len(
+                    [s for s in self.sessions.values() if s.get("active", False)]
+                ),
                 "total_memories": stats.get("total_memories", 0),
-                "avg_content_length": round(stats.get("avg_content_length", 0), 2)
+                "avg_content_length": round(stats.get("avg_content_length", 0), 2),
             }
         except Exception as e:
             logger.error(f"Failed to get session stats: {e}")
@@ -273,7 +284,7 @@ class SessionService:
                 "total_sessions": 0,
                 "active_sessions": 0,
                 "total_memories": 0,
-                "avg_content_length": 0
+                "avg_content_length": 0,
             }
 
     async def create_session(self, session_data: dict) -> dict:
@@ -284,7 +295,7 @@ class SessionService:
                 **session_data,
                 "id": session_id,
                 "active": True,
-                "created_at": time.time()
+                "created_at": time.time(),
             }
 
             return self.sessions[session_id]

@@ -72,7 +72,11 @@ def test_openapi_endpoints():
     try:
         memory_data = {
             "content": "OpenAPI test memory content",
-            "metadata": {"type": "test", "priority": "high", "timestamp": datetime.now().isoformat()},
+            "metadata": {
+                "type": "test",
+                "priority": "high",
+                "timestamp": datetime.now().isoformat(),
+            },
         }
 
         response = requests.post(f"{BASE_URL}/memories?api_key={API_KEY}", json=memory_data)
@@ -135,11 +139,15 @@ def test_openapi_endpoints():
     try:
         # Test missing API key
         response = requests.get(f"{BASE_URL}/status")
-        assert response.status_code == 422, f"Expected 422 for missing API key, got {response.status_code}"
+        assert (
+            response.status_code == 422
+        ), f"Expected 422 for missing API key, got {response.status_code}"
 
         # Test invalid API key
         response = requests.get(f"{BASE_URL}/status?api_key=invalid_key")
-        assert response.status_code == 401, f"Expected 401 for invalid API key, got {response.status_code}"
+        assert (
+            response.status_code == 401
+        ), f"Expected 401 for invalid API key, got {response.status_code}"
 
         print("✅ Error handling and authentication working")
     except Exception as e:
@@ -179,7 +187,9 @@ def test_openapi_documentation_completeness():
         # Check for paths
         expected_paths = ["/health", "/status", "/memories", "/memories/search"]
         for path in expected_paths:
-            assert path in schema["paths"] or any(p.startswith(path) for p in schema["paths"]), f"Missing path: {path}"
+            assert path in schema["paths"] or any(
+                p.startswith(path) for p in schema["paths"]
+            ), f"Missing path: {path}"
 
         print("✅ OpenAPI documentation is complete and comprehensive")
         return True

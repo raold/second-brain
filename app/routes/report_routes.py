@@ -1,11 +1,13 @@
-"""
-API routes for automated report generation
-"""
-
 from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+
+"""
+API routes for automated report generation
+"""
+
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_current_user
@@ -28,7 +30,7 @@ async def generate_report(
     request: ReportRequest,
     current_user: str = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-    services: ServiceFactory = Depends(ServiceFactory)
+    services: ServiceFactory = Depends(ServiceFactory),
 ) -> GeneratedReport:
     """
     Generate a report based on request parameters.
@@ -57,7 +59,7 @@ async def generate_report(
                 title=report.title,
                 preview=report.executive_summary[:200],
                 action_url=f"/reports/{report.id}",
-                priority=0.8
+                priority=0.8,
             )
 
         return report
@@ -68,8 +70,7 @@ async def generate_report(
 
 @router.get("/templates", response_model=list[ReportTemplate])
 async def get_report_templates(
-    current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: str = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ) -> list[ReportTemplate]:
     """Get available report templates."""
     # In production, load from database
@@ -78,29 +79,49 @@ async def get_report_templates(
             name="Weekly Summary",
             description="Comprehensive weekly activity summary",
             report_type=ReportType.WEEKLY,
-            sections=["executive_summary", "highlights", "new_discoveries", "statistics", "recommendations"],
+            sections=[
+                "executive_summary",
+                "highlights",
+                "new_discoveries",
+                "statistics",
+                "recommendations",
+            ],
             include_visualizations=True,
             include_metrics=True,
-            include_recommendations=True
+            include_recommendations=True,
         ),
         ReportTemplate(
             name="Monthly Insights",
             description="AI-powered monthly insights and analysis",
             report_type=ReportType.INSIGHTS,
-            sections=["executive_summary", "patterns", "emerging_topics", "knowledge_gaps", "growth_metrics", "recommendations"],
+            sections=[
+                "executive_summary",
+                "patterns",
+                "emerging_topics",
+                "knowledge_gaps",
+                "growth_metrics",
+                "recommendations",
+            ],
             include_visualizations=True,
             include_metrics=True,
-            include_recommendations=True
+            include_recommendations=True,
         ),
         ReportTemplate(
             name="Learning Progress",
             description="Track your learning progress and achievements",
             report_type=ReportType.PROGRESS,
-            sections=["executive_summary", "progress_overview", "learning_metrics", "achievements", "comparisons", "recommendations"],
+            sections=[
+                "executive_summary",
+                "progress_overview",
+                "learning_metrics",
+                "achievements",
+                "comparisons",
+                "recommendations",
+            ],
             include_visualizations=True,
             include_metrics=True,
-            include_recommendations=True
-        )
+            include_recommendations=True,
+        ),
     ]
 
     return templates
@@ -110,7 +131,7 @@ async def get_report_templates(
 async def create_report_template(
     template: ReportTemplate,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> ReportTemplate:
     """Create a custom report template."""
     # In production, save to database
@@ -124,7 +145,7 @@ async def create_report_template(
 async def get_report_schedules(
     enabled_only: bool = Query(True, description="Only return enabled schedules"),
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> list[ReportSchedule]:
     """Get user's report schedules."""
     # In production, load from database
@@ -141,7 +162,7 @@ async def get_report_schedules(
                 schedule_config={"day_of_week": "monday", "time": "09:00"},
                 recipients=[f"{current_user}@example.com"],
                 enabled=True,
-                next_scheduled=datetime.utcnow()
+                next_scheduled=datetime.utcnow(),
             )
         )
 
@@ -152,7 +173,7 @@ async def get_report_schedules(
 async def create_report_schedule(
     schedule: ReportSchedule,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> ReportSchedule:
     """Schedule automated report generation."""
     schedule.user_id = current_user
@@ -168,7 +189,7 @@ async def update_report_schedule(
     schedule_id: UUID,
     updates: dict,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> ReportSchedule:
     """Update a report schedule."""
     # In production, update in database
@@ -184,7 +205,7 @@ async def update_report_schedule(
         schedule_config=updates.get("schedule_config", {"day_of_week": "monday", "time": "09:00"}),
         recipients=updates.get("recipients", [f"{current_user}@example.com"]),
         enabled=updates.get("enabled", True),
-        next_scheduled=datetime.utcnow()
+        next_scheduled=datetime.utcnow(),
     )
 
     return schedule
@@ -194,7 +215,7 @@ async def update_report_schedule(
 async def delete_report_schedule(
     schedule_id: UUID,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Delete a report schedule."""
     # In production, delete from database
@@ -208,7 +229,7 @@ async def get_report_history(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> list[GeneratedReport]:
     """Get user's report generation history."""
     # In production, load from database
@@ -226,7 +247,7 @@ async def get_report_history(
             format=ReportFormat.HTML,
             generation_time_ms=1234,
             period_start=datetime.utcnow(),
-            period_end=datetime.utcnow()
+            period_end=datetime.utcnow(),
         )
         history.append(report)
 
@@ -237,7 +258,7 @@ async def get_report_history(
 async def get_report(
     report_id: UUID,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> GeneratedReport:
     """Get a specific generated report."""
     # In production, load from database
@@ -253,7 +274,7 @@ async def get_report(
         format=ReportFormat.HTML,
         generation_time_ms=1234,
         period_start=datetime.utcnow(),
-        period_end=datetime.utcnow()
+        period_end=datetime.utcnow(),
     )
 
     return report
@@ -264,14 +285,14 @@ async def download_report(
     report_id: UUID,
     format: ReportFormat | None = None,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Download a generated report in specified format."""
     # In production, return file response
 
     return {
         "download_url": f"/reports/{report_id}/download/{format or 'pdf'}",
-        "expires_at": datetime.utcnow().isoformat()
+        "expires_at": datetime.utcnow().isoformat(),
     }
 
 
@@ -281,7 +302,7 @@ async def share_report(
     recipients: list[str],
     message: str | None = None,
     current_user: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Share a report with other users."""
     # In production, send emails or create share links
@@ -290,5 +311,5 @@ async def share_report(
         "success": True,
         "shared_with": recipients,
         "share_link": f"/reports/shared/{report_id}",
-        "expires_at": datetime.utcnow().isoformat()
+        "expires_at": datetime.utcnow().isoformat(),
     }

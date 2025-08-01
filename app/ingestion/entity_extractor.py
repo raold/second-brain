@@ -1,10 +1,13 @@
+import re
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Entity extraction component for the sophisticated ingestion engine
 """
 
-from typing import Any
 
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -12,7 +15,9 @@ logger = get_logger(__name__)
 class EntityExtractor:
     """Sophisticated entity extraction using SpaCy and custom patterns"""
 
-    def __init__(self, model_name: str = "en_core_web_trf", enable_custom: bool = True, use_gpu: bool = False):
+    def __init__(
+        self, model_name: str = "en_core_web_trf", enable_custom: bool = True, use_gpu: bool = False
+    ):
         """
         Initialize entity extractor
 
@@ -38,7 +43,9 @@ class EntityExtractor:
                         logger.info(f"Loaded SpaCy transformer model: {model_name}")
                     except OSError:
                         # Fall back to smaller model if transformer not available
-                        logger.warning("Transformer model not found, falling back to en_core_web_lg")
+                        logger.warning(
+                            "Transformer model not found, falling back to en_core_web_lg"
+                        )
                         try:
                             self.nlp = spacy.load("en_core_web_lg")
                             self.model_name = "en_core_web_lg"
@@ -103,18 +110,17 @@ class EntityExtractor:
                     confidence = self._calculate_entity_confidence(ent)
 
                     if confidence >= min_confidence:
-                        entities.append(Entity(
-                            text=ent.text,
-                            type=entity_type,
-                            normalized=self._normalize_text(ent.text),
-                            start_pos=ent.start_char,
-                            end_pos=ent.end_char,
-                            confidence=confidence,
-                            metadata={
-                                "spacy_label": ent.label_,
-                                "source": "spacy_ner"
-                            }
-                        ))
+                        entities.append(
+                            Entity(
+                                text=ent.text,
+                                type=entity_type,
+                                normalized=self._normalize_text(ent.text),
+                                start_pos=ent.start_char,
+                                end_pos=ent.end_char,
+                                confidence=confidence,
+                                metadata={"spacy_label": ent.label_, "source": "spacy_ner"},
+                            )
+                        )
 
             # Extract additional entities from noun phrases
             for chunk in doc.noun_chunks:
@@ -124,18 +130,17 @@ class EntityExtractor:
                         confidence = self._calculate_chunk_confidence(chunk)
 
                         if confidence >= min_confidence:
-                            entities.append(Entity(
-                                text=chunk.text,
-                                type=entity_type,
-                                normalized=self._normalize_text(chunk.text),
-                                start_pos=chunk.start_char,
-                                end_pos=chunk.end_char,
-                                confidence=confidence,
-                                metadata={
-                                    "source": "noun_chunks",
-                                    "root": chunk.root.text
-                                }
-                            ))
+                            entities.append(
+                                Entity(
+                                    text=chunk.text,
+                                    type=entity_type,
+                                    normalized=self._normalize_text(chunk.text),
+                                    start_pos=chunk.start_char,
+                                    end_pos=chunk.end_char,
+                                    confidence=confidence,
+                                    metadata={"source": "noun_chunks", "root": chunk.root.text},
+                                )
+                            )
 
         except Exception as e:
             logger.error(f"Error in SpaCy entity extraction: {e}")
@@ -155,18 +160,20 @@ class EntityExtractor:
                     # Extract the main group or full match
                     entity_text = match.group(1) if len(match.groups()) > 0 else match.group(0)
 
-                    entities.append(Entity(
-                        text=entity_text,
-                        type=pattern_type,
-                        normalized=self._normalize_text(entity_text),
-                        start_pos=match.start(),
-                        end_pos=match.end(),
-                        confidence=confidence,
-                        metadata={
-                            "source": "custom_pattern",
-                            "pattern_name": pattern_info.get("name", "unnamed")
-                        }
-                    ))
+                    entities.append(
+                        Entity(
+                            text=entity_text,
+                            type=pattern_type,
+                            normalized=self._normalize_text(entity_text),
+                            start_pos=match.start(),
+                            end_pos=match.end(),
+                            confidence=confidence,
+                            metadata={
+                                "source": "custom_pattern",
+                                "pattern_name": pattern_info.get("name", "unnamed"),
+                            },
+                        )
+                    )
 
         return entities
 
@@ -176,87 +183,79 @@ class EntityExtractor:
             EntityType.EMAIL: [
                 {
                     "name": "standard_email",
-                    "pattern": r'\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b',
-                    "confidence": 0.95
+                    "pattern": r"\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b",
+                    "confidence": 0.95,
                 }
             ],
             EntityType.URL: [
                 {
                     "name": "http_url",
                     "pattern": r'(https?://[^\s<>"{}|\\^`\[\]]+)',
-                    "confidence": 0.95
+                    "confidence": 0.95,
                 },
                 {
                     "name": "www_url",
                     "pattern": r'(www\.[^\s<>"{}|\\^`\[\]]+\.[^\s<>"{}|\\^`\[\]]+)',
-                    "confidence": 0.90
-                }
+                    "confidence": 0.90,
+                },
             ],
             EntityType.PHONE: [
                 {
                     "name": "us_phone",
-                    "pattern": r'\b(\+?1?[-.]?\(?[0-9]{3}\)?[-.]?[0-9]{3}[-.]?[0-9]{4})\b',
-                    "confidence": 0.85
+                    "pattern": r"\b(\+?1?[-.]?\(?[0-9]{3}\)?[-.]?[0-9]{3}[-.]?[0-9]{4})\b",
+                    "confidence": 0.85,
                 },
                 {
                     "name": "international_phone",
-                    "pattern": r'\b(\+[0-9]{1,3}[-.]?[0-9]{1,4}[-.]?[0-9]{1,4}[-.]?[0-9]{1,9})\b',
-                    "confidence": 0.80
-                }
+                    "pattern": r"\b(\+[0-9]{1,3}[-.]?[0-9]{1,4}[-.]?[0-9]{1,4}[-.]?[0-9]{1,9})\b",
+                    "confidence": 0.80,
+                },
             ],
             EntityType.DATE: [
-                {
-                    "name": "iso_date",
-                    "pattern": r'\b(\d{4}-\d{2}-\d{2})\b',
-                    "confidence": 0.95
-                },
+                {"name": "iso_date", "pattern": r"\b(\d{4}-\d{2}-\d{2})\b", "confidence": 0.95},
                 {
                     "name": "us_date",
-                    "pattern": r'\b(\d{1,2}/\d{1,2}/\d{2,4})\b',
-                    "confidence": 0.85
+                    "pattern": r"\b(\d{1,2}/\d{1,2}/\d{2,4})\b",
+                    "confidence": 0.85,
                 },
                 {
                     "name": "written_date",
-                    "pattern": r'\b((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2},? \d{4})\b',
-                    "confidence": 0.90
-                }
+                    "pattern": r"\b((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2},? \d{4})\b",
+                    "confidence": 0.90,
+                },
             ],
             EntityType.TIME: [
                 {
                     "name": "time_12h",
-                    "pattern": r'\b(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))\b',
-                    "confidence": 0.90
+                    "pattern": r"\b(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))\b",
+                    "confidence": 0.90,
                 },
                 {
                     "name": "time_24h",
-                    "pattern": r'\b([01]?[0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\b',
-                    "confidence": 0.85
-                }
+                    "pattern": r"\b([01]?[0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?\b",
+                    "confidence": 0.85,
+                },
             ],
             EntityType.PROJECT: [
                 {
                     "name": "jira_ticket",
-                    "pattern": r'\b([A-Z]{2,10}-\d{1,6})\b',
-                    "confidence": 0.80
+                    "pattern": r"\b([A-Z]{2,10}-\d{1,6})\b",
+                    "confidence": 0.80,
                 },
-                {
-                    "name": "github_issue",
-                    "pattern": r'(?:#|issue )(\d{1,6})\b',
-                    "confidence": 0.75
-                }
+                {"name": "github_issue", "pattern": r"(?:#|issue )(\d{1,6})\b", "confidence": 0.75},
             ],
             EntityType.TECHNOLOGY: [
                 {
                     "name": "version_number",
-                    "pattern": r'\b(\w+)\s+v?(\d+\.?\d*\.?\d*)\b',
-                    "confidence": 0.70
+                    "pattern": r"\b(\w+)\s+v?(\d+\.?\d*\.?\d*)\b",
+                    "confidence": 0.70,
                 },
                 {
                     "name": "programming_language",
-                    "pattern": r'\b(Python|JavaScript|Java|C\+\+|C#|Ruby|Go|Rust|TypeScript|Swift)\b',
-                    "confidence": 0.85
-                }
-            ]
+                    "pattern": r"\b(Python|JavaScript|Java|C\+\+|C#|Ruby|Go|Rust|TypeScript|Swift)\b",
+                    "confidence": 0.85,
+                },
+            ],
         }
 
     def _map_spacy_to_entity_type(self, spacy_label: str) -> EntityType | None:
@@ -338,7 +337,16 @@ class EntityExtractor:
         text_lower = chunk.text.lower()
 
         # Check for technology indicators
-        tech_keywords = {"system", "software", "application", "platform", "framework", "library", "api", "sdk"}
+        tech_keywords = {
+            "system",
+            "software",
+            "application",
+            "platform",
+            "framework",
+            "library",
+            "api",
+            "sdk",
+        }
         if any(keyword in text_lower for keyword in tech_keywords):
             return EntityType.TECHNOLOGY
 
@@ -376,9 +384,11 @@ class EntityExtractor:
             # Check for exact duplicates in different positions
             is_duplicate = False
             for existing in deduplicated:
-                if (entity.normalized == existing.normalized and
-                    entity.type == existing.type and
-                    abs(entity.start_pos - existing.start_pos) < 50):
+                if (
+                    entity.normalized == existing.normalized
+                    and entity.type == existing.type
+                    and abs(entity.start_pos - existing.start_pos) < 50
+                ):
                     is_duplicate = True
                     break
 
@@ -431,25 +441,26 @@ class EntityExtractor:
             {"label": "TECHNOLOGY", "pattern": [{"LOWER": "pytorch"}]},
             {"label": "TECHNOLOGY", "pattern": [{"LOWER": "spacy"}]},
             {"label": "TECHNOLOGY", "pattern": [{"LOWER": "transformers"}]},
-
             # Framework patterns
             {"label": "TECHNOLOGY", "pattern": [{"LOWER": {"IN": ["django", "flask", "fastapi"]}}]},
-
             # AI/ML concepts
             {"label": "CONCEPT", "pattern": [{"LOWER": "machine"}, {"LOWER": "learning"}]},
             {"label": "CONCEPT", "pattern": [{"LOWER": "deep"}, {"LOWER": "learning"}]},
             {"label": "CONCEPT", "pattern": [{"LOWER": "neural"}, {"LOWER": "network"}]},
-            {"label": "CONCEPT", "pattern": [{"LOWER": "natural"}, {"LOWER": "language"}, {"LOWER": "processing"}]},
-
+            {
+                "label": "CONCEPT",
+                "pattern": [{"LOWER": "natural"}, {"LOWER": "language"}, {"LOWER": "processing"}],
+            },
             # Project management
             {"label": "PROJECT", "pattern": [{"TEXT": {"REGEX": "[A-Z]{2,}-\\d+"}}]},  # JIRA-style
-
             # Version patterns
             {"label": "VERSION", "pattern": [{"TEXT": {"REGEX": "v?\\d+\\.\\d+(\\.\\d+)?"}}]},
         ]
         return patterns
 
-    def extract_entities_with_context(self, text: str, context_window: int = 50) -> list[dict[str, Any]]:
+    def extract_entities_with_context(
+        self, text: str, context_window: int = 50
+    ) -> list[dict[str, Any]]:
         """
         Extract entities with surrounding context for better understanding
 
@@ -470,10 +481,10 @@ class EntityExtractor:
             context = {
                 "entity": entity.dict(),
                 "context": {
-                    "before": text[start:entity.start_pos],
-                    "after": text[entity.end_pos:end],
-                    "full": text[start:end]
-                }
+                    "before": text[start : entity.start_pos],
+                    "after": text[entity.end_pos : end],
+                    "full": text[start:end],
+                },
             }
             entities_with_context.append(context)
 
@@ -486,7 +497,7 @@ class EntityExtractor:
                 "total_entities": 0,
                 "entity_types": {},
                 "confidence_stats": {},
-                "extraction_sources": {}
+                "extraction_sources": {},
             }
 
         # Count by type
@@ -500,7 +511,7 @@ class EntityExtractor:
             "mean": sum(confidences) / len(confidences),
             "min": min(confidences),
             "max": max(confidences),
-            "high_confidence": len([c for c in confidences if c >= 0.8])
+            "high_confidence": len([c for c in confidences if c >= 0.8]),
         }
 
         # Source statistics
@@ -513,5 +524,5 @@ class EntityExtractor:
             "total_entities": len(entities),
             "entity_types": type_counts,
             "confidence_stats": confidence_stats,
-            "extraction_sources": source_counts
+            "extraction_sources": source_counts,
         }

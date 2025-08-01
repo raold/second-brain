@@ -7,6 +7,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 pytestmark = pytest.mark.unit
 
 from app.services.memory_service import MemoryService
@@ -40,8 +41,7 @@ class TestMemoryService:
         self.mock_db.store_memory.return_value = "memory-123"
 
         memory_id = await self.memory_service.store_memory(
-            content="Test memory content",
-            metadata={"type": "note", "importance": 0.8}
+            content="Test memory content", metadata={"type": "note", "importance": 0.8}
         )
 
         assert memory_id == "memory-123"
@@ -52,10 +52,7 @@ class TestMemoryService:
         """Test memory storage with empty content should still work"""
         self.mock_db.store_memory.return_value = "memory-empty"
 
-        memory_id = await self.memory_service.store_memory(
-            content="",
-            metadata={}
-        )
+        memory_id = await self.memory_service.store_memory(content="", metadata={})
 
         assert memory_id == "memory-empty"
         assert self.mock_db.store_memory.called
@@ -67,7 +64,7 @@ class TestMemoryService:
             "id": "memory-123",
             "content": "Test content",
             "metadata": {"type": "note"},
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
         }
         self.mock_db.get_memory.return_value = expected_memory
 
@@ -91,14 +88,11 @@ class TestMemoryService:
         """Test successful memory search"""
         mock_results = [
             {"id": "memory-1", "content": "Python programming", "score": 0.95},
-            {"id": "memory-2", "content": "Code examples", "score": 0.87}
+            {"id": "memory-2", "content": "Code examples", "score": 0.87},
         ]
         self.mock_db.contextual_search.return_value = mock_results
 
-        results = await self.memory_service.search_memories(
-            query="Python programming",
-            limit=10
-        )
+        results = await self.memory_service.search_memories(query="Python programming", limit=10)
 
         assert results == mock_results
         assert self.mock_db.contextual_search.called
@@ -108,10 +102,7 @@ class TestMemoryService:
         """Test search with empty query"""
         self.mock_db.contextual_search.return_value = []
 
-        results = await self.memory_service.search_memories(
-            query="",
-            limit=10
-        )
+        results = await self.memory_service.search_memories(query="", limit=10)
 
         assert isinstance(results, list)
         # Empty query should still work but might return empty results
@@ -119,16 +110,11 @@ class TestMemoryService:
     @pytest.mark.asyncio
     async def test_click_search_result(self):
         """Test clicking on search result"""
-        expected_memory = {
-            "id": "memory-123",
-            "content": "Test content",
-            "clicked": True
-        }
+        expected_memory = {"id": "memory-123", "content": "Test content", "clicked": True}
         self.mock_db.get_memory.return_value = expected_memory
 
         result = await self.memory_service.click_search_result(
-            memory_id="memory-123",
-            query="test query"
+            memory_id="memory-123", query="test query"
         )
 
         assert result == expected_memory
@@ -137,12 +123,12 @@ class TestMemoryService:
     async def test_add_user_feedback(self):
         """Test adding user feedback"""
         # Mock the database methods that add_user_feedback might use
-        with patch.object(self.memory_service, 'add_user_feedback', return_value=True):
+        with patch.object(self.memory_service, "add_user_feedback", return_value=True):
             result = await self.memory_service.add_user_feedback(
                 memory_id="memory-123",
                 feedback_type="helpful",
                 feedback_value=1,
-                feedback_text="This was helpful"
+                feedback_text="This was helpful",
             )
 
             # Should return boolean and not raise exceptions
@@ -154,10 +140,12 @@ class TestMemoryService:
         mock_analytics = {
             "total_memories": 100,
             "avg_importance": 0.65,
-            "high_importance_count": 25
+            "high_importance_count": 25,
         }
 
-        with patch.object(self.memory_service, 'get_importance_analytics', return_value=mock_analytics):
+        with patch.object(
+            self.memory_service, "get_importance_analytics", return_value=mock_analytics
+        ):
             analytics = await self.memory_service.get_importance_analytics()
             assert analytics == mock_analytics
 
@@ -166,10 +154,12 @@ class TestMemoryService:
         """Test getting high importance memories"""
         mock_memories = [
             {"id": "mem1", "content": "Important note", "importance_score": 0.9},
-            {"id": "mem2", "content": "Critical info", "importance_score": 0.85}
+            {"id": "mem2", "content": "Critical info", "importance_score": 0.85},
         ]
 
-        with patch.object(self.memory_service, 'get_high_importance_memories', return_value=mock_memories):
+        with patch.object(
+            self.memory_service, "get_high_importance_memories", return_value=mock_memories
+        ):
             memories = await self.memory_service.get_high_importance_memories(limit=10)
             assert memories == mock_memories
 
@@ -195,13 +185,11 @@ class TestMemoryService:
     @pytest.mark.asyncio
     async def test_recalculate_importance_scores(self):
         """Test importance score recalculation"""
-        mock_result = {
-            "processed": 50,
-            "updated": 25,
-            "errors": 0
-        }
+        mock_result = {"processed": 50, "updated": 25, "errors": 0}
 
-        with patch.object(self.memory_service, 'recalculate_importance_scores', return_value=mock_result):
+        with patch.object(
+            self.memory_service, "recalculate_importance_scores", return_value=mock_result
+        ):
             result = await self.memory_service.recalculate_importance_scores(limit=50)
             assert result == mock_result
 
@@ -271,9 +259,11 @@ class TestMemoryServiceIntegration:
         # Should handle gracefully
         health = await memory_service.health_check()
         # Check for database availability in health response
-        assert (health.get("database_available") is False or
-                health.get("database_connected") is False or
-                "database" in health.get("issues", []))
+        assert (
+            health.get("database_available") is False
+            or health.get("database_connected") is False
+            or "database" in health.get("issues", [])
+        )
 
     @pytest.mark.asyncio
     async def test_protocol_validation(self):
@@ -294,11 +284,11 @@ class TestMemoryServiceIntegration:
         memory_service = MemoryService(mock_db)
 
         # Test Repository methods
-        assert hasattr(memory_service, 'save')
-        assert hasattr(memory_service, 'find_by_id')
-        assert hasattr(memory_service, 'find_all')
-        assert hasattr(memory_service, 'delete')
-        assert hasattr(memory_service, 'exists')
+        assert hasattr(memory_service, "save")
+        assert hasattr(memory_service, "find_by_id")
+        assert hasattr(memory_service, "find_all")
+        assert hasattr(memory_service, "delete")
+        assert hasattr(memory_service, "exists")
 
     @pytest.mark.asyncio
     async def test_searchable_interface(self):
@@ -307,8 +297,8 @@ class TestMemoryServiceIntegration:
         memory_service = MemoryService(mock_db)
 
         # Test Searchable methods
-        assert hasattr(memory_service, 'search')
-        assert hasattr(memory_service, 'supports_filters')
+        assert hasattr(memory_service, "search")
+        assert hasattr(memory_service, "supports_filters")
         assert memory_service.supports_filters() is True
 
     @pytest.mark.asyncio
@@ -318,6 +308,6 @@ class TestMemoryServiceIntegration:
         memory_service = MemoryService(mock_db)
 
         # Test Cacheable methods
-        assert hasattr(memory_service, 'cache_key')
-        assert hasattr(memory_service, 'cache_ttl')
-        assert hasattr(memory_service, 'is_cache_valid')
+        assert hasattr(memory_service, "cache_key")
+        assert hasattr(memory_service, "cache_ttl")
+        assert hasattr(memory_service, "is_cache_valid")

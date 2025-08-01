@@ -1,3 +1,9 @@
+import time
+from datetime import datetime
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Deduplication Database Interface
 
@@ -5,10 +11,7 @@ Clean abstraction layer for deduplication database operations,
 enabling proper testing and dependency injection.
 """
 
-from datetime import datetime
-from typing import Any
 
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -232,7 +235,11 @@ class PostgreSQLDeduplicationDatabase(DeduplicationDatabaseInterface):
                     """UPDATE memories
                        SET metadata = metadata || $1, updated_at = NOW()
                        WHERE id = $2""",
-                    {"is_duplicate": True, "duplicate_of": primary_id, "marked_duplicate_at": str(datetime.now())},
+                    {
+                        "is_duplicate": True,
+                        "duplicate_of": primary_id,
+                        "marked_duplicate_at": str(datetime.now()),
+                    },
                     memory_id,
                 )
             return True
@@ -287,7 +294,8 @@ class PostgreSQLDeduplicationDatabase(DeduplicationDatabaseInterface):
         try:
             async with self.database_service.pool.acquire() as conn:
                 rows = await conn.fetch(
-                    "SELECT id, embedding FROM memory_embeddings WHERE memory_id = ANY($1)", memory_ids
+                    "SELECT id, embedding FROM memory_embeddings WHERE memory_id = ANY($1)",
+                    memory_ids,
                 )
                 return {row["id"]: row["embedding"] for row in rows if row["embedding"]}
 
@@ -338,7 +346,9 @@ class MockDeduplicationDatabase(DeduplicationDatabaseInterface):
         if filter_criteria:
             if "content_length_min" in filter_criteria:
                 min_length = filter_criteria["content_length_min"]
-                filtered_memories = [m for m in filtered_memories if len(m["content"]) >= min_length]
+                filtered_memories = [
+                    m for m in filtered_memories if len(m["content"]) >= min_length
+                ]
 
         if limit:
             filtered_memories = filtered_memories[:limit]

@@ -1,3 +1,5 @@
+from app.models.memory import Memory
+
 """
 Models package for Second Brain
 """

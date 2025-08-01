@@ -1,16 +1,21 @@
-"""
-Advanced structured data extraction with enhanced parsing capabilities
-"""
-
-import ast
 import json
 import re
 from datetime import datetime
 from typing import Any
 
+import pandas as pd
+
+from app.ingestion.models import StructuredData
+from app.utils.logging_config import get_logger
+
+"""
+Advanced structured data extraction with enhanced parsing capabilities
+"""
+
+import ast
+
 from app.models.ingestion import StructuredData
 from app.services.structured_data_extractor import StructuredDataExtractor
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -18,11 +23,13 @@ logger = get_logger(__name__)
 class AdvancedStructuredExtractor(StructuredDataExtractor):
     """Advanced structured data extraction with enhanced capabilities"""
 
-    def __init__(self,
-                 enable_form_extraction: bool = True,
-                 enable_schema_inference: bool = True,
-                 enable_ast_parsing: bool = True,
-                 enable_semantic_parsing: bool = True):
+    def __init__(
+        self,
+        enable_form_extraction: bool = True,
+        enable_schema_inference: bool = True,
+        enable_ast_parsing: bool = True,
+        enable_semantic_parsing: bool = True,
+    ):
         """
         Initialize advanced structured extractor
 
@@ -67,8 +74,14 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         # Extract additional structured elements
         forms = self._extract_forms(text) if self.enable_form_extraction else {}
         schemas = self._infer_schemas(base_data) if self.enable_schema_inference else {}
-        enhanced_code = self._enhance_code_extraction(base_data.code_snippets, text) if self.enable_ast_parsing else []
-        semantic_data = self._extract_semantic_structures(text) if self.enable_semantic_parsing else {}
+        enhanced_code = (
+            self._enhance_code_extraction(base_data.code_snippets, text)
+            if self.enable_ast_parsing
+            else []
+        )
+        semantic_data = (
+            self._extract_semantic_structures(text) if self.enable_semantic_parsing else {}
+        )
 
         # Extract advanced table formats
         csv_tables = self._extract_csv_tables(text)
@@ -99,8 +112,8 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                 "form_extraction": self.enable_form_extraction,
                 "schema_inference": self.enable_schema_inference,
                 "ast_parsing": self.enable_ast_parsing,
-                "semantic_parsing": self.enable_semantic_parsing
-            }
+                "semantic_parsing": self.enable_semantic_parsing,
+            },
         }
 
         return StructuredData(
@@ -108,7 +121,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
             lists=base_data.lists,
             tables=all_tables,
             code_snippets=all_code,
-            metadata_fields=enhanced_metadata
+            metadata_fields=enhanced_metadata,
         )
 
     def _extract_forms(self, text: str) -> dict[str, Any]:
@@ -137,23 +150,19 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         qa_pairs = []
 
         # Pattern for Q: ... A: ...
-        qa_pattern = r'Q:\s*(.+?)\s*A:\s*(.+?)(?=Q:|$)'
+        qa_pattern = r"Q:\s*(.+?)\s*A:\s*(.+?)(?=Q:|$)"
         for match in re.finditer(qa_pattern, text, re.DOTALL | re.IGNORECASE):
             question = match.group(1).strip()
             answer = match.group(2).strip()
             qa_pairs.append({"question": question, "answer": answer})
 
         # Pattern for numbered questions
-        numbered_pattern = r'(\d+)\.\s*(.+?\?)\s*(?:Answer:|A:)?\s*(.+?)(?=\d+\.|$)'
+        numbered_pattern = r"(\d+)\.\s*(.+?\?)\s*(?:Answer:|A:)?\s*(.+?)(?=\d+\.|$)"
         for match in re.finditer(numbered_pattern, text, re.DOTALL):
             number = match.group(1)
             question = match.group(2).strip()
             answer = match.group(3).strip()
-            qa_pairs.append({
-                "number": number,
-                "question": question,
-                "answer": answer
-            })
+            qa_pairs.append({"number": number, "question": question, "answer": answer})
 
         return qa_pairs
 
@@ -162,26 +171,18 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         selections = []
 
         # Checkbox patterns: [x], [ ], [X], etc.
-        checkbox_pattern = r'\[([ xX])\]\s*(.+?)(?=\[|$)'
+        checkbox_pattern = r"\[([ xX])\]\s*(.+?)(?=\[|$)"
         for match in re.finditer(checkbox_pattern, text):
-            checked = match.group(1).strip() != ''
+            checked = match.group(1).strip() != ""
             label = match.group(2).strip()
-            selections.append({
-                "type": "checkbox",
-                "checked": checked,
-                "label": label
-            })
+            selections.append({"type": "checkbox", "checked": checked, "label": label})
 
         # Radio button patterns: (x), ( ), (*), etc.
-        radio_pattern = r'\(([ xX*])\)\s*(.+?)(?=\(|$)'
+        radio_pattern = r"\(([ xX*])\)\s*(.+?)(?=\(|$)"
         for match in re.finditer(radio_pattern, text):
-            selected = match.group(1).strip() != ''
+            selected = match.group(1).strip() != ""
             label = match.group(2).strip()
-            selections.append({
-                "type": "radio",
-                "selected": selected,
-                "label": label
-            })
+            selections.append({"type": "radio", "selected": selected, "label": label})
 
         return selections
 
@@ -191,20 +192,24 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
 
         # Pattern for form fields like: Name: _______ or Name: [        ]
         field_patterns = [
-            r'(\w[\w\s]*?):\s*_{3,}',
-            r'(\w[\w\s]*?):\s*\[[\s]*\]',
-            r'(\w[\w\s]*?):\s*\([\s]*\)',
-            r'(\w[\w\s]*?):\s*\.{3,}'
+            r"(\w[\w\s]*?):\s*_{3,}",
+            r"(\w[\w\s]*?):\s*\[[\s]*\]",
+            r"(\w[\w\s]*?):\s*\([\s]*\)",
+            r"(\w[\w\s]*?):\s*\.{3,}",
         ]
 
         for pattern in field_patterns:
             for match in re.finditer(pattern, text):
                 field_name = match.group(1).strip()
-                fields.append({
-                    "name": field_name,
-                    "type": "text",
-                    "required": True if field_name.lower() in ['name', 'email', 'phone'] else False
-                })
+                fields.append(
+                    {
+                        "name": field_name,
+                        "type": "text",
+                        "required": (
+                            True if field_name.lower() in ["name", "email", "phone"] else False
+                        ),
+                    }
+                )
 
         return fields
 
@@ -218,10 +223,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
             for i, table in enumerate(data.tables):
                 schema = self._infer_table_schema(table)
                 if schema:
-                    table_schemas.append({
-                        "table_index": i,
-                        "schema": schema
-                    })
+                    table_schemas.append({"table_index": i, "schema": schema})
             if table_schemas:
                 schemas["table_schemas"] = table_schemas
 
@@ -248,7 +250,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
             "columns": {},
             "row_count": len(table["rows"]),
             "nullable_columns": [],
-            "unique_columns": []
+            "unique_columns": [],
         }
 
         # Analyze each column
@@ -260,9 +262,9 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
             column_type = self._infer_column_type(column_values)
             schema["columns"][header] = {
                 "type": column_type,
-                "nullable": any(v is None or v == '' for v in column_values),
+                "nullable": any(v is None or v == "" for v in column_values),
                 "unique": len(set(column_values)) == len(column_values),
-                "sample_values": list(set(column_values))[:5]
+                "sample_values": list(set(column_values))[:5],
             }
 
             if schema["columns"][header]["nullable"]:
@@ -289,46 +291,35 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
             pass
 
         # Check if all values are dates
-        date_patterns = [
-            r'^\d{4}-\d{2}-\d{2}$',
-            r'^\d{2}/\d{2}/\d{4}$',
-            r'^\d{2}-\d{2}-\d{4}$'
-        ]
+        date_patterns = [r"^\d{4}-\d{2}-\d{2}$", r"^\d{2}/\d{2}/\d{4}$", r"^\d{2}-\d{2}-\d{4}$"]
         if all(any(re.match(p, str(v)) for p in date_patterns) for v in non_empty_values):
             return "date"
 
         # Check if all values are booleans
-        bool_values = {'true', 'false', 'yes', 'no', '1', '0', 't', 'f', 'y', 'n'}
+        bool_values = {"true", "false", "yes", "no", "1", "0", "t", "f", "y", "n"}
         if all(str(v).lower() in bool_values for v in non_empty_values):
             return "boolean"
 
         # Check if values look like emails
-        if all('@' in str(v) and '.' in str(v) for v in non_empty_values):
+        if all("@" in str(v) and "." in str(v) for v in non_empty_values):
             return "email"
 
         # Check if values look like URLs
-        if all(str(v).startswith(('http://', 'https://')) for v in non_empty_values):
+        if all(str(v).startswith(("http://", "https://")) for v in non_empty_values):
             return "url"
 
         return "string"
 
     def _infer_kv_schema(self, kv_pairs: dict[str, Any]) -> dict[str, Any]:
         """Infer schema from key-value pairs"""
-        schema = {
-            "properties": {},
-            "required": [],
-            "total_fields": len(kv_pairs)
-        }
+        schema = {"properties": {}, "required": [], "total_fields": len(kv_pairs)}
 
         for key, value in kv_pairs.items():
             value_type = self._infer_value_type(value)
-            schema["properties"][key] = {
-                "type": value_type,
-                "value": value
-            }
+            schema["properties"][key] = {"type": value_type, "value": value}
 
             # Common required fields
-            if key.lower() in ['id', 'name', 'title', 'type']:
+            if key.lower() in ["id", "name", "title", "type"]:
                 schema["required"].append(key)
 
         return schema
@@ -347,11 +338,11 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
             return "object"
         elif isinstance(value, str):
             # Check for specific string types
-            if re.match(r'^\d{4}-\d{2}-\d{2}', value):
+            if re.match(r"^\d{4}-\d{2}-\d{2}", value):
                 return "date"
-            elif '@' in value and '.' in value:
+            elif "@" in value and "." in value:
                 return "email"
-            elif value.startswith(('http://', 'https://')):
+            elif value.startswith(("http://", "https://")):
                 return "url"
             else:
                 return "string"
@@ -373,12 +364,14 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                     "unique_items": len(set(items)),
                     "item_types": list(unique_types),
                     "homogeneous": len(unique_types) == 1,
-                    "sample_items": items[:5]
+                    "sample_items": items[:5],
                 }
 
         return schemas
 
-    def _enhance_code_extraction(self, code_snippets: list[dict[str, str]], text: str) -> list[dict[str, Any]]:
+    def _enhance_code_extraction(
+        self, code_snippets: list[dict[str, str]], text: str
+    ) -> list[dict[str, Any]]:
         """Enhance code extraction with AST parsing"""
         enhanced_snippets = []
 
@@ -408,27 +401,29 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
 
     def _analyze_code_complexity(self, code: str, language: str) -> dict[str, Any]:
         """Analyze code complexity metrics"""
-        lines = code.split('\n')
+        lines = code.split("\n")
 
         complexity = {
             "lines_of_code": len(lines),
             "non_empty_lines": len([l for l in lines if l.strip()]),
             "comment_lines": 0,
             "max_line_length": max(len(l) for l in lines) if lines else 0,
-            "indentation_levels": 0
+            "indentation_levels": 0,
         }
 
         # Count comment lines
         if language == "python":
-            complexity["comment_lines"] = len([l for l in lines if l.strip().startswith('#')])
+            complexity["comment_lines"] = len([l for l in lines if l.strip().startswith("#")])
         elif language in ["javascript", "java"]:
-            complexity["comment_lines"] = len([l for l in lines if l.strip().startswith('//')])
+            complexity["comment_lines"] = len([l for l in lines if l.strip().startswith("//")])
 
         # Calculate max indentation
         for line in lines:
             if line.strip():
                 indent = len(line) - len(line.lstrip())
-                complexity["indentation_levels"] = max(complexity["indentation_levels"], indent // 4)
+                complexity["indentation_levels"] = max(
+                    complexity["indentation_levels"], indent // 4
+                )
 
         return complexity
 
@@ -442,7 +437,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                 "functions": [],
                 "classes": [],
                 "variables": [],
-                "decorators": []
+                "decorators": [],
             }
 
             for node in ast.walk(tree):
@@ -450,26 +445,33 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                     for alias in node.names:
                         structure["imports"].append(alias.name)
                 elif isinstance(node, ast.ImportFrom):
-                    module = node.module or ''
+                    module = node.module or ""
                     for alias in node.names:
                         structure["imports"].append(f"{module}.{alias.name}")
                 elif isinstance(node, ast.FunctionDef):
                     func_info = {
                         "name": node.name,
                         "args": [arg.arg for arg in node.args.args],
-                        "decorators": [d.id if isinstance(d, ast.Name) else str(d) for d in node.decorator_list],
+                        "decorators": [
+                            d.id if isinstance(d, ast.Name) else str(d) for d in node.decorator_list
+                        ],
                         "docstring": ast.get_docstring(node),
-                        "lineno": node.lineno
+                        "lineno": node.lineno,
                     }
                     structure["functions"].append(func_info)
                 elif isinstance(node, ast.ClassDef):
                     class_info = {
                         "name": node.name,
-                        "bases": [base.id if isinstance(base, ast.Name) else str(base) for base in node.bases],
-                        "decorators": [d.id if isinstance(d, ast.Name) else str(d) for d in node.decorator_list],
+                        "bases": [
+                            base.id if isinstance(base, ast.Name) else str(base)
+                            for base in node.bases
+                        ],
+                        "decorators": [
+                            d.id if isinstance(d, ast.Name) else str(d) for d in node.decorator_list
+                        ],
                         "docstring": ast.get_docstring(node),
                         "methods": [],
-                        "lineno": node.lineno
+                        "lineno": node.lineno,
                     }
 
                     # Extract methods
@@ -480,7 +482,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                     structure["classes"].append(class_info)
                 elif isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name):
                     var_name = node.targets[0].id
-                    if not var_name.startswith('_'):
+                    if not var_name.startswith("_"):
                         structure["variables"].append(var_name)
 
             return structure
@@ -495,9 +497,9 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         if language == "python":
             # Extract imports
             import_patterns = [
-                r'import\s+(\w+)',
-                r'from\s+(\w+)\s+import',
-                r'import\s+(\w+)\s+as\s+\w+'
+                r"import\s+(\w+)",
+                r"from\s+(\w+)\s+import",
+                r"import\s+(\w+)\s+as\s+\w+",
             ]
             for pattern in import_patterns:
                 dependencies.extend(re.findall(pattern, code))
@@ -507,40 +509,44 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
             js_patterns = [
                 r'require\([\'"]([^\'"]+ )[\'\"]\)',
                 r'import\s+.*\s+from\s+[\'"]([^\'"]+ )[\'"]',
-                r'import\s+[\'"]([^\'"]+ )[\'"]'
+                r'import\s+[\'"]([^\'"]+ )[\'"]',
             ]
             for pattern in js_patterns:
                 dependencies.extend(re.findall(pattern, code))
 
         elif language == "java":
             # Extract imports
-            java_pattern = r'import\s+([\w.]+);'
+            java_pattern = r"import\s+([\w.]+);"
             dependencies.extend(re.findall(java_pattern, code))
 
         return list(set(dependencies))
 
     def _extract_definitions(self, code: str, language: str) -> dict[str, list[str]]:
         """Extract function and class definitions"""
-        definitions = {
-            "functions": [],
-            "classes": [],
-            "methods": []
-        }
+        definitions = {"functions": [], "classes": [], "methods": []}
 
         if language == "python":
-            definitions["functions"] = re.findall(r'def\s+(\w+)\s*\(', code)
-            definitions["classes"] = re.findall(r'class\s+(\w+)\s*[:\(]', code)
+            definitions["functions"] = re.findall(r"def\s+(\w+)\s*\(", code)
+            definitions["classes"] = re.findall(r"class\s+(\w+)\s*[:\(]", code)
 
         elif language == "javascript":
             # Function declarations and expressions
-            definitions["functions"].extend(re.findall(r'function\s+(\w+)\s*\(', code))
-            definitions["functions"].extend(re.findall(r'const\s+(\w+)\s*=\s*(?:async\s+)?function', code))
-            definitions["functions"].extend(re.findall(r'const\s+(\w+)\s*=\s*(?:async\s+)?\(', code))
-            definitions["classes"] = re.findall(r'class\s+(\w+)(?:\s+extends\s+\w+)?\s*\{', code)
+            definitions["functions"].extend(re.findall(r"function\s+(\w+)\s*\(", code))
+            definitions["functions"].extend(
+                re.findall(r"const\s+(\w+)\s*=\s*(?:async\s+)?function", code)
+            )
+            definitions["functions"].extend(
+                re.findall(r"const\s+(\w+)\s*=\s*(?:async\s+)?\(", code)
+            )
+            definitions["classes"] = re.findall(r"class\s+(\w+)(?:\s+extends\s+\w+)?\s*\{", code)
 
         elif language == "java":
-            definitions["classes"] = re.findall(r'class\s+(\w+)(?:\s+extends\s+\w+)?(?:\s+implements\s+[\w,\s]+)?\s*\{', code)
-            definitions["functions"] = re.findall(r'(?:public|private|protected|static|\s)+[\w<>\[\]]+\s+(\w+)\s*\(', code)
+            definitions["classes"] = re.findall(
+                r"class\s+(\w+)(?:\s+extends\s+\w+)?(?:\s+implements\s+[\w,\s]+)?\s*\{", code
+            )
+            definitions["functions"] = re.findall(
+                r"(?:public|private|protected|static|\s)+[\w<>\[\]]+\s+(\w+)\s*\(", code
+            )
 
         return definitions
 
@@ -576,19 +582,16 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
 
         # Pattern: "X is defined as Y"
         patterns = [
-            r'(\w[\w\s]*?)\s+is\s+defined\s+as\s+(.+?)(?:\.|$)',
-            r'(\w[\w\s]*?):\s*(?:a|an)\s+(.+?)(?:\.|$)',
-            r'Definition\s+of\s+(\w[\w\s]*?):\s*(.+?)(?:\.|$)'
+            r"(\w[\w\s]*?)\s+is\s+defined\s+as\s+(.+?)(?:\.|$)",
+            r"(\w[\w\s]*?):\s*(?:a|an)\s+(.+?)(?:\.|$)",
+            r"Definition\s+of\s+(\w[\w\s]*?):\s*(.+?)(?:\.|$)",
         ]
 
         for pattern in patterns:
             for match in re.finditer(pattern, text, re.IGNORECASE):
                 term = match.group(1).strip()
                 definition = match.group(2).strip()
-                definitions.append({
-                    "term": term,
-                    "definition": definition
-                })
+                definitions.append({"term": term, "definition": definition})
 
         return definitions
 
@@ -597,9 +600,9 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         specs = []
 
         # Look for specification-like patterns
-        spec_keywords = ['specification', 'spec', 'requirement', 'must', 'shall', 'should']
+        spec_keywords = ["specification", "spec", "requirement", "must", "shall", "should"]
 
-        lines = text.split('\n')
+        lines = text.split("\n")
 
         for line in lines:
             line_lower = line.lower()
@@ -607,7 +610,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
             # Check if line contains spec keywords
             if any(keyword in line_lower for keyword in spec_keywords):
                 # Extract spec ID if present
-                id_match = re.match(r'([\w\-]+\d+[\w\-]*)\s*[:\-]\s*(.+)', line)
+                id_match = re.match(r"([\w\-]+\d+[\w\-]*)\s*[:\-]\s*(.+)", line)
                 if id_match:
                     spec_id = id_match.group(1)
                     content = id_match.group(2)
@@ -615,11 +618,17 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                     spec_id = None
                     content = line
 
-                specs.append({
-                    "id": spec_id,
-                    "content": content.strip(),
-                    "type": "requirement" if any(k in line_lower for k in ['must', 'shall']) else "specification"
-                })
+                specs.append(
+                    {
+                        "id": spec_id,
+                        "content": content.strip(),
+                        "type": (
+                            "requirement"
+                            if any(k in line_lower for k in ["must", "shall"])
+                            else "specification"
+                        ),
+                    }
+                )
 
         return specs
 
@@ -629,18 +638,24 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
 
         # Pattern for requirements
         req_patterns = [
-            r'(?:must|shall|should)\s+(.+?)(?:\.|$)',
-            r'(?:required|requirement):\s*(.+?)(?:\.|$)',
-            r'(?:REQ[\-_]?\d+):\s*(.+?)(?:\.|$)'
+            r"(?:must|shall|should)\s+(.+?)(?:\.|$)",
+            r"(?:required|requirement):\s*(.+?)(?:\.|$)",
+            r"(?:REQ[\-_]?\d+):\s*(.+?)(?:\.|$)",
         ]
 
         for pattern in req_patterns:
             for match in re.finditer(pattern, text, re.IGNORECASE):
                 requirement = match.group(1).strip() if match.group(1) else match.group(0).strip()
-                requirements.append({
-                    "requirement": requirement,
-                    "priority": "high" if "must" in match.group(0).lower() or "shall" in match.group(0).lower() else "medium"
-                })
+                requirements.append(
+                    {
+                        "requirement": requirement,
+                        "priority": (
+                            "high"
+                            if "must" in match.group(0).lower() or "shall" in match.group(0).lower()
+                            else "medium"
+                        ),
+                    }
+                )
 
         return requirements
 
@@ -649,7 +664,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         procedures = []
 
         # Look for step patterns
-        step_pattern = r'(?:step\s+)?(\d+)[.)]\s*(.+?)(?=(?:step\s+)?\d+[.)]|$)'
+        step_pattern = r"(?:step\s+)?(\d+)[.)]\s*(.+?)(?=(?:step\s+)?\d+[.)]|$)"
 
         matches = list(re.finditer(step_pattern, text, re.IGNORECASE | re.DOTALL))
 
@@ -658,17 +673,12 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
             for match in matches:
                 step_num = match.group(1)
                 step_content = match.group(2).strip()
-                steps.append({
-                    "step_number": int(step_num),
-                    "description": step_content
-                })
+                steps.append({"step_number": int(step_num), "description": step_content})
 
             if steps:
-                procedures.append({
-                    "type": "numbered_procedure",
-                    "steps": steps,
-                    "total_steps": len(steps)
-                })
+                procedures.append(
+                    {"type": "numbered_procedure", "steps": steps, "total_steps": len(steps)}
+                )
 
         return procedures
 
@@ -677,13 +687,13 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         tables = []
 
         # Look for CSV-like patterns
-        lines = text.split('\n')
+        lines = text.split("\n")
         csv_blocks = []
         current_block = []
 
         for line in lines:
             # Check if line contains commas and looks like CSV
-            if ',' in line and len(line.split(',')) >= 2:
+            if "," in line and len(line.split(",")) >= 2:
                 current_block.append(line)
             else:
                 if len(current_block) >= 2:
@@ -696,14 +706,15 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                 try:
                     # Try to parse as CSV using pandas
                     import io
-                    csv_text = '\n'.join(block)
+
+                    csv_text = "\n".join(block)
                     df = pd.read_csv(io.StringIO(csv_text))
 
                     table = {
                         "type": "csv",
                         "headers": df.columns.tolist(),
-                        "rows": df.to_dict('records'),
-                        "shape": df.shape
+                        "rows": df.to_dict("records"),
+                        "shape": df.shape,
                     }
                     tables.append(table)
                 except Exception:
@@ -711,21 +722,17 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
             else:
                 # Manual CSV parsing
                 if block:
-                    headers = [h.strip() for h in block[0].split(',')]
+                    headers = [h.strip() for h in block[0].split(",")]
                     rows = []
 
                     for line in block[1:]:
-                        cells = [c.strip() for c in line.split(',')]
+                        cells = [c.strip() for c in line.split(",")]
                         if len(cells) == len(headers):
                             row = dict(zip(headers, cells, strict=False))
                             rows.append(row)
 
                     if rows:
-                        tables.append({
-                            "type": "csv",
-                            "headers": headers,
-                            "rows": rows
-                        })
+                        tables.append({"type": "csv", "headers": headers, "rows": rows})
 
         return tables
 
@@ -734,66 +741,60 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         tables = []
 
         # Look for HTML table tags
-        table_pattern = r'<table[^>]*>.*?</table>'
+        table_pattern = r"<table[^>]*>.*?</table>"
 
         for match in re.finditer(table_pattern, text, re.DOTALL | re.IGNORECASE):
             table_html = match.group(0)
 
             if BS4_AVAILABLE:
                 try:
-                    soup = BeautifulSoup(table_html, 'html.parser')
-                    table = soup.find('table')
+                    soup = BeautifulSoup(table_html, "html.parser")
+                    table = soup.find("table")
 
                     if table:
                         # Extract headers
                         headers = []
-                        header_row = table.find('tr')
+                        header_row = table.find("tr")
                         if header_row:
-                            headers = [th.get_text(strip=True) for th in header_row.find_all(['th', 'td'])]
+                            headers = [
+                                th.get_text(strip=True) for th in header_row.find_all(["th", "td"])
+                            ]
 
                         # Extract rows
                         rows = []
-                        for tr in table.find_all('tr')[1:]:
-                            cells = [td.get_text(strip=True) for td in tr.find_all(['td', 'th'])]
+                        for tr in table.find_all("tr")[1:]:
+                            cells = [td.get_text(strip=True) for td in tr.find_all(["td", "th"])]
                             if len(cells) == len(headers):
                                 row = dict(zip(headers, cells, strict=False))
                                 rows.append(row)
 
                         if rows:
-                            tables.append({
-                                "type": "html",
-                                "headers": headers,
-                                "rows": rows
-                            })
+                            tables.append({"type": "html", "headers": headers, "rows": rows})
                 except Exception:
                     pass
             else:
                 # Basic HTML parsing without BeautifulSoup
                 # Extract table rows
-                row_pattern = r'<tr[^>]*>(.*?)</tr>'
+                row_pattern = r"<tr[^>]*>(.*?)</tr>"
                 rows_html = re.findall(row_pattern, table_html, re.DOTALL)
 
                 if rows_html:
                     # Extract headers from first row
-                    header_pattern = r'<t[hd][^>]*>(.*?)</t[hd]>'
+                    header_pattern = r"<t[hd][^>]*>(.*?)</t[hd]>"
                     headers = re.findall(header_pattern, rows_html[0])
-                    headers = [re.sub(r'<[^>]+>', '', h).strip() for h in headers]
+                    headers = [re.sub(r"<[^>]+>", "", h).strip() for h in headers]
 
                     # Extract data rows
                     rows = []
                     for row_html in rows_html[1:]:
                         cells = re.findall(header_pattern, row_html)
-                        cells = [re.sub(r'<[^>]+>', '', c).strip() for c in cells]
+                        cells = [re.sub(r"<[^>]+>", "", c).strip() for c in cells]
                         if len(cells) == len(headers):
                             row = dict(zip(headers, cells, strict=False))
                             rows.append(row)
 
                     if rows:
-                        tables.append({
-                            "type": "html",
-                            "headers": headers,
-                            "rows": rows
-                        })
+                        tables.append({"type": "html", "headers": headers, "rows": rows})
 
         return tables
 
@@ -823,10 +824,10 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         configs = {}
         current_section = None
 
-        ini_section_pattern = r'^\[([^\]]+)\]'
-        ini_kv_pattern = r'^(\w+)\s*=\s*(.+)$'
+        ini_section_pattern = r"^\[([^\]]+)\]"
+        ini_kv_pattern = r"^(\w+)\s*=\s*(.+)$"
 
-        for line in text.split('\n'):
+        for line in text.split("\n"):
             line = line.strip()
 
             # Check for section
@@ -841,7 +842,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                 kv_match = re.match(ini_kv_pattern, line)
                 if kv_match:
                     key = kv_match.group(1)
-                    value = kv_match.group(2).strip('"\'')
+                    value = kv_match.group(2).strip("\"'")
                     configs[current_section][key] = value
 
         return configs
@@ -852,15 +853,15 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
 
         # Pattern for environment variables
         env_patterns = [
-            r'(?:export\s+)?([A-Z_]+)=([^\s]+)',
-            r'([A-Z_]+):\s*([^\n]+)',
-            r'\$\{?([A-Z_]+)\}?'
+            r"(?:export\s+)?([A-Z_]+)=([^\s]+)",
+            r"([A-Z_]+):\s*([^\n]+)",
+            r"\$\{?([A-Z_]+)\}?",
         ]
 
         for pattern in env_patterns[:2]:  # Only use set patterns
             for match in re.finditer(pattern, text):
                 var_name = match.group(1)
-                var_value = match.group(2).strip('"\'')
+                var_value = match.group(2).strip("\"'")
                 env_vars[var_name] = var_value
 
         return env_vars
@@ -870,7 +871,7 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         configs = {}
 
         # Find XML blocks
-        xml_pattern = r'<\?xml[^>]*\?>.*?(?=<\?xml|$)'
+        xml_pattern = r"<\?xml[^>]*\?>.*?(?=<\?xml|$)"
 
         for match in re.finditer(xml_pattern, text, re.DOTALL):
             try:
@@ -892,11 +893,11 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
 
         # Add attributes
         if element.attrib:
-            result['@attributes'] = element.attrib
+            result["@attributes"] = element.attrib
 
         # Add text content
         if element.text and element.text.strip():
-            result['text'] = element.text.strip()
+            result["text"] = element.text.strip()
 
         # Add child elements
         for child in element:
@@ -937,16 +938,14 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         endpoints = []
 
         # Pattern for HTTP methods and paths
-        endpoint_pattern = r'(GET|POST|PUT|DELETE|PATCH)\s+(/[\w/\-{}:]+)'
+        endpoint_pattern = r"(GET|POST|PUT|DELETE|PATCH)\s+(/[\w/\-{}:]+)"
 
         for match in re.finditer(endpoint_pattern, text):
             method = match.group(1)
             path = match.group(2)
-            endpoints.append({
-                "method": method,
-                "path": path,
-                "parameters": re.findall(r'\{(\w+)\}', path)
-            })
+            endpoints.append(
+                {"method": method, "path": path, "parameters": re.findall(r"\{(\w+)\}", path)}
+            )
 
         return endpoints
 
@@ -955,19 +954,19 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
         responses = []
 
         # Look for response patterns
-        response_keywords = ['response', 'returns', 'output']
+        response_keywords = ["response", "returns", "output"]
 
         # Find JSON responses
-        json_pattern = r'(?:' + '|'.join(response_keywords) + r')[:\s]*(\{[^{}]*\{[^{}]*\}[^{}]*\}|\{[^{}]+\})'
+        json_pattern = (
+            r"(?:" + "|".join(response_keywords) + r")[:\s]*(\{[^{}]*\{[^{}]*\}[^{}]*\}|\{[^{}]+\})"
+        )
 
         for match in re.finditer(json_pattern, text, re.IGNORECASE):
             try:
                 response_data = json.loads(match.group(1))
-                responses.append({
-                    "type": "json",
-                    "data": response_data,
-                    "status": 200  # Default assumption
-                })
+                responses.append(
+                    {"type": "json", "data": response_data, "status": 200}  # Default assumption
+                )
             except Exception:
                 pass
 
@@ -979,8 +978,8 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
 
         # Pattern for parameter descriptions
         param_patterns = [
-            r'(?:param|parameter)\s+(\w+)\s*:\s*(.+?)(?=param|parameter|$)',
-            r'@param\s+\{(\w+)\}\s+(\w+)\s*-?\s*(.+?)(?=@|$)'
+            r"(?:param|parameter)\s+(\w+)\s*:\s*(.+?)(?=param|parameter|$)",
+            r"@param\s+\{(\w+)\}\s+(\w+)\s*-?\s*(.+?)(?=@|$)",
         ]
 
         for pattern in param_patterns:
@@ -993,39 +992,41 @@ class AdvancedStructuredExtractor(StructuredDataExtractor):
                     param_name = match.group(2)
                     param_desc = match.group(3).strip()
 
-                parameters.append({
-                    "name": param_name,
-                    "description": param_desc,
-                    "type": param_type if len(match.groups()) > 2 else "unknown"
-                })
+                parameters.append(
+                    {
+                        "name": param_name,
+                        "description": param_desc,
+                        "type": param_type if len(match.groups()) > 2 else "unknown",
+                    }
+                )
 
         return parameters
 
     def _initialize_form_patterns(self) -> list[dict[str, Any]]:
         """Initialize form detection patterns"""
         return [
-            {"pattern": r'Q:\s*(.+?)\s*A:\s*(.+)', "type": "qa"},
-            {"pattern": r'\[([ xX])\]\s*(.+)', "type": "checkbox"},
-            {"pattern": r'\(([ xX*])\)\s*(.+)', "type": "radio"},
-            {"pattern": r'(\w+):\s*_{3,}', "type": "fill_blank"}
+            {"pattern": r"Q:\s*(.+?)\s*A:\s*(.+)", "type": "qa"},
+            {"pattern": r"\[([ xX])\]\s*(.+)", "type": "checkbox"},
+            {"pattern": r"\(([ xX*])\)\s*(.+)", "type": "radio"},
+            {"pattern": r"(\w+):\s*_{3,}", "type": "fill_blank"},
         ]
 
     def _initialize_semantic_patterns(self) -> list[dict[str, Any]]:
         """Initialize semantic pattern detection"""
         return [
-            {"pattern": r'is defined as', "type": "definition"},
-            {"pattern": r'(?:must|shall|should)\s+', "type": "requirement"},
-            {"pattern": r'step\s+\d+', "type": "procedure"},
-            {"pattern": r'(?:spec|specification):\s*', "type": "specification"}
+            {"pattern": r"is defined as", "type": "definition"},
+            {"pattern": r"(?:must|shall|should)\s+", "type": "requirement"},
+            {"pattern": r"step\s+\d+", "type": "procedure"},
+            {"pattern": r"(?:spec|specification):\s*", "type": "specification"},
         ]
 
     def _initialize_data_type_patterns(self) -> list[dict[str, Any]]:
         """Initialize data type detection patterns"""
         return [
-            {"pattern": r'^\d{4}-\d{2}-\d{2}', "type": "date"},
-            {"pattern": r'^[\w\.-]+@[\w\.-]+\.\w+$', "type": "email"},
-            {"pattern": r'^https?://', "type": "url"},
-            {"pattern": r'^\d+$', "type": "integer"},
-            {"pattern": r'^\d+\.\d+$', "type": "float"},
-            {"pattern": r'^(?:true|false|yes|no)$', "type": "boolean"}
+            {"pattern": r"^\d{4}-\d{2}-\d{2}", "type": "date"},
+            {"pattern": r"^[\w\.-]+@[\w\.-]+\.\w+$", "type": "email"},
+            {"pattern": r"^https?://", "type": "url"},
+            {"pattern": r"^\d+$", "type": "integer"},
+            {"pattern": r"^\d+\.\d+$", "type": "float"},
+            {"pattern": r"^(?:true|false|yes|no)$", "type": "boolean"},
         ]

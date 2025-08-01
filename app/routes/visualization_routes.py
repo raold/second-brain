@@ -1,16 +1,21 @@
-"""
-Memory Visualization API Routes.
-Provides endpoints for interactive memory graphs, advanced search, and relationship analysis.
-"""
-
+import os
 from datetime import datetime
 from typing import Any
 
+import numpy as np
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from app.database import get_database
 from app.utils.logging_config import get_logger
+
+"""
+Memory Visualization API Routes.
+Provides endpoints for interactive memory graphs, advanced search, and relationship analysis.
+"""
+
+
+
 
 logger = get_logger(__name__)
 
@@ -26,7 +31,9 @@ class GraphRequest(BaseModel):
     time_range_days: int | None = Field(None, gt=0, description="Include memories from last N days")
     max_nodes: int | None = Field(500, gt=0, le=2000, description="Maximum number of nodes")
     include_relationships: bool = Field(True, description="Include similarity relationships")
-    cluster_method: str = Field("semantic", pattern="^(kmeans|dbscan|semantic)$", description="Clustering algorithm")
+    cluster_method: str = Field(
+        "semantic", pattern="^(kmeans|dbscan|semantic)$", description="Clustering algorithm"
+    )
 
 
 class AdvancedSearchRequest(BaseModel):
@@ -35,7 +42,9 @@ class AdvancedSearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=1000, description="Search query")
     search_type: str = Field("hybrid", pattern="^(semantic|temporal|importance|hybrid)$")
     memory_types: list[str] | None = Field(None, description="Filter by memory types")
-    importance_range: list[float] | None = Field(None, description="Min/max importance scores [min, max]")
+    importance_range: list[float] | None = Field(
+        None, description="Min/max importance scores [min, max]"
+    )
     date_range: list[str] | None = Field(None, description="ISO date strings [start, end]")
     topic_filters: list[str] | None = Field(None, description="Filter by topics/keywords")
     limit: int = Field(50, gt=0, le=200, description="Maximum results")
@@ -66,7 +75,6 @@ class SearchResponse(BaseModel):
 # Create async API key verification function
 async def verify_api_key_async(api_key: str):
     """Async wrapper for API key verification."""
-    import os
 
     expected_key = os.getenv("API_KEY")
     if not expected_key:
@@ -111,7 +119,9 @@ async def generate_memory_graph(
             cluster_method=request.cluster_method,
         )
 
-        logger.info(f"Generated graph with {len(graph_data['nodes'])} nodes, {len(graph_data['edges'])} edges")
+        logger.info(
+            f"Generated graph with {len(graph_data['nodes'])} nodes, {len(graph_data['edges'])} edges"
+        )
 
         return GraphResponse(**graph_data)
 
@@ -172,7 +182,8 @@ async def generate_quick_graph(
 
 @router.post("/search/advanced", response_model=SearchResponse)
 async def advanced_search(
-    request: AdvancedSearchRequest, api_key: str = Query(None, description="API key for authentication")
+    request: AdvancedSearchRequest,
+    api_key: str = Query(None, description="API key for authentication"),
 ):
     """
     Perform advanced multi-dimensional memory search.
@@ -263,7 +274,9 @@ async def get_search_suggestions(
 
             # Extract words containing the query
             words = content.split()
-            matching_words = [word for word in words if query.lower() in word.lower() and len(word) > 2]
+            matching_words = [
+                word for word in words if query.lower() in word.lower() and len(word) > 2
+            ]
             suggested_terms.update(matching_words[:3])  # Top 3 words per memory
 
         return {
@@ -281,7 +294,9 @@ async def get_search_suggestions(
 
 
 @router.get("/analytics/memory-stats")
-async def get_memory_analytics(api_key: str = Query(None, description="API key for authentication")):
+async def get_memory_analytics(
+    api_key: str = Query(None, description="API key for authentication")
+):
     """
     Get comprehensive memory analytics and statistics.
     Provides insights into memory distribution, importance patterns, and relationships.
@@ -295,7 +310,8 @@ async def get_memory_analytics(api_key: str = Query(None, description="API key f
 
         async with db.pool.acquire() as conn:
             # Basic memory statistics
-            stats = await conn.fetchrow("""
+            stats = await conn.fetchrow(
+                """
                 SELECT
                     COUNT(*) as total_memories,
                     AVG(importance_score) as avg_importance,
@@ -303,18 +319,22 @@ async def get_memory_analytics(api_key: str = Query(None, description="API key f
                     MIN(importance_score) as min_importance,
                     COUNT(DISTINCT memory_type) as memory_types_count
                 FROM memories
-            """)
+            """
+            )
 
             # Memory type distribution
-            type_distribution = await conn.fetch("""
+            type_distribution = await conn.fetch(
+                """
                 SELECT memory_type, COUNT(*) as count
                 FROM memories
                 GROUP BY memory_type
                 ORDER BY count DESC
-            """)
+            """
+            )
 
             # Temporal distribution (memories per day over last 30 days)
-            temporal_stats = await conn.fetch("""
+            temporal_stats = await conn.fetch(
+                """
                 SELECT
                     DATE(created_at) as date,
                     COUNT(*) as count,
@@ -323,28 +343,35 @@ async def get_memory_analytics(api_key: str = Query(None, description="API key f
                 WHERE created_at >= NOW() - INTERVAL '30 days'
                 GROUP BY DATE(created_at)
                 ORDER BY date DESC
-            """)
+            """
+            )
 
             # High importance memories
-            important_memories = await conn.fetch("""
+            important_memories = await conn.fetch(
+                """
                 SELECT id, content, importance_score, memory_type, created_at
                 FROM memories
                 WHERE importance_score >= 0.8
                 ORDER BY importance_score DESC
                 LIMIT 10
-            """)
+            """
+            )
 
         analytics = {
             "overview": {
                 "total_memories": stats["total_memories"],
-                "average_importance": float(stats["avg_importance"]) if stats["avg_importance"] else 0,
+                "average_importance": (
+                    float(stats["avg_importance"]) if stats["avg_importance"] else 0
+                ),
                 "importance_range": {
                     "min": float(stats["min_importance"]) if stats["min_importance"] else 0,
                     "max": float(stats["max_importance"]) if stats["max_importance"] else 0,
                 },
                 "memory_types_count": stats["memory_types_count"],
             },
-            "distribution": {"by_type": {row["memory_type"]: row["count"] for row in type_distribution}},
+            "distribution": {
+                "by_type": {row["memory_type"]: row["count"] for row in type_distribution}
+            },
             "temporal_patterns": [
                 {
                     "date": row["date"].isoformat(),
@@ -356,7 +383,8 @@ async def get_memory_analytics(api_key: str = Query(None, description="API key f
             "high_importance_memories": [
                 {
                     "id": str(row["id"]),
-                    "content_preview": row["content"][:100] + ("..." if len(row["content"]) > 100 else ""),
+                    "content_preview": row["content"][:100]
+                    + ("..." if len(row["content"]) > 100 else ""),
                     "importance_score": float(row["importance_score"]),
                     "memory_type": row["memory_type"],
                     "created_at": row["created_at"].isoformat(),
@@ -428,19 +456,25 @@ async def get_memory_relationships(
         viz_engine = MemoryVisualizationEngine(db)
 
         # Convert embeddings and calculate similarities
-        target_embedding = [float(x.strip()) for x in str(target_memory["embedding"]).strip("[]").split(",")]
+        target_embedding = [
+            float(x.strip()) for x in str(target_memory["embedding"]).strip("[]").split(",")
+        ]
         relationships = []
 
         for memory in related_memories:
             if memory["embedding"]:
-                memory_embedding = [float(x.strip()) for x in str(memory["embedding"]).strip("[]").split(",")]
+                memory_embedding = [
+                    float(x.strip()) for x in str(memory["embedding"]).strip("[]").split(",")
+                ]
 
                 # Calculate cosine similarity
                 target_norm = np.linalg.norm(target_embedding)
                 memory_norm = np.linalg.norm(memory_embedding)
 
                 if target_norm > 0 and memory_norm > 0:
-                    similarity = np.dot(target_embedding, memory_embedding) / (target_norm * memory_norm)
+                    similarity = np.dot(target_embedding, memory_embedding) / (
+                        target_norm * memory_norm
+                    )
 
                     if similarity >= similarity_threshold:
                         relationships.append(
@@ -476,7 +510,9 @@ async def get_memory_relationships(
                 "total_found": len(relationships),
                 "similarity_threshold": similarity_threshold,
                 "max_similarity": max([r["similarity"] for r in relationships], default=0),
-                "avg_similarity": np.mean([r["similarity"] for r in relationships]) if relationships else 0,
+                "avg_similarity": (
+                    np.mean([r["similarity"] for r in relationships]) if relationships else 0
+                ),
             },
         }
 
@@ -518,7 +554,9 @@ async def get_memory_clusters(
         )
 
         # Filter clusters by minimum size
-        filtered_clusters = [cluster for cluster in graph_data["clusters"] if cluster["size"] >= min_cluster_size]
+        filtered_clusters = [
+            cluster for cluster in graph_data["clusters"] if cluster["size"] >= min_cluster_size
+        ]
 
         # Enhance cluster data with member details
         enhanced_clusters = []
@@ -539,15 +577,19 @@ async def get_memory_clusters(
             enhanced_cluster = {
                 **cluster,
                 "member_details": member_details,
-                "dominant_type": max(
-                    set(detail["memory_type"] for detail in member_details),
-                    key=lambda x: len([d for d in member_details if d["memory_type"] == x]),
-                )
-                if member_details
-                else "unknown",
-                "avg_importance": np.mean([detail["importance_score"] for detail in member_details])
-                if member_details
-                else 0,
+                "dominant_type": (
+                    max(
+                        set(detail["memory_type"] for detail in member_details),
+                        key=lambda x: len([d for d in member_details if d["memory_type"] == x]),
+                    )
+                    if member_details
+                    else "unknown"
+                ),
+                "avg_importance": (
+                    np.mean([detail["importance_score"] for detail in member_details])
+                    if member_details
+                    else 0
+                ),
             }
             enhanced_clusters.append(enhanced_cluster)
 
@@ -578,7 +620,11 @@ async def visualization_health():
 
         return {
             "status": "healthy",
-            "services": {"database": "connected", "visualization_engine": "ready", "search_engine": "ready"},
+            "services": {
+                "database": "connected",
+                "visualization_engine": "ready",
+                "search_engine": "ready",
+            },
             "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:

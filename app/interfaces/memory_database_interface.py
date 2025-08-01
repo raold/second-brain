@@ -1,3 +1,7 @@
+import re
+from datetime import datetime
+from typing import Any
+
 #!/usr/bin/env python3
 """
 Memory Database Interface - Abstraction Layer for Testing
@@ -12,8 +16,6 @@ Created as part of Phase 1: Emergency Stabilization
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import Any
 
 
 class MemoryDatabaseInterface(ABC):
@@ -223,7 +225,9 @@ class MockMemoryDatabase(MemoryDatabaseInterface):
 
         # Sort by importance and creation date
         return sorted(
-            candidates, key=lambda m: (m.get("importance_score", 0), m.get("created_at", datetime.min)), reverse=True
+            candidates,
+            key=lambda m: (m.get("importance_score", 0), m.get("created_at", datetime.min)),
+            reverse=True,
         )
 
     async def get_memories_for_clustering(
@@ -246,7 +250,6 @@ class MockMemoryDatabase(MemoryDatabaseInterface):
         self, concept_pattern: str, cutoff_date: datetime, limit: int = 100
     ) -> list[dict[str, Any]]:
         """Get concept memories from mock data."""
-        import re
 
         candidates = []
         pattern = re.compile(concept_pattern, re.IGNORECASE)

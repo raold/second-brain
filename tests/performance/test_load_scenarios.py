@@ -24,14 +24,12 @@ class TestLoadScenarios:
         async def store_memory(session_id: int):
             payload = {
                 "content": f"Concurrent memory test {session_id} - testing system under load",
-                "importance_score": 0.5 + (session_id % 5) * 0.1
+                "importance_score": 0.5 + (session_id % 5) * 0.1,
             }
 
             start_time = time.time()
             response = await client.post(
-                "/memories/semantic",
-                json=payload,
-                params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key}
             )
             end_time = time.time()
 
@@ -39,7 +37,7 @@ class TestLoadScenarios:
                 "session_id": session_id,
                 "status_code": response.status_code,
                 "response_time": end_time - start_time,
-                "success": response.status_code == 200
+                "success": response.status_code == 200,
             }
 
         # Test with increasing concurrency levels
@@ -60,7 +58,9 @@ class TestLoadScenarios:
 
             # Performance assertions
             success_rate = successful_requests / concurrency
-            assert success_rate >= 0.8, f"Success rate {success_rate} too low for concurrency {concurrency}"
+            assert (
+                success_rate >= 0.8
+            ), f"Success rate {success_rate} too low for concurrency {concurrency}"
 
             if response_times:
                 avg_response_time = statistics.mean(response_times)
@@ -73,7 +73,9 @@ class TestLoadScenarios:
                 print(f"  Throughput: {successful_requests/total_time:.2f} req/s")
 
                 # Performance thresholds
-                assert avg_response_time < 5.0, f"Average response time too high: {avg_response_time}s"
+                assert (
+                    avg_response_time < 5.0
+                ), f"Average response time too high: {avg_response_time}s"
                 assert max_response_time < 10.0, f"Max response time too high: {max_response_time}s"
 
     @pytest.mark.asyncio
@@ -86,14 +88,14 @@ class TestLoadScenarios:
             "Machine learning algorithms and applications",
             "Database design patterns and optimization",
             "Web development frameworks and tools",
-            "Software architecture principles and patterns"
+            "Software architecture principles and patterns",
         ]
 
         for content in seed_memories:
             await client.post(
                 "/memories/semantic",
                 json={"content": content, "importance_score": 0.7},
-                params={"api_key": api_key}
+                params={"api_key": api_key},
             )
 
         async def search_memory(query_id: int):
@@ -102,19 +104,14 @@ class TestLoadScenarios:
                 "machine learning",
                 "database design",
                 "web development",
-                "software architecture"
+                "software architecture",
             ]
 
-            payload = {
-                "query": queries[query_id % len(queries)],
-                "limit": 5
-            }
+            payload = {"query": queries[query_id % len(queries)], "limit": 5}
 
             start_time = time.time()
             response = await client.post(
-                "/memories/search",
-                json=payload,
-                params={"api_key": api_key}
+                "/memories/search", json=payload, params={"api_key": api_key}
             )
             end_time = time.time()
 
@@ -123,7 +120,7 @@ class TestLoadScenarios:
                 "status_code": response.status_code,
                 "response_time": end_time - start_time,
                 "results_count": len(response.json()) if response.status_code == 200 else 0,
-                "success": response.status_code == 200
+                "success": response.status_code == 200,
             }
 
         # Test concurrent searches
@@ -160,13 +157,11 @@ class TestLoadScenarios:
         for i in range(20):
             payload = {
                 "content": f"Performance test memory {i} with some content to retrieve",
-                "importance_score": 0.6
+                "importance_score": 0.6,
             }
 
             response = await client.post(
-                "/memories/semantic",
-                json=payload,
-                params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key}
             )
 
             if response.status_code == 200:
@@ -177,17 +172,14 @@ class TestLoadScenarios:
 
         async def retrieve_memory(memory_id: str):
             start_time = time.time()
-            response = await client.get(
-                f"/memories/{memory_id}",
-                params={"api_key": api_key}
-            )
+            response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
             end_time = time.time()
 
             return {
                 "memory_id": memory_id,
                 "status_code": response.status_code,
                 "response_time": end_time - start_time,
-                "success": response.status_code == 200
+                "success": response.status_code == 200,
             }
 
         # Test concurrent retrieval
@@ -221,58 +213,54 @@ class TestLoadScenarios:
             if op_id % 3 == 0:
                 payload = {
                     "content": f"Mixed workload test memory {op_id}",
-                    "importance_score": 0.5
+                    "importance_score": 0.5,
                 }
 
                 start_time = time.time()
                 response = await client.post(
-                    "/memories/semantic",
-                    json=payload,
-                    params={"api_key": api_key}
+                    "/memories/semantic", json=payload, params={"api_key": api_key}
                 )
                 end_time = time.time()
 
-                operations.append({
-                    "type": "store",
-                    "success": response.status_code == 200,
-                    "response_time": end_time - start_time
-                })
+                operations.append(
+                    {
+                        "type": "store",
+                        "success": response.status_code == 200,
+                        "response_time": end_time - start_time,
+                    }
+                )
 
             # Search operation
             elif op_id % 3 == 1:
-                payload = {
-                    "query": f"test memory {op_id}",
-                    "limit": 5
-                }
+                payload = {"query": f"test memory {op_id}", "limit": 5}
 
                 start_time = time.time()
                 response = await client.post(
-                    "/memories/search",
-                    json=payload,
-                    params={"api_key": api_key}
+                    "/memories/search", json=payload, params={"api_key": api_key}
                 )
                 end_time = time.time()
 
-                operations.append({
-                    "type": "search",
-                    "success": response.status_code == 200,
-                    "response_time": end_time - start_time
-                })
+                operations.append(
+                    {
+                        "type": "search",
+                        "success": response.status_code == 200,
+                        "response_time": end_time - start_time,
+                    }
+                )
 
             # Health check (simulating monitoring)
             else:
                 start_time = time.time()
-                response = await client.get(
-                    "/health",
-                    params={"api_key": api_key}
-                )
+                response = await client.get("/health", params={"api_key": api_key})
                 end_time = time.time()
 
-                operations.append({
-                    "type": "health",
-                    "success": response.status_code == 200,
-                    "response_time": end_time - start_time
-                })
+                operations.append(
+                    {
+                        "type": "health",
+                        "success": response.status_code == 200,
+                        "response_time": end_time - start_time,
+                    }
+                )
 
             return operations
 
@@ -321,23 +309,23 @@ class TestLoadScenarios:
                     # Store memory
                     payload = {
                         "content": f"Sustained load test {op_count}",
-                        "importance_score": 0.5
+                        "importance_score": 0.5,
                     }
 
                     op_start = time.time()
                     response = await client.post(
-                        "/memories/semantic",
-                        json=payload,
-                        params={"api_key": api_key}
+                        "/memories/semantic", json=payload, params={"api_key": api_key}
                     )
                     op_end = time.time()
 
-                    operations.append({
-                        "type": "store",
-                        "success": response.status_code == 200,
-                        "response_time": op_end - op_start,
-                        "timestamp": op_start
-                    })
+                    operations.append(
+                        {
+                            "type": "store",
+                            "success": response.status_code == 200,
+                            "response_time": op_end - op_start,
+                            "timestamp": op_start,
+                        }
+                    )
 
                 elif op_count % 4 == 1:
                     # Search
@@ -345,18 +333,18 @@ class TestLoadScenarios:
 
                     op_start = time.time()
                     response = await client.post(
-                        "/memories/search",
-                        json=payload,
-                        params={"api_key": api_key}
+                        "/memories/search", json=payload, params={"api_key": api_key}
                     )
                     op_end = time.time()
 
-                    operations.append({
-                        "type": "search",
-                        "success": response.status_code == 200,
-                        "response_time": op_end - op_start,
-                        "timestamp": op_start
-                    })
+                    operations.append(
+                        {
+                            "type": "search",
+                            "success": response.status_code == 200,
+                            "response_time": op_end - op_start,
+                            "timestamp": op_start,
+                        }
+                    )
 
                 else:
                     # Health check
@@ -364,12 +352,14 @@ class TestLoadScenarios:
                     response = await client.get("/health", params={"api_key": api_key})
                     op_end = time.time()
 
-                    operations.append({
-                        "type": "health",
-                        "success": response.status_code == 200,
-                        "response_time": op_end - op_start,
-                        "timestamp": op_start
-                    })
+                    operations.append(
+                        {
+                            "type": "health",
+                            "success": response.status_code == 200,
+                            "response_time": op_end - op_start,
+                            "timestamp": op_start,
+                        }
+                    )
 
                 # Small delay to avoid overwhelming
                 await asyncio.sleep(0.01)
@@ -401,7 +391,9 @@ class TestLoadScenarios:
 
         # Performance requirements
         assert success_rate >= 0.85, f"Sustained load success rate too low: {success_rate}"
-        assert avg_response_time < 2.0, f"Sustained load response time too high: {avg_response_time}s"
+        assert (
+            avg_response_time < 2.0
+        ), f"Sustained load response time too high: {avg_response_time}s"
 
     @pytest.mark.asyncio
     async def test_memory_pagination_performance(self, client: AsyncClient, api_key: str):
@@ -417,14 +409,10 @@ class TestLoadScenarios:
             for i in range(batch, min(batch + batch_size, total_memories)):
                 payload = {
                     "content": f"Pagination test memory {i} with unique content for testing",
-                    "importance_score": 0.5 + (i % 10) * 0.05
+                    "importance_score": 0.5 + (i % 10) * 0.05,
                 }
 
-                task = client.post(
-                    "/memories/semantic",
-                    json=payload,
-                    params={"api_key": api_key}
-                )
+                task = client.post("/memories/semantic", json=payload, params={"api_key": api_key})
                 batch_tasks.append(task)
 
             # Execute batch
@@ -445,12 +433,7 @@ class TestLoadScenarios:
 
                 start_time = time.time()
                 response = await client.get(
-                    "/memories",
-                    params={
-                        "api_key": api_key,
-                        "limit": page_size,
-                        "offset": offset
-                    }
+                    "/memories", params={"api_key": api_key, "limit": page_size, "offset": offset}
                 )
                 end_time = time.time()
 
@@ -464,7 +447,9 @@ class TestLoadScenarios:
                 print(f"  Page size {page_size}: {avg_page_time:.3f}s avg")
 
                 # Pagination should be fast
-                assert avg_page_time < 1.0, f"Pagination too slow for page size {page_size}: {avg_page_time}s"
+                assert (
+                    avg_page_time < 1.0
+                ), f"Pagination too slow for page size {page_size}: {avg_page_time}s"
 
     @pytest.mark.asyncio
     async def test_api_endpoint_response_times(self, client: AsyncClient, api_key: str):
@@ -474,7 +459,7 @@ class TestLoadScenarios:
         store_response = await client.post(
             "/memories/semantic",
             json={"content": "API response time test memory", "importance_score": 0.7},
-            params={"api_key": api_key}
+            params={"api_key": api_key},
         )
 
         memory_id = None
@@ -490,10 +475,12 @@ class TestLoadScenarios:
 
         # Add memory-specific endpoints if we have a memory
         if memory_id:
-            endpoints_to_test.extend([
-                (f"/memories/{memory_id}", "GET", None, 1.0),  # Get specific memory
-                ("/memories/search", "POST", {"query": "test", "limit": 5}, 2.0),  # Search
-            ])
+            endpoints_to_test.extend(
+                [
+                    (f"/memories/{memory_id}", "GET", None, 1.0),  # Get specific memory
+                    ("/memories/search", "POST", {"query": "test", "limit": 5}, 2.0),  # Search
+                ]
+            )
 
         results = {}
 
@@ -507,7 +494,9 @@ class TestLoadScenarios:
                 if method == "GET":
                     response = await client.get(endpoint, params={"api_key": api_key})
                 elif method == "POST":
-                    response = await client.post(endpoint, json=payload, params={"api_key": api_key})
+                    response = await client.post(
+                        endpoint, json=payload, params={"api_key": api_key}
+                    )
 
                 end_time = time.time()
 
@@ -519,7 +508,9 @@ class TestLoadScenarios:
                 results[f"{method} {endpoint}"] = avg_time
 
                 print(f"{method} {endpoint}: {avg_time:.3f}s avg")
-                assert avg_time < max_time, f"Endpoint {endpoint} too slow: {avg_time}s > {max_time}s"
+                assert (
+                    avg_time < max_time
+                ), f"Endpoint {endpoint} too slow: {avg_time}s > {max_time}s"
 
         return results
 
@@ -539,21 +530,16 @@ class TestLoadScenarios:
                 ]
                 payload = payloads[int(time.time()) % len(payloads)]
             else:
-                payload = {
-                    "content": f"Load test memory {time.time()}",
-                    "importance_score": 0.6
-                }
+                payload = {"content": f"Load test memory {time.time()}", "importance_score": 0.6}
 
             response = await client.post(
-                "/memories/semantic",
-                json=payload,
-                params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key}
             )
 
             return {
                 "status_code": response.status_code,
                 "error_inducing": error_inducing,
-                "success": response.status_code == 200
+                "success": response.status_code == 200,
             }
 
         # Mix of normal and error-inducing operations
@@ -569,18 +555,26 @@ class TestLoadScenarios:
         normal_ops = [r for r in results if not r["error_inducing"]]
         error_ops = [r for r in results if r["error_inducing"]]
 
-        normal_success_rate = sum(1 for r in normal_ops if r["success"]) / len(normal_ops) if normal_ops else 1
-        error_success_rate = sum(1 for r in error_ops if r["success"]) / len(error_ops) if error_ops else 0
+        normal_success_rate = (
+            sum(1 for r in normal_ops if r["success"]) / len(normal_ops) if normal_ops else 1
+        )
+        error_success_rate = (
+            sum(1 for r in error_ops if r["success"]) / len(error_ops) if error_ops else 0
+        )
 
         print("\nError Rate Analysis:")
         print(f"  Normal operations success rate: {normal_success_rate:.2%}")
         print(f"  Error-inducing operations success rate: {error_success_rate:.2%}")
 
         # Normal operations should have high success rate
-        assert normal_success_rate >= 0.9, f"Normal operations success rate too low: {normal_success_rate}"
+        assert (
+            normal_success_rate >= 0.9
+        ), f"Normal operations success rate too low: {normal_success_rate}"
 
         # Error-inducing operations should mostly fail (be handled properly)
-        assert error_success_rate <= 0.2, f"Error handling not working properly: {error_success_rate}"
+        assert (
+            error_success_rate <= 0.2
+        ), f"Error handling not working properly: {error_success_rate}"
 
     @pytest.mark.asyncio
     async def test_resource_usage_monitoring(self, client: AsyncClient, api_key: str):
@@ -598,7 +592,7 @@ class TestLoadScenarios:
                 return {
                     "memory_percent": initial_memory,
                     "cpu_percent": initial_cpu,
-                    "available": True
+                    "available": True,
                 }
             except ImportError:
                 return {"available": False}
@@ -611,9 +605,11 @@ class TestLoadScenarios:
         for i in range(15):
             payload = {
                 "content": f"Resource monitoring test {i} with substantial content to process",
-                "importance_score": 0.6
+                "importance_score": 0.6,
             }
-            tasks.append(client.post("/memories/semantic", json=payload, params={"api_key": api_key}))
+            tasks.append(
+                client.post("/memories/semantic", json=payload, params={"api_key": api_key})
+            )
 
         # Execute load
         start_time = time.time()
@@ -634,7 +630,9 @@ class TestLoadScenarios:
         print(f"  Throughput: {throughput:.2f} ops/sec")
 
         if initial_resources["available"] and final_resources["available"]:
-            memory_increase = final_resources["memory_percent"] - initial_resources["memory_percent"]
+            memory_increase = (
+                final_resources["memory_percent"] - initial_resources["memory_percent"]
+            )
             print(f"  Memory usage change: {memory_increase:+.1f}%")
 
             # Memory usage shouldn't increase dramatically

@@ -1,3 +1,8 @@
+import math
+from datetime import datetime
+
+from pydantic import BaseModel, Field
+
 """
 Spaced Repetition Models - v2.8.2
 
@@ -5,10 +10,9 @@ Data models for spaced repetition learning system including algorithms,
 scheduling, and learning statistics.
 """
 
-from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import field_validator
 
 
 class RepetitionAlgorithm(str, Enum):
@@ -35,13 +39,14 @@ class ReviewDifficulty(str, Enum):
     """Difficulty rating for a review."""
 
     AGAIN = "again"  # Complete failure
-    HARD = "hard"   # Difficult but recalled
-    GOOD = "good"   # Normal difficulty
-    EASY = "easy"   # Very easy
+    HARD = "hard"  # Difficult but recalled
+    GOOD = "good"  # Normal difficulty
+    EASY = "easy"  # Very easy
 
 
 class RepetitionSettings(BaseModel):
     """Settings for spaced repetition system"""
+
     algorithm: str = Field(default="sm2")
     initial_interval: int = Field(default=1, gt=0)
     easy_multiplier: float = Field(default=2.5, gt=1)
@@ -56,8 +61,11 @@ class RepetitionSettings(BaseModel):
 
 class ForgettingCurve(BaseModel):
     """Model for forgetting curve calculations"""
+
     days: list[int] = Field(default_factory=list, description="Days after review")
-    retention_rates: list[float] = Field(default_factory=list, description="Retention rates at each day")
+    retention_rates: list[float] = Field(
+        default_factory=list, description="Retention rates at each day"
+    )
     algorithm: RepetitionAlgorithm | None = Field(None, description="Algorithm used")
     sample_size: int | None = Field(None, description="Number of samples")
 
@@ -68,10 +76,10 @@ class ForgettingCurve(BaseModel):
     time_constant: float = Field(7.0, gt=0, description="Time constant in days")
     last_review: datetime | None = Field(None, description="Last review date")
 
-    @field_validator('retention_rates')
+    @field_validator("retention_rates")
     def validate_same_length(cls, v, info):
         """Ensure days and retention_rates have same length"""
-        if info.data.get('days') and len(v) != len(info.data['days']):
+        if info.data.get("days") and len(v) != len(info.data["days"]):
             raise ValueError("days and retention_rates must have same length")
         return v
 
@@ -81,7 +89,7 @@ class ForgettingCurve(BaseModel):
             idx = self.days.index(day)
             return self.retention_rates[idx]
         # Use forgetting curve formula with new fields
-        import math
+
         if self.last_review and self.time_constant > 0:
             # Use Ebbinghaus forgetting curve: R = e^(-t/s) where t is time, s is strength
             return self.initial_strength * math.exp(-day * self.decay_rate / self.time_constant)
@@ -92,6 +100,7 @@ class ForgettingCurve(BaseModel):
 
 class SessionStatistics(BaseModel):
     """Statistics for a review session"""
+
     # Basic counts
     total_reviewed: int = Field(default=0, ge=0)
     correct_answers: int = Field(default=0, ge=0)
@@ -149,7 +158,7 @@ class MemoryStrength(BaseModel):
 
         time_elapsed = (current_time - self.last_review).days
         # R = e^(-t/S) where t is time elapsed and S is stability
-        import math
+
         return math.exp(-time_elapsed / self.stability)
 
 
@@ -175,14 +184,14 @@ class ReviewSchedule(BaseModel):
     current_strength: MemoryStrength | None = Field(None, description="Current memory strength")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    @field_validator('overdue_days', mode='before')
+    @field_validator("overdue_days", mode="before")
     def calculate_overdue(cls, v, info):
         """Calculate overdue days."""
-        if info.data.get('next_review_date'):
-            days_diff = (datetime.utcnow() - info.data['next_review_date']).days
+        if info.data.get("next_review_date"):
+            days_diff = (datetime.utcnow() - info.data["next_review_date"]).days
             return max(0, days_diff)
-        elif info.data.get('scheduled_date'):
-            days_diff = (datetime.utcnow() - info.data['scheduled_date']).days
+        elif info.data.get("scheduled_date"):
+            days_diff = (datetime.utcnow() - info.data["scheduled_date"]).days
             return max(0, days_diff)
         return v
 
@@ -191,8 +200,7 @@ class RepetitionConfig(BaseModel):
     """Configuration for spaced repetition system."""
 
     algorithm: RepetitionAlgorithm = Field(
-        RepetitionAlgorithm.SM2,
-        description="Repetition algorithm to use"
+        RepetitionAlgorithm.SM2, description="Repetition algorithm to use"
     )
 
     # Algorithm parameters
@@ -203,18 +211,12 @@ class RepetitionConfig(BaseModel):
     again_factor: float = Field(0.5, description="Factor for again reviews")
 
     # Intervals
-    learning_steps: list[int] = Field(
-        [1, 10],  # minutes
-        description="Learning steps in minutes"
-    )
+    learning_steps: list[int] = Field([1, 10], description="Learning steps in minutes")  # minutes
     graduating_interval: int = Field(1, description="First review interval in days")
     easy_interval: int = Field(4, description="Interval for 'easy' on first review")
 
     # Lapses
-    relearning_steps: list[int] = Field(
-        [10],  # minutes
-        description="Relearning steps in minutes"
-    )
+    relearning_steps: list[int] = Field([10], description="Relearning steps in minutes")  # minutes
     lapse_multiplier: float = Field(0.5, description="Interval multiplier on lapse")
     minimum_interval: int = Field(1, description="Minimum interval in days")
     maximum_interval: int = Field(365, description="Maximum interval in days")
@@ -228,12 +230,7 @@ class RepetitionConfig(BaseModel):
     bury_related: bool = Field(True, description="Bury related memories")
 
     # Optimization
-    optimize_for_retention: float = Field(
-        0.9,
-        ge=0.7,
-        le=0.99,
-        description="Target retention rate"
-    )
+    optimize_for_retention: float = Field(0.9, ge=0.7, le=0.99, description="Target retention rate")
 
     # Daily limits
     new_per_day: int = Field(20, description="New memories per day")
@@ -270,7 +267,7 @@ class ReviewSession(BaseModel):
     # Reviews by difficulty
     difficulty_distribution: dict[str, int] = Field(
         default_factory=lambda: {"again": 0, "hard": 0, "good": 0, "easy": 0},
-        description="Distribution of difficulty ratings"
+        description="Distribution of difficulty ratings",
     )
 
     # Streaks
@@ -299,10 +296,7 @@ class ReviewResult(BaseModel):
 
     # User feedback
     confidence_level: float | None = Field(
-        None,
-        ge=0.0,
-        le=1.0,
-        description="User's confidence level"
+        None, ge=0.0, le=1.0, description="User's confidence level"
     )
     notes: str | None = Field(None, description="Review notes")
 
@@ -344,50 +338,34 @@ class LearningStatistics(BaseModel):
     # Time distribution
     best_review_time: str | None = Field(None, description="Best time for reviews")
     review_time_distribution: dict[int, int] = Field(
-        default_factory=dict,
-        description="Reviews by hour of day"
+        default_factory=dict, description="Reviews by hour of day"
     )
-    time_distribution: dict[str, float] | None = Field(
-        None,
-        description="Time period distribution"
-    )
+    time_distribution: dict[str, float] | None = Field(None, description="Time period distribution")
 
     # Difficulty distribution
     difficulty_distribution: dict[str, float] = Field(
-        default_factory=dict,
-        description="Percentage by difficulty"
+        default_factory=dict, description="Percentage by difficulty"
     )
 
     # Forgetting curves
     forgetting_curves: list[ForgettingCurve] = Field(
-        default_factory=list,
-        description="Forgetting curves data"
+        default_factory=list, description="Forgetting curves data"
     )
 
     # Projections
     reviews_due_today: int = Field(0, description="Reviews due today")
     reviews_due_week: int = Field(0, description="Reviews due this week")
-    workload_trend: str = Field("stable", description="Workload trend: increasing, stable, decreasing")
+    workload_trend: str = Field(
+        "stable", description="Workload trend: increasing, stable, decreasing"
+    )
 
 
 class BulkReviewRequest(BaseModel):
     """Request to schedule reviews for multiple memories."""
 
     memory_ids: list[str] = Field(..., description="Memory IDs to schedule")
-    algorithm: RepetitionAlgorithm = Field(
-        RepetitionAlgorithm.SM2,
-        description="Algorithm to use"
-    )
+    algorithm: RepetitionAlgorithm = Field(RepetitionAlgorithm.SM2, description="Algorithm to use")
     config: RepetitionConfig | None = Field(None, description="Custom configuration")
-    distribute_over_days: int | None = Field(
-        None,
-        description="Distribute reviews over N days"
-    )
-    prioritize_by: str = Field(
-        "importance",
-        description="Prioritization: importance, age, random"
-    )
-    force_schedule: bool = Field(
-        False,
-        description="Force scheduling even if not due"
-    )
+    distribute_over_days: int | None = Field(None, description="Distribute reviews over N days")
+    prioritize_by: str = Field("importance", description="Prioritization: importance, age, random")
+    force_schedule: bool = Field(False, description="Force scheduling even if not due")

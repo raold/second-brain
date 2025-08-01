@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 import pytest
+
 pytestmark = pytest.mark.validation
 
 
@@ -70,6 +71,7 @@ class TestCodeStructure:
 
         # This is just a warning, not a failure
         import glob
+
         for pattern in conflicting_patterns:
             matches = glob.glob(str(project_root / "**" / pattern), recursive=True)
             if matches:
@@ -86,16 +88,16 @@ class TestPythonSyntax:
         python_files = []
         for root, dirs, files in os.walk(project_root / "app"):
             # Skip __pycache__ and .git directories
-            dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
 
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     python_files.append(Path(root) / file)
 
         syntax_errors = []
         for py_file in python_files:
             try:
-                with open(py_file, encoding='utf-8') as f:
+                with open(py_file, encoding="utf-8") as f:
                     content = f.read()
                 ast.parse(content)
             except SyntaxError as e:
@@ -103,7 +105,7 @@ class TestPythonSyntax:
             except UnicodeDecodeError:
                 # Try with different encoding
                 try:
-                    with open(py_file, encoding='latin-1') as f:
+                    with open(py_file, encoding="latin-1") as f:
                         content = f.read()
                     ast.parse(content)
                 except Exception as e:
@@ -127,18 +129,26 @@ class TestPythonSyntax:
             full_path = project_root / file_path
             if full_path.exists():
                 try:
-                    with open(full_path, encoding='utf-8') as f:
+                    with open(full_path, encoding="utf-8") as f:
                         content = f.read()
 
                     # Check for duplicate imports
-                    lines = content.split('\n')
-                    import_lines = [line.strip() for line in lines if line.strip().startswith('import ') or line.strip().startswith('from ')]
+                    lines = content.split("\n")
+                    import_lines = [
+                        line.strip()
+                        for line in lines
+                        if line.strip().startswith("import ") or line.strip().startswith("from ")
+                    ]
 
                     # Check for duplicate import statements
                     unique_imports = set(import_lines)
                     if len(import_lines) != len(unique_imports):
-                        duplicate_imports = [imp for imp in import_lines if import_lines.count(imp) > 1]
-                        import_issues.append(f"{file_path}: Duplicate imports found: {set(duplicate_imports)}")
+                        duplicate_imports = [
+                            imp for imp in import_lines if import_lines.count(imp) > 1
+                        ]
+                        import_issues.append(
+                            f"{file_path}: Duplicate imports found: {set(duplicate_imports)}"
+                        )
 
                 except Exception as e:
                     import_issues.append(f"{file_path}: Could not check imports: {e}")
@@ -160,16 +170,18 @@ class TestCodeStyle:
         max_length = 200  # Very generous limit
 
         for root, dirs, files in os.walk(project_root / "app"):
-            dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
 
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = Path(root) / file
                     try:
-                        with open(file_path, encoding='utf-8') as f:
+                        with open(file_path, encoding="utf-8") as f:
                             for line_num, line in enumerate(f, 1):
                                 if len(line.rstrip()) > max_length:
-                                    long_lines.append(f"{file_path}:{line_num} ({len(line.rstrip())} chars)")
+                                    long_lines.append(
+                                        f"{file_path}:{line_num} ({len(line.rstrip())} chars)"
+                                    )
                     except Exception:
                         continue
 
@@ -194,13 +206,13 @@ class TestCodeStyle:
         debug_found = []
 
         for root, dirs, files in os.walk(project_root / "app"):
-            dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
 
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = Path(root) / file
                     try:
-                        with open(file_path, encoding='utf-8') as f:
+                        with open(file_path, encoding="utf-8") as f:
                             content = f.read()
 
                         for pattern in debug_patterns:
@@ -236,7 +248,7 @@ class TestDocumentation:
             full_path = project_root / file_path
             if full_path.exists():
                 try:
-                    with open(full_path, encoding='utf-8') as f:
+                    with open(full_path, encoding="utf-8") as f:
                         content = f.read()
 
                     # Parse the AST to check for module docstring
@@ -244,10 +256,10 @@ class TestDocumentation:
 
                     # Check if first statement is a string (docstring)
                     has_docstring = (
-                        len(tree.body) > 0 and
-                        isinstance(tree.body[0], ast.Expr) and
-                        isinstance(tree.body[0].value, ast.Constant) and
-                        isinstance(tree.body[0].value.value, str)
+                        len(tree.body) > 0
+                        and isinstance(tree.body[0], ast.Expr)
+                        and isinstance(tree.body[0].value, ast.Constant)
+                        and isinstance(tree.body[0].value.value, str)
                     )
 
                     if not has_docstring:
@@ -278,17 +290,21 @@ class TestSecurity:
         potential_secrets = []
 
         for root, dirs, files in os.walk(project_root / "app"):
-            dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
 
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = Path(root) / file
                     try:
-                        with open(file_path, encoding='utf-8') as f:
+                        with open(file_path, encoding="utf-8") as f:
                             for line_num, line in enumerate(f, 1):
                                 lower_line = line.lower()
                                 for pattern in secret_patterns:
-                                    if pattern in lower_line and '"' in line and len(line.strip()) > 20:
+                                    if (
+                                        pattern in lower_line
+                                        and '"' in line
+                                        and len(line.strip()) > 20
+                                    ):
                                         # Might be a hardcoded secret
                                         potential_secrets.append(f"{file_path}:{line_num}")
                     except Exception:
@@ -305,16 +321,16 @@ class TestSecurity:
         eval_usage = []
 
         for root, dirs, files in os.walk(project_root / "app"):
-            dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
 
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = Path(root) / file
                     try:
-                        with open(file_path, encoding='utf-8') as f:
+                        with open(file_path, encoding="utf-8") as f:
                             content = f.read()
 
-                        if 'eval(' in content:
+                        if "eval(" in content:
                             eval_usage.append(str(file_path))
                     except Exception:
                         continue
@@ -340,19 +356,21 @@ class TestPerformance:
         ]
 
         for root, dirs, files in os.walk(project_root / "app"):
-            dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
 
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = Path(root) / file
                     try:
-                        with open(file_path, encoding='utf-8') as f:
+                        with open(file_path, encoding="utf-8") as f:
                             content = f.read()
 
                         for pattern, description in antipatterns:
                             if pattern in content:
                                 count = content.count(pattern)
-                                performance_issues.append(f"{file_path}: {count} instances of {description}")
+                                performance_issues.append(
+                                    f"{file_path}: {count} instances of {description}"
+                                )
                     except Exception:
                         continue
 
@@ -370,10 +388,10 @@ class TestPerformance:
         max_size = 50000  # 50KB is reasonable for most Python files
 
         for root, dirs, files in os.walk(project_root / "app"):
-            dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
 
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = Path(root) / file
                     try:
                         size = file_path.stat().st_size

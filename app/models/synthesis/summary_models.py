@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 class SummaryType(str, Enum):
     """Types of summaries available"""
+
     EXECUTIVE = "executive"
     DETAILED = "detailed"
     TECHNICAL = "technical"
@@ -16,6 +17,7 @@ class SummaryType(str, Enum):
 
 class FormatType(str, Enum):
     """Output format types"""
+
     PLAIN_TEXT = "plain_text"
     STRUCTURED = "structured"
     BULLET_POINTS = "bullet_points"
@@ -24,6 +26,7 @@ class FormatType(str, Enum):
 
 class SummaryRequest(BaseModel):
     """Request for summary generation"""
+
     memory_ids: list[UUID] = Field(default_factory=list)
     summary_type: SummaryType = Field(default=SummaryType.DETAILED)
     max_length: int | None = Field(default=500, gt=0)
@@ -37,6 +40,7 @@ class SummaryRequest(BaseModel):
 
 class SummarySegment(BaseModel):
     """A segment of the summary"""
+
     title: str
     content: str
     importance: float = Field(ge=0, le=1)
@@ -46,6 +50,7 @@ class SummarySegment(BaseModel):
 
 class SummaryResponse(BaseModel):
     """Response containing the generated summary"""
+
     id: UUID = Field(default_factory=uuid4)
     summary_type: SummaryType
     segments: list[SummarySegment] = Field(default_factory=list)
@@ -59,6 +64,7 @@ class SummaryResponse(BaseModel):
 
 class SummaryResult(BaseModel):
     """Legacy summary result for compatibility"""
+
     id: UUID
     summary: str
     key_points: list[str] = Field(default_factory=list)
@@ -67,6 +73,7 @@ class SummaryResult(BaseModel):
 
 class TopicSummary(BaseModel):
     """Summary of a specific topic"""
+
     topic_name: str
     summary: str
     key_points: list[str] = Field(default_factory=list)
@@ -78,6 +85,7 @@ class TopicSummary(BaseModel):
 
 class DomainOverview(BaseModel):
     """Overview of a knowledge domain"""
+
     domain_name: str
     description: str
     topic_summaries: list[TopicSummary] = Field(default_factory=list)
@@ -89,6 +97,7 @@ class DomainOverview(BaseModel):
 
 class KeyInsight(BaseModel):
     """Represents a key insight from summarization"""
+
     insight: str
     confidence: float = Field(ge=0, le=1)
     supporting_memories: list[UUID] = Field(default_factory=list)

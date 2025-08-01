@@ -5,9 +5,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from app.models.synthesis.consolidation_models import ConsolidationResult
+
 
 class ConsolidationStrategy(str, Enum):
     """Consolidation strategies"""
+
     MERGE = "merge"
     SUMMARIZE = "summarize"
     HIERARCHICAL = "hierarchical"
@@ -16,6 +19,7 @@ class ConsolidationStrategy(str, Enum):
 
 class MergeStrategy(str, Enum):
     """Memory merge strategies"""
+
     KEEP_NEWEST = "keep_newest"
     KEEP_OLDEST = "keep_oldest"
     KEEP_HIGHEST_IMPORTANCE = "keep_highest_importance"
@@ -49,6 +53,7 @@ class ConsolidationStatus(BaseModel):
 
 class ConsolidatedMemory(BaseModel):
     """Represents a consolidated memory"""
+
     id: UUID
     title: str
     content: str
@@ -62,6 +67,7 @@ class ConsolidatedMemory(BaseModel):
 
 class ConsolidationCandidate(BaseModel):
     """Candidate memories for consolidation"""
+
     memory_ids: list[UUID]
     similarity_score: float = Field(ge=0, le=1)
     reason: str
@@ -71,6 +77,7 @@ class ConsolidationCandidate(BaseModel):
 
 class ConsolidationPreview(BaseModel):
     """Preview of consolidation result"""
+
     candidate: ConsolidationCandidate
     preview_content: str
     estimated_reduction: float = Field(ge=0, le=1)
@@ -79,6 +86,7 @@ class ConsolidationPreview(BaseModel):
 
 class QualityAssessment(BaseModel):
     """Quality assessment for consolidation"""
+
     coherence_score: float = Field(ge=0, le=1)
     completeness_score: float = Field(ge=0, le=1)
     accuracy_score: float = Field(ge=0, le=1)
@@ -89,6 +97,7 @@ class QualityAssessment(BaseModel):
 
 class DuplicateGroup(BaseModel):
     """Group of duplicate or similar memories"""
+
     memory_ids: list[UUID]
     similarity_score: float = Field(ge=0, le=1)
     duplicate_type: str  # "exact", "near_duplicate", "similar"

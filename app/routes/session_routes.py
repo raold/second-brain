@@ -1,15 +1,18 @@
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+
+from app.core.exceptions import SecondBrainException
+from app.utils.logging_config import get_logger
+
 """
 Session Routes - Thin route handlers for session operations.
 All business logic is delegated to SessionService.
 """
 
-
-from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query
-from pydantic import BaseModel, Field
+from fastapi import BackgroundTasks, Form
 
 from app.core.dependencies import get_session_service_dep
 from app.models.api_models import SecondBrainException
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/session", tags=["Session"])
@@ -45,7 +48,11 @@ class ConversationMessage(BaseModel):
 
 
 @router.post("/ingest")
-async def ingest_mobile_idea(idea_request: IdeaIngestionRequest, background_tasks: BackgroundTasks, session_service=Depends(get_session_service_dep)):
+async def ingest_mobile_idea(
+    idea_request: IdeaIngestionRequest,
+    background_tasks: BackgroundTasks,
+    session_service=Depends(get_session_service_dep),
+):
     """
     The WOODCHIPPER - Ingest ideas from mobile/remote and automatically process them.
     This is the core feature for dropping ideas and having them automatically integrated.
@@ -58,7 +65,11 @@ async def ingest_mobile_idea(idea_request: IdeaIngestionRequest, background_task
             context=idea_request.context,
         )
 
-        return {"status": "success", "message": "Idea successfully ingested and processed", **result}
+        return {
+            "status": "success",
+            "message": "Idea successfully ingested and processed",
+            **result,
+        }
 
     except SecondBrainException:
         raise
@@ -83,7 +94,9 @@ async def get_session_status(session_service=Depends(get_session_service_dep)):
 
 
 @router.post("/pause")
-async def pause_session(pause_request: SessionPauseRequest, session_service=Depends(get_session_service_dep)):
+async def pause_session(
+    pause_request: SessionPauseRequest, session_service=Depends(get_session_service_dep)
+):
     """
     Pause current session and generate comprehensive resume context.
     Critical for cost management and seamless continuation.
@@ -109,7 +122,9 @@ async def pause_session(pause_request: SessionPauseRequest, session_service=Depe
 
 
 @router.post("/resume")
-async def resume_session(resume_request: SessionResumeRequest, session_service=Depends(get_session_service_dep)):
+async def resume_session(
+    resume_request: SessionResumeRequest, session_service=Depends(get_session_service_dep)
+):
     """
     Resume a previous session with full context restoration.
     Supports cross-device synchronization.
@@ -127,7 +142,9 @@ async def resume_session(resume_request: SessionResumeRequest, session_service=D
 
 
 @router.post("/conversation/process")
-async def process_conversation(message: ConversationMessage, session_service=Depends(get_session_service_dep)):
+async def process_conversation(
+    message: ConversationMessage, session_service=Depends(get_session_service_dep)
+):
     """
     Process conversation messages to extract insights and update project state.
     Monitors for technical discussions and feature requests.
@@ -161,7 +178,9 @@ async def get_current_context(session_service=Depends(get_session_service_dep)):
 
 
 @router.get("/history")
-async def get_session_history(limit: int = Query(default=50, ge=1, le=1000), session_service=Depends(get_session_service_dep)):
+async def get_session_history(
+    limit: int = Query(default=50, ge=1, le=1000), session_service=Depends(get_session_service_dep)
+):
     """Get conversation history with context preservation."""
     try:
         # Note: This would need to be implemented in SessionService
@@ -169,7 +188,7 @@ async def get_session_history(limit: int = Query(default=50, ge=1, le=1000), ses
         return {
             "status": "success",
             "history": [],
-            "message": "History endpoint needs service implementation"
+            "message": "History endpoint needs service implementation",
         }
 
     except Exception as e:
@@ -178,7 +197,9 @@ async def get_session_history(limit: int = Query(default=50, ge=1, le=1000), ses
 
 
 @router.post("/sync")
-async def sync_session(target_device: str = "cloud", session_service=Depends(get_session_service_dep)):
+async def sync_session(
+    target_device: str = "cloud", session_service=Depends(get_session_service_dep)
+):
     """
     Synchronize session across devices for seamless continuation.
     Critical for cross-device productivity.
@@ -189,7 +210,7 @@ async def sync_session(target_device: str = "cloud", session_service=Depends(get
         return {
             "status": "success",
             "message": f"Session sync to {target_device} initiated",
-            "note": "Sync endpoint needs service implementation"
+            "note": "Sync endpoint needs service implementation",
         }
 
     except Exception as e:
@@ -199,7 +220,11 @@ async def sync_session(target_device: str = "cloud", session_service=Depends(get
 
 # Mobile-optimized endpoints
 @router.post("/mobile/idea")
-async def mobile_idea_quick_drop(idea: str = Form(...), voice_note: str | None = Form(default=None), session_service=Depends(get_session_service_dep)):
+async def mobile_idea_quick_drop(
+    idea: str = Form(...),
+    voice_note: str | None = Form(default=None),
+    session_service=Depends(get_session_service_dep),
+):
     """
     Quick idea drop from mobile - ultra-simple interface.
     The fastest way to get ideas into the system.
@@ -211,10 +236,7 @@ async def mobile_idea_quick_drop(idea: str = Form(...), voice_note: str | None =
             full_idea += f" [Voice note: {voice_note}]"
 
         result = await session_service.ingest_idea(
-            idea=full_idea,
-            source="mobile_quick",
-            priority="medium",
-            context=None
+            idea=full_idea, source="mobile_quick", priority="medium", context=None
         )
 
         return {
@@ -222,7 +244,7 @@ async def mobile_idea_quick_drop(idea: str = Form(...), voice_note: str | None =
             "message": "💡 Idea captured and processing!",
             "idea_id": result.get("idea_id"),
             "features_detected": len(result.get("detected_features", [])),
-            "quick_summary": f"Added {len(result.get('detected_features', []))} features to roadmap"
+            "quick_summary": f"Added {len(result.get('detected_features', []))} features to roadmap",
         }
 
     except Exception as e:
@@ -241,7 +263,7 @@ async def mobile_status_check(session_service=Depends(get_session_service_dep)):
             "session_active": True,  # Simplified for mobile
             "current_focus": status.get("current_state", {}).get("focus", "Ready"),
             "project_health": "healthy",  # Simplified
-            "recent_features": []  # Simplified
+            "recent_features": [],  # Simplified
         }
 
     except Exception as e:

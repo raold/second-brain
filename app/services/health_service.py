@@ -1,13 +1,16 @@
-"""
-Health Service - Handles health check and system status business logic.
-Provides system health information and diagnostics.
-"""
-
+import os
 from datetime import datetime
 from typing import Any
 
 from app.database import Database
 from app.utils.logging_config import get_logger
+
+"""
+Health Service - Handles health check and system status business logic.
+Provides system health information and diagnostics.
+"""
+
+
 from app.utils.version import get_version_info
 
 logger = get_logger(__name__)
@@ -44,7 +47,11 @@ class HealthService:
 
         except Exception as e:
             self.logger.error(f"Health check failed: {e}")
-            return {"status": "unhealthy", "error": str(e), "timestamp": datetime.utcnow().isoformat()}
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
 
     async def get_system_status(self) -> dict[str, Any]:
         """
@@ -69,7 +76,7 @@ class HealthService:
                     "memories_with_embeddings": 0,
                     "hnsw_index_exists": False,
                     "ivf_index_exists": False,
-                    "index_ready": False
+                    "index_ready": False,
                 }
 
             # Generate recommendations
@@ -157,7 +164,9 @@ class HealthService:
 
             # Set overall status
             if diagnostics["issues"]:
-                diagnostics["overall_status"] = "degraded" if len(diagnostics["issues"]) < 2 else "critical"
+                diagnostics["overall_status"] = (
+                    "degraded" if len(diagnostics["issues"]) < 2 else "critical"
+                )
 
             return diagnostics
 
@@ -193,7 +202,9 @@ class HealthService:
                     "type": "postgresql",
                     "healthy": True,
                     "latency_ms": round(latency, 2),
-                    "pool_size": self.db.pool.get_size() if hasattr(self.db.pool, "get_size") else "unknown",
+                    "pool_size": (
+                        self.db.pool.get_size() if hasattr(self.db.pool, "get_size") else "unknown"
+                    ),
                 }
 
             return {
@@ -272,7 +283,11 @@ class HealthService:
         """Get database performance metrics."""
         try:
             if isinstance(self.db, MockDatabase):
-                return {"type": "mock", "query_performance": "instant", "connection_pool": "not applicable"}
+                return {
+                    "type": "mock",
+                    "query_performance": "instant",
+                    "connection_pool": "not applicable",
+                }
 
             # Get real database metrics
             metrics = {}
@@ -283,7 +298,9 @@ class HealthService:
             query_time = (datetime.utcnow() - start_time).total_seconds() * 1000
 
             metrics["average_query_time_ms"] = round(query_time, 2)
-            metrics["connection_pool_status"] = "active" if hasattr(self.db, "pool") and self.db.pool else "inactive"
+            metrics["connection_pool_status"] = (
+                "active" if hasattr(self.db, "pool") and self.db.pool else "inactive"
+            )
 
             return metrics
 
@@ -300,7 +317,9 @@ class HealthService:
                 "process_memory_mb": round(process.memory_info().rss / (1024**2), 2),
                 "process_cpu_percent": process.cpu_percent(interval=0.1),
                 "thread_count": process.num_threads(),
-                "open_files": len(process.open_files()) if hasattr(process, "open_files") else "unknown",
+                "open_files": (
+                    len(process.open_files()) if hasattr(process, "open_files") else "unknown"
+                ),
             }
         except Exception as e:
             self.logger.error(f"Failed to get resource usage: {e}")
@@ -340,7 +359,10 @@ class HealthService:
             return {
                 "check": "memory_usage",
                 "passed": passed,
-                "details": {"usage_percent": memory.percent, "available_gb": round(memory.available / (1024**3), 2)},
+                "details": {
+                    "usage_percent": memory.percent,
+                    "available_gb": round(memory.available / (1024**3), 2),
+                },
                 "error": "High memory usage detected" if not passed else None,
             }
         except Exception as e:
@@ -355,7 +377,10 @@ class HealthService:
             return {
                 "check": "disk_space",
                 "passed": passed,
-                "details": {"usage_percent": disk.percent, "free_gb": round(disk.free / (1024**3), 2)},
+                "details": {
+                    "usage_percent": disk.percent,
+                    "free_gb": round(disk.free / (1024**3), 2),
+                },
                 "error": "Low disk space" if not passed else None,
             }
         except Exception as e:

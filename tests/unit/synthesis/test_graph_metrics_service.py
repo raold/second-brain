@@ -23,12 +23,7 @@ class TestGraphNode:
     def test_graph_node_creation(self):
         """Test creating a graph node"""
         node_id = uuid4()
-        node = GraphNode(
-            node_id,
-            "Test content",
-            8.5,
-            datetime.utcnow()
-        )
+        node = GraphNode(node_id, "Test content", 8.5, datetime.utcnow())
 
         assert node.id == node_id
         assert node.content == "Test content"
@@ -63,37 +58,37 @@ class TestGraphMetricsService:
         base_time = datetime.utcnow()
         return [
             {
-                'id': uuid4(),
-                'content': 'Python programming basics',
-                'importance': 8,
-                'created_at': base_time,
-                'tags': ['Python', 'Programming'],
-                'metadata': {}
+                "id": uuid4(),
+                "content": "Python programming basics",
+                "importance": 8,
+                "created_at": base_time,
+                "tags": ["Python", "Programming"],
+                "metadata": {},
             },
             {
-                'id': uuid4(),
-                'content': 'Advanced Python concepts',
-                'importance': 9,
-                'created_at': base_time - timedelta(days=5),
-                'tags': ['Python', 'Advanced'],
-                'metadata': {}
+                "id": uuid4(),
+                "content": "Advanced Python concepts",
+                "importance": 9,
+                "created_at": base_time - timedelta(days=5),
+                "tags": ["Python", "Advanced"],
+                "metadata": {},
             },
             {
-                'id': uuid4(),
-                'content': 'Machine Learning with Python',
-                'importance': 9,
-                'created_at': base_time - timedelta(days=10),
-                'tags': ['Python', 'ML'],
-                'metadata': {}
+                "id": uuid4(),
+                "content": "Machine Learning with Python",
+                "importance": 9,
+                "created_at": base_time - timedelta(days=10),
+                "tags": ["Python", "ML"],
+                "metadata": {},
             },
             {
-                'id': uuid4(),
-                'content': 'JavaScript basics',
-                'importance': 7,
-                'created_at': base_time - timedelta(days=15),
-                'tags': ['JavaScript'],
-                'metadata': {}
-            }
+                "id": uuid4(),
+                "content": "JavaScript basics",
+                "importance": 7,
+                "created_at": base_time - timedelta(days=15),
+                "tags": ["JavaScript"],
+                "metadata": {},
+            },
         ]
 
     @pytest.fixture
@@ -101,19 +96,19 @@ class TestGraphMetricsService:
         """Create sample relationships"""
         return [
             {
-                'source_id': sample_memories[0]['id'],
-                'target_id': sample_memories[1]['id'],
-                'relationship_type': 'related_to',
-                'strength': 0.8,
-                'created_at': datetime.utcnow()
+                "source_id": sample_memories[0]["id"],
+                "target_id": sample_memories[1]["id"],
+                "relationship_type": "related_to",
+                "strength": 0.8,
+                "created_at": datetime.utcnow(),
             },
             {
-                'source_id': sample_memories[1]['id'],
-                'target_id': sample_memories[2]['id'],
-                'relationship_type': 'prerequisite_for',
-                'strength': 0.9,
-                'created_at': datetime.utcnow()
-            }
+                "source_id": sample_memories[1]["id"],
+                "target_id": sample_memories[2]["id"],
+                "relationship_type": "prerequisite_for",
+                "strength": 0.9,
+                "created_at": datetime.utcnow(),
+            },
         ]
 
     @pytest.mark.asyncio
@@ -148,7 +143,7 @@ class TestGraphMetricsService:
         assert metrics.total_nodes == 0
         assert metrics.total_edges == 0
         assert metrics.graph_density == 0
-        assert metrics.metadata.get('empty') is True
+        assert metrics.metadata.get("empty") is True
 
     @pytest.mark.asyncio
     async def test_analyze_node_importance(self, service, sample_memories, sample_relationships):
@@ -159,7 +154,7 @@ class TestGraphMetricsService:
         # Clear cache to force rebuild
         service._graph_cache = None
 
-        node_id = sample_memories[1]['id']  # Node with connections
+        node_id = sample_memories[1]["id"]  # Node with connections
         node_metrics = await service.analyze_node_importance(node_id)
 
         assert isinstance(node_metrics, NodeMetrics)
@@ -187,27 +182,31 @@ class TestGraphMetricsService:
 
         # Add more memories to make clusters significant
         for i in range(3):
-            cluster1_memories.append({
-                'id': uuid4(),
-                'content': f'Python topic {i}',
-                'importance': 7,
-                'created_at': datetime.utcnow(),
-                'tags': ['Python'],
-                'metadata': {}
-            })
+            cluster1_memories.append(
+                {
+                    "id": uuid4(),
+                    "content": f"Python topic {i}",
+                    "importance": 7,
+                    "created_at": datetime.utcnow(),
+                    "tags": ["Python"],
+                    "metadata": {},
+                }
+            )
 
         all_memories = cluster1_memories + cluster2_memories
 
         # Create relationships within cluster 1
         cluster1_relationships = []
         for i in range(len(cluster1_memories) - 1):
-            cluster1_relationships.append({
-                'source_id': cluster1_memories[i]['id'],
-                'target_id': cluster1_memories[i + 1]['id'],
-                'relationship_type': 'related_to',
-                'strength': 0.8,
-                'created_at': datetime.utcnow()
-            })
+            cluster1_relationships.append(
+                {
+                    "source_id": cluster1_memories[i]["id"],
+                    "target_id": cluster1_memories[i + 1]["id"],
+                    "relationship_type": "related_to",
+                    "strength": 0.8,
+                    "created_at": datetime.utcnow(),
+                }
+            )
 
         service._fetch_graph_memories = AsyncMock(return_value=all_memories)
         service._fetch_relationships = AsyncMock(return_value=cluster1_relationships)
@@ -234,14 +233,14 @@ class TestGraphMetricsService:
         assert graph.number_of_edges() == len(sample_relationships)
 
         # Check node attributes
-        node_id = sample_memories[0]['id']
-        assert graph.nodes[node_id]['content'] == sample_memories[0]['content']
-        assert graph.nodes[node_id]['importance'] == sample_memories[0]['importance']
+        node_id = sample_memories[0]["id"]
+        assert graph.nodes[node_id]["content"] == sample_memories[0]["content"]
+        assert graph.nodes[node_id]["importance"] == sample_memories[0]["importance"]
 
         # Check edge attributes
-        edge = (sample_relationships[0]['source_id'], sample_relationships[0]['target_id'])
+        edge = (sample_relationships[0]["source_id"], sample_relationships[0]["target_id"])
         assert graph.has_edge(*edge)
-        assert graph.edges[edge]['relationship_type'] == 'related_to'
+        assert graph.edges[edge]["relationship_type"] == "related_to"
 
     @pytest.mark.asyncio
     async def test_graph_caching(self, service, sample_memories, sample_relationships):
@@ -268,7 +267,9 @@ class TestGraphMetricsService:
         assert graph3 is not graph2  # Different instance
 
     @pytest.mark.asyncio
-    async def test_calculate_connectivity_metrics(self, service, sample_memories, sample_relationships):
+    async def test_calculate_connectivity_metrics(
+        self, service, sample_memories, sample_relationships
+    ):
         """Test connectivity metrics calculation"""
         # Create a connected graph
         service._fetch_graph_memories = AsyncMock(return_value=sample_memories)
@@ -302,9 +303,9 @@ class TestGraphMetricsService:
         assert 0 <= metrics.recent_activity_score <= 1
         assert isinstance(metrics.temporal_clusters, list)
         assert isinstance(metrics.activity_periods, list)
-        assert 'total_time_span_days' in metrics.metadata
-        assert 'first_memory' in metrics.metadata
-        assert 'last_memory' in metrics.metadata
+        assert "total_time_span_days" in metrics.metadata
+        assert "first_memory" in metrics.metadata
+        assert "last_memory" in metrics.metadata
 
     def test_find_temporal_clusters(self, service):
         """Test temporal cluster detection"""
@@ -327,10 +328,10 @@ class TestGraphMetricsService:
         clusters = service._find_temporal_clusters(times)
 
         assert len(clusters) >= 1  # At least one cluster
-        assert clusters[0]['size'] >= 3
-        assert 'start_time' in clusters[0]
-        assert 'end_time' in clusters[0]
-        assert 'duration_hours' in clusters[0]
+        assert clusters[0]["size"] >= 3
+        assert "start_time" in clusters[0]
+        assert "end_time" in clusters[0]
+        assert "duration_hours" in clusters[0]
 
     def test_identify_activity_periods(self, service):
         """Test activity period identification"""
@@ -351,14 +352,12 @@ class TestGraphMetricsService:
     def test_calculate_graph_health(self, service):
         """Test graph health score calculation"""
         node_metrics = {
-            'avg_clustering': 0.7,
-            'degree_distribution': {'mean': 5},
-            'isolated_nodes': ['node1', 'node2']
+            "avg_clustering": 0.7,
+            "degree_distribution": {"mean": 5},
+            "isolated_nodes": ["node1", "node2"],
         }
 
-        cluster_metrics = {
-            'modularity': 0.6
-        }
+        cluster_metrics = {"modularity": 0.6}
 
         connectivity_metrics = ConnectivityMetrics(
             is_connected=True,
@@ -370,13 +369,11 @@ class TestGraphMetricsService:
             node_connectivity=2,
             num_bridges=5,
             num_articulation_points=3,
-            metadata={}
+            metadata={},
         )
 
         health_score = service._calculate_graph_health(
-            node_metrics,
-            cluster_metrics,
-            connectivity_metrics
+            node_metrics, cluster_metrics, connectivity_metrics
         )
 
         assert 0 <= health_score <= 1
@@ -393,7 +390,7 @@ class TestGraphMetricsService:
 
         # Should return empty metrics on error
         assert metrics.total_nodes == 0
-        assert metrics.metadata.get('empty') is True
+        assert metrics.metadata.get("empty") is True
 
     def test_calculate_cluster_modularity(self, service):
         """Test cluster modularity calculation"""

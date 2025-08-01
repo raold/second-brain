@@ -1,17 +1,22 @@
+from datetime import datetime
+from typing import Any
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+
 """
 Data models for AI insights and pattern discovery
 """
 
-from datetime import datetime
 from enum import Enum
-from typing import Any, Literal
-from uuid import UUID
+from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import field_validator
 
 
 class InsightType(str, Enum):
     """Types of insights that can be generated"""
+
     USAGE_PATTERN = "usage_pattern"
     KNOWLEDGE_GROWTH = "knowledge_growth"
     MEMORY_CLUSTER = "memory_cluster"
@@ -26,6 +31,7 @@ class InsightType(str, Enum):
 
 class PatternType(str, Enum):
     """Types of patterns that can be detected"""
+
     TEMPORAL = "temporal"  # Time-based patterns
     SEMANTIC = "semantic"  # Content similarity patterns
     BEHAVIORAL = "behavioral"  # Usage behavior patterns
@@ -35,6 +41,7 @@ class PatternType(str, Enum):
 
 class TimeFrame(str, Enum):
     """Time frames for analysis"""
+
     DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
@@ -45,6 +52,7 @@ class TimeFrame(str, Enum):
 
 class Insight(BaseModel):
     """Individual insight generated from memory analysis"""
+
     id: UUID
     type: InsightType
     title: str
@@ -57,7 +65,7 @@ class Insight(BaseModel):
     time_frame: TimeFrame
     affected_memories: list[UUID] = []
 
-    @field_validator('confidence')
+    @field_validator("confidence")
     @classmethod
     def validate_confidence(cls, v: float) -> float:
         return max(0.0, min(1.0, v))
@@ -65,6 +73,7 @@ class Insight(BaseModel):
 
 class Pattern(BaseModel):
     """Detected pattern in memory usage or content"""
+
     id: UUID
     type: PatternType
     name: str
@@ -76,7 +85,7 @@ class Pattern(BaseModel):
     examples: list[dict[str, Any]]
     metadata: dict[str, Any] = {}
 
-    @field_validator('strength')
+    @field_validator("strength")
     @classmethod
     def validate_strength(cls, v: float) -> float:
         return max(0.0, min(1.0, v))
@@ -84,6 +93,7 @@ class Pattern(BaseModel):
 
 class MemoryCluster(BaseModel):
     """Cluster of related memories"""
+
     id: UUID
     name: str
     description: str
@@ -96,7 +106,7 @@ class MemoryCluster(BaseModel):
     created_at: datetime
     keywords: list[str] = []
 
-    @field_validator('coherence_score')
+    @field_validator("coherence_score")
     @classmethod
     def validate_coherence(cls, v: float) -> float:
         return max(0.0, min(1.0, v))
@@ -104,6 +114,7 @@ class MemoryCluster(BaseModel):
 
 class KnowledgeGap(BaseModel):
     """Identified gap in knowledge"""
+
     id: UUID
     area: str
     description: str
@@ -113,7 +124,7 @@ class KnowledgeGap(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     detected_at: datetime
 
-    @field_validator('severity', 'confidence')
+    @field_validator("severity", "confidence")
     @classmethod
     def validate_scores(cls, v: float) -> float:
         return max(0.0, min(1.0, v))
@@ -121,6 +132,7 @@ class KnowledgeGap(BaseModel):
 
 class UsageStatistics(BaseModel):
     """Memory usage statistics"""
+
     time_frame: TimeFrame
     total_memories: int
     total_accesses: int
@@ -134,6 +146,7 @@ class UsageStatistics(BaseModel):
 
 class LearningProgress(BaseModel):
     """Learning progress tracking"""
+
     time_frame: TimeFrame
     topics_covered: int
     memories_created: int
@@ -146,6 +159,7 @@ class LearningProgress(BaseModel):
 
 class InsightRequest(BaseModel):
     """Request for generating insights"""
+
     time_frame: TimeFrame = TimeFrame.WEEKLY
     insight_types: list[InsightType] | None = None
     limit: int = Field(default=10, ge=1, le=50)
@@ -155,6 +169,7 @@ class InsightRequest(BaseModel):
 
 class PatternDetectionRequest(BaseModel):
     """Request for pattern detection"""
+
     pattern_types: list[PatternType] | None = None
     time_frame: TimeFrame = TimeFrame.MONTHLY
     min_occurrences: int = Field(default=3, ge=1)
@@ -163,6 +178,7 @@ class PatternDetectionRequest(BaseModel):
 
 class ClusteringRequest(BaseModel):
     """Request for memory clustering"""
+
     algorithm: Literal["kmeans", "dbscan", "hierarchical"] = "kmeans"
     num_clusters: int | None = Field(None, ge=2, le=50)
     min_cluster_size: int = Field(default=3, ge=2)
@@ -171,6 +187,7 @@ class ClusteringRequest(BaseModel):
 
 class GapAnalysisRequest(BaseModel):
     """Request for knowledge gap analysis"""
+
     domains: list[str] | None = None
     min_severity: float = Field(default=0.5, ge=0.0, le=1.0)
     include_suggestions: bool = True
@@ -180,6 +197,7 @@ class GapAnalysisRequest(BaseModel):
 # Response models
 class InsightResponse(BaseModel):
     """Response containing insights"""
+
     insights: list[Insight]
     total: int
     time_frame: TimeFrame
@@ -189,6 +207,7 @@ class InsightResponse(BaseModel):
 
 class PatternResponse(BaseModel):
     """Response containing detected patterns"""
+
     patterns: list[Pattern]
     total: int
     time_frame: TimeFrame
@@ -197,6 +216,7 @@ class PatternResponse(BaseModel):
 
 class ClusterResponse(BaseModel):
     """Response containing memory clusters"""
+
     clusters: list[MemoryCluster]
     total_clusters: int
     total_memories_clustered: int
@@ -206,6 +226,7 @@ class ClusterResponse(BaseModel):
 
 class GapAnalysisResponse(BaseModel):
     """Response containing knowledge gaps"""
+
     gaps: list[KnowledgeGap]
     total: int
     coverage_score: float = Field(ge=0.0, le=1.0)
@@ -215,6 +236,7 @@ class GapAnalysisResponse(BaseModel):
 
 class TrendAnalysis(BaseModel):
     """Trend analysis results"""
+
     trend_type: str
     trend_direction: Literal["increasing", "decreasing", "stable"]
     confidence: float = Field(ge=0.0, le=1.0)
@@ -226,6 +248,7 @@ class TrendAnalysis(BaseModel):
 
 class PatternDetection(BaseModel):
     """Pattern detection results"""
+
     pattern_type: PatternType
     pattern_name: str
     occurrences: int

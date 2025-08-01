@@ -1,3 +1,10 @@
+from datetime import datetime
+from typing import Any
+
+import numpy as np
+
+from app.utils.logging_config import get_logger
+
 #!/usr/bin/env python3
 """
 Memory Relationship Analyzer - Refactored Version
@@ -17,10 +24,6 @@ Refactored: ~200 lines, testable, modular
 """
 
 from collections import Counter, defaultdict
-from datetime import datetime
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -29,7 +32,10 @@ class MemoryRelationshipAnalyzer:
     """Refactored analyzer for detecting and quantifying relationships between memories."""
 
     def __init__(
-        self, database: MemoryDatabaseInterface, similarity_threshold: float = 0.3, temporal_window_hours: float = 24.0
+        self,
+        database: MemoryDatabaseInterface,
+        similarity_threshold: float = 0.3,
+        temporal_window_hours: float = 24.0,
     ):
         """Initialize relationship analyzer with dependency injection.
 
@@ -56,7 +62,11 @@ class MemoryRelationshipAnalyzer:
         }
 
     async def analyze_memory_relationships(
-        self, memory_id: str, relationship_types: list[str] | None = None, depth: int = 2, max_connections: int = 50
+        self,
+        memory_id: str,
+        relationship_types: list[str] | None = None,
+        depth: int = 2,
+        max_connections: int = 50,
     ) -> dict[str, Any]:
         """
         Perform comprehensive relationship analysis for a specific memory.
@@ -92,7 +102,9 @@ class MemoryRelationshipAnalyzer:
             )
 
             # Filter and rank relationships
-            significant_relationships = self._filter_significant_relationships(relationships, max_connections)
+            significant_relationships = self._filter_significant_relationships(
+                relationships, max_connections
+            )
 
             # Perform multi-level analysis if depth > 1
             extended_network = {}
@@ -102,7 +114,9 @@ class MemoryRelationshipAnalyzer:
                 )
 
             # Generate insights
-            insights = self._generate_relationship_insights(significant_relationships, extended_network)
+            insights = self._generate_relationship_insights(
+                significant_relationships, extended_network
+            )
 
             return {
                 "memory_id": memory_id,
@@ -136,7 +150,10 @@ class MemoryRelationshipAnalyzer:
             }
 
     async def _analyze_relationships_batch(
-        self, target_memory: dict[str, Any], candidate_memories: list[dict[str, Any]], relationship_types: list[str]
+        self,
+        target_memory: dict[str, Any],
+        candidate_memories: list[dict[str, Any]],
+        relationship_types: list[str],
     ) -> list[dict[str, Any]]:
         """Analyze relationships between target memory and candidates."""
         relationships = []
@@ -170,24 +187,32 @@ class MemoryRelationshipAnalyzer:
                         "target_id": str(target_memory["id"]),
                         "related_id": str(candidate["id"]),
                         "related_memory": {
-                            "content_preview": candidate["content"][:100] if candidate.get("content") else "",
+                            "content_preview": (
+                                candidate["content"][:100] if candidate.get("content") else ""
+                            ),
                             "memory_type": candidate.get("memory_type"),
                             "importance_score": float(candidate.get("importance_score", 0)),
-                            "created_at": candidate["created_at"].isoformat() if candidate.get("created_at") else None,
+                            "created_at": (
+                                candidate["created_at"].isoformat()
+                                if candidate.get("created_at")
+                                else None
+                            ),
                         },
                         "relationship_scores": relationship_scores,
                         "composite_score": composite_score,
-                        "primary_relationship_type": max(
-                            relationship_scores.keys(), key=lambda k: relationship_scores[k]
-                        )
-                        if relationship_scores
-                        else "unknown",
+                        "primary_relationship_type": (
+                            max(relationship_scores.keys(), key=lambda k: relationship_scores[k])
+                            if relationship_scores
+                            else "unknown"
+                        ),
                         "strength": categorize_relationship_strength(composite_score),
                     }
                     relationships.append(relationship)
 
             except Exception as e:
-                logger.warning(f"Failed to analyze relationship with candidate {candidate.get('id', 'unknown')}: {e}")
+                logger.warning(
+                    f"Failed to analyze relationship with candidate {candidate.get('id', 'unknown')}: {e}"
+                )
                 continue
 
         return sorted(relationships, key=lambda x: x["composite_score"], reverse=True)
@@ -211,20 +236,27 @@ class MemoryRelationshipAnalyzer:
         self, memory1: dict, memory2: dict, embedding1: list[float], embedding2: list[float]
     ) -> float:
         """Analyze content overlap."""
-        return self.similarity_analyzers.calculate_content_overlap(memory1.get("content"), memory2.get("content"))
+        return self.similarity_analyzers.calculate_content_overlap(
+            memory1.get("content"), memory2.get("content")
+        )
 
     async def _analyze_conceptual_hierarchy(
         self, memory1: dict, memory2: dict, embedding1: list[float], embedding2: list[float]
     ) -> float:
         """Analyze conceptual hierarchy."""
-        return self.similarity_analyzers.calculate_conceptual_hierarchy(memory1.get("content"), memory2.get("content"))
+        return self.similarity_analyzers.calculate_conceptual_hierarchy(
+            memory1.get("content"), memory2.get("content")
+        )
 
     async def _analyze_causal_relationship(
         self, memory1: dict, memory2: dict, embedding1: list[float], embedding2: list[float]
     ) -> float:
         """Analyze causal relationships."""
         return self.similarity_analyzers.detect_causal_relationship(
-            memory1.get("content"), memory2.get("content"), memory1.get("created_at"), memory2.get("created_at")
+            memory1.get("content"),
+            memory2.get("content"),
+            memory1.get("created_at"),
+            memory2.get("created_at"),
         )
 
     async def _analyze_contextual_association(
@@ -240,7 +272,9 @@ class MemoryRelationshipAnalyzer:
             memory2.get("importance_score"),
         )
 
-    def _filter_significant_relationships(self, relationships: list[dict], max_connections: int) -> list[dict]:
+    def _filter_significant_relationships(
+        self, relationships: list[dict], max_connections: int
+    ) -> list[dict]:
         """Filter and rank relationships by significance."""
         # Remove relationships below threshold
         filtered = [r for r in relationships if r["composite_score"] > self.similarity_threshold]
@@ -270,7 +304,9 @@ class MemoryRelationshipAnalyzer:
 
                 extended_network[related_id] = {
                     "memory_preview": relationship["related_memory"],
-                    "secondary_relationships": sub_analysis.get("direct_relationships", [])[:5],  # Limit depth
+                    "secondary_relationships": sub_analysis.get("direct_relationships", [])[
+                        :5
+                    ],  # Limit depth
                     "relationship_count": len(sub_analysis.get("direct_relationships", [])),
                 }
 
@@ -280,7 +316,9 @@ class MemoryRelationshipAnalyzer:
 
         return extended_network
 
-    def _generate_relationship_insights(self, relationships: list[dict], extended_network: dict) -> dict[str, Any]:
+    def _generate_relationship_insights(
+        self, relationships: list[dict], extended_network: dict
+    ) -> dict[str, Any]:
         """Generate insights from relationship analysis."""
         if not relationships:
             return {"message": "No significant relationships found"}
@@ -300,7 +338,9 @@ class MemoryRelationshipAnalyzer:
                 for rel_type, score in r["relationship_scores"].items():
                     type_scores[rel_type].append(score)
 
-            avg_scores_by_type = {rel_type: float(np.mean(scores)) for rel_type, scores in type_scores.items()}
+            avg_scores_by_type = {
+                rel_type: float(np.mean(scores)) for rel_type, scores in type_scores.items()
+            }
 
             # Network insights
             network_size = len(relationships) + len(extended_network)

@@ -1,16 +1,19 @@
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
+
+from app.utils.logging_config import get_logger
+
 """
 WebSocket routes for real-time updates
 """
 
 import uuid
-from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db
 from app.services.synthesis.websocket_service import get_websocket_service
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -21,7 +24,7 @@ router = APIRouter(prefix="/ws", tags=["WebSocket"])
 async def websocket_endpoint(
     websocket: WebSocket,
     token: str | None = Query(None, description="Authentication token"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     WebSocket endpoint for real-time updates.
@@ -87,18 +90,12 @@ async def websocket_endpoint(
 
 
 @router.get("/status")
-async def get_websocket_status(
-    db: AsyncSession = Depends(get_db)
-) -> dict:
+async def get_websocket_status(db: AsyncSession = Depends(get_db)) -> dict:
     """Get WebSocket service status and statistics."""
     ws_service = await get_websocket_service(db)
     stats = ws_service.connection_manager.get_connection_stats()
 
-    return {
-        "status": "active",
-        "statistics": stats,
-        "server_time": datetime.utcnow().isoformat()
-    }
+    return {"status": "active", "statistics": stats, "server_time": datetime.utcnow().isoformat()}
 
 
 # Example usage documentation

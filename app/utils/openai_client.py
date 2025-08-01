@@ -1,15 +1,17 @@
-"""
-OpenAI client utility for embeddings.
-"""
-
 import asyncio
 import os
 from typing import Optional
 
+from app.utils.logging_config import get_logger
+
+"""
+OpenAI client utility for embeddings.
+"""
+
+
 from openai import AsyncOpenAI
 
 from app.config import Config
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -55,7 +57,13 @@ class OpenAIClient:
             logger.error(f"Failed to get embedding: {e}")
             return None
 
-    async def generate_text(self, prompt: str, system_prompt: str = None, max_tokens: int = 1000, temperature: float = 0.7) -> str | None:
+    async def generate_text(
+        self,
+        prompt: str,
+        system_prompt: str = None,
+        max_tokens: int = 1000,
+        temperature: float = 0.7,
+    ) -> str | None:
         """Generate text using OpenAI API."""
         if not self._client:
             logger.error("OpenAI client not initialized - missing API key")
@@ -71,7 +79,7 @@ class OpenAIClient:
                 model=os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
                 messages=messages,
                 max_tokens=max_tokens,
-                temperature=temperature
+                temperature=temperature,
             )
             return response.choices[0].message.content
         except Exception as e:
@@ -90,7 +98,7 @@ class OpenAIClient:
             "entities": "Extract named entities (people, places, organizations, dates) from this content:",
             "sentiment": "Analyze the sentiment of this content (positive, negative, neutral) and explain why:",
             "topics": "Identify the main topics discussed in this content:",
-            "structure": "Analyze the structure of this content and identify key sections:"
+            "structure": "Analyze the structure of this content and identify key sections:",
         }
 
         prompt = analysis_prompts.get(analysis_type, analysis_prompts["summary"])
@@ -99,11 +107,14 @@ class OpenAIClient:
             response = await self._client.chat.completions.create(
                 model=os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
                 messages=[
-                    {"role": "system", "content": "You are an expert content analyst. Provide clear, structured analysis."},
-                    {"role": "user", "content": f"{prompt}\n\n{content}"}
+                    {
+                        "role": "system",
+                        "content": "You are an expert content analyst. Provide clear, structured analysis.",
+                    },
+                    {"role": "user", "content": f"{prompt}\n\n{content}"},
                 ],
                 max_tokens=500,
-                temperature=0.3  # Lower temperature for more consistent analysis
+                temperature=0.3,  # Lower temperature for more consistent analysis
             )
 
             result = response.choices[0].message.content
@@ -113,7 +124,7 @@ class OpenAIClient:
                 "analysis_type": analysis_type,
                 "result": result,
                 "model_used": response.model,
-                "tokens_used": response.usage.total_tokens if hasattr(response, 'usage') else None
+                "tokens_used": response.usage.total_tokens if hasattr(response, "usage") else None,
             }
 
         except Exception as e:
@@ -127,20 +138,32 @@ class OpenAIClient:
             return None
 
         try:
-            topics_text = "\n".join([f"- {t.get('name', 'Unknown')}: {', '.join(t.get('keywords', [])[:5])}" for t in topics])
+            topics_text = "\n".join(
+                [
+                    f"- {t.get('name', 'Unknown')}: {', '.join(t.get('keywords', [])[:5])}"
+                    for t in topics
+                ]
+            )
 
             response = await self._client.chat.completions.create(
                 model=os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
                 messages=[
-                    {"role": "system", "content": "You are an expert at analyzing and naming topics. Provide clear, descriptive names and brief explanations."},
-                    {"role": "user", "content": f"Improve the names and add brief descriptions for these topics:\n{topics_text}\n\nReturn as JSON array with 'name', 'description', and 'keywords' for each topic."}
+                    {
+                        "role": "system",
+                        "content": "You are an expert at analyzing and naming topics. Provide clear, descriptive names and brief explanations.",
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Improve the names and add brief descriptions for these topics:\n{topics_text}\n\nReturn as JSON array with 'name', 'description', and 'keywords' for each topic.",
+                    },
                 ],
                 max_tokens=800,
                 temperature=0.5,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             )
 
             import json
+
             result = json.loads(response.choices[0].message.content)
 
             # Merge enhanced data back into topics
@@ -168,15 +191,22 @@ class OpenAIClient:
             response = await self._client.chat.completions.create(
                 model=os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
                 messages=[
-                    {"role": "system", "content": "You are an expert content classifier. Classify content accurately and provide confidence scores."},
-                    {"role": "user", "content": f"Classify this content into one or more of these categories: {categories_text}\n\nContent: {content[:2000]}\n\nReturn as JSON with 'primary_category', 'all_categories' (with confidence scores), and 'reasoning'."}
+                    {
+                        "role": "system",
+                        "content": "You are an expert content classifier. Classify content accurately and provide confidence scores.",
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Classify this content into one or more of these categories: {categories_text}\n\nContent: {content[:2000]}\n\nReturn as JSON with 'primary_category', 'all_categories' (with confidence scores), and 'reasoning'.",
+                    },
                 ],
                 max_tokens=300,
                 temperature=0.3,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             )
 
             import json
+
             return json.loads(response.choices[0].message.content)
 
         except Exception as e:

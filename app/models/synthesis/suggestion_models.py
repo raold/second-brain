@@ -5,9 +5,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from app.models.synthesis.suggestion_models import SuggestionType
+
 
 class SuggestionType(str, Enum):
     """Types of suggestions"""
+
     EXPLORE = "explore"
     CONNECT = "connect"
     REVIEW = "review"
@@ -24,6 +27,7 @@ class SuggestionType(str, Enum):
 
 class ActionType(str, Enum):
     """Types of actions for suggestions"""
+
     CREATE = "create"
     LINK = "link"
     REVIEW = "review"
@@ -34,6 +38,7 @@ class ActionType(str, Enum):
 
 class Suggestion(BaseModel):
     """Individual suggestion"""
+
     id: str
     type: SuggestionType
     title: str
@@ -48,6 +53,7 @@ class Suggestion(BaseModel):
 
 class LearningPathSuggestion(BaseModel):
     """Suggested learning path"""
+
     path_name: str
     description: str
     steps: list[str]
@@ -60,6 +66,7 @@ class LearningPathSuggestion(BaseModel):
 
 class ContentSuggestion(BaseModel):
     """Suggested content to create"""
+
     content_type: str  # "synthesis", "deep_dive", "reflection"
     topic: str
     rationale: str
@@ -70,6 +77,7 @@ class ContentSuggestion(BaseModel):
 
 class OrganizationSuggestion(BaseModel):
     """Suggestion for better organization"""
+
     organization_type: str  # "tagging", "structure", "maintenance"
     title: str
     description: str
@@ -80,6 +88,7 @@ class OrganizationSuggestion(BaseModel):
 
 class SuggestionRequest(BaseModel):
     """Request for suggestions"""
+
     user_id: str
     context_memory_ids: list[UUID] | None = Field(default_factory=list)
     suggestion_types: list[SuggestionType] | None = None
@@ -96,6 +105,7 @@ class SuggestionRequest(BaseModel):
 
 class SuggestionResponse(BaseModel):
     """Response containing suggestions"""
+
     suggestions: list[Suggestion]
     learning_paths: list[LearningPathSuggestion] = Field(default_factory=list)
     content_suggestions: list[ContentSuggestion] = Field(default_factory=list)

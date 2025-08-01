@@ -1,16 +1,21 @@
-"""
-Search-related models for Second Brain
-"""
-
 from datetime import datetime
 
 from pydantic import BaseModel, Field
 
 from app.models.memory import MemoryType
+from app.models.search import SearchResult
+
+"""
+Search-related models for Second Brain
+"""
+
+
+
 
 
 class SearchCriteria(BaseModel):
     """Criteria for searching memories"""
+
     query: str | None = Field(None, description="Search query text")
     user_id: str | None = Field(None, description="User ID filter")
     memory_type: MemoryType | None = Field(None, description="Memory type filter")
@@ -26,13 +31,14 @@ class SearchCriteria(BaseModel):
                 "query": "python programming",
                 "memory_type": "note",
                 "tags": ["python", "programming"],
-                "limit": 50
+                "limit": 50,
             }
         }
 
 
 class SearchResult(BaseModel):
     """Search result with memory and relevance score"""
+
     memory_id: str
     content: str
     memory_type: MemoryType
@@ -48,6 +54,6 @@ class SearchResult(BaseModel):
                 "memory_type": "note",
                 "created_at": "2024-01-15T10:30:00Z",
                 "relevance_score": 0.95,
-                "highlights": ["Python", "programming language"]
+                "highlights": ["Python", "programming language"],
             }
         }

@@ -1,3 +1,10 @@
+import re
+from dataclasses import dataclass, field
+from typing import Any
+
+from app.ingestion.models import StructuredData
+from app.utils.logging_config import get_logger
+
 """
 Domain classification service for intelligent content analysis.
 
@@ -8,12 +15,8 @@ This service analyzes text content to:
 - Provide statistical analysis of content
 """
 
-import re
 from collections import Counter
-from dataclasses import dataclass, field
-from typing import Any
 
-from app.utils.logging_config import get_logger
 from app.utils.openai_client import get_openai_client
 
 logger = get_logger(__name__)
@@ -22,6 +25,7 @@ logger = get_logger(__name__)
 @dataclass
 class Topic:
     """Represents an extracted topic with metadata"""
+
     name: str
     frequency: int
     confidence: float
@@ -32,6 +36,7 @@ class Topic:
 @dataclass
 class Domain:
     """Represents a knowledge domain classification"""
+
     name: str
     confidence: float
     indicators: list[str] = field(default_factory=list)
@@ -41,6 +46,7 @@ class Domain:
 @dataclass
 class StructuredData:
     """Container for extracted structured data"""
+
     key_value_pairs: dict[str, Any] = field(default_factory=dict)
     lists: list[dict[str, Any]] = field(default_factory=list)
     tables: list[dict[str, Any]] = field(default_factory=list)
@@ -54,42 +60,110 @@ class DomainClassifier:
     # Knowledge domain definitions
     DOMAIN_PATTERNS = {
         "technology": {
-            "keywords": ["software", "code", "api", "database", "algorithm", "framework", "programming", "development", "tech", "system"],
+            "keywords": [
+                "software",
+                "code",
+                "api",
+                "database",
+                "algorithm",
+                "framework",
+                "programming",
+                "development",
+                "tech",
+                "system",
+            ],
             "patterns": [r"\b(python|javascript|java|sql|html|css)\b", r"\b(AI|ML|API|SDK)\b"],
-            "sub_domains": ["software_engineering", "data_science", "web_development", "devops", "security"]
+            "sub_domains": [
+                "software_engineering",
+                "data_science",
+                "web_development",
+                "devops",
+                "security",
+            ],
         },
         "business": {
-            "keywords": ["revenue", "profit", "market", "strategy", "customer", "sales", "growth", "investment", "roi", "kpi"],
+            "keywords": [
+                "revenue",
+                "profit",
+                "market",
+                "strategy",
+                "customer",
+                "sales",
+                "growth",
+                "investment",
+                "roi",
+                "kpi",
+            ],
             "patterns": [r"\$\d+", r"\d+%\s*(growth|increase|decrease)", r"\b(Q[1-4]|FY\d{2,4})\b"],
-            "sub_domains": ["finance", "marketing", "strategy", "operations", "hr"]
+            "sub_domains": ["finance", "marketing", "strategy", "operations", "hr"],
         },
         "science": {
-            "keywords": ["research", "study", "experiment", "hypothesis", "data", "analysis", "theory", "evidence", "methodology"],
+            "keywords": [
+                "research",
+                "study",
+                "experiment",
+                "hypothesis",
+                "data",
+                "analysis",
+                "theory",
+                "evidence",
+                "methodology",
+            ],
             "patterns": [r"\b(p\s*[<=]\s*0\.\d+)\b", r"\b(n\s*=\s*\d+)\b"],
-            "sub_domains": ["biology", "physics", "chemistry", "psychology", "medicine"]
+            "sub_domains": ["biology", "physics", "chemistry", "psychology", "medicine"],
         },
         "personal": {
-            "keywords": ["feeling", "thought", "experience", "life", "goal", "dream", "memory", "relationship", "emotion"],
+            "keywords": [
+                "feeling",
+                "thought",
+                "experience",
+                "life",
+                "goal",
+                "dream",
+                "memory",
+                "relationship",
+                "emotion",
+            ],
             "patterns": [r"\b(I|me|my|myself)\b", r"\b(feel|think|believe|want|need)\b"],
-            "sub_domains": ["journal", "goals", "relationships", "health", "reflection"]
+            "sub_domains": ["journal", "goals", "relationships", "health", "reflection"],
         },
         "education": {
-            "keywords": ["learn", "teach", "course", "lesson", "student", "knowledge", "skill", "training", "education"],
-            "patterns": [r"\b(chapter|lesson|module|unit)\s*\d+\b", r"\b(assignment|homework|exam|test)\b"],
-            "sub_domains": ["academic", "professional_development", "skills_training", "certification"]
-        }
+            "keywords": [
+                "learn",
+                "teach",
+                "course",
+                "lesson",
+                "student",
+                "knowledge",
+                "skill",
+                "training",
+                "education",
+            ],
+            "patterns": [
+                r"\b(chapter|lesson|module|unit)\s*\d+\b",
+                r"\b(assignment|homework|exam|test)\b",
+            ],
+            "sub_domains": [
+                "academic",
+                "professional_development",
+                "skills_training",
+                "certification",
+            ],
+        },
     }
 
     def __init__(self, **kwargs):
         self.config = kwargs
         self.openai_client = None
-        self.use_ai = kwargs.get('use_ai', True)
+        self.use_ai = kwargs.get("use_ai", True)
 
         if self.use_ai:
             try:
                 self.openai_client = get_openai_client()
             except Exception as e:
-                logger.warning(f"Failed to initialize OpenAI client: {e}. Falling back to rule-based analysis.")
+                logger.warning(
+                    f"Failed to initialize OpenAI client: {e}. Falling back to rule-based analysis."
+                )
                 self.use_ai = False
 
         logger.info(f"Initialized DomainClassifier (AI={'enabled' if self.use_ai else 'disabled'})")
@@ -99,7 +173,7 @@ class DomainClassifier:
         try:
             # Preprocess content
             content_lower = content.lower()
-            words = re.findall(r'\b\w+\b', content_lower)
+            words = re.findall(r"\b\w+\b", content_lower)
 
             # Extract noun phrases and important terms
             topics = []
@@ -108,8 +182,32 @@ class DomainClassifier:
             word_freq = Counter(words)
 
             # Filter out common words
-            common_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'as', 'by', 'is', 'was', 'are', 'were'}
-            important_words = [(word, freq) for word, freq in word_freq.most_common(50) if word not in common_words and len(word) > 3]
+            common_words = {
+                "the",
+                "a",
+                "an",
+                "and",
+                "or",
+                "but",
+                "in",
+                "on",
+                "at",
+                "to",
+                "for",
+                "of",
+                "with",
+                "as",
+                "by",
+                "is",
+                "was",
+                "are",
+                "were",
+            }
+            important_words = [
+                (word, freq)
+                for word, freq in word_freq.most_common(50)
+                if word not in common_words and len(word) > 3
+            ]
 
             # Group related words into topics
             for word, freq in important_words[:20]:
@@ -118,7 +216,7 @@ class DomainClassifier:
 
                 # Extract context sentences
                 context = []
-                sentences = re.split(r'[.!?]+', content)
+                sentences = re.split(r"[.!?]+", content)
                 for sentence in sentences:
                     if word in sentence.lower():
                         context.append(sentence.strip()[:200])
@@ -130,7 +228,7 @@ class DomainClassifier:
                     frequency=freq,
                     confidence=min(freq / len(words), 1.0),
                     keywords=related[:5],
-                    context=context
+                    context=context,
                 )
                 topics.append(topic)
 
@@ -145,7 +243,10 @@ class DomainClassifier:
             # Deduplicate and sort by confidence
             unique_topics = {}
             for topic in topics:
-                if topic.name not in unique_topics or topic.confidence > unique_topics[topic.name].confidence:
+                if (
+                    topic.name not in unique_topics
+                    or topic.confidence > unique_topics[topic.name].confidence
+                ):
                     unique_topics[topic.name] = topic
 
             return sorted(unique_topics.values(), key=lambda t: t.confidence, reverse=True)[:10]
@@ -166,12 +267,14 @@ class DomainClassifier:
             for domain_name, domain_info in self.DOMAIN_PATTERNS.items():
                 # Check patterns
                 pattern_matches = 0
-                for pattern in domain_info['patterns']:
+                for pattern in domain_info["patterns"]:
                     matches = re.findall(pattern, content, re.IGNORECASE)
                     pattern_matches += len(matches)
 
                 # Check keywords
-                keyword_matches = sum(1 for keyword in domain_info['keywords'] if keyword in content.lower())
+                keyword_matches = sum(
+                    1 for keyword in domain_info["keywords"] if keyword in content.lower()
+                )
 
                 if pattern_matches > 0 or keyword_matches > 2:
                     confidence = min((pattern_matches * 0.2 + keyword_matches * 0.1), 1.0)
@@ -180,8 +283,11 @@ class DomainClassifier:
                         name=f"{domain_name.title()} Topics",
                         frequency=pattern_matches + keyword_matches,
                         confidence=confidence,
-                        keywords=domain_info['keywords'][:5],
-                        context=[f"Domain: {domain_name}", f"Sub-domains: {', '.join(domain_info['sub_domains'][:3])}"]
+                        keywords=domain_info["keywords"][:5],
+                        context=[
+                            f"Domain: {domain_name}",
+                            f"Sub-domains: {', '.join(domain_info['sub_domains'][:3])}",
+                        ],
                     )
                     enhanced_topics.append(topic)
 
@@ -208,7 +314,7 @@ class DomainClassifier:
                     "average_confidence": 0.0,
                     "high_confidence_topics": 0,
                     "topic_distribution": {},
-                    "keyword_count": 0
+                    "keyword_count": 0,
                 }
 
             # Calculate statistics
@@ -219,7 +325,7 @@ class DomainClassifier:
             confidence_groups = {
                 "high": [t for t in topics if t.confidence >= 0.7],
                 "medium": [t for t in topics if 0.4 <= t.confidence < 0.7],
-                "low": [t for t in topics if t.confidence < 0.4]
+                "low": [t for t in topics if t.confidence < 0.4],
             }
 
             return {
@@ -231,10 +337,7 @@ class DomainClassifier:
                 },
                 "keyword_count": len(set(keywords_all)),
                 "top_topics": [t.name for t in topics[:5]],
-                "confidence_range": {
-                    "min": min(confidences),
-                    "max": max(confidences)
-                }
+                "confidence_range": {"min": min(confidences), "max": max(confidences)},
             }
 
         except Exception as e:
@@ -297,17 +400,14 @@ class DomainClassifier:
                 "code_snippets_count": len(data.code_snippets),
                 "metadata_fields_count": len(data.metadata_fields),
                 "total_structured_elements": (
-                    len(data.key_value_pairs) +
-                    len(data.lists) +
-                    len(data.tables) +
-                    len(data.code_snippets)
+                    len(data.key_value_pairs)
+                    + len(data.lists)
+                    + len(data.tables)
+                    + len(data.code_snippets)
                 ),
-                "has_structured_data": any([
-                    data.key_value_pairs,
-                    data.lists,
-                    data.tables,
-                    data.code_snippets
-                ])
+                "has_structured_data": any(
+                    [data.key_value_pairs, data.lists, data.tables, data.code_snippets]
+                ),
             }
 
         except Exception as e:
@@ -329,14 +429,14 @@ class DomainClassifier:
 
                 # Check keywords
                 keyword_matches = 0
-                for keyword in domain_info['keywords']:
+                for keyword in domain_info["keywords"]:
                     if keyword in content_lower:
                         keyword_matches += content_lower.count(keyword)
                         indicators.append(f"keyword: {keyword}")
 
                 # Check patterns
                 pattern_matches = 0
-                for pattern in domain_info['patterns']:
+                for pattern in domain_info["patterns"]:
                     matches = re.findall(pattern, content, re.IGNORECASE)
                     pattern_matches += len(matches)
                     if matches:
@@ -353,7 +453,11 @@ class DomainClassifier:
                         name=domain_name,
                         confidence=score,
                         indicators=indicators[:5],
-                        sub_domains=[sd for sd in domain_info['sub_domains'] if any(sd.replace('_', ' ') in content_lower for _ in range(1))]
+                        sub_domains=[
+                            sd
+                            for sd in domain_info["sub_domains"]
+                            if any(sd.replace("_", " ") in content_lower for _ in range(1))
+                        ],
                     )
                     domains.append(domain)
                     confidence_scores[domain_name] = score
@@ -366,14 +470,17 @@ class DomainClassifier:
 
             return {
                 "primary_domain": primary_domain,
-                "domains": [{
-                    "name": d.name,
-                    "confidence": d.confidence,
-                    "indicators": d.indicators,
-                    "sub_domains": d.sub_domains
-                } for d in domains[:3]],
+                "domains": [
+                    {
+                        "name": d.name,
+                        "confidence": d.confidence,
+                        "indicators": d.indicators,
+                        "sub_domains": d.sub_domains,
+                    }
+                    for d in domains[:3]
+                ],
                 "confidence_scores": confidence_scores,
-                "multi_domain": len([d for d in domains if d.confidence > 0.3]) > 1
+                "multi_domain": len([d for d in domains if d.confidence > 0.3]) > 1,
             }
 
         except Exception as e:
@@ -388,18 +495,19 @@ class DomainClassifier:
                     "total_domains": 0,
                     "primary_domain": None,
                     "domain_distribution": {},
-                    "average_confidence": 0.0
+                    "average_confidence": 0.0,
                 }
 
             # Convert dict domains to Domain objects if needed
             if isinstance(domains[0], dict):
                 domains = [
                     Domain(
-                        name=d['name'],
-                        confidence=d['confidence'],
-                        indicators=d.get('indicators', []),
-                        sub_domains=d.get('sub_domains', [])
-                    ) for d in domains
+                        name=d["name"],
+                        confidence=d["confidence"],
+                        indicators=d.get("indicators", []),
+                        sub_domains=d.get("sub_domains", []),
+                    )
+                    for d in domains
                 ]
 
             confidences = [d.confidence for d in domains]
@@ -407,12 +515,10 @@ class DomainClassifier:
             return {
                 "total_domains": len(domains),
                 "primary_domain": domains[0].name if domains else None,
-                "domain_distribution": {
-                    d.name: d.confidence for d in domains
-                },
+                "domain_distribution": {d.name: d.confidence for d in domains},
                 "average_confidence": sum(confidences) / len(confidences) if confidences else 0.0,
                 "high_confidence_domains": [d.name for d in domains if d.confidence > 0.7],
-                "sub_domains_identified": sum(len(d.sub_domains) for d in domains)
+                "sub_domains_identified": sum(len(d.sub_domains) for d in domains),
             }
 
         except Exception as e:
@@ -427,16 +533,16 @@ class DomainClassifier:
 
         # Pattern 1: "key: value" or "key = value"
         patterns = [
-            r'([\w\s]+?)\s*[:=]\s*([^\n]+)',
-            r'\*\*([\w\s]+?)\*\*\s*[:=]\s*([^\n]+)',
-            r'\b([A-Z][\w\s]+?)\s+is\s+([^\n.]+)'
+            r"([\w\s]+?)\s*[:=]\s*([^\n]+)",
+            r"\*\*([\w\s]+?)\*\*\s*[:=]\s*([^\n]+)",
+            r"\b([A-Z][\w\s]+?)\s+is\s+([^\n.]+)",
         ]
 
         for pattern in patterns:
             matches = re.findall(pattern, content)
             for key, value in matches:
                 key = key.strip()
-                value = value.strip().rstrip('.,')
+                value = value.strip().rstrip(".,")
                 if len(key) < 50 and len(value) < 200 and key.lower() not in pairs:
                     pairs[key] = value
 
@@ -448,18 +554,18 @@ class DomainClassifier:
 
         # Pattern for bullet points or numbered lists
         list_patterns = [
-            r'(?:^|\n)\s*[•\-\*]\s+(.+?)(?=\n|$)',
-            r'(?:^|\n)\s*\d+\.\s+(.+?)(?=\n|$)',
-            r'(?:^|\n)\s*[a-z]\.\s+(.+?)(?=\n|$)'
+            r"(?:^|\n)\s*[•\-\*]\s+(.+?)(?=\n|$)",
+            r"(?:^|\n)\s*\d+\.\s+(.+?)(?=\n|$)",
+            r"(?:^|\n)\s*[a-z]\.\s+(.+?)(?=\n|$)",
         ]
 
         for pattern in list_patterns:
             matches = re.findall(pattern, content, re.MULTILINE)
             if len(matches) >= 2:
                 list_data = {
-                    "type": "bullet" if '•' in pattern or '-' in pattern else "numbered",
+                    "type": "bullet" if "•" in pattern or "-" in pattern else "numbered",
                     "items": [match.strip() for match in matches],
-                    "count": len(matches)
+                    "count": len(matches),
                 }
                 lists.append(list_data)
 
@@ -470,29 +576,31 @@ class DomainClassifier:
         tables = []
 
         # Simple table detection (pipe-separated values)
-        lines = content.split('\n')
+        lines = content.split("\n")
         potential_table = []
 
         for line in lines:
-            if '|' in line and line.count('|') >= 2:
+            if "|" in line and line.count("|") >= 2:
                 potential_table.append(line)
             elif potential_table and len(potential_table) >= 2:
                 # Process the table
-                headers = [cell.strip() for cell in potential_table[0].split('|') if cell.strip()]
+                headers = [cell.strip() for cell in potential_table[0].split("|") if cell.strip()]
                 rows = []
 
                 for row_line in potential_table[2:]:  # Skip separator line
-                    cells = [cell.strip() for cell in row_line.split('|') if cell.strip()]
+                    cells = [cell.strip() for cell in row_line.split("|") if cell.strip()]
                     if len(cells) == len(headers):
                         rows.append(dict(zip(headers, cells, strict=False)))
 
                 if rows:
-                    tables.append({
-                        "headers": headers,
-                        "rows": rows,
-                        "row_count": len(rows),
-                        "column_count": len(headers)
-                    })
+                    tables.append(
+                        {
+                            "headers": headers,
+                            "rows": rows,
+                            "row_count": len(rows),
+                            "column_count": len(headers),
+                        }
+                    )
 
                 potential_table = []
 
@@ -504,26 +612,28 @@ class DomainClassifier:
 
         # Pattern for code blocks
         code_patterns = [
-            r'```([\w]*)?\n([\s\S]*?)```',  # Markdown code blocks
-            r'(?:^|\n)((?:    |\t)[^\n]+(?:\n(?:    |\t)[^\n]+)*)',  # Indented blocks
+            r"```([\w]*)?\n([\s\S]*?)```",  # Markdown code blocks
+            r"(?:^|\n)((?:    |\t)[^\n]+(?:\n(?:    |\t)[^\n]+)*)",  # Indented blocks
         ]
 
         for pattern in code_patterns:
             matches = re.findall(pattern, content, re.MULTILINE)
             for match in matches:
                 if isinstance(match, tuple):
-                    language = match[0] if match[0] else 'unknown'
+                    language = match[0] if match[0] else "unknown"
                     code = match[1] if len(match) > 1 else match[0]
                 else:
-                    language = 'unknown'
+                    language = "unknown"
                     code = match
 
                 if code.strip():
-                    snippets.append({
-                        "language": language,
-                        "code": code.strip(),
-                        "lines": len(code.strip().split('\n'))
-                    })
+                    snippets.append(
+                        {
+                            "language": language,
+                            "code": code.strip(),
+                            "lines": len(code.strip().split("\n")),
+                        }
+                    )
 
         return snippets
 
@@ -533,11 +643,11 @@ class DomainClassifier:
 
         # Common metadata patterns
         metadata_patterns = {
-            "date": r'\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2})\b',
-            "time": r'\b(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[APap][Mm])?)\b',
-            "email": r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-            "url": r'https?://[^\s]+',
-            "phone": r'\b(?:\+?1[-.]?)?\(?[0-9]{3}\)?[-.]?[0-9]{3}[-.]?[0-9]{4}\b'
+            "date": r"\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2})\b",
+            "time": r"\b(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[APap][Mm])?)\b",
+            "email": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+            "url": r"https?://[^\s]+",
+            "phone": r"\b(?:\+?1[-.]?)?\(?[0-9]{3}\)?[-.]?[0-9]{3}[-.]?[0-9]{4}\b",
         }
 
         for field, pattern in metadata_patterns.items():
@@ -546,9 +656,9 @@ class DomainClassifier:
                 metadata[field] = matches[0] if len(matches) == 1 else matches
 
         # Extract word and character counts
-        metadata['word_count'] = len(re.findall(r'\b\w+\b', content))
-        metadata['char_count'] = len(content)
-        metadata['line_count'] = len(content.split('\n'))
+        metadata["word_count"] = len(re.findall(r"\b\w+\b", content))
+        metadata["char_count"] = len(content)
+        metadata["line_count"] = len(content.split("\n"))
 
         return metadata
 
@@ -558,7 +668,9 @@ class DomainClassifier:
         # For now, return empty list as OpenAI integration is pending
         return []
 
-    def _enhance_structured_data_with_ai(self, content: str, data: StructuredData) -> StructuredData:
+    def _enhance_structured_data_with_ai(
+        self, content: str, data: StructuredData
+    ) -> StructuredData:
         """Use AI to enhance structured data extraction (placeholder)"""
         # This would use OpenAI to enhance extraction
         # For now, return original data as OpenAI integration is pending

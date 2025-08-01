@@ -1,3 +1,9 @@
+import asyncio
+from dataclasses import dataclass
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Advanced protocol definitions and duck typing implementations for the Second Brain application.
 
@@ -6,28 +12,24 @@ protocol definitions, and runtime type checking that enable flexible, maintainab
 without sacrificing type safety.
 """
 
-import asyncio
 from collections.abc import AsyncIterable, Awaitable, Callable
-from dataclasses import dataclass
 from typing import (
-    Any,
     Protocol,
     TypeVar,
     runtime_checkable,
 )
 
-from app.utils.logging_config import get_logger
-
 logger = get_logger(__name__)
 
-T = TypeVar('T')
-K = TypeVar('K')
-V = TypeVar('V')
+T = TypeVar("T")
+K = TypeVar("K")
+V = TypeVar("V")
 
 
 # ============================================================================
 # Core Protocols for Second Brain Components
 # ============================================================================
+
 
 @runtime_checkable
 class Identifiable(Protocol):
@@ -63,7 +65,7 @@ class Serializable(Protocol):
         ...
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> 'Serializable':
+    def from_dict(cls, data: dict[str, Any]) -> "Serializable":
         """Create object from dictionary representation."""
         ...
 
@@ -156,6 +158,7 @@ class Observable(Protocol):
 # Memory and Knowledge Protocols
 # ============================================================================
 
+
 @runtime_checkable
 class MemoryLike(Protocol):
     """Protocol for memory-like objects."""
@@ -235,6 +238,7 @@ class Retrievable(Protocol[T]):
 # Data Processing Protocols
 # ============================================================================
 
+
 @runtime_checkable
 class Transformer(Protocol[T, V]):
     """Protocol for objects that transform data from one type to another."""
@@ -281,7 +285,9 @@ class Filterable(Protocol[T]):
         """Filter items by attribute values."""
         ...
 
-    async def filter_async(self, items: AsyncIterable[T], predicate: Callable[[T], Awaitable[bool]]) -> list[T]:
+    async def filter_async(
+        self, items: AsyncIterable[T], predicate: Callable[[T], Awaitable[bool]]
+    ) -> list[T]:
         """Filter items using async predicate."""
         ...
 
@@ -290,7 +296,9 @@ class Filterable(Protocol[T]):
 class Sortable(Protocol[T]):
     """Protocol for objects that can sort collections."""
 
-    def sort(self, items: list[T], key: Callable[[T], Any] | None = None, reverse: bool = False) -> list[T]:
+    def sort(
+        self, items: list[T], key: Callable[[T], Any] | None = None, reverse: bool = False
+    ) -> list[T]:
         """Sort items using optional key function."""
         ...
 
@@ -306,6 +314,7 @@ class Sortable(Protocol[T]):
 # ============================================================================
 # Service and Component Protocols
 # ============================================================================
+
 
 @runtime_checkable
 class Service(Protocol):
@@ -391,6 +400,7 @@ class EventHandler(Protocol[T]):
 # Repository and Storage Protocols
 # ============================================================================
 
+
 @runtime_checkable
 class Repository(Protocol[T]):
     """Protocol for repository pattern implementation."""
@@ -470,6 +480,7 @@ class Storage(Protocol):
 # Protocol-Based Duck Typing Utilities
 # ============================================================================
 
+
 class ProtocolChecker:
     """Utility class for runtime protocol checking and validation."""
 
@@ -498,7 +509,7 @@ class ProtocolChecker:
                 if callable(obj_attr):
                     if hasattr(protocol, attr_name):
                         protocol_method = getattr(protocol, attr_name)
-                        if hasattr(protocol_method, '__annotations__'):
+                        if hasattr(protocol_method, "__annotations__"):
                             # Could add more sophisticated signature checking here
                             pass
 
@@ -518,7 +529,9 @@ class ProtocolChecker:
             for attr_name in protocol_annotations:
                 if not hasattr(obj, attr_name):
                     missing.append(attr_name)
-                elif not callable(getattr(obj, attr_name)) and not isinstance(getattr(obj, attr_name), property):
+                elif not callable(getattr(obj, attr_name)) and not isinstance(
+                    getattr(obj, attr_name), property
+                ):
                     # Check if it should be callable based on protocol
                     if hasattr(protocol, attr_name):
                         protocol_attr = getattr(protocol, attr_name)
@@ -541,9 +554,9 @@ class ProtocolChecker:
             missing = ProtocolChecker.get_missing_methods(obj, protocol) if not implements else []
 
             results[protocol] = {
-                'implements': implements,
-                'missing_methods': missing,
-                'protocol_name': getattr(protocol, '__name__', str(protocol))
+                "implements": implements,
+                "missing_methods": missing,
+                "protocol_name": getattr(protocol, "__name__", str(protocol)),
             }
 
         return results
@@ -556,7 +569,9 @@ class ProtocolAdapter:
         self.target = target
         self._adapters: dict[type, dict[str, Callable]] = {}
 
-    def add_adapter(self, protocol: type, method_name: str, implementation: Callable) -> 'ProtocolAdapter':
+    def add_adapter(
+        self, protocol: type, method_name: str, implementation: Callable
+    ) -> "ProtocolAdapter":
         """Add method implementation for protocol compliance."""
         if protocol not in self._adapters:
             self._adapters[protocol] = {}
@@ -598,7 +613,10 @@ class ProtocolAdapter:
 # Duck Typing Helper Functions
 # ============================================================================
 
-def duck_type_check(obj: Any, required_methods: list[str], required_properties: list[str] | None = None) -> bool:
+
+def duck_type_check(
+    obj: Any, required_methods: list[str], required_properties: list[str] | None = None
+) -> bool:
     """Check if object has required methods and properties (duck typing)."""
     required_properties = required_properties or []
 
@@ -619,6 +637,7 @@ def duck_type_check(obj: Any, required_methods: list[str], required_properties: 
 
 def make_duck_compatible(obj: Any, target_interface: type) -> Any:
     """Create duck-type compatible wrapper for object."""
+
     class DuckWrapper:
         def __init__(self, wrapped_obj):
             self._wrapped = wrapped_obj
@@ -632,14 +651,16 @@ def make_duck_compatible(obj: Any, target_interface: type) -> Any:
     wrapper = DuckWrapper(obj)
 
     # Add missing methods from target interface if possible
-    if hasattr(target_interface, '__annotations__'):
+    if hasattr(target_interface, "__annotations__"):
         annotations = get_type_hints(target_interface)
 
         for method_name in annotations:
             if not hasattr(obj, method_name):
                 # Create placeholder method
                 def placeholder_method(*args, **kwargs):
-                    raise NotImplementedError(f"Method {method_name} not implemented in wrapped object")
+                    raise NotImplementedError(
+                        f"Method {method_name} not implemented in wrapped object"
+                    )
 
                 setattr(wrapper, method_name, placeholder_method)
 
@@ -673,7 +694,7 @@ def get_protocol_methods(protocol: type) -> list[str]:
 
         # Also check for methods defined directly on the protocol
         for attr_name in dir(protocol):
-            if not attr_name.startswith('_'):
+            if not attr_name.startswith("_"):
                 attr = getattr(protocol, attr_name)
                 if callable(attr) and attr_name not in methods:
                     methods.append(attr_name)
@@ -687,6 +708,7 @@ def get_protocol_methods(protocol: type) -> list[str]:
 # ============================================================================
 # Example Implementation Classes
 # ============================================================================
+
 
 @dataclass
 class UniversalMemory:
@@ -714,18 +736,18 @@ class UniversalMemory:
     # Serializable protocol
     def to_dict(self) -> dict[str, Any]:
         return {
-            'id': self.id,
-            'content': self.content,
-            'memory_type': self.memory_type,
-            'importance_score': self.importance_score,
-            'created_at': self.created_at,
-            'updated_at': self.updated_at,
-            'embedding': self.embedding,
-            'metadata': self.metadata
+            "id": self.id,
+            "content": self.content,
+            "memory_type": self.memory_type,
+            "importance_score": self.importance_score,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "embedding": self.embedding,
+            "metadata": self.metadata,
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> 'UniversalMemory':
+    def from_dict(cls, data: dict[str, Any]) -> "UniversalMemory":
         return cls(**data)
 
     # Cacheable protocol
@@ -760,7 +782,7 @@ class UniversalMemory:
         if not (0.0 <= self.importance_score <= 1.0):
             errors.append("Importance score must be between 0.0 and 1.0")
 
-        if self.memory_type not in ['semantic', 'episodic', 'procedural']:
+        if self.memory_type not in ["semantic", "episodic", "procedural"]:
             errors.append("Memory type must be semantic, episodic, or procedural")
 
         return errors
@@ -797,10 +819,10 @@ class ProcessingService:
         uptime = asyncio.get_event_loop().time() - self._start_time if self._start_time else 0
 
         return {
-            'service': self.name,
-            'status': 'healthy' if self._running else 'stopped',
-            'uptime_seconds': uptime,
-            'timestamp': asyncio.get_event_loop().time()
+            "service": self.name,
+            "status": "healthy" if self._running else "stopped",
+            "uptime_seconds": uptime,
+            "timestamp": asyncio.get_event_loop().time(),
         }
 
     # Configurable protocol
@@ -811,19 +833,20 @@ class ProcessingService:
     def get_configuration(self) -> dict[str, Any]:
         config = {}
         for attr in dir(self):
-            if attr.startswith('config_'):
+            if attr.startswith("config_"):
                 config[attr[7:]] = getattr(self, attr)
         return config
 
     def reset_configuration(self) -> None:
         for attr in list(dir(self)):
-            if attr.startswith('config_'):
+            if attr.startswith("config_"):
                 delattr(self, attr)
 
 
 # ============================================================================
 # Protocol Testing and Validation
 # ============================================================================
+
 
 def test_protocol_implementations():
     """Test protocol implementations with examples."""
@@ -834,20 +857,27 @@ def test_protocol_implementations():
         content="This is test content",
         memory_type="semantic",
         importance_score=0.8,
-        created_at=1234567890.0
+        created_at=1234567890.0,
     )
 
     # Test protocol compliance
     checker = ProtocolChecker()
-    protocols_to_test = [Identifiable, Timestamped, Serializable, Cacheable, MemoryLike, Validatable]
+    protocols_to_test = [
+        Identifiable,
+        Timestamped,
+        Serializable,
+        Cacheable,
+        MemoryLike,
+        Validatable,
+    ]
 
     results = checker.validate_protocol_implementations(memory, *protocols_to_test)
 
     print("Protocol compliance results for UniversalMemory:")
     for _protocol, result in results.items():
-        status = "✓" if result['implements'] else "✗"
+        status = "✓" if result["implements"] else "✗"
         print(f"  {status} {result['protocol_name']}")
-        if result['missing_methods']:
+        if result["missing_methods"]:
             print(f"    Missing: {', '.join(result['missing_methods'])}")
 
     # Test ProcessingService
@@ -858,9 +888,9 @@ def test_protocol_implementations():
 
     print("\nProtocol compliance results for ProcessingService:")
     for _protocol, result in service_results.items():
-        status = "✓" if result['implements'] else "✗"
+        status = "✓" if result["implements"] else "✗"
         print(f"  {status} {result['protocol_name']}")
-        if result['missing_methods']:
+        if result["missing_methods"]:
             print(f"    Missing: {', '.join(result['missing_methods'])}")
 
     # Test duck typing
@@ -872,7 +902,7 @@ def test_protocol_implementations():
             return "Swimming..."
 
     duck = SimpleDuck()
-    is_duck_like = duck_type_check(duck, ['quack', 'swim'])
+    is_duck_like = duck_type_check(duck, ["quack", "swim"])
     print(f"\nDuck typing test: {is_duck_like}")
 
     print("\nAll protocol tests completed!")

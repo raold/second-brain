@@ -1,10 +1,13 @@
-"""WebSocket service for real-time communication"""
-
 from typing import Any
 
 from fastapi import WebSocket
 
 from app.utils.logging_config import get_logger
+
+"""WebSocket service for real-time communication"""
+
+
+
 
 logger = get_logger(__name__)
 
@@ -59,10 +62,7 @@ class EventBroadcaster:
 
     async def broadcast_event(self, event_type: str, data: dict[str, Any]):
         """Broadcast an event to all connected clients"""
-        message = {
-            "type": event_type,
-            "data": data
-        }
+        message = {"type": event_type, "data": data}
         await self.connection_manager.broadcast(str(message))
 
 
@@ -74,7 +74,9 @@ class WebSocketService:
         self.event_broadcaster = EventBroadcaster(self.connection_manager)
         self.active_subscriptions: dict[str, set[str]] = {}
 
-    async def handle_connection(self, websocket: WebSocket, connection_id: str, user_id: str | None = None):
+    async def handle_connection(
+        self, websocket: WebSocket, connection_id: str, user_id: str | None = None
+    ):
         """Handle a new WebSocket connection"""
         await self.connection_manager.connect(websocket, connection_id, user_id)
 
@@ -100,7 +102,7 @@ class WebSocketService:
         return {
             "active_connections": len(self.connection_manager.active_connections),
             "users_connected": len(self.connection_manager.user_connections),
-            "subscriptions": len(self.active_subscriptions)
+            "subscriptions": len(self.active_subscriptions),
         }
 
 

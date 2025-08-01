@@ -1,13 +1,15 @@
+from fastapi import APIRouter
+
 """
 Route handlers for Second Brain API.
 Thin controllers that delegate business logic to service layer.
 """
 
-from fastapi import APIRouter
+
+from .dashboard_routes import router as dashboard_router
 
 # Import only the essential routers that work
 from .health_routes import router as health_router
-from .dashboard_routes import router as dashboard_router
 
 # Create stub routers for all imports to prevent ImportError
 try:
@@ -77,7 +79,7 @@ except ImportError:
 
 __all__ = [
     "analysis_router",
-    "bulk_operations_router", 
+    "bulk_operations_router",
     "dashboard_router",
     "google_drive_router",
     "graph_router",

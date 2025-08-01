@@ -1,3 +1,11 @@
+import time
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+from app.services.monitoring.metrics_collector import MetricsCollector
+from app.utils.logging_config import get_logger
+
 """
 Metrics Collector - Prometheus-style metrics from structured logs.
 
@@ -5,20 +13,15 @@ This service converts structured log data into time-series metrics
 compatible with Prometheus, Grafana, and other monitoring systems.
 """
 
-import time
 from collections import defaultdict
-from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 
 class MetricType(str, Enum):
     """Prometheus metric types."""
+
     COUNTER = "counter"
     GAUGE = "gauge"
     HISTOGRAM = "histogram"
@@ -28,6 +31,7 @@ class MetricType(str, Enum):
 @dataclass
 class Metric:
     """Individual metric data point."""
+
     name: str
     type: MetricType
     value: float
@@ -39,6 +43,7 @@ class Metric:
 @dataclass
 class HistogramBucket:
     """Histogram bucket for latency metrics."""
+
     le: float  # Less than or equal to
     count: int
 
@@ -61,18 +66,18 @@ class MetricsCollector:
         # Histograms (duration tracking)
         self.operation_duration_buckets = {
             # Buckets in milliseconds
-            "buckets": [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, float('inf')],
+            "buckets": [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, float("inf")],
             "counts": defaultdict(lambda: defaultdict(int)),
             "sums": defaultdict(float),
-            "totals": defaultdict(int)
+            "totals": defaultdict(int),
         }
 
         # Memory histogram
         self.memory_usage_buckets = {
-            "buckets": [1, 5, 10, 25, 50, 100, 250, 500, 1000, float('inf')],
+            "buckets": [1, 5, 10, 25, 50, 100, 250, 500, 1000, float("inf")],
             "counts": defaultdict(lambda: defaultdict(int)),
             "sums": defaultdict(float),
-            "totals": defaultdict(int)
+            "totals": defaultdict(int),
         }
 
         # Time series storage (last hour)
@@ -86,7 +91,7 @@ class MetricsCollector:
         memory_mb: float | None = None,
         user_id: str | None = None,
         success: bool = True,
-        labels: dict[str, str] | None = None
+        labels: dict[str, str] | None = None,
     ):
         """Record an operation metric."""
         base_labels = {"operation": operation}
@@ -106,32 +111,26 @@ class MetricsCollector:
 
         # Record duration histogram
         if duration_ms is not None:
-            self._record_histogram(
-                self.operation_duration_buckets,
-                base_labels,
-                duration_ms
-            )
+            self._record_histogram(self.operation_duration_buckets, base_labels, duration_ms)
 
         # Record memory histogram
         if memory_mb is not None:
-            self._record_histogram(
-                self.memory_usage_buckets,
-                base_labels,
-                memory_mb
-            )
+            self._record_histogram(self.memory_usage_buckets, base_labels, memory_mb)
 
             # Update memory gauge
             self.memory_usage_mb[operation] = memory_mb
 
         # Add to time series
         timestamp = time.time()
-        self.time_series[operation].append({
-            "timestamp": timestamp,
-            "duration_ms": duration_ms,
-            "memory_mb": memory_mb,
-            "success": success,
-            "user_id": user_id
-        })
+        self.time_series[operation].append(
+            {
+                "timestamp": timestamp,
+                "duration_ms": duration_ms,
+                "memory_mb": memory_mb,
+                "success": success,
+                "user_id": user_id,
+            }
+        )
 
         # Cleanup old time series data
         await self._cleanup_time_series()
@@ -142,14 +141,14 @@ class MetricsCollector:
         path: str,
         status_code: int,
         duration_ms: float,
-        user_id: str | None = None
+        user_id: str | None = None,
     ):
         """Record HTTP request metrics."""
         labels = {
             "method": method,
             "path": path,
             "status": str(status_code),
-            "status_class": f"{status_code // 100}xx"
+            "status_class": f"{status_code // 100}xx",
         }
 
         key = self._labels_key(labels)
@@ -161,7 +160,7 @@ class MetricsCollector:
             duration_ms=duration_ms,
             user_id=user_id,
             success=status_code < 400,
-            labels=labels
+            labels=labels,
         )
 
     async def record_memory_operation(
@@ -170,13 +169,10 @@ class MetricsCollector:
         memory_type: str,
         success: bool = True,
         duration_ms: float | None = None,
-        user_id: str | None = None
+        user_id: str | None = None,
     ):
         """Record memory-specific operations."""
-        labels = {
-            "operation_type": operation_type,
-            "memory_type": memory_type
-        }
+        labels = {"operation_type": operation_type, "memory_type": memory_type}
 
         key = self._labels_key(labels)
         self.memory_operations_total[key] += 1
@@ -186,15 +182,10 @@ class MetricsCollector:
             duration_ms=duration_ms,
             user_id=user_id,
             success=success,
-            labels=labels
+            labels=labels,
         )
 
-    def _record_histogram(
-        self,
-        histogram: dict[str, Any],
-        labels: dict[str, str],
-        value: float
-    ):
+    def _record_histogram(self, histogram: dict[str, Any], labels: dict[str, str], value: float):
         """Record value in histogram buckets."""
         labels_key = self._labels_key(labels)
 
@@ -218,10 +209,7 @@ class MetricsCollector:
         for operation in list(self.time_series.keys()):
             series = self.time_series[operation]
             # Keep only recent data
-            self.time_series[operation] = [
-                point for point in series
-                if point["timestamp"] > cutoff
-            ]
+            self.time_series[operation] = [point for point in series if point["timestamp"] > cutoff]
 
             # Remove empty series
             if not self.time_series[operation]:
@@ -258,17 +246,21 @@ class MetricsCollector:
         lines.append("# HELP second_brain_memory_usage_mb Current memory usage by operation")
         lines.append("# TYPE second_brain_memory_usage_mb gauge")
         for operation, memory_mb in self.memory_usage_mb.items():
-            lines.append(f"second_brain_memory_usage_mb{{operation=\"{operation}\"}} {memory_mb}")
+            lines.append(f'second_brain_memory_usage_mb{{operation="{operation}"}} {memory_mb}')
 
         # Duration histograms
         lines.append("# HELP second_brain_operation_duration_ms Operation duration in milliseconds")
         lines.append("# TYPE second_brain_operation_duration_ms histogram")
-        self._add_histogram_metrics(lines, "second_brain_operation_duration_ms", self.operation_duration_buckets)
+        self._add_histogram_metrics(
+            lines, "second_brain_operation_duration_ms", self.operation_duration_buckets
+        )
 
         # Memory histograms
         lines.append("# HELP second_brain_memory_allocation_mb Memory allocation in MB")
         lines.append("# TYPE second_brain_memory_allocation_mb histogram")
-        self._add_histogram_metrics(lines, "second_brain_memory_allocation_mb", self.memory_usage_buckets)
+        self._add_histogram_metrics(
+            lines, "second_brain_memory_allocation_mb", self.memory_usage_buckets
+        )
 
         return "\n".join(lines)
 
@@ -277,8 +269,8 @@ class MetricsCollector:
         # Buckets
         for labels_key, bucket_counts in histogram["counts"].items():
             for bucket, count in bucket_counts.items():
-                le_value = "+Inf" if bucket == float('inf') else str(bucket)
-                lines.append(f"{metric_name}_bucket{{{labels_key},le=\"{le_value}\"}} {count}")
+                le_value = "+Inf" if bucket == float("inf") else str(bucket)
+                lines.append(f'{metric_name}_bucket{{{labels_key},le="{le_value}"}} {count}')
 
         # Sums
         for labels_key, sum_value in histogram["sums"].items():
@@ -296,27 +288,27 @@ class MetricsCollector:
                 "operations_total": dict(self.operation_total),
                 "operation_errors": dict(self.operation_errors),
                 "http_requests_total": dict(self.http_requests_total),
-                "memory_operations_total": dict(self.memory_operations_total)
+                "memory_operations_total": dict(self.memory_operations_total),
             },
             "gauges": {
                 "active_users": len(self.active_users),
-                "memory_usage_mb": dict(self.memory_usage_mb)
+                "memory_usage_mb": dict(self.memory_usage_mb),
             },
             "histograms": {
                 "operation_duration": {
                     "buckets": self.operation_duration_buckets["buckets"],
                     "counts": dict(self.operation_duration_buckets["counts"]),
                     "sums": dict(self.operation_duration_buckets["sums"]),
-                    "totals": dict(self.operation_duration_buckets["totals"])
+                    "totals": dict(self.operation_duration_buckets["totals"]),
                 },
                 "memory_allocation": {
                     "buckets": self.memory_usage_buckets["buckets"],
                     "counts": dict(self.memory_usage_buckets["counts"]),
                     "sums": dict(self.memory_usage_buckets["sums"]),
-                    "totals": dict(self.memory_usage_buckets["totals"])
-                }
+                    "totals": dict(self.memory_usage_buckets["totals"]),
+                },
             },
-            "time_series": dict(self.time_series)
+            "time_series": dict(self.time_series),
         }
 
     def get_summary_stats(self) -> dict[str, Any]:
@@ -339,7 +331,7 @@ class MetricsCollector:
             "active_users": len(self.active_users),
             "tracked_operations": len(self.time_series),
             "avg_durations": avg_durations,
-            "current_memory_usage": dict(self.memory_usage_mb)
+            "current_memory_usage": dict(self.memory_usage_mb),
         }
 
 

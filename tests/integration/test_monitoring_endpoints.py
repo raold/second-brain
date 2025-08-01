@@ -51,19 +51,13 @@ class TestMonitoringEndpoints:
         assert response.status_code in [401, 422]
 
         # Test with valid API key
-        response = await client.get(
-            "/metrics",
-            params={"api_key": api_key}
-        )
+        response = await client.get("/metrics", params={"api_key": api_key})
         assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_metrics_endpoint_content(self, client: AsyncClient, api_key: str):
         """Test metrics endpoint returns proper metrics data"""
-        response = await client.get(
-            "/metrics",
-            params={"api_key": api_key}
-        )
+        response = await client.get("/metrics", params={"api_key": api_key})
 
         assert response.status_code == 200
         data = response.json()
@@ -76,7 +70,9 @@ class TestMonitoringEndpoints:
         if "system" in data:
             system_metrics = data["system"]
             expected_system_metrics = ["cpu_percent", "memory_percent", "uptime_seconds"]
-            system_present = [metric for metric in expected_system_metrics if metric in system_metrics]
+            system_present = [
+                metric for metric in expected_system_metrics if metric in system_metrics
+            ]
             assert len(system_present) >= 1, "System metrics should contain basic metrics"
 
     @pytest.mark.asyncio
@@ -97,10 +93,7 @@ class TestMonitoringEndpoints:
     @pytest.mark.asyncio
     async def test_security_status_endpoint(self, client: AsyncClient, api_key: str):
         """Test security status monitoring endpoint"""
-        response = await client.get(
-            "/security/status",
-            params={"api_key": api_key}
-        )
+        response = await client.get("/security/status", params={"api_key": api_key})
 
         assert response.status_code == 200
         data = response.json()
@@ -115,10 +108,7 @@ class TestMonitoringEndpoints:
     @pytest.mark.asyncio
     async def test_security_audit_endpoint(self, client: AsyncClient, api_key: str):
         """Test security audit endpoint"""
-        response = await client.get(
-            "/security/audit",
-            params={"api_key": api_key}
-        )
+        response = await client.get("/security/audit", params={"api_key": api_key})
 
         assert response.status_code == 200
         data = response.json()
@@ -148,10 +138,7 @@ class TestMonitoringEndpoints:
     @pytest.mark.asyncio
     async def test_status_endpoint_database_metrics(self, client: AsyncClient, api_key: str):
         """Test status endpoint provides database metrics"""
-        response = await client.get(
-            "/status",
-            params={"api_key": api_key}
-        )
+        response = await client.get("/status", params={"api_key": api_key})
 
         assert response.status_code == 200
         data = response.json()
@@ -209,11 +196,13 @@ class TestMonitoringEndpoints:
 
         # Add authenticated endpoints
         if api_key:
-            tasks.extend([
-                access_endpoint("/metrics", use_auth=True),
-                access_endpoint("/security/status", use_auth=True),
-                access_endpoint("/status", use_auth=True),
-            ])
+            tasks.extend(
+                [
+                    access_endpoint("/metrics", use_auth=True),
+                    access_endpoint("/security/status", use_auth=True),
+                    access_endpoint("/status", use_auth=True),
+                ]
+            )
 
         results = await asyncio.gather(*tasks)
 
@@ -246,7 +235,7 @@ class TestMonitoringEndpoints:
     async def test_monitoring_error_handling(self, client: AsyncClient, api_key: str):
         """Test error handling in monitoring endpoints"""
         # Test with simulated backend failures
-        with patch('app.core.monitoring.get_metrics_collector') as mock_collector:
+        with patch("app.core.monitoring.get_metrics_collector") as mock_collector:
             mock_collector.side_effect = Exception("Metrics collection failed")
 
             response = await client.get("/monitoring/summary")
@@ -295,16 +284,16 @@ class TestMonitoringEndpoints:
             # If it's Prometheus format, should have metric patterns
             if "# HELP" in content or "# TYPE" in content:
                 # Verify basic Prometheus format
-                lines = content.split('\n')
-                metric_lines = [line for line in lines if line and not line.startswith('#')]
+                lines = content.split("\n")
+                metric_lines = [line for line in lines if line and not line.startswith("#")]
 
                 # Should have some actual metrics
                 assert len(metric_lines) > 0
 
                 # Basic format validation (metric_name value)
                 for line in metric_lines[:5]:  # Check first few
-                    if ' ' in line:
-                        parts = line.split(' ')
+                    if " " in line:
+                        parts = line.split(" ")
                         assert len(parts) >= 2  # metric_name and value
 
     @pytest.mark.asyncio
@@ -349,7 +338,7 @@ class TestMonitoringEndpoints:
                 "x-ratelimit-limit",
                 "x-ratelimit-remaining",
                 "x-ratelimit-reset",
-                "retry-after"
+                "retry-after",
             ]
 
             # If rate limiting is active, headers might be present

@@ -5,7 +5,6 @@ Auth utilities for API routes
 """
 
 
-
 def get_current_user(user_id: str = None):
     """
     Placeholder authentication function.

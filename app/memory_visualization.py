@@ -1,14 +1,18 @@
+import json
+from datetime import datetime, timedelta
+from typing import Any
+
+import numpy as np
+
+from app.database import get_database
+from app.utils.logging_config import get_logger
+
 """
 Memory Visualization Engine for Interactive Memory Exploration.
 Provides graph data generation, relationship extraction, and semantic clustering.
 """
 
-import json
 from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -150,7 +154,9 @@ class MemoryVisualizationEngine:
             },
         }
 
-    async def _generate_nodes(self, memories: list[dict], embeddings: list[list[float]]) -> list[dict[str, Any]]:
+    async def _generate_nodes(
+        self, memories: list[dict], embeddings: list[list[float]]
+    ) -> list[dict[str, Any]]:
         """Generate node data for visualization."""
         if not embeddings:
             return []
@@ -204,7 +210,9 @@ class MemoryVisualizationEngine:
 
         return nodes
 
-    async def _generate_edges(self, memories: list[dict], embeddings: list[list[float]]) -> list[dict[str, Any]]:
+    async def _generate_edges(
+        self, memories: list[dict], embeddings: list[list[float]]
+    ) -> list[dict[str, Any]]:
         """Generate edge data based on semantic similarity."""
         if len(embeddings) < 2:
             return []
@@ -296,12 +304,22 @@ class MemoryVisualizationEngine:
                 "center": {
                     "x": float(
                         np.mean(
-                            [pos[0] for pos in await self._calculate_2d_positions([embeddings[idx] for idx in indices])]
+                            [
+                                pos[0]
+                                for pos in await self._calculate_2d_positions(
+                                    [embeddings[idx] for idx in indices]
+                                )
+                            ]
                         )
                     ),
                     "y": float(
                         np.mean(
-                            [pos[1] for pos in await self._calculate_2d_positions([embeddings[idx] for idx in indices])]
+                            [
+                                pos[1]
+                                for pos in await self._calculate_2d_positions(
+                                    [embeddings[idx] for idx in indices]
+                                )
+                            ]
                         )
                     ),
                 },
@@ -316,7 +334,9 @@ class MemoryVisualizationEngine:
 
         return clusters
 
-    async def _calculate_2d_positions(self, embeddings: list[list[float]]) -> list[tuple[float, float]]:
+    async def _calculate_2d_positions(
+        self, embeddings: list[list[float]]
+    ) -> list[tuple[float, float]]:
         """Calculate 2D positions for nodes using PCA dimensionality reduction."""
         if len(embeddings) == 1:
             return [(0.0, 0.0)]
@@ -332,13 +352,17 @@ class MemoryVisualizationEngine:
 
         return [(float(pos[0]), float(pos[1])) for pos in positions_2d]
 
-    async def _cluster_kmeans(self, embeddings: list[list[float]], memories: list[dict]) -> list[int]:
+    async def _cluster_kmeans(
+        self, embeddings: list[list[float]], memories: list[dict]
+    ) -> list[int]:
         """K-means clustering based on embeddings."""
         n_clusters = min(8, max(2, len(embeddings) // 10))  # Adaptive cluster count
         kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
         return kmeans.fit_predict(embeddings).tolist()
 
-    async def _cluster_dbscan(self, embeddings: list[list[float]], memories: list[dict]) -> list[int]:
+    async def _cluster_dbscan(
+        self, embeddings: list[list[float]], memories: list[dict]
+    ) -> list[int]:
         """DBSCAN clustering for density-based grouping."""
         # Adaptive eps based on embedding dimensionality
         eps = 0.5 if len(embeddings[0]) > 100 else 0.3
@@ -347,7 +371,9 @@ class MemoryVisualizationEngine:
         dbscan = DBSCAN(eps=eps, min_samples=min_samples, metric="cosine")
         return dbscan.fit_predict(embeddings).tolist()
 
-    async def _cluster_semantic(self, embeddings: list[list[float]], memories: list[dict]) -> list[int]:
+    async def _cluster_semantic(
+        self, embeddings: list[list[float]], memories: list[dict]
+    ) -> list[int]:
         """Semantic clustering based on content analysis and memory types."""
         # Combine embedding similarity with semantic features
         labels = []
@@ -365,7 +391,9 @@ class MemoryVisualizationEngine:
                 cluster_type = cluster_info["type"]
 
                 # Semantic similarity criteria
-                topic_overlap = len(memory_topics & cluster_topics) / max(len(memory_topics | cluster_topics), 1)
+                topic_overlap = len(memory_topics & cluster_topics) / max(
+                    len(memory_topics | cluster_topics), 1
+                )
                 type_match = memory_type == cluster_type
 
                 if topic_overlap > 0.3 and type_match:
@@ -444,7 +472,9 @@ class MemoryVisualizationEngine:
             "try",
             "let",
         }
-        meaningful_words = [word for word in content_words if len(word) > 3 and word not in stopwords]
+        meaningful_words = [
+            word for word in content_words if len(word) > 3 and word not in stopwords
+        ]
         topics.extend(meaningful_words[:5])  # Top 5 content keywords
 
         # Extract from metadata
@@ -477,7 +507,16 @@ class MemoryVisualizationEngine:
 
     def _generate_cluster_color(self, cluster_id: int) -> str:
         """Generate a consistent color for a cluster."""
-        colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FECA57", "#FF9FF3", "#54A0FF", "#5F27CD"]
+        colors = [
+            "#FF6B6B",
+            "#4ECDC4",
+            "#45B7D1",
+            "#96CEB4",
+            "#FECA57",
+            "#FF9FF3",
+            "#54A0FF",
+            "#5F27CD",
+        ]
         return colors[cluster_id % len(colors)]
 
     def _determine_edge_color(self, memory1: dict, memory2: dict, similarity: float) -> str:
@@ -495,7 +534,9 @@ class MemoryVisualizationEngine:
             return f"same_type_{memory1['memory_type']}"
         return f"cross_type_{memory1['memory_type']}_{memory2['memory_type']}"
 
-    def _calculate_graph_stats(self, nodes: list[dict], edges: list[dict], clusters: list[dict]) -> dict[str, Any]:
+    def _calculate_graph_stats(
+        self, nodes: list[dict], edges: list[dict], clusters: list[dict]
+    ) -> dict[str, Any]:
         """Calculate graph statistics and metrics."""
         if not nodes:
             return {}
@@ -591,7 +632,9 @@ class AdvancedSearchEngine:
         elif search_type == "importance":
             results = await self._importance_search(db, query, importance_range, limit)
         else:  # hybrid
-            results = await self._hybrid_search(db, query, memory_types, importance_range, date_range, limit)
+            results = await self._hybrid_search(
+                db, query, memory_types, importance_range, date_range, limit
+            )
 
         # Apply additional filters
         if topic_filters:
@@ -637,11 +680,15 @@ class AdvancedSearchEngine:
             },
         }
 
-    async def _semantic_search(self, db, query: str, memory_types: list[str] | None, limit: int) -> list[dict]:
+    async def _semantic_search(
+        self, db, query: str, memory_types: list[str] | None, limit: int
+    ) -> list[dict]:
         """Semantic similarity search using embeddings."""
         return await db.contextual_search(query=query, limit=limit, memory_types=memory_types)
 
-    async def _temporal_search(self, db, query: str, date_range: tuple[str, str] | None, limit: int) -> list[dict]:
+    async def _temporal_search(
+        self, db, query: str, date_range: tuple[str, str] | None, limit: int
+    ) -> list[dict]:
         """Temporal search focusing on time-based patterns."""
         timeframe = None
         if date_range:
@@ -659,7 +706,9 @@ class AdvancedSearchEngine:
         """Search focusing on importance-weighted results."""
         importance_threshold = importance_range[0] if importance_range else 0.5
 
-        return await db.contextual_search(query=query, limit=limit, importance_threshold=importance_threshold)
+        return await db.contextual_search(
+            query=query, limit=limit, importance_threshold=importance_threshold
+        )
 
     async def _hybrid_search(
         self,
@@ -698,7 +747,9 @@ class AdvancedSearchEngine:
             metadata_str = json.dumps(result.get("metadata", {})).lower()
 
             # Check if any topic filter matches content or metadata
-            if any(topic in content_lower or topic in metadata_str for topic in topic_filters_lower):
+            if any(
+                topic in content_lower or topic in metadata_str for topic in topic_filters_lower
+            ):
                 filtered_results.append(result)
 
         return filtered_results
@@ -718,7 +769,9 @@ class AdvancedSearchEngine:
                     "size": len(cluster_results),
                     "results": cluster_results,
                     "common_themes": self._extract_common_themes(cluster_results),
-                    "avg_importance": np.mean([r.get("importance_score", 0) for r in cluster_results]),
+                    "avg_importance": np.mean(
+                        [r.get("importance_score", 0) for r in cluster_results]
+                    ),
                 }
                 clusters.append(cluster)
 
@@ -795,7 +848,9 @@ class AdvancedSearchEngine:
         importance_scores = [result.get("importance_score", 0) for result in results]
 
         # Similarity scores if available
-        similarity_scores = [result.get("similarity", 0) for result in results if result.get("similarity")]
+        similarity_scores = [
+            result.get("similarity", 0) for result in results if result.get("similarity")
+        ]
 
         return {
             "query_length": len(query),
@@ -805,13 +860,16 @@ class AdvancedSearchEngine:
                 "max": max(importance_scores) if importance_scores else 0,
                 "min": min(importance_scores) if importance_scores else 0,
             },
-            "similarity_stats": {
-                "avg": np.mean(similarity_scores) if similarity_scores else 0,
-                "max": max(similarity_scores) if similarity_scores else 0,
-                "min": min(similarity_scores) if similarity_scores else 0,
-            }
-            if similarity_scores
-            else {},
+            "similarity_stats": (
+                {
+                    "avg": np.mean(similarity_scores) if similarity_scores else 0,
+                    "max": max(similarity_scores) if similarity_scores else 0,
+                    "min": min(similarity_scores) if similarity_scores else 0,
+                }
+                if similarity_scores
+                else {}
+            ),
             "clustering_efficiency": len(clusters) / max(len(results), 1),
-            "relationship_density": len(relationships) / max((len(results) * (len(results) - 1)) // 2, 1),
+            "relationship_density": len(relationships)
+            / max((len(results) * (len(results) - 1)) // 2, 1),
         }

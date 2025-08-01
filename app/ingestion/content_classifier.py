@@ -1,11 +1,13 @@
+import re
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Intelligent content classifier for automatic categorization and quality assessment
 """
 
 from collections import Counter, defaultdict
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -64,7 +66,7 @@ class ContentClassifier:
             "memory_type": memory_type,
             "importance": importance,
             "tags": suggested_tags,
-            "metadata": self._generate_metadata_suggestions(processed_content)
+            "metadata": self._generate_metadata_suggestions(processed_content),
         }
 
     def _classify_domain(self, content: ProcessedContent) -> str | None:
@@ -182,7 +184,9 @@ class ContentClassifier:
         # Entity extraction completeness
         if content.entities:
             # Check entity confidence
-            avg_entity_confidence = sum(e.confidence for e in content.entities) / len(content.entities)
+            avg_entity_confidence = sum(e.confidence for e in content.entities) / len(
+                content.entities
+            )
             completeness_factors.append(avg_entity_confidence)
         else:
             completeness_factors.append(0.3)  # Penalty for no entities
@@ -249,9 +253,9 @@ class ContentClassifier:
 
         # Check for temporal indicators
         temporal_patterns = [
-            r'\b(?:today|yesterday|tomorrow|last week|next month)\b',
-            r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b',
-            r'\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\b'
+            r"\b(?:today|yesterday|tomorrow|last week|next month)\b",
+            r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b",
+            r"\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\b",
         ]
 
         text_lower = content.original_content.lower()
@@ -261,14 +265,28 @@ class ContentClassifier:
             type_scores["episodic"] += temporal_count * 0.5
 
         # Check for procedural indicators
-        procedural_indicators = ["how to", "step by step", "instructions", "guide", "tutorial", "process"]
+        procedural_indicators = [
+            "how to",
+            "step by step",
+            "instructions",
+            "guide",
+            "tutorial",
+            "process",
+        ]
         procedural_count = sum(1 for indicator in procedural_indicators if indicator in text_lower)
 
         if procedural_count > 0:
             type_scores["procedural"] += procedural_count * 0.8
 
         # Check for factual/reference content
-        reference_indicators = ["definition", "explanation", "concept", "theory", "principle", "fact"]
+        reference_indicators = [
+            "definition",
+            "explanation",
+            "concept",
+            "theory",
+            "principle",
+            "fact",
+        ]
         reference_count = sum(1 for indicator in reference_indicators if indicator in text_lower)
 
         if reference_count > 0:
@@ -304,7 +322,7 @@ class ContentClassifier:
             ContentQuality.HIGH: 1.5,
             ContentQuality.MEDIUM: 0.5,
             ContentQuality.LOW: -0.5,
-            ContentQuality.INCOMPLETE: -1.0
+            ContentQuality.INCOMPLETE: -1.0,
         }
         importance_score += quality_boost.get(content.quality, 0)
 
@@ -367,7 +385,11 @@ class ContentClassifier:
 
         # Extract tags from high-confidence entities
         for entity in content.entities:
-            if entity.confidence > 0.8 and entity.type.value in ["technology", "concept", "project"]:
+            if entity.confidence > 0.8 and entity.type.value in [
+                "technology",
+                "concept",
+                "project",
+            ]:
                 entity_tag = entity.normalized.replace(" ", "-")
                 if 3 < len(entity_tag) < 20:  # Reasonable tag length
                     tags.add(entity_tag)
@@ -381,7 +403,7 @@ class ContentClassifier:
                 IntentType.LEARNING: "learning",
                 IntentType.REFERENCE: "reference",
                 IntentType.PROBLEM: "problem",
-                IntentType.SOLUTION: "solution"
+                IntentType.SOLUTION: "solution",
             }
             if content.intent.type in intent_tags:
                 tags.add(intent_tags[content.intent.type])
@@ -405,21 +427,24 @@ class ContentClassifier:
         metadata = {}
 
         # Add source type based on content patterns
-        if re.search(r'https?://', content.original_content):
+        if re.search(r"https?://", content.original_content):
             metadata["source_type"] = "web"
-        elif re.search(r'@[\w]+', content.original_content):
+        elif re.search(r"@[\w]+", content.original_content):
             metadata["source_type"] = "social"
-        elif any(indicator in content.original_content.lower() for indicator in ["meeting", "discussion", "conversation"]):
+        elif any(
+            indicator in content.original_content.lower()
+            for indicator in ["meeting", "discussion", "conversation"]
+        ):
             metadata["source_type"] = "meeting"
         else:
             metadata["source_type"] = "note"
 
         # Add complexity level
         complexity_score = (
-            len(content.entities) * 0.1 +
-            len(content.relationships) * 0.2 +
-            len(content.topics) * 0.15 +
-            (1.0 if content.structured_data else 0)
+            len(content.entities) * 0.1
+            + len(content.relationships) * 0.2
+            + len(content.topics) * 0.15
+            + (1.0 if content.structured_data else 0)
         )
 
         if complexity_score > 2.0:
@@ -445,7 +470,7 @@ class ContentClassifier:
             "relationship_count": len(content.relationships),
             "topic_count": len(content.topics),
             "has_embeddings": bool(content.embeddings),
-            "processing_time_ms": content.processing_time_ms
+            "processing_time_ms": content.processing_time_ms,
         }
 
         return metadata
@@ -454,38 +479,88 @@ class ContentClassifier:
         """Initialize domain classification rules"""
         return {
             "Technology": {
-                "keywords": ["software", "code", "programming", "api", "database", "cloud", "ai", "machine learning"],
-                "entity_types": ["technology", "project"]
+                "keywords": [
+                    "software",
+                    "code",
+                    "programming",
+                    "api",
+                    "database",
+                    "cloud",
+                    "ai",
+                    "machine learning",
+                ],
+                "entity_types": ["technology", "project"],
             },
             "Business": {
-                "keywords": ["business", "revenue", "customer", "market", "strategy", "sales", "profit", "roi"],
-                "entity_types": ["organization", "person"]
+                "keywords": [
+                    "business",
+                    "revenue",
+                    "customer",
+                    "market",
+                    "strategy",
+                    "sales",
+                    "profit",
+                    "roi",
+                ],
+                "entity_types": ["organization", "person"],
             },
             "Science": {
-                "keywords": ["research", "study", "experiment", "hypothesis", "data", "analysis", "theory"],
-                "entity_types": ["concept", "location"]
+                "keywords": [
+                    "research",
+                    "study",
+                    "experiment",
+                    "hypothesis",
+                    "data",
+                    "analysis",
+                    "theory",
+                ],
+                "entity_types": ["concept", "location"],
             },
             "Education": {
-                "keywords": ["learning", "education", "course", "lesson", "student", "teacher", "knowledge"],
-                "entity_types": ["person", "organization"]
+                "keywords": [
+                    "learning",
+                    "education",
+                    "course",
+                    "lesson",
+                    "student",
+                    "teacher",
+                    "knowledge",
+                ],
+                "entity_types": ["person", "organization"],
             },
             "Personal": {
                 "keywords": ["personal", "life", "goal", "habit", "health", "family", "hobby"],
-                "entity_types": ["person", "location"]
-            }
+                "entity_types": ["person", "location"],
+            },
         }
 
     def _initialize_quality_indicators(self) -> dict[str, list[str]]:
         """Initialize content quality indicators"""
         return {
             "positive": [
-                "comprehensive", "detailed", "explained", "analyzed", "structured",
-                "clear", "important", "critical", "essential", "valuable"
+                "comprehensive",
+                "detailed",
+                "explained",
+                "analyzed",
+                "structured",
+                "clear",
+                "important",
+                "critical",
+                "essential",
+                "valuable",
             ],
             "negative": [
-                "unclear", "confusing", "incomplete", "draft", "todo later",
-                "need more info", "not sure", "maybe", "possibly", "temporary"
-            ]
+                "unclear",
+                "confusing",
+                "incomplete",
+                "draft",
+                "todo later",
+                "need more info",
+                "not sure",
+                "maybe",
+                "possibly",
+                "temporary",
+            ],
         }
 
     def _initialize_memory_type_rules(self) -> dict[str, dict[str, Any]]:
@@ -493,16 +568,19 @@ class ContentClassifier:
         return {
             "semantic": {
                 "keywords": ["definition", "concept", "theory", "principle", "fact", "knowledge"],
-                "patterns": [r'\bis\s+(?:a|an|the)\b', r'\bmeans\b', r'\brefers?\s+to\b']
+                "patterns": [r"\bis\s+(?:a|an|the)\b", r"\bmeans\b", r"\brefers?\s+to\b"],
             },
             "episodic": {
                 "keywords": ["remember", "recall", "happened", "event", "experience", "met"],
-                "patterns": [r'\b(?:I|we)\s+(?:did|went|saw|met)\b', r'\b(?:last|next)\s+(?:week|month|year)\b']
+                "patterns": [
+                    r"\b(?:I|we)\s+(?:did|went|saw|met)\b",
+                    r"\b(?:last|next)\s+(?:week|month|year)\b",
+                ],
             },
             "procedural": {
                 "keywords": ["how to", "steps", "process", "method", "technique", "instruction"],
-                "patterns": [r'\b\d+\.\s+', r'\bstep\s+\d+\b', r'\bfirst\b.*\bthen\b']
-            }
+                "patterns": [r"\b\d+\.\s+", r"\bstep\s+\d+\b", r"\bfirst\b.*\bthen\b"],
+            },
         }
 
     def _initialize_importance_factors(self) -> dict[str, dict[str, float]]:
@@ -519,11 +597,13 @@ class ContentClassifier:
                 "main": 0.5,
                 "note": -0.3,
                 "minor": -0.5,
-                "trivial": -0.8
+                "trivial": -0.8,
             }
         }
 
-    def get_classification_statistics(self, classifications: list[dict[str, Any]]) -> dict[str, Any]:
+    def get_classification_statistics(
+        self, classifications: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Get statistics about classifications"""
         if not classifications:
             return {
@@ -532,16 +612,20 @@ class ContentClassifier:
                 "quality_distribution": {},
                 "memory_type_distribution": {},
                 "avg_importance": 0,
-                "avg_completeness": 0
+                "avg_completeness": 0,
             }
 
         # Aggregate statistics
         domain_counts = Counter(c["domain"] for c in classifications if c.get("domain"))
         quality_counts = Counter(c["quality"] for c in classifications if c.get("quality"))
-        memory_type_counts = Counter(c["memory_type"] for c in classifications if c.get("memory_type"))
+        memory_type_counts = Counter(
+            c["memory_type"] for c in classifications if c.get("memory_type")
+        )
 
         importances = [c["importance"] for c in classifications if "importance" in c]
-        completenesses = [c["completeness_score"] for c in classifications if "completeness_score" in c]
+        completenesses = [
+            c["completeness_score"] for c in classifications if "completeness_score" in c
+        ]
 
         return {
             "total_classified": len(classifications),
@@ -550,5 +634,5 @@ class ContentClassifier:
             "memory_type_distribution": dict(memory_type_counts),
             "avg_importance": sum(importances) / len(importances) if importances else 0,
             "avg_completeness": sum(completenesses) / len(completenesses) if completenesses else 0,
-            "tag_frequency": Counter([tag for c in classifications for tag in c.get("tags", [])])
+            "tag_frequency": Counter([tag for c in classifications for tag in c.get("tags", [])]),
         }

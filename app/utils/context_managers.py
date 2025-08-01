@@ -1,3 +1,12 @@
+import asyncio
+import time
+from dataclasses import dataclass, field
+from typing import Any, Union
+
+from fastapi import Path
+
+from app.utils.logging_config import get_logger
+
 """
 Sophisticated context managers for resource management in the Second Brain application.
 
@@ -6,26 +15,24 @@ and handle resource lifecycle management with proper error handling
 and cleanup semantics.
 """
 
-import asyncio
 import contextlib
-from dataclasses import dataclass
 from enum import Enum
-from typing import Any, TypeVar, Union
-
-from app.utils.logging_config import get_logger
+from typing import TypeVar
 
 logger = get_logger(__name__)
 
-T = TypeVar('T')
-R = TypeVar('R')
+T = TypeVar("T")
+R = TypeVar("R")
 
 
 # ============================================================================
 # Resource Management Context Managers
 # ============================================================================
 
+
 class ResourceState(Enum):
     """States for managed resources."""
+
     UNINITIALIZED = "uninitialized"
     ACQUIRING = "acquiring"
     ACTIVE = "active"
@@ -37,6 +44,7 @@ class ResourceState(Enum):
 @dataclass
 class ResourceMetrics:
     """Metrics for resource usage tracking."""
+
     acquisition_time: float = 0.0
     usage_duration: float = 0.0
     release_time: float = 0.0
@@ -87,7 +95,9 @@ class ManagedResource(ABC, Generic[T]):
                 self._usage_start = time.perf_counter()
 
                 self.state = ResourceState.ACTIVE
-                logger.debug(f"Resource {self.resource_id} acquired in {self.metrics.acquisition_time:.4f}s")
+                logger.debug(
+                    f"Resource {self.resource_id} acquired in {self.metrics.acquisition_time:.4f}s"
+                )
                 return self._resource
 
             except Exception as e:
@@ -96,11 +106,15 @@ class ManagedResource(ABC, Generic[T]):
                 self.metrics.error_count += 1
 
                 if attempt < self.max_retries - 1:
-                    wait_time = 2 ** attempt  # Exponential backoff
-                    logger.warning(f"Failed to acquire resource {self.resource_id} (attempt {attempt + 1}): {e}. Retrying in {wait_time}s")
+                    wait_time = 2**attempt  # Exponential backoff
+                    logger.warning(
+                        f"Failed to acquire resource {self.resource_id} (attempt {attempt + 1}): {e}. Retrying in {wait_time}s"
+                    )
                     await asyncio.sleep(wait_time)
                 else:
-                    logger.error(f"Failed to acquire resource {self.resource_id} after {self.max_retries} attempts: {e}")
+                    logger.error(
+                        f"Failed to acquire resource {self.resource_id} after {self.max_retries} attempts: {e}"
+                    )
 
         self.state = ResourceState.ERROR
         raise RuntimeError(f"Failed to acquire resource {self.resource_id}") from last_error
@@ -108,7 +122,9 @@ class ManagedResource(ABC, Generic[T]):
     async def release(self) -> None:
         """Release resource with proper cleanup and metrics."""
         if self.state != ResourceState.ACTIVE or not self._resource:
-            logger.warning(f"Attempting to release resource {self.resource_id} in state {self.state}")
+            logger.warning(
+                f"Attempting to release resource {self.resource_id} in state {self.state}"
+            )
             return
 
         self.state = ResourceState.RELEASING
@@ -122,7 +138,9 @@ class ManagedResource(ABC, Generic[T]):
             await self._release_resource(self._resource)
             self.metrics.release_time = time.perf_counter() - release_start
 
-            logger.debug(f"Resource {self.resource_id} released in {self.metrics.release_time:.4f}s")
+            logger.debug(
+                f"Resource {self.resource_id} released in {self.metrics.release_time:.4f}s"
+            )
 
         except Exception as e:
             self.metrics.error_count += 1
@@ -137,17 +155,17 @@ class ManagedResource(ABC, Generic[T]):
     def get_metrics(self) -> dict[str, Any]:
         """Get comprehensive resource metrics."""
         return {
-            'resource_id': self.resource_id,
-            'state': self.state.value,
-            'metrics': {
-                'acquisition_time': self.metrics.acquisition_time,
-                'usage_duration': self.metrics.usage_duration,
-                'release_time': self.metrics.release_time,
-                'error_count': self.metrics.error_count,
-                'total_uses': self.metrics.total_uses,
-                'peak_concurrent_uses': self.metrics.peak_concurrent_uses
+            "resource_id": self.resource_id,
+            "state": self.state.value,
+            "metrics": {
+                "acquisition_time": self.metrics.acquisition_time,
+                "usage_duration": self.metrics.usage_duration,
+                "release_time": self.metrics.release_time,
+                "error_count": self.metrics.error_count,
+                "total_uses": self.metrics.total_uses,
+                "peak_concurrent_uses": self.metrics.peak_concurrent_uses,
             },
-            'recent_errors': [str(e) for e in self._error_history[-5:]]  # Last 5 errors
+            "recent_errors": [str(e) for e in self._error_history[-5:]],  # Last 5 errors
         }
 
 
@@ -170,10 +188,13 @@ async def managed_resource(resource: ManagedResource[T]) -> AsyncGenerator[T, No
 # Database Connection Context Managers
 # ============================================================================
 
+
 class DatabaseTransaction:
     """Context manager for database transactions with sophisticated error handling."""
 
-    def __init__(self, connection, isolation_level: str = "READ_COMMITTED", timeout: float | None = None):
+    def __init__(
+        self, connection, isolation_level: str = "READ_COMMITTED", timeout: float | None = None
+    ):
         self.connection = connection
         self.isolation_level = isolation_level
         self.timeout = timeout
@@ -188,7 +209,9 @@ class DatabaseTransaction:
         try:
             # Set isolation level if specified
             if self.isolation_level != "READ_COMMITTED":
-                await self.connection.execute(f"SET TRANSACTION ISOLATION LEVEL {self.isolation_level}")
+                await self.connection.execute(
+                    f"SET TRANSACTION ISOLATION LEVEL {self.isolation_level}"
+                )
 
             # Start transaction with timeout if specified
             if self.timeout:
@@ -211,7 +234,9 @@ class DatabaseTransaction:
             if exc_type is None:
                 # Commit on success
                 await self.transaction.commit()
-                logger.debug(f"Transaction committed successfully after {duration:.4f}s ({self.operations_count} operations)")
+                logger.debug(
+                    f"Transaction committed successfully after {duration:.4f}s ({self.operations_count} operations)"
+                )
             else:
                 # Rollback on exception
                 await self.transaction.rollback()
@@ -260,7 +285,7 @@ async def database_transaction(
     connection,
     isolation_level: str = "READ_COMMITTED",
     timeout: float | None = None,
-    max_retries: int = 3
+    max_retries: int = 3,
 ) -> AsyncGenerator[DatabaseTransaction, None]:
     """Enhanced database transaction context manager with retry logic."""
 
@@ -276,10 +301,14 @@ async def database_transaction(
 
             # Check if error is retryable
             error_str = str(e).lower()
-            if any(retryable in error_str for retryable in ['deadlock', 'serialization', 'conflict']):
+            if any(
+                retryable in error_str for retryable in ["deadlock", "serialization", "conflict"]
+            ):
                 if attempt < max_retries - 1:
-                    wait_time = (2 ** attempt) * 0.1  # Short exponential backoff
-                    logger.warning(f"Retryable transaction error (attempt {attempt + 1}): {e}. Retrying in {wait_time:.2f}s")
+                    wait_time = (2**attempt) * 0.1  # Short exponential backoff
+                    logger.warning(
+                        f"Retryable transaction error (attempt {attempt + 1}): {e}. Retrying in {wait_time:.2f}s"
+                    )
                     await asyncio.sleep(wait_time)
                     continue
 
@@ -294,9 +323,11 @@ async def database_transaction(
 # Processing Context Managers
 # ============================================================================
 
+
 @dataclass
 class ProcessingContext:
     """Context for processing operations with progress tracking."""
+
     operation_id: str
     operation_name: str
     priority: Priority = Priority.MEDIUM
@@ -326,19 +357,26 @@ class ProcessingManager(Observable):
         """Start a processing operation."""
         async with self._lock:
             if len(self.active_operations) >= self.max_concurrent:
-                raise RuntimeError(f"Maximum concurrent operations ({self.max_concurrent}) exceeded")
+                raise RuntimeError(
+                    f"Maximum concurrent operations ({self.max_concurrent}) exceeded"
+                )
 
             context.start_time = time.perf_counter()
             self.active_operations[context.operation_id] = context
 
             # Notify observers
-            await self.notify_observers(ChangeNotification(
-                change_type=ChangeType.CREATED,
-                entity_id=context.operation_id,
-                entity_type="processing_operation",
-                new_value=context,
-                metadata={'operation_name': context.operation_name, 'priority': context.priority.name}
-            ))
+            await self.notify_observers(
+                ChangeNotification(
+                    change_type=ChangeType.CREATED,
+                    entity_id=context.operation_id,
+                    entity_type="processing_operation",
+                    new_value=context,
+                    metadata={
+                        "operation_name": context.operation_name,
+                        "priority": context.priority.name,
+                    },
+                )
+            )
 
             logger.info(f"Started operation '{context.operation_name}' ({context.operation_id})")
 
@@ -361,13 +399,15 @@ class ProcessingManager(Observable):
                 logger.warning(f"Progress callback failed for operation {operation_id}: {e}")
 
         # Notify observers
-        await self.notify_observers(ChangeNotification(
-            change_type=ChangeType.UPDATED,
-            entity_id=operation_id,
-            entity_type="processing_operation",
-            new_value=context,
-            metadata={'step': step, 'progress': progress}
-        ))
+        await self.notify_observers(
+            ChangeNotification(
+                change_type=ChangeType.UPDATED,
+                entity_id=operation_id,
+                entity_type="processing_operation",
+                new_value=context,
+                metadata={"step": step, "progress": progress},
+            )
+        )
 
     async def complete_operation(self, operation_id: str, result: Any = None) -> None:
         """Complete a processing operation."""
@@ -377,8 +417,8 @@ class ProcessingManager(Observable):
                 return
 
             duration = time.perf_counter() - context.start_time if context.start_time else 0
-            context.metadata['duration'] = duration
-            context.metadata['result'] = result
+            context.metadata["duration"] = duration
+            context.metadata["result"] = result
 
             self.operation_history.append(context)
 
@@ -387,16 +427,20 @@ class ProcessingManager(Observable):
                 self.operation_history = self.operation_history[-100:]
 
             # Notify observers
-            await self.notify_observers(ChangeNotification(
-                change_type=ChangeType.UPDATED,
-                entity_id=operation_id,
-                entity_type="processing_operation",
-                old_value=context,
-                new_value=None,
-                metadata={'completed': True, 'duration': duration}
-            ))
+            await self.notify_observers(
+                ChangeNotification(
+                    change_type=ChangeType.UPDATED,
+                    entity_id=operation_id,
+                    entity_type="processing_operation",
+                    old_value=context,
+                    new_value=None,
+                    metadata={"completed": True, "duration": duration},
+                )
+            )
 
-            logger.info(f"Completed operation '{context.operation_name}' ({operation_id}) in {duration:.4f}s")
+            logger.info(
+                f"Completed operation '{context.operation_name}' ({operation_id}) in {duration:.4f}s"
+            )
 
     def get_active_operations(self) -> dict[str, ProcessingContext]:
         """Get currently active operations."""
@@ -408,7 +452,10 @@ class ProcessingManager(Observable):
         total_completed = len(self.operation_history)
 
         if self.operation_history:
-            avg_duration = sum(op.metadata.get('duration', 0) for op in self.operation_history) / total_completed
+            avg_duration = (
+                sum(op.metadata.get("duration", 0) for op in self.operation_history)
+                / total_completed
+            )
             priority_counts = {}
             for op in self.operation_history:
                 priority = op.priority.name
@@ -418,11 +465,11 @@ class ProcessingManager(Observable):
             priority_counts = {}
 
         return {
-            'active_operations': active_count,
-            'completed_operations': total_completed,
-            'max_concurrent': self.max_concurrent,
-            'average_duration': avg_duration,
-            'priority_distribution': priority_counts
+            "active_operations": active_count,
+            "completed_operations": total_completed,
+            "max_concurrent": self.max_concurrent,
+            "average_duration": avg_duration,
+            "priority_distribution": priority_counts,
         }
 
 
@@ -433,11 +480,12 @@ async def processing_operation(
     priority: Priority = Priority.MEDIUM,
     timeout: float | None = None,
     progress_callback: callable | None = None,
-    **metadata
+    **metadata,
 ) -> AsyncGenerator[ProcessingContext, None]:
     """Context manager for processing operations with automatic lifecycle management."""
 
     import uuid
+
     operation_id = str(uuid.uuid4())
 
     context = ProcessingContext(
@@ -446,7 +494,7 @@ async def processing_operation(
         priority=priority,
         timeout=timeout,
         progress_callback=progress_callback,
-        metadata=metadata
+        metadata=metadata,
     )
 
     try:
@@ -458,7 +506,9 @@ async def processing_operation(
                 async with asyncio.timeout(timeout):
                     yield context
             except TimeoutError:
-                logger.error(f"Operation '{operation_name}' ({operation_id}) timed out after {timeout}s")
+                logger.error(
+                    f"Operation '{operation_name}' ({operation_id}) timed out after {timeout}s"
+                )
                 raise
         else:
             yield context
@@ -475,24 +525,26 @@ async def processing_operation(
 # File and Path Context Managers
 # ============================================================================
 
+
 @contextlib.contextmanager
 def atomic_file_write(
     file_path: Union[str, Path],
-    mode: str = 'w',
-    encoding: str = 'utf-8',
+    mode: str = "w",
+    encoding: str = "utf-8",
     backup: bool = True,
-    temp_suffix: str = '.tmp'
+    temp_suffix: str = ".tmp",
 ) -> Generator[Any, None, None]:
     """Context manager for atomic file writes with backup and rollback."""
 
     file_path = Path(file_path)
     temp_path = file_path.with_suffix(file_path.suffix + temp_suffix)
-    backup_path = file_path.with_suffix(file_path.suffix + '.backup') if backup else None
+    backup_path = file_path.with_suffix(file_path.suffix + ".backup") if backup else None
 
     # Create backup if requested and file exists
     if backup and file_path.exists():
         try:
             import shutil
+
             shutil.copy2(file_path, backup_path)
             logger.debug(f"Created backup: {backup_path}")
         except Exception as e:
@@ -538,9 +590,7 @@ def atomic_file_write(
 
 @contextlib.asynccontextmanager
 async def temporary_directory(
-    prefix: str = 'temp_',
-    cleanup: bool = True,
-    base_dir: Path | None = None
+    prefix: str = "temp_", cleanup: bool = True, base_dir: Path | None = None
 ) -> AsyncGenerator[Path, None]:
     """Context manager for temporary directories with async cleanup."""
 
@@ -559,9 +609,7 @@ async def temporary_directory(
         if temp_dir and cleanup:
             try:
                 # Async cleanup to avoid blocking
-                await asyncio.get_event_loop().run_in_executor(
-                    None, shutil.rmtree, temp_dir
-                )
+                await asyncio.get_event_loop().run_in_executor(None, shutil.rmtree, temp_dir)
                 logger.debug(f"Cleaned up temporary directory: {temp_dir}")
             except Exception as e:
                 logger.warning(f"Failed to clean up temporary directory {temp_dir}: {e}")
@@ -571,9 +619,11 @@ async def temporary_directory(
 # Memory and Resource Monitoring Context Managers
 # ============================================================================
 
+
 @dataclass
 class ResourceSnapshot:
     """Snapshot of system resource usage."""
+
     timestamp: float
     memory_mb: float
     cpu_percent: float
@@ -619,6 +669,7 @@ class ResourceMonitor:
     async def _monitor_loop(self) -> None:
         """Main monitoring loop."""
         import psutil
+
         process = psutil.Process()
 
         try:
@@ -628,7 +679,7 @@ class ResourceMonitor:
                     memory_mb=process.memory_info().rss / 1024 / 1024,
                     cpu_percent=process.cpu_percent(),
                     open_files=len(process.open_files()),
-                    thread_count=process.num_threads()
+                    thread_count=process.num_threads(),
                 )
 
                 self.snapshots.append(snapshot)
@@ -647,38 +698,37 @@ class ResourceMonitor:
     def get_summary(self) -> dict[str, Any]:
         """Get resource usage summary."""
         if not self.snapshots:
-            return {'error': 'No monitoring data available'}
+            return {"error": "No monitoring data available"}
 
         memory_values = [s.memory_mb for s in self.snapshots]
         cpu_values = [s.cpu_percent for s in self.snapshots]
 
         return {
-            'duration_seconds': self.snapshots[-1].timestamp - self.snapshots[0].timestamp,
-            'samples_collected': len(self.snapshots),
-            'memory': {
-                'peak_mb': max(memory_values),
-                'average_mb': sum(memory_values) / len(memory_values),
-                'final_mb': memory_values[-1]
+            "duration_seconds": self.snapshots[-1].timestamp - self.snapshots[0].timestamp,
+            "samples_collected": len(self.snapshots),
+            "memory": {
+                "peak_mb": max(memory_values),
+                "average_mb": sum(memory_values) / len(memory_values),
+                "final_mb": memory_values[-1],
             },
-            'cpu': {
-                'peak_percent': max(cpu_values),
-                'average_percent': sum(cpu_values) / len(cpu_values),
+            "cpu": {
+                "peak_percent": max(cpu_values),
+                "average_percent": sum(cpu_values) / len(cpu_values),
             },
-            'files': {
-                'peak_open': max(s.open_files for s in self.snapshots),
-                'final_open': self.snapshots[-1].open_files
+            "files": {
+                "peak_open": max(s.open_files for s in self.snapshots),
+                "final_open": self.snapshots[-1].open_files,
             },
-            'threads': {
-                'peak_count': max(s.thread_count for s in self.snapshots),
-                'final_count': self.snapshots[-1].thread_count
-            }
+            "threads": {
+                "peak_count": max(s.thread_count for s in self.snapshots),
+                "final_count": self.snapshots[-1].thread_count,
+            },
         }
 
 
 @contextlib.asynccontextmanager
 async def resource_monitoring(
-    sample_interval: float = 1.0,
-    log_summary: bool = True
+    sample_interval: float = 1.0, log_summary: bool = True
 ) -> AsyncGenerator[ResourceMonitor, None]:
     """Context manager for resource monitoring during operations."""
 
@@ -692,16 +742,19 @@ async def resource_monitoring(
 
         if log_summary:
             summary = monitor.get_summary()
-            if 'error' not in summary:
-                logger.info(f"Resource usage summary: "
-                          f"Peak memory: {summary['memory']['peak_mb']:.1f}MB, "
-                          f"Avg CPU: {summary['cpu']['average_percent']:.1f}%, "
-                          f"Duration: {summary['duration_seconds']:.1f}s")
+            if "error" not in summary:
+                logger.info(
+                    f"Resource usage summary: "
+                    f"Peak memory: {summary['memory']['peak_mb']:.1f}MB, "
+                    f"Avg CPU: {summary['cpu']['average_percent']:.1f}%, "
+                    f"Duration: {summary['duration_seconds']:.1f}s"
+                )
 
 
 # ============================================================================
 # Composable Context Manager Utilities
 # ============================================================================
+
 
 @contextlib.asynccontextmanager
 async def combine_contexts(*context_managers) -> AsyncGenerator[tuple, None]:
@@ -780,7 +833,7 @@ if __name__ == "__main__":
             "Data Processing Task",
             priority=Priority.HIGH,
             timeout=10.0,
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
         ) as operation:
             # Simulate processing steps
             await manager.update_progress(operation.operation_id, "Loading data", 25.0)

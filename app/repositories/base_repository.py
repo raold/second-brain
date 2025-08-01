@@ -1,15 +1,17 @@
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Base repository pattern implementation with common functionality.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 import asyncpg
 
-from app.utils.logging_config import get_logger
-
-T = TypeVar('T')
+T = TypeVar("T")
 
 logger = get_logger(__name__)
 
@@ -73,7 +75,9 @@ class BaseRepository(ABC, Generic[T]):
         """
         async with self.pool.acquire() as conn:
             if limit:
-                query = f"SELECT * FROM {self.table_name} ORDER BY created_at DESC LIMIT $1 OFFSET $2"
+                query = (
+                    f"SELECT * FROM {self.table_name} ORDER BY created_at DESC LIMIT $1 OFFSET $2"
+                )
                 rows = await conn.fetch(query, limit, offset)
             else:
                 query = f"SELECT * FROM {self.table_name} ORDER BY created_at DESC"
@@ -141,7 +145,7 @@ class BaseRepository(ABC, Generic[T]):
         params: list[Any],
         limit: int | None = None,
         offset: int = 0,
-        order_by: str = "created_at DESC"
+        order_by: str = "created_at DESC",
     ) -> list[T]:
         """
         Find entities by custom criteria.
@@ -168,9 +172,7 @@ class BaseRepository(ABC, Generic[T]):
             return [await self._map_row_to_entity(row) for row in rows]
 
     async def execute_query(
-        self,
-        query: str,
-        params: list[Any] | None = None
+        self, query: str, params: list[Any] | None = None
     ) -> list[asyncpg.Record]:
         """
         Execute custom query and return raw results.
@@ -198,8 +200,8 @@ class BaseRepository(ABC, Generic[T]):
         async with self.pool.acquire() as conn:
             async with conn.transaction():
                 for operation in operations:
-                    query = operation['query']
-                    params = operation.get('params', [])
+                    query = operation["query"]
+                    params = operation.get("params", [])
 
                     if params:
                         await conn.execute(query, *params)
@@ -209,13 +211,13 @@ class BaseRepository(ABC, Generic[T]):
     async def _log_operation(self, operation: str, entity_id: str | None = None, **kwargs):
         """Log repository operations for debugging and monitoring."""
         log_data = {
-            'repository': self.__class__.__name__,
-            'table': self.table_name,
-            'operation': operation,
+            "repository": self.__class__.__name__,
+            "table": self.table_name,
+            "operation": operation,
         }
 
         if entity_id:
-            log_data['entity_id'] = entity_id
+            log_data["entity_id"] = entity_id
 
         log_data.update(kwargs)
 

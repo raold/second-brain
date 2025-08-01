@@ -1,14 +1,18 @@
-"""
-Cross-Memory Relationship API Routes
-Provides endpoints for analyzing relationships between different memory types
-"""
-
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from app.database import get_database
 from app.utils.logging_config import get_logger
+
+"""
+Cross-Memory Relationship API Routes
+Provides endpoints for analyzing relationships between different memory types
+"""
+
+
+
 
 logger = get_logger(__name__)
 
@@ -211,8 +215,14 @@ async def get_knowledge_clusters():
             "clusters": clusters,
             "cluster_summary": {
                 "total_clusters": len(clusters),
-                "largest_cluster": max(clusters, key=lambda x: x["memory_count"])["memory_count"] if clusters else 0,
-                "average_coherence": sum(c["coherence_score"] for c in clusters) / len(clusters) if clusters else 0,
+                "largest_cluster": (
+                    max(clusters, key=lambda x: x["memory_count"])["memory_count"]
+                    if clusters
+                    else 0
+                ),
+                "average_coherence": (
+                    sum(c["coherence_score"] for c in clusters) / len(clusters) if clusters else 0
+                ),
             },
         }
 
@@ -237,7 +247,11 @@ async def get_network_metrics():
             memories = []
 
         if not memories:
-            return {"status": "no_data", "message": "No memories available for network analysis", "metrics": {}}
+            return {
+                "status": "no_data",
+                "message": "No memories available for network analysis",
+                "metrics": {},
+            }
 
         # Calculate network metrics
         engine = CrossMemoryRelationshipEngine(database)
@@ -282,7 +296,11 @@ async def get_memory_roles():
             memories = []
 
         if not memories:
-            return {"status": "no_data", "message": "No memories available for role analysis", "roles": {}}
+            return {
+                "status": "no_data",
+                "message": "No memories available for role analysis",
+                "roles": {},
+            }
 
         # Analyze memory roles
         engine = CrossMemoryRelationshipEngine(database)
@@ -327,7 +345,9 @@ async def find_knowledge_bridges(
     try:
         valid_types = ["semantic", "episodic", "procedural"]
         if source_type not in valid_types or target_type not in valid_types:
-            raise HTTPException(status_code=400, detail=f"Memory types must be one of: {', '.join(valid_types)}")
+            raise HTTPException(
+                status_code=400, detail=f"Memory types must be one of: {', '.join(valid_types)}"
+            )
 
         database = await get_database()
 
@@ -338,7 +358,11 @@ async def find_knowledge_bridges(
             memories = []
 
         if not memories:
-            return {"status": "no_data", "message": "No memories available for bridge analysis", "bridges": []}
+            return {
+                "status": "no_data",
+                "message": "No memories available for bridge analysis",
+                "bridges": [],
+            }
 
         # Find bridge memories
         engine = CrossMemoryRelationshipEngine(database)

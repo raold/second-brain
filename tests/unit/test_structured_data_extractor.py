@@ -7,6 +7,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 pytestmark = pytest.mark.unit
 
 from app.services.structured_data_extractor import (
@@ -40,7 +41,7 @@ class TestStructuredDataExtractor:
             "min_confidence": 0.8,
             "extract_entities": False,
             "extract_relationships": False,
-            "use_ai": False
+            "use_ai": False,
         }
         extractor = StructuredDataExtractor(**config)
         assert extractor.min_confidence == 0.8
@@ -56,14 +57,14 @@ class TestStructuredDataExtractor:
         Email: john@example.com
         Status: Active
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         assert "Name" in result.key_value_pairs
         assert "Age" in result.key_value_pairs
         assert "Email" in result.key_value_pairs
         assert "Status" in result.key_value_pairs
-        
+
         assert result.key_value_pairs["Name"] == "John Doe"
         assert result.key_value_pairs["Age"] == 30
         assert result.key_value_pairs["Email"] == "john@example.com"
@@ -79,9 +80,9 @@ class TestStructuredDataExtractor:
         Temperature is 25.5
         Location means New York
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         assert result.key_value_pairs["Name"] == "John Doe"
         assert result.key_value_pairs["Age"] == 30
         assert result.key_value_pairs["Country"] == "USA"
@@ -102,18 +103,18 @@ class TestStructuredDataExtractor:
         * Item 2
         + Item 3
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         assert len(result.lists) >= 1
-        
+
         # Find the shopping list
         shopping_list = None
         for lst in result.lists:
             if lst.title == "Shopping List":
                 shopping_list = lst
                 break
-        
+
         assert shopping_list is not None
         assert shopping_list.list_type == "bullet"
         assert "Apples" in shopping_list.items
@@ -134,18 +135,18 @@ class TestStructuredDataExtractor:
         b) Option B
         c) Option C
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         assert len(result.lists) >= 1
-        
+
         # Find numbered list
         numbered_list = None
         for lst in result.lists:
             if lst.title == "Steps":
                 numbered_list = lst
                 break
-        
+
         assert numbered_list is not None
         assert numbered_list.list_type == "numbered"
         assert "First step" in numbered_list.items
@@ -161,12 +162,12 @@ class TestStructuredDataExtractor:
         | Bob     | 30  | Boston    |
         | Charlie | 35  | Chicago   |
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         assert len(result.tables) == 1
         table = result.tables[0]
-        
+
         assert table.headers == ["Name", "Age", "City"]
         assert len(table.rows) == 3
         assert table.rows[0] == ["Alice", "25", "New York"]
@@ -194,17 +195,17 @@ class TestStructuredDataExtractor:
         }
         ```
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         assert len(result.code_snippets) == 2
-        
+
         python_block = result.code_snippets[0]
         assert python_block.language == "python"
         assert "def hello_world():" in python_block.code
         assert "hello_world" in python_block.functions
         assert "MyClass" in python_block.classes
-        
+
         js_block = result.code_snippets[1]
         assert js_block.language == "javascript"
         assert "function greet(name)" in js_block.code
@@ -216,9 +217,9 @@ class TestStructuredDataExtractor:
         Another important date is January 20, 2024.
         Don't forget about 12/25/2023.
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         date_entities = [e for e in result.entities if e.entity_type == "date"]
         assert len(date_entities) >= 2  # At least 2 dates should be found
 
@@ -229,12 +230,12 @@ class TestStructuredDataExtractor:
         You can also reach john.doe@company.org.
         Check out our blog at http://blog.example.com/posts.
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         email_entities = [e for e in result.entities if e.entity_type == "email"]
         url_entities = [e for e in result.entities if e.entity_type == "url"]
-        
+
         assert len(email_entities) >= 2
         assert len(url_entities) >= 2
 
@@ -245,12 +246,12 @@ class TestStructuredDataExtractor:
         The price is $1,299.99 or 500 USD.
         Budget: $50,000.00
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         phone_entities = [e for e in result.entities if e.entity_type == "phone"]
         money_entities = [e for e in result.entities if e.entity_type == "money"]
-        
+
         assert len(phone_entities) >= 1
         assert len(money_entities) >= 2
 
@@ -266,17 +267,17 @@ class TestStructuredDataExtractor:
         
         This helps test the metadata extraction functionality.
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         assert "statistics" in result.metadata_fields
         stats = result.metadata_fields["statistics"]
-        
+
         assert "word_count" in stats
         assert "line_count" in stats
         assert "character_count" in stats
         assert "paragraph_count" in stats
-        
+
         assert stats["word_count"] > 0
         assert stats["line_count"] > 0
         assert stats["character_count"] > 0
@@ -302,17 +303,17 @@ class TestStructuredDataExtractor:
             pass
         ```
         """
-        
+
         result = self.extractor.extract_structured_data(content)
         stats = self.extractor.get_extraction_statistics(result)
-        
+
         assert "total_structured_elements" in stats
         assert "key_value_pairs" in stats
         assert "lists" in stats
         assert "tables" in stats
         assert "code_snippets" in stats
         assert "entities" in stats
-        
+
         assert stats["key_value_pairs"]["count"] >= 2
         assert stats["lists"]["count"] >= 1
         assert stats["tables"]["count"] >= 1
@@ -333,15 +334,15 @@ class TestStructuredDataExtractor:
         ## Results
         The results are presented here.
         """
-        
+
         topics = self.extractor.extract_topics(content)
-        
+
         assert len(topics) >= 4
-        
+
         # Check for section topics
         section_topics = [t for t in topics if t["type"] == "section"]
         assert len(section_topics) >= 4
-        
+
         titles = [t["title"] for t in section_topics]
         assert "Introduction" in titles
         assert "Methods" in titles
@@ -357,12 +358,12 @@ class TestStructuredDataExtractor:
         
         Neural Network: A computing system inspired by biological neural networks.
         """
-        
+
         topics = self.extractor.extract_topics(content)
-        
+
         definition_topics = [t for t in topics if t["type"] == "definition"]
         assert len(definition_topics) >= 3
-        
+
         terms = [t["term"] for t in definition_topics]
         assert "Machine Learning" in terms
         assert "Deep Learning" in terms
@@ -381,12 +382,12 @@ class TestStructuredDataExtractor:
         This function implements a statistical algorithm using the NumPy library.
         The API endpoint accepts parameters and returns processed data.
         """
-        
+
         result = self.extractor.classify_domain(content)
-        
+
         assert "domains" in result
         assert "primary_domain" in result
-        
+
         # Should detect technical domain
         domain_names = [d["name"] for d in result["domains"]]
         assert "technical" in domain_names or result["primary_domain"] == "technical"
@@ -399,12 +400,12 @@ class TestStructuredDataExtractor:
         Key performance indicators show strong growth in customer acquisition.
         Market analysis indicates continued expansion opportunities.
         """
-        
+
         result = self.extractor.classify_domain(content)
-        
+
         assert "domains" in result
         assert "primary_domain" in result
-        
+
         # Should detect business domain
         domain_names = [d["name"] for d in result["domains"]]
         assert "business" in domain_names or result["primary_domain"] == "business"
@@ -425,12 +426,12 @@ class TestStructuredDataExtractor:
         References:
         [1] Author, A. (2019). Title of paper. Journal Name.
         """
-        
+
         result = self.extractor.classify_domain(content)
-        
+
         assert "domains" in result
         assert "primary_domain" in result
-        
+
         # Should detect academic domain
         domain_names = [d["name"] for d in result["domains"]]
         assert "academic" in domain_names or result["primary_domain"] == "academic"
@@ -466,24 +467,24 @@ class TestStructuredDataExtractor:
         Contact: admin@project.com
         Deadline: 2024-06-15
         """
-        
+
         result = self.extractor.extract_advanced_structured_data(content)
-        
+
         # Should extract key-value pairs
         assert len(result.key_value_pairs) >= 3
         assert "Project Name" in result.key_value_pairs
         assert "Status" in result.key_value_pairs
         assert "Budget" in result.key_value_pairs
-        
+
         # Should extract lists
         assert len(result.lists) >= 1
-        
+
         # Should extract tables
         assert len(result.tables) >= 1
-        
+
         # Should extract code blocks
         assert len(result.code_snippets) >= 1
-        
+
         # Should extract entities
         email_entities = [e for e in result.entities if e.entity_type == "email"]
         date_entities = [e for e in result.entities if e.entity_type == "date"]
@@ -501,7 +502,7 @@ class TestStructuredDataExtractorEdgeCases:
     def test_empty_content(self):
         """Test extraction with empty content"""
         result = self.extractor.extract_structured_data("")
-        
+
         assert len(result.key_value_pairs) == 0
         assert len(result.lists) == 0
         assert len(result.tables) == 0
@@ -514,9 +515,9 @@ class TestStructuredDataExtractorEdgeCases:
         | Alice | 25 | Extra column |
         | Bob |
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         # Should handle malformed table gracefully
         # Either extract what it can or skip the table
         assert isinstance(result.tables, list)
@@ -530,9 +531,9 @@ class TestStructuredDataExtractorEdgeCases:
         * Another bullet
         2. Another number
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         # Should handle mixed list types
         assert isinstance(result.lists, list)
 
@@ -540,9 +541,9 @@ class TestStructuredDataExtractorEdgeCases:
         """Test extraction with very long content"""
         # Create content with 10,000 lines
         long_content = "\n".join([f"Line {i}: This is line number {i}" for i in range(10000)])
-        
+
         result = self.extractor.extract_structured_data(long_content)
-        
+
         # Should handle long content without crashing
         assert isinstance(result, StructuredDataContainer)
         assert "statistics" in result.metadata_fields
@@ -559,9 +560,9 @@ class TestStructuredDataExtractorEdgeCases:
         
         العنوان: البيانات المنظمة
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         # Should handle Unicode content
         assert isinstance(result, StructuredDataContainer)
 
@@ -572,9 +573,9 @@ class TestStructuredDataExtractorEdgeCases:
         Special chars: !@#$%^&*()_+-=[]{}|;:'"<>?,./
         HTML tags: <script>alert('test')</script>
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         # Should handle special characters safely
         assert isinstance(result, StructuredDataContainer)
 
@@ -595,9 +596,9 @@ class TestStructuredDataExtractorEdgeCases:
         }
         ```
         """
-        
+
         result = self.extractor.extract_structured_data(content)
-        
+
         # Should extract the code block
         assert len(result.code_snippets) >= 1
         code_block = result.code_snippets[0]
@@ -612,15 +613,15 @@ class TestStructuredDataExtractorEdgeCases:
     def test_memory_usage_with_large_input(self):
         """Test memory usage doesn't explode with large input"""
         import sys
-        
+
         # Create a large content string (1MB)
         large_content = "Sample text. " * (1024 * 1024 // 13)  # ~1MB
-        
+
         # Monitor memory usage (simplified)
         initial_size = sys.getsizeof(large_content)
-        
+
         result = self.extractor.extract_structured_data(large_content)
-        
+
         # Should complete without excessive memory usage
         assert isinstance(result, StructuredDataContainer)
         assert sys.getsizeof(result) < initial_size * 2  # Shouldn't double memory usage
@@ -629,21 +630,21 @@ class TestStructuredDataExtractorEdgeCases:
 class TestStructuredDataExtractorAI:
     """Test AI enhancement functionality"""
 
-    @patch('app.services.structured_data_extractor.get_openai_client')
+    @patch("app.services.structured_data_extractor.get_openai_client")
     def test_ai_enhancement_enabled(self, mock_openai):
         """Test AI enhancement when enabled"""
         mock_client = MagicMock()
         mock_openai.return_value = mock_client
-        
+
         extractor = StructuredDataExtractor(use_ai=True)
         assert extractor.use_ai is True
         assert extractor.openai_client == mock_client
 
-    @patch('app.services.structured_data_extractor.get_openai_client')
+    @patch("app.services.structured_data_extractor.get_openai_client")
     def test_ai_enhancement_fails_gracefully(self, mock_openai):
         """Test AI enhancement fails gracefully"""
         mock_openai.side_effect = Exception("OpenAI not available")
-        
+
         extractor = StructuredDataExtractor(use_ai=True)
         assert extractor.use_ai is False  # Should fallback to pattern-based
 
@@ -656,10 +657,10 @@ class TestStructuredDataExtractorAI:
         - Item 1
         - Item 2
         """
-        
+
         extractor = StructuredDataExtractor(use_ai=False)
         result = extractor.extract_structured_data(content)
-        
+
         assert len(result.key_value_pairs) >= 2
         assert len(result.lists) >= 1
 
@@ -674,9 +675,9 @@ class TestDataModels:
             rows=[["Alice", "25"], ["Bob", "30"]],
             caption="User Data",
             table_type="data",
-            confidence=0.9
+            confidence=0.9,
         )
-        
+
         assert table.headers == ["Name", "Age"]
         assert len(table.rows) == 2
         assert table.caption == "User Data"
@@ -686,11 +687,9 @@ class TestDataModels:
     def test_extracted_list_model(self):
         """Test ExtractedList data model"""
         list_obj = ExtractedList(
-            items=["Item 1", "Item 2", "Item 3"],
-            list_type="unordered",
-            title="Shopping List"
+            items=["Item 1", "Item 2", "Item 3"], list_type="unordered", title="Shopping List"
         )
-        
+
         assert len(list_obj.items) == 3
         assert list_obj.list_type == "unordered"
         assert list_obj.title == "Shopping List"
@@ -703,9 +702,9 @@ class TestDataModels:
             line_count=2,
             description="Simple greeting function",
             functions=["hello"],
-            classes=[]
+            classes=[],
         )
-        
+
         assert "def hello():" in code_block.code
         assert code_block.language == "python"
         assert code_block.line_count == 2
@@ -718,9 +717,9 @@ class TestDataModels:
             text="john@example.com",
             entity_type="email",
             context="Contact john@example.com for more info",
-            confidence=0.95
+            confidence=0.95,
         )
-        
+
         assert entity.text == "john@example.com"
         assert entity.entity_type == "email"
         assert "john@example.com" in entity.context
@@ -729,7 +728,7 @@ class TestDataModels:
     def test_structured_data_container_model(self):
         """Test StructuredDataContainer data model"""
         container = StructuredDataContainer()
-        
+
         # Test default values
         assert isinstance(container.key_value_pairs, dict)
         assert isinstance(container.lists, list)
@@ -738,10 +737,10 @@ class TestDataModels:
         assert isinstance(container.metadata_fields, dict)
         assert isinstance(container.entities, list)
         assert isinstance(container.relationships, list)
-        
+
         # Test adding data
         container.key_value_pairs["test"] = "value"
         container.lists.append(ExtractedList(items=["test"], list_type="bullet"))
-        
+
         assert container.key_value_pairs["test"] == "value"
         assert len(container.lists) == 1

@@ -10,53 +10,30 @@ from typing import Generator, List, Dict, Any
 # Test markers configuration
 pytest_plugins = []
 
+
 def pytest_configure(config):
     """Configure pytest with custom markers"""
     config.addinivalue_line(
-        "markers", 
-        "unit: Unit tests - fast, isolated tests with no external dependencies"
+        "markers", "unit: Unit tests - fast, isolated tests with no external dependencies"
     )
     config.addinivalue_line(
-        "markers",
-        "integration: Integration tests - test component interactions"
+        "markers", "integration: Integration tests - test component interactions"
     )
     config.addinivalue_line(
-        "markers",
-        "performance: Performance tests - measure speed, memory, and throughput"
+        "markers", "performance: Performance tests - measure speed, memory, and throughput"
     )
-    config.addinivalue_line(
-        "markers",
-        "websocket: WebSocket-specific tests"
-    )
-    config.addinivalue_line(
-        "markers",
-        "extraction: StructuredDataExtractor-specific tests"
-    )
-    config.addinivalue_line(
-        "markers",
-        "api_v2: V2 API endpoint tests"
-    )
-    config.addinivalue_line(
-        "markers",
-        "security: Security-focused tests"
-    )
-    config.addinivalue_line(
-        "markers",
-        "edge_case: Edge case and error condition tests"
-    )
-    config.addinivalue_line(
-        "markers",
-        "load: Load testing - high volume operations"
-    )
-    config.addinivalue_line(
-        "markers",
-        "slow: Slower tests that may take more time"
-    )
+    config.addinivalue_line("markers", "websocket: WebSocket-specific tests")
+    config.addinivalue_line("markers", "extraction: StructuredDataExtractor-specific tests")
+    config.addinivalue_line("markers", "api_v2: V2 API endpoint tests")
+    config.addinivalue_line("markers", "security: Security-focused tests")
+    config.addinivalue_line("markers", "edge_case: Edge case and error condition tests")
+    config.addinivalue_line("markers", "load: Load testing - high volume operations")
+    config.addinivalue_line("markers", "slow: Slower tests that may take more time")
 
 
 class TestDataGenerator:
     """Generate test data for various scenarios"""
-    
+
     @staticmethod
     def generate_structured_content(complexity: str = "medium") -> str:
         """Generate structured content for testing extraction"""
@@ -66,7 +43,7 @@ class TestDataGenerator:
             Value: 42
             Status: Active
             """
-        
+
         elif complexity == "medium":
             return """
             # Project Documentation
@@ -96,7 +73,7 @@ class TestDataGenerator:
             Contact: test@example.com
             Website: https://example.com
             """
-        
+
         else:  # complex
             return """
             # Comprehensive System Analysis Report
@@ -298,16 +275,18 @@ class TestDataGenerator:
         """Generate WebSocket test messages"""
         messages = []
         for i in range(count):
-            messages.append({
-                "type": f"test.message.{i}",
-                "id": f"msg-{i:03d}",
-                "timestamp": "2024-01-15T10:30:00Z",
-                "data": {
-                    "sequence": i,
-                    "content": f"Test message {i}",
-                    "priority": "normal" if i % 3 != 0 else "high"
+            messages.append(
+                {
+                    "type": f"test.message.{i}",
+                    "id": f"msg-{i:03d}",
+                    "timestamp": "2024-01-15T10:30:00Z",
+                    "data": {
+                        "sequence": i,
+                        "content": f"Test message {i}",
+                        "priority": "normal" if i % 3 != 0 else "high",
+                    },
                 }
-            })
+            )
         return messages
 
     @staticmethod
@@ -325,7 +304,7 @@ class TestDataGenerator:
                 - Rate limiting
                 - Error handling
                 """,
-                "complex": TestDataGenerator.generate_structured_content("complex")
+                "complex": TestDataGenerator.generate_structured_content("complex"),
             },
             "invalid_inputs": [
                 "",  # Empty string
@@ -337,43 +316,58 @@ class TestDataGenerator:
                 "🚀" * 1000,  # Unicode spam
             ],
             "valid_memory_types": [
-                "note", "task", "meeting", "document", "idea", 
-                "reference", "project", "research", "learning"
+                "note",
+                "task",
+                "meeting",
+                "document",
+                "idea",
+                "reference",
+                "project",
+                "research",
+                "learning",
             ],
             "valid_tags": [
-                ["test"], ["api", "v2"], ["performance", "load"],
-                ["security", "validation"], ["integration", "e2e"]
-            ]
+                ["test"],
+                ["api", "v2"],
+                ["performance", "load"],
+                ["security", "validation"],
+                ["integration", "e2e"],
+            ],
         }
 
 
 class TestUtilities:
     """Utility functions for tests"""
-    
+
     @staticmethod
     def assert_response_structure(response_data: Dict[str, Any], required_fields: List[str]):
         """Assert that response has required structure"""
         for field in required_fields:
             assert field in response_data, f"Missing required field: {field}"
-    
+
     @staticmethod
-    def assert_performance_metrics(duration: float, memory_delta: float, 
-                                 max_duration: float = 5.0, max_memory: float = 50.0):
+    def assert_performance_metrics(
+        duration: float, memory_delta: float, max_duration: float = 5.0, max_memory: float = 50.0
+    ):
         """Assert performance metrics are within acceptable ranges"""
         assert duration < max_duration, f"Duration {duration:.3f}s exceeds limit {max_duration}s"
-        assert memory_delta < max_memory, f"Memory delta {memory_delta:.1f}MB exceeds limit {max_memory}MB"
-    
+        assert (
+            memory_delta < max_memory
+        ), f"Memory delta {memory_delta:.1f}MB exceeds limit {max_memory}MB"
+
     @staticmethod
     def validate_extraction_results(extracted_data, min_elements: int = 1):
         """Validate structured data extraction results"""
         total_elements = (
-            len(extracted_data.key_value_pairs) +
-            len(extracted_data.lists) +
-            len(extracted_data.tables) +
-            len(extracted_data.code_snippets)
+            len(extracted_data.key_value_pairs)
+            + len(extracted_data.lists)
+            + len(extracted_data.tables)
+            + len(extracted_data.code_snippets)
         )
-        assert total_elements >= min_elements, f"Expected at least {min_elements} extracted elements"
-    
+        assert (
+            total_elements >= min_elements
+        ), f"Expected at least {min_elements} extracted elements"
+
     @staticmethod
     def create_mock_websocket_responses():
         """Create mock WebSocket responses for testing"""
@@ -381,22 +375,19 @@ class TestUtilities:
             "connection_success": {
                 "type": "connection",
                 "status": "connected",
-                "timestamp": "2024-01-15T10:30:00Z"
+                "timestamp": "2024-01-15T10:30:00Z",
             },
             "subscription_ack": {
                 "type": "subscription",
                 "status": "acknowledged",
-                "event_types": ["memory.created", "memory.updated"]
+                "event_types": ["memory.created", "memory.updated"],
             },
-            "heartbeat": {
-                "type": "heartbeat",
-                "timestamp": "2024-01-15T10:30:00Z"
-            },
+            "heartbeat": {"type": "heartbeat", "timestamp": "2024-01-15T10:30:00Z"},
             "error": {
                 "type": "error",
                 "code": "INVALID_MESSAGE",
-                "message": "Invalid message format"
-            }
+                "message": "Invalid message format",
+            },
         }
 
 
@@ -405,32 +396,19 @@ TEST_ENVIRONMENTS = {
     "unit": {
         "database": "mock",
         "external_apis": "mock",
-        "performance_limits": {
-            "response_time": 1.0,
-            "memory_usage": 25.0
-        }
+        "performance_limits": {"response_time": 1.0, "memory_usage": 25.0},
     },
     "integration": {
         "database": "test_db",
         "external_apis": "sandbox",
-        "performance_limits": {
-            "response_time": 3.0,
-            "memory_usage": 100.0
-        }
+        "performance_limits": {"response_time": 3.0, "memory_usage": 100.0},
     },
     "performance": {
         "database": "test_db",
         "external_apis": "mock",
-        "performance_limits": {
-            "response_time": 5.0,
-            "memory_usage": 200.0
-        },
-        "load_parameters": {
-            "concurrent_requests": 50,
-            "test_duration": 30,
-            "ramp_up_time": 5
-        }
-    }
+        "performance_limits": {"response_time": 5.0, "memory_usage": 200.0},
+        "load_parameters": {"concurrent_requests": 50, "test_duration": 30, "ramp_up_time": 5},
+    },
 }
 
 
@@ -470,24 +448,24 @@ def collect_test_metrics() -> Dict[str, Any]:
     return {
         "test_files_created": [
             "test_v2_unified_api.py",
-            "test_structured_data_extractor.py", 
+            "test_structured_data_extractor.py",
             "test_websocket_functionality.py",
             "test_v2_api_integration.py",
-            "test_comprehensive_performance.py"
+            "test_comprehensive_performance.py",
         ],
         "test_categories": {
             "unit": 100,  # Estimated test count
             "integration": 30,
             "performance": 20,
             "security": 15,
-            "edge_cases": 25
+            "edge_cases": 25,
         },
         "coverage_targets": {
             "v2_api": 95,
             "structured_extractor": 90,
             "websocket": 85,
-            "integration": 80
-        }
+            "integration": 80,
+        },
     }
 
 
@@ -495,16 +473,16 @@ if __name__ == "__main__":
     # Print test configuration summary
     print("Test Configuration Summary")
     print("=" * 40)
-    
+
     metrics = collect_test_metrics()
     print(f"Test files: {len(metrics['test_files_created'])}")
     print(f"Total estimated tests: {sum(metrics['test_categories'].values())}")
     print(f"Coverage targets: {metrics['coverage_targets']}")
-    
+
     print("\nTest Categories:")
-    for category, count in metrics['test_categories'].items():
+    for category, count in metrics["test_categories"].items():
         print(f"  {category}: {count} tests")
-    
+
     print("\nTest Files Created:")
-    for test_file in metrics['test_files_created']:
+    for test_file in metrics["test_files_created"]:
         print(f"  tests/{test_file}")

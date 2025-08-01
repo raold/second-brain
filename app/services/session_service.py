@@ -1,16 +1,19 @@
+from datetime import datetime
+from typing import Any
+from uuid import uuid4
+
+from app.utils.logging_config import get_logger
+
 """
 Session Service - Handles all session-related business logic.
 Manages session persistence, context continuity, and idea processing.
 """
 
-from datetime import datetime
-from typing import Any
-from uuid import uuid4
 
 from app.conversation_processor import ConversationProcessor
 from app.services.monitoring import get_metrics_collector
 from app.session_manager import SessionManager
-from app.utils.logging_config import PerformanceLogger, get_logger
+from app.utils.logging_config import PerformanceLogger
 
 logger = get_logger(__name__)
 
@@ -25,7 +28,7 @@ class SessionService:
         self,
         session_manager: SessionManager,
         conversation_processor: ConversationProcessor,
-        project_dashboard: Any
+        project_dashboard: Any,
     ):
         self.session_manager = session_manager
         self.conversation_processor = conversation_processor
@@ -33,7 +36,11 @@ class SessionService:
         self.logger = logger  # Deprecated: use module logger instead
 
     async def ingest_idea(
-        self, idea: str, source: str = "mobile", priority: str = "medium", context: str | None = None
+        self,
+        idea: str,
+        source: str = "mobile",
+        priority: str = "medium",
+        context: str | None = None,
     ) -> dict[str, Any]:
         """
         Process an idea through the woodchipper.
@@ -60,7 +67,9 @@ class SessionService:
             )
 
             # Add to session history
-            self.session_manager.add_idea_to_session(idea_id=idea_id, idea=idea, source=source, features=features)
+            self.session_manager.add_idea_to_session(
+                idea_id=idea_id, idea=idea, source=source, features=features
+            )
 
             # Prepare auto-updates
             auto_updates = {
@@ -82,22 +91,25 @@ class SessionService:
             }
 
         except Exception as e:
-                # Record failed metrics
-                metrics_collector = get_metrics_collector()
-                await metrics_collector.record_operation(
-                    operation="idea_ingestion",
-                    success=False,
-                    labels={"source": source, "priority": priority}
-                )
+            # Record failed metrics
+            metrics_collector = get_metrics_collector()
+            await metrics_collector.record_operation(
+                operation="idea_ingestion",
+                success=False,
+                labels={"source": source, "priority": priority},
+            )
 
-                logger.exception("Failed to process idea", extra={
+            logger.exception(
+                "Failed to process idea",
+                extra={
                     "operation": "ingest_idea",
                     "source": source,
                     "priority": priority,
                     "idea_length": len(idea),
-                    "error_type": type(e).__name__
-                })
-                raise
+                    "error_type": type(e).__name__,
+                },
+            )
+            raise
 
     async def pause_session(self, reason: str = "User requested") -> dict[str, Any]:
         """
@@ -110,10 +122,7 @@ class SessionService:
             Resume context and session summary
         """
         with PerformanceLogger("session_pause", logger):
-            logger.info("Pausing session", extra={
-                "operation": "pause_session",
-                "reason": reason
-            })
+            logger.info("Pausing session", extra={"operation": "pause_session", "reason": reason})
 
             try:
                 # Get current session state
@@ -128,11 +137,14 @@ class SessionService:
                 # Get analytics
                 analytics = self.session_manager.get_session_analytics()
 
-                logger.info("Session paused successfully", extra={
-                    "operation": "pause_session",
-                    "session_id": saved_session.get('session_id'),
-                    "reason": reason
-                })
+                logger.info(
+                    "Session paused successfully",
+                    extra={
+                        "operation": "pause_session",
+                        "session_id": saved_session.get("session_id"),
+                        "reason": reason,
+                    },
+                )
 
                 return {
                     "session_id": saved_session["session_id"],
@@ -145,11 +157,14 @@ class SessionService:
                 }
 
             except Exception as e:
-                logger.exception("Failed to pause session", extra={
-                    "operation": "pause_session",
-                    "reason": reason,
-                    "error_type": type(e).__name__
-                })
+                logger.exception(
+                    "Failed to pause session",
+                    extra={
+                        "operation": "pause_session",
+                        "reason": reason,
+                        "error_type": type(e).__name__,
+                    },
+                )
                 raise
 
     async def resume_session(
@@ -167,7 +182,9 @@ class SessionService:
         """
         try:
             # Resume the session
-            resumed_session = self.session_manager.resume_session(session_id=session_id, device_context=device_context)
+            resumed_session = self.session_manager.resume_session(
+                session_id=session_id, device_context=device_context
+            )
 
             # Restore project dashboard state
             self.project_dashboard.restore_state(resumed_session.get("dashboard_state", {}))
@@ -190,7 +207,9 @@ class SessionService:
             self.logger.error(f"Failed to resume session: {e}")
             raise
 
-    async def process_conversation_message(self, message: str, context_type: str = "general") -> dict[str, Any]:
+    async def process_conversation_message(
+        self, message: str, context_type: str = "general"
+    ) -> dict[str, Any]:
         """
         Process a conversation message for insights and updates.
 
@@ -203,7 +222,9 @@ class SessionService:
         """
         try:
             # Analyze conversation
-            analysis = self.conversation_processor.analyze_conversation(message=message, context_type=context_type)
+            analysis = self.conversation_processor.analyze_conversation(
+                message=message, context_type=context_type
+            )
 
             # Update dashboard if relevant
             if analysis.get("is_relevant", False):

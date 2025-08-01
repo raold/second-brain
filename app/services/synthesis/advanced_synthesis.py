@@ -1,17 +1,23 @@
+import json
+from datetime import datetime
+from typing import Any
+from uuid import UUID, uuid4
+
+from app.utils.logging_config import get_logger
+
 """Advanced Synthesis Engine Service
 
 Real implementation of memory synthesis using hierarchical processing,
 theme extraction, and LLM-powered consolidation.
 """
 
-import json
 from collections import defaultdict
-from datetime import datetime
-from typing import Any
-from uuid import UUID, uuid4
 
-from app.models.synthesis.advanced_models import SynthesisRequest, SynthesisResult, SynthesisStrategy
-from app.utils.logging_config import get_logger
+from app.models.synthesis.advanced_models import (
+    SynthesisRequest,
+    SynthesisResult,
+    SynthesisStrategy,
+)
 
 logger = get_logger(__name__)
 
@@ -31,20 +37,20 @@ class ThemeCluster:
             return 0.0
 
         # Average importance of memories in cluster
-        avg_importance = sum(m.get('importance', 5) for m in self.memories) / len(self.memories)
+        avg_importance = sum(m.get("importance", 5) for m in self.memories) / len(self.memories)
 
         # Size factor (more memories = more important)
         size_factor = min(len(self.memories) / 10, 1.0)
 
         # Recency factor
-        latest_date = max(m.get('created_at', datetime.min) for m in self.memories)
+        latest_date = max(m.get("created_at", datetime.min) for m in self.memories)
         days_old = (datetime.utcnow() - latest_date).days
         recency_factor = max(0, 1 - (days_old / 365))  # Linear decay over a year
 
         # Combined score
         return (avg_importance / 10) * 0.5 + size_factor * 0.3 + recency_factor * 0.2
 
-    def add_sub_theme(self, sub_cluster: 'ThemeCluster'):
+    def add_sub_theme(self, sub_cluster: "ThemeCluster"):
         """Add a sub-theme cluster"""
         self.sub_themes.append(sub_cluster)
 
@@ -108,7 +114,7 @@ Memories for timeline:
 {memories}
 
 Create a narrative that shows the temporal progression of ideas and events.
-"""
+""",
         }
 
     async def synthesize_memories(self, request: SynthesisRequest) -> list[SynthesisResult]:
@@ -147,27 +153,31 @@ Create a narrative that shows the temporal progression of ideas and events.
             try:
                 memory = await self.memory_service.get_memory(str(memory_id))
                 if memory:
-                    memories.append({
-                        'id': memory_id,
-                        'content': memory.content,
-                        'importance': memory.importance_score,
-                        'created_at': memory.created_at,
-                        'tags': getattr(memory, 'tags', []),
-                        'metadata': getattr(memory, 'metadata', {})
-                    })
+                    memories.append(
+                        {
+                            "id": memory_id,
+                            "content": memory.content,
+                            "importance": memory.importance_score,
+                            "created_at": memory.created_at,
+                            "tags": getattr(memory, "tags", []),
+                            "metadata": getattr(memory, "metadata", {}),
+                        }
+                    )
             except Exception as e:
                 logger.error(f"Failed to fetch memory {memory_id}: {e}")
 
         return memories
 
-    async def _extract_themes_and_cluster(self, memories: list[dict[str, Any]]) -> list[ThemeCluster]:
+    async def _extract_themes_and_cluster(
+        self, memories: list[dict[str, Any]]
+    ) -> list[ThemeCluster]:
         """Extract themes and cluster memories"""
         # Group by explicit tags first
         tag_groups = defaultdict(list)
         untagged = []
 
         for memory in memories:
-            tags = memory.get('tags', [])
+            tags = memory.get("tags", [])
             if tags:
                 for tag in tags:
                     tag_groups[tag].append(memory)
@@ -189,7 +199,9 @@ Create a narrative that shows the temporal progression of ideas and events.
     async def _extract_implicit_themes(self, memories: list[dict[str, Any]]) -> list[ThemeCluster]:
         """Use LLM to extract themes from untagged memories"""
         # Prepare content for theme extraction
-        memory_texts = [f"- {m['content'][:200]}..." for m in memories[:20]]  # Limit to prevent token overflow
+        memory_texts = [
+            f"- {m['content'][:200]}..." for m in memories[:20]
+        ]  # Limit to prevent token overflow
 
         prompt = f"""
 Analyze these memory excerpts and identify 3-5 main themes or topics:
@@ -202,9 +214,7 @@ Example: ["Machine Learning Fundamentals", "Python Best Practices", "Database De
 
         try:
             response = await self.openai_client.generate(
-                prompt=prompt,
-                max_tokens=200,
-                temperature=0.3
+                prompt=prompt, max_tokens=200, temperature=0.3
             )
 
             # Parse themes
@@ -220,9 +230,9 @@ Example: ["Machine Learning Fundamentals", "Python Best Practices", "Database De
             # Handle any remaining memories
             assigned_ids = set()
             for cluster in theme_clusters:
-                assigned_ids.update(m['id'] for m in cluster.memories)
+                assigned_ids.update(m["id"] for m in cluster.memories)
 
-            unassigned = [m for m in memories if m['id'] not in assigned_ids]
+            unassigned = [m for m in memories if m["id"] not in assigned_ids]
             if unassigned:
                 theme_clusters.append(ThemeCluster("Miscellaneous", unassigned))
 
@@ -233,7 +243,9 @@ Example: ["Machine Learning Fundamentals", "Python Best Practices", "Database De
             # Fallback: create a single cluster
             return [ThemeCluster("General", memories)]
 
-    async def _find_memories_for_theme(self, theme: str, memories: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def _find_memories_for_theme(
+        self, theme: str, memories: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Find memories that match a theme using semantic similarity"""
         # Simple keyword matching for now
         # In production, use embeddings for semantic similarity
@@ -242,7 +254,7 @@ Example: ["Machine Learning Fundamentals", "Python Best Practices", "Database De
 
         matched_memories = []
         for memory in memories:
-            content_lower = memory['content'].lower()
+            content_lower = memory["content"].lower()
             content_words = set(content_lower.split())
 
             # Check for word overlap
@@ -276,9 +288,7 @@ Example: ["Machine Learning Fundamentals", "Python Best Practices", "Database De
         return root
 
     async def _synthesize_hierarchical(
-        self,
-        hierarchy: ThemeCluster,
-        request: SynthesisRequest
+        self, hierarchy: ThemeCluster, request: SynthesisRequest
     ) -> list[SynthesisResult]:
         """Generate synthesis from hierarchical structure"""
         results = []
@@ -288,18 +298,17 @@ Example: ["Machine Learning Fundamentals", "Python Best Practices", "Database De
         results.append(root_synthesis)
 
         # Optionally synthesize sub-themes
-        if request.options.get('include_sub_themes', True) and hierarchy.sub_themes:
+        if request.options.get("include_sub_themes", True) and hierarchy.sub_themes:
             for sub_theme in hierarchy.sub_themes[:3]:  # Limit to top 3 sub-themes
-                sub_synthesis = await self._synthesize_cluster(sub_theme, request, is_sub_theme=True)
+                sub_synthesis = await self._synthesize_cluster(
+                    sub_theme, request, is_sub_theme=True
+                )
                 results.append(sub_synthesis)
 
         return results
 
     async def _synthesize_cluster(
-        self,
-        cluster: ThemeCluster,
-        request: SynthesisRequest,
-        is_sub_theme: bool = False
+        self, cluster: ThemeCluster, request: SynthesisRequest, is_sub_theme: bool = False
     ) -> SynthesisResult:
         """Synthesize a single cluster"""
         # Prepare memory content
@@ -311,8 +320,7 @@ Example: ["Machine Learning Fundamentals", "Python Best Practices", "Database De
 
         # Get appropriate template
         template = self.synthesis_templates.get(
-            request.strategy,
-            self.synthesis_templates[SynthesisStrategy.SUMMARY]
+            request.strategy, self.synthesis_templates[SynthesisStrategy.SUMMARY]
         )
 
         # Add context for sub-themes
@@ -324,9 +332,7 @@ Example: ["Machine Learning Fundamentals", "Python Best Practices", "Database De
 
         try:
             synthesis_content = await self.openai_client.generate(
-                prompt=prompt,
-                max_tokens=request.max_tokens,
-                temperature=request.temperature
+                prompt=prompt, max_tokens=request.max_tokens, temperature=request.temperature
             )
 
             # Add references if requested
@@ -338,15 +344,15 @@ Example: ["Machine Learning Fundamentals", "Python Best Practices", "Database De
                 id=uuid4(),
                 synthesis_type=request.strategy.value,
                 content=synthesis_content,
-                source_memory_ids=[m['id'] for m in cluster.memories],
+                source_memory_ids=[m["id"] for m in cluster.memories],
                 confidence_score=cluster.importance_score,
                 metadata={
                     "theme": cluster.theme,
                     "is_sub_theme": is_sub_theme,
                     "memory_count": len(cluster.memories),
                     "strategy": request.strategy.value,
-                    "timestamp": datetime.utcnow().isoformat()
-                }
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
             )
 
         except Exception as e:
@@ -354,17 +360,11 @@ Example: ["Machine Learning Fundamentals", "Python Best Practices", "Database De
             return await self._create_fallback_synthesis(request, cluster.memories)
 
     async def _synthesize_timeline(
-        self,
-        memories: list[dict[str, Any]],
-        hierarchy: ThemeCluster,
-        request: SynthesisRequest
+        self, memories: list[dict[str, Any]], hierarchy: ThemeCluster, request: SynthesisRequest
     ) -> list[SynthesisResult]:
         """Create timeline-based synthesis"""
         # Sort memories by date
-        sorted_memories = sorted(
-            memories,
-            key=lambda m: m.get('created_at', datetime.min)
-        )
+        sorted_memories = sorted(memories, key=lambda m: m.get("created_at", datetime.min))
 
         # Group by time periods
         time_groups = self._group_by_time_period(sorted_memories)
@@ -391,37 +391,45 @@ Focus on cause-and-effect relationships and the progression of concepts.
             narrative = await self.openai_client.generate(
                 prompt=narrative_prompt,
                 max_tokens=request.max_tokens,
-                temperature=request.temperature
+                temperature=request.temperature,
             )
 
-            final_content = f"# Timeline Synthesis\n\n{narrative}\n\n## Detailed Timeline\n\n{timeline_content}"
+            final_content = (
+                f"# Timeline Synthesis\n\n{narrative}\n\n## Detailed Timeline\n\n{timeline_content}"
+            )
 
-            return [SynthesisResult(
-                id=uuid4(),
-                synthesis_type=SynthesisStrategy.TIMELINE.value,
-                content=final_content,
-                source_memory_ids=[m['id'] for m in memories],
-                confidence_score=0.85,
-                metadata={
-                    "periods": len(time_groups),
-                    "span_days": (sorted_memories[-1]['created_at'] - sorted_memories[0]['created_at']).days,
-                    "strategy": SynthesisStrategy.TIMELINE.value,
-                    "timestamp": datetime.utcnow().isoformat()
-                }
-            )]
+            return [
+                SynthesisResult(
+                    id=uuid4(),
+                    synthesis_type=SynthesisStrategy.TIMELINE.value,
+                    content=final_content,
+                    source_memory_ids=[m["id"] for m in memories],
+                    confidence_score=0.85,
+                    metadata={
+                        "periods": len(time_groups),
+                        "span_days": (
+                            sorted_memories[-1]["created_at"] - sorted_memories[0]["created_at"]
+                        ).days,
+                        "strategy": SynthesisStrategy.TIMELINE.value,
+                        "timestamp": datetime.utcnow().isoformat(),
+                    },
+                )
+            ]
 
         except Exception as e:
             logger.error(f"Timeline synthesis failed: {e}")
             return [await self._create_fallback_synthesis(request, memories)]
 
-    def _group_by_time_period(self, memories: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    def _group_by_time_period(
+        self, memories: list[dict[str, Any]]
+    ) -> dict[str, list[dict[str, Any]]]:
         """Group memories by time period"""
         from collections import OrderedDict
 
         groups = OrderedDict()
 
         for memory in memories:
-            date = memory.get('created_at', datetime.utcnow())
+            date = memory.get("created_at", datetime.utcnow())
             # Group by month
             date.strftime("%Y-%m")
             period_label = date.strftime("%B %Y")
@@ -432,15 +440,11 @@ Focus on cause-and-effect relationships and the progression of concepts.
 
         return groups
 
-    async def _synthesize_time_period(
-        self,
-        period: str,
-        memories: list[dict[str, Any]]
-    ) -> str:
+    async def _synthesize_time_period(self, period: str, memories: list[dict[str, Any]]) -> str:
         """Synthesize memories from a specific time period"""
         memory_summaries = []
         for memory in memories[:10]:  # Limit per period
-            date_str = memory['created_at'].strftime("%Y-%m-%d")
+            date_str = memory["created_at"].strftime("%Y-%m-%d")
             summary = f"[{date_str}] {memory['content'][:100]}..."
             memory_summaries.append(summary)
 
@@ -459,9 +463,7 @@ Focus on cause-and-effect relationships and the progression of concepts.
         return "\n".join(references)
 
     async def _create_fallback_synthesis(
-        self,
-        request: SynthesisRequest,
-        memories: list[dict[str, Any]] | None = None
+        self, request: SynthesisRequest, memories: list[dict[str, Any]] | None = None
     ) -> SynthesisResult:
         """Create a basic fallback synthesis"""
         if memories:
@@ -482,6 +484,6 @@ Focus on cause-and-effect relationships and the progression of concepts.
             metadata={
                 "fallback": True,
                 "strategy": request.strategy.value,
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         )

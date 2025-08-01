@@ -1,3 +1,5 @@
+from app.events.domain_events import SearchPerformedEvent, SystemHealthEvent
+
 """
 Event-driven architecture components for the Second Brain application.
 
@@ -26,23 +28,21 @@ from .event_handlers import (
 
 __all__ = [
     # Domain Events
-    'DomainEvent',
-    'MemoryCreatedEvent',
-    'MemoryUpdatedEvent',
-    'MemoryAccessedEvent',
-    'ImportanceUpdatedEvent',
-    'SessionCreatedEvent',
-    'SessionExpiredEvent',
-    'SearchPerformedEvent',
-    'SystemHealthEvent',
-
+    "DomainEvent",
+    "MemoryCreatedEvent",
+    "MemoryUpdatedEvent",
+    "MemoryAccessedEvent",
+    "ImportanceUpdatedEvent",
+    "SessionCreatedEvent",
+    "SessionExpiredEvent",
+    "SearchPerformedEvent",
+    "SystemHealthEvent",
     # Event Infrastructure
-    'EventBus',
-    'EventHandler',
-
+    "EventBus",
+    "EventHandler",
     # Event Handlers
-    'ImportanceTrackingHandler',
-    'SearchAnalyticsHandler',
-    'SystemMonitoringHandler',
-    'NotificationHandler',
+    "ImportanceTrackingHandler",
+    "SearchAnalyticsHandler",
+    "SystemMonitoringHandler",
+    "NotificationHandler",
 ]

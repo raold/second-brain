@@ -1,10 +1,13 @@
-"""Memory migration tools for bulk operations"""
-
 from typing import Any
 
 from pydantic import BaseModel
 
 from app.utils.logging_config import get_logger
+
+"""Memory migration tools for bulk operations"""
+
+
+
 
 logger = get_logger(__name__)
 
@@ -20,10 +23,10 @@ class MigrationPlan:
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         return {
-            'total_memories': self.total_memories,
-            'completed': self.completed,
-            'failed': self.failed,
-            'progress': self.completed / max(self.total_memories, 1)
+            "total_memories": self.total_memories,
+            "completed": self.completed,
+            "failed": self.failed,
+            "progress": self.completed / max(self.total_memories, 1),
         }
 
 
@@ -33,11 +36,7 @@ class MigrationExecutor:
     async def execute_migration(self, plan: MigrationPlan) -> dict[str, Any]:
         """Execute a migration plan"""
         # Stub implementation
-        return {
-            'status': 'completed',
-            'migrated': plan.total_memories,
-            'failed': 0
-        }
+        return {"status": "completed", "migrated": plan.total_memories, "failed": 0}
 
 
 class MigrationValidator:
@@ -65,11 +64,13 @@ def validate_migration_format(data: Any) -> bool:
 
 class MigrationConfig(BaseModel):
     """Configuration for migration"""
+
     batch_size: int = 100
 
 
 class MigrationResult(BaseModel):
     """Result of a migration operation"""
+
     success: bool = True
     message: str = ""
     migrated_count: int = 0
@@ -98,13 +99,15 @@ class MigrationManager:
         plan = create_migration_plan(data)
         execution_result = await self.executor.execute_migration(plan)
 
-        result.migrated_count = execution_result.get('migrated', 0)
-        result.failed_count = execution_result.get('failed', 0)
+        result.migrated_count = execution_result.get("migrated", 0)
+        result.failed_count = execution_result.get("failed", 0)
         result.message = "Migration completed"
 
         return result
 
-    def create_memory_type_migration(self, from_type: str, to_type: str, filter_criteria: Any = None) -> str:
+    def create_memory_type_migration(
+        self, from_type: str, to_type: str, filter_criteria: Any = None
+    ) -> str:
         """Create a memory type migration"""
         self._migration_counter += 1
         migration_id = f"migration_{self._migration_counter}"
@@ -115,12 +118,14 @@ class MigrationManager:
             "from_type": from_type,
             "to_type": to_type,
             "filter_criteria": filter_criteria,
-            "status": "pending"
+            "status": "pending",
         }
 
         return migration_id
 
-    async def execute_migration(self, migration_id: str, config: MigrationConfig) -> MigrationResult:
+    async def execute_migration(
+        self, migration_id: str, config: MigrationConfig
+    ) -> MigrationResult:
         """Execute a specific migration"""
         if migration_id not in self.migrations:
             return MigrationResult(success=False, message="Migration not found")

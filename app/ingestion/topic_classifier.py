@@ -1,11 +1,15 @@
+import re
+from typing import Any, Union
+
+import numpy as np
+
+from app.utils.logging_config import get_logger
+
 """
 Topic modeling and classification component for the ingestion engine
 """
 
 from collections import Counter, defaultdict
-from typing import Any, Union
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -13,12 +17,14 @@ logger = get_logger(__name__)
 class TopicClassifier:
     """Sophisticated topic modeling and classification"""
 
-    def __init__(self,
-                 enable_lda: bool = True,
-                 enable_keyword: bool = True,
-                 enable_domain: bool = True,
-                 enable_advanced: bool = True,
-                 n_topics: int = 10):
+    def __init__(
+        self,
+        enable_lda: bool = True,
+        enable_keyword: bool = True,
+        enable_domain: bool = True,
+        enable_advanced: bool = True,
+        n_topics: int = 10,
+    ):
         """
         Initialize topic classifier
 
@@ -49,10 +55,9 @@ class TopicClassifier:
         # Advanced topic modeling (lazy loaded)
         self._advanced_model = None
 
-    def extract_topics(self,
-                      text: str,
-                      min_relevance: float = 0.5,
-                      max_topics: int = 5) -> list[Topic]:
+    def extract_topics(
+        self, text: str, min_relevance: float = 0.5, max_topics: int = 5
+    ) -> list[Topic]:
         """
         Extract topics from text using multiple methods
 
@@ -85,16 +90,10 @@ class TopicClassifier:
         merged_topics = self._merge_similar_topics(all_topics)
 
         # Filter by relevance and limit count
-        filtered_topics = [
-            topic for topic in merged_topics
-            if topic.relevance >= min_relevance
-        ]
+        filtered_topics = [topic for topic in merged_topics if topic.relevance >= min_relevance]
 
         # Sort by relevance and confidence
-        filtered_topics.sort(
-            key=lambda t: (t.relevance * t.confidence),
-            reverse=True
-        )
+        filtered_topics.sort(key=lambda t: (t.relevance * t.confidence), reverse=True)
 
         return filtered_topics[:max_topics]
 
@@ -114,7 +113,7 @@ class TopicClassifier:
             total_matches = 0
 
             for keyword in keywords:
-                count = len(re.findall(r'\b' + re.escape(keyword) + r'\b', text_lower))
+                count = len(re.findall(r"\b" + re.escape(keyword) + r"\b", text_lower))
                 if count > 0:
                     keyword_counts[keyword] = count
                     total_matches += count
@@ -122,8 +121,7 @@ class TopicClassifier:
             # Check required keywords
             if required:
                 has_required = all(
-                    re.search(r'\b' + re.escape(req) + r'\b', text_lower)
-                    for req in required
+                    re.search(r"\b" + re.escape(req) + r"\b", text_lower) for req in required
                 )
                 if not has_required:
                     continue
@@ -149,22 +147,20 @@ class TopicClassifier:
             confidence = min(1.0, unique_matches / max(3, len(keywords) * 0.3))
 
             # Extract top keywords found
-            top_keywords = sorted(
-                keyword_counts.keys(),
-                key=keyword_counts.get,
-                reverse=True
-            )[:5]
+            top_keywords = sorted(keyword_counts.keys(), key=keyword_counts.get, reverse=True)[:5]
 
             # Create topic hierarchy
             hierarchy = topic_info.get("hierarchy", [topic_name])
 
-            topics.append(Topic(
-                name=topic_name,
-                keywords=top_keywords,
-                confidence=confidence,
-                relevance=relevance,
-                hierarchy=hierarchy
-            ))
+            topics.append(
+                Topic(
+                    name=topic_name,
+                    keywords=top_keywords,
+                    confidence=confidence,
+                    relevance=relevance,
+                    hierarchy=hierarchy,
+                )
+            )
 
         return topics
 
@@ -194,13 +190,15 @@ class TopicClassifier:
                 # Extract unique matched terms as keywords
                 keywords = list(set(matched_patterns))[:5]
 
-                topics.append(Topic(
-                    name=f"{domain} Domain",
-                    keywords=keywords,
-                    confidence=confidence,
-                    relevance=relevance,
-                    hierarchy=["Domains", domain]
-                ))
+                topics.append(
+                    Topic(
+                        name=f"{domain} Domain",
+                        keywords=keywords,
+                        confidence=confidence,
+                        relevance=relevance,
+                        hierarchy=["Domains", domain],
+                    )
+                )
 
         return topics
 
@@ -221,13 +219,11 @@ class TopicClassifier:
                     max_features=100,
                     min_df=1,
                     max_df=0.95,
-                    stop_words='english',
-                    ngram_range=(1, 2)
+                    stop_words="english",
+                    ngram_range=(1, 2),
                 )
                 self.lda_model = LatentDirichletAllocation(
-                    n_components=min(self.n_topics, len(documents)),
-                    random_state=42,
-                    max_iter=10
+                    n_components=min(self.n_topics, len(documents)), random_state=42, max_iter=10
                 )
 
             # Transform documents
@@ -254,13 +250,15 @@ class TopicClassifier:
                 # Generate topic name from top words
                 topic_name = self._generate_topic_name(top_words[:3])
 
-                topics.append(Topic(
-                    name=topic_name,
-                    keywords=top_words[:5],
-                    confidence=0.7,  # LDA confidence is moderate
-                    relevance=topic_relevance,
-                    hierarchy=["LDA Topics", topic_name]
-                ))
+                topics.append(
+                    Topic(
+                        name=topic_name,
+                        keywords=top_words[:5],
+                        confidence=0.7,  # LDA confidence is moderate
+                        relevance=topic_relevance,
+                        hierarchy=["LDA Topics", topic_name],
+                    )
+                )
 
         except Exception as e:
             logger.warning(f"LDA topic extraction failed: {e}")
@@ -270,7 +268,7 @@ class TopicClassifier:
     def _prepare_text_for_lda(self, text: str) -> list[str]:
         """Prepare text for LDA by splitting into chunks"""
         # Split into sentences
-        sentences = re.split(r'[.!?]+', text)
+        sentences = re.split(r"[.!?]+", text)
 
         # Group sentences into documents (3-5 sentences each)
         documents = []
@@ -291,7 +289,7 @@ class TopicClassifier:
         # If too few documents, split by paragraphs or create overlapping windows
         if len(documents) < 3:
             # Split by paragraphs
-            paragraphs = text.split('\n\n')
+            paragraphs = text.split("\n\n")
             if len(paragraphs) > 1:
                 documents = [p.strip() for p in paragraphs if p.strip()]
             else:
@@ -301,7 +299,7 @@ class TopicClassifier:
                 step = 25
                 documents = []
                 for i in range(0, len(words) - window_size + 1, step):
-                    documents.append(" ".join(words[i:i + window_size]))
+                    documents.append(" ".join(words[i : i + window_size]))
 
         return documents if documents else [text]
 
@@ -321,7 +319,7 @@ class TopicClassifier:
             similar_topics = [topic1]
             keywords1 = set(topic1.keywords)
 
-            for j, topic2 in enumerate(topics[i+1:], i+1):
+            for j, topic2 in enumerate(topics[i + 1 :], i + 1):
                 if j in processed:
                     continue
 
@@ -363,9 +361,7 @@ class TopicClassifier:
                 keyword_counts[keyword] += 1
 
         # Get top keywords
-        top_keywords = [
-            keyword for keyword, _ in keyword_counts.most_common(7)
-        ]
+        top_keywords = [keyword for keyword, _ in keyword_counts.most_common(7)]
 
         # Average confidence and relevance
         avg_confidence = sum(t.confidence for t in topics) / len(topics)
@@ -387,7 +383,7 @@ class TopicClassifier:
             keywords=top_keywords,
             confidence=avg_confidence,
             relevance=avg_relevance,
-            hierarchy=hierarchy
+            hierarchy=hierarchy,
         )
 
     def _calculate_name_similarity(self, name1: str, name2: str) -> float:
@@ -420,11 +416,17 @@ class TopicClassifier:
         """Initialize domain detection patterns"""
         return {
             "Technology": [
-                {"pattern": r"\b(python|java|javascript|code|programming|software)\b", "weight": 1.5},
+                {
+                    "pattern": r"\b(python|java|javascript|code|programming|software)\b",
+                    "weight": 1.5,
+                },
                 {"pattern": r"\b(api|sdk|framework|library|package)\b", "weight": 1.2},
                 {"pattern": r"\b(database|sql|nosql|mongodb|postgresql)\b", "weight": 1.3},
                 {"pattern": r"\b(cloud|aws|azure|gcp|docker|kubernetes)\b", "weight": 1.4},
-                {"pattern": r"\b(machine learning|ai|neural network|deep learning)\b", "weight": 1.5},
+                {
+                    "pattern": r"\b(machine learning|ai|neural network|deep learning)\b",
+                    "weight": 1.5,
+                },
             ],
             "Business": [
                 {"pattern": r"\b(revenue|profit|roi|kpi|metrics)\b", "weight": 1.4},
@@ -449,61 +451,141 @@ class TopicClassifier:
                 {"pattern": r"\b(student|teacher|professor|instructor)\b", "weight": 1.3},
                 {"pattern": r"\b(course|class|lesson|lecture)\b", "weight": 1.3},
                 {"pattern": r"\b(assignment|homework|exam|grade)\b", "weight": 1.2},
-            ]
+            ],
         }
 
     def _initialize_keyword_topics(self) -> dict[str, dict[str, Any]]:
         """Initialize keyword-based topic definitions"""
         return {
             "Project Management": {
-                "keywords": ["project", "timeline", "milestone", "deliverable", "scope",
-                           "budget", "resource", "stakeholder", "risk", "planning"],
+                "keywords": [
+                    "project",
+                    "timeline",
+                    "milestone",
+                    "deliverable",
+                    "scope",
+                    "budget",
+                    "resource",
+                    "stakeholder",
+                    "risk",
+                    "planning",
+                ],
                 "boost_phrases": ["project plan", "risk management", "scope creep"],
-                "hierarchy": ["Business", "Management", "Project Management"]
+                "hierarchy": ["Business", "Management", "Project Management"],
             },
             "Software Development": {
-                "keywords": ["code", "development", "programming", "debug", "testing",
-                           "deployment", "git", "version", "release", "bug"],
+                "keywords": [
+                    "code",
+                    "development",
+                    "programming",
+                    "debug",
+                    "testing",
+                    "deployment",
+                    "git",
+                    "version",
+                    "release",
+                    "bug",
+                ],
                 "required": [],
                 "boost_phrases": ["code review", "pull request", "continuous integration"],
-                "hierarchy": ["Technology", "Development", "Software Development"]
+                "hierarchy": ["Technology", "Development", "Software Development"],
             },
             "Data Science": {
-                "keywords": ["data", "analysis", "model", "algorithm", "prediction",
-                           "dataset", "feature", "training", "validation", "accuracy"],
+                "keywords": [
+                    "data",
+                    "analysis",
+                    "model",
+                    "algorithm",
+                    "prediction",
+                    "dataset",
+                    "feature",
+                    "training",
+                    "validation",
+                    "accuracy",
+                ],
                 "boost_phrases": ["machine learning", "data pipeline", "model training"],
-                "hierarchy": ["Technology", "Data", "Data Science"]
+                "hierarchy": ["Technology", "Data", "Data Science"],
             },
             "Product Design": {
-                "keywords": ["design", "user", "interface", "experience", "prototype",
-                           "mockup", "wireframe", "usability", "feedback", "iteration"],
+                "keywords": [
+                    "design",
+                    "user",
+                    "interface",
+                    "experience",
+                    "prototype",
+                    "mockup",
+                    "wireframe",
+                    "usability",
+                    "feedback",
+                    "iteration",
+                ],
                 "boost_phrases": ["user experience", "design system", "user research"],
-                "hierarchy": ["Design", "Product", "Product Design"]
+                "hierarchy": ["Design", "Product", "Product Design"],
             },
             "Marketing": {
-                "keywords": ["marketing", "campaign", "audience", "brand", "content",
-                           "social", "engagement", "conversion", "analytics", "strategy"],
+                "keywords": [
+                    "marketing",
+                    "campaign",
+                    "audience",
+                    "brand",
+                    "content",
+                    "social",
+                    "engagement",
+                    "conversion",
+                    "analytics",
+                    "strategy",
+                ],
                 "boost_phrases": ["content marketing", "social media", "conversion rate"],
-                "hierarchy": ["Business", "Marketing"]
+                "hierarchy": ["Business", "Marketing"],
             },
             "Finance": {
-                "keywords": ["finance", "budget", "revenue", "cost", "investment",
-                           "profit", "expense", "cash", "forecast", "financial"],
+                "keywords": [
+                    "finance",
+                    "budget",
+                    "revenue",
+                    "cost",
+                    "investment",
+                    "profit",
+                    "expense",
+                    "cash",
+                    "forecast",
+                    "financial",
+                ],
                 "boost_phrases": ["financial planning", "cash flow", "return on investment"],
-                "hierarchy": ["Business", "Finance"]
+                "hierarchy": ["Business", "Finance"],
             },
             "Personal Development": {
-                "keywords": ["goal", "habit", "productivity", "mindset", "growth",
-                           "motivation", "success", "improvement", "skill", "learning"],
+                "keywords": [
+                    "goal",
+                    "habit",
+                    "productivity",
+                    "mindset",
+                    "growth",
+                    "motivation",
+                    "success",
+                    "improvement",
+                    "skill",
+                    "learning",
+                ],
                 "boost_phrases": ["personal growth", "skill development", "goal setting"],
-                "hierarchy": ["Personal", "Development"]
+                "hierarchy": ["Personal", "Development"],
             },
             "Research": {
-                "keywords": ["research", "study", "paper", "publication", "methodology",
-                           "literature", "review", "citation", "abstract", "conclusion"],
+                "keywords": [
+                    "research",
+                    "study",
+                    "paper",
+                    "publication",
+                    "methodology",
+                    "literature",
+                    "review",
+                    "citation",
+                    "abstract",
+                    "conclusion",
+                ],
                 "boost_phrases": ["literature review", "research methodology", "peer review"],
-                "hierarchy": ["Academic", "Research"]
-            }
+                "hierarchy": ["Academic", "Research"],
+            },
         }
 
     def get_topic_statistics(self, topics: list[Topic]) -> dict[str, Any]:
@@ -514,7 +596,7 @@ class TopicClassifier:
                 "avg_confidence": 0,
                 "avg_relevance": 0,
                 "keyword_coverage": 0,
-                "domain_distribution": {}
+                "domain_distribution": {},
             }
 
         # Basic statistics
@@ -542,13 +624,12 @@ class TopicClassifier:
             "avg_relevance": avg_relevance,
             "unique_keywords": len(all_keywords),
             "avg_keywords_per_topic": sum(len(t.keywords) for t in topics) / total_topics,
-            "domain_distribution": dict(domain_counts)
+            "domain_distribution": dict(domain_counts),
         }
 
-    def extract_advanced_topics(self,
-                               texts: Union[str, list[str]],
-                               use_hierarchy: bool = True,
-                               **kwargs) -> list[Topic]:
+    def extract_advanced_topics(
+        self, texts: Union[str, list[str]], use_hierarchy: bool = True, **kwargs
+    ) -> list[Topic]:
         """
         Extract topics using advanced transformer-based models
 
@@ -564,6 +645,7 @@ class TopicClassifier:
         if self._advanced_model is None and self.enable_advanced:
             try:
                 from app.ingestion.advanced_topic_modeling import AdvancedTopicModeling
+
                 self._advanced_model = AdvancedTopicModeling()
             except ImportError:
                 logger.warning("Advanced topic modeling not available")
@@ -572,9 +654,7 @@ class TopicClassifier:
 
         if self._advanced_model:
             return self._advanced_model.extract_advanced_topics(
-                texts,
-                include_hierarchy=use_hierarchy,
-                **kwargs
+                texts, include_hierarchy=use_hierarchy, **kwargs
             )
         else:
             # Fallback to standard extraction
@@ -583,6 +663,6 @@ class TopicClassifier:
                 for text in texts:
                     topics = self.extract_topics(text, **kwargs)
                     all_topics.extend(topics)
-                return all_topics[:kwargs.get('max_topics', 10)]
+                return all_topics[: kwargs.get("max_topics", 10)]
             else:
                 return self.extract_topics(texts, **kwargs)

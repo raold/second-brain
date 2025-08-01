@@ -1,15 +1,18 @@
-"""
-Second Brain v2.0 API Routes
-Provides endpoints for the new interface
-"""
 import asyncio
 import os
-import subprocess
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
+"""
+Second Brain v2.0 API Routes
+Provides endpoints for the new interface
+"""
+
+import subprocess
+
 router = APIRouter(prefix="/api/v2")
+
 
 # WebSocket connection manager
 class ConnectionManager:
@@ -30,7 +33,9 @@ class ConnectionManager:
             except Exception:
                 pass
 
+
 manager = ConnectionManager()
+
 
 @router.get("/metrics")
 async def get_metrics():
@@ -43,10 +48,10 @@ async def get_metrics():
                 ["python", "-m", "pytest", "--collect-only", "-q"],
                 capture_output=True,
                 text=True,
-                cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+                cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             )
             if result.stdout:
-                lines = result.stdout.strip().split('\n')
+                lines = result.stdout.strip().split("\n")
                 for line in lines:
                     if "tests collected" in line:
                         test_count = int(line.split()[0])
@@ -62,10 +67,11 @@ async def get_metrics():
             "patterns": pattern_count,
             "version": "3.0.0",
             "agents": 27,
-            "token_usage": "6x"
+            "token_usage": "6x",
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/git/activity")
 async def get_git_activity():
@@ -75,20 +81,22 @@ async def get_git_activity():
         result = subprocess.run(
             ["git", "log", "--oneline", "-n", "10", "--pretty=format:%H|%s|%at"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         commits = []
         if result.returncode == 0:
-            for line in result.stdout.strip().split('\n'):
+            for line in result.stdout.strip().split("\n"):
                 if line:
-                    parts = line.split('|')
+                    parts = line.split("|")
                     if len(parts) >= 3:
-                        commits.append({
-                            "hash": parts[0],
-                            "message": parts[1],
-                            "timestamp": datetime.fromtimestamp(int(parts[2])).isoformat()
-                        })
+                        commits.append(
+                            {
+                                "hash": parts[0],
+                                "message": parts[1],
+                                "timestamp": datetime.fromtimestamp(int(parts[2])).isoformat(),
+                            }
+                        )
 
         # Create timeline data
         now = datetime.now()
@@ -100,39 +108,43 @@ async def get_git_activity():
             {"label": "1m", "timestamp": (now - timedelta(days=30)).isoformat()},
         ]
 
-        return {
-            "commits": commits[:5],
-            "timeline": timeline
-        }
+        return {"commits": commits[:5], "timeline": timeline}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/todos")
 async def get_todos():
     """Get TODO list from TODO.md"""
     try:
         todos = []
-        todo_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "TODO.md")
+        todo_file = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "TODO.md"
+        )
 
         if os.path.exists(todo_file):
             with open(todo_file) as f:
                 content = f.read()
 
             # Parse TODO items (simplified)
-            lines = content.split('\n')
+            lines = content.split("\n")
             for line in lines:
-                if '- [ ]' in line:
-                    todos.append({
-                        "content": line.replace('- [ ]', '').strip(),
-                        "status": "pending",
-                        "priority": "medium"
-                    })
-                elif '- [x]' in line:
-                    todos.append({
-                        "content": line.replace('- [x]', '').strip(),
-                        "status": "completed",
-                        "priority": "medium"
-                    })
+                if "- [ ]" in line:
+                    todos.append(
+                        {
+                            "content": line.replace("- [ ]", "").strip(),
+                            "status": "pending",
+                            "priority": "medium",
+                        }
+                    )
+                elif "- [x]" in line:
+                    todos.append(
+                        {
+                            "content": line.replace("- [x]", "").strip(),
+                            "status": "completed",
+                            "priority": "medium",
+                        }
+                    )
 
         # Calculate progress
         total = len(todos)
@@ -143,10 +155,11 @@ async def get_todos():
             "todos": todos[:10],  # Return first 10
             "progress": progress,
             "total": total,
-            "completed": completed
+            "completed": completed,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/health")
 async def get_api_health():
@@ -157,8 +170,9 @@ async def get_api_health():
         "memoryUsage": 42,
         "cpuUsage": 15,
         "activeConnections": len(manager.active_connections),
-        "status": "healthy"
+        "status": "healthy",
     }
+
 
 @router.post("/memories/ingest")
 async def ingest_memory(file: dict):
@@ -168,8 +182,9 @@ async def ingest_memory(file: dict):
     return {
         "status": "success",
         "message": "File ingested successfully",
-        "memory_id": "mem_" + datetime.now().strftime("%Y%m%d%H%M%S")
+        "memory_id": "mem_" + datetime.now().strftime("%Y%m%d%H%M%S"),
     }
+
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -177,27 +192,20 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         # Send initial connection confirmation
-        await websocket.send_json({
-            "type": "connection",
-            "status": "connected"
-        })
+        await websocket.send_json({"type": "connection", "status": "connected"})
 
         # Keep connection alive
         while True:
             # Wait for messages or send periodic updates
             await asyncio.sleep(30)
-            await websocket.send_json({
-                "type": "ping",
-                "timestamp": datetime.now().isoformat()
-            })
+            await websocket.send_json({"type": "ping", "timestamp": datetime.now().isoformat()})
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+
 
 # Background task to broadcast updates
 async def broadcast_update(update_type: str, data: dict):
     """Broadcast updates to all connected clients"""
-    await manager.broadcast({
-        "type": update_type,
-        "data": data,
-        "timestamp": datetime.now().isoformat()
-    })
+    await manager.broadcast(
+        {"type": update_type, "data": data, "timestamp": datetime.now().isoformat()}
+    )

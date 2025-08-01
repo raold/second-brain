@@ -1,11 +1,13 @@
+import re
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Relationship detection component for identifying connections between entities
 """
 
 from collections import defaultdict
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -13,7 +15,12 @@ logger = get_logger(__name__)
 class RelationshipDetector:
     """Detect relationships between entities using dependency parsing and patterns"""
 
-    def __init__(self, model_name: str = "en_core_web_trf", enable_patterns: bool = True, use_gpu: bool = False):
+    def __init__(
+        self,
+        model_name: str = "en_core_web_trf",
+        enable_patterns: bool = True,
+        use_gpu: bool = False,
+    ):
         """
         Initialize relationship detector
 
@@ -41,10 +48,14 @@ class RelationshipDetector:
                         self.nlp = spacy.load(model_name)
                         if self.use_gpu and spacy.prefer_gpu():
                             logger.info("Using GPU for SpaCy transformer model")
-                        logger.info(f"Loaded SpaCy transformer model for relationship detection: {model_name}")
+                        logger.info(
+                            f"Loaded SpaCy transformer model for relationship detection: {model_name}"
+                        )
                     except OSError:
                         # Fall back to smaller model if transformer not available
-                        logger.warning("Transformer model not found, falling back to en_core_web_lg")
+                        logger.warning(
+                            "Transformer model not found, falling back to en_core_web_lg"
+                        )
                         try:
                             self.nlp = spacy.load("en_core_web_lg")
                             self.model_name = "en_core_web_lg"
@@ -59,10 +70,9 @@ class RelationshipDetector:
                 logger.warning(f"Failed to load SpaCy model {model_name}: {e}")
                 logger.info("Relationship detection will use pattern matching only")
 
-    def detect_relationships(self,
-                           text: str,
-                           entities: list[Entity],
-                           min_confidence: float = 0.6) -> list[Relationship]:
+    def detect_relationships(
+        self, text: str, entities: list[Entity], min_confidence: float = 0.6
+    ) -> list[Relationship]:
         """
         Detect relationships between entities
 
@@ -109,9 +119,9 @@ class RelationshipDetector:
 
         return relationships
 
-    def _detect_dependency_relationships(self,
-                                       text: str,
-                                       entities: list[Entity]) -> list[Relationship]:
+    def _detect_dependency_relationships(
+        self, text: str, entities: list[Entity]
+    ) -> list[Relationship]:
         """Detect relationships using dependency parsing"""
         relationships = []
 
@@ -123,7 +133,7 @@ class RelationshipDetector:
 
             # Analyze dependencies between entities
             for i, (entity1, span1) in enumerate(entity_spans):
-                for _j, (entity2, span2) in enumerate(entity_spans[i+1:], i+1):
+                for _j, (entity2, span2) in enumerate(entity_spans[i + 1 :], i + 1):
                     # Find dependency path between entities
                     path = self._find_dependency_path(span1.root, span2.root)
 
@@ -135,26 +145,28 @@ class RelationshipDetector:
                             # Extract evidence text
                             evidence = self._extract_evidence(doc, span1, span2)
 
-                            relationships.append(Relationship(
-                                source=entity1,
-                                target=entity2,
-                                type=rel_type,
-                                confidence=confidence,
-                                evidence=evidence,
-                                metadata={
-                                    "detection_method": "dependency_parsing",
-                                    "path_length": len(path)
-                                }
-                            ))
+                            relationships.append(
+                                Relationship(
+                                    source=entity1,
+                                    target=entity2,
+                                    type=rel_type,
+                                    confidence=confidence,
+                                    evidence=evidence,
+                                    metadata={
+                                        "detection_method": "dependency_parsing",
+                                        "path_length": len(path),
+                                    },
+                                )
+                            )
 
         except Exception as e:
             logger.error(f"Error in dependency relationship detection: {e}")
 
         return relationships
 
-    def _detect_pattern_relationships(self,
-                                    text: str,
-                                    entities: list[Entity]) -> list[Relationship]:
+    def _detect_pattern_relationships(
+        self, text: str, entities: list[Entity]
+    ) -> list[Relationship]:
         """Detect relationships using predefined patterns"""
         relationships = []
 
@@ -178,23 +190,25 @@ class RelationshipDetector:
                         entity2 = self._find_entity_by_text(entities, entity2_text, match.start(2))
 
                         if entity1 and entity2 and entity1 != entity2:
-                            relationships.append(Relationship(
-                                source=entity1,
-                                target=entity2,
-                                type=pattern_type,
-                                confidence=confidence_boost,
-                                evidence=match.group(0),
-                                metadata={
-                                    "detection_method": "pattern_matching",
-                                    "pattern_name": pattern_info.get("name", "unnamed")
-                                }
-                            ))
+                            relationships.append(
+                                Relationship(
+                                    source=entity1,
+                                    target=entity2,
+                                    type=pattern_type,
+                                    confidence=confidence_boost,
+                                    evidence=match.group(0),
+                                    metadata={
+                                        "detection_method": "pattern_matching",
+                                        "pattern_name": pattern_info.get("name", "unnamed"),
+                                    },
+                                )
+                            )
 
         return relationships
 
-    def _detect_proximity_relationships(self,
-                                      text: str,
-                                      entities: list[Entity]) -> list[Relationship]:
+    def _detect_proximity_relationships(
+        self, text: str, entities: list[Entity]
+    ) -> list[Relationship]:
         """Detect relationships based on entity proximity"""
         relationships = []
 
@@ -210,7 +224,7 @@ class RelationshipDetector:
             distance = entity2.start_pos - entity1.end_pos
 
             # Check if entities are in same sentence
-            text_between = text[entity1.end_pos:entity2.start_pos]
+            text_between = text[entity1.end_pos : entity2.start_pos]
 
             # Determine relationship based on context
             if distance < 50 and distance > 0:  # Close proximity
@@ -223,17 +237,16 @@ class RelationshipDetector:
                     confidence = 0.6 - (distance / 100)  # Closer = higher confidence
 
                 if confidence > 0.5:
-                    relationships.append(Relationship(
-                        source=entity1,
-                        target=entity2,
-                        type=rel_type,
-                        confidence=confidence,
-                        evidence=text[entity1.start_pos:entity2.end_pos],
-                        metadata={
-                            "detection_method": "proximity",
-                            "distance": distance
-                        }
-                    ))
+                    relationships.append(
+                        Relationship(
+                            source=entity1,
+                            target=entity2,
+                            type=rel_type,
+                            confidence=confidence,
+                            evidence=text[entity1.start_pos : entity2.end_pos],
+                            metadata={"detection_method": "proximity", "distance": distance},
+                        )
+                    )
 
         return relationships
 
@@ -257,17 +270,19 @@ class RelationshipDetector:
 
                 # Create chain of relationships
                 for i in range(len(group) - 1):
-                    relationships.append(Relationship(
-                        source=group[i],
-                        target=group[i + 1],
-                        type=RelationshipType.SIMILAR_TO,
-                        confidence=0.9,
-                        evidence=f"Both refer to '{normalized}'",
-                        metadata={
-                            "detection_method": "coreference",
-                            "normalized_form": normalized
-                        }
-                    ))
+                    relationships.append(
+                        Relationship(
+                            source=group[i],
+                            target=group[i + 1],
+                            type=RelationshipType.SIMILAR_TO,
+                            confidence=0.9,
+                            evidence=f"Both refer to '{normalized}'",
+                            metadata={
+                                "detection_method": "coreference",
+                                "normalized_form": normalized,
+                            },
+                        )
+                    )
 
         return relationships
 
@@ -312,8 +327,7 @@ class RelationshipDetector:
             return None
 
         # Find lowest common ancestor (closest to tokens)
-        lca = min(common_ancestors, key=lambda t:
-                 min(abs(t.i - token1.i), abs(t.i - token2.i)))
+        lca = min(common_ancestors, key=lambda t: min(abs(t.i - token1.i), abs(t.i - token2.i)))
 
         # Build path from token1 to lca to token2
         path1 = self._path_to_ancestor(token1, lca)
@@ -396,32 +410,14 @@ class RelationshipDetector:
         patterns = {
             RelationshipType.WORKS_FOR: [
                 r"\bworks?\s+(?:for|at|with)\b",
-                r"\bemployed\s+(?:by|at)\b"
+                r"\bemployed\s+(?:by|at)\b",
             ],
-            RelationshipType.LOCATED_IN: [
-                r"\b(?:in|at|near|within)\b",
-                r"\blocated\s+(?:in|at)\b"
-            ],
-            RelationshipType.CREATED_BY: [
-                r"\b(?:created|made|built|developed)\s+by\b",
-                r"\bby\b"
-            ],
-            RelationshipType.PART_OF: [
-                r"\bpart\s+of\b",
-                r"\b(?:member|component)\s+of\b"
-            ],
-            RelationshipType.DEPENDS_ON: [
-                r"\bdepends?\s+on\b",
-                r"\brequires?\b"
-            ],
-            RelationshipType.TEMPORAL_BEFORE: [
-                r"\bbefore\b",
-                r"\bprior\s+to\b"
-            ],
-            RelationshipType.TEMPORAL_AFTER: [
-                r"\bafter\b",
-                r"\bfollowing\b"
-            ]
+            RelationshipType.LOCATED_IN: [r"\b(?:in|at|near|within)\b", r"\blocated\s+(?:in|at)\b"],
+            RelationshipType.CREATED_BY: [r"\b(?:created|made|built|developed)\s+by\b", r"\bby\b"],
+            RelationshipType.PART_OF: [r"\bpart\s+of\b", r"\b(?:member|component)\s+of\b"],
+            RelationshipType.DEPENDS_ON: [r"\bdepends?\s+on\b", r"\brequires?\b"],
+            RelationshipType.TEMPORAL_BEFORE: [r"\bbefore\b", r"\bprior\s+to\b"],
+            RelationshipType.TEMPORAL_AFTER: [r"\bafter\b", r"\bfollowing\b"],
         }
 
         for rel_type, pattern_list in patterns.items():
@@ -459,10 +455,9 @@ class RelationshipDetector:
 
             return evidence
 
-    def _find_entity_by_text(self,
-                           entities: list[Entity],
-                           text: str,
-                           position: int) -> Entity | None:
+    def _find_entity_by_text(
+        self, entities: list[Entity], text: str, position: int
+    ) -> Entity | None:
         """Find entity matching text near position"""
         text_lower = text.lower().strip()
 
@@ -505,7 +500,7 @@ class RelationshipDetector:
                 rel.target.normalized,
                 rel.type,
                 rel.source.start_pos,
-                rel.target.start_pos
+                rel.target.start_pos,
             )
 
             # Also check reverse for bidirectional relationships
@@ -514,7 +509,7 @@ class RelationshipDetector:
                 rel.source.normalized,
                 rel.type,
                 rel.target.start_pos,
-                rel.source.start_pos
+                rel.source.start_pos,
             )
 
             if key not in seen and reverse_key not in seen:
@@ -528,7 +523,7 @@ class RelationshipDetector:
                         existing.target.normalized,
                         existing.type,
                         existing.source.start_pos,
-                        existing.target.start_pos
+                        existing.target.start_pos,
                     )
                     if existing_key == key and rel.confidence > existing.confidence:
                         unique[i] = rel
@@ -543,50 +538,50 @@ class RelationshipDetector:
                 {
                     "name": "works_for_pattern",
                     "pattern": r"(\b[A-Z][a-z]+ [A-Z][a-z]+)\s+works?\s+(?:for|at)\s+(\b[A-Z][\w\s&]+)",
-                    "confidence": 0.85
+                    "confidence": 0.85,
                 },
                 {
                     "name": "employed_by_pattern",
                     "pattern": r"(\b[A-Z][a-z]+ [A-Z][a-z]+),?\s+(?:an?\s+)?employee\s+(?:of|at)\s+(\b[A-Z][\w\s&]+)",
-                    "confidence": 0.80
-                }
+                    "confidence": 0.80,
+                },
             ],
             RelationshipType.LOCATED_IN: [
                 {
                     "name": "located_in_pattern",
                     "pattern": r"(\b[A-Z][\w\s]+)\s+(?:is\s+)?(?:located\s+)?in\s+(\b[A-Z][\w\s]+)",
-                    "confidence": 0.75
+                    "confidence": 0.75,
                 },
                 {
                     "name": "based_in_pattern",
                     "pattern": r"(\b[A-Z][\w\s]+)\s+based\s+in\s+(\b[A-Z][\w\s]+)",
-                    "confidence": 0.80
-                }
+                    "confidence": 0.80,
+                },
             ],
             RelationshipType.CREATED_BY: [
                 {
                     "name": "created_by_pattern",
                     "pattern": r"(\b[A-Z][\w\s]+)\s+(?:was\s+)?(?:created|developed|built|made)\s+by\s+(\b[A-Z][\w\s]+)",
-                    "confidence": 0.85
+                    "confidence": 0.85,
                 },
                 {
                     "name": "author_pattern",
                     "pattern": r"(\b[A-Z][\w\s]+)\s+by\s+(\b[A-Z][a-z]+ [A-Z][a-z]+)",
-                    "confidence": 0.70
-                }
+                    "confidence": 0.70,
+                },
             ],
             RelationshipType.PART_OF: [
                 {
                     "name": "part_of_pattern",
                     "pattern": r"(\b[A-Z][\w\s]+)\s+(?:is\s+)?(?:a\s+)?part\s+of\s+(\b[A-Z][\w\s]+)",
-                    "confidence": 0.80
+                    "confidence": 0.80,
                 },
                 {
                     "name": "member_of_pattern",
                     "pattern": r"(\b[A-Z][\w\s]+)\s+(?:is\s+)?(?:a\s+)?member\s+of\s+(\b[A-Z][\w\s]+)",
-                    "confidence": 0.75
-                }
-            ]
+                    "confidence": 0.75,
+                },
+            ],
         }
 
     def _initialize_transformer_patterns(self) -> dict[str, Any]:
@@ -594,19 +589,34 @@ class RelationshipDetector:
         return {
             "semantic_similarity_threshold": 0.8,
             "contextual_patterns": {
-                "causation": ["because", "therefore", "thus", "hence", "consequently", "as a result"],
+                "causation": [
+                    "because",
+                    "therefore",
+                    "thus",
+                    "hence",
+                    "consequently",
+                    "as a result",
+                ],
                 "comparison": ["similarly", "likewise", "in contrast", "however", "whereas"],
                 "sequence": ["first", "then", "next", "finally", "subsequently", "afterwards"],
-                "elaboration": ["specifically", "namely", "in particular", "for example", "such as"],
+                "elaboration": [
+                    "specifically",
+                    "namely",
+                    "in particular",
+                    "for example",
+                    "such as",
+                ],
             },
             "entity_role_patterns": {
                 "agent": ["performed", "conducted", "executed", "initiated", "completed"],
                 "patient": ["received", "underwent", "experienced", "suffered", "benefited from"],
                 "instrument": ["using", "with", "through", "via", "by means of"],
-            }
+            },
         }
 
-    def detect_transformer_relationships(self, doc: Any, entities: list[Entity]) -> list[Relationship]:
+    def detect_transformer_relationships(
+        self, doc: Any, entities: list[Entity]
+    ) -> list[Relationship]:
         """
         Use transformer embeddings to detect semantic relationships
 
@@ -626,7 +636,7 @@ class RelationshipDetector:
         entity_spans = self._create_entity_spans(doc, entities)
 
         for i, (entity1, span1) in enumerate(entity_spans):
-            for _j, (entity2, span2) in enumerate(entity_spans[i+1:], i+1):
+            for _j, (entity2, span2) in enumerate(entity_spans[i + 1 :], i + 1):
                 # Get transformer embeddings for entities
                 if hasattr(span1, "_.trf_data") and hasattr(span2, "_.trf_data"):
                     # Calculate semantic similarity using transformer embeddings
@@ -638,9 +648,11 @@ class RelationshipDetector:
                         confidence = similarity
 
                         # Check contextual patterns for more specific relationship types
-                        context_between = doc[span1.end:span2.start].text.lower()
+                        context_between = doc[span1.end : span2.start].text.lower()
 
-                        for rel_category, keywords in self.transformer_patterns["contextual_patterns"].items():
+                        for rel_category, keywords in self.transformer_patterns[
+                            "contextual_patterns"
+                        ].items():
                             if any(keyword in context_between for keyword in keywords):
                                 if rel_category == "causation":
                                     rel_type = RelationshipType.CAUSAL
@@ -649,17 +661,19 @@ class RelationshipDetector:
                                 confidence = min(0.95, similarity + 0.1)
                                 break
 
-                        relationships.append(Relationship(
-                            source=entity1,
-                            target=entity2,
-                            type=rel_type,
-                            confidence=confidence,
-                            evidence=doc[span1.start:span2.end].text,
-                            metadata={
-                                "detection_method": "transformer_similarity",
-                                "similarity_score": float(similarity)
-                            }
-                        ))
+                        relationships.append(
+                            Relationship(
+                                source=entity1,
+                                target=entity2,
+                                type=rel_type,
+                                confidence=confidence,
+                                evidence=doc[span1.start : span2.end].text,
+                                metadata={
+                                    "detection_method": "transformer_similarity",
+                                    "similarity_score": float(similarity),
+                                },
+                            )
+                        )
 
         return relationships
 
@@ -670,7 +684,7 @@ class RelationshipDetector:
                 "total_relationships": 0,
                 "relationship_types": {},
                 "confidence_stats": {},
-                "detection_methods": {}
+                "detection_methods": {},
             }
 
         # Count by type
@@ -684,7 +698,7 @@ class RelationshipDetector:
             "mean": sum(confidences) / len(confidences),
             "min": min(confidences),
             "max": max(confidences),
-            "high_confidence": len([c for c in confidences if c >= 0.8])
+            "high_confidence": len([c for c in confidences if c >= 0.8]),
         }
 
         # Detection method statistics
@@ -698,5 +712,6 @@ class RelationshipDetector:
             "relationship_types": dict(type_counts),
             "confidence_stats": confidence_stats,
             "detection_methods": dict(method_counts),
-            "avg_evidence_length": sum(len(r.evidence or "") for r in relationships) / len(relationships)
+            "avg_evidence_length": sum(len(r.evidence or "") for r in relationships)
+            / len(relationships),
         }

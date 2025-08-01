@@ -1,16 +1,17 @@
-"""
-Embedding cache implementation for performance optimization.
-Caches OpenAI embeddings to reduce API calls and improve response times.
-"""
-
 import asyncio
 import hashlib
 import json
 from datetime import datetime, timedelta
 
-import redis.asyncio as aioredis
-
 from app.utils.logging_config import get_logger
+
+"""
+Embedding cache implementation for performance optimization.
+Caches OpenAI embeddings to reduce API calls and improve response times.
+"""
+
+
+import redis.asyncio as aioredis
 
 logger = get_logger(__name__)
 
@@ -18,7 +19,9 @@ logger = get_logger(__name__)
 class EmbeddingCache:
     """Cache for OpenAI embeddings with Redis and in-memory LRU cache."""
 
-    def __init__(self, redis_url: str | None = None, ttl_hours: int = 24, memory_cache_size: int = 1000):
+    def __init__(
+        self, redis_url: str | None = None, ttl_hours: int = 24, memory_cache_size: int = 1000
+    ):
         """
         Initialize embedding cache.
 
@@ -42,7 +45,7 @@ class EmbeddingCache:
             "redis_hits": 0,
             "redis_misses": 0,
             "api_calls": 0,
-            "errors": 0
+            "errors": 0,
         }
 
     async def initialize(self):
@@ -57,9 +60,7 @@ class EmbeddingCache:
             if self.redis_url:
                 try:
                     self.redis_client = await aioredis.from_url(
-                        self.redis_url,
-                        encoding="utf-8",
-                        decode_responses=False
+                        self.redis_url, encoding="utf-8", decode_responses=False
                     )
                     await self.redis_client.ping()
                     logger.info("Redis embedding cache initialized")
@@ -74,12 +75,7 @@ class EmbeddingCache:
         content = f"{model}:{text}"
         return f"emb:{hashlib.sha256(content.encode()).hexdigest()[:32]}"
 
-    async def get_embedding(
-        self,
-        text: str,
-        model: str,
-        generate_func
-    ) -> list[float]:
+    async def get_embedding(self, text: str, model: str, generate_func) -> list[float]:
         """
         Get embedding from cache or generate new one.
 
@@ -169,11 +165,7 @@ class EmbeddingCache:
         # Update Redis cache
         if self.redis_client:
             try:
-                await self.redis_client.setex(
-                    key,
-                    self.ttl_seconds,
-                    json.dumps(embedding)
-                )
+                await self.redis_client.setex(key, self.ttl_seconds, json.dumps(embedding))
             except Exception as e:
                 logger.warning(f"Redis cache write error: {e}")
 
@@ -205,32 +197,20 @@ class EmbeddingCache:
 
     def get_stats(self) -> dict[str, any]:
         """Get cache statistics."""
-        total_requests = (
-            self.stats["memory_hits"] +
-            self.stats["memory_misses"]
-        )
+        total_requests = self.stats["memory_hits"] + self.stats["memory_misses"]
 
-        memory_hit_rate = (
-            self.stats["memory_hits"] / total_requests
-            if total_requests > 0 else 0
-        )
+        memory_hit_rate = self.stats["memory_hits"] / total_requests if total_requests > 0 else 0
 
-        redis_requests = (
-            self.stats["redis_hits"] +
-            self.stats["redis_misses"]
-        )
+        redis_requests = self.stats["redis_hits"] + self.stats["redis_misses"]
 
-        redis_hit_rate = (
-            self.stats["redis_hits"] / redis_requests
-            if redis_requests > 0 else 0
-        )
+        redis_hit_rate = self.stats["redis_hits"] / redis_requests if redis_requests > 0 else 0
 
         return {
             "memory_cache_size": len(self.memory_cache),
             "memory_hit_rate": memory_hit_rate,
             "redis_hit_rate": redis_hit_rate,
             "total_api_calls_saved": self.stats["memory_hits"] + self.stats["redis_hits"],
-            "stats": self.stats
+            "stats": self.stats,
         }
 
     async def close(self):

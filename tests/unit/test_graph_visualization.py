@@ -5,6 +5,7 @@ Tests for graph visualization and D3.js integration
 import json
 
 import pytest
+
 pytestmark = pytest.mark.unit
 
 
@@ -18,17 +19,13 @@ class TestGraphVisualization:
             "nodes": [
                 {"id": "1", "label": "Python", "type": "technology", "importance": 0.9},
                 {"id": "2", "label": "Machine Learning", "type": "concept", "importance": 0.8},
-                {"id": "3", "label": "Data Science", "type": "skill", "importance": 0.7}
+                {"id": "3", "label": "Data Science", "type": "skill", "importance": 0.7},
             ],
             "edges": [
                 {"source": "1", "target": "2", "weight": 0.8, "type": "used_in"},
-                {"source": "2", "target": "3", "weight": 0.7, "type": "part_of"}
+                {"source": "2", "target": "3", "weight": 0.7, "type": "part_of"},
             ],
-            "metadata": {
-                "node_count": 3,
-                "edge_count": 2,
-                "density": 0.67
-            }
+            "metadata": {"node_count": 3, "edge_count": 2, "density": 0.67},
         }
 
     def test_graph_data_validation(self, sample_graph_data):
@@ -61,12 +58,21 @@ class TestGraphVisualization:
             "event": "#F4A460",
             "skill": "#FFD93D",
             "topic": "#6C5CE7",
-            "other": "#95A5A6"
+            "other": "#95A5A6",
         }
 
         # All entity types should have colors
-        entity_types = ["person", "organization", "technology", "concept",
-                       "location", "event", "skill", "topic", "other"]
+        entity_types = [
+            "person",
+            "organization",
+            "technology",
+            "concept",
+            "location",
+            "event",
+            "skill",
+            "topic",
+            "other",
+        ]
 
         for entity_type in entity_types:
             assert entity_type in color_map
@@ -94,8 +100,7 @@ class TestGraphVisualization:
 
         # Filter nodes
         matching_nodes = [
-            n for n in sample_graph_data["nodes"]
-            if search_term.lower() in n["label"].lower()
+            n for n in sample_graph_data["nodes"] if search_term.lower() in n["label"].lower()
         ]
 
         assert len(matching_nodes) == 1
@@ -104,8 +109,7 @@ class TestGraphVisualization:
         # Test partial matching
         partial_search = "learn"
         partial_matches = [
-            n for n in sample_graph_data["nodes"]
-            if partial_search.lower() in n["label"].lower()
+            n for n in sample_graph_data["nodes"] if partial_search.lower() in n["label"].lower()
         ]
 
         assert len(partial_matches) == 1
@@ -114,20 +118,14 @@ class TestGraphVisualization:
     def test_entity_type_filtering(self, sample_graph_data):
         """Test filtering by entity type"""
         # Filter by technology type
-        tech_nodes = [
-            n for n in sample_graph_data["nodes"]
-            if n["type"] == "technology"
-        ]
+        tech_nodes = [n for n in sample_graph_data["nodes"] if n["type"] == "technology"]
 
         assert len(tech_nodes) == 1
         assert tech_nodes[0]["label"] == "Python"
 
         # Filter by multiple types
         types_to_include = ["concept", "skill"]
-        filtered_nodes = [
-            n for n in sample_graph_data["nodes"]
-            if n["type"] in types_to_include
-        ]
+        filtered_nodes = [n for n in sample_graph_data["nodes"] if n["type"] in types_to_include]
 
         assert len(filtered_nodes) == 2
 
@@ -149,7 +147,7 @@ class TestGraphVisualization:
 
         # Calculate average degree
         avg_degree = sum(degrees.values()) / len(degrees)
-        assert avg_degree == 4/3  # (1+2+1)/3
+        assert avg_degree == 4 / 3  # (1+2+1)/3
 
     def test_export_functionality(self, sample_graph_data):
         """Test graph export capabilities"""
@@ -166,7 +164,7 @@ class TestGraphVisualization:
         export_data = {
             "graph": sample_graph_data,
             "export_timestamp": "2024-01-01T10:00:00",
-            "version": "2.8.0"
+            "version": "2.8.0",
         }
 
         assert "graph" in export_data
@@ -177,9 +175,9 @@ class TestGraphVisualization:
         """Test performance considerations for large graphs"""
         # Define performance thresholds
         thresholds = {
-            "small": {"nodes": 100, "render_time": 500},    # 500ms
-            "medium": {"nodes": 1000, "render_time": 2000}, # 2s
-            "large": {"nodes": 5000, "render_time": 5000}   # 5s
+            "small": {"nodes": 100, "render_time": 500},  # 500ms
+            "medium": {"nodes": 1000, "render_time": 2000},  # 2s
+            "large": {"nodes": 5000, "render_time": 5000},  # 5s
         }
 
         # Check thresholds are reasonable
@@ -190,7 +188,7 @@ class TestGraphVisualization:
         lod_settings = {
             "high": {"min_zoom": 0.8, "show_labels": True, "show_edges": True},
             "medium": {"min_zoom": 0.4, "show_labels": True, "show_edges": False},
-            "low": {"min_zoom": 0.2, "show_labels": False, "show_edges": False}
+            "low": {"min_zoom": 0.2, "show_labels": False, "show_edges": False},
         }
 
         assert len(lod_settings) == 3
@@ -202,7 +200,7 @@ class TestGraphVisualization:
             "node_click": {"node_id": "1", "timestamp": "2024-01-01T10:00:00"},
             "node_hover": {"node_id": "2", "timestamp": "2024-01-01T10:00:01"},
             "background_click": {"timestamp": "2024-01-01T10:00:02"},
-            "zoom": {"level": 1.5, "timestamp": "2024-01-01T10:00:03"}
+            "zoom": {"level": 1.5, "timestamp": "2024-01-01T10:00:03"},
         }
 
         # Verify event structure
@@ -219,7 +217,7 @@ class TestGraphVisualization:
             "Show connections between Python and AI",
             "What is related to machine learning?",
             "Show all people",
-            "How are concepts connected?"
+            "How are concepts connected?",
         ]
 
         assert len(query_examples) >= 4
@@ -229,7 +227,7 @@ class TestGraphVisualization:
             "connections between X and Y",
             "related to X",
             "show all X",
-            "how are X connected"
+            "how are X connected",
         ]
 
         for query in valid_queries:
@@ -246,7 +244,7 @@ class TestGraphVisualization:
         single_node = {
             "nodes": [{"id": "1", "label": "Alone", "type": "concept"}],
             "edges": [],
-            "metadata": {"node_count": 1}
+            "metadata": {"node_count": 1},
         }
         assert len(single_node["nodes"]) == 1
         assert len(single_node["edges"]) == 0
@@ -255,10 +253,10 @@ class TestGraphVisualization:
         disconnected = {
             "nodes": [
                 {"id": "1", "label": "A", "type": "concept"},
-                {"id": "2", "label": "B", "type": "concept"}
+                {"id": "2", "label": "B", "type": "concept"},
             ],
             "edges": [],
-            "metadata": {"connected_components": 2}
+            "metadata": {"connected_components": 2},
         }
         assert disconnected["metadata"]["connected_components"] == 2
 
@@ -267,7 +265,7 @@ class TestGraphVisualization:
         breakpoints = {
             "mobile": {"max_width": 768, "node_size": 5, "font_size": 10},
             "tablet": {"max_width": 1024, "node_size": 8, "font_size": 12},
-            "desktop": {"min_width": 1024, "node_size": 10, "font_size": 14}
+            "desktop": {"min_width": 1024, "node_size": 10, "font_size": 14},
         }
 
         # Verify breakpoint consistency

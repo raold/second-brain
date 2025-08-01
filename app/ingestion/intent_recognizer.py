@@ -1,18 +1,22 @@
+import re
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Intent recognition component for understanding user intent in content
 """
 
 from collections import defaultdict
-from typing import Any
 
 from app.ingestion.models import IntentType
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 # Check for optional dependencies
 try:
     import spacy
+
     SPACY_AVAILABLE = True
 except ImportError:
     SPACY_AVAILABLE = False
@@ -20,6 +24,7 @@ except ImportError:
 
 try:
     from textblob import TextBlob
+
     TEXTBLOB_AVAILABLE = True
 except ImportError:
     TEXTBLOB_AVAILABLE = False
@@ -74,10 +79,11 @@ class IntentRecognizer:
         # Try to load transformer-based classifier
         try:
             from transformers import pipeline
+
             self.transformer_classifier = pipeline(
                 "zero-shot-classification",
                 model="facebook/bart-large-mnli",
-                device=-1  # CPU, set to 0 for GPU
+                device=-1,  # CPU, set to 0 for GPU
             )
             self.intent_labels = [intent.value for intent in IntentType]
             logger.info("Loaded transformer classifier for intent recognition")
@@ -119,7 +125,7 @@ class IntentRecognizer:
             confidence=confidence,
             action_items=action_items,
             urgency=urgency,
-            sentiment=sentiment
+            sentiment=sentiment,
         )
 
     def _detect_intent_type(self, text: str) -> tuple[IntentType | None, float]:
@@ -132,7 +138,7 @@ class IntentRecognizer:
                 result = self.transformer_classifier(
                     text[:512],  # Limit text length
                     candidate_labels=self.intent_labels,
-                    multi_label=False
+                    multi_label=False,
                 )
 
                 # Get top prediction
@@ -187,7 +193,9 @@ class IntentRecognizer:
         if text_lower.strip().endswith("?"):
             intent_scores[IntentType.QUESTION] += 2.0
 
-        if any(text_lower.strip().startswith(prefix.lower()) for prefix in ["TODO:", "FIXME:", "NOTE:"]):
+        if any(
+            text_lower.strip().startswith(prefix.lower()) for prefix in ["TODO:", "FIXME:", "NOTE:"]
+        ):
             intent_scores[IntentType.TODO] += 3.0
 
         # Find highest scoring intent
@@ -229,9 +237,13 @@ class IntentRecognizer:
                 # Check for modal verbs (planning, decision)
                 modal_verbs = [token for token in sent if token.tag_ == "MD"]
                 if modal_verbs:
-                    if any(modal.text.lower() in ["should", "must", "need"] for modal in modal_verbs):
+                    if any(
+                        modal.text.lower() in ["should", "must", "need"] for modal in modal_verbs
+                    ):
                         sentence_intents.append((IntentType.DECISION, 0.6))
-                    elif any(modal.text.lower() in ["will", "would", "might"] for modal in modal_verbs):
+                    elif any(
+                        modal.text.lower() in ["will", "would", "might"] for modal in modal_verbs
+                    ):
                         sentence_intents.append((IntentType.PLANNING, 0.6))
 
             # Return most common intent
@@ -255,7 +267,7 @@ class IntentRecognizer:
         action_items = []
 
         # Split into sentences
-        sentences = re.split(r'[.!?]+', text)
+        sentences = re.split(r"[.!?]+", text)
 
         for sentence in sentences:
             sentence = sentence.strip()
@@ -276,7 +288,7 @@ class IntentRecognizer:
                 # Remove common prefixes
                 for prefix in ["TODO:", "FIXME:", "ACTION:", "TASK:", "- ", "* ", "• "]:
                     if action.upper().startswith(prefix.upper()):
-                        action = action[len(prefix):].strip()
+                        action = action[len(prefix) :].strip()
                         break
 
                 # Add to list if not too long
@@ -284,7 +296,7 @@ class IntentRecognizer:
                     action_items.append(action)
 
         # Also check for bulleted/numbered lists
-        list_items = re.findall(r'(?:^|\n)\s*[-*•]\s*(.+)', text)
+        list_items = re.findall(r"(?:^|\n)\s*[-*•]\s*(.+)", text)
         for item in list_items:
             item = item.strip()
             if len(item) < 200 and item not in action_items:
@@ -318,10 +330,10 @@ class IntentRecognizer:
 
         # Check for deadline mentions
         deadline_patterns = [
-            r'\b(?:by|before|until)\s+(?:tomorrow|today|tonight|end of day|eod|cob)\b',
-            r'\bdeadline\s*:?\s*\d',
-            r'\bdue\s+(?:date|by|on)\b',
-            r'\b\d+\s*(?:hours?|days?|weeks?)\s+(?:left|remaining)\b'
+            r"\b(?:by|before|until)\s+(?:tomorrow|today|tonight|end of day|eod|cob)\b",
+            r"\bdeadline\s*:?\s*\d",
+            r"\bdue\s+(?:date|by|on)\b",
+            r"\b\d+\s*(?:hours?|days?|weeks?)\s+(?:left|remaining)\b",
         ]
 
         for pattern in deadline_patterns:
@@ -329,9 +341,9 @@ class IntentRecognizer:
                 urgency_score += 0.2
 
         # Check for priority mentions
-        if re.search(r'\b(?:high|highest|critical)\s+priority\b', text_lower):
+        if re.search(r"\b(?:high|highest|critical)\s+priority\b", text_lower):
             urgency_score += 0.3
-        elif re.search(r'\blow\s+priority\b', text_lower):
+        elif re.search(r"\blow\s+priority\b", text_lower):
             urgency_score -= 0.2
 
         # Normalize to 0-1 range
@@ -354,77 +366,80 @@ class IntentRecognizer:
         """Initialize patterns for intent detection"""
         return {
             IntentType.QUESTION: [
-                {"pattern": r'\b(?:what|when|where|who|why|how|which|whose)\b', "weight": 1.5},
-                {"pattern": r'\b(?:can|could|would|should|is|are|does|do|did)\s+\w+\s*\?', "weight": 2.0},
-                {"pattern": r'\b(?:explain|describe|define|clarify)\b', "weight": 1.2},
-                {"pattern": r'\?$', "weight": 2.5, "is_regex": False},
+                {"pattern": r"\b(?:what|when|where|who|why|how|which|whose)\b", "weight": 1.5},
+                {
+                    "pattern": r"\b(?:can|could|would|should|is|are|does|do|did)\s+\w+\s*\?",
+                    "weight": 2.0,
+                },
+                {"pattern": r"\b(?:explain|describe|define|clarify)\b", "weight": 1.2},
+                {"pattern": r"\?$", "weight": 2.5, "is_regex": False},
             ],
             IntentType.TODO: [
-                {"pattern": r'\b(?:todo|task|action|need to|must|should)\b', "weight": 1.5},
-                {"pattern": r'\b(?:complete|finish|implement|create|build|fix)\b', "weight": 1.2},
-                {"pattern": r'^(?:todo|fixme|task|action)\s*:', "weight": 3.0},
-                {"pattern": r'\b(?:remember to|don\'t forget to|make sure to)\b', "weight": 1.8},
+                {"pattern": r"\b(?:todo|task|action|need to|must|should)\b", "weight": 1.5},
+                {"pattern": r"\b(?:complete|finish|implement|create|build|fix)\b", "weight": 1.2},
+                {"pattern": r"^(?:todo|fixme|task|action)\s*:", "weight": 3.0},
+                {"pattern": r"\b(?:remember to|don\'t forget to|make sure to)\b", "weight": 1.8},
             ],
             IntentType.IDEA: [
-                {"pattern": r'\b(?:idea|thought|concept|proposal|suggestion)\b', "weight": 1.5},
-                {"pattern": r'\b(?:what if|how about|consider|imagine|suppose)\b', "weight": 1.3},
-                {"pattern": r'\b(?:could|might|maybe|perhaps|possibly)\b', "weight": 0.8},
-                {"pattern": r'^(?:idea|thought|proposal)\s*:', "weight": 2.5},
+                {"pattern": r"\b(?:idea|thought|concept|proposal|suggestion)\b", "weight": 1.5},
+                {"pattern": r"\b(?:what if|how about|consider|imagine|suppose)\b", "weight": 1.3},
+                {"pattern": r"\b(?:could|might|maybe|perhaps|possibly)\b", "weight": 0.8},
+                {"pattern": r"^(?:idea|thought|proposal)\s*:", "weight": 2.5},
             ],
             IntentType.DECISION: [
-                {"pattern": r'\b(?:decide|decision|choose|choice|option)\b', "weight": 1.8},
-                {"pattern": r'\b(?:pros and cons|trade-?off|versus|vs\.?)\b', "weight": 1.5},
-                {"pattern": r'\b(?:conclude|determined|resolved|agreed)\b', "weight": 1.4},
-                {"pattern": r'\b(?:will|going to|plan to)\b', "weight": 1.0},
+                {"pattern": r"\b(?:decide|decision|choose|choice|option)\b", "weight": 1.8},
+                {"pattern": r"\b(?:pros and cons|trade-?off|versus|vs\.?)\b", "weight": 1.5},
+                {"pattern": r"\b(?:conclude|determined|resolved|agreed)\b", "weight": 1.4},
+                {"pattern": r"\b(?:will|going to|plan to)\b", "weight": 1.0},
             ],
             IntentType.LEARNING: [
-                {"pattern": r'\b(?:learn|study|understand|research|explore)\b', "weight": 1.5},
-                {"pattern": r'\b(?:tutorial|guide|documentation|course|lesson)\b', "weight": 1.3},
-                {"pattern": r'\b(?:how to|tips|tricks|best practice)\b', "weight": 1.4},
-                {"pattern": r'\b(?:discovered|found out|realized|understood)\b', "weight": 1.2},
+                {"pattern": r"\b(?:learn|study|understand|research|explore)\b", "weight": 1.5},
+                {"pattern": r"\b(?:tutorial|guide|documentation|course|lesson)\b", "weight": 1.3},
+                {"pattern": r"\b(?:how to|tips|tricks|best practice)\b", "weight": 1.4},
+                {"pattern": r"\b(?:discovered|found out|realized|understood)\b", "weight": 1.2},
             ],
             IntentType.REFERENCE: [
-                {"pattern": r'\b(?:reference|link|url|source|citation)\b', "weight": 1.5},
-                {"pattern": r'https?://', "weight": 2.0},
-                {"pattern": r'\b(?:see|refer to|check|look at)\b', "weight": 1.0},
-                {"pattern": r'\b(?:documentation|docs|manual|spec)\b', "weight": 1.2},
+                {"pattern": r"\b(?:reference|link|url|source|citation)\b", "weight": 1.5},
+                {"pattern": r"https?://", "weight": 2.0},
+                {"pattern": r"\b(?:see|refer to|check|look at)\b", "weight": 1.0},
+                {"pattern": r"\b(?:documentation|docs|manual|spec)\b", "weight": 1.2},
             ],
             IntentType.REFLECTION: [
-                {"pattern": r'\b(?:reflect|think|thought|consider|ponder)\b', "weight": 1.3},
-                {"pattern": r'\b(?:feel|felt|believe|opinion|perspective)\b', "weight": 1.2},
-                {"pattern": r'\b(?:retrospective|review|assessment|evaluation)\b', "weight": 1.5},
-                {"pattern": r'\b(?:lesson learned|takeaway|insight)\b', "weight": 1.4},
+                {"pattern": r"\b(?:reflect|think|thought|consider|ponder)\b", "weight": 1.3},
+                {"pattern": r"\b(?:feel|felt|believe|opinion|perspective)\b", "weight": 1.2},
+                {"pattern": r"\b(?:retrospective|review|assessment|evaluation)\b", "weight": 1.5},
+                {"pattern": r"\b(?:lesson learned|takeaway|insight)\b", "weight": 1.4},
             ],
             IntentType.PLANNING: [
-                {"pattern": r'\b(?:plan|planning|schedule|timeline|roadmap)\b', "weight": 1.8},
-                {"pattern": r'\b(?:milestone|deadline|target|goal|objective)\b', "weight": 1.5},
-                {"pattern": r'\b(?:next steps|action plan|strategy)\b', "weight": 1.6},
-                {"pattern": r'\b(?:will|going to|intend to|aim to)\b', "weight": 1.0},
+                {"pattern": r"\b(?:plan|planning|schedule|timeline|roadmap)\b", "weight": 1.8},
+                {"pattern": r"\b(?:milestone|deadline|target|goal|objective)\b", "weight": 1.5},
+                {"pattern": r"\b(?:next steps|action plan|strategy)\b", "weight": 1.6},
+                {"pattern": r"\b(?:will|going to|intend to|aim to)\b", "weight": 1.0},
             ],
             IntentType.PROBLEM: [
-                {"pattern": r'\b(?:problem|issue|bug|error|failure)\b', "weight": 1.8},
-                {"pattern": r'\b(?:broken|failed|not working|doesn\'t work)\b', "weight": 1.6},
-                {"pattern": r'\b(?:challenge|obstacle|difficulty|blocker)\b', "weight": 1.4},
-                {"pattern": r'\b(?:help|stuck|confused|unsure)\b', "weight": 1.2},
+                {"pattern": r"\b(?:problem|issue|bug|error|failure)\b", "weight": 1.8},
+                {"pattern": r"\b(?:broken|failed|not working|doesn\'t work)\b", "weight": 1.6},
+                {"pattern": r"\b(?:challenge|obstacle|difficulty|blocker)\b", "weight": 1.4},
+                {"pattern": r"\b(?:help|stuck|confused|unsure)\b", "weight": 1.2},
             ],
             IntentType.SOLUTION: [
-                {"pattern": r'\b(?:solution|solve|fix|resolve|workaround)\b', "weight": 1.8},
-                {"pattern": r'\b(?:answer|approach|method|technique)\b', "weight": 1.3},
-                {"pattern": r'\b(?:works|working|fixed|resolved)\b', "weight": 1.4},
-                {"pattern": r'\b(?:recommendation|suggest|advise)\b', "weight": 1.2},
+                {"pattern": r"\b(?:solution|solve|fix|resolve|workaround)\b", "weight": 1.8},
+                {"pattern": r"\b(?:answer|approach|method|technique)\b", "weight": 1.3},
+                {"pattern": r"\b(?:works|working|fixed|resolved)\b", "weight": 1.4},
+                {"pattern": r"\b(?:recommendation|suggest|advise)\b", "weight": 1.2},
             ],
         }
 
     def _initialize_action_patterns(self) -> list[str]:
         """Initialize patterns for action item detection"""
         return [
-            r'\b(?:todo|task|action|fixme)\s*:',
-            r'\b(?:need to|must|should|have to|required to)\b',
-            r'\b(?:don\'t forget to|remember to|make sure to)\b',
-            r'\b(?:complete|finish|implement|create|build|fix|update|review)\b',
-            r'^[-*•]\s*(?:need|must|should|will)',
-            r'\b(?:action item|next step|follow up)\b',
-            r'\b(?:assign|assigned to|responsible for)\b',
+            r"\b(?:todo|task|action|fixme)\s*:",
+            r"\b(?:need to|must|should|have to|required to)\b",
+            r"\b(?:don\'t forget to|remember to|make sure to)\b",
+            r"\b(?:complete|finish|implement|create|build|fix|update|review)\b",
+            r"^[-*•]\s*(?:need|must|should|will)",
+            r"\b(?:action item|next step|follow up)\b",
+            r"\b(?:assign|assigned to|responsible for)\b",
         ]
 
     def _initialize_urgency_indicators(self) -> dict[str, dict[str, float]]:
@@ -453,7 +468,7 @@ class IntentRecognizer:
                 "when you can": 0.2,
                 "not urgent": 0.25,
                 "back burner": 0.2,
-            }
+            },
         }
 
     def get_intent_statistics(self, intents: list[Intent]) -> dict[str, Any]:
@@ -465,7 +480,7 @@ class IntentRecognizer:
                 "avg_confidence": 0,
                 "avg_urgency": 0,
                 "total_action_items": 0,
-                "sentiment_stats": {}
+                "sentiment_stats": {},
             }
 
         # Intent type distribution
@@ -499,5 +514,5 @@ class IntentRecognizer:
             "avg_confidence": avg_confidence,
             "avg_urgency": avg_urgency,
             "total_action_items": total_actions,
-            "sentiment_stats": sentiment_stats
+            "sentiment_stats": sentiment_stats,
         }

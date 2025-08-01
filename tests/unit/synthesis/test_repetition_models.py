@@ -4,7 +4,12 @@ Test repetition models for synthesis features
 
 from datetime import datetime, timedelta
 
-from app.models.synthesis.repetition_models import ForgettingCurve, RepetitionSettings, ReviewSchedule, ReviewStatus
+from app.models.synthesis.repetition_models import (
+    ForgettingCurve,
+    RepetitionSettings,
+    ReviewSchedule,
+    ReviewStatus,
+)
 
 
 class TestRepetitionModels:
@@ -16,7 +21,7 @@ class TestRepetitionModels:
             interval_days=[1, 3, 7, 14, 30],
             retention_goal=0.85,
             difficulty_modifier=1.0,
-            enable_notifications=True
+            enable_notifications=True,
         )
 
         assert len(settings.interval_days) == 5
@@ -32,7 +37,7 @@ class TestRepetitionModels:
             initial_strength=1.0,
             decay_rate=0.5,
             time_constant=7.0,
-            last_review=datetime.utcnow()
+            last_review=datetime.utcnow(),
         )
 
         assert curve.memory_id == "mem-123"
@@ -49,7 +54,7 @@ class TestRepetitionModels:
             memory_id="mem-123",
             next_review_date=next_review,
             review_count=2,
-            status=ReviewStatus.SCHEDULED
+            status=ReviewStatus.SCHEDULED,
         )
 
         assert schedule.id == "sched-456"
@@ -65,7 +70,7 @@ class TestRepetitionModels:
             memory_id="mem-456",
             next_review_date=datetime.utcnow(),
             review_count=0,
-            status=ReviewStatus.SCHEDULED
+            status=ReviewStatus.SCHEDULED,
         )
 
         # Test status transitions
@@ -86,7 +91,7 @@ class TestRepetitionModels:
             initial_strength=1.0,
             decay_rate=0.5,
             time_constant=7.0,
-            last_review=datetime.utcnow() - timedelta(days=7)
+            last_review=datetime.utcnow() - timedelta(days=7),
         )
 
         # After 7 days (one time constant), strength should be ~0.5

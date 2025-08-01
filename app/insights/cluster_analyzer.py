@@ -1,13 +1,15 @@
-"""
-Memory clustering and semantic grouping analyzer
-"""
-
-from collections import Counter, defaultdict
 from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
 import numpy as np
+
+"""
+Memory clustering and semantic grouping analyzer
+"""
+
+from collections import Counter, defaultdict
+
 from sklearn.cluster import DBSCAN, AgglomerativeClustering, KMeans
 from sklearn.metrics import calinski_harabasz_score, silhouette_score
 from sklearn.preprocessing import StandardScaler
@@ -24,8 +26,7 @@ class ClusterAnalyzer:
         self.max_clusters = 50
 
     async def analyze_clusters(
-        self,
-        request: ClusteringRequest
+        self, request: ClusteringRequest
     ) -> tuple[list[MemoryCluster], float]:
         """Main method to perform clustering analysis"""
         # Get memories with embeddings
@@ -39,13 +40,9 @@ class ClusterAnalyzer:
 
         # Perform clustering based on algorithm
         if request.algorithm == "kmeans":
-            labels, quality_score = await self._kmeans_clustering(
-                embeddings, request, memory_data
-            )
+            labels, quality_score = await self._kmeans_clustering(embeddings, request, memory_data)
         elif request.algorithm == "dbscan":
-            labels, quality_score = await self._dbscan_clustering(
-                embeddings, request, memory_data
-            )
+            labels, quality_score = await self._dbscan_clustering(embeddings, request, memory_data)
         elif request.algorithm == "hierarchical":
             labels, quality_score = await self._hierarchical_clustering(
                 embeddings, request, memory_data
@@ -54,9 +51,7 @@ class ClusterAnalyzer:
             raise ValueError(f"Unknown clustering algorithm: {request.algorithm}")
 
         # Create cluster objects
-        clusters = self._create_clusters_from_labels(
-            labels, memory_data, embeddings, request
-        )
+        clusters = self._create_clusters_from_labels(labels, memory_data, embeddings, request)
 
         return clusters, quality_score
 
@@ -73,32 +68,30 @@ class ClusterAnalyzer:
         return await self.db.fetch_all(query)
 
     def _prepare_clustering_data(
-        self,
-        memories: list[dict[str, Any]]
+        self, memories: list[dict[str, Any]]
     ) -> tuple[np.ndarray, list[dict[str, Any]]]:
         """Prepare data for clustering"""
         embeddings = []
         memory_data = []
 
         for memory in memories:
-            if memory.get('content_vector'):
-                embeddings.append(memory['content_vector'])
-                memory_data.append({
-                    'id': memory['id'],
-                    'content': memory['content'],
-                    'tags': memory.get('tags', []),
-                    'importance': memory.get('importance', 0),
-                    'created_at': memory['created_at'],
-                    'metadata': memory.get('metadata', {})
-                })
+            if memory.get("content_vector"):
+                embeddings.append(memory["content_vector"])
+                memory_data.append(
+                    {
+                        "id": memory["id"],
+                        "content": memory["content"],
+                        "tags": memory.get("tags", []),
+                        "importance": memory.get("importance", 0),
+                        "created_at": memory["created_at"],
+                        "metadata": memory.get("metadata", {}),
+                    }
+                )
 
         return np.array(embeddings), memory_data
 
     async def _kmeans_clustering(
-        self,
-        embeddings: np.ndarray,
-        request: ClusteringRequest,
-        memory_data: list[dict[str, Any]]
+        self, embeddings: np.ndarray, request: ClusteringRequest, memory_data: list[dict[str, Any]]
     ) -> tuple[np.ndarray, float]:
         """Perform K-means clustering"""
         # Determine optimal number of clusters if not specified
@@ -113,11 +106,7 @@ class ClusterAnalyzer:
         scaler = StandardScaler()
         scaled_embeddings = scaler.fit_transform(embeddings)
 
-        kmeans = KMeans(
-            n_clusters=n_clusters,
-            random_state=42,
-            n_init=10
-        )
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
         labels = kmeans.fit_predict(scaled_embeddings)
 
         # Calculate quality score
@@ -131,10 +120,7 @@ class ClusterAnalyzer:
         return labels, quality_score
 
     async def _dbscan_clustering(
-        self,
-        embeddings: np.ndarray,
-        request: ClusteringRequest,
-        memory_data: list[dict[str, Any]]
+        self, embeddings: np.ndarray, request: ClusteringRequest, memory_data: list[dict[str, Any]]
     ) -> tuple[np.ndarray, float]:
         """Perform DBSCAN clustering"""
         scaler = StandardScaler()
@@ -143,11 +129,7 @@ class ClusterAnalyzer:
         # Use similarity threshold to determine eps
         eps = 1.0 - request.similarity_threshold
 
-        dbscan = DBSCAN(
-            eps=eps,
-            min_samples=request.min_cluster_size,
-            metric='cosine'
-        )
+        dbscan = DBSCAN(eps=eps, min_samples=request.min_cluster_size, metric="cosine")
         labels = dbscan.fit_predict(scaled_embeddings)
 
         # Calculate quality score
@@ -158,10 +140,7 @@ class ClusterAnalyzer:
             # Filter out noise points for quality calculation
             mask = labels != -1
             if np.sum(mask) > 0:
-                silhouette = silhouette_score(
-                    scaled_embeddings[mask],
-                    labels[mask]
-                )
+                silhouette = silhouette_score(scaled_embeddings[mask], labels[mask])
                 quality_score = silhouette * (1 - n_noise / len(labels))
             else:
                 quality_score = 0.0
@@ -171,10 +150,7 @@ class ClusterAnalyzer:
         return labels, quality_score
 
     async def _hierarchical_clustering(
-        self,
-        embeddings: np.ndarray,
-        request: ClusteringRequest,
-        memory_data: list[dict[str, Any]]
+        self, embeddings: np.ndarray, request: ClusteringRequest, memory_data: list[dict[str, Any]]
     ) -> tuple[np.ndarray, float]:
         """Perform hierarchical clustering"""
         scaler = StandardScaler()
@@ -186,10 +162,7 @@ class ClusterAnalyzer:
         else:
             n_clusters = request.num_clusters
 
-        clustering = AgglomerativeClustering(
-            n_clusters=n_clusters,
-            linkage='ward'
-        )
+        clustering = AgglomerativeClustering(n_clusters=n_clusters, linkage="ward")
         labels = clustering.fit_predict(scaled_embeddings)
 
         # Calculate quality score
@@ -201,11 +174,7 @@ class ClusterAnalyzer:
 
         return labels, quality_score
 
-    async def _find_optimal_clusters_elbow(
-        self,
-        embeddings: np.ndarray,
-        max_k: int = 20
-    ) -> int:
+    async def _find_optimal_clusters_elbow(self, embeddings: np.ndarray, max_k: int = 20) -> int:
         """Find optimal number of clusters using elbow method"""
         scaler = StandardScaler()
         scaled_embeddings = scaler.fit_transform(embeddings)
@@ -237,7 +206,7 @@ class ClusterAnalyzer:
         labels: np.ndarray,
         memory_data: list[dict[str, Any]],
         embeddings: np.ndarray,
-        request: ClusteringRequest
+        request: ClusteringRequest,
     ) -> list[MemoryCluster]:
         """Create MemoryCluster objects from clustering labels"""
         clusters = []
@@ -260,32 +229,25 @@ class ClusterAnalyzer:
 
             # Find centroid (memory closest to cluster center)
             cluster_center = np.mean(member_embeddings, axis=0)
-            distances = np.linalg.norm(
-                member_embeddings - cluster_center,
-                axis=1
-            )
+            distances = np.linalg.norm(member_embeddings - cluster_center, axis=1)
             centroid_idx = np.argmin(distances)
             centroid_memory = member_memories[centroid_idx]
 
             # Extract common tags
             all_tags = []
             for mem in member_memories:
-                all_tags.extend(mem.get('tags', []))
+                all_tags.extend(mem.get("tags", []))
             common_tags = [
-                tag for tag, count in Counter(all_tags).most_common(10)
+                tag
+                for tag, count in Counter(all_tags).most_common(10)
                 if count >= len(member_memories) * 0.3  # Present in 30% of memories
             ]
 
             # Calculate average importance
-            avg_importance = np.mean([
-                mem.get('importance', 0) for mem in member_memories
-            ])
+            avg_importance = np.mean([mem.get("importance", 0) for mem in member_memories])
 
             # Calculate coherence score
-            coherence = self._calculate_cluster_coherence(
-                member_embeddings,
-                cluster_center
-            )
+            coherence = self._calculate_cluster_coherence(member_embeddings, cluster_center)
 
             # Extract keywords from content
             keywords = self._extract_cluster_keywords(member_memories)
@@ -293,18 +255,15 @@ class ClusterAnalyzer:
             cluster = MemoryCluster(
                 id=uuid4(),
                 name=self._generate_cluster_name(common_tags, keywords),
-                description=self._generate_cluster_description(
-                    member_memories,
-                    common_tags
-                ),
+                description=self._generate_cluster_description(member_memories, common_tags),
                 size=len(members),
-                centroid_memory_id=centroid_memory['id'],
-                memory_ids=[mem['id'] for mem in member_memories],
+                centroid_memory_id=centroid_memory["id"],
+                memory_ids=[mem["id"] for mem in member_memories],
                 common_tags=common_tags,
                 average_importance=avg_importance,
                 coherence_score=coherence,
                 created_at=datetime.utcnow(),
-                keywords=keywords
+                keywords=keywords,
             )
 
             clusters.append(cluster)
@@ -312,9 +271,7 @@ class ClusterAnalyzer:
         return sorted(clusters, key=lambda c: c.size, reverse=True)
 
     def _calculate_cluster_coherence(
-        self,
-        member_embeddings: np.ndarray,
-        center: np.ndarray
+        self, member_embeddings: np.ndarray, center: np.ndarray
     ) -> float:
         """Calculate coherence of cluster members"""
         # Average cosine similarity to center
@@ -328,16 +285,14 @@ class ClusterAnalyzer:
         return np.mean(similarities)
 
     def _extract_cluster_keywords(
-        self,
-        memories: list[dict[str, Any]],
-        max_keywords: int = 10
+        self, memories: list[dict[str, Any]], max_keywords: int = 10
     ) -> list[str]:
         """Extract representative keywords from cluster"""
         # Simple keyword extraction from content
         word_freq = defaultdict(int)
 
         for memory in memories:
-            content = memory.get('content', '').lower()
+            content = memory.get("content", "").lower()
             # Simple tokenization
             words = content.split()
 
@@ -347,20 +302,15 @@ class ClusterAnalyzer:
 
         # Get most frequent words
         keywords = [
-            word for word, _ in sorted(
-                word_freq.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )[:max_keywords]
+            word
+            for word, _ in sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[
+                :max_keywords
+            ]
         ]
 
         return keywords
 
-    def _generate_cluster_name(
-        self,
-        tags: list[str],
-        keywords: list[str]
-    ) -> str:
+    def _generate_cluster_name(self, tags: list[str], keywords: list[str]) -> str:
         """Generate descriptive name for cluster"""
         if tags:
             return f"Cluster: {', '.join(tags[:3])}"
@@ -369,11 +319,7 @@ class ClusterAnalyzer:
         else:
             return "Unnamed Cluster"
 
-    def _generate_cluster_description(
-        self,
-        memories: list[dict[str, Any]],
-        tags: list[str]
-    ) -> str:
+    def _generate_cluster_description(self, memories: list[dict[str, Any]], tags: list[str]) -> str:
         """Generate description for cluster"""
         desc_parts = []
 
@@ -383,12 +329,10 @@ class ClusterAnalyzer:
             desc_parts.append(f"Common themes: {', '.join(tags[:5])}")
 
         # Add date range
-        dates = [m['created_at'] for m in memories]
+        dates = [m["created_at"] for m in memories]
         if dates:
             min_date = min(dates)
             max_date = max(dates)
-            desc_parts.append(
-                f"Created between {min_date.date()} and {max_date.date()}"
-            )
+            desc_parts.append(f"Created between {min_date.date()} and {max_date.date()}")
 
         return ". ".join(desc_parts)

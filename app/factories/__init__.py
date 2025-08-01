@@ -10,10 +10,10 @@ from .repository_factory import RepositoryFactory
 from .service_factory import AnalyticsServiceFactory, MemoryServiceFactory, ServiceFactory
 
 __all__ = [
-    'ServiceFactory',
-    'MemoryServiceFactory',
-    'AnalyticsServiceFactory',
-    'RepositoryFactory',
-    'DependencyContainer',
-    'ServiceScope',
+    "ServiceFactory",
+    "MemoryServiceFactory",
+    "AnalyticsServiceFactory",
+    "RepositoryFactory",
+    "DependencyContainer",
+    "ServiceScope",
 ]

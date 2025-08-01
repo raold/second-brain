@@ -125,6 +125,7 @@ class TestSecureTokenManager:
 
         # Wait a bit to ensure it's expired
         import time
+
         time.sleep(0.1)
 
         # Verify should fail
@@ -195,6 +196,7 @@ class TestDataEncryption:
     def test_encryption_with_master_key(self):
         """Test encryption with specific master key"""
         from cryptography.fernet import Fernet
+
         master_key = Fernet.generate_key().decode()
 
         encryptor1 = DataEncryption(master_key=master_key)
@@ -268,7 +270,9 @@ class TestSecurityAuditor:
         assert "recommendations" in report
 
         # Check severity categories
-        assert all(sev in report["results_by_severity"] for sev in ["CRITICAL", "HIGH", "MEDIUM", "LOW"])
+        assert all(
+            sev in report["results_by_severity"] for sev in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+        )
 
 
 class TestSecurityEventMonitor:
@@ -307,7 +311,7 @@ class TestSecurityEventMonitor:
             severity="MEDIUM",
             source_ip="192.168.1.100",
             user_id="user123",
-            details={"attempts": 3}
+            details={"attempts": 3},
         )
 
         # No exception should be raised

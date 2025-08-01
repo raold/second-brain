@@ -2,8 +2,8 @@
 Unit tests for service factory and dependency injection
 """
 
-
 import pytest
+
 pytestmark = pytest.mark.unit
 
 
@@ -14,6 +14,7 @@ class TestServiceFactory:
         """Test that service factory can be imported"""
         try:
             from app.services.service_factory import ServiceFactory
+
             assert ServiceFactory is not None
         except ImportError:
             # Service factory might not be implemented yet
@@ -93,6 +94,7 @@ class TestMockServices:
 
     def test_mock_memory_service(self):
         """Test mock memory service"""
+
         # Create a simple mock service for testing
         class MockMemoryService:
             def __init__(self):
@@ -111,13 +113,14 @@ class TestMockServices:
 
         service = MockMemoryService()
         assert service is not None
-        assert hasattr(service, 'create_memory')
-        assert hasattr(service, 'get_memory')
-        assert hasattr(service, 'list_memories')
+        assert hasattr(service, "create_memory")
+        assert hasattr(service, "get_memory")
+        assert hasattr(service, "list_memories")
 
     @pytest.mark.asyncio
     async def test_mock_service_workflow(self):
         """Test complete workflow with mock service"""
+
         class MockMemoryService:
             def __init__(self):
                 self.memories = {}
@@ -136,10 +139,7 @@ class TestMockServices:
         service = MockMemoryService()
 
         # Create a memory
-        memory_data = {
-            "content": "Test memory",
-            "memory_type": "factual"
-        }
+        memory_data = {"content": "Test memory", "memory_type": "factual"}
 
         created_memory = await service.create_memory(memory_data)
         assert created_memory["content"] == "Test memory"
@@ -163,6 +163,7 @@ class TestServiceConfiguration:
         try:
             # Try to import configuration
             from app.config import Config
+
             config = Config()
             assert config is not None
 
@@ -170,6 +171,7 @@ class TestServiceConfiguration:
             # Config might not be implemented as a class
             try:
                 import app.config
+
                 assert app.config is not None
             except ImportError:
                 pytest.skip("Configuration module not implemented")
@@ -186,6 +188,7 @@ class TestServiceConfiguration:
             # Should use mock implementations
             try:
                 from app.database_mock import MockDatabase
+
                 mock_db = MockDatabase()
                 assert mock_db is not None
             except ImportError:
@@ -204,7 +207,7 @@ class TestServiceHealthChecks:
             service = get_memory_service()
 
             # Check if service has health check method
-            if hasattr(service, 'health_check'):
+            if hasattr(service, "health_check"):
                 health = await service.health_check()
                 assert isinstance(health, dict)
                 assert "status" in health
@@ -228,7 +231,7 @@ class TestServiceHealthChecks:
             assert service is not None
 
             # Should have basic attributes
-            assert hasattr(service, '__class__')
+            assert hasattr(service, "__class__")
 
         except ImportError:
             pytest.skip("Memory service not implemented")
@@ -245,6 +248,7 @@ class TestServiceIntegration:
         """Test service integration with database"""
         try:
             from app.services.service_factory import get_memory_service
+
             # Skip if mock database not available
             pytest.skip("MockDatabase not implemented, integration test skipped")
 
@@ -252,11 +256,8 @@ class TestServiceIntegration:
             service = get_memory_service()
 
             # Test basic operation
-            if hasattr(service, 'create_memory'):
-                memory_data = {
-                    "content": "Integration test memory",
-                    "memory_type": "factual"
-                }
+            if hasattr(service, "create_memory"):
+                memory_data = {"content": "Integration test memory", "memory_type": "factual"}
 
                 try:
                     result = await service.create_memory(memory_data)
@@ -281,10 +282,11 @@ class TestServiceIntegration:
             service = get_memory_service()
 
             # Service should handle errors gracefully
-            if hasattr(service, 'get_memory'):
+            if hasattr(service, "get_memory"):
                 try:
                     # This should either work or raise a proper exception
                     import asyncio
+
                     result = asyncio.run(service.get_memory("nonexistent-id"))
 
                     # Either returns None or raises specific exception

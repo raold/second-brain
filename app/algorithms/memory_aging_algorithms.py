@@ -1,17 +1,18 @@
+import asyncio
+import math
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 #!/usr/bin/env python3
 """
 Advanced Memory Aging Algorithms for Second Brain
 Implements multiple cognitive science-based memory aging models with sophisticated temporal decay
 """
 
-import asyncio
-import math
-from dataclasses import dataclass
-from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -107,9 +108,14 @@ class AdvancedMemoryAging:
                 spacing_intervals=[1, 2, 4, 8, 16, 32],
             ),
             AgingModel.POWER_LAW: AgingParameters(
-                model=AgingModel.POWER_LAW, half_life_days=30.0, decay_rate=0.1, spacing_intervals=[1, 3, 9, 27, 81]
+                model=AgingModel.POWER_LAW,
+                half_life_days=30.0,
+                decay_rate=0.1,
+                spacing_intervals=[1, 3, 9, 27, 81],
             ),
-            AgingModel.EXPONENTIAL: AgingParameters(model=AgingModel.EXPONENTIAL, half_life_days=25.0, decay_rate=0.12),
+            AgingModel.EXPONENTIAL: AgingParameters(
+                model=AgingModel.EXPONENTIAL, half_life_days=25.0, decay_rate=0.12
+            ),
             AgingModel.SPACING_EFFECT: AgingParameters(
                 model=AgingModel.SPACING_EFFECT,
                 half_life_days=45.0,
@@ -117,10 +123,16 @@ class AdvancedMemoryAging:
                 spacing_intervals=[1, 2, 5, 12, 30, 75, 180],
             ),
             AgingModel.INTERFERENCE: AgingParameters(
-                model=AgingModel.INTERFERENCE, half_life_days=15.0, decay_rate=0.2, interference_factor=0.1
+                model=AgingModel.INTERFERENCE,
+                half_life_days=15.0,
+                decay_rate=0.2,
+                interference_factor=0.1,
             ),
             AgingModel.CONSOLIDATION: AgingParameters(
-                model=AgingModel.CONSOLIDATION, half_life_days=60.0, decay_rate=0.05, consolidation_period_days=14
+                model=AgingModel.CONSOLIDATION,
+                half_life_days=60.0,
+                decay_rate=0.05,
+                consolidation_period_days=14,
             ),
         }
 
@@ -162,20 +174,32 @@ class AdvancedMemoryAging:
 
         # Apply specific aging model
         if model == AgingModel.EBBINGHAUS:
-            result = self._calculate_ebbinghaus_aging(age_days, days_since_access, access_history, params)
+            result = self._calculate_ebbinghaus_aging(
+                age_days, days_since_access, access_history, params
+            )
         elif model == AgingModel.POWER_LAW:
-            result = self._calculate_power_law_aging(age_days, days_since_access, access_history, params)
+            result = self._calculate_power_law_aging(
+                age_days, days_since_access, access_history, params
+            )
         elif model == AgingModel.EXPONENTIAL:
-            result = self._calculate_exponential_aging(age_days, days_since_access, access_history, params)
+            result = self._calculate_exponential_aging(
+                age_days, days_since_access, access_history, params
+            )
         elif model == AgingModel.SPACING_EFFECT:
             result = self._calculate_spacing_effect_aging(age_days, access_history, params)
         elif model == AgingModel.INTERFERENCE:
-            result = self._calculate_interference_aging(age_days, access_history, params, content_complexity)
+            result = self._calculate_interference_aging(
+                age_days, access_history, params, content_complexity
+            )
         elif model == AgingModel.CONSOLIDATION:
-            result = self._calculate_consolidation_aging(age_days, days_since_access, access_history, params)
+            result = self._calculate_consolidation_aging(
+                age_days, days_since_access, access_history, params
+            )
         else:
             # Fallback to Ebbinghaus
-            result = self._calculate_ebbinghaus_aging(age_days, days_since_access, access_history, params)
+            result = self._calculate_ebbinghaus_aging(
+                age_days, days_since_access, access_history, params
+            )
 
         # Apply memory type modifiers
         result = self._apply_memory_type_modifiers(result, memory_type)
@@ -226,7 +250,11 @@ class AdvancedMemoryAging:
         return AgingModel.EBBINGHAUS
 
     def _calculate_ebbinghaus_aging(
-        self, age_days: int, days_since_access: int, access_history: list[MemoryAccess], params: AgingParameters
+        self,
+        age_days: int,
+        days_since_access: int,
+        access_history: list[MemoryAccess],
+        params: AgingParameters,
     ) -> AgingResult:
         """
         Implement Ebbinghaus forgetting curve: R = e^(-t/S)
@@ -266,7 +294,11 @@ class AdvancedMemoryAging:
         )
 
     def _calculate_power_law_aging(
-        self, age_days: int, days_since_access: int, access_history: list[MemoryAccess], params: AgingParameters
+        self,
+        age_days: int,
+        days_since_access: int,
+        access_history: list[MemoryAccess],
+        params: AgingParameters,
     ) -> AgingResult:
         """
         Implement Power Law forgetting: R = (1 + t)^(-d)
@@ -361,7 +393,11 @@ class AdvancedMemoryAging:
         )
 
     def _calculate_interference_aging(
-        self, age_days: int, access_history: list[MemoryAccess], params: AgingParameters, content_complexity: float
+        self,
+        age_days: int,
+        access_history: list[MemoryAccess],
+        params: AgingParameters,
+        content_complexity: float,
     ) -> AgingResult:
         """
         Implement interference-based forgetting model
@@ -380,7 +416,9 @@ class AdvancedMemoryAging:
         interference_decay = interference_effect * (1 - interference_resistance)
 
         # Recent access protection
-        days_since_last = (datetime.now() - access_history[-1].timestamp).days if access_history else age_days
+        days_since_last = (
+            (datetime.now() - access_history[-1].timestamp).days if access_history else age_days
+        )
         recency_protection = math.exp(-days_since_last / 7.0)
 
         # Combined strength calculation
@@ -404,7 +442,11 @@ class AdvancedMemoryAging:
         )
 
     def _calculate_consolidation_aging(
-        self, age_days: int, days_since_access: int, access_history: list[MemoryAccess], params: AgingParameters
+        self,
+        age_days: int,
+        days_since_access: int,
+        access_history: list[MemoryAccess],
+        params: AgingParameters,
     ) -> AgingResult:
         """
         Implement memory consolidation model
@@ -454,7 +496,11 @@ class AdvancedMemoryAging:
         )
 
     def _calculate_exponential_aging(
-        self, age_days: int, days_since_access: int, access_history: list[MemoryAccess], params: AgingParameters
+        self,
+        age_days: int,
+        days_since_access: int,
+        access_history: list[MemoryAccess],
+        params: AgingParameters,
     ) -> AgingResult:
         """Simple exponential decay model"""
         decay_factor = math.exp(-days_since_access / params.half_life_days)
@@ -557,7 +603,9 @@ class AdvancedMemoryAging:
 
         return ", ".join(explanations)
 
-    def get_aging_analytics(self, memory_aging_data: list[tuple[str, AgingResult]]) -> dict[str, Any]:
+    def get_aging_analytics(
+        self, memory_aging_data: list[tuple[str, AgingResult]]
+    ) -> dict[str, Any]:
         """Generate analytics about memory aging patterns"""
         if not memory_aging_data:
             return {"error": "No aging data available"}
@@ -599,7 +647,11 @@ class AdvancedMemoryAging:
         }
 
     def _generate_aging_insights(
-        self, strength_dist: dict[str, int], model_usage: dict[str, int], half_life_data: dict[str, float], total: int
+        self,
+        strength_dist: dict[str, int],
+        model_usage: dict[str, int],
+        half_life_data: dict[str, float],
+        total: int,
     ) -> list[str]:
         """Generate insights from aging analytics"""
         insights = []
@@ -609,9 +661,13 @@ class AdvancedMemoryAging:
         crystal_percent = (strength_dist.get("crystal", 0) / total) * 100
 
         if weak_percent > 30:
-            insights.append(f"{weak_percent:.1f}% of memories are weak - consider review scheduling")
+            insights.append(
+                f"{weak_percent:.1f}% of memories are weak - consider review scheduling"
+            )
         if crystal_percent > 20:
-            insights.append(f"{crystal_percent:.1f}% of memories are crystallized - excellent retention")
+            insights.append(
+                f"{crystal_percent:.1f}% of memories are crystallized - excellent retention"
+            )
 
         # Model insights
         most_used_model = max(model_usage.items(), key=lambda x: x[1])[0]

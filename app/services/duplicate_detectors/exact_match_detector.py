@@ -1,3 +1,8 @@
+import hashlib
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Exact Match Detector
 
@@ -5,11 +10,7 @@ Detects exact duplicate content using content hashing.
 Fast and highly accurate for identical content matches.
 """
 
-import hashlib
 from collections import defaultdict
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -217,7 +218,10 @@ class ExactMatchDetector(BaseDuplicateDetector):
         return f"generated_{content_hash[:16]}"
 
     async def find_incremental_duplicates(
-        self, new_memories: list[dict[str, Any]], existing_hashes: dict[str, str], config: DeduplicationConfig
+        self,
+        new_memories: list[dict[str, Any]],
+        existing_hashes: dict[str, str],
+        config: DeduplicationConfig,
     ) -> list[DuplicateGroup]:
         """
         Find duplicates incrementally by comparing new memories against existing hashes.
@@ -233,7 +237,9 @@ class ExactMatchDetector(BaseDuplicateDetector):
         if not new_memories or not existing_hashes:
             return []
 
-        logger.debug(f"Incremental exact match detection: {len(new_memories)} new vs {len(existing_hashes)} existing")
+        logger.debug(
+            f"Incremental exact match detection: {len(new_memories)} new vs {len(existing_hashes)} existing"
+        )
 
         duplicate_groups = []
         hash_to_memories = defaultdict(list)
@@ -261,7 +267,9 @@ class ExactMatchDetector(BaseDuplicateDetector):
             if len(actual_memories) < len(memory_group):
                 # We have duplicates with existing memories
                 try:
-                    group = await self._create_duplicate_group(actual_memories, content_hash, config)
+                    group = await self._create_duplicate_group(
+                        actual_memories, content_hash, config
+                    )
                     if group:
                         duplicate_groups.append(group)
                         self._record_duplicate_found()
@@ -270,7 +278,9 @@ class ExactMatchDetector(BaseDuplicateDetector):
                     logger.error(f"Error creating incremental duplicate group: {e}")
                     continue
 
-        logger.info(f"Incremental exact match detection completed: {len(duplicate_groups)} groups found")
+        logger.info(
+            f"Incremental exact match detection completed: {len(duplicate_groups)} groups found"
+        )
         return duplicate_groups
 
     def get_content_hash(self, memory_id: str) -> str:

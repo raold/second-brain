@@ -23,7 +23,7 @@ class TestSecurityValidation:
             ("/memories/search", "POST"),
             ("/status", "GET"),
             ("/security/status", "GET"),
-            ("/metrics", "GET")
+            ("/metrics", "GET"),
         ]
 
         for endpoint, method in protected_endpoints:
@@ -47,10 +47,7 @@ class TestSecurityValidation:
         ]
 
         for invalid_key in invalid_keys:
-            response = await client.get(
-                "/memories",
-                params={"api_key": invalid_key}
-            )
+            response = await client.get("/memories", params={"api_key": invalid_key})
             assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -61,43 +58,38 @@ class TestSecurityValidation:
             "<script>alert('xss')</script>",
             "javascript:alert('xss')",
             "<img src=x onerror=alert('xss')>",
-
             # SQL injection attempts
             "'; DROP TABLE memories; --",
             "' OR '1'='1",
             "admin'--",
-
             # Command injection attempts
             "; rm -rf /",
             "$(rm -rf /)",
             "`rm -rf /`",
-
             # Path traversal attempts
             "../../../etc/passwd",
             "..\\..\\..\\windows\\system32",
-
             # Large payloads
             "A" * 100000,  # Very large content
-
             # Special characters
             "\x00\x01\x02\x03",  # Null bytes and control chars
             "💀🔥💥",  # Unicode that might break things
         ]
 
         for malicious_input in malicious_inputs:
-            payload = {
-                "content": malicious_input,
-                "importance_score": 0.5
-            }
+            payload = {"content": malicious_input, "importance_score": 0.5}
 
             response = await client.post(
-                "/memories/semantic",
-                json=payload,
-                params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key}
             )
 
             # Should either sanitize and succeed, or reject with validation error
-            assert response.status_code in [200, 400, 422, 413], f"Failed for input: {malicious_input[:50]}"
+            assert response.status_code in [
+                200,
+                400,
+                422,
+                413,
+            ], f"Failed for input: {malicious_input[:50]}"
 
             if response.status_code == 200:
                 # If accepted, verify content was sanitized
@@ -107,7 +99,9 @@ class TestSecurityValidation:
                 # Should not contain raw script tags or dangerous content
                 dangerous_patterns = ["<script", "javascript:", "DROP TABLE", "; rm -rf"]
                 for pattern in dangerous_patterns:
-                    assert pattern.lower() not in stored_content.lower(), f"Dangerous pattern '{pattern}' not sanitized"
+                    assert (
+                        pattern.lower() not in stored_content.lower()
+                    ), f"Dangerous pattern '{pattern}' not sanitized"
 
     @pytest.mark.asyncio
     async def test_request_size_limits(self, client: AsyncClient, api_key: str):
@@ -115,15 +109,10 @@ class TestSecurityValidation:
         # Test extremely large request
         huge_content = "A" * 1000000  # 1MB content
 
-        payload = {
-            "content": huge_content,
-            "importance_score": 0.5
-        }
+        payload = {"content": huge_content, "importance_score": 0.5}
 
         response = await client.post(
-            "/memories/semantic",
-            json=payload,
-            params={"api_key": api_key}
+            "/memories/semantic", json=payload, params={"api_key": api_key}
         )
 
         # Should reject oversized requests
@@ -136,10 +125,7 @@ class TestSecurityValidation:
         responses = []
 
         for i in range(20):  # Make 20 rapid requests
-            response = await client.get(
-                "/health",
-                params={"api_key": api_key}
-            )
+            response = await client.get("/health", params={"api_key": api_key})
             responses.append(response.status_code)
 
             # Small delay to avoid overwhelming the test client
@@ -165,7 +151,7 @@ class TestSecurityValidation:
             cors_headers = [
                 "access-control-allow-origin",
                 "access-control-allow-methods",
-                "access-control-allow-headers"
+                "access-control-allow-headers",
             ]
 
             # At least some CORS headers should be present
@@ -175,10 +161,7 @@ class TestSecurityValidation:
     @pytest.mark.asyncio
     async def test_security_headers_applied(self, client: AsyncClient, api_key: str):
         """Test that security headers are applied to responses"""
-        response = await client.get(
-            "/health",
-            params={"api_key": api_key}
-        )
+        response = await client.get("/health", params={"api_key": api_key})
 
         assert response.status_code == 200
         headers = response.headers
@@ -208,15 +191,10 @@ class TestSecurityValidation:
         ]
 
         for payload in sql_injection_payloads:
-            search_payload = {
-                "query": payload,
-                "limit": 10
-            }
+            search_payload = {"query": payload, "limit": 10}
 
             response = await client.post(
-                "/memories/search",
-                json=search_payload,
-                params={"api_key": api_key}
+                "/memories/search", json=search_payload, params={"api_key": api_key}
             )
 
             # Should either sanitize and return results, or return validation error
@@ -251,14 +229,11 @@ class TestSecurityValidation:
         edge_case_payloads = [
             # Deeply nested JSON
             {"content": {"nested": {"very": {"deep": {"structure": "test"}}}}},
-
             # JSON with special numbers
-            {"content": "test", "importance_score": float('inf')},
-            {"content": "test", "importance_score": float('-inf')},
-
+            {"content": "test", "importance_score": float("inf")},
+            {"content": "test", "importance_score": float("-inf")},
             # Very large numbers
             {"content": "test", "importance_score": 10**308},
-
             # Unicode in keys and values
             {"content": "test 🧠", "metadata": {"🔑": "🔒"}},
         ]
@@ -266,9 +241,7 @@ class TestSecurityValidation:
         for payload in edge_case_payloads:
             try:
                 response = await client.post(
-                    "/memories/semantic",
-                    json=payload,
-                    params={"api_key": api_key}
+                    "/memories/semantic", json=payload, params={"api_key": api_key}
                 )
 
                 # Should handle gracefully
@@ -286,7 +259,7 @@ class TestSecurityValidation:
             "/memories/semantic",
             content="not json",
             headers={"content-type": "text/plain"},
-            params={"api_key": api_key}
+            params={"api_key": api_key},
         )
 
         # Should reject non-JSON content
@@ -296,9 +269,7 @@ class TestSecurityValidation:
     async def test_parameter_pollution(self, client: AsyncClient, api_key: str):
         """Test handling of parameter pollution attacks"""
         # Test duplicate parameters
-        response = await client.get(
-            "/memories?limit=10&limit=100&api_key=" + api_key
-        )
+        response = await client.get("/memories?limit=10&limit=100&api_key=" + api_key)
 
         # Should handle gracefully, not cause errors
         assert response.status_code in [200, 400, 422]
@@ -312,15 +283,13 @@ class TestSecurityValidation:
                 "domain": "<script>alert('xss')</script>",
                 "concepts": ["'; DROP TABLE memories; --"],
                 "malicious_key": {"nested": {"injection": "attempt"}},
-                "confidence": "not a number"
+                "confidence": "not a number",
             },
-            "importance_score": 0.5
+            "importance_score": 0.5,
         }
 
         response = await client.post(
-            "/memories/semantic",
-            json=malicious_metadata,
-            params={"api_key": api_key}
+            "/memories/semantic", json=malicious_metadata, params={"api_key": api_key}
         )
 
         # Should either sanitize or reject
@@ -340,15 +309,10 @@ class TestSecurityValidation:
         ]
 
         for query in edge_case_queries:
-            payload = {
-                "query": query,
-                "limit": 5
-            }
+            payload = {"query": query, "limit": 5}
 
             response = await client.post(
-                "/memories/search",
-                json=payload,
-                params={"api_key": api_key}
+                "/memories/search", json=payload, params={"api_key": api_key}
             )
 
             # Should handle gracefully
@@ -362,10 +326,7 @@ class TestSecurityValidation:
         assert response.status_code in [401, 422]
 
         # Test with valid API key
-        response = await client.get(
-            "/security/status",
-            params={"api_key": api_key}
-        )
+        response = await client.get("/security/status", params={"api_key": api_key})
         assert response.status_code == 200
 
         # Verify response contains security metrics
@@ -397,14 +358,12 @@ class TestSecurityValidation:
     @pytest.mark.asyncio
     async def test_request_timeout_handling(self, client: AsyncClient, api_key: str):
         """Test request timeout handling"""
-        with patch('asyncio.sleep') as mock_sleep:
+        with patch("asyncio.sleep") as mock_sleep:
             # Mock a slow operation
             mock_sleep.return_value = None
 
             response = await client.get(
-                "/health",
-                params={"api_key": api_key},
-                timeout=1.0  # Short timeout
+                "/health", params={"api_key": api_key}, timeout=1.0  # Short timeout
             )
 
             # Should complete within timeout or handle gracefully
@@ -414,15 +373,10 @@ class TestSecurityValidation:
     async def test_memory_access_authorization(self, client: AsyncClient, api_key: str):
         """Test that memory access is properly authorized"""
         # Store a memory first
-        payload = {
-            "content": "Private memory content",
-            "importance_score": 0.5
-        }
+        payload = {"content": "Private memory content", "importance_score": 0.5}
 
         response = await client.post(
-            "/memories/semantic",
-            json=payload,
-            params={"api_key": api_key}
+            "/memories/semantic", json=payload, params={"api_key": api_key}
         )
 
         assert response.status_code == 200
@@ -434,17 +388,11 @@ class TestSecurityValidation:
         assert response.status_code in [401, 422]
 
         # Try to access with invalid API key
-        response = await client.get(
-            f"/memories/{memory_id}",
-            params={"api_key": "invalid"}
-        )
+        response = await client.get(f"/memories/{memory_id}", params={"api_key": "invalid"})
         assert response.status_code == 401
 
         # Should work with valid API key
-        response = await client.get(
-            f"/memories/{memory_id}",
-            params={"api_key": api_key}
-        )
+        response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
         assert response.status_code == 200
 
     @pytest.mark.asyncio
@@ -460,17 +408,14 @@ class TestSecurityValidation:
 
         for endpoint, method in error_conditions:
             if method == "GET":
-                response = await client.get(
-                    endpoint,
-                    params={"api_key": api_key}
-                )
+                response = await client.get(endpoint, params={"api_key": api_key})
             elif method == "POST":
                 # Send malformed JSON
                 response = await client.post(
                     endpoint,
                     content="invalid json{",
                     headers={"content-type": "application/json"},
-                    params={"api_key": api_key}
+                    params={"api_key": api_key},
                 )
 
             # Error responses should not contain sensitive information
@@ -481,13 +426,23 @@ class TestSecurityValidation:
 
                     # Should not contain sensitive patterns
                     sensitive_patterns = [
-                        "password", "secret", "key", "token",
-                        "database", "connection", "traceback",
-                        "/home/", "/var/", "c:\\", "file not found"
+                        "password",
+                        "secret",
+                        "key",
+                        "token",
+                        "database",
+                        "connection",
+                        "traceback",
+                        "/home/",
+                        "/var/",
+                        "c:\\",
+                        "file not found",
                     ]
 
                     for pattern in sensitive_patterns:
-                        assert pattern not in error_text, f"Error message contains sensitive info: {pattern}"
+                        assert (
+                            pattern not in error_text
+                        ), f"Error message contains sensitive info: {pattern}"
 
                 except Exception:
                     # If response is not JSON, check raw text

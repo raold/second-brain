@@ -1,3 +1,8 @@
+import asyncio
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Hybrid Detector
 
@@ -5,11 +10,7 @@ Combines multiple detection methods for comprehensive duplicate detection.
 Intelligently weights and combines results from exact, fuzzy, and semantic detection.
 """
 
-import asyncio
 from collections import defaultdict
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -92,7 +93,10 @@ class HybridDetector(BaseDuplicateDetector):
         return combined_groups
 
     async def _run_parallel_detection(
-        self, memories: list[dict[str, Any]], config: DeduplicationConfig, methods: list[SimilarityMethod]
+        self,
+        memories: list[dict[str, Any]],
+        config: DeduplicationConfig,
+        methods: list[SimilarityMethod],
     ) -> dict[SimilarityMethod, list[DuplicateGroup]]:
         """
         Run multiple detection methods in parallel.
@@ -119,7 +123,9 @@ class HybridDetector(BaseDuplicateDetector):
                 continue
 
             method_to_detector[method] = detector
-            task = asyncio.create_task(detector.find_duplicates(memories, config), name=f"detect_{method.value}")
+            task = asyncio.create_task(
+                detector.find_duplicates(memories, config), name=f"detect_{method.value}"
+            )
             detection_tasks.append((method, task))
 
         # Wait for all detection methods to complete
@@ -173,7 +179,11 @@ class HybridDetector(BaseDuplicateDetector):
                 for score in group.similarity_scores:
                     pair_key = tuple(sorted([score.memory_id_1, score.memory_id_2]))
                     pair_detections[pair_key].append(
-                        {"method": method, "score": score, "weight": self.method_weights.get(method, 0.5)}
+                        {
+                            "method": method,
+                            "score": score,
+                            "weight": self.method_weights.get(method, 0.5),
+                        }
                     )
 
         # Calculate combined scores for each pair
@@ -276,7 +286,9 @@ class HybridDetector(BaseDuplicateDetector):
         return combined_score
 
     def _group_combined_pairs(
-        self, pairs: list[tuple[dict[str, Any], dict[str, Any], SimilarityScore]], config: DeduplicationConfig
+        self,
+        pairs: list[tuple[dict[str, Any], dict[str, Any], SimilarityScore]],
+        config: DeduplicationConfig,
     ) -> list[DuplicateGroup]:
         """
         Group combined pairs into duplicate groups.
@@ -329,7 +341,9 @@ class HybridDetector(BaseDuplicateDetector):
                         stack.append(connected_id)
 
             if len(group_memory_ids) >= 2:
-                group = self._create_hybrid_duplicate_group(group_memory_ids, pair_scores, pairs, config)
+                group = self._create_hybrid_duplicate_group(
+                    group_memory_ids, pair_scores, pairs, config
+                )
                 if group:
                     duplicate_groups.append(group)
                     self._record_duplicate_found()

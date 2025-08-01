@@ -1,13 +1,14 @@
-"""
-Knowledge gap detection and analysis
-"""
-
-from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
 import numpy as np
+
+"""
+Knowledge gap detection and analysis
+"""
+
+from collections import defaultdict
 
 from .models import GapAnalysisRequest, KnowledgeGap
 
@@ -19,15 +20,21 @@ class KnowledgeGapDetector:
         self.db = database
         self.min_domain_memories = 5
         self.reference_domains = [
-            "programming", "machine learning", "databases", "algorithms",
-            "system design", "networking", "security", "cloud computing",
-            "data structures", "software engineering", "devops", "testing"
+            "programming",
+            "machine learning",
+            "databases",
+            "algorithms",
+            "system design",
+            "networking",
+            "security",
+            "cloud computing",
+            "data structures",
+            "software engineering",
+            "devops",
+            "testing",
         ]
 
-    async def analyze_gaps(
-        self,
-        request: GapAnalysisRequest
-    ) -> list[KnowledgeGap]:
+    async def analyze_gaps(self, request: GapAnalysisRequest) -> list[KnowledgeGap]:
         """Main method to detect knowledge gaps"""
         # Get all memories
         memories = await self._get_all_memories()
@@ -55,16 +62,13 @@ class KnowledgeGapDetector:
         gaps.extend(depth_gaps)
 
         # Filter by severity and deduplicate
-        filtered_gaps = self._filter_and_deduplicate_gaps(
-            gaps,
-            request.min_severity
-        )
+        filtered_gaps = self._filter_and_deduplicate_gaps(gaps, request.min_severity)
 
         # Sort by severity
         filtered_gaps.sort(key=lambda g: g.severity, reverse=True)
 
         # Limit results
-        return filtered_gaps[:request.limit]
+        return filtered_gaps[: request.limit]
 
     async def _get_all_memories(self) -> list[dict[str, Any]]:
         """Get all memories for analysis"""
@@ -78,9 +82,7 @@ class KnowledgeGapDetector:
         return await self.db.fetch_all(query)
 
     async def _detect_domain_gaps(
-        self,
-        memories: list[dict[str, Any]],
-        request: GapAnalysisRequest
+        self, memories: list[dict[str, Any]], request: GapAnalysisRequest
     ) -> list[KnowledgeGap]:
         """Detect gaps in domain coverage"""
         gaps = []
@@ -93,16 +95,13 @@ class KnowledgeGapDetector:
         domain_keywords = self._get_domain_keywords()
 
         for memory in memories:
-            content_lower = memory['content'].lower()
-            tags_lower = [tag.lower() for tag in memory.get('tags', [])]
+            content_lower = memory["content"].lower()
+            tags_lower = [tag.lower() for tag in memory.get("tags", [])]
 
             for domain in domains:
                 # Check if memory relates to domain
                 if self._memory_matches_domain(
-                    content_lower,
-                    tags_lower,
-                    domain,
-                    domain_keywords.get(domain, [])
+                    content_lower, tags_lower, domain, domain_keywords.get(domain, [])
                 ):
                     domain_memories[domain].append(memory)
 
@@ -119,27 +118,22 @@ class KnowledgeGapDetector:
                     area=f"Domain: {domain}",
                     description=f"Limited coverage of {domain} with only {len(domain_mems)} memories",
                     severity=severity,
-                    related_memories=[m['id'] for m in domain_mems],
+                    related_memories=[m["id"] for m in domain_mems],
                     suggested_topics=self._suggest_topics_for_domain(domain),
                     confidence=0.8,
-                    detected_at=datetime.utcnow()
+                    detected_at=datetime.utcnow(),
                 )
                 gaps.append(gap)
 
             elif domain_mems:
                 # Check for subtopic gaps within domain
-                subtopic_gaps = await self._analyze_domain_subtopics(
-                    domain,
-                    domain_mems
-                )
+                subtopic_gaps = await self._analyze_domain_subtopics(domain, domain_mems)
                 gaps.extend(subtopic_gaps)
 
         return gaps
 
     async def _detect_temporal_gaps(
-        self,
-        memories: list[dict[str, Any]],
-        request: GapAnalysisRequest
+        self, memories: list[dict[str, Any]], request: GapAnalysisRequest
     ) -> list[KnowledgeGap]:
         """Detect areas that haven't been updated recently"""
         gaps = []
@@ -150,13 +144,13 @@ class KnowledgeGapDetector:
         topic_memories = defaultdict(list)
 
         for memory in memories:
-            for tag in memory.get('tags', []):
+            for tag in memory.get("tags", []):
                 topic_memories[tag].append(memory)
 
         # Check for stale topics
         for topic, topic_mems in topic_memories.items():
             if len(topic_mems) >= 3:  # Only consider established topics
-                latest_update = max(m['updated_at'] for m in topic_mems)
+                latest_update = max(m["updated_at"] for m in topic_mems)
 
                 if now - latest_update > stale_threshold:
                     days_stale = (now - latest_update).days
@@ -167,23 +161,21 @@ class KnowledgeGapDetector:
                         area=f"Stale Topic: {topic}",
                         description=f"No updates to '{topic}' in {days_stale} days",
                         severity=severity,
-                        related_memories=[m['id'] for m in topic_mems[-5:]],
+                        related_memories=[m["id"] for m in topic_mems[-5:]],
                         suggested_topics=[
                             f"Recent developments in {topic}",
                             f"New {topic} best practices",
-                            f"Updated {topic} techniques"
+                            f"Updated {topic} techniques",
                         ],
                         confidence=0.7,
-                        detected_at=datetime.utcnow()
+                        detected_at=datetime.utcnow(),
                     )
                     gaps.append(gap)
 
         return gaps
 
     async def _detect_relationship_gaps(
-        self,
-        memories: list[dict[str, Any]],
-        request: GapAnalysisRequest
+        self, memories: list[dict[str, Any]], request: GapAnalysisRequest
     ) -> list[KnowledgeGap]:
         """Detect isolated knowledge areas lacking connections"""
         gaps = []
@@ -193,12 +185,12 @@ class KnowledgeGapDetector:
         tag_frequency = defaultdict(int)
 
         for memory in memories:
-            tags = memory.get('tags', [])
+            tags = memory.get("tags", [])
             for tag in tags:
                 tag_frequency[tag] += 1
 
             for i, tag1 in enumerate(tags):
-                for tag2 in tags[i+1:]:
+                for tag2 in tags[i + 1 :]:
                     tag_cooccurrence[tag1][tag2] += 1
                     tag_cooccurrence[tag2][tag1] += 1
 
@@ -213,33 +205,26 @@ class KnowledgeGapDetector:
                     severity = isolation_score * 0.8  # Slightly lower severity
 
                     # Find memories with this tag
-                    tag_memories = [
-                        m for m in memories
-                        if tag in m.get('tags', [])
-                    ]
+                    tag_memories = [m for m in memories if tag in m.get("tags", [])]
 
                     gap = KnowledgeGap(
                         id=uuid4(),
                         area=f"Isolated Topic: {tag}",
                         description=f"'{tag}' has limited connections to other topics",
                         severity=severity,
-                        related_memories=[m['id'] for m in tag_memories[:5]],
+                        related_memories=[m["id"] for m in tag_memories[:5]],
                         suggested_topics=self._suggest_connections_for_tag(
-                            tag,
-                            tag_cooccurrence,
-                            tag_frequency
+                            tag, tag_cooccurrence, tag_frequency
                         ),
                         confidence=0.6,
-                        detected_at=datetime.utcnow()
+                        detected_at=datetime.utcnow(),
                     )
                     gaps.append(gap)
 
         return gaps
 
     async def _detect_depth_gaps(
-        self,
-        memories: list[dict[str, Any]],
-        request: GapAnalysisRequest
+        self, memories: list[dict[str, Any]], request: GapAnalysisRequest
     ) -> list[KnowledgeGap]:
         """Detect areas with superficial coverage"""
         gaps = []
@@ -248,15 +233,15 @@ class KnowledgeGapDetector:
         topic_memories = defaultdict(list)
 
         for memory in memories:
-            for tag in memory.get('tags', []):
+            for tag in memory.get("tags", []):
                 topic_memories[tag].append(memory)
 
         # Analyze depth of coverage
         for topic, topic_mems in topic_memories.items():
             if len(topic_mems) >= 3:
                 # Calculate average content length and importance
-                avg_length = np.mean([len(m['content']) for m in topic_mems])
-                avg_importance = np.mean([m.get('importance', 0) for m in topic_mems])
+                avg_length = np.mean([len(m["content"]) for m in topic_mems])
+                avg_importance = np.mean([m.get("importance", 0) for m in topic_mems])
 
                 # Check for superficial coverage
                 if avg_length < 200 and avg_importance < 5:
@@ -267,24 +252,22 @@ class KnowledgeGapDetector:
                         area=f"Shallow Coverage: {topic}",
                         description=f"'{topic}' has superficial coverage with short, low-importance memories",
                         severity=severity,
-                        related_memories=[m['id'] for m in topic_mems[:5]],
+                        related_memories=[m["id"] for m in topic_mems[:5]],
                         suggested_topics=[
                             f"Deep dive into {topic}",
                             f"{topic} advanced concepts",
                             f"{topic} best practices and patterns",
-                            f"{topic} real-world applications"
+                            f"{topic} real-world applications",
                         ],
                         confidence=0.7,
-                        detected_at=datetime.utcnow()
+                        detected_at=datetime.utcnow(),
                     )
                     gaps.append(gap)
 
         return gaps
 
     async def _analyze_domain_subtopics(
-        self,
-        domain: str,
-        domain_memories: list[dict[str, Any]]
+        self, domain: str, domain_memories: list[dict[str, Any]]
     ) -> list[KnowledgeGap]:
         """Analyze subtopic coverage within a domain"""
         gaps = []
@@ -298,7 +281,7 @@ class KnowledgeGapDetector:
         subtopic_coverage = defaultdict(list)
 
         for memory in domain_memories:
-            content_lower = memory['content'].lower()
+            content_lower = memory["content"].lower()
             for subtopic in expected_subtopics:
                 if subtopic.lower() in content_lower:
                     subtopic_coverage[subtopic].append(memory)
@@ -313,25 +296,21 @@ class KnowledgeGapDetector:
                     area=f"Missing Subtopic: {domain}/{subtopic}",
                     description=f"Limited coverage of {subtopic} within {domain}",
                     severity=severity,
-                    related_memories=[m['id'] for m in subtopic_coverage[subtopic]],
+                    related_memories=[m["id"] for m in subtopic_coverage[subtopic]],
                     suggested_topics=[
                         f"{subtopic} fundamentals",
                         f"{subtopic} in {domain}",
-                        f"Practical {subtopic}"
+                        f"Practical {subtopic}",
                     ],
                     confidence=0.6,
-                    detected_at=datetime.utcnow()
+                    detected_at=datetime.utcnow(),
                 )
                 gaps.append(gap)
 
         return gaps
 
     def _memory_matches_domain(
-        self,
-        content: str,
-        tags: list[str],
-        domain: str,
-        keywords: list[str]
+        self, content: str, tags: list[str], domain: str, keywords: list[str]
     ) -> bool:
         """Check if memory matches a domain"""
         domain_lower = domain.lower()
@@ -366,18 +345,42 @@ class KnowledgeGapDetector:
             "data structures": ["array", "list", "tree", "graph", "hash"],
             "software engineering": ["design pattern", "testing", "agile", "refactor", "solid"],
             "devops": ["ci/cd", "deployment", "monitoring", "automation", "pipeline"],
-            "testing": ["unit test", "integration", "mock", "coverage", "assertion"]
+            "testing": ["unit test", "integration", "mock", "coverage", "assertion"],
         }
 
     def _get_domain_subtopics(self, domain: str) -> list[str]:
         """Get expected subtopics for a domain"""
         subtopics = {
             "programming": ["syntax", "data types", "control flow", "functions", "classes"],
-            "machine learning": ["supervised learning", "unsupervised learning", "deep learning", "feature engineering", "evaluation"],
+            "machine learning": [
+                "supervised learning",
+                "unsupervised learning",
+                "deep learning",
+                "feature engineering",
+                "evaluation",
+            ],
             "databases": ["normalization", "indexing", "transactions", "nosql", "optimization"],
-            "algorithms": ["sorting", "searching", "dynamic programming", "graph algorithms", "greedy"],
-            "system design": ["load balancing", "caching", "message queues", "databases", "monitoring"],
-            "security": ["authentication", "authorization", "cryptography", "vulnerabilities", "best practices"]
+            "algorithms": [
+                "sorting",
+                "searching",
+                "dynamic programming",
+                "graph algorithms",
+                "greedy",
+            ],
+            "system design": [
+                "load balancing",
+                "caching",
+                "message queues",
+                "databases",
+                "monitoring",
+            ],
+            "security": [
+                "authentication",
+                "authorization",
+                "cryptography",
+                "vulnerabilities",
+                "best practices",
+            ],
         }
 
         return subtopics.get(domain, [])
@@ -389,7 +392,7 @@ class KnowledgeGapDetector:
             f"{domain} best practices",
             f"Advanced {domain} concepts",
             f"{domain} tools and frameworks",
-            f"Real-world {domain} examples"
+            f"Real-world {domain} examples",
         ]
 
         # Add domain-specific suggestions
@@ -397,7 +400,7 @@ class KnowledgeGapDetector:
             "programming": ["Design patterns", "Code optimization", "Clean code principles"],
             "machine learning": ["Model selection", "Hyperparameter tuning", "MLOps"],
             "databases": ["Query optimization", "Data modeling", "Replication strategies"],
-            "security": ["Threat modeling", "Security auditing", "Incident response"]
+            "security": ["Threat modeling", "Security auditing", "Incident response"],
         }
 
         if domain in specific_suggestions:
@@ -406,10 +409,7 @@ class KnowledgeGapDetector:
         return base_suggestions[:5]
 
     def _suggest_connections_for_tag(
-        self,
-        tag: str,
-        cooccurrence: dict[str, dict[str, int]],
-        frequency: dict[str, int]
+        self, tag: str, cooccurrence: dict[str, dict[str, int]], frequency: dict[str, int]
     ) -> list[str]:
         """Suggest connections for an isolated tag"""
         suggestions = []
@@ -419,9 +419,9 @@ class KnowledgeGapDetector:
         for other_tag in frequency.keys():
             if other_tag != tag:
                 # Check for semantic similarity
-                if any(word in other_tag for word in tag.split('-')):
+                if any(word in other_tag for word in tag.split("-")):
                     related_tags.append(other_tag)
-                elif any(word in tag for word in other_tag.split('-')):
+                elif any(word in tag for word in other_tag.split("-")):
                     related_tags.append(other_tag)
 
         # Create suggestions
@@ -429,18 +429,18 @@ class KnowledgeGapDetector:
             suggestions.append(f"Connect {tag} with {related}")
 
         # General suggestions
-        suggestions.extend([
-            f"Practical applications of {tag}",
-            f"{tag} in context",
-            f"Integrate {tag} with existing knowledge"
-        ])
+        suggestions.extend(
+            [
+                f"Practical applications of {tag}",
+                f"{tag} in context",
+                f"Integrate {tag} with existing knowledge",
+            ]
+        )
 
         return suggestions[:5]
 
     def _filter_and_deduplicate_gaps(
-        self,
-        gaps: list[KnowledgeGap],
-        min_severity: float
+        self, gaps: list[KnowledgeGap], min_severity: float
     ) -> list[KnowledgeGap]:
         """Filter gaps by severity and remove duplicates"""
         # Filter by severity
@@ -452,17 +452,14 @@ class KnowledgeGapDetector:
 
         for gap in filtered:
             # Simple deduplication by area prefix
-            area_key = gap.area.split(':')[0]
+            area_key = gap.area.split(":")[0]
 
             if area_key not in seen_areas:
                 unique_gaps.append(gap)
                 seen_areas.add(area_key)
             else:
                 # Keep if significantly different severity
-                existing = next(
-                    (g for g in unique_gaps if g.area.startswith(area_key)),
-                    None
-                )
+                existing = next((g for g in unique_gaps if g.area.startswith(area_key)), None)
                 if existing and gap.severity > existing.severity * 1.2:
                     unique_gaps.remove(existing)
                     unique_gaps.append(gap)

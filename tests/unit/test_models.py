@@ -17,10 +17,7 @@ class TestMemoryModel:
 
     def test_memory_creation_basic(self):
         """Test basic memory creation"""
-        memory = Memory(
-            content="Test memory content",
-            memory_type=MemoryType.FACTUAL
-        )
+        memory = Memory(content="Test memory content", memory_type=MemoryType.FACTUAL)
         assert memory.content == "Test memory content"
         assert memory.memory_type == MemoryType.FACTUAL
         assert memory.importance_score == 0.5
@@ -43,7 +40,7 @@ class TestMemoryModel:
             metadata={"source": "test"},
             embedding=[0.1, 0.2, 0.3],
             access_count=5,
-            last_accessed=now
+            last_accessed=now,
         )
 
         assert memory.id == "test-id"
@@ -62,9 +59,7 @@ class TestMemoryModel:
     def test_memory_create_classmethod(self):
         """Test Memory.create class method"""
         memory = Memory.create(
-            content="Created memory",
-            memory_type=MemoryType.EPISODIC,
-            user_id="user-456"
+            content="Created memory", memory_type=MemoryType.EPISODIC, user_id="user-456"
         )
 
         assert memory.content == "Created memory"
@@ -96,7 +91,7 @@ class TestMemoryModel:
             content="Test content",
             memory_type=MemoryType.FACTUAL,
             tags=["test"],
-            metadata={"key": "value"}
+            metadata={"key": "value"},
         )
 
         data = memory.model_dump()
@@ -113,7 +108,7 @@ class TestMemoryModel:
             "memory_type": "semantic",
             "importance_score": 0.9,
             "tags": ["deserialized"],
-            "metadata": {"test": True}
+            "metadata": {"test": True},
         }
 
         memory = Memory(**data)
@@ -136,7 +131,7 @@ class TestMemoryMetrics:
             average_importance=0.65,
             recent_memories=25,
             total_access_count=500,
-            last_updated=now
+            last_updated=now,
         )
 
         assert metrics.total_memories == 100
@@ -155,7 +150,7 @@ class TestMemoryMetrics:
             average_importance=0.5,
             recent_memories=0,
             total_access_count=0,
-            last_updated=now
+            last_updated=now,
         )
 
         data = metrics.model_dump()

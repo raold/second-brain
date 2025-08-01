@@ -1,3 +1,8 @@
+import re
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Fuzzy Match Detector
 
@@ -7,9 +12,6 @@ Handles minor variations, typos, and formatting differences.
 
 import difflib
 from collections import defaultdict
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -80,7 +82,9 @@ class FuzzyMatchDetector(BaseDuplicateDetector):
             return []
 
         # Find potential duplicate pairs using similarity threshold
-        duplicate_pairs = await self._find_similar_pairs(normalized_memories, config.fuzzy_threshold)
+        duplicate_pairs = await self._find_similar_pairs(
+            normalized_memories, config.fuzzy_threshold
+        )
 
         if not duplicate_pairs:
             return []
@@ -139,7 +143,9 @@ class FuzzyMatchDetector(BaseDuplicateDetector):
                 # Add to pairs if above threshold
                 if similarity >= threshold:
                     similar_pairs.append((mem1, mem2, similarity))
-                    logger.debug(f"Found fuzzy match: {mem1_id} <-> {mem2_id} (similarity: {similarity:.3f})")
+                    logger.debug(
+                        f"Found fuzzy match: {mem1_id} <-> {mem2_id} (similarity: {similarity:.3f})"
+                    )
 
         return similar_pairs
 
@@ -198,7 +204,9 @@ class FuzzyMatchDetector(BaseDuplicateDetector):
 
             if len(group_memory_ids) >= 2:
                 # Create duplicate group
-                group = self._create_duplicate_group(group_memory_ids, pair_similarities, pairs, config)
+                group = self._create_duplicate_group(
+                    group_memory_ids, pair_similarities, pairs, config
+                )
                 if group:
                     duplicate_groups.append(group)
                     self._record_duplicate_found()
@@ -260,7 +268,9 @@ class FuzzyMatchDetector(BaseDuplicateDetector):
                     # Calculate composite similarity
                     content_weight = config.content_weight
                     metadata_weight = config.metadata_weight
-                    overall_similarity = content_weight * similarity + metadata_weight * metadata_similarity
+                    overall_similarity = (
+                        content_weight * similarity + metadata_weight * metadata_similarity
+                    )
 
                     similarity_score = SimilarityScore(
                         memory_id_1=id1,
@@ -270,7 +280,9 @@ class FuzzyMatchDetector(BaseDuplicateDetector):
                         structural_similarity=similarity,  # Use content similarity as proxy
                         overall_similarity=overall_similarity,
                         method_used=SimilarityMethod.FUZZY_MATCH,
-                        confidence=min(similarity, 0.95),  # Fuzzy matches have slightly lower confidence
+                        confidence=min(
+                            similarity, 0.95
+                        ),  # Fuzzy matches have slightly lower confidence
                         reasoning=f"Fuzzy string match (similarity: {similarity:.3f})",
                     )
 
@@ -376,7 +388,13 @@ class FuzzyStringCalculator:
     """Utility class for calculating fuzzy string similarities."""
 
     def calculate_similarity(
-        self, text1: str, text2: str, tokens1: list[str], tokens2: list[str], fingerprint1: str, fingerprint2: str
+        self,
+        text1: str,
+        text2: str,
+        tokens1: list[str],
+        tokens2: list[str],
+        fingerprint1: str,
+        fingerprint2: str,
     ) -> float:
         """
         Calculate fuzzy similarity between two texts using multiple methods.
@@ -397,7 +415,9 @@ class FuzzyStringCalculator:
 
         # Quick fingerprint pre-filter
         if len(fingerprint1) > 10 and len(fingerprint2) > 10:
-            fingerprint_similarity = difflib.SequenceMatcher(None, fingerprint1, fingerprint2).ratio()
+            fingerprint_similarity = difflib.SequenceMatcher(
+                None, fingerprint1, fingerprint2
+            ).ratio()
 
             # Skip expensive calculations if fingerprints are too different
             if fingerprint_similarity < 0.3:
@@ -430,7 +450,9 @@ class FuzzyStringCalculator:
             weights = [0.4, 0.3, 0.2, 0.1][: len(similarities)]  # Prefer sequence matcher
             weights = weights[: len(similarities)]
             weight_sum = sum(weights)
-            weighted_sum = sum(sim * weight for sim, weight in zip(similarities, weights, strict=False))
+            weighted_sum = sum(
+                sim * weight for sim, weight in zip(similarities, weights, strict=False)
+            )
             return weighted_sum / weight_sum if weight_sum > 0 else 0.0
 
         return 0.0

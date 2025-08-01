@@ -1,11 +1,13 @@
+
+from fastapi import Depends
+
+from app.utils.logging_config import get_logger
+
 """
 Authentication dependencies for FastAPI routes
 """
 
-
-from fastapi import Depends, Header
-
-from app.utils.logging_config import get_logger
+from fastapi import Header
 
 logger = get_logger(__name__)
 
@@ -39,11 +41,7 @@ async def get_current_user(api_key: str = Depends(verify_api_key)) -> dict[str, 
         User information dict
     """
     # Stub implementation - return default user
-    return {
-        "user_id": "default-user",
-        "username": "Default User",
-        "email": "user@example.com"
-    }
+    return {"user_id": "default-user", "username": "Default User", "email": "user@example.com"}
 
 
 async def get_db_instance():

@@ -1,3 +1,11 @@
+import hashlib
+import json
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+from fastapi import Path
+
 #!/usr/bin/env python3
 """
 Session State Manager - Persistent Context Continuity System
@@ -6,15 +14,11 @@ across sessions, interruptions, and devices for seamless AI pair programming
 """
 
 import gzip
-import hashlib
-import json
 import uuid
 from collections import deque
-from dataclasses import asdict, dataclass
-from datetime import datetime
+from dataclasses import asdict
 from enum import Enum
 from pathlib import Path
-from typing import Any
 
 from app.conversation_processor import get_conversation_processor
 
@@ -198,7 +202,9 @@ class SessionManager:
 
             print(f"Resumed session: {session_id}")
             print(f"Current focus: {self.current_session.project_momentum.current_focus}")
-            print(f"Conversation history: {len(self.current_session.conversation_history)} messages")
+            print(
+                f"Conversation history: {len(self.current_session.conversation_history)} messages"
+            )
             print(f"Productivity: {self.current_session.productivity_metrics}")
 
             return True
@@ -478,13 +484,17 @@ TO RESUME SEAMLESSLY:
         if conv_message.detected_features:
             # Add features to roadmap
             for feature in conv_message.detected_features:
-                milestone_id = dashboard.add_new_feature_context(feature, f"Idea ingested from {source}: {idea}")
+                milestone_id = dashboard.add_new_feature_context(
+                    feature, f"Idea ingested from {source}: {idea}"
+                )
                 result["auto_updates"][feature] = milestone_id
 
         # Update session momentum
         if self.current_session:
             momentum = self.current_session.project_momentum
-            momentum.next_logical_steps.append(f"Review and prioritize idea: {conv_message.semantic_summary}")
+            momentum.next_logical_steps.append(
+                f"Review and prioritize idea: {conv_message.semantic_summary}"
+            )
             momentum.current_focus = f"Processing remote idea: {conv_message.semantic_summary}"
 
         # Generate updated dashboard state
@@ -512,10 +522,10 @@ TO RESUME SEAMLESSLY:
             session_dict = asdict(self.current_session)
 
             # Convert enum to string value for JSON serialization
-            if isinstance(session_dict.get('state'), SessionState):
-                session_dict['state'] = session_dict['state'].value
-            elif hasattr(session_dict.get('state'), 'value'):
-                session_dict['state'] = session_dict['state'].value
+            if isinstance(session_dict.get("state"), SessionState):
+                session_dict["state"] = session_dict["state"].value
+            elif hasattr(session_dict.get("state"), "value"):
+                session_dict["state"] = session_dict["state"].value
 
             # Save compressed session file
             session_file = self.sessions_dir / f"{self.current_session.session_id}.json.gz"
@@ -545,7 +555,7 @@ TO RESUME SEAMLESSLY:
             return obj.value
         elif isinstance(obj, datetime):
             return obj.isoformat()
-        elif hasattr(obj, '__dict__'):
+        elif hasattr(obj, "__dict__"):
             return obj.__dict__
         else:
             return str(obj)
@@ -580,20 +590,22 @@ TO RESUME SEAMLESSLY:
     def _deserialize_session_data(self, session_data: dict) -> dict:
         """Convert serialized session data back to proper types"""
         # Convert project_momentum dict back to ProjectMomentum object
-        if isinstance(session_data.get('project_momentum'), dict):
-            session_data['project_momentum'] = ProjectMomentum(**session_data['project_momentum'])
+        if isinstance(session_data.get("project_momentum"), dict):
+            session_data["project_momentum"] = ProjectMomentum(**session_data["project_momentum"])
 
         # Convert state string back to enum
-        if isinstance(session_data.get('state'), str):
+        if isinstance(session_data.get("state"), str):
             try:
-                session_data['state'] = SessionState(session_data['state'])
+                session_data["state"] = SessionState(session_data["state"])
             except ValueError:
-                session_data['state'] = SessionState.ACTIVE  # Default fallback
+                session_data["state"] = SessionState.ACTIVE  # Default fallback
 
         # Convert conversation_history dicts back to ConversationMessage objects
-        if 'conversation_history' in session_data and isinstance(session_data['conversation_history'], list):
+        if "conversation_history" in session_data and isinstance(
+            session_data["conversation_history"], list
+        ):
             converted_messages = []
-            for msg in session_data['conversation_history']:
+            for msg in session_data["conversation_history"]:
                 if isinstance(msg, dict):
                     try:
                         converted_messages.append(ConversationMessage(**msg))
@@ -603,7 +615,7 @@ TO RESUME SEAMLESSLY:
                         continue
                 else:
                     converted_messages.append(msg)
-            session_data['conversation_history'] = converted_messages
+            session_data["conversation_history"] = converted_messages
 
         return session_data
 
@@ -679,7 +691,9 @@ TO RESUME SEAMLESSLY:
 
         # Update technical context
         dashboard_summary = {}
-        momentum.technical_context = f"Dashboard state at pause: {dashboard_summary['overall_health']['status']}"
+        momentum.technical_context = (
+            f"Dashboard state at pause: {dashboard_summary['overall_health']['status']}"
+        )
 
     def get_session_analytics(self) -> dict[str, Any]:
         """Get comprehensive session analytics"""
@@ -693,9 +707,13 @@ TO RESUME SEAMLESSLY:
             "productivity_metrics": self.current_session.productivity_metrics,
             "conversation_summary": {
                 "total_messages": len(self.current_session.conversation_history),
-                "speakers": list(set(msg.speaker for msg in self.current_session.conversation_history)),
+                "speakers": list(
+                    set(msg.speaker for msg in self.current_session.conversation_history)
+                ),
                 "emotional_tone": self.get_recent_emotional_tone(),
-                "context_types": list(set(msg.context_type for msg in self.current_session.conversation_history)),
+                "context_types": list(
+                    set(msg.context_type for msg in self.current_session.conversation_history)
+                ),
             },
             "momentum": asdict(self.current_session.project_momentum),
             "sync_status": {
@@ -752,10 +770,14 @@ if __name__ == "__main__":
     session_manager = SessionManager()
 
     # Simulate some conversation
-    session_manager.process_conversation_message("CTO", "lets talk about automated importance scoring", "planning")
+    session_manager.process_conversation_message(
+        "CTO", "lets talk about automated importance scoring", "planning"
+    )
 
     session_manager.process_conversation_message(
-        "Principal Engineer", "I'll design the importance algorithm with machine learning", "implementation"
+        "Principal Engineer",
+        "I'll design the importance algorithm with machine learning",
+        "implementation",
     )
 
     # Test idea ingestion

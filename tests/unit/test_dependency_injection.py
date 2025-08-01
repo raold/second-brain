@@ -5,6 +5,7 @@ Test the standardized dependency injection system
 from unittest.mock import MagicMock
 
 import pytest
+
 pytestmark = pytest.mark.unit
 
 from app.core.dependencies import (
@@ -104,6 +105,7 @@ class TestDependencyInjection:
         # Test factory registration
         def mock_factory():
             return MagicMock()
+
         container.register_factory("test_service", mock_factory)
 
         # Test service retrieval
@@ -137,10 +139,10 @@ class TestServiceFunctionality:
         service = get_health_service()
 
         # Should have expected methods
-        assert hasattr(service, 'get_health_status')
-        assert hasattr(service, 'get_system_status')
-        assert hasattr(service, 'run_diagnostics')
-        assert hasattr(service, 'get_performance_metrics')
+        assert hasattr(service, "get_health_status")
+        assert hasattr(service, "get_system_status")
+        assert hasattr(service, "run_diagnostics")
+        assert hasattr(service, "get_performance_metrics")
 
         # Methods should be callable
         assert callable(service.get_health_status)
@@ -153,11 +155,11 @@ class TestServiceFunctionality:
         service = get_memory_service()
 
         # Should have expected methods
-        assert hasattr(service, 'find_all')
-        assert hasattr(service, 'save')
-        assert hasattr(service, 'search')
-        assert hasattr(service, 'get_memory')
-        assert hasattr(service, 'delete')
+        assert hasattr(service, "find_all")
+        assert hasattr(service, "save")
+        assert hasattr(service, "search")
+        assert hasattr(service, "get_memory")
+        assert hasattr(service, "delete")
 
         # Methods should be callable
         assert callable(service.find_all)
@@ -171,12 +173,12 @@ class TestServiceFunctionality:
         service = get_session_service()
 
         # Should have expected methods
-        assert hasattr(service, 'create_session')
-        assert hasattr(service, 'get_session')
-        assert hasattr(service, 'get_session_status')
-        assert hasattr(service, 'ingest_idea')
-        assert hasattr(service, 'pause_session')
-        assert hasattr(service, 'resume_session')
+        assert hasattr(service, "create_session")
+        assert hasattr(service, "get_session")
+        assert hasattr(service, "get_session_status")
+        assert hasattr(service, "ingest_idea")
+        assert hasattr(service, "pause_session")
+        assert hasattr(service, "resume_session")
 
         # Methods should be callable
         assert callable(service.create_session)

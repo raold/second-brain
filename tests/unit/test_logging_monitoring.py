@@ -7,6 +7,7 @@ import time
 from unittest.mock import Mock
 
 import pytest
+
 pytestmark = pytest.mark.unit
 
 from app.core.logging import AuditLogger, LogConfig, PerformanceLogger, StructuredLogger, get_logger
@@ -72,7 +73,7 @@ class TestLogging:
             action="create",
             result="success",
             user_id="user-123",
-            details={"memory_id": "mem-456"}
+            details={"memory_id": "mem-456"},
         )
 
         # No exception should be raised
@@ -99,7 +100,7 @@ class TestMonitoring:
             name="test_counter",
             type=MetricType.COUNTER,
             description="Test counter",
-            labels=["status"]
+            labels=["status"],
         )
         metric = collector.register_custom_metric(definition)
 
@@ -116,7 +117,7 @@ class TestMonitoring:
                 name="test_ops_counter",
                 type=MetricType.COUNTER,
                 description="Test operations",
-                labels=["operation"]
+                labels=["operation"],
             )
         )
 
@@ -125,7 +126,7 @@ class TestMonitoring:
                 name="test_gauge",
                 type=MetricType.GAUGE,
                 description="Test gauge",
-                labels=["component"]
+                labels=["component"],
             )
         )
 
@@ -134,7 +135,7 @@ class TestMonitoring:
                 name="test_histogram",
                 type=MetricType.HISTOGRAM,
                 description="Test histogram",
-                labels=["endpoint"]
+                labels=["endpoint"],
             )
         )
 
@@ -290,7 +291,7 @@ class TestMonitoringDecorator:
                 name="operation_duration",
                 type=MetricType.HISTOGRAM,
                 description="Operation duration",
-                labels=["operation", "status"]
+                labels=["operation", "status"],
             )
         )
 
@@ -315,7 +316,7 @@ class TestMonitoringDecorator:
                     name="operation_duration",
                     type=MetricType.HISTOGRAM,
                     description="Operation duration",
-                    labels=["operation", "status"]
+                    labels=["operation", "status"],
                 )
             )
 
@@ -325,7 +326,7 @@ class TestMonitoringDecorator:
                     name="operation_errors",
                     type=MetricType.COUNTER,
                     description="Operation errors",
-                    labels=["operation", "error_type"]
+                    labels=["operation", "error_type"],
                 )
             )
 

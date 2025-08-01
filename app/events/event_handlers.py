@@ -1,3 +1,9 @@
+from datetime import datetime
+from typing import Any
+
+from app.events.domain_events import ErrorOccurredEvent, SearchPerformedEvent, SystemHealthEvent
+from app.utils.logging_config import get_logger
+
 """
 Concrete event handlers for various domain events.
 
@@ -5,12 +11,9 @@ These handlers implement cross-cutting concerns like analytics,
 notifications, and system monitoring triggered by domain events.
 """
 
-from datetime import datetime
-from typing import Any
 
 from app.events.domain_events import DomainEvent, MemoryAccessedEvent, MemoryCreatedEvent
 from app.events.event_bus import EventHandler
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -64,7 +67,9 @@ class ImportanceTrackingHandler(EventHandler):
 
         # Limit history size
         if len(self.access_patterns[memory_id]) > self.max_access_history:
-            self.access_patterns[memory_id] = self.access_patterns[memory_id][-self.max_access_history:]
+            self.access_patterns[memory_id] = self.access_patterns[memory_id][
+                -self.max_access_history :
+            ]
 
         # Calculate new importance score
         new_score = await self._calculate_importance_score(memory_id, event.access_type)
@@ -77,7 +82,9 @@ class ImportanceTrackingHandler(EventHandler):
             if self.memory_repository:
                 try:
                     await self.memory_repository.update_importance_score(memory_id, new_score)
-                    logger.debug(f"Updated importance for memory {memory_id}: {current_score:.3f} -> {new_score:.3f}")
+                    logger.debug(
+                        f"Updated importance for memory {memory_id}: {current_score:.3f} -> {new_score:.3f}"
+                    )
                 except Exception as e:
                     logger.error(f"Failed to update importance for memory {memory_id}: {e}")
 
@@ -123,18 +130,14 @@ class ImportanceTrackingHandler(EventHandler):
         recency_bonus = max(0, self.recency_bonus * (1 - hours_since_access / 168))  # 7 days decay
 
         # Access type weights
-        type_weights = {
-            'view': 1.0,
-            'search_result': 0.8,
-            'related_fetch': 0.6
-        }
+        type_weights = {"view": 1.0, "search_result": 0.8, "related_fetch": 0.6}
         access_weight = type_weights.get(access_type, 0.5)
 
         # Calculate boost
         importance_boost = (
-            (access_frequency * 0.1) +  # Frequency component
-            recency_bonus +             # Recency component
-            (access_weight * 0.05)      # Access type component
+            (access_frequency * 0.1)  # Frequency component
+            + recency_bonus  # Recency component
+            + (access_weight * 0.05)  # Access type component
         )
 
         # Apply boost with ceiling
@@ -152,12 +155,12 @@ class SearchAnalyticsHandler(EventHandler):
 
     def __init__(self):
         self.search_stats = {
-            'total_searches': 0,
-            'successful_searches': 0,
-            'empty_result_searches': 0,
-            'slow_searches': 0,
-            'popular_terms': {},
-            'performance_samples': []
+            "total_searches": 0,
+            "successful_searches": 0,
+            "empty_result_searches": 0,
+            "slow_searches": 0,
+            "popular_terms": {},
+            "performance_samples": [],
         }
         self.recent_searches: list = []
         self.max_recent_searches = 1000
@@ -174,92 +177,96 @@ class SearchAnalyticsHandler(EventHandler):
     async def _handle_search_performed(self, event: SearchPerformedEvent) -> None:
         """Analyze search performance and patterns."""
         # Update basic stats
-        self.search_stats['total_searches'] += 1
+        self.search_stats["total_searches"] += 1
 
         if event.results_count > 0:
-            self.search_stats['successful_searches'] += 1
+            self.search_stats["successful_searches"] += 1
         else:
-            self.search_stats['empty_result_searches'] += 1
+            self.search_stats["empty_result_searches"] += 1
 
         if event.execution_time_ms > 1000:  # > 1 second
-            self.search_stats['slow_searches'] += 1
+            self.search_stats["slow_searches"] += 1
 
         # Track popular search terms
         query_lower = event.search_query.lower().strip()
         if len(query_lower) > 2:  # Ignore very short queries
-            self.search_stats['popular_terms'][query_lower] = (
-                self.search_stats['popular_terms'].get(query_lower, 0) + 1
+            self.search_stats["popular_terms"][query_lower] = (
+                self.search_stats["popular_terms"].get(query_lower, 0) + 1
             )
 
         # Sample performance data
-        self.search_stats['performance_samples'].append({
-            'timestamp': event.occurred_at,
-            'execution_time_ms': event.execution_time_ms,
-            'results_count': event.results_count,
-            'query_length': len(event.search_query)
-        })
+        self.search_stats["performance_samples"].append(
+            {
+                "timestamp": event.occurred_at,
+                "execution_time_ms": event.execution_time_ms,
+                "results_count": event.results_count,
+                "query_length": len(event.search_query),
+            }
+        )
 
         # Limit performance samples
-        if len(self.search_stats['performance_samples']) > 1000:
-            self.search_stats['performance_samples'] = self.search_stats['performance_samples'][-1000:]
+        if len(self.search_stats["performance_samples"]) > 1000:
+            self.search_stats["performance_samples"] = self.search_stats["performance_samples"][
+                -1000:
+            ]
 
         # Track recent searches for pattern analysis
-        self.recent_searches.append({
-            'query': event.search_query,
-            'timestamp': event.occurred_at,
-            'user_id': event.user_id,
-            'results_count': event.results_count
-        })
+        self.recent_searches.append(
+            {
+                "query": event.search_query,
+                "timestamp": event.occurred_at,
+                "user_id": event.user_id,
+                "results_count": event.results_count,
+            }
+        )
 
         if len(self.recent_searches) > self.max_recent_searches:
-            self.recent_searches = self.recent_searches[-self.max_recent_searches:]
+            self.recent_searches = self.recent_searches[-self.max_recent_searches :]
 
         # Log analytics
         logger.info(
             "Search analytics",
             extra={
-                'query': event.search_query,
-                'results_count': event.results_count,
-                'execution_time_ms': event.execution_time_ms,
-                'user_id': event.user_id,
-                'search_type': event.search_type
-            }
+                "query": event.search_query,
+                "results_count": event.results_count,
+                "execution_time_ms": event.execution_time_ms,
+                "user_id": event.user_id,
+                "search_type": event.search_type,
+            },
         )
 
     def get_analytics_summary(self) -> dict[str, Any]:
         """Get search analytics summary."""
-        total = self.search_stats['total_searches']
+        total = self.search_stats["total_searches"]
         if total == 0:
-            return {'message': 'No search data available'}
+            return {"message": "No search data available"}
 
-        success_rate = self.search_stats['successful_searches'] / total
-        empty_rate = self.search_stats['empty_result_searches'] / total
-        slow_rate = self.search_stats['slow_searches'] / total
+        success_rate = self.search_stats["successful_searches"] / total
+        empty_rate = self.search_stats["empty_result_searches"] / total
+        slow_rate = self.search_stats["slow_searches"] / total
 
         # Top search terms
         top_terms = sorted(
-            self.search_stats['popular_terms'].items(),
-            key=lambda x: x[1],
-            reverse=True
+            self.search_stats["popular_terms"].items(), key=lambda x: x[1], reverse=True
         )[:10]
 
         # Average performance
-        perf_samples = self.search_stats['performance_samples']
+        perf_samples = self.search_stats["performance_samples"]
         if perf_samples:
-            avg_time = sum(s['execution_time_ms'] for s in perf_samples) / len(perf_samples)
-            avg_results = sum(s['results_count'] for s in perf_samples) / len(perf_samples)
+            avg_time = sum(s["execution_time_ms"] for s in perf_samples) / len(perf_samples)
+            avg_results = sum(s["results_count"] for s in perf_samples) / len(perf_samples)
         else:
             avg_time = avg_results = 0
 
         return {
-            'total_searches': total,
-            'success_rate': success_rate,
-            'empty_result_rate': empty_rate,
-            'slow_search_rate': slow_rate,
-            'avg_execution_time_ms': avg_time,
-            'avg_results_count': avg_results,
-            'top_search_terms': top_terms,
-            'recent_search_count': len(self.recent_searches)
+            "total_searches": total,
+            "success_rate": success_rate,
+            "empty_result_rate": empty_rate,
+            "slow_search_rate": slow_rate,
+            "avg_execution_time_ms": avg_time,
+            "avg_results_count": avg_results,
+            "top_search_terms": top_terms,
+            "recent_search_count": len(self.recent_searches),
         }
 
 
@@ -273,9 +280,9 @@ class SystemMonitoringHandler(EventHandler):
     def __init__(self):
         self.health_history: dict[str, list] = {}
         self.alert_thresholds = {
-            'error_rate': 0.05,  # 5% error rate threshold
-            'response_time': 2000,  # 2 seconds
-            'memory_usage': 0.85  # 85% memory usage
+            "error_rate": 0.05,  # 5% error rate threshold
+            "response_time": 2000,  # 2 seconds
+            "memory_usage": 0.85,  # 85% memory usage
         }
         self.max_history_size = 100
 
@@ -285,7 +292,7 @@ class SystemMonitoringHandler(EventHandler):
             await self._handle_system_health(event)
         elif isinstance(event, ErrorOccurredEvent):
             await self._handle_error_occurred(event)
-        elif hasattr(event, 'execution_time_ms'):
+        elif hasattr(event, "execution_time_ms"):
             await self._handle_performance_event(event)
 
     async def _handle_system_health(self, event: SystemHealthEvent) -> None:
@@ -296,30 +303,32 @@ class SystemMonitoringHandler(EventHandler):
             self.health_history[component] = []
 
         health_record = {
-            'timestamp': event.occurred_at,
-            'status': event.health_status,
-            'metrics': event.metrics,
-            'previous_status': event.previous_status
+            "timestamp": event.occurred_at,
+            "status": event.health_status,
+            "metrics": event.metrics,
+            "previous_status": event.previous_status,
         }
 
         self.health_history[component].append(health_record)
 
         # Limit history size
         if len(self.health_history[component]) > self.max_history_size:
-            self.health_history[component] = self.health_history[component][-self.max_history_size:]
+            self.health_history[component] = self.health_history[component][
+                -self.max_history_size :
+            ]
 
         # Check for alerts
-        if event.health_status in ['degraded', 'unhealthy']:
+        if event.health_status in ["degraded", "unhealthy"]:
             await self._trigger_health_alert(event)
 
         logger.info(
             f"System health update: {component} -> {event.health_status}",
             extra={
-                'component': component,
-                'status': event.health_status,
-                'previous_status': event.previous_status,
-                'metrics': event.metrics
-            }
+                "component": component,
+                "status": event.health_status,
+                "previous_status": event.previous_status,
+                "metrics": event.metrics,
+            },
         )
 
     async def _handle_error_occurred(self, event: ErrorOccurredEvent) -> None:
@@ -327,32 +336,32 @@ class SystemMonitoringHandler(EventHandler):
         logger.error(
             f"System error in {event.component}: {event.error_message}",
             extra={
-                'component': event.component,
-                'error_type': event.error_type,
-                'user_id': event.user_id,
-                'request_id': event.request_id,
-                'severity': event.metadata.get('error_severity')
-            }
+                "component": event.component,
+                "error_type": event.error_type,
+                "user_id": event.user_id,
+                "request_id": event.request_id,
+                "severity": event.metadata.get("error_severity"),
+            },
         )
 
         # Could trigger alerts based on error frequency/severity
-        if event.metadata.get('error_severity') == 'critical':
+        if event.metadata.get("error_severity") == "critical":
             await self._trigger_error_alert(event)
 
     async def _handle_performance_event(self, event: DomainEvent) -> None:
         """Monitor performance metrics from events."""
-        if hasattr(event, 'execution_time_ms'):
+        if hasattr(event, "execution_time_ms"):
             execution_time = event.execution_time_ms
 
             # Log slow operations
-            if execution_time > self.alert_thresholds['response_time']:
+            if execution_time > self.alert_thresholds["response_time"]:
                 logger.warning(
                     f"Slow operation detected: {event.event_type} took {execution_time:.1f}ms",
                     extra={
-                        'event_type': event.event_type,
-                        'execution_time_ms': execution_time,
-                        'event_id': event.event_id
-                    }
+                        "event_type": event.event_type,
+                        "execution_time_ms": execution_time,
+                        "event_id": event.event_id,
+                    },
                 )
 
     async def _trigger_health_alert(self, event: SystemHealthEvent) -> None:
@@ -361,11 +370,11 @@ class SystemMonitoringHandler(EventHandler):
         logger.warning(
             f"HEALTH ALERT: {event.component} status changed to {event.health_status}",
             extra={
-                'alert_type': 'health',
-                'component': event.component,
-                'status': event.health_status,
-                'metrics': event.metrics
-            }
+                "alert_type": "health",
+                "component": event.component,
+                "status": event.health_status,
+                "metrics": event.metrics,
+            },
         )
 
     async def _trigger_error_alert(self, event: ErrorOccurredEvent) -> None:
@@ -373,11 +382,11 @@ class SystemMonitoringHandler(EventHandler):
         logger.critical(
             f"CRITICAL ERROR ALERT: {event.error_type} in {event.component}",
             extra={
-                'alert_type': 'critical_error',
-                'component': event.component,
-                'error_type': event.error_type,
-                'error_message': event.error_message
-            }
+                "alert_type": "critical_error",
+                "component": event.component,
+                "error_type": event.error_type,
+                "error_message": event.error_message,
+            },
         )
 
     def get_health_summary(self) -> dict[str, Any]:
@@ -388,10 +397,12 @@ class SystemMonitoringHandler(EventHandler):
             if history:
                 latest = history[-1]
                 summary[component] = {
-                    'current_status': latest['status'],
-                    'last_update': latest['timestamp'],
-                    'recent_changes': len([h for h in history[-10:] if h['status'] != latest['status']]),
-                    'metrics': latest.get('metrics', {})
+                    "current_status": latest["status"],
+                    "last_update": latest["timestamp"],
+                    "recent_changes": len(
+                        [h for h in history[-10:] if h["status"] != latest["status"]]
+                    ),
+                    "metrics": latest.get("metrics", {}),
                 }
 
         return summary
@@ -421,9 +432,9 @@ class NotificationHandler(EventHandler):
         """Determine if event should trigger a notification."""
         # Define notification triggers
         notification_events = {
-            ImportanceUpdatedEvent: lambda e: e.metadata.get('significant_change', False),
-            SystemHealthEvent: lambda e: e.health_status in ['degraded', 'unhealthy'],
-            ErrorOccurredEvent: lambda e: e.metadata.get('error_severity') in ['critical', 'high']
+            ImportanceUpdatedEvent: lambda e: e.metadata.get("significant_change", False),
+            SystemHealthEvent: lambda e: e.health_status in ["degraded", "unhealthy"],
+            ErrorOccurredEvent: lambda e: e.metadata.get("error_severity") in ["critical", "high"],
         }
 
         event_type = type(event)
@@ -436,20 +447,20 @@ class NotificationHandler(EventHandler):
         """Create notification from event."""
         notification_templates = {
             ImportanceUpdatedEvent: {
-                'title': 'Memory Importance Updated',
-                'message': 'Memory importance changed significantly',
-                'category': 'memory_update'
+                "title": "Memory Importance Updated",
+                "message": "Memory importance changed significantly",
+                "category": "memory_update",
             },
             SystemHealthEvent: {
-                'title': 'System Health Alert',
-                'message': f'Component {getattr(event, "component", "unknown")} is {getattr(event, "health_status", "unknown")}',
-                'category': 'system_health'
+                "title": "System Health Alert",
+                "message": f'Component {getattr(event, "component", "unknown")} is {getattr(event, "health_status", "unknown")}',
+                "category": "system_health",
             },
             ErrorOccurredEvent: {
-                'title': 'System Error',
-                'message': f'Critical error in {getattr(event, "component", "unknown")}',
-                'category': 'system_error'
-            }
+                "title": "System Error",
+                "message": f'Critical error in {getattr(event, "component", "unknown")}',
+                "category": "system_error",
+            },
         }
 
         template = notification_templates.get(type(event))
@@ -457,14 +468,14 @@ class NotificationHandler(EventHandler):
             return None
 
         return {
-            'id': f"notif_{event.event_id}",
-            'event_id': event.event_id,
-            'user_id': getattr(event, 'user_id', None),
-            'title': template['title'],
-            'message': template['message'],
-            'category': template['category'],
-            'created_at': event.occurred_at,
-            'read': False
+            "id": f"notif_{event.event_id}",
+            "event_id": event.event_id,
+            "user_id": getattr(event, "user_id", None),
+            "title": template["title"],
+            "message": template["message"],
+            "category": template["category"],
+            "created_at": event.occurred_at,
+            "read": False,
         }
 
     async def _send_notification(self, notification: dict[str, Any]) -> None:
@@ -477,21 +488,22 @@ class NotificationHandler(EventHandler):
         logger.info(
             f"Notification: {notification['title']}",
             extra={
-                'notification_id': notification['id'],
-                'user_id': notification.get('user_id'),
-                'category': notification['category'],
-                'message': notification['message']
-            }
+                "notification_id": notification["id"],
+                "user_id": notification.get("user_id"),
+                "category": notification["category"],
+                "message": notification["message"],
+            },
         )
 
     def get_notifications(self, user_id: str, limit: int = 10) -> list:
         """Get recent notifications for a user."""
         user_notifications = [
-            n for n in self.notification_queue
-            if n.get('user_id') == user_id or n.get('user_id') is None
+            n
+            for n in self.notification_queue
+            if n.get("user_id") == user_id or n.get("user_id") is None
         ]
 
         # Sort by creation time, most recent first
-        user_notifications.sort(key=lambda x: x['created_at'], reverse=True)
+        user_notifications.sort(key=lambda x: x["created_at"], reverse=True)
 
         return user_notifications[:limit]

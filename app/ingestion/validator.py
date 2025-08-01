@@ -1,21 +1,24 @@
+import re
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Advanced validation framework for ingestion pipeline
 """
 
 from collections import defaultdict
 from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 
 class ValidationLevel(str, Enum):
     """Validation severity levels"""
+
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
@@ -24,6 +27,7 @@ class ValidationLevel(str, Enum):
 
 class ValidationType(str, Enum):
     """Types of validation"""
+
     SCHEMA = "schema"
     CONTENT = "content"
     EXTRACTION = "extraction"
@@ -35,6 +39,7 @@ class ValidationType(str, Enum):
 @dataclass
 class ValidationIssue:
     """Represents a validation issue"""
+
     level: ValidationLevel
     type: ValidationType
     field: str
@@ -46,6 +51,7 @@ class ValidationIssue:
 @dataclass
 class ValidationResult:
     """Result of validation"""
+
     is_valid: bool
     issues: list[ValidationIssue]
     score: float  # 0-1 validation score
@@ -95,7 +101,7 @@ class AdvancedValidator:
             "min_entities": 0,
             "max_entities": 1000,
             "min_confidence": 0.3,
-            "min_quality_score": 0.5
+            "min_quality_score": 0.5,
         }
 
     def validate(self, content: ProcessedContent) -> ValidationResult:
@@ -155,15 +161,10 @@ class AdvancedValidator:
             "error_count": error_count,
             "warning_count": len([i for i in issues if i.level == ValidationLevel.WARNING]),
             "info_count": len([i for i in issues if i.level == ValidationLevel.INFO]),
-            "validation_timestamp": datetime.utcnow().isoformat()
+            "validation_timestamp": datetime.utcnow().isoformat(),
         }
 
-        return ValidationResult(
-            is_valid=is_valid,
-            issues=issues,
-            score=score,
-            metadata=metadata
-        )
+        return ValidationResult(is_valid=is_valid, issues=issues, score=score, metadata=metadata)
 
     def _validate_schema(self, content: ProcessedContent) -> list[ValidationIssue]:
         """Validate content schema"""
@@ -171,43 +172,51 @@ class AdvancedValidator:
 
         # Check required fields
         if not content.original_content:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.CRITICAL,
-                type=ValidationType.SCHEMA,
-                field="original_content",
-                message="Original content is missing",
-                suggestion="Ensure content is provided before processing"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.CRITICAL,
+                    type=ValidationType.SCHEMA,
+                    field="original_content",
+                    message="Original content is missing",
+                    suggestion="Ensure content is provided before processing",
+                )
+            )
 
         if not content.content_hash:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                type=ValidationType.SCHEMA,
-                field="content_hash",
-                message="Content hash is missing",
-                suggestion="Generate content hash during preprocessing"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    type=ValidationType.SCHEMA,
+                    field="content_hash",
+                    message="Content hash is missing",
+                    suggestion="Generate content hash during preprocessing",
+                )
+            )
 
         # Check data types
         if content.completeness_score is not None:
             if not 0 <= content.completeness_score <= 1:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.ERROR,
-                    type=ValidationType.SCHEMA,
-                    field="completeness_score",
-                    message=f"Completeness score {content.completeness_score} out of range [0,1]",
-                    details={"value": content.completeness_score}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.ERROR,
+                        type=ValidationType.SCHEMA,
+                        field="completeness_score",
+                        message=f"Completeness score {content.completeness_score} out of range [0,1]",
+                        details={"value": content.completeness_score},
+                    )
+                )
 
         if content.suggested_importance is not None:
             if not 0 <= content.suggested_importance <= 10:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.WARNING,
-                    type=ValidationType.SCHEMA,
-                    field="suggested_importance",
-                    message=f"Importance {content.suggested_importance} out of range [0,10]",
-                    details={"value": content.suggested_importance}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.WARNING,
+                        type=ValidationType.SCHEMA,
+                        field="suggested_importance",
+                        message=f"Importance {content.suggested_importance} out of range [0,10]",
+                        details={"value": content.suggested_importance},
+                    )
+                )
 
         return issues
 
@@ -219,65 +228,83 @@ class AdvancedValidator:
 
         # Length validation
         if len(text) < self.thresholds["min_content_length"]:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                type=ValidationType.CONTENT,
-                field="original_content",
-                message="Content is too short",
-                details={"length": len(text), "min_length": self.thresholds["min_content_length"]},
-                suggestion="Provide more substantial content"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    type=ValidationType.CONTENT,
+                    field="original_content",
+                    message="Content is too short",
+                    details={
+                        "length": len(text),
+                        "min_length": self.thresholds["min_content_length"],
+                    },
+                    suggestion="Provide more substantial content",
+                )
+            )
 
         if len(text) > self.thresholds["max_content_length"]:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.WARNING,
-                type=ValidationType.CONTENT,
-                field="original_content",
-                message="Content is very long",
-                details={"length": len(text), "max_length": self.thresholds["max_content_length"]},
-                suggestion="Consider splitting into smaller chunks"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.WARNING,
+                    type=ValidationType.CONTENT,
+                    field="original_content",
+                    message="Content is very long",
+                    details={
+                        "length": len(text),
+                        "max_length": self.thresholds["max_content_length"],
+                    },
+                    suggestion="Consider splitting into smaller chunks",
+                )
+            )
 
         # Character validation
         if not text.strip():
-            issues.append(ValidationIssue(
-                level=ValidationLevel.CRITICAL,
-                type=ValidationType.CONTENT,
-                field="original_content",
-                message="Content is empty or only whitespace"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.CRITICAL,
+                    type=ValidationType.CONTENT,
+                    field="original_content",
+                    message="Content is empty or only whitespace",
+                )
+            )
 
         # Check for binary content
-        if '\x00' in text or '\xff' in text:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                type=ValidationType.CONTENT,
-                field="original_content",
-                message="Content appears to contain binary data",
-                suggestion="Ensure content is properly decoded text"
-            ))
+        if "\x00" in text or "\xff" in text:
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    type=ValidationType.CONTENT,
+                    field="original_content",
+                    message="Content appears to contain binary data",
+                    suggestion="Ensure content is properly decoded text",
+                )
+            )
 
         # Check for repetitive content
         if self._is_repetitive(text):
-            issues.append(ValidationIssue(
-                level=ValidationLevel.WARNING,
-                type=ValidationType.CONTENT,
-                field="original_content",
-                message="Content appears to be highly repetitive",
-                suggestion="Check for data corruption or processing errors"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.WARNING,
+                    type=ValidationType.CONTENT,
+                    field="original_content",
+                    message="Content appears to be highly repetitive",
+                    suggestion="Check for data corruption or processing errors",
+                )
+            )
 
         # Check encoding
         try:
-            text.encode('utf-8')
+            text.encode("utf-8")
         except UnicodeEncodeError:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.ERROR,
-                type=ValidationType.CONTENT,
-                field="original_content",
-                message="Content contains invalid Unicode characters",
-                suggestion="Fix encoding issues in preprocessing"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.ERROR,
+                    type=ValidationType.CONTENT,
+                    field="original_content",
+                    message="Content contains invalid Unicode characters",
+                    suggestion="Fix encoding issues in preprocessing",
+                )
+            )
 
         return issues
 
@@ -287,88 +314,109 @@ class AdvancedValidator:
 
         # Entity validation
         if len(content.entities) > self.thresholds["max_entities"]:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.WARNING,
-                type=ValidationType.EXTRACTION,
-                field="entities",
-                message=f"Excessive number of entities extracted ({len(content.entities)})",
-                details={"count": len(content.entities), "max": self.thresholds["max_entities"]},
-                suggestion="Review entity extraction parameters"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.WARNING,
+                    type=ValidationType.EXTRACTION,
+                    field="entities",
+                    message=f"Excessive number of entities extracted ({len(content.entities)})",
+                    details={
+                        "count": len(content.entities),
+                        "max": self.thresholds["max_entities"],
+                    },
+                    suggestion="Review entity extraction parameters",
+                )
+            )
 
         # Check entity confidence
         low_confidence_entities = [
-            e for e in content.entities
-            if e.confidence < self.thresholds["min_confidence"]
+            e for e in content.entities if e.confidence < self.thresholds["min_confidence"]
         ]
 
         if low_confidence_entities:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.INFO,
-                type=ValidationType.EXTRACTION,
-                field="entities",
-                message=f"{len(low_confidence_entities)} entities have low confidence",
-                details={"count": len(low_confidence_entities)},
-                suggestion="Consider filtering low-confidence entities"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.INFO,
+                    type=ValidationType.EXTRACTION,
+                    field="entities",
+                    message=f"{len(low_confidence_entities)} entities have low confidence",
+                    details={"count": len(low_confidence_entities)},
+                    suggestion="Consider filtering low-confidence entities",
+                )
+            )
 
         # Validate entity positions
         for entity in content.entities:
             if entity.start_pos >= entity.end_pos:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.ERROR,
-                    type=ValidationType.EXTRACTION,
-                    field="entities",
-                    message=f"Invalid entity position for '{entity.text}'",
-                    details={"start": entity.start_pos, "end": entity.end_pos}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.ERROR,
+                        type=ValidationType.EXTRACTION,
+                        field="entities",
+                        message=f"Invalid entity position for '{entity.text}'",
+                        details={"start": entity.start_pos, "end": entity.end_pos},
+                    )
+                )
 
             if entity.end_pos > len(content.original_content):
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.ERROR,
-                    type=ValidationType.EXTRACTION,
-                    field="entities",
-                    message=f"Entity position exceeds content length for '{entity.text}'",
-                    details={"position": entity.end_pos, "content_length": len(content.original_content)}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.ERROR,
+                        type=ValidationType.EXTRACTION,
+                        field="entities",
+                        message=f"Entity position exceeds content length for '{entity.text}'",
+                        details={
+                            "position": entity.end_pos,
+                            "content_length": len(content.original_content),
+                        },
+                    )
+                )
 
         # Relationship validation
         for rel in content.relationships:
             # Check if entities exist
             entity_texts = {e.text for e in content.entities}
             if rel.source.text not in entity_texts or rel.target.text not in entity_texts:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.WARNING,
-                    type=ValidationType.EXTRACTION,
-                    field="relationships",
-                    message="Relationship references non-existent entity",
-                    details={"source": rel.source.text, "target": rel.target.text}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.WARNING,
+                        type=ValidationType.EXTRACTION,
+                        field="relationships",
+                        message="Relationship references non-existent entity",
+                        details={"source": rel.source.text, "target": rel.target.text},
+                    )
+                )
 
         # Topic validation
         if content.topics:
             # Check for duplicate topics
             topic_names = [t.name for t in content.topics]
             if len(topic_names) != len(set(topic_names)):
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.INFO,
-                    type=ValidationType.EXTRACTION,
-                    field="topics",
-                    message="Duplicate topics detected",
-                    suggestion="Merge similar topics"
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.INFO,
+                        type=ValidationType.EXTRACTION,
+                        field="topics",
+                        message="Duplicate topics detected",
+                        suggestion="Merge similar topics",
+                    )
+                )
 
         # Embedding validation
         if content.embeddings:
             for key, embedding in content.embeddings.items():
-                if not isinstance(embedding, list) or not all(isinstance(x, int | float) for x in embedding):
-                    issues.append(ValidationIssue(
-                        level=ValidationLevel.ERROR,
-                        type=ValidationType.EXTRACTION,
-                        field="embeddings",
-                        message=f"Invalid embedding format for key '{key}'",
-                        suggestion="Ensure embeddings are lists of numbers"
-                    ))
+                if not isinstance(embedding, list) or not all(
+                    isinstance(x, int | float) for x in embedding
+                ):
+                    issues.append(
+                        ValidationIssue(
+                            level=ValidationLevel.ERROR,
+                            type=ValidationType.EXTRACTION,
+                            field="embeddings",
+                            message=f"Invalid embedding format for key '{key}'",
+                            suggestion="Ensure embeddings are lists of numbers",
+                        )
+                    )
 
         return issues
 
@@ -378,38 +426,44 @@ class AdvancedValidator:
 
         # Check quality assessment
         if content.quality == ContentQuality.INCOMPLETE:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.WARNING,
-                type=ValidationType.QUALITY,
-                field="quality",
-                message="Content marked as incomplete",
-                suggestion="Review content for missing information"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.WARNING,
+                    type=ValidationType.QUALITY,
+                    field="quality",
+                    message="Content marked as incomplete",
+                    suggestion="Review content for missing information",
+                )
+            )
 
         # Check completeness score
         if content.completeness_score < self.thresholds["min_quality_score"]:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.WARNING,
-                type=ValidationType.QUALITY,
-                field="completeness_score",
-                message=f"Low completeness score ({content.completeness_score:.2f})",
-                details={"score": content.completeness_score},
-                suggestion="Improve extraction coverage"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.WARNING,
+                    type=ValidationType.QUALITY,
+                    field="completeness_score",
+                    message=f"Low completeness score ({content.completeness_score:.2f})",
+                    details={"score": content.completeness_score},
+                    suggestion="Improve extraction coverage",
+                )
+            )
 
         # Check extraction coverage
         content_words = len(content.original_content.split())
         entity_coverage = len(content.entities) / max(content_words / 50, 1)  # Rough estimate
 
         if entity_coverage < 0.1:
-            issues.append(ValidationIssue(
-                level=ValidationLevel.INFO,
-                type=ValidationType.QUALITY,
-                field="entities",
-                message="Low entity extraction coverage",
-                details={"coverage": entity_coverage},
-                suggestion="Content may need richer entity extraction"
-            ))
+            issues.append(
+                ValidationIssue(
+                    level=ValidationLevel.INFO,
+                    type=ValidationType.QUALITY,
+                    field="entities",
+                    message="Low entity extraction coverage",
+                    details={"coverage": entity_coverage},
+                    suggestion="Content may need richer entity extraction",
+                )
+            )
 
         return issues
 
@@ -425,22 +479,26 @@ class AdvancedValidator:
             target_key = (rel.target.text, rel.target.type)
 
             if source_key not in entity_set:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.ERROR,
-                    type=ValidationType.CONSISTENCY,
-                    field="relationships",
-                    message=f"Relationship source entity not found: {rel.source.text}",
-                    details={"entity": rel.source.text, "type": rel.source.type}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.ERROR,
+                        type=ValidationType.CONSISTENCY,
+                        field="relationships",
+                        message=f"Relationship source entity not found: {rel.source.text}",
+                        details={"entity": rel.source.text, "type": rel.source.type},
+                    )
+                )
 
             if target_key not in entity_set:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.ERROR,
-                    type=ValidationType.CONSISTENCY,
-                    field="relationships",
-                    message=f"Relationship target entity not found: {rel.target.text}",
-                    details={"entity": rel.target.text, "type": rel.target.type}
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.ERROR,
+                        type=ValidationType.CONSISTENCY,
+                        field="relationships",
+                        message=f"Relationship target entity not found: {rel.target.text}",
+                        details={"entity": rel.target.text, "type": rel.target.type},
+                    )
+                )
 
         # Check metadata consistency
         if content.suggested_tags:
@@ -450,33 +508,38 @@ class AdvancedValidator:
                 topic_keywords.update(topic.keywords)
 
             unrelated_tags = [
-                tag for tag in content.suggested_tags
+                tag
+                for tag in content.suggested_tags
                 if not any(keyword in tag for keyword in topic_keywords)
             ]
 
             if len(unrelated_tags) > len(content.suggested_tags) * 0.5:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.INFO,
-                    type=ValidationType.CONSISTENCY,
-                    field="suggested_tags",
-                    message="Many tags don't match extracted topics",
-                    details={"unrelated_count": len(unrelated_tags)},
-                    suggestion="Review tag generation logic"
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.INFO,
+                        type=ValidationType.CONSISTENCY,
+                        field="suggested_tags",
+                        message="Many tags don't match extracted topics",
+                        details={"unrelated_count": len(unrelated_tags)},
+                        suggestion="Review tag generation logic",
+                    )
+                )
 
         # Check timestamp consistency
         if content.processed_at and content.embedding_metadata:
             if content.embedding_metadata.generated_at < content.processed_at:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.WARNING,
-                    type=ValidationType.CONSISTENCY,
-                    field="timestamps",
-                    message="Embedding generated before processing timestamp",
-                    details={
-                        "processed_at": content.processed_at.isoformat(),
-                        "embedding_at": content.embedding_metadata.generated_at.isoformat()
-                    }
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.WARNING,
+                        type=ValidationType.CONSISTENCY,
+                        field="timestamps",
+                        message="Embedding generated before processing timestamp",
+                        details={
+                            "processed_at": content.processed_at.isoformat(),
+                            "embedding_at": content.embedding_metadata.generated_at.isoformat(),
+                        },
+                    )
+                )
 
         return issues
 
@@ -489,44 +552,51 @@ class AdvancedValidator:
         # Rule: Important content should have high quality
         if content.suggested_importance and content.suggested_importance > 7:
             if content.quality in [ContentQuality.LOW, ContentQuality.INCOMPLETE]:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.WARNING,
-                    type=ValidationType.BUSINESS,
-                    field="quality",
-                    message="High importance content has low quality",
-                    details={
-                        "importance": content.suggested_importance,
-                        "quality": content.quality
-                    },
-                    suggestion="Improve processing for important content"
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.WARNING,
+                        type=ValidationType.BUSINESS,
+                        field="quality",
+                        message="High importance content has low quality",
+                        details={
+                            "importance": content.suggested_importance,
+                            "quality": content.quality,
+                        },
+                        suggestion="Improve processing for important content",
+                    )
+                )
 
         # Rule: Action items should have deadlines
         if content.intent and content.intent.type.value == "todo":
             if content.intent.action_items and not self._has_temporal_reference(content):
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.INFO,
-                    type=ValidationType.BUSINESS,
-                    field="intent",
-                    message="TODO items without temporal reference",
-                    suggestion="Consider extracting or adding deadlines"
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.INFO,
+                        type=ValidationType.BUSINESS,
+                        field="intent",
+                        message="TODO items without temporal reference",
+                        suggestion="Consider extracting or adding deadlines",
+                    )
+                )
 
         # Rule: Code snippets should have language detection
         if content.structured_data and content.structured_data.code_snippets:
             unknown_lang_count = sum(
-                1 for snippet in content.structured_data.code_snippets
+                1
+                for snippet in content.structured_data.code_snippets
                 if snippet.get("language") == "unknown"
             )
 
             if unknown_lang_count > 0:
-                issues.append(ValidationIssue(
-                    level=ValidationLevel.INFO,
-                    type=ValidationType.BUSINESS,
-                    field="structured_data",
-                    message=f"{unknown_lang_count} code snippets with unknown language",
-                    suggestion="Improve language detection for code"
-                ))
+                issues.append(
+                    ValidationIssue(
+                        level=ValidationLevel.INFO,
+                        type=ValidationType.BUSINESS,
+                        field="structured_data",
+                        message=f"{unknown_lang_count} code snippets with unknown language",
+                        suggestion="Improve language detection for code",
+                    )
+                )
 
         return issues
 
@@ -556,7 +626,7 @@ class AdvancedValidator:
             return True
 
         # Check for repeated phrases
-        bigrams = [f"{words[i]} {words[i+1]}" for i in range(len(words)-1)]
+        bigrams = [f"{words[i]} {words[i+1]}" for i in range(len(words) - 1)]
         bigram_counts = defaultdict(int)
         for bigram in bigrams:
             bigram_counts[bigram] += 1
@@ -576,10 +646,10 @@ class AdvancedValidator:
 
         # Check for temporal patterns in text
         temporal_patterns = [
-            r'\b(?:today|tomorrow|yesterday|next|last)\b',
-            r'\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b',
-            r'\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\b',
-            r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b'
+            r"\b(?:today|tomorrow|yesterday|next|last)\b",
+            r"\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b",
+            r"\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\b",
+            r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b",
         ]
 
         text_lower = content.original_content.lower()
@@ -599,7 +669,7 @@ class AdvancedValidator:
             ValidationLevel.CRITICAL: 10.0,
             ValidationLevel.ERROR: 5.0,
             ValidationLevel.WARNING: 2.0,
-            ValidationLevel.INFO: 0.5
+            ValidationLevel.INFO: 0.5,
         }
 
         total_weight = sum(weights.get(issue.level, 1.0) for issue in issues)

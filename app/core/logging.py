@@ -1,3 +1,14 @@
+import asyncio
+import logging
+import sys
+import time
+from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel
+
+from app.utils.logging_config import get_logger
+
 """
 Centralized logging configuration for Second Brain v3.0.0
 
@@ -9,20 +20,13 @@ This module provides:
 - Audit logging
 """
 
-import asyncio
-import logging
-import sys
-import time
 import traceback
 from contextvars import ContextVar
-from datetime import datetime
 from functools import wraps
-from typing import Any
 
 import structlog
 from fastapi import Request, Response
 from fastapi.routing import APIRoute
-from pydantic import BaseModel
 from pythonjsonlogger import jsonlogger
 
 # Context variables for request tracking
@@ -66,7 +70,7 @@ class StructuredLogger:
             if self.config.format == "json":
                 formatter = jsonlogger.JsonFormatter(
                     "%(timestamp)s %(level)s %(name)s %(message)s",
-                    timestamp=lambda: datetime.utcnow().isoformat()
+                    timestamp=lambda: datetime.utcnow().isoformat(),
                 )
             else:
                 formatter = logging.Formatter(
@@ -88,13 +92,13 @@ class StructuredLogger:
             file_handler = RotatingFileHandler(
                 self.config.file_path,
                 maxBytes=self.config.max_file_size,
-                backupCount=self.config.backup_count
+                backupCount=self.config.backup_count,
             )
 
             if self.config.format == "json":
                 formatter = jsonlogger.JsonFormatter(
                     "%(timestamp)s %(level)s %(name)s %(message)s",
-                    timestamp=lambda: datetime.utcnow().isoformat()
+                    timestamp=lambda: datetime.utcnow().isoformat(),
                 )
             else:
                 formatter = logging.Formatter(
@@ -110,7 +114,7 @@ class StructuredLogger:
         context = {
             "request_id": request_id_var.get(),
             "user_id": user_id_var.get(),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
         context.update(extra)
         return context
@@ -168,7 +172,7 @@ class PerformanceLogger:
                 exception=exc_val,
                 operation=self.operation,
                 duration_ms=duration * 1000,
-                **self.extra
+                **self.extra,
             )
         else:
             log_level = "warning" if duration > 1.0 else "debug"
@@ -176,7 +180,7 @@ class PerformanceLogger:
                 f"{self.operation} completed",
                 operation=self.operation,
                 duration_ms=duration * 1000,
-                **self.extra
+                **self.extra,
             )
 
 
@@ -193,7 +197,7 @@ class AuditLogger:
         action: str,
         result: str,
         user_id: str | None = None,
-        details: dict[str, Any] | None = None
+        details: dict[str, Any] | None = None,
     ):
         """Log an audit event"""
         self.logger.info(
@@ -204,7 +208,7 @@ class AuditLogger:
             result=result,
             user_id=user_id or user_id_var.get(),
             details=details or {},
-            audit=True
+            audit=True,
         )
 
 
@@ -229,7 +233,7 @@ class LoggingRoute(APIRoute):
                 method=request.method,
                 path=request.url.path,
                 query_params=dict(request.query_params),
-                client_host=request.client.host if request.client else None
+                client_host=request.client.host if request.client else None,
             )
 
             try:
@@ -243,7 +247,7 @@ class LoggingRoute(APIRoute):
                     method=request.method,
                     path=request.url.path,
                     status_code=response.status_code,
-                    duration_ms=duration * 1000
+                    duration_ms=duration * 1000,
                 )
 
                 # Add request ID to response headers
@@ -259,7 +263,7 @@ class LoggingRoute(APIRoute):
                     exception=e,
                     method=request.method,
                     path=request.url.path,
-                    duration_ms=duration * 1000
+                    duration_ms=duration * 1000,
                 )
                 raise
 
@@ -291,6 +295,7 @@ def get_audit_logger() -> AuditLogger:
 
 def log_function_call(func):
     """Decorator to log function calls"""
+
     @wraps(func)
     async def async_wrapper(*args, **kwargs):
         logger = get_logger(func.__module__)
@@ -322,7 +327,7 @@ def setup_structlog():
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            structlog.processors.JSONRenderer()
+            structlog.processors.JSONRenderer(),
         ],
         context_class=dict,
         logger_factory=structlog.stdlib.LoggerFactory(),

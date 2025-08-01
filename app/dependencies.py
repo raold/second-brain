@@ -1,3 +1,5 @@
+from app.database import get_database
+
 """
 Common dependencies for FastAPI routes
 """
@@ -17,16 +19,10 @@ async def get_db():
 get_database = get_db_instance
 
 
-async def get_current_user(
-    authorization: str | None = Header(None)
-) -> User:
+async def get_current_user(authorization: str | None = Header(None)) -> User:
     """
     Get current user from authorization header.
     For now, returns a demo user. In production, implement proper auth.
     """
     # Demo user for development
-    return User(
-        id="demo-user",
-        email="demo@example.com",
-        username="demo"
-    )
+    return User(id="demo-user", email="demo@example.com", username="demo")

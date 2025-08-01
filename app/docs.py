@@ -1,13 +1,17 @@
+from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+from app.models.memory import MemoryType
+
 """
 OpenAPI documentation configuration for Second Brain API
 """
 
-from datetime import datetime
 from enum import Enum
-from typing import Any
 
 from fastapi import FastAPI
-from pydantic import BaseModel, Field
 
 from app.version import get_version_info
 
@@ -42,7 +46,12 @@ class SemanticMetadata(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": {"category": "technology", "domain": "database", "confidence": 0.95, "verified": True}
+            "example": {
+                "category": "technology",
+                "domain": "database",
+                "confidence": 0.95,
+                "verified": True,
+            }
         }
 
 
@@ -97,17 +106,27 @@ class MemoryResponse(BaseModel):
     memory_type: MemoryType = Field(..., description="Memory type classification")
 
     # Cognitive metadata
-    importance_score: float = Field(default=0.5, ge=0.0, le=1.0, description="Memory importance score")
+    importance_score: float = Field(
+        default=0.5, ge=0.0, le=1.0, description="Memory importance score"
+    )
     access_count: int = Field(default=0, description="Number of times accessed")
     last_accessed: str = Field(..., description="Last access timestamp")
 
     # Type-specific metadata
-    semantic_metadata: dict[str, Any] | None = Field(default=None, description="Semantic memory metadata")
-    episodic_metadata: dict[str, Any] | None = Field(default=None, description="Episodic memory metadata")
-    procedural_metadata: dict[str, Any] | None = Field(default=None, description="Procedural memory metadata")
+    semantic_metadata: dict[str, Any] | None = Field(
+        default=None, description="Semantic memory metadata"
+    )
+    episodic_metadata: dict[str, Any] | None = Field(
+        default=None, description="Episodic memory metadata"
+    )
+    procedural_metadata: dict[str, Any] | None = Field(
+        default=None, description="Procedural memory metadata"
+    )
 
     # Consolidation tracking
-    consolidation_score: float = Field(default=0.5, ge=0.0, le=1.0, description="Memory consolidation score")
+    consolidation_score: float = Field(
+        default=0.5, ge=0.0, le=1.0, description="Memory consolidation score"
+    )
 
     # Legacy compatibility
     metadata: dict[str, Any] | None = Field(default=None, description="General metadata (legacy)")
@@ -117,7 +136,9 @@ class MemoryResponse(BaseModel):
     updated_at: str = Field(..., description="Last update timestamp")
 
     # Search-specific
-    similarity: float | None = Field(default=None, description="Similarity score for search results")
+    similarity: float | None = Field(
+        default=None, description="Similarity score for search results"
+    )
 
     class Config:
         json_schema_extra = {
@@ -167,7 +188,13 @@ class HealthResponse(BaseModel):
     timestamp: datetime = Field(..., description="Health check timestamp")
 
     class Config:
-        json_schema_extra = {"example": {"status": "healthy", "version": "2.0.0", "timestamp": "2024-01-15T12:00:00Z"}}
+        json_schema_extra = {
+            "example": {
+                "status": "healthy",
+                "version": "2.0.0",
+                "timestamp": "2024-01-15T12:00:00Z",
+            }
+        }
 
 
 class StatusResponse(BaseModel):
@@ -196,18 +223,28 @@ class MemoryRequest(BaseModel):
     """Request model for creating memories with cognitive types"""
 
     content: str = Field(..., description="Memory content to store", min_length=1)
-    memory_type: MemoryType = Field(default=MemoryType.SEMANTIC, description="Memory type classification")
+    memory_type: MemoryType = Field(
+        default=MemoryType.SEMANTIC, description="Memory type classification"
+    )
 
     # Type-specific metadata
-    semantic_metadata: SemanticMetadata | None = Field(default=None, description="Semantic memory metadata")
-    episodic_metadata: EpisodicMetadata | None = Field(default=None, description="Episodic memory metadata")
-    procedural_metadata: ProceduralMetadata | None = Field(default=None, description="Procedural memory metadata")
+    semantic_metadata: SemanticMetadata | None = Field(
+        default=None, description="Semantic memory metadata"
+    )
+    episodic_metadata: EpisodicMetadata | None = Field(
+        default=None, description="Episodic memory metadata"
+    )
+    procedural_metadata: ProceduralMetadata | None = Field(
+        default=None, description="Procedural memory metadata"
+    )
 
     # Legacy compatibility
     metadata: dict[str, Any] | None = Field(default=None, description="General metadata (legacy)")
 
     # Optional cognitive parameters
-    importance_score: float | None = Field(default=None, ge=0.0, le=1.0, description="Initial importance score")
+    importance_score: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Initial importance score"
+    )
 
     class Config:
         json_schema_extra = {
@@ -230,24 +267,36 @@ class SemanticMemoryRequest(BaseModel):
     """Request model for semantic memories"""
 
     content: str = Field(..., description="Semantic memory content", min_length=1)
-    semantic_metadata: SemanticMetadata | None = Field(default=None, description="Semantic metadata")
-    importance_score: float | None = Field(default=None, ge=0.0, le=1.0, description="Importance score")
+    semantic_metadata: SemanticMetadata | None = Field(
+        default=None, description="Semantic metadata"
+    )
+    importance_score: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Importance score"
+    )
 
 
 class EpisodicMemoryRequest(BaseModel):
     """Request model for episodic memories"""
 
     content: str = Field(..., description="Episodic memory content", min_length=1)
-    episodic_metadata: EpisodicMetadata | None = Field(default=None, description="Episodic metadata")
-    importance_score: float | None = Field(default=None, ge=0.0, le=1.0, description="Importance score")
+    episodic_metadata: EpisodicMetadata | None = Field(
+        default=None, description="Episodic metadata"
+    )
+    importance_score: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Importance score"
+    )
 
 
 class ProceduralMemoryRequest(BaseModel):
     """Request model for procedural memories"""
 
     content: str = Field(..., description="Procedural memory content", min_length=1)
-    procedural_metadata: ProceduralMetadata | None = Field(default=None, description="Procedural metadata")
-    importance_score: float | None = Field(default=None, ge=0.0, le=1.0, description="Importance score")
+    procedural_metadata: ProceduralMetadata | None = Field(
+        default=None, description="Procedural metadata"
+    )
+    importance_score: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Importance score"
+    )
 
 
 # Enhanced search request model
@@ -255,9 +304,15 @@ class ContextualSearchRequest(BaseModel):
     """Request model for contextual search with memory type filtering"""
 
     query: str = Field(..., description="Search query", min_length=1)
-    memory_types: list[MemoryType] | None = Field(default=None, description="Filter by memory types")
-    importance_threshold: float | None = Field(default=None, ge=0.0, le=1.0, description="Minimum importance score")
-    timeframe: str | None = Field(default=None, description="Time-based filtering (e.g., 'last_week', 'last_month')")
+    memory_types: list[MemoryType] | None = Field(
+        default=None, description="Filter by memory types"
+    )
+    importance_threshold: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Minimum importance score"
+    )
+    timeframe: str | None = Field(
+        default=None, description="Time-based filtering (e.g., 'last_week', 'last_month')"
+    )
     limit: int = Field(default=10, ge=1, le=100, description="Maximum results")
     include_archived: bool = Field(default=False, description="Include archived memories")
 
@@ -293,7 +348,10 @@ class ErrorResponse(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": {"error": "Memory not found", "details": "No memory exists with the provided ID"}
+            "example": {
+                "error": "Memory not found",
+                "details": "No memory exists with the provided ID",
+            }
         }
 
 
@@ -407,7 +465,10 @@ All endpoints require an API key passed as a query parameter:
                     "metadata": {"type": "fact", "category": "database", "importance": "high"},
                 },
             },
-            "SearchExample": {"summary": "Search query", "value": {"query": "database performance", "limit": 10}},
+            "SearchExample": {
+                "summary": "Search query",
+                "value": {"query": "database performance", "limit": 10},
+            },
         }
 
         app.openapi_schema = openapi_schema

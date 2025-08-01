@@ -23,8 +23,8 @@ class TestThemeCluster:
     def test_theme_cluster_creation(self):
         """Test creating a theme cluster"""
         memories = [
-            {'id': uuid4(), 'content': 'Test 1', 'importance': 8, 'created_at': datetime.utcnow()},
-            {'id': uuid4(), 'content': 'Test 2', 'importance': 6, 'created_at': datetime.utcnow()},
+            {"id": uuid4(), "content": "Test 1", "importance": 8, "created_at": datetime.utcnow()},
+            {"id": uuid4(), "content": "Test 2", "importance": 6, "created_at": datetime.utcnow()},
         ]
 
         cluster = ThemeCluster("Python", memories)
@@ -38,8 +38,18 @@ class TestThemeCluster:
         """Test cluster importance calculation"""
         # High importance, recent memories
         recent_memories = [
-            {'id': uuid4(), 'content': 'Important', 'importance': 9, 'created_at': datetime.utcnow()},
-            {'id': uuid4(), 'content': 'Also important', 'importance': 8, 'created_at': datetime.utcnow()},
+            {
+                "id": uuid4(),
+                "content": "Important",
+                "importance": 9,
+                "created_at": datetime.utcnow(),
+            },
+            {
+                "id": uuid4(),
+                "content": "Also important",
+                "importance": 8,
+                "created_at": datetime.utcnow(),
+            },
         ]
 
         high_cluster = ThemeCluster("Important Topic", recent_memories)
@@ -49,9 +59,14 @@ class TestThemeCluster:
 
         # Low importance, old memories
         from datetime import timedelta
+
         old_memories = [
-            {'id': uuid4(), 'content': 'Old', 'importance': 3,
-             'created_at': datetime.utcnow() - timedelta(days=400)},
+            {
+                "id": uuid4(),
+                "content": "Old",
+                "importance": 3,
+                "created_at": datetime.utcnow() - timedelta(days=400),
+            },
         ]
 
         low_cluster = ThemeCluster("Old Topic", old_memories)
@@ -96,7 +111,7 @@ class TestAdvancedSynthesisEngine:
             max_tokens=1000,
             temperature=0.7,
             include_references=True,
-            user_id="test_user"
+            user_id="test_user",
         )
 
     @pytest.fixture
@@ -104,29 +119,29 @@ class TestAdvancedSynthesisEngine:
         """Create sample memories"""
         return [
             {
-                'id': uuid4(),
-                'content': 'Python is a versatile programming language',
-                'importance': 8,
-                'created_at': datetime.utcnow(),
-                'tags': ['Python', 'Programming'],
-                'metadata': {}
+                "id": uuid4(),
+                "content": "Python is a versatile programming language",
+                "importance": 8,
+                "created_at": datetime.utcnow(),
+                "tags": ["Python", "Programming"],
+                "metadata": {},
             },
             {
-                'id': uuid4(),
-                'content': 'Machine learning with Python is powerful',
-                'importance': 9,
-                'created_at': datetime.utcnow(),
-                'tags': ['Python', 'ML'],
-                'metadata': {}
+                "id": uuid4(),
+                "content": "Machine learning with Python is powerful",
+                "importance": 9,
+                "created_at": datetime.utcnow(),
+                "tags": ["Python", "ML"],
+                "metadata": {},
             },
             {
-                'id': uuid4(),
-                'content': 'Django is a Python web framework',
-                'importance': 7,
-                'created_at': datetime.utcnow(),
-                'tags': ['Python', 'Web'],
-                'metadata': {}
-            }
+                "id": uuid4(),
+                "content": "Django is a Python web framework",
+                "importance": 7,
+                "created_at": datetime.utcnow(),
+                "tags": ["Python", "Web"],
+                "metadata": {},
+            },
         ]
 
     @pytest.mark.asyncio
@@ -138,7 +153,7 @@ class TestAdvancedSynthesisEngine:
         # Mock theme extraction
         mock_clusters = [
             ThemeCluster("Python", sample_memories[:2]),
-            ThemeCluster("Web Development", [sample_memories[2]])
+            ThemeCluster("Web Development", [sample_memories[2]]),
         ]
         engine._extract_themes_and_cluster = AsyncMock(return_value=mock_clusters)
 
@@ -180,7 +195,7 @@ class TestAdvancedSynthesisEngine:
         results = await engine.synthesize_memories(sample_request)
 
         assert len(results) == 1
-        assert results[0].metadata.get('fallback') is True
+        assert results[0].metadata.get("fallback") is True
 
     @pytest.mark.asyncio
     async def test_extract_themes_and_cluster(self, engine, sample_memories):
@@ -198,8 +213,8 @@ class TestAdvancedSynthesisEngine:
     async def test_extract_implicit_themes(self, engine):
         """Test implicit theme extraction using LLM"""
         untagged_memories = [
-            {'id': uuid4(), 'content': 'Neural networks are fascinating', 'importance': 8},
-            {'id': uuid4(), 'content': 'Deep learning revolutionizes AI', 'importance': 9},
+            {"id": uuid4(), "content": "Neural networks are fascinating", "importance": 8},
+            {"id": uuid4(), "content": "Deep learning revolutionizes AI", "importance": 9},
         ]
 
         # Mock LLM response
@@ -216,15 +231,16 @@ class TestAdvancedSynthesisEngine:
     async def test_timeline_synthesis(self, engine, sample_memories):
         """Test timeline-based synthesis"""
         request = SynthesisRequest(
-            memory_ids=[m['id'] for m in sample_memories],
+            memory_ids=[m["id"] for m in sample_memories],
             strategy=SynthesisStrategy.TIMELINE,
-            user_id="test_user"
+            user_id="test_user",
         )
 
         # Add different dates to memories
         from datetime import timedelta
+
         for i, memory in enumerate(sample_memories):
-            memory['created_at'] = datetime.utcnow() - timedelta(days=i*30)
+            memory["created_at"] = datetime.utcnow() - timedelta(days=i * 30)
 
         engine._fetch_memories = AsyncMock(return_value=sample_memories)
         engine.openai_client.generate = AsyncMock(
@@ -260,13 +276,13 @@ class TestAdvancedSynthesisEngine:
         engine.openai_client.generate = AsyncMock(return_value="Synthesized content")
 
         # Include sub-themes in options
-        sample_request.options['include_sub_themes'] = True
+        sample_request.options["include_sub_themes"] = True
 
         results = await engine.synthesize_memories(sample_request)
 
         # Should have main synthesis + sub-theme syntheses
         assert len(results) >= 2
-        assert any(r.metadata.get('is_sub_theme') for r in results)
+        assert any(r.metadata.get("is_sub_theme") for r in results)
 
     def test_synthesis_templates(self, engine):
         """Test that all synthesis templates are defined"""
@@ -286,7 +302,7 @@ class TestAdvancedSynthesisEngine:
         result = await engine._create_fallback_synthesis(sample_request, sample_memories)
 
         assert isinstance(result, SynthesisResult)
-        assert result.metadata.get('fallback') is True
+        assert result.metadata.get("fallback") is True
         assert result.confidence_score == 0.5
         assert len(result.source_memory_ids) == len(sample_request.memory_ids)
 
@@ -308,14 +324,12 @@ class TestAdvancedSynthesisEngine:
 
         results = {}
         for strategy in SynthesisStrategy:
-            engine.openai_client.generate = AsyncMock(
-                return_value=f"Content for {strategy.value}"
-            )
+            engine.openai_client.generate = AsyncMock(return_value=f"Content for {strategy.value}")
 
             request = SynthesisRequest(
-                memory_ids=[m['id'] for m in sample_memories],
+                memory_ids=[m["id"] for m in sample_memories],
                 strategy=strategy,
-                user_id="test_user"
+                user_id="test_user",
             )
 
             result = await engine.synthesize_memories(request)
@@ -327,14 +341,13 @@ class TestAdvancedSynthesisEngine:
     @pytest.mark.asyncio
     async def test_memory_fetch_error_handling(self, engine, sample_request):
         """Test handling of memory fetch errors"""
+
         # Simulate partial fetch failure
         async def mock_get_memory(memory_id):
             if memory_id == str(sample_request.memory_ids[0]):
                 raise Exception("Memory not found")
             return MagicMock(
-                content="Test content",
-                importance_score=5,
-                created_at=datetime.utcnow()
+                content="Test content", importance_score=5, created_at=datetime.utcnow()
             )
 
         engine.memory_service.get_memory = mock_get_memory

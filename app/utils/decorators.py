@@ -1,3 +1,10 @@
+import asyncio
+import time
+from typing import Union
+from uuid import uuid4
+
+from app.utils.logging_config import get_logger
+
 """
 Elegant decorators for cross-cutting concerns in the Second Brain application.
 
@@ -6,14 +13,10 @@ rather than just showing off cleverness. Each decorator addresses real
 architectural needs while maintaining readability and debuggability.
 """
 
-import asyncio
 import functools
 import inspect
 from collections import defaultdict
 from collections.abc import Callable
-from typing import Union
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -22,11 +25,12 @@ logger = get_logger(__name__)
 # Performance and Monitoring Decorators
 # ============================================================================
 
+
 def measure_performance(
     operation_name: str | None = None,
     log_slow_queries: bool = True,
     slow_threshold_ms: float = 1000.0,
-    include_args: bool = False
+    include_args: bool = False,
 ):
     """
     Measure function execution time with intelligent logging.
@@ -37,33 +41,35 @@ def measure_performance(
         slow_threshold_ms: Threshold in milliseconds for logging slow operations
         include_args: Whether to include function arguments in logs
     """
+
     def decorator(func: F) -> F:
         op_name = operation_name or f"{func.__module__}.{func.__qualname__}"
 
         if asyncio.iscoroutinefunction(func):
+
             @functools.wraps(func)
             async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
                 start_time = time.perf_counter()
                 operation_id = str(uuid4())[:8]
 
-                logger.debug(f"Starting {op_name}", extra={
-                    'operation_id': operation_id,
-                    'operation_name': op_name
-                })
+                logger.debug(
+                    f"Starting {op_name}",
+                    extra={"operation_id": operation_id, "operation_name": op_name},
+                )
 
                 try:
                     result = await func(*args, **kwargs)
                     duration_ms = (time.perf_counter() - start_time) * 1000
 
                     log_data = {
-                        'operation_id': operation_id,
-                        'operation_name': op_name,
-                        'duration_ms': round(duration_ms, 2),
-                        'status': 'success'
+                        "operation_id": operation_id,
+                        "operation_name": op_name,
+                        "duration_ms": round(duration_ms, 2),
+                        "status": "success",
                     }
 
                     if include_args and args:
-                        log_data['args'] = str(args)[:200]  # Truncate long args
+                        log_data["args"] = str(args)[:200]  # Truncate long args
 
                     if log_slow_queries and duration_ms > slow_threshold_ms:
                         logger.warning(f"Slow operation: {op_name}", extra=log_data)
@@ -74,40 +80,44 @@ def measure_performance(
 
                 except Exception as e:
                     duration_ms = (time.perf_counter() - start_time) * 1000
-                    logger.error(f"Failed {op_name}: {e}", extra={
-                        'operation_id': operation_id,
-                        'operation_name': op_name,
-                        'duration_ms': round(duration_ms, 2),
-                        'status': 'error',
-                        'error_type': type(e).__name__
-                    })
+                    logger.error(
+                        f"Failed {op_name}: {e}",
+                        extra={
+                            "operation_id": operation_id,
+                            "operation_name": op_name,
+                            "duration_ms": round(duration_ms, 2),
+                            "status": "error",
+                            "error_type": type(e).__name__,
+                        },
+                    )
                     raise
 
             return async_wrapper
         else:
+
             @functools.wraps(func)
             def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
                 start_time = time.perf_counter()
                 operation_id = str(uuid4())[:8]
 
-                logger.debug(f"Starting {op_name}", extra={
-                    'operation_id': operation_id,
-                    'operation_name': op_name
-                })
+                logger.debug(
+                    f"Starting {op_name}",
+                    extra={"operation_id": operation_id, "operation_name": op_name},
+                )
 
                 try:
                     result = func(*args, **kwargs)
                     duration_ms = (time.perf_counter() - start_time) * 1000
 
                     log_data = {
-                        'operation_id': operation_id,
-                        'operation_name': op_name,
-                        'duration_ms': round(duration_ms, 2),
-                        'status': 'success'
+                        "operation_id": operation_id,
+                        "operation_name": op_name,
+                        "duration_ms": round(duration_ms, 2),
+                        "status": "success",
                     }
 
                     if include_args and args:
-                        log_data['args'] = str(args)[:200]
+                        log_data["args"] = str(args)[:200]
 
                     if log_slow_queries and duration_ms > slow_threshold_ms:
                         logger.warning(f"Slow operation: {op_name}", extra=log_data)
@@ -118,13 +128,16 @@ def measure_performance(
 
                 except Exception as e:
                     duration_ms = (time.perf_counter() - start_time) * 1000
-                    logger.error(f"Failed {op_name}: {e}", extra={
-                        'operation_id': operation_id,
-                        'operation_name': op_name,
-                        'duration_ms': round(duration_ms, 2),
-                        'status': 'error',
-                        'error_type': type(e).__name__
-                    })
+                    logger.error(
+                        f"Failed {op_name}: {e}",
+                        extra={
+                            "operation_id": operation_id,
+                            "operation_name": op_name,
+                            "duration_ms": round(duration_ms, 2),
+                            "status": "error",
+                            "error_type": type(e).__name__,
+                        },
+                    )
                     raise
 
             return sync_wrapper
@@ -157,7 +170,7 @@ class RateLimiter:
             return False
 
 
-def rate_limit(max_calls: int, time_window: float, per: str = 'function'):
+def rate_limit(max_calls: int, time_window: float, per: str = "function"):
     """
     Rate limit function calls with sophisticated controls.
 
@@ -172,13 +185,13 @@ def rate_limit(max_calls: int, time_window: float, per: str = 'function'):
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
             # Determine rate limiting identifier
-            if per == 'function':
+            if per == "function":
                 identifier = func.__qualname__
-            elif per == 'instance' and args:
+            elif per == "instance" and args:
                 identifier = f"{func.__qualname__}:{id(args[0])}"
-            elif per == 'user':
+            elif per == "user":
                 # Look for user_id in kwargs or first arg
-                user_id = kwargs.get('user_id') or (args[0] if args else 'anonymous')
+                user_id = kwargs.get("user_id") or (args[0] if args else "anonymous")
                 identifier = f"{func.__qualname__}:user:{user_id}"
             else:
                 identifier = func.__qualname__
@@ -200,12 +213,13 @@ def rate_limit(max_calls: int, time_window: float, per: str = 'function'):
 # Error Handling and Resilience Decorators
 # ============================================================================
 
+
 def retry(
     max_attempts: int = 3,
     delay: float = 1.0,
     backoff: float = 2.0,
     exceptions: Union[type[Exception], tuple] = Exception,
-    on_retry: Callable | None = None
+    on_retry: Callable | None = None,
 ):
     """
     Retry decorator with exponential backoff and customizable behavior.
@@ -217,6 +231,7 @@ def retry(
         exceptions: Exception types to retry on
         on_retry: Callback function called on each retry
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
@@ -235,10 +250,14 @@ def retry(
 
                     if attempt == max_attempts - 1:
                         # Last attempt, don't retry
-                        logger.error(f"Function {func.__qualname__} failed after {max_attempts} attempts: {e}")
+                        logger.error(
+                            f"Function {func.__qualname__} failed after {max_attempts} attempts: {e}"
+                        )
                         raise
 
-                    logger.warning(f"Attempt {attempt + 1} failed for {func.__qualname__}: {e}, retrying in {current_delay}s")
+                    logger.warning(
+                        f"Attempt {attempt + 1} failed for {func.__qualname__}: {e}, retrying in {current_delay}s"
+                    )
 
                     if on_retry:
                         try:
@@ -263,7 +282,7 @@ def retry(
 def circuit_breaker(
     failure_threshold: int = 5,
     timeout: float = 60.0,
-    expected_exception: type[Exception] = Exception
+    expected_exception: type[Exception] = Exception,
 ):
     """
     Circuit breaker pattern to prevent cascading failures.
@@ -273,11 +292,12 @@ def circuit_breaker(
         timeout: Time to wait before attempting to close circuit
         expected_exception: Exception type that triggers circuit breaker
     """
+
     class CircuitBreakerState:
         def __init__(self):
             self.failure_count = 0
             self.last_failure_time = None
-            self.state = 'closed'  # closed, open, half-open
+            self.state = "closed"  # closed, open, half-open
 
     state = CircuitBreakerState()
 
@@ -287,14 +307,16 @@ def circuit_breaker(
             now = time.time()
 
             # Check if we should transition from open to half-open
-            if (state.state == 'open' and
-                state.last_failure_time and
-                now - state.last_failure_time > timeout):
-                state.state = 'half-open'
+            if (
+                state.state == "open"
+                and state.last_failure_time
+                and now - state.last_failure_time > timeout
+            ):
+                state.state = "half-open"
                 logger.info(f"Circuit breaker for {func.__qualname__} transitioning to half-open")
 
             # Reject calls if circuit is open
-            if state.state == 'open':
+            if state.state == "open":
                 raise RuntimeError(f"Circuit breaker open for {func.__qualname__}")
 
             try:
@@ -304,8 +326,8 @@ def circuit_breaker(
                     result = func(*args, **kwargs)
 
                 # Success - reset failure count and close circuit
-                if state.state == 'half-open':
-                    state.state = 'closed'
+                if state.state == "half-open":
+                    state.state = "closed"
                     logger.info(f"Circuit breaker for {func.__qualname__} closed")
 
                 state.failure_count = 0
@@ -316,8 +338,10 @@ def circuit_breaker(
                 state.last_failure_time = now
 
                 if state.failure_count >= failure_threshold:
-                    state.state = 'open'
-                    logger.warning(f"Circuit breaker for {func.__qualname__} opened after {state.failure_count} failures")
+                    state.state = "open"
+                    logger.warning(
+                        f"Circuit breaker for {func.__qualname__} opened after {state.failure_count} failures"
+                    )
 
                 raise
 
@@ -330,11 +354,8 @@ def circuit_breaker(
 # Caching and Memoization Decorators
 # ============================================================================
 
-def memoize(
-    max_size: int | None = 128,
-    ttl: float | None = None,
-    typed: bool = False
-):
+
+def memoize(max_size: int | None = 128, ttl: float | None = None, typed: bool = False):
     """
     Advanced memoization with TTL and type-aware caching.
 
@@ -343,9 +364,10 @@ def memoize(
         ttl: Time-to-live for cache entries in seconds
         typed: Whether to treat different types as distinct cache keys
     """
+
     def decorator(func: F) -> F:
         cache = {}
-        cache_info = {'hits': 0, 'misses': 0}
+        cache_info = {"hits": 0, "misses": 0}
 
         def make_key(*args, **kwargs):
             """Create cache key from arguments."""
@@ -367,14 +389,14 @@ def memoize(
             if key in cache:
                 result, timestamp = cache[key]
                 if not is_expired(timestamp):
-                    cache_info['hits'] += 1
+                    cache_info["hits"] += 1
                     return result
                 else:
                     # Remove expired entry
                     del cache[key]
 
             # Cache miss - compute result
-            cache_info['misses'] += 1
+            cache_info["misses"] += 1
 
             if asyncio.iscoroutinefunction(func):
                 result = await func(*args, **kwargs)
@@ -406,6 +428,7 @@ def memoize(
 # Validation and Type Checking Decorators
 # ============================================================================
 
+
 def validate_args(**validators):
     """
     Validate function arguments using custom validators.
@@ -413,6 +436,7 @@ def validate_args(**validators):
     Args:
         **validators: Mapping of argument names to validator functions
     """
+
     def decorator(func: F) -> F:
         sig = inspect.signature(func)
 
@@ -428,7 +452,9 @@ def validate_args(**validators):
                     value = bound_args.arguments[param_name]
                     try:
                         if not validator(value):
-                            raise ValueError(f"Validation failed for parameter '{param_name}': {value}")
+                            raise ValueError(
+                                f"Validation failed for parameter '{param_name}': {value}"
+                            )
                     except Exception as e:
                         raise ValueError(f"Validation error for parameter '{param_name}': {e}")
 
@@ -442,13 +468,14 @@ def validate_args(**validators):
     return decorator
 
 
-def ensure_authenticated(user_param: str = 'user_id'):
+def ensure_authenticated(user_param: str = "user_id"):
     """
     Ensure user is authenticated before executing function.
 
     Args:
         user_param: Name of the parameter containing user ID
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
@@ -457,7 +484,7 @@ def ensure_authenticated(user_param: str = 'user_id'):
             bound_args.apply_defaults()
 
             user_id = bound_args.arguments.get(user_param)
-            if not user_id or user_id == 'anonymous':
+            if not user_id or user_id == "anonymous":
                 raise PermissionError(f"Authentication required for {func.__qualname__}")
 
             if asyncio.iscoroutinefunction(func):
@@ -474,6 +501,7 @@ def ensure_authenticated(user_param: str = 'user_id'):
 # Context and State Management Decorators
 # ============================================================================
 
+
 def with_context(**context_vars):
     """
     Inject context variables into function execution.
@@ -481,11 +509,12 @@ def with_context(**context_vars):
     Args:
         **context_vars: Context variables to inject
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
             # Store original context if it exists
-            original_context = getattr(wrapper, '_context', {})
+            original_context = getattr(wrapper, "_context", {})
 
             # Merge with new context
             merged_context = {**original_context, **context_vars}
@@ -501,7 +530,7 @@ def with_context(**context_vars):
                 wrapper._context = original_context
 
         # Provide access to current context
-        wrapper.get_context = lambda: getattr(wrapper, '_context', {})
+        wrapper.get_context = lambda: getattr(wrapper, "_context", {})
 
         return wrapper
 
@@ -543,6 +572,7 @@ def singleton(cls):
 # Utility Functions for Decorator Composition
 # ============================================================================
 
+
 def compose_decorators(*decorators):
     """
     Compose multiple decorators into a single decorator.
@@ -550,10 +580,12 @@ def compose_decorators(*decorators):
     Args:
         *decorators: Decorators to compose (applied right to left)
     """
+
     def composed_decorator(func):
         for decorator in reversed(decorators):
             func = decorator(func)
         return func
+
     return composed_decorator
 
 
@@ -562,7 +594,7 @@ def robust_api_endpoint(
     operation_name: str | None = None,
     max_attempts: int = 3,
     rate_limit_calls: int = 100,
-    cache_ttl: float | None = None
+    cache_ttl: float | None = None,
 ):
     """
     Pre-composed decorator for robust API endpoints.
@@ -573,7 +605,7 @@ def robust_api_endpoint(
         measure_performance(operation_name=operation_name),
         retry(max_attempts=max_attempts),
         rate_limit(rate_limit_calls, 60.0),  # 60-second window
-        memoize(ttl=cache_ttl) if cache_ttl else lambda x: x
+        memoize(ttl=cache_ttl) if cache_ttl else lambda x: x,
     )
 
 
@@ -594,10 +626,7 @@ if __name__ == "__main__":
         await asyncio.sleep(0.1)  # Simulate work
         return x + y
 
-    @validate_args(
-        name=lambda x: len(x) > 0,
-        age=lambda x: 0 <= x <= 150
-    )
+    @validate_args(name=lambda x: len(x) > 0, age=lambda x: 0 <= x <= 150)
     def create_user(name: str, age: int) -> dict:
         """Example function with argument validation."""
         return {"name": name, "age": age}
@@ -605,6 +634,7 @@ if __name__ == "__main__":
     @singleton
     class ConfigManager:
         """Example singleton class."""
+
         def __init__(self):
             self.config = {"initialized": True}
 

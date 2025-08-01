@@ -18,7 +18,8 @@ sys.path.insert(0, str(project_root))
 # Also add PYTHONPATH for CI environment
 import os
 
-os.environ['PYTHONPATH'] = str(project_root)
+os.environ["PYTHONPATH"] = str(project_root)
+
 
 def test_memory_domain():
     """Test Memory domain model."""
@@ -109,6 +110,7 @@ def test_memory_domain():
         print(f"[FAIL] Memory domain test: {e}")
         return False
 
+
 def test_user_domain():
     """Test User domain model."""
     print("\nTesting User domain model...")
@@ -178,6 +180,7 @@ def test_user_domain():
         print(f"[FAIL] User domain test: {e}")
         return False
 
+
 def main():
     """Run all domain tests."""
     print("=== Domain Layer Validation ===")
@@ -198,6 +201,7 @@ def main():
         print("[FAILURE] Some domain tests failed.")
 
     return success
+
 
 if __name__ == "__main__":
     success = main()

@@ -1,3 +1,12 @@
+import asyncio
+import logging
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Log Analytics Service - Real-time monitoring using structured logs.
 
@@ -5,23 +14,16 @@ This service processes structured logs to provide real-time monitoring,
 alerting, and performance analytics.
 """
 
-import asyncio
-import logging
-import time
 from collections import defaultdict, deque
 from collections.abc import Callable
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 
 class AlertLevel(str, Enum):
     """Alert severity levels."""
+
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
@@ -31,6 +33,7 @@ class AlertLevel(str, Enum):
 @dataclass
 class LogMetric:
     """Structured log metric."""
+
     timestamp: datetime
     level: str
     operation: str
@@ -44,6 +47,7 @@ class LogMetric:
 @dataclass
 class Alert:
     """System alert based on log analysis."""
+
     id: str
     level: AlertLevel
     title: str
@@ -56,6 +60,7 @@ class Alert:
 @dataclass
 class PerformanceMetrics:
     """Performance metrics aggregated from logs."""
+
     operation: str
     avg_duration_ms: float
     p95_duration_ms: float
@@ -136,7 +141,7 @@ class LogAnalyticsService:
 
         # Update counters
         self.operation_counts[metric.operation] += 1
-        if metric.level in ['ERROR', 'CRITICAL']:
+        if metric.level in ["ERROR", "CRITICAL"]:
             self.error_counts[metric.operation] += 1
         if metric.user_id:
             self.user_activity[metric.user_id] += 1
@@ -155,52 +160,58 @@ class LogAnalyticsService:
         if metric.duration_ms and metric.operation in self.performance_thresholds:
             threshold = self.performance_thresholds[metric.operation]["duration_ms"]
             if metric.duration_ms > threshold:
-                alerts.append(Alert(
-                    id=f"perf_{metric.operation}_{int(time.time())}",
-                    level=AlertLevel.WARNING,
-                    title=f"Slow {metric.operation}",
-                    message=f"Operation took {metric.duration_ms:.1f}ms (threshold: {threshold}ms)",
-                    timestamp=metric.timestamp,
-                    source_operation=metric.operation,
-                    context={
-                        "duration_ms": metric.duration_ms,
-                        "threshold_ms": threshold,
-                        "user_id": metric.user_id,
-                        "request_id": metric.request_id
-                    }
-                ))
+                alerts.append(
+                    Alert(
+                        id=f"perf_{metric.operation}_{int(time.time())}",
+                        level=AlertLevel.WARNING,
+                        title=f"Slow {metric.operation}",
+                        message=f"Operation took {metric.duration_ms:.1f}ms (threshold: {threshold}ms)",
+                        timestamp=metric.timestamp,
+                        source_operation=metric.operation,
+                        context={
+                            "duration_ms": metric.duration_ms,
+                            "threshold_ms": threshold,
+                            "user_id": metric.user_id,
+                            "request_id": metric.request_id,
+                        },
+                    )
+                )
 
         # Memory usage alerts
         if metric.memory_mb and metric.operation in self.performance_thresholds:
             threshold = self.performance_thresholds[metric.operation]["memory_mb"]
             if metric.memory_mb > threshold:
-                alerts.append(Alert(
-                    id=f"mem_{metric.operation}_{int(time.time())}",
-                    level=AlertLevel.WARNING,
-                    title=f"High memory usage in {metric.operation}",
-                    message=f"Operation used {metric.memory_mb:.1f}MB (threshold: {threshold}MB)",
-                    timestamp=metric.timestamp,
-                    source_operation=metric.operation,
-                    context={
-                        "memory_mb": metric.memory_mb,
-                        "threshold_mb": threshold,
-                        "user_id": metric.user_id,
-                        "request_id": metric.request_id
-                    }
-                ))
+                alerts.append(
+                    Alert(
+                        id=f"mem_{metric.operation}_{int(time.time())}",
+                        level=AlertLevel.WARNING,
+                        title=f"High memory usage in {metric.operation}",
+                        message=f"Operation used {metric.memory_mb:.1f}MB (threshold: {threshold}MB)",
+                        timestamp=metric.timestamp,
+                        source_operation=metric.operation,
+                        context={
+                            "memory_mb": metric.memory_mb,
+                            "threshold_mb": threshold,
+                            "user_id": metric.user_id,
+                            "request_id": metric.request_id,
+                        },
+                    )
+                )
 
         # Error rate alerts
         error_rate = self._calculate_error_rate(metric.operation)
         if error_rate > 0.1:  # 10% error rate
-            alerts.append(Alert(
-                id=f"error_{metric.operation}_{int(time.time())}",
-                level=AlertLevel.ERROR,
-                title=f"High error rate in {metric.operation}",
-                message=f"Error rate: {error_rate:.1%}",
-                timestamp=metric.timestamp,
-                source_operation=metric.operation,
-                context={"error_rate": error_rate}
-            ))
+            alerts.append(
+                Alert(
+                    id=f"error_{metric.operation}_{int(time.time())}",
+                    level=AlertLevel.ERROR,
+                    title=f"High error rate in {metric.operation}",
+                    message=f"Error rate: {error_rate:.1%}",
+                    timestamp=metric.timestamp,
+                    source_operation=metric.operation,
+                    context={"error_rate": error_rate},
+                )
+            )
 
         # Process alerts
         for alert in alerts:
@@ -215,8 +226,10 @@ class LogAnalyticsService:
 
         # Get recent metrics for this operation
         recent_metrics = [
-            m for m in self.metrics_buffer
-            if m.operation == operation and m.duration_ms is not None
+            m
+            for m in self.metrics_buffer
+            if m.operation == operation
+            and m.duration_ms is not None
             and (datetime.utcnow() - m.timestamp) < timedelta(minutes=5)
         ]
 
@@ -231,7 +244,7 @@ class LogAnalyticsService:
         p95_duration = durations[int(len(durations) * 0.95)]
         p99_duration = durations[int(len(durations) * 0.99)]
 
-        error_count = sum(1 for m in recent_metrics if m.level in ['ERROR', 'CRITICAL'])
+        error_count = sum(1 for m in recent_metrics if m.level in ["ERROR", "CRITICAL"])
         error_rate = error_count / len(recent_metrics)
 
         memory_values = [m.memory_mb for m in recent_metrics if m.memory_mb is not None]
@@ -246,7 +259,7 @@ class LogAnalyticsService:
             total_calls=len(recent_metrics),
             error_rate=error_rate,
             avg_memory_mb=avg_memory,
-            last_updated=datetime.utcnow()
+            last_updated=datetime.utcnow(),
         )
 
     def _calculate_error_rate(self, operation: str) -> float:
@@ -264,25 +277,27 @@ class LogAnalyticsService:
         self.alerts = [a for a in self.alerts if a.timestamp > cutoff]
 
         # Log the alert
-        logger.warning("System alert generated", extra={
-            "alert_id": alert.id,
-            "alert_level": alert.level,
-            "alert_title": alert.title,
-            "alert_message": alert.message,
-            "source_operation": alert.source_operation,
-            "alert_context": alert.context
-        })
+        logger.warning(
+            "System alert generated",
+            extra={
+                "alert_id": alert.id,
+                "alert_level": alert.level,
+                "alert_title": alert.title,
+                "alert_message": alert.message,
+                "source_operation": alert.source_operation,
+                "alert_context": alert.context,
+            },
+        )
 
         # Notify alert handlers
         for handler in self.alert_handlers:
             try:
                 handler(alert)
             except Exception as e:
-                logger.error("Alert handler failed", extra={
-                    "handler": str(handler),
-                    "error": str(e),
-                    "alert_id": alert.id
-                })
+                logger.error(
+                    "Alert handler failed",
+                    extra={"handler": str(handler), "error": str(e), "alert_id": alert.id},
+                )
 
     async def _process_metrics_loop(self):
         """Background loop for processing metrics."""
@@ -292,16 +307,18 @@ class LogAnalyticsService:
                 cutoff = datetime.utcnow() - timedelta(hours=1)
                 old_count = len(self.metrics_buffer)
                 self.metrics_buffer = deque(
-                    [m for m in self.metrics_buffer if m.timestamp > cutoff],
-                    maxlen=10000
+                    [m for m in self.metrics_buffer if m.timestamp > cutoff], maxlen=10000
                 )
                 new_count = len(self.metrics_buffer)
 
                 if old_count != new_count:
-                    logger.debug("Cleaned old metrics", extra={
-                        "removed_count": old_count - new_count,
-                        "remaining_count": new_count
-                    })
+                    logger.debug(
+                        "Cleaned old metrics",
+                        extra={
+                            "removed_count": old_count - new_count,
+                            "remaining_count": new_count,
+                        },
+                    )
 
                 # Sleep before next iteration
                 await asyncio.sleep(60)  # Process every minute
@@ -309,17 +326,15 @@ class LogAnalyticsService:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.exception("Error in metrics processing loop", extra={
-                    "error_type": type(e).__name__
-                })
+                logger.exception(
+                    "Error in metrics processing loop", extra={"error_type": type(e).__name__}
+                )
                 await asyncio.sleep(10)  # Short sleep on error
 
     def add_alert_handler(self, handler: Callable[[Alert], None]):
         """Add custom alert handler."""
         self.alert_handlers.append(handler)
-        logger.info("Alert handler added", extra={
-            "handler_count": len(self.alert_handlers)
-        })
+        logger.info("Alert handler added", extra={"handler_count": len(self.alert_handlers)})
 
     def get_dashboard_data(self) -> dict[str, Any]:
         """Get current dashboard data."""
@@ -334,11 +349,13 @@ class LogAnalyticsService:
         for metric in recent_metrics:
             stats = operation_stats[metric.operation]
             stats["count"] += 1
-            if metric.level in ['ERROR', 'CRITICAL']:
+            if metric.level in ["ERROR", "CRITICAL"]:
                 stats["errors"] += 1
             if metric.duration_ms:
                 current_avg = stats["avg_duration"]
-                stats["avg_duration"] = (current_avg * (stats["count"] - 1) + metric.duration_ms) / stats["count"]
+                stats["avg_duration"] = (
+                    current_avg * (stats["count"] - 1) + metric.duration_ms
+                ) / stats["count"]
 
         # Active alerts
         active_alerts = [a for a in self.alerts if (now - a.timestamp) < timedelta(minutes=30)]
@@ -350,7 +367,7 @@ class LogAnalyticsService:
                 "total_operations": len(recent_metrics),
                 "unique_operations": len(operation_stats),
                 "error_count": sum(stats["errors"] for stats in operation_stats.values()),
-                "active_users": len(set(m.user_id for m in recent_metrics if m.user_id))
+                "active_users": len(set(m.user_id for m in recent_metrics if m.user_id)),
             },
             "operation_stats": dict(operation_stats),
             "performance_metrics": {
@@ -358,7 +375,7 @@ class LogAnalyticsService:
                     "avg_duration_ms": metrics.avg_duration_ms,
                     "p95_duration_ms": metrics.p95_duration_ms,
                     "error_rate": metrics.error_rate,
-                    "total_calls": metrics.total_calls
+                    "total_calls": metrics.total_calls,
                 }
                 for op, metrics in self.performance_cache.items()
             },
@@ -369,10 +386,10 @@ class LogAnalyticsService:
                     "title": alert.title,
                     "message": alert.message,
                     "timestamp": alert.timestamp.isoformat(),
-                    "operation": alert.source_operation
+                    "operation": alert.source_operation,
                 }
                 for alert in active_alerts
-            ]
+            ],
         }
 
 
@@ -387,21 +404,21 @@ class StructuredLogHandler(logging.Handler):
         """Process log record for analytics."""
         try:
             # Only process logs with structured data
-            if not hasattr(record, 'extra_data'):
+            if not hasattr(record, "extra_data"):
                 return
 
             # Extract structured data
-            extra_data = getattr(record, 'extra_data', {})
+            extra_data = getattr(record, "extra_data", {})
 
             metric = LogMetric(
                 timestamp=datetime.fromtimestamp(record.created),
                 level=record.levelname,
-                operation=extra_data.get('operation', 'unknown'),
-                duration_ms=extra_data.get('duration_ms'),
-                memory_mb=extra_data.get('memory_mb'),
-                user_id=extra_data.get('user_id'),
-                request_id=extra_data.get('request_id'),
-                extra_data=extra_data
+                operation=extra_data.get("operation", "unknown"),
+                duration_ms=extra_data.get("duration_ms"),
+                memory_mb=extra_data.get("memory_mb"),
+                user_id=extra_data.get("user_id"),
+                request_id=extra_data.get("request_id"),
+                extra_data=extra_data,
             )
 
             # Process asynchronously

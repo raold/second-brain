@@ -9,7 +9,12 @@ from uuid import UUID
 
 import pytest
 
-from app.models.synthesis.summary_models import FormatType, SummaryRequest, SummaryResponse, SummaryType
+from app.models.synthesis.summary_models import (
+    FormatType,
+    SummaryRequest,
+    SummaryResponse,
+    SummaryType,
+)
 from app.services.synthesis.knowledge_summarizer import KnowledgeDomain, KnowledgeSummarizer
 
 
@@ -32,7 +37,11 @@ class TestKnowledgeDomain:
         domain = KnowledgeDomain("AI/ML")
 
         # Add a memory to the domain
-        memory = {"id": "mem1", "content": "Machine learning basics", "created_at": datetime.now().isoformat()}
+        memory = {
+            "id": "mem1",
+            "content": "Machine learning basics",
+            "created_at": datetime.now().isoformat(),
+        }
         domain.memories.append(memory)
 
         assert len(domain.memories) == 1
@@ -63,7 +72,7 @@ class TestKnowledgeSummarizer:
         self.summarizer = KnowledgeSummarizer(
             db=self.mock_db,
             memory_service=self.mock_memory_service,
-            openai_client=self.mock_openai_client
+            openai_client=self.mock_openai_client,
         )
 
     @pytest.mark.asyncio
@@ -75,29 +84,36 @@ class TestKnowledgeSummarizer:
                 "id": "mem1",
                 "content": "Python is a programming language",
                 "created_at": datetime.now().isoformat(),
-                "metadata": {"type": "note"}
+                "metadata": {"type": "note"},
             },
             {
                 "id": "mem2",
                 "content": "Machine learning uses Python extensively",
                 "created_at": datetime.now().isoformat(),
-                "metadata": {"type": "note"}
-            }
+                "metadata": {"type": "note"},
+            },
         ]
 
         # Mock memory fetching
-        with patch.object(self.summarizer, '_fetch_memories_for_summary', return_value=sample_memories):
+        with patch.object(
+            self.summarizer, "_fetch_memories_for_summary", return_value=sample_memories
+        ):
             # Mock domain organization
-            with patch.object(self.summarizer, '_organize_knowledge_domains', return_value={}):
+            with patch.object(self.summarizer, "_organize_knowledge_domains", return_value={}):
                 # Mock insight extraction
-                with patch.object(self.summarizer, '_extract_key_insights', return_value=[]):
+                with patch.object(self.summarizer, "_extract_key_insights", return_value=[]):
                     # Mock template formatting
-                    with patch.object(self.summarizer, '_create_executive_summary', return_value=[]):
+                    with patch.object(
+                        self.summarizer, "_create_executive_summary", return_value=[]
+                    ):
 
                         request = SummaryRequest(
                             summary_type=SummaryType.EXECUTIVE,
-                            memory_ids=[UUID("12345678-1234-5678-9012-123456789abc"), UUID("12345678-1234-5678-9012-123456789abd")],
-                            format_type=FormatType.STRUCTURED
+                            memory_ids=[
+                                UUID("12345678-1234-5678-9012-123456789abc"),
+                                UUID("12345678-1234-5678-9012-123456789abd"),
+                            ],
+                            format_type=FormatType.STRUCTURED,
                         )
 
                         response = await self.summarizer.create_summary(request)
@@ -109,9 +125,7 @@ class TestKnowledgeSummarizer:
     async def test_create_summary_no_memories(self):
         """Test summary creation with no memories"""
         request = SummaryRequest(
-            summary_type=SummaryType.EXECUTIVE,
-            memory_ids=[],
-            format_type=FormatType.STRUCTURED
+            summary_type=SummaryType.EXECUTIVE, memory_ids=[], format_type=FormatType.STRUCTURED
         )
 
         response = await self.summarizer.create_summary(request)
@@ -127,14 +141,17 @@ class TestKnowledgeSummarizer:
         # Mock memory service
         sample_memories = [
             {"id": "mem1", "content": "Test content 1"},
-            {"id": "mem2", "content": "Test content 2"}
+            {"id": "mem2", "content": "Test content 2"},
         ]
         self.mock_memory_service.get_memory.side_effect = sample_memories
 
         request = SummaryRequest(
             summary_type=SummaryType.DETAILED,
-            memory_ids=[UUID("12345678-1234-5678-9012-123456789abc"), UUID("12345678-1234-5678-9012-123456789abd")],
-            format_type=FormatType.STRUCTURED
+            memory_ids=[
+                UUID("12345678-1234-5678-9012-123456789abc"),
+                UUID("12345678-1234-5678-9012-123456789abd"),
+            ],
+            format_type=FormatType.STRUCTURED,
         )
 
         memories = await self.summarizer._fetch_memories_for_summary(request)
@@ -151,15 +168,15 @@ class TestKnowledgeSummarizer:
                 "content": "Python programming concepts and syntax",
                 "created_at": datetime.now().isoformat(),
                 "metadata": {"tags": ["python", "programming"]},
-                "importance": 0.8
+                "importance": 0.8,
             },
             {
                 "id": "mem2",
                 "content": "Machine learning algorithms in Python",
                 "created_at": datetime.now().isoformat(),
                 "metadata": {"tags": ["ml", "python"]},
-                "importance": 0.9
-            }
+                "importance": 0.9,
+            },
         ]
 
         domains = await self.summarizer._organize_knowledge_domains(memories)
@@ -172,7 +189,7 @@ class TestKnowledgeSummarizer:
         """Test topic discovery from memories"""
         memories = [
             {"id": "mem1", "content": "Python data structures list dict tuple"},
-            {"id": "mem2", "content": "Machine learning classification regression"}
+            {"id": "mem2", "content": "Machine learning classification regression"},
         ]
 
         topics = await self.summarizer._discover_topics(memories)
@@ -185,7 +202,11 @@ class TestKnowledgeSummarizer:
         """Test key insight extraction"""
         memories = [
             {"id": "mem1", "content": "Important discovery about AI safety", "importance": 0.9},
-            {"id": "mem2", "content": "Critical learning about model performance", "importance": 0.8}
+            {
+                "id": "mem2",
+                "content": "Critical learning about model performance",
+                "importance": 0.8,
+            },
         ]
         domains = {"AI": KnowledgeDomain("AI")}
 
@@ -200,17 +221,17 @@ class TestKnowledgeSummarizer:
         request_executive = SummaryRequest(
             summary_type=SummaryType.EXECUTIVE,
             memory_ids=[UUID("12345678-1234-5678-9012-123456789abc")],
-            format_type=FormatType.STRUCTURED
+            format_type=FormatType.STRUCTURED,
         )
 
         request_technical = SummaryRequest(
             summary_type=SummaryType.TECHNICAL,
             memory_ids=[UUID("12345678-1234-5678-9012-123456789abc")],
-            format_type=FormatType.STRUCTURED
+            format_type=FormatType.STRUCTURED,
         )
 
         # Mock memory fetching to return empty to avoid complex mocking
-        with patch.object(self.summarizer, '_fetch_memories_for_summary', return_value=[]):
+        with patch.object(self.summarizer, "_fetch_memories_for_summary", return_value=[]):
             response_exec = await self.summarizer.create_summary(request_executive)
             response_tech = await self.summarizer.create_summary(request_technical)
 
@@ -224,7 +245,7 @@ class TestKnowledgeSummarizer:
         insights = ["Key insight about productivity", "Important finding about efficiency"]
 
         # Use patch to mock the method directly
-        with patch.object(self.summarizer, '_create_executive_summary', return_value=[]):
+        with patch.object(self.summarizer, "_create_executive_summary", return_value=[]):
 
             segments = await self.summarizer._create_executive_summary(domains, insights)
 
@@ -238,7 +259,7 @@ class TestKnowledgeSummarizer:
         insights = ["Detailed research finding", "Comprehensive analysis result"]
 
         # Use patch to mock the method directly
-        with patch.object(self.summarizer, '_create_detailed_summary', return_value=[]):
+        with patch.object(self.summarizer, "_create_detailed_summary", return_value=[]):
 
             segments = await self.summarizer._create_detailed_summary(domains, insights)
 
@@ -252,7 +273,7 @@ class TestKnowledgeSummarizer:
         insights = ["Technical implementation detail", "Architecture decision rationale"]
 
         # Use patch to mock the method directly
-        with patch.object(self.summarizer, '_create_technical_summary', return_value=[]):
+        with patch.object(self.summarizer, "_create_technical_summary", return_value=[]):
 
             segments = await self.summarizer._create_technical_summary(domains, insights)
 
@@ -266,7 +287,7 @@ class TestKnowledgeSummarizer:
         insights = ["Learning objective achieved", "Skill development milestone"]
 
         # Use patch to mock the method directly
-        with patch.object(self.summarizer, '_create_learning_summary', return_value=[]):
+        with patch.object(self.summarizer, "_create_learning_summary", return_value=[]):
 
             segments = await self.summarizer._create_learning_summary(domains, insights)
 
@@ -290,15 +311,15 @@ class TestKnowledgeSummarizer:
         """Test coverage score calculation"""
         memories = [
             {"id": "mem1", "content": "Python programming"},
-            {"id": "mem2", "content": "Data science methods"}
+            {"id": "mem2", "content": "Data science methods"},
         ]
         domains = {
             "Programming": KnowledgeDomain("Programming"),
-            "Data Science": KnowledgeDomain("Data Science")
+            "Data Science": KnowledgeDomain("Data Science"),
         }
 
         # Mock the calculation to return a reasonable score
-        with patch.object(self.summarizer, '_calculate_coverage_score', return_value=0.75):
+        with patch.object(self.summarizer, "_calculate_coverage_score", return_value=0.75):
             score = self.summarizer._calculate_coverage_score(memories, domains)
 
             assert isinstance(score, float)
@@ -328,11 +349,11 @@ class TestKnowledgeSummarizer:
         domain.memories = [
             {"created_at": (datetime.now() - timedelta(days=5)).isoformat()},
             {"created_at": (datetime.now() - timedelta(days=3)).isoformat()},
-            {"created_at": datetime.now().isoformat()}
+            {"created_at": datetime.now().isoformat()},
         ]
 
         # Mock the growth trend calculation to return a reasonable value
-        with patch.object(self.summarizer, '_calculate_growth_trend', return_value="increasing"):
+        with patch.object(self.summarizer, "_calculate_growth_trend", return_value="increasing"):
             trend = self.summarizer._calculate_growth_trend(domain)
 
             assert isinstance(trend, str)
@@ -341,9 +362,7 @@ class TestKnowledgeSummarizer:
     def test_empty_summary_response(self):
         """Test empty summary response creation"""
         request = SummaryRequest(
-            summary_type=SummaryType.EXECUTIVE,
-            memory_ids=[],
-            format_type=FormatType.STRUCTURED
+            summary_type=SummaryType.EXECUTIVE, memory_ids=[], format_type=FormatType.STRUCTURED
         )
 
         response = self.summarizer._empty_summary_response(request)
@@ -378,7 +397,7 @@ class TestKnowledgeSummarizerIntegration:
         self.summarizer = KnowledgeSummarizer(
             db=self.mock_db,
             memory_service=self.mock_memory_service,
-            openai_client=self.mock_openai_client
+            openai_client=self.mock_openai_client,
         )
 
     @pytest.mark.asyncio
@@ -390,34 +409,34 @@ class TestKnowledgeSummarizerIntegration:
                 "id": "mem1",
                 "content": "Comprehensive study of machine learning algorithms",
                 "created_at": datetime.now().isoformat(),
-                "metadata": {"type": "research", "importance": 0.9}
+                "metadata": {"type": "research", "importance": 0.9},
             }
         ]
 
         # Mock all dependencies
-        with patch.object(self.summarizer, '_fetch_memories_for_summary', return_value=memories):
-            with patch.object(self.summarizer, '_organize_knowledge_domains', return_value={}):
-                with patch.object(self.summarizer, '_extract_key_insights', return_value=[]):
+        with patch.object(self.summarizer, "_fetch_memories_for_summary", return_value=memories):
+            with patch.object(self.summarizer, "_organize_knowledge_domains", return_value={}):
+                with patch.object(self.summarizer, "_extract_key_insights", return_value=[]):
 
                     request = SummaryRequest(
                         summary_type=SummaryType.DETAILED,
                         memory_ids=[UUID("12345678-1234-5678-9012-123456789abc")],
                         format_type=FormatType.STRUCTURED,
-                        max_length=1000
+                        max_length=1000,
                     )
 
                     response = await self.summarizer.create_summary(request)
 
                     # Verify response structure
                     assert isinstance(response, SummaryResponse)
-                    assert hasattr(response, 'id')
-                    assert hasattr(response, 'summary_type')
-                    assert hasattr(response, 'segments')
-                    assert hasattr(response, 'key_insights')
-                    assert hasattr(response, 'domains')
-                    assert hasattr(response, 'confidence_score')
-                    assert hasattr(response, 'metadata')
-                    assert hasattr(response, 'created_at')
+                    assert hasattr(response, "id")
+                    assert hasattr(response, "summary_type")
+                    assert hasattr(response, "segments")
+                    assert hasattr(response, "key_insights")
+                    assert hasattr(response, "domains")
+                    assert hasattr(response, "confidence_score")
+                    assert hasattr(response, "metadata")
+                    assert hasattr(response, "created_at")
 
     @pytest.mark.asyncio
     async def test_error_handling_in_summary_creation(self):
@@ -426,11 +445,13 @@ class TestKnowledgeSummarizerIntegration:
         request = SummaryRequest(
             summary_type=SummaryType.EXECUTIVE,
             memory_ids=[UUID("12345678-1234-5678-9012-123456789abc")],
-            format_type=FormatType.STRUCTURED
+            format_type=FormatType.STRUCTURED,
         )
 
         # Mock memory service to raise exception
-        with patch.object(self.summarizer, '_fetch_memories_for_summary', side_effect=Exception("Database error")):
+        with patch.object(
+            self.summarizer, "_fetch_memories_for_summary", side_effect=Exception("Database error")
+        ):
             response = await self.summarizer.create_summary(request)
 
             # Should handle error gracefully

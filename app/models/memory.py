@@ -1,16 +1,23 @@
+from datetime import datetime
+from typing import Any
+from uuid import uuid4
+
+from pydantic import BaseModel
+
+from app.models.memory import Memory, MemoryType
+
 """
 Memory models for Second Brain
 """
 
-from datetime import datetime
 from enum import Enum
-from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 
 class User(BaseModel):
     """User model"""
+
     id: str
     email: str
     username: str
@@ -18,6 +25,7 @@ class User(BaseModel):
 
 class MemoryType(str, Enum):
     """Memory type enumeration"""
+
     FACTUAL = "factual"
     PROCEDURAL = "procedural"
     EPISODIC = "episodic"
@@ -43,9 +51,9 @@ class Memory(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     @classmethod
-    def create(cls, content: str, memory_type: MemoryType, user_id: str | None = None) -> 'Memory':
+    def create(cls, content: str, memory_type: MemoryType, user_id: str | None = None) -> "Memory":
         """Create a new memory with default values."""
-        from uuid import uuid4
+
         now = datetime.utcnow()
         return cls(
             id=str(uuid4()),
@@ -53,12 +61,13 @@ class Memory(BaseModel):
             memory_type=memory_type,
             created_at=now,
             updated_at=now,
-            user_id=user_id
+            user_id=user_id,
         )
 
 
 class MemoryMetrics(BaseModel):
     """Memory metrics and statistics"""
+
     total_memories: int
     memories_by_type: dict[str, int]
     average_importance: float

@@ -20,9 +20,7 @@ class TestReportModels:
     def test_report_request_creation(self):
         """Test creating a report request"""
         request = ReportRequest(
-            report_type=ReportType.DAILY_SUMMARY,
-            format=ReportFormat.MARKDOWN,
-            user_id="user-123"
+            report_type=ReportType.DAILY_SUMMARY, format=ReportFormat.MARKDOWN, user_id="user-123"
         )
 
         assert request.report_type == ReportType.DAILY_SUMMARY
@@ -33,15 +31,9 @@ class TestReportModels:
         """Test creating a report response"""
         sections = [
             ReportSection(
-                title="Executive Summary",
-                content="This is the summary content",
-                order=1
+                title="Executive Summary", content="This is the summary content", order=1
             ),
-            ReportSection(
-                title="Details",
-                content="Detailed analysis here",
-                order=2
-            )
+            ReportSection(title="Details", content="Detailed analysis here", order=2),
         ]
 
         response = ReportResponse(
@@ -49,7 +41,7 @@ class TestReportModels:
             report_type=ReportType.WEEKLY_INSIGHTS,
             format=ReportFormat.HTML,
             sections=sections,
-            generated_at=datetime.utcnow().isoformat()
+            generated_at=datetime.utcnow().isoformat(),
         )
 
         assert response.report_id == "report-123"
@@ -66,7 +58,7 @@ class TestReportModels:
             cron_expression="0 9 1 * *",  # First day of month at 9 AM
             is_active=True,
             last_run=None,
-            next_run=datetime.utcnow().isoformat()
+            next_run=datetime.utcnow().isoformat(),
         )
 
         assert schedule.schedule_id == "schedule-456"
@@ -80,7 +72,7 @@ class TestReportModels:
         sections = [
             ReportSection(title="Third", content="Content 3", order=3),
             ReportSection(title="First", content="Content 1", order=1),
-            ReportSection(title="Second", content="Content 2", order=2)
+            ReportSection(title="Second", content="Content 2", order=2),
         ]
 
         # Sort by order

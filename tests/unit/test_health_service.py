@@ -6,6 +6,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 pytestmark = pytest.mark.unit
 
 from app.services.health_service import HealthService
@@ -25,7 +26,7 @@ class TestHealthService:
             "hnsw_index_exists": False,
             "ivf_index_exists": False,
             "avg_content_length": 256.5,
-            "recommended_index_threshold": 1000
+            "recommended_index_threshold": 1000,
         }
         self.health_service = HealthService(self.mock_db)
 
@@ -44,7 +45,7 @@ class TestHealthService:
     async def test_get_health_status_with_exception(self):
         """Test health status when an exception occurs"""
         # Mock version_info to raise exception
-        with patch('app.services.health_service.get_version_info') as mock_version:
+        with patch("app.services.health_service.get_version_info") as mock_version:
             mock_version.side_effect = Exception("Version error")
 
             health_status = await self.health_service.get_health_status()
@@ -154,13 +155,15 @@ class TestHealthServiceIntegration:
         mock_db.get_memory_count = AsyncMock(return_value=100)
         mock_db.get_database_size = AsyncMock(return_value=1024 * 1024)
         mock_db.check_connection = AsyncMock(return_value=True)
-        mock_db.get_index_stats = AsyncMock(return_value={
-            "total_memories": 100,
-            "memories_with_embeddings": 100,
-            "hnsw_index_exists": False,
-            "ivf_index_exists": False,
-            "index_ready": False
-        })
+        mock_db.get_index_stats = AsyncMock(
+            return_value={
+                "total_memories": 100,
+                "memories_with_embeddings": 100,
+                "hnsw_index_exists": False,
+                "ivf_index_exists": False,
+                "index_ready": False,
+            }
+        )
         mock_db.pool = AsyncMock()
 
         health_service = HealthService(mock_db)
@@ -218,13 +221,15 @@ class TestHealthServiceErrorHandling:
         # Mock database methods that raise exceptions
         mock_db.get_memory_count = AsyncMock(side_effect=Exception("DB error"))
         mock_db.check_connection = AsyncMock(side_effect=Exception("Connection failed"))
-        mock_db.get_index_stats = AsyncMock(return_value={
-            "total_memories": 0,
-            "memories_with_embeddings": 0,
-            "hnsw_index_exists": False,
-            "ivf_index_exists": False,
-            "index_ready": False
-        })
+        mock_db.get_index_stats = AsyncMock(
+            return_value={
+                "total_memories": 0,
+                "memories_with_embeddings": 0,
+                "hnsw_index_exists": False,
+                "ivf_index_exists": False,
+                "index_ready": False,
+            }
+        )
         mock_db.pool = AsyncMock()
 
         health_service = HealthService(mock_db)
@@ -241,13 +246,16 @@ class TestHealthServiceErrorHandling:
 
         # Database status should indicate issues
         if "database" in system_status:
-            assert "error" in system_status["database"] or system_status["database"]["status"] == "unhealthy"
+            assert (
+                "error" in system_status["database"]
+                or system_status["database"]["status"] == "unhealthy"
+            )
 
     @pytest.mark.asyncio
     async def test_system_resource_error_handling(self):
         """Test handling of system resource access errors"""
         # Mock psutil to raise exceptions
-        with patch('psutil.cpu_percent') as mock_cpu:
+        with patch("psutil.cpu_percent") as mock_cpu:
             mock_cpu.side_effect = Exception("CPU access error")
 
             health_service = HealthService()

@@ -1,3 +1,9 @@
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, Field
+
 """
 Deduplication Data Models
 
@@ -5,12 +11,9 @@ Comprehensive data models for memory deduplication operations,
 including enums, configurations, and result structures.
 """
 
-from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
-from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict
 
 
 class SimilarityMethod(str, Enum):
@@ -102,7 +105,9 @@ class DuplicateGroup:
         """Average similarity score for the group."""
         if not self.similarity_scores:
             return 0.0
-        return sum(score.overall_similarity for score in self.similarity_scores) / len(self.similarity_scores)
+        return sum(score.overall_similarity for score in self.similarity_scores) / len(
+            self.similarity_scores
+        )
 
 
 @dataclass
@@ -172,12 +177,20 @@ class DeduplicationConfig(BaseModel):
     similarity_method: SimilarityMethod = Field(
         default=SimilarityMethod.HYBRID, description="Method for similarity detection"
     )
-    similarity_threshold: float = Field(default=0.8, ge=0.0, le=1.0, description="Minimum similarity for duplicates")
+    similarity_threshold: float = Field(
+        default=0.8, ge=0.0, le=1.0, description="Minimum similarity for duplicates"
+    )
 
     # Similarity weights (must sum to approximately 1.0)
-    content_weight: float = Field(default=0.6, ge=0.0, le=1.0, description="Weight for content similarity")
-    metadata_weight: float = Field(default=0.3, ge=0.0, le=1.0, description="Weight for metadata similarity")
-    structural_weight: float = Field(default=0.1, ge=0.0, le=1.0, description="Weight for structural similarity")
+    content_weight: float = Field(
+        default=0.6, ge=0.0, le=1.0, description="Weight for content similarity"
+    )
+    metadata_weight: float = Field(
+        default=0.3, ge=0.0, le=1.0, description="Weight for metadata similarity"
+    )
+    structural_weight: float = Field(
+        default=0.1, ge=0.0, le=1.0, description="Weight for structural similarity"
+    )
 
     # Merge and action settings
     merge_strategy: MergeStrategy = Field(
@@ -189,32 +202,42 @@ class DeduplicationConfig(BaseModel):
 
     # Processing settings
     batch_size: int = Field(default=100, gt=0, description="Batch size for processing")
-    max_comparisons: int | None = Field(default=10000, gt=0, description="Maximum number of pairwise comparisons")
+    max_comparisons: int | None = Field(
+        default=10000, gt=0, description="Maximum number of pairwise comparisons"
+    )
 
     # Fuzzy matching settings
     enable_fuzzy_matching: bool = Field(default=True, description="Enable fuzzy string matching")
-    fuzzy_threshold: float = Field(default=0.85, ge=0.0, le=1.0, description="Threshold for fuzzy matching")
+    fuzzy_threshold: float = Field(
+        default=0.85, ge=0.0, le=1.0, description="Threshold for fuzzy matching"
+    )
 
     # Semantic similarity settings
-    enable_semantic_analysis: bool = Field(default=True, description="Enable semantic similarity analysis")
+    enable_semantic_analysis: bool = Field(
+        default=True, description="Enable semantic similarity analysis"
+    )
     semantic_model: str = Field(
-        default="sentence-transformers/all-MiniLM-L6-v2", description="Model for semantic embeddings"
+        default="sentence-transformers/all-MiniLM-L6-v2",
+        description="Model for semantic embeddings",
     )
 
     # Safety and backup settings
-    preserve_metadata: bool = Field(default=True, description="Preserve metadata from all duplicates")
+    preserve_metadata: bool = Field(
+        default=True, description="Preserve metadata from all duplicates"
+    )
     create_backup: bool = Field(default=True, description="Create backup before deduplication")
     dry_run: bool = Field(default=False, description="Perform dry run without making changes")
 
     # Performance settings
     enable_caching: bool = Field(default=True, description="Enable similarity score caching")
-    parallel_processing: bool = Field(default=True, description="Enable parallel processing where possible")
-    max_workers: int = Field(default=4, gt=0, description="Maximum worker threads for parallel processing")
-
-    model_config = ConfigDict(
-        use_enum_values=True,
-        validate_assignment=True
+    parallel_processing: bool = Field(
+        default=True, description="Enable parallel processing where possible"
     )
+    max_workers: int = Field(
+        default=4, gt=0, description="Maximum worker threads for parallel processing"
+    )
+
+    model_config = ConfigDict(use_enum_values=True, validate_assignment=True)
 
     def validate_weights(self) -> bool:
         """Validate that similarity weights sum to approximately 1.0."""

@@ -15,6 +15,7 @@ class NodeMetrics(BaseModel):
 
 class ConnectivityMetrics(BaseModel):
     """Connectivity metrics for the graph"""
+
     is_connected: bool = Field(default=False)
     num_connected_components: int = Field(default=0, ge=0)
     largest_component_size: int = Field(default=0, ge=0)
@@ -29,6 +30,7 @@ class ConnectivityMetrics(BaseModel):
 
 class TemporalMetrics(BaseModel):
     """Temporal metrics for memory creation patterns"""
+
     growth_rate: float = Field(default=0.0)  # memories per day
     recent_activity_score: float = Field(default=0.0, ge=0, le=1)
     temporal_clusters: list[dict[str, Any]] = Field(default_factory=list)
@@ -38,6 +40,7 @@ class TemporalMetrics(BaseModel):
 
 class KnowledgeCluster(BaseModel):
     """Represents a cluster of related knowledge"""
+
     cluster_id: str
     cluster_theme: str
     size: int = Field(ge=1)
@@ -49,6 +52,7 @@ class KnowledgeCluster(BaseModel):
 
 class ClusterMetrics(BaseModel):
     """Metrics for knowledge clusters"""
+
     clusters: list[KnowledgeCluster] = Field(default_factory=list)
     modularity: float = Field(default=0.0, ge=-1, le=1)
     num_clusters: int = Field(default=0, ge=0)
@@ -60,6 +64,7 @@ class ClusterMetrics(BaseModel):
 
 class GraphMetrics(BaseModel):
     """Extended graph metrics with all fields"""
+
     total_nodes: int = Field(default=0, ge=0)
     total_edges: int = Field(default=0, ge=0)
     graph_density: float = Field(default=0.0, ge=0, le=1)
@@ -80,6 +85,7 @@ class MetricsReport(BaseModel):
 
 class MetricsAlert(BaseModel):
     """Alert for significant metric changes"""
+
     id: UUID = Field(default_factory=uuid4)
     metric_name: str
     alert_type: str = Field(default="threshold")  # "threshold", "anomaly", "trend"
@@ -98,6 +104,7 @@ class MetricsAlert(BaseModel):
 
 class MetricsTrend(BaseModel):
     """Trend data for a metric over time"""
+
     metric_name: str
     time_points: list[datetime]
     values: list[float]
@@ -108,6 +115,7 @@ class MetricsTrend(BaseModel):
 
 class MetricsSnapshot(BaseModel):
     """Snapshot of all metrics at a point in time"""
+
     id: UUID = Field(default_factory=uuid4)
     user_id: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
@@ -120,6 +128,7 @@ class MetricsSnapshot(BaseModel):
 
 class MetricsDashboard(BaseModel):
     """Dashboard configuration and data"""
+
     id: UUID = Field(default_factory=uuid4)
     user_id: str
     name: str
@@ -135,6 +144,7 @@ class MetricsDashboard(BaseModel):
 
 class MetricsRequest(BaseModel):
     """Request for graph metrics calculation"""
+
     memory_ids: list[UUID] | None = None
     include_relationships: bool = Field(default=True)
     include_temporal: bool = Field(default=True)

@@ -10,9 +10,9 @@ from .memory_repository import MemoryRepository, PostgreSQLMemoryRepository
 from .session_repository import PostgreSQLSessionRepository, SessionRepository
 
 __all__ = [
-    'BaseRepository',
-    'MemoryRepository',
-    'PostgreSQLMemoryRepository',
-    'SessionRepository',
-    'PostgreSQLSessionRepository',
+    "BaseRepository",
+    "MemoryRepository",
+    "PostgreSQLMemoryRepository",
+    "SessionRepository",
+    "PostgreSQLSessionRepository",
 ]

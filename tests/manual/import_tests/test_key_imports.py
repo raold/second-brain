@@ -6,7 +6,8 @@ Test key imports that are most likely to have issues
 import sys
 
 # Add the project root to sys.path
-sys.path.insert(0, '/Users/dro/Documents/second-brain')
+sys.path.insert(0, "/Users/dro/Documents/second-brain")
+
 
 def test_import(module_name, description):
     """Test importing a module and report results"""
@@ -18,6 +19,7 @@ def test_import(module_name, description):
     except Exception as e:
         print(f"  ❌ FAILED: {e}")
         return False
+
 
 def main():
     """Test critical imports"""
@@ -53,6 +55,7 @@ def main():
     else:
         print("\n🎉 All critical imports successful!")
         return 0
+
 
 if __name__ == "__main__":
     exit_code = main()

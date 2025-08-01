@@ -1,9 +1,13 @@
+import os
+
+from app.core.redis_manager import get_redis_client
+from app.utils.logging_config import get_logger
+
 """
 Redis Connection Manager for Second Brain v3.0.0
 Handles Redis connections for caching and rate limiting
 """
 
-import os
 from contextlib import asynccontextmanager
 
 import redis.asyncio as redis
@@ -32,7 +36,7 @@ class RedisManager:
                 socket_timeout=self.connection_timeout,
                 socket_connect_timeout=self.connection_timeout,
                 retry_on_timeout=True,
-                max_connections=20
+                max_connections=20,
             )
 
             # Test connection
@@ -67,7 +71,7 @@ class RedisManager:
                 "status": "healthy",
                 "latency_ms": 1,  # Redis ping is very fast
                 "memory_used": info.get("used_memory_human", "unknown"),
-                "connected_clients": info.get("connected_clients", 0)
+                "connected_clients": info.get("connected_clients", 0),
             }
         except Exception as e:
             return {"status": "error", "error": str(e)}

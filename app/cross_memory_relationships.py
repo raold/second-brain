@@ -1,8 +1,10 @@
-"""Cross memory relationship engine"""
-
 from typing import Any
 
 from app.utils.logging_config import get_logger
+
+"""Cross memory relationship engine"""
+
+
 
 logger = get_logger(__name__)
 
@@ -18,13 +20,15 @@ class CrossMemoryRelationshipEngine:
         # Stub implementation
         return []
 
-    async def create_relationship(self, source_id: str, target_id: str, relationship_type: str) -> dict[str, Any]:
+    async def create_relationship(
+        self, source_id: str, target_id: str, relationship_type: str
+    ) -> dict[str, Any]:
         """Create a relationship between two memories"""
         relationship = {
             "source_id": source_id,
             "target_id": target_id,
             "type": relationship_type,
-            "strength": 0.8
+            "strength": 0.8,
         }
         return relationship
 
@@ -32,7 +36,9 @@ class CrossMemoryRelationshipEngine:
         """Get all relationships for a memory"""
         return self.relationships.get(memory_id, [])
 
-    async def update_relationship(self, relationship_id: str, updates: dict[str, Any]) -> dict[str, Any]:
+    async def update_relationship(
+        self, relationship_id: str, updates: dict[str, Any]
+    ) -> dict[str, Any]:
         """Update a relationship"""
         # Stub implementation
         return {"id": relationship_id, **updates}

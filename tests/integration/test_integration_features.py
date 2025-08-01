@@ -13,6 +13,7 @@ from pathlib import Path
 # Add the project root to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+
 def test_integrated_features():
     """Test that all three features can work together"""
     print("🔗 Testing Integrated Features v2.8.0")
@@ -26,7 +27,7 @@ def test_integrated_features():
             "query": "How are Python and machine learning connected?",
             "max_hops": 3,
             "beam_width": 5,
-            "confidence_threshold": 0.7
+            "confidence_threshold": 0.7,
         }
 
         # Validate query structure
@@ -44,13 +45,34 @@ def test_integrated_features():
     print("\n📊 Testing Knowledge Graph Builder...")
     try:
         # Test entity types and relationships
-        entity_types = ["person", "organization", "technology", "concept",
-                       "location", "event", "skill", "topic", "other"]
+        entity_types = [
+            "person",
+            "organization",
+            "technology",
+            "concept",
+            "location",
+            "event",
+            "skill",
+            "topic",
+            "other",
+        ]
 
-        relationship_types = ["works_at", "located_in", "uses", "part_of",
-                            "related_to", "taught_by", "developed_by",
-                            "applies_to", "derived_from", "connects_to",
-                            "influences", "depends_on", "contains", "mentions"]
+        relationship_types = [
+            "works_at",
+            "located_in",
+            "uses",
+            "part_of",
+            "related_to",
+            "taught_by",
+            "developed_by",
+            "applies_to",
+            "derived_from",
+            "connects_to",
+            "influences",
+            "depends_on",
+            "contains",
+            "mentions",
+        ]
 
         # Validate knowledge graph structure
         assert len(entity_types) == 9
@@ -61,11 +83,9 @@ def test_integrated_features():
         sample_graph = {
             "nodes": [
                 {"id": "1", "label": "Python", "type": "technology"},
-                {"id": "2", "label": "ML", "type": "concept"}
+                {"id": "2", "label": "ML", "type": "concept"},
             ],
-            "edges": [
-                {"source": "1", "target": "2", "type": "used_in", "weight": 0.8}
-            ]
+            "edges": [{"source": "1", "target": "2", "type": "used_in", "weight": 0.8}],
         }
 
         assert len(sample_graph["nodes"]) > 0
@@ -91,7 +111,7 @@ def test_integrated_features():
             "event": "#F4A460",
             "skill": "#FFD93D",
             "topic": "#6C5CE7",
-            "other": "#95A5A6"
+            "other": "#95A5A6",
         }
 
         assert len(color_map) == len(entity_types)
@@ -111,7 +131,7 @@ def test_integrated_features():
         reasoning_output = {
             "entities": ["Python", "machine learning", "data science"],
             "relationships": [("Python", "used_in", "machine learning")],
-            "confidence": 0.85
+            "confidence": 0.85,
         }
 
         # Step 2: Knowledge graph processes entities
@@ -122,7 +142,7 @@ def test_integrated_features():
             ],
             "edges": [
                 {"source": "entity_0", "target": "entity_1", "type": "used_in", "weight": 0.85}
-            ]
+            ],
         }
 
         # Step 3: Visualization renders graph

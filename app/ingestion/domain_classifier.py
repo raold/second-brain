@@ -1,6 +1,7 @@
+from app.utils.logging_config import get_logger
+
 """Domain classifier for content categorization"""
 
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -15,7 +16,7 @@ class DomainClassifier:
             "science": ["physics", "chemistry", "biology", "research", "experiment", "theory"],
             "business": ["strategy", "management", "finance", "marketing", "sales", "startup"],
             "personal": ["health", "fitness", "productivity", "learning", "goals", "habits"],
-            "creative": ["art", "music", "writing", "design", "creativity", "inspiration"]
+            "creative": ["art", "music", "writing", "design", "creativity", "inspiration"],
         }
 
     async def classify(self, content: str) -> dict[str, float]:
@@ -38,7 +39,7 @@ class DomainClassifier:
         # Normalize scores
         total = sum(scores.values())
         if total > 0:
-            scores = {k: v/total for k, v in scores.items()}
+            scores = {k: v / total for k, v in scores.items()}
 
         return scores
 

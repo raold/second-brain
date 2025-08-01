@@ -1,3 +1,12 @@
+from datetime import datetime, timedelta
+from typing import Any
+from uuid import UUID
+
+import networkx as nx
+import numpy as np
+
+from app.utils.logging_config import get_logger
+
 """Graph Metrics Service for Knowledge Graph Analysis
 
 Real implementation that analyzes the structure and properties of the
@@ -5,13 +14,12 @@ knowledge graph formed by memories and their relationships.
 """
 
 from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Any, TYPE_CHECKING
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 # Optional dependencies
 try:
     import networkx as nx
+
     NETWORKX_AVAILABLE = True
 except ImportError:
     NETWORKX_AVAILABLE = False
@@ -19,6 +27,7 @@ except ImportError:
 
 try:
     import numpy as np
+
     NUMPY_AVAILABLE = True
 except ImportError:
     NUMPY_AVAILABLE = False
@@ -39,7 +48,6 @@ from app.models.synthesis.metrics_models import (
     NodeMetrics,
     TemporalMetrics,
 )
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -62,10 +70,14 @@ class GraphMetricsService:
 
     def __init__(self, db, memory_service, relationship_analyzer):
         if not NETWORKX_AVAILABLE:
-            raise ImportError("NetworkX is required for graph metrics. Install with: pip install networkx")
+            raise ImportError(
+                "NetworkX is required for graph metrics. Install with: pip install networkx"
+            )
         if not NUMPY_AVAILABLE:
-            raise ImportError("NumPy is required for graph metrics. Install with: pip install numpy")
-            
+            raise ImportError(
+                "NumPy is required for graph metrics. Install with: pip install numpy"
+            )
+
         self.db = db
         self.memory_service = memory_service
         self.relationship_analyzer = relationship_analyzer
@@ -92,41 +104,43 @@ class GraphMetricsService:
 
             # Calculate overall graph health score
             health_score = self._calculate_graph_health(
-                node_metrics,
-                cluster_metrics,
-                connectivity_metrics
+                node_metrics, cluster_metrics, connectivity_metrics
             )
 
             # Convert node_metrics to proper format
             node_metrics_dict = {}
-            if isinstance(node_metrics, dict) and 'top_pagerank_nodes' in node_metrics:
-                for node_info in node_metrics.get('top_pagerank_nodes', []):
-                    if isinstance(node_info, dict) and 'node' in node_info:
-                        node_id = node_info['node']
+            if isinstance(node_metrics, dict) and "top_pagerank_nodes" in node_metrics:
+                for node_info in node_metrics.get("top_pagerank_nodes", []):
+                    if isinstance(node_info, dict) and "node" in node_info:
+                        node_id = node_info["node"]
                         node_metrics_dict[str(node_id)] = NodeMetrics(
                             node_id=node_id,
                             degree=graph.degree(node_id) if node_id in graph else 0,
                             betweenness_centrality=0.0,
                             closeness_centrality=0.0,
-                            pagerank=node_info.get('score', 0.0)
+                            pagerank=node_info.get("score", 0.0),
                         )
 
             return GraphMetrics(
                 total_nodes=graph.number_of_nodes(),
                 total_edges=graph.number_of_edges(),
                 graph_density=nx.density(graph),
-                average_degree=sum(dict(graph.degree()).values()) / graph.number_of_nodes() if graph.number_of_nodes() > 0 else 0,
+                average_degree=(
+                    sum(dict(graph.degree()).values()) / graph.number_of_nodes()
+                    if graph.number_of_nodes() > 0
+                    else 0
+                ),
                 clustering_coefficient=nx.average_clustering(graph),
                 node_metrics=node_metrics_dict,
                 connectivity_metrics=connectivity_metrics,
                 temporal_metrics=temporal_metrics,
                 health_score=health_score,
                 metadata={
-                    'analysis_timestamp': datetime.utcnow().isoformat(),
-                    'graph_type': 'knowledge_graph',
-                    'includes_relationships': request.include_relationships,
-                    'raw_node_metrics': node_metrics  # Keep raw metrics in metadata
-                }
+                    "analysis_timestamp": datetime.utcnow().isoformat(),
+                    "graph_type": "knowledge_graph",
+                    "includes_relationships": request.include_relationships,
+                    "raw_node_metrics": node_metrics,  # Keep raw metrics in metadata
+                },
             )
 
         except Exception as e:
@@ -167,7 +181,7 @@ class GraphMetricsService:
                 degree=graph.degree(memory_id),
                 betweenness_centrality=between_cent,
                 closeness_centrality=closeness_cent,
-                pagerank=pagerank
+                pagerank=pagerank,
             )
 
         except Exception as e:
@@ -198,7 +212,7 @@ class GraphMetricsService:
                 cluster_tags = set()
                 for node in component:
                     node_data = graph.nodes[node]
-                    cluster_tags.update(node_data.get('tags', []))
+                    cluster_tags.update(node_data.get("tags", []))
 
                 # Calculate cluster metrics
                 cluster = KnowledgeCluster(
@@ -209,18 +223,18 @@ class GraphMetricsService:
                     central_nodes=[central_node],
                     member_nodes=list(component),
                     metadata={
-                        'avg_importance': np.mean([
-                            graph.nodes[n].get('importance', 0.5) for n in component
-                        ]),
-                        'tags': list(cluster_tags)[:10],  # Top 10 tags
-                        'modularity': self._calculate_cluster_modularity(graph, component),
-                        'cohesion': nx.average_clustering(subgraph.to_undirected())
-                    }
+                        "avg_importance": np.mean(
+                            [graph.nodes[n].get("importance", 0.5) for n in component]
+                        ),
+                        "tags": list(cluster_tags)[:10],  # Top 10 tags
+                        "modularity": self._calculate_cluster_modularity(graph, component),
+                        "cohesion": nx.average_clustering(subgraph.to_undirected()),
+                    },
                 )
                 clusters.append(cluster)
 
             # Sort by size and importance
-            clusters.sort(key=lambda c: (c.size, c.metadata.get('avg_importance', 0)), reverse=True)
+            clusters.sort(key=lambda c: (c.size, c.metadata.get("avg_importance", 0)), reverse=True)
 
             return clusters
 
@@ -231,10 +245,12 @@ class GraphMetricsService:
     async def _build_knowledge_graph(self, memory_ids: list[UUID] | None = None) -> Graph:
         """Build or retrieve the knowledge graph"""
         # Check cache
-        if (self._graph_cache is not None and
-            self._cache_timestamp and
-            datetime.utcnow() - self._cache_timestamp < self._cache_ttl and
-            memory_ids is None):  # Only use cache for full graph
+        if (
+            self._graph_cache is not None
+            and self._cache_timestamp
+            and datetime.utcnow() - self._cache_timestamp < self._cache_ttl
+            and memory_ids is None
+        ):  # Only use cache for full graph
             return self._graph_cache
 
         # Build new graph
@@ -246,12 +262,12 @@ class GraphMetricsService:
         # Add nodes
         for memory in memories:
             graph.add_node(
-                memory['id'],
-                content=memory['content'],
-                importance=memory['importance'],
-                created_at=memory['created_at'],
-                tags=memory.get('tags', []),
-                metadata=memory.get('metadata', {})
+                memory["id"],
+                content=memory["content"],
+                importance=memory["importance"],
+                created_at=memory["created_at"],
+                tags=memory.get("tags", []),
+                metadata=memory.get("metadata", {}),
             )
 
         # Fetch and add relationships
@@ -260,11 +276,11 @@ class GraphMetricsService:
         for rel in relationships:
             # Add edge with relationship data
             graph.add_edge(
-                rel['source_id'],
-                rel['target_id'],
-                relationship_type=rel['relationship_type'],
-                strength=rel.get('strength', 0.5),
-                created_at=rel.get('created_at')
+                rel["source_id"],
+                rel["target_id"],
+                relationship_type=rel["relationship_type"],
+                strength=rel.get("strength", 0.5),
+                created_at=rel.get("created_at"),
             )
 
         # Cache if full graph
@@ -324,15 +340,15 @@ class GraphMetricsService:
         # Degree distribution
         degrees = [d for n, d in graph.degree()]
         degree_dist = {
-            'mean': np.mean(degrees),
-            'std': np.std(degrees),
-            'min': min(degrees) if degrees else 0,
-            'max': max(degrees) if degrees else 0,
-            'median': np.median(degrees) if degrees else 0
+            "mean": np.mean(degrees),
+            "std": np.std(degrees),
+            "min": min(degrees) if degrees else 0,
+            "max": max(degrees) if degrees else 0,
+            "median": np.median(degrees) if degrees else 0,
         }
 
         # Find hubs (highly connected nodes)
-        degree_threshold = degree_dist['mean'] + 2 * degree_dist['std']
+        degree_threshold = degree_dist["mean"] + 2 * degree_dist["std"]
         hubs = [n for n, d in graph.degree() if d > degree_threshold]
 
         # Find isolated nodes
@@ -343,12 +359,12 @@ class GraphMetricsService:
         top_pagerank = sorted(pagerank_scores.items(), key=lambda x: x[1], reverse=True)[:10]
 
         return {
-            'degree_distribution': degree_dist,
-            'hub_nodes': hubs[:20],  # Top 20 hubs
-            'isolated_nodes': isolated[:20],  # Sample of isolated nodes
-            'top_pagerank_nodes': [{'node': n, 'score': s} for n, s in top_pagerank],
-            'avg_clustering': nx.average_clustering(graph),
-            'node_connectivity': nx.node_connectivity(graph) if graph.number_of_nodes() > 1 else 0
+            "degree_distribution": degree_dist,
+            "hub_nodes": hubs[:20],  # Top 20 hubs
+            "isolated_nodes": isolated[:20],  # Sample of isolated nodes
+            "top_pagerank_nodes": [{"node": n, "score": s} for n, s in top_pagerank],
+            "avg_clustering": nx.average_clustering(graph),
+            "node_connectivity": nx.node_connectivity(graph) if graph.number_of_nodes() > 1 else 0,
         }
 
     async def _calculate_cluster_metrics(self, graph: Graph) -> dict[str, Any]:
@@ -357,6 +373,7 @@ class GraphMetricsService:
         try:
             # Louvain community detection
             import community
+
             partition = community.best_partition(graph.to_undirected())
             modularity = community.modularity(partition, graph.to_undirected())
 
@@ -369,19 +386,19 @@ class GraphMetricsService:
             comm_sizes = [len(nodes) for nodes in communities.values()]
 
             cluster_metrics = {
-                'num_communities': len(communities),
-                'modularity': modularity,
-                'community_sizes': {
-                    'mean': np.mean(comm_sizes),
-                    'std': np.std(comm_sizes),
-                    'min': min(comm_sizes),
-                    'max': max(comm_sizes)
+                "num_communities": len(communities),
+                "modularity": modularity,
+                "community_sizes": {
+                    "mean": np.mean(comm_sizes),
+                    "std": np.std(comm_sizes),
+                    "min": min(comm_sizes),
+                    "max": max(comm_sizes),
                 },
-                'largest_communities': sorted(
+                "largest_communities": sorted(
                     [(cid, len(nodes)) for cid, nodes in communities.items()],
                     key=lambda x: x[1],
-                    reverse=True
-                )[:5]
+                    reverse=True,
+                )[:5],
             }
         except ImportError:
             # Fallback to connected components
@@ -389,13 +406,13 @@ class GraphMetricsService:
             comp_sizes = [len(c) for c in components]
 
             cluster_metrics = {
-                'num_components': len(components),
-                'component_sizes': {
-                    'mean': np.mean(comp_sizes) if comp_sizes else 0,
-                    'std': np.std(comp_sizes) if comp_sizes else 0,
-                    'min': min(comp_sizes) if comp_sizes else 0,
-                    'max': max(comp_sizes) if comp_sizes else 0
-                }
+                "num_components": len(components),
+                "component_sizes": {
+                    "mean": np.mean(comp_sizes) if comp_sizes else 0,
+                    "std": np.std(comp_sizes) if comp_sizes else 0,
+                    "min": min(comp_sizes) if comp_sizes else 0,
+                    "max": max(comp_sizes) if comp_sizes else 0,
+                },
             }
 
         return cluster_metrics
@@ -423,7 +440,11 @@ class GraphMetricsService:
         return ConnectivityMetrics(
             is_connected=is_connected,
             num_connected_components=num_components,
-            largest_component_size=max([len(c) for c in nx.connected_components(graph.to_undirected())]) if num_components > 0 else 0,
+            largest_component_size=(
+                max([len(c) for c in nx.connected_components(graph.to_undirected())])
+                if num_components > 0
+                else 0
+            ),
             average_path_length=avg_path_length,
             diameter=diameter,
             edge_connectivity=nx.edge_connectivity(graph) if graph.number_of_nodes() > 1 else 0,
@@ -431,9 +452,9 @@ class GraphMetricsService:
             num_bridges=len(bridges),
             num_articulation_points=len(articulation_points),
             metadata={
-                'bridges_sample': bridges[:10],  # Sample of bridges
-                'articulation_points_sample': articulation_points[:10]
-            }
+                "bridges_sample": bridges[:10],  # Sample of bridges
+                "articulation_points_sample": articulation_points[:10],
+            },
         )
 
     async def _calculate_temporal_metrics(self, graph: Graph) -> TemporalMetrics:
@@ -441,7 +462,7 @@ class GraphMetricsService:
         # Extract creation times
         creation_times = []
         for node in graph.nodes():
-            created_at = graph.nodes[node].get('created_at')
+            created_at = graph.nodes[node].get("created_at")
             if created_at:
                 creation_times.append(created_at)
 
@@ -451,7 +472,7 @@ class GraphMetricsService:
                 recent_activity_score=0.0,
                 temporal_clusters=[],
                 activity_periods=[],
-                metadata={}
+                metadata={},
             )
 
         # Sort times
@@ -478,12 +499,14 @@ class GraphMetricsService:
             temporal_clusters=temporal_clusters,
             activity_periods=activity_periods,
             metadata={
-                'total_time_span_days': time_span,
-                'first_memory': creation_times[0].isoformat(),
-                'last_memory': creation_times[-1].isoformat(),
-                'memories_last_7_days': sum(1 for t in creation_times if t > datetime.utcnow() - timedelta(days=7)),
-                'memories_last_30_days': recent_nodes
-            }
+                "total_time_span_days": time_span,
+                "first_memory": creation_times[0].isoformat(),
+                "last_memory": creation_times[-1].isoformat(),
+                "memories_last_7_days": sum(
+                    1 for t in creation_times if t > datetime.utcnow() - timedelta(days=7)
+                ),
+                "memories_last_30_days": recent_nodes,
+            },
         )
 
     def _find_temporal_clusters(self, times: list[datetime]) -> list[dict[str, Any]]:
@@ -495,7 +518,10 @@ class GraphMetricsService:
         sorted_times = sorted(times)
 
         # Calculate time differences
-        time_diffs = [(sorted_times[i+1] - sorted_times[i]).total_seconds() / 3600 for i in range(len(sorted_times)-1)]
+        time_diffs = [
+            (sorted_times[i + 1] - sorted_times[i]).total_seconds() / 3600
+            for i in range(len(sorted_times) - 1)
+        ]
 
         # Find clusters using a threshold based on median
         # Use median instead of mean to handle outliers better
@@ -515,22 +541,32 @@ class GraphMetricsService:
                 # End of cluster
                 cluster_size = i - current_cluster_start + 1
                 if cluster_size >= 3:  # Minimum cluster size
-                    clusters.append({
-                        'start_time': sorted_times[current_cluster_start].isoformat(),
-                        'end_time': sorted_times[i].isoformat(),
-                        'size': cluster_size,
-                        'duration_hours': (sorted_times[i] - sorted_times[current_cluster_start]).total_seconds() / 3600
-                    })
+                    clusters.append(
+                        {
+                            "start_time": sorted_times[current_cluster_start].isoformat(),
+                            "end_time": sorted_times[i].isoformat(),
+                            "size": cluster_size,
+                            "duration_hours": (
+                                sorted_times[i] - sorted_times[current_cluster_start]
+                            ).total_seconds()
+                            / 3600,
+                        }
+                    )
                 current_cluster_start = i + 1
 
         # Handle last cluster
         if len(sorted_times) - current_cluster_start >= 3:
-            clusters.append({
-                'start_time': sorted_times[current_cluster_start].isoformat(),
-                'end_time': sorted_times[-1].isoformat(),
-                'size': len(sorted_times) - current_cluster_start,
-                'duration_hours': (sorted_times[-1] - sorted_times[current_cluster_start]).total_seconds() / 3600
-            })
+            clusters.append(
+                {
+                    "start_time": sorted_times[current_cluster_start].isoformat(),
+                    "end_time": sorted_times[-1].isoformat(),
+                    "size": len(sorted_times) - current_cluster_start,
+                    "duration_hours": (
+                        sorted_times[-1] - sorted_times[current_cluster_start]
+                    ).total_seconds()
+                    / 3600,
+                }
+            )
 
         return clusters
 
@@ -556,7 +592,7 @@ class GraphMetricsService:
             weekday_counts[w] += 1
 
         # Find peak days
-        day_names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         peak_days = sorted(weekday_counts.items(), key=lambda x: x[1], reverse=True)[:2]
         if peak_days[0][1] > len(times) * 0.25:  # Significant concentration
             periods.append(f"Most active days: {', '.join(day_names[d[0]] for d in peak_days)}")
@@ -598,7 +634,7 @@ class GraphMetricsService:
         self,
         node_metrics: dict[str, Any],
         cluster_metrics: dict[str, Any],
-        connectivity_metrics: ConnectivityMetrics
+        connectivity_metrics: ConnectivityMetrics,
     ) -> float:
         """Calculate overall graph health score"""
         scores = []
@@ -608,18 +644,18 @@ class GraphMetricsService:
         scores.append(conn_score * 0.3)
 
         # Clustering score (good clustering coefficient)
-        clustering = node_metrics.get('avg_clustering', 0)
+        clustering = node_metrics.get("avg_clustering", 0)
         cluster_score = min(clustering * 2, 1.0)  # Normalize
         scores.append(cluster_score * 0.2)
 
         # Modularity score (clear community structure)
-        modularity = cluster_metrics.get('modularity', 0)
+        modularity = cluster_metrics.get("modularity", 0)
         mod_score = min(modularity * 1.5, 1.0)  # Normalize
         scores.append(mod_score * 0.2)
 
         # Balance score (not too many isolated nodes)
-        total_nodes = node_metrics.get('degree_distribution', {}).get('mean', 1) * 100  # Estimate
-        isolated_ratio = len(node_metrics.get('isolated_nodes', [])) / max(total_nodes, 1)
+        total_nodes = node_metrics.get("degree_distribution", {}).get("mean", 1) * 100  # Estimate
+        isolated_ratio = len(node_metrics.get("isolated_nodes", [])) / max(total_nodes, 1)
         balance_score = 1.0 - min(isolated_ratio * 5, 1.0)  # Penalize high isolation
         scores.append(balance_score * 0.3)
 
@@ -645,15 +681,15 @@ class GraphMetricsService:
                 node_connectivity=0,
                 num_bridges=0,
                 num_articulation_points=0,
-                metadata={}
+                metadata={},
             ),
             temporal_metrics=TemporalMetrics(
                 growth_rate=0.0,
                 recent_activity_score=0.0,
                 temporal_clusters=[],
                 activity_periods=[],
-                metadata={}
+                metadata={},
             ),
             health_score=0.0,
-            metadata={'empty': True}
+            metadata={"empty": True},
         )

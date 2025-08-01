@@ -1,3 +1,9 @@
+from fastapi import WebSocket
+
+from app.models.synthesis.consolidation_models import ConsolidationResult
+from app.models.synthesis.suggestion_models import SuggestionType
+from app.models.synthesis.websocket_models import WebSocketMessage
+
 """
 Synthesis Models - v2.8.2
 

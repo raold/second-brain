@@ -12,17 +12,13 @@ from pathlib import Path
 # Add the project root to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+
 def test_visualization_data_structure():
     """Test graph visualization data structures"""
     print("🎨 Testing Visualization Data Structures v2.6.2-visualization")
 
     # Test node structure
-    sample_node = {
-        "id": "1",
-        "label": "Python",
-        "type": "technology",
-        "importance": 0.9
-    }
+    sample_node = {"id": "1", "label": "Python", "type": "technology", "importance": 0.9}
 
     required_node_fields = ["id", "label", "type"]
     for field in required_node_fields:
@@ -30,12 +26,7 @@ def test_visualization_data_structure():
     print("✅ Node structure validation works")
 
     # Test edge structure
-    sample_edge = {
-        "source": "1",
-        "target": "2",
-        "weight": 0.8,
-        "type": "used_in"
-    }
+    sample_edge = {"source": "1", "target": "2", "weight": 0.8, "type": "used_in"}
 
     required_edge_fields = ["source", "target", "weight"]
     for field in required_edge_fields:
@@ -43,8 +34,17 @@ def test_visualization_data_structure():
     print("✅ Edge structure validation works")
 
     # Test entity type color mapping
-    entity_types = ["person", "organization", "technology", "concept",
-                   "location", "event", "skill", "topic", "other"]
+    entity_types = [
+        "person",
+        "organization",
+        "technology",
+        "concept",
+        "location",
+        "event",
+        "skill",
+        "topic",
+        "other",
+    ]
 
     color_map = {
         "person": "#FF6B6B",
@@ -55,7 +55,7 @@ def test_visualization_data_structure():
         "event": "#F4A460",
         "skill": "#FFD93D",
         "topic": "#6C5CE7",
-        "other": "#95A5A6"
+        "other": "#95A5A6",
     }
 
     for entity_type in entity_types:
@@ -75,34 +75,25 @@ def test_search_filtering():
     sample_nodes = [
         {"id": "1", "label": "Python", "type": "technology", "importance": 0.9},
         {"id": "2", "label": "Machine Learning", "type": "concept", "importance": 0.8},
-        {"id": "3", "label": "John Smith", "type": "person", "importance": 0.7}
+        {"id": "3", "label": "John Smith", "type": "person", "importance": 0.7},
     ]
 
     # Test search functionality
     search_term = "Python"
-    matching_nodes = [
-        n for n in sample_nodes
-        if search_term.lower() in n["label"].lower()
-    ]
+    matching_nodes = [n for n in sample_nodes if search_term.lower() in n["label"].lower()]
     assert len(matching_nodes) == 1
     assert matching_nodes[0]["id"] == "1"
     print("✅ Node search functionality works")
 
     # Test entity type filtering
-    tech_nodes = [
-        n for n in sample_nodes
-        if n["type"] == "technology"
-    ]
+    tech_nodes = [n for n in sample_nodes if n["type"] == "technology"]
     assert len(tech_nodes) == 1
     assert tech_nodes[0]["label"] == "Python"
     print("✅ Entity type filtering works")
 
     # Test multiple type filtering
     types_to_include = ["concept", "person"]
-    filtered_nodes = [
-        n for n in sample_nodes
-        if n["type"] in types_to_include
-    ]
+    filtered_nodes = [n for n in sample_nodes if n["type"] in types_to_include]
     assert len(filtered_nodes) == 2
     print("✅ Multiple type filtering works")
 
@@ -162,6 +153,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Visualization Feature Tests: FAILED - {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

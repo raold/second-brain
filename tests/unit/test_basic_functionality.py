@@ -17,23 +17,27 @@ class TestBasicImports:
     def test_fastapi_import(self):
         """Test FastAPI import"""
         import fastapi
-        assert hasattr(fastapi, 'FastAPI')
+
+        assert hasattr(fastapi, "FastAPI")
 
     def test_pydantic_import(self):
         """Test Pydantic import"""
         import pydantic
-        assert hasattr(pydantic, 'BaseModel')
+
+        assert hasattr(pydantic, "BaseModel")
 
     def test_uvicorn_import(self):
         """Test Uvicorn import"""
         import uvicorn
-        assert hasattr(uvicorn, 'run')
+
+        assert hasattr(uvicorn, "run")
 
     def test_app_import(self):
         """Test app module import"""
         try:
             from app import app
-            assert hasattr(app, 'app')
+
+            assert hasattr(app, "app")
         except ImportError as e:
             pytest.skip(f"App import failed (expected in CI): {e}")
 
@@ -41,6 +45,7 @@ class TestBasicImports:
         """Test models import"""
         try:
             from app.models.memory import Memory, MemoryType
+
             assert Memory is not None
             assert MemoryType is not None
         except ImportError as e:
@@ -50,6 +55,7 @@ class TestBasicImports:
         """Test database import"""
         try:
             from app.database import Database
+
             assert Database is not None
         except ImportError as e:
             pytest.skip(f"Database import failed (expected in CI): {e}")
@@ -61,9 +67,10 @@ class TestAppInitialization:
     def test_app_creation(self):
         """Test FastAPI app creation"""
         from fastapi import FastAPI
+
         app = FastAPI()
         assert app is not None
-        assert hasattr(app, 'include_router')
+        assert hasattr(app, "include_router")
 
     def test_pydantic_model_creation(self):
         """Test Pydantic model creation"""
@@ -81,10 +88,10 @@ class TestAppInitialization:
     async def test_mock_database_initialization(self, mock_database):
         """Test mock database initialization"""
         await mock_database.initialize()
-        
+
         # Verify mock was called
         mock_database.initialize.assert_called_once()
-        
+
         # Test basic operations
         await mock_database.close()
         mock_database.close.assert_called_once()
@@ -118,6 +125,7 @@ class TestErrorHandling:
         """Test handling of import errors"""
         try:
             import nonexistent_module  # This should fail
+
             raise AssertionError("Should have raised ImportError")
         except ImportError:
             pass  # Expected
@@ -213,10 +221,10 @@ class TestMockingInfrastructure:
     async def test_mock_database_fixture(self, mock_database):
         """Test mock database fixture"""
         # Test that mock has expected methods
-        assert hasattr(mock_database, 'initialize')
-        assert hasattr(mock_database, 'create_memory')
-        assert hasattr(mock_database, 'list_memories')
-        
+        assert hasattr(mock_database, "initialize")
+        assert hasattr(mock_database, "create_memory")
+        assert hasattr(mock_database, "list_memories")
+
         # Test mock behavior
         memories = await mock_database.list_memories()
         assert memories == []
@@ -226,8 +234,7 @@ class TestMockingInfrastructure:
         """Test mock OpenAI client fixture"""
         # Test embeddings
         response = await mock_openai_client.embeddings.create(
-            model="text-embedding-ada-002",
-            input="test text"
+            model="text-embedding-ada-002", input="test text"
         )
         assert response.data[0].embedding == [0.1] * 1536
 
@@ -237,7 +244,7 @@ class TestMockingInfrastructure:
         # Test basic operations
         result = await mock_redis.set("test_key", "test_value")
         assert result is True
-        
+
         value = await mock_redis.get("test_key")
         assert value is None  # Mock returns None by default
 

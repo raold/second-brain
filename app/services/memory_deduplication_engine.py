@@ -1,21 +1,22 @@
+import hashlib
+import re
+import time
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+from app.database import get_database
+
 #!/usr/bin/env python3
 """
 Advanced Memory Deduplication Engine
 Intelligent duplicate detection with similarity analysis and smart merging
 """
 
-import hashlib
-import re
-import time
 from collections import defaultdict
-from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
-from typing import Any
-
-from pydantic import BaseModel, Field
-
-from app.database import get_database
 
 
 class SimilarityMethod(str, Enum):
@@ -98,13 +99,25 @@ class DeduplicationResult:
 class DeduplicationConfig(BaseModel):
     """Configuration for deduplication process"""
 
-    similarity_method: SimilarityMethod = Field(SimilarityMethod.HYBRID, description="Method for similarity detection")
-    similarity_threshold: float = Field(0.8, ge=0.0, le=1.0, description="Minimum similarity for duplicates")
+    similarity_method: SimilarityMethod = Field(
+        SimilarityMethod.HYBRID, description="Method for similarity detection"
+    )
+    similarity_threshold: float = Field(
+        0.8, ge=0.0, le=1.0, description="Minimum similarity for duplicates"
+    )
     content_weight: float = Field(0.6, ge=0.0, le=1.0, description="Weight for content similarity")
-    metadata_weight: float = Field(0.3, ge=0.0, le=1.0, description="Weight for metadata similarity")
-    structural_weight: float = Field(0.1, ge=0.0, le=1.0, description="Weight for structural similarity")
-    merge_strategy: MergeStrategy = Field(MergeStrategy.SMART_MERGE, description="Strategy for merging duplicates")
-    duplicate_action: DuplicateAction = Field(DuplicateAction.MARK_DUPLICATE, description="Action for duplicates")
+    metadata_weight: float = Field(
+        0.3, ge=0.0, le=1.0, description="Weight for metadata similarity"
+    )
+    structural_weight: float = Field(
+        0.1, ge=0.0, le=1.0, description="Weight for structural similarity"
+    )
+    merge_strategy: MergeStrategy = Field(
+        MergeStrategy.SMART_MERGE, description="Strategy for merging duplicates"
+    )
+    duplicate_action: DuplicateAction = Field(
+        DuplicateAction.MARK_DUPLICATE, description="Action for duplicates"
+    )
     batch_size: int = Field(100, description="Batch size for processing")
     enable_fuzzy_matching: bool = Field(True, description="Enable fuzzy string matching")
     fuzzy_threshold: float = Field(0.85, description="Threshold for fuzzy matching")
@@ -171,7 +184,9 @@ class ExactMatchDetector:
 
         return duplicate_groups
 
-    def _select_primary_memory(self, memories: list[dict[str, Any]], strategy: MergeStrategy) -> str:
+    def _select_primary_memory(
+        self, memories: list[dict[str, Any]], strategy: MergeStrategy
+    ) -> str:
         """Select primary memory based on strategy"""
         if strategy == MergeStrategy.KEEP_OLDEST:
             oldest = min(memories, key=lambda m: m.get("created_at", ""))
@@ -183,13 +198,17 @@ class ExactMatchDetector:
             longest = max(memories, key=lambda m: len(m.get("content", "")))
             return longest.get("id", "unknown")
         elif strategy == MergeStrategy.KEEP_HIGHEST_IMPORTANCE:
-            highest = max(memories, key=lambda m: m.get("metadata", {}).get("importance_score", 0.5))
+            highest = max(
+                memories, key=lambda m: m.get("metadata", {}).get("importance_score", 0.5)
+            )
             return highest.get("id", "unknown")
         else:
             # Default to first memory
             return memories[0].get("id", "unknown")
 
-    def _calculate_metadata_similarity(self, memory1: dict[str, Any], memory2: dict[str, Any]) -> float:
+    def _calculate_metadata_similarity(
+        self, memory1: dict[str, Any], memory2: dict[str, Any]
+    ) -> float:
         """Calculate metadata similarity between two memories"""
         metadata1 = memory1.get("metadata", {})
         metadata2 = memory2.get("metadata", {})
@@ -257,7 +276,8 @@ class FuzzyMatchDetector:
                 if similarity.overall_similarity >= config.fuzzy_threshold:
                     # Check if memories are already in existing groups
                     existing_group = self._find_existing_group(
-                        duplicate_groups, [memory1["original"].get("id"), memory2["original"].get("id")]
+                        duplicate_groups,
+                        [memory1["original"].get("id"), memory2["original"].get("id")],
                     )
 
                     if existing_group:
@@ -376,10 +396,14 @@ class FuzzyMatchDetector:
         final_content_similarity = (content_similarity + string_similarity) / 2
 
         # Metadata similarity
-        metadata_similarity = self._calculate_metadata_similarity(memory1["original"], memory2["original"])
+        metadata_similarity = self._calculate_metadata_similarity(
+            memory1["original"], memory2["original"]
+        )
 
         # Structural similarity (length, word count, etc.)
-        structural_similarity = self._calculate_structural_similarity(memory1["original"], memory2["original"])
+        structural_similarity = self._calculate_structural_similarity(
+            memory1["original"], memory2["original"]
+        )
 
         # Overall similarity
         overall_similarity = (
@@ -421,7 +445,9 @@ class FuzzyMatchDetector:
 
         return (matches / max_len + length_similarity) / 2
 
-    def _calculate_metadata_similarity(self, memory1: dict[str, Any], memory2: dict[str, Any]) -> float:
+    def _calculate_metadata_similarity(
+        self, memory1: dict[str, Any], memory2: dict[str, Any]
+    ) -> float:
         """Calculate metadata similarity"""
         metadata1 = memory1.get("metadata", {})
         metadata2 = memory2.get("metadata", {})
@@ -449,7 +475,9 @@ class FuzzyMatchDetector:
 
         return matches / len(all_keys)
 
-    def _calculate_structural_similarity(self, memory1: dict[str, Any], memory2: dict[str, Any]) -> float:
+    def _calculate_structural_similarity(
+        self, memory1: dict[str, Any], memory2: dict[str, Any]
+    ) -> float:
         """Calculate structural similarity"""
         content1 = memory1.get("content", "")
         content2 = memory2.get("content", "")
@@ -473,14 +501,18 @@ class FuzzyMatchDetector:
 
         return (length_similarity + word_similarity) / 2
 
-    def _find_existing_group(self, groups: list[DuplicateGroup], memory_ids: list[str]) -> DuplicateGroup | None:
+    def _find_existing_group(
+        self, groups: list[DuplicateGroup], memory_ids: list[str]
+    ) -> DuplicateGroup | None:
         """Find existing group containing any of the memory IDs"""
         for group in groups:
             if any(memory_id in group.memory_ids for memory_id in memory_ids):
                 return group
         return None
 
-    def _select_primary_memory(self, memories: list[dict[str, Any]], strategy: MergeStrategy) -> str:
+    def _select_primary_memory(
+        self, memories: list[dict[str, Any]], strategy: MergeStrategy
+    ) -> str:
         """Select primary memory based on strategy"""
         if strategy == MergeStrategy.KEEP_LONGEST:
             longest = max(memories, key=lambda m: len(m.get("content", "")))
@@ -520,7 +552,9 @@ class SemanticSimilarityDetector:
                 memory1_data = memory_keywords[i]
                 memory2_data = memory_keywords[j]
 
-                similarity = await self._calculate_semantic_similarity(memory1_data, memory2_data, config)
+                similarity = await self._calculate_semantic_similarity(
+                    memory1_data, memory2_data, config
+                )
 
                 if similarity.overall_similarity >= config.similarity_threshold:
                     group_id = f"semantic_{hashlib.md5(f'{i}_{j}'.encode()).hexdigest()[:8]}"
@@ -551,13 +585,31 @@ class SemanticSimilarityDetector:
         words = re.findall(r"\b\w+\b", content.lower())
 
         # Filter common words and short words
-        stop_words = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by"}
+        stop_words = {
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+        }
         keywords = {word for word in words if len(word) > 3 and word not in stop_words}
 
         return keywords
 
     async def _calculate_semantic_similarity(
-        self, memory1_data: dict[str, Any], memory2_data: dict[str, Any], config: DeduplicationConfig
+        self,
+        memory1_data: dict[str, Any],
+        memory2_data: dict[str, Any],
+        config: DeduplicationConfig,
     ) -> SimilarityScore:
         """Calculate semantic similarity between memories"""
         keywords1 = memory1_data["keywords"]
@@ -570,10 +622,14 @@ class SemanticSimilarityDetector:
         content_similarity = intersection / union if union > 0 else 0.0
 
         # Metadata similarity
-        metadata_similarity = self._calculate_metadata_similarity(memory1_data["memory"], memory2_data["memory"])
+        metadata_similarity = self._calculate_metadata_similarity(
+            memory1_data["memory"], memory2_data["memory"]
+        )
 
         # Structural similarity
-        structural_similarity = self._calculate_structural_similarity(memory1_data["memory"], memory2_data["memory"])
+        structural_similarity = self._calculate_structural_similarity(
+            memory1_data["memory"], memory2_data["memory"]
+        )
 
         # Overall similarity
         overall_similarity = (
@@ -594,7 +650,9 @@ class SemanticSimilarityDetector:
             reasoning=f"Semantic similarity with {intersection} common keywords out of {union} total",
         )
 
-    def _calculate_metadata_similarity(self, memory1: dict[str, Any], memory2: dict[str, Any]) -> float:
+    def _calculate_metadata_similarity(
+        self, memory1: dict[str, Any], memory2: dict[str, Any]
+    ) -> float:
         """Calculate metadata similarity"""
         metadata1 = memory1.get("metadata", {})
         metadata2 = memory2.get("metadata", {})
@@ -606,7 +664,9 @@ class SemanticSimilarityDetector:
         matches = sum(1 for key in common_keys if metadata1[key] == metadata2[key])
         return matches / len(common_keys)
 
-    def _calculate_structural_similarity(self, memory1: dict[str, Any], memory2: dict[str, Any]) -> float:
+    def _calculate_structural_similarity(
+        self, memory1: dict[str, Any], memory2: dict[str, Any]
+    ) -> float:
         """Calculate structural similarity"""
         content1 = memory1.get("content", "")
         content2 = memory2.get("content", "")
@@ -619,7 +679,9 @@ class SemanticSimilarityDetector:
 
         return 1 - abs(len1 - len2) / max_len
 
-    def _select_primary_memory(self, memories: list[dict[str, Any]], strategy: MergeStrategy) -> str:
+    def _select_primary_memory(
+        self, memories: list[dict[str, Any]], strategy: MergeStrategy
+    ) -> str:
         """Select primary memory based on strategy"""
         return memories[0].get("id", "unknown")
 
@@ -675,7 +737,9 @@ class MemoryDeduplicationEngine:
 
             # Process duplicates if not dry run
             if not config.dry_run:
-                processing_result = await self._process_duplicate_groups(duplicate_groups, config, db)
+                processing_result = await self._process_duplicate_groups(
+                    duplicate_groups, config, db
+                )
                 result.memories_merged = processing_result["merged"]
                 result.memories_deleted = processing_result["deleted"]
                 result.memories_marked = processing_result["marked"]
@@ -824,7 +888,9 @@ class MemoryDeduplicationEngine:
             return
 
         # Create merged content and metadata
-        merged_content, merged_metadata = await self._create_merged_memory(memories, group.merge_strategy, config)
+        merged_content, merged_metadata = await self._create_merged_memory(
+            memories, group.merge_strategy, config
+        )
 
         group.merged_content = merged_content
         group.merged_metadata = merged_metadata
@@ -887,14 +953,18 @@ class MemoryDeduplicationEngine:
             return {}
 
         duplicate_rate = result.total_duplicates / result.total_memories
-        processing_rate = result.total_memories / result.processing_time if result.processing_time > 0 else 0
+        processing_rate = (
+            result.total_memories / result.processing_time if result.processing_time > 0 else 0
+        )
 
         return {
             "duplicate_rate": duplicate_rate,
             "processing_rate_per_second": processing_rate,
-            "groups_per_second": result.duplicate_groups_found / result.processing_time
-            if result.processing_time > 0
-            else 0,
+            "groups_per_second": (
+                result.duplicate_groups_found / result.processing_time
+                if result.processing_time > 0
+                else 0
+            ),
             "efficiency_score": 1 - len(result.errors) / max(1, result.total_memories),
         }
 
@@ -907,7 +977,9 @@ class MemoryDeduplicationEngine:
         total_memories_processed = sum(r.total_memories for r in self.deduplication_history)
         total_duplicates_found = sum(r.total_duplicates for r in self.deduplication_history)
 
-        avg_duplicate_rate = total_duplicates_found / total_memories_processed if total_memories_processed > 0 else 0
+        avg_duplicate_rate = (
+            total_duplicates_found / total_memories_processed if total_memories_processed > 0 else 0
+        )
 
         return {
             "total_runs": total_runs,

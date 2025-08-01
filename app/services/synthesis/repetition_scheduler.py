@@ -1,9 +1,11 @@
-"""Spaced repetition scheduler for memory review"""
-
 from datetime import datetime, timedelta
 from typing import Any
 
 from app.utils.logging_config import get_logger
+
+"""Spaced repetition scheduler for memory review"""
+
+
 
 logger = get_logger(__name__)
 
@@ -21,11 +23,11 @@ class SpacedRepetitionEngine:
 
         # Simple algorithm: easier items have longer intervals
         multiplier = {
-            1: 2.5,    # Very easy
-            2: 2.0,    # Easy
-            3: 1.5,    # Medium
-            4: 1.0,    # Hard
-            5: 0.5     # Very hard
+            1: 2.5,  # Very easy
+            2: 2.0,  # Easy
+            3: 1.5,  # Medium
+            4: 1.0,  # Hard
+            5: 0.5,  # Very hard
         }.get(difficulty, 1.0)
 
         return int(previous_interval * multiplier)
@@ -51,7 +53,7 @@ class RepetitionScheduler:
             "next_review": next_review.isoformat(),
             "interval": next_interval,
             "difficulty": difficulty,
-            "review_count": current_schedule.get("review_count", 0) + 1
+            "review_count": current_schedule.get("review_count", 0) + 1,
         }
 
         self.schedules[memory_id] = schedule
@@ -65,11 +67,9 @@ class RepetitionScheduler:
         for memory_id, schedule in self.schedules.items():
             next_review = datetime.fromisoformat(schedule["next_review"])
             if next_review <= now:
-                due_reviews.append({
-                    "memory_id": memory_id,
-                    "overdue_days": (now - next_review).days,
-                    **schedule
-                })
+                due_reviews.append(
+                    {"memory_id": memory_id, "overdue_days": (now - next_review).days, **schedule}
+                )
 
         # Sort by most overdue first
         due_reviews.sort(key=lambda x: x["overdue_days"], reverse=True)
@@ -85,10 +85,7 @@ class RepetitionScheduler:
             schedule = await self.schedule_review(memory_id, difficulty)
             results.append(schedule)
 
-        return {
-            "reviewed": len(results),
-            "results": results
-        }
+        return {"reviewed": len(results), "results": results}
 
     async def get_statistics(self) -> dict[str, Any]:
         """Get repetition statistics"""
@@ -98,7 +95,7 @@ class RepetitionScheduler:
         return {
             "total_scheduled": total_scheduled,
             "due_for_review": due_count,
-            "completion_rate": (total_scheduled - due_count) / max(total_scheduled, 1)
+            "completion_rate": (total_scheduled - due_count) / max(total_scheduled, 1),
         }
 
 

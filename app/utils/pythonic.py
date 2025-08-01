@@ -1,3 +1,10 @@
+import asyncio
+import time
+from dataclasses import dataclass, field
+from typing import Any, Optional
+
+from app.utils.logging_config import get_logger
+
 """
 Pythonic utilities and patterns for the Second Brain application.
 
@@ -9,24 +16,21 @@ This module demonstrates idiomatic Python usage including:
 - Functional programming patterns
 """
 
-import asyncio
 import functools
 from collections.abc import Callable
-from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional, Protocol, TypeVar
-
-from app.utils.logging_config import get_logger
+from typing import Protocol, TypeVar
 
 logger = get_logger(__name__)
 
-T = TypeVar('T')
-P = TypeVar('P')
+T = TypeVar("T")
+P = TypeVar("P")
 
 
 # ============================================================================
 # Enhanced Enums with Behavior
 # ============================================================================
+
 
 @unique
 class Priority(Enum):
@@ -42,7 +46,7 @@ class Priority(Enum):
         self.display_name = display_name
         self.emoji = emoji
 
-    def __lt__(self, other: 'Priority') -> bool:
+    def __lt__(self, other: "Priority") -> bool:
         """Enable priority comparison."""
         if isinstance(other, Priority):
             return self.level < other.level
@@ -52,7 +56,7 @@ class Priority(Enum):
         return f"{self.emoji} {self.display_name}"
 
     @classmethod
-    def from_score(cls, score: float) -> 'Priority':
+    def from_score(cls, score: float) -> "Priority":
         """Convert numeric score to priority level."""
         if score >= 0.9:
             return cls.CRITICAL
@@ -78,14 +82,14 @@ class ProcessingStatus(Enum):
     FAILED = auto()
     CANCELLED = auto()
 
-    def can_transition_to(self, target: 'ProcessingStatus') -> bool:
+    def can_transition_to(self, target: "ProcessingStatus") -> bool:
         """Check if transition to target status is valid."""
         valid_transitions = {
             self.PENDING: {self.PROCESSING, self.CANCELLED},
             self.PROCESSING: {self.COMPLETED, self.FAILED, self.CANCELLED},
             self.COMPLETED: set(),  # Terminal state
             self.FAILED: {self.PENDING},  # Can retry
-            self.CANCELLED: {self.PENDING}  # Can restart
+            self.CANCELLED: {self.PENDING},  # Can restart
         }
         return target in valid_transitions.get(self, set())
 
@@ -103,6 +107,7 @@ class ProcessingStatus(Enum):
 # ============================================================================
 # Rich Dataclasses with Advanced Features
 # ============================================================================
+
 
 @dataclass(frozen=True, slots=True)
 class MetricSnapshot:
@@ -128,7 +133,7 @@ class MetricSnapshot:
     @property
     def age_seconds(self) -> float:
         """Calculate age of metric in seconds."""
-        cache_key = 'age_seconds'
+        cache_key = "age_seconds"
         cache = MetricSnapshot._property_cache.get(self, {})
 
         if cache_key not in cache:
@@ -146,7 +151,7 @@ class MetricSnapshot:
         """Determine priority based on value thresholds."""
         return Priority.from_score(self.value)
 
-    def with_tag(self, key: str, value: str) -> 'MetricSnapshot':
+    def with_tag(self, key: str, value: str) -> "MetricSnapshot":
         """Return new instance with additional tag."""
         new_tags = {**self.tags, key: value}
         return MetricSnapshot(
@@ -154,10 +159,10 @@ class MetricSnapshot:
             value=self.value,
             timestamp=self.timestamp,
             tags=new_tags,
-            metadata=self.metadata
+            metadata=self.metadata,
         )
 
-    def normalize(self, min_val: float = 0.0, max_val: float = 1.0) -> 'MetricSnapshot':
+    def normalize(self, min_val: float = 0.0, max_val: float = 1.0) -> "MetricSnapshot":
         """Return normalized version of metric."""
         if max_val <= min_val:
             raise ValueError("max_val must be greater than min_val")
@@ -170,7 +175,7 @@ class MetricSnapshot:
             value=normalized_value,
             timestamp=self.timestamp,
             tags=self.tags,
-            metadata={**self.metadata, 'normalization': {'min': min_val, 'max': max_val}}
+            metadata={**self.metadata, "normalization": {"min": min_val, "max": max_val}},
         )
 
 
@@ -198,7 +203,7 @@ class ProcessingTask:
         if not self.status.can_transition_to(new_status):
             logger.warning(
                 f"Invalid status transition: {self.status} -> {new_status}",
-                extra={'task_id': self.id, 'task_name': self.name}
+                extra={"task_id": self.id, "task_name": self.name},
             )
             return False
 
@@ -216,11 +221,7 @@ class ProcessingTask:
 
         logger.info(
             f"Task status changed: {old_status} -> {new_status}",
-            extra={
-                'task_id': self.id,
-                'task_name': self.name,
-                'attempts': self.attempts
-            }
+            extra={"task_id": self.id, "task_name": self.name, "attempts": self.attempts},
         )
         return True
 
@@ -240,12 +241,12 @@ class ProcessingTask:
     def can_retry(self) -> bool:
         """Check if task can be retried."""
         return (
-            self.status == ProcessingStatus.FAILED and
-            self.attempts < 3 and
-            self.status.can_transition_to(ProcessingStatus.PENDING)
+            self.status == ProcessingStatus.FAILED
+            and self.attempts < 3
+            and self.status.can_transition_to(ProcessingStatus.PENDING)
         )
 
-    def __lt__(self, other: 'ProcessingTask') -> bool:
+    def __lt__(self, other: "ProcessingTask") -> bool:
         """Enable priority-based sorting."""
         if not isinstance(other, ProcessingTask):
             return NotImplemented
@@ -256,6 +257,7 @@ class ProcessingTask:
 # Validation Descriptors
 # ============================================================================
 
+
 class ValidatedField(Generic[T]):
     """Descriptor for field validation with type safety."""
 
@@ -264,7 +266,7 @@ class ValidatedField(Generic[T]):
         validator: Callable[[T], bool],
         error_message: str,
         default: T | None = None,
-        transform: Callable[[T], T] | None = None
+        transform: Callable[[T], T] | None = None,
     ):
         self.validator = validator
         self.error_message = error_message
@@ -275,7 +277,7 @@ class ValidatedField(Generic[T]):
 
     def __set_name__(self, owner, name):
         self.name = name
-        self.private_name = f'_{name}'
+        self.private_name = f"_{name}"
 
     def __get__(self, obj, objtype=None) -> T:
         if obj is None:
@@ -302,7 +304,7 @@ class PositiveFloat(ValidatedField[float]):
             validator=lambda x: isinstance(x, int | float) and x >= 0,
             error_message="Value must be a positive number",
             default=default,
-            transform=float
+            transform=float,
         )
 
 
@@ -315,13 +317,14 @@ class NonEmptyString(ValidatedField[str]):
             validator=lambda x: isinstance(x, str) and len(x.strip()) > 0,
             error_message="Value must be a non-empty string",
             default=default,
-            transform=transform_func
+            transform=transform_func,
         )
 
 
 # ============================================================================
 # Protocol Definitions for Duck Typing
 # ============================================================================
+
 
 @runtime_checkable
 class Processable(Protocol):
@@ -361,7 +364,7 @@ class Serializable(Protocol):
         ...
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> 'Serializable':
+    def from_dict(cls, data: dict[str, Any]) -> "Serializable":
         """Create object from dictionary."""
         ...
 
@@ -371,20 +374,18 @@ class SerializableMixin:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert dataclass to dictionary."""
-        if hasattr(self, '__dataclass_fields__'):
+        if hasattr(self, "__dataclass_fields__"):
             from dataclasses import asdict
+
             return asdict(self)
 
         # Fallback for non-dataclass objects
-        return {
-            key: value for key, value in self.__dict__.items()
-            if not key.startswith('_')
-        }
+        return {key: value for key, value in self.__dict__.items() if not key.startswith("_")}
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]):
         """Create instance from dictionary."""
-        if hasattr(cls, '__dataclass_fields__'):
+        if hasattr(cls, "__dataclass_fields__"):
             # Filter data to only include dataclass fields
             field_names = set(cls.__dataclass_fields__.keys())
             filtered_data = {k: v for k, v in data.items() if k in field_names}
@@ -398,6 +399,7 @@ class SerializableMixin:
 # Functional Programming Utilities
 # ============================================================================
 
+
 def compose(*functions: Callable) -> Callable:
     """Compose functions right to left."""
     return functools.reduce(lambda f, g: lambda x: f(g(x)), functions, lambda x: x)
@@ -410,11 +412,13 @@ def pipe(value: T, *functions: Callable[[T], T]) -> T:
 
 def curry(func: Callable) -> Callable:
     """Curry a function to enable partial application."""
+
     @functools.wraps(func)
     def curried(*args, **kwargs):
         if len(args) + len(kwargs) >= func.__code__.co_argcount:
             return func(*args, **kwargs)
         return functools.partial(curried, *args, **kwargs)
+
     return curried
 
 
@@ -428,10 +432,7 @@ def filter_by_attribute(attr_name: str, predicate: Callable, items: list[Any]) -
 def group_by_attribute(attr_name: str, items: list[Any]) -> dict[Any, list[Any]]:
     """Group items by attribute value."""
     sorted_items = sorted(items, key=attrgetter(attr_name))
-    return {
-        key: list(group)
-        for key, group in groupby(sorted_items, key=attrgetter(attr_name))
-    }
+    return {key: list(group) for key, group in groupby(sorted_items, key=attrgetter(attr_name))}
 
 
 def chunk_iterator(iterable: Iterator[T], chunk_size: int) -> Iterator[list[T]]:
@@ -453,13 +454,12 @@ def flatten(nested_iterable: Iterator[Iterator[T]]) -> Iterator[T]:
 # Advanced Iterator Patterns
 # ============================================================================
 
+
 class BatchProcessor(Generic[T]):
     """Process items in batches with configurable behavior."""
 
     def __init__(
-        self,
-        batch_size: int = 100,
-        processor: Callable[[list[T]], list[T]] | None = None
+        self, batch_size: int = 100, processor: Callable[[list[T]], list[T]] | None = None
     ):
         self.batch_size = batch_size
         self.processor = processor or (lambda x: x)
@@ -515,38 +515,41 @@ class SlidingWindow(Generic[T]):
         items = list(iterable)
 
         for i in range(0, len(items) - self.window_size + 1, self.step_size):
-            yield items[i:i + self.window_size]
+            yield items[i : i + self.window_size]
 
 
 # ============================================================================
 # Named Tuple Extensions
 # ============================================================================
 
+
 class Coordinate(NamedTuple):
     """2D coordinate with computed properties."""
+
     x: float
     y: float
 
     @property
     def magnitude(self) -> float:
         """Calculate distance from origin."""
-        return (self.x ** 2 + self.y ** 2) ** 0.5
+        return (self.x**2 + self.y**2) ** 0.5
 
-    def distance_to(self, other: 'Coordinate') -> float:
+    def distance_to(self, other: "Coordinate") -> float:
         """Calculate distance to another coordinate."""
         return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
 
-    def __add__(self, other: 'Coordinate') -> 'Coordinate':
+    def __add__(self, other: "Coordinate") -> "Coordinate":
         """Add coordinates."""
         return Coordinate(self.x + other.x, self.y + other.y)
 
-    def __mul__(self, scalar: float) -> 'Coordinate':
+    def __mul__(self, scalar: float) -> "Coordinate":
         """Multiply by scalar."""
         return Coordinate(self.x * scalar, self.y * scalar)
 
 
 class Range(NamedTuple):
     """Range with validation and operations."""
+
     start: float
     end: float
 
@@ -568,24 +571,22 @@ class Range(NamedTuple):
         """Check if value is in range."""
         return self.start <= value <= self.end
 
-    def overlaps(self, other: 'Range') -> bool:
+    def overlaps(self, other: "Range") -> bool:
         """Check if ranges overlap."""
         return self.start <= other.end and other.start <= self.end
 
-    def intersection(self, other: 'Range') -> Optional['Range']:
+    def intersection(self, other: "Range") -> Optional["Range"]:
         """Calculate intersection with another range."""
         if not self.overlaps(other):
             return None
 
-        return Range(
-            start=max(self.start, other.start),
-            end=min(self.end, other.end)
-        )
+        return Range(start=max(self.start, other.start), end=min(self.end, other.end))
 
 
 # ============================================================================
 # Examples of Usage
 # ============================================================================
+
 
 def demonstration_usage():
     """Demonstrate the pythonic patterns."""
@@ -596,11 +597,7 @@ def demonstration_usage():
     assert priority.is_urgent
 
     # Rich dataclasses
-    task = ProcessingTask(
-        id="task_001",
-        name="Process Memories",
-        priority=Priority.HIGH
-    )
+    task = ProcessingTask(id="task_001", name="Process Memories", priority=Priority.HIGH)
 
     assert task.transition_to(ProcessingStatus.PROCESSING)
     assert not task.transition_to(ProcessingStatus.COMPLETED)  # Invalid transition
@@ -620,7 +617,7 @@ def demonstration_usage():
         numbers,
         lambda x: [n * 2 for n in x],  # Double
         lambda x: [n for n in x if n > 5],  # Filter > 5
-        sum  # Sum remaining
+        sum,  # Sum remaining
     )
     assert result == 18  # (6 + 8 + 10)
 

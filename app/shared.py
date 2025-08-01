@@ -1,7 +1,10 @@
+from fastapi import HTTPException
+
+from app.database import get_database
+
 """Shared utilities and dependencies for the application"""
 
-
-from fastapi import Header, HTTPException
+from fastapi import Header
 
 from app.config import get_settings
 
@@ -9,7 +12,7 @@ from app.config import get_settings
 # Simple replacements for archived functions
 async def get_db_instance():
     """Get database instance"""
-    from app.database import get_database
+
     return get_database()
 
 

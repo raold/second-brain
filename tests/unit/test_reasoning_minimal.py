@@ -30,7 +30,7 @@ async def test_reasoning_basic():
                     "contextual_score": 0.9,
                     "memory_type": "episodic",
                     "importance_score": 0.8,
-                    "created_at": "2024-01-01"
+                    "created_at": "2024-01-01",
                 }
             ]
 
@@ -44,7 +44,9 @@ async def test_reasoning_basic():
     print("✅ Reasoning type detection works")
 
     # Test query parsing
-    query = await engine._parse_query("What caused me to learn Python?", max_hops=3, reasoning_type=None)
+    query = await engine._parse_query(
+        "What caused me to learn Python?", max_hops=3, reasoning_type=None
+    )
     assert query.reasoning_type == ReasoningType.CAUSAL
     assert query.max_hops == 3
     print("✅ Query parsing works")
@@ -75,6 +77,7 @@ async def main():
     except Exception as e:
         print(f"\n❌ Reasoning Engine Feature Test: FAILED - {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

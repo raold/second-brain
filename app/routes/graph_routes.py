@@ -1,27 +1,26 @@
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+
+from app.utils.logging_config import get_logger
+
 """
 API routes for advanced relationship graph functionality
 """
 
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
-
 from app.dependencies import get_current_user, get_db_instance
 from app.services.memory_service import MemoryService
 from app.shared import verify_api_key
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
-router = APIRouter(
-    prefix="/graph",
-    tags=["graph"],
-    responses={404: {"description": "Not found"}}
-)
+router = APIRouter(prefix="/graph", tags=["graph"], responses={404: {"description": "Not found"}})
 
 
 class GraphRequest(BaseModel):
     """Request model for graph building"""
+
     memory_ids: list[str] | None = Field(None, description="Memory IDs to include")
     tags: list[str] | None = Field(None, description="Filter by tags")
     min_confidence: float = Field(0.5, description="Minimum confidence threshold")
@@ -31,6 +30,7 @@ class GraphRequest(BaseModel):
 
 class PathRequest(BaseModel):
     """Request model for path finding"""
+
     source_entity_id: str = Field(..., description="Source entity ID")
     target_entity_id: str = Field(..., description="Target entity ID")
     max_paths: int = Field(5, description="Maximum number of paths")
@@ -39,6 +39,7 @@ class PathRequest(BaseModel):
 
 class NeighborhoodRequest(BaseModel):
     """Request model for entity neighborhood"""
+
     entity_id: str = Field(..., description="Entity ID")
     depth: int = Field(2, description="Neighborhood depth")
     min_confidence: float = Field(0.5, description="Minimum confidence")
@@ -49,7 +50,7 @@ async def build_relationship_graph(
     request: GraphRequest,
     _: str = Depends(verify_api_key),
     current_user: dict = Depends(get_current_user),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """
     Build a relationship graph from memories
@@ -61,22 +62,19 @@ async def build_relationship_graph(
         if request.memory_ids:
             memories = []
             for memory_id in request.memory_ids:
-                memory = await memory_service.get_memory(memory_id, current_user.get('user_id', 'default_user'))
+                memory = await memory_service.get_memory(
+                    memory_id, current_user.get("user_id", "default_user")
+                )
                 if memory:
                     memories.append(memory)
         else:
             # Get all memories with optional tag filter
             memories = await memory_service.search_memories(
-                user_id=current_user.get('user_id', 'default_user'),
-                tags=request.tags,
-                limit=50
+                user_id=current_user.get("user_id", "default_user"), tags=request.tags, limit=50
             )
 
         if not memories:
-            return {
-                "status": "no_data",
-                "message": "No memories found with specified filters"
-            }
+            return {"status": "no_data", "message": "No memories found with specified filters"}
 
         # Extract entities and relationships from memories
         entity_extractor = EntityExtractor()
@@ -85,30 +83,26 @@ async def build_relationship_graph(
         all_entities = []
         all_relationships = []
 
-        for memory in memories[:request.max_entities]:
+        for memory in memories[: request.max_entities]:
             # Extract entities
             entities = entity_extractor.extract_entities(memory.content)
 
             # Extract relationships
             if len(entities) >= 2:
                 relationships = relationship_detector.detect_relationships(
-                    memory.content,
-                    entities,
-                    min_confidence=request.min_confidence
+                    memory.content, entities, min_confidence=request.min_confidence
                 )
 
                 all_entities.extend(entities)
                 all_relationships.extend(relationships)
 
         # Build graph
-        graph = RelationshipGraph(
-            enable_clustering=request.enable_clustering
-        )
+        graph = RelationshipGraph(enable_clustering=request.enable_clustering)
 
         graph_data = graph.build_graph(
             entities=all_entities,
             relationships=all_relationships,
-            min_confidence=request.min_confidence
+            min_confidence=request.min_confidence,
         )
 
         # Add layout
@@ -125,8 +119,8 @@ async def build_relationship_graph(
             "metadata": {
                 "num_memories": len(memories),
                 "num_entities": len(all_entities),
-                "num_relationships": len(all_relationships)
-            }
+                "num_relationships": len(all_relationships),
+            },
         }
 
     except Exception as e:
@@ -139,7 +133,7 @@ async def find_relationship_paths(
     request: PathRequest,
     _: str = Depends(verify_api_key),
     current_user: dict = Depends(get_current_user),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """
     Find paths between two entities in the relationship graph
@@ -148,8 +142,7 @@ async def find_relationship_paths(
         # Build graph first (in production, this might be cached)
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.get('user_id', 'default_user'),
-            limit=100
+            user_id=current_user.get("user_id", "default_user"), limit=100
         )
 
         # Extract entities and relationships
@@ -162,10 +155,7 @@ async def find_relationship_paths(
         for memory in memories:
             entities = entity_extractor.extract_entities(memory.content)
             if len(entities) >= 2:
-                relationships = relationship_detector.detect_relationships(
-                    memory.content,
-                    entities
-                )
+                relationships = relationship_detector.detect_relationships(memory.content, entities)
                 all_entities.extend(entities)
                 all_relationships.extend(relationships)
 
@@ -178,7 +168,7 @@ async def find_relationship_paths(
             source_id=request.source_entity_id,
             target_id=request.target_entity_id,
             max_paths=request.max_paths,
-            max_length=request.max_length
+            max_length=request.max_length,
         )
 
         return {
@@ -187,8 +177,8 @@ async def find_relationship_paths(
             "metadata": {
                 "source": request.source_entity_id,
                 "target": request.target_entity_id,
-                "num_paths_found": len(paths)
-            }
+                "num_paths_found": len(paths),
+            },
         }
 
     except Exception as e:
@@ -201,7 +191,7 @@ async def get_entity_neighborhood(
     request: NeighborhoodRequest,
     _: str = Depends(verify_api_key),
     current_user: dict = Depends(get_current_user),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """
     Get the neighborhood of an entity
@@ -210,8 +200,7 @@ async def get_entity_neighborhood(
         # Build graph (in production, this might be cached)
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.get('user_id', 'default_user'),
-            limit=100
+            user_id=current_user.get("user_id", "default_user"), limit=100
         )
 
         # Extract entities and relationships
@@ -224,10 +213,7 @@ async def get_entity_neighborhood(
         for memory in memories:
             entities = entity_extractor.extract_entities(memory.content)
             if len(entities) >= 2:
-                relationships = relationship_detector.detect_relationships(
-                    memory.content,
-                    entities
-                )
+                relationships = relationship_detector.detect_relationships(memory.content, entities)
                 all_entities.extend(entities)
                 all_relationships.extend(relationships)
 
@@ -237,15 +223,10 @@ async def get_entity_neighborhood(
 
         # Get neighborhood
         neighborhood = graph.get_entity_neighborhood(
-            entity_id=request.entity_id,
-            depth=request.depth,
-            min_confidence=request.min_confidence
+            entity_id=request.entity_id, depth=request.depth, min_confidence=request.min_confidence
         )
 
-        return {
-            "status": "success",
-            "neighborhood": neighborhood
-        }
+        return {"status": "success", "neighborhood": neighborhood}
 
     except Exception as e:
         logger.error(f"Error getting neighborhood: {e}")
@@ -257,7 +238,7 @@ async def get_central_entities(
     top_n: int = Query(10, description="Number of top entities"),
     _: str = Depends(verify_api_key),
     current_user: dict = Depends(get_current_user),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """
     Get the most central entities in the knowledge graph
@@ -266,8 +247,7 @@ async def get_central_entities(
         # Build graph
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.get('user_id', 'default_user'),
-            limit=100
+            user_id=current_user.get("user_id", "default_user"), limit=100
         )
 
         # Extract entities and relationships
@@ -280,10 +260,7 @@ async def get_central_entities(
         for memory in memories:
             entities = entity_extractor.extract_entities(memory.content)
             if len(entities) >= 2:
-                relationships = relationship_detector.detect_relationships(
-                    memory.content,
-                    entities
-                )
+                relationships = relationship_detector.detect_relationships(memory.content, entities)
                 all_entities.extend(entities)
                 all_relationships.extend(relationships)
 
@@ -299,8 +276,8 @@ async def get_central_entities(
             "centrality_metrics": centrality,
             "metadata": {
                 "total_entities": len(all_entities),
-                "total_relationships": len(all_relationships)
-            }
+                "total_relationships": len(all_relationships),
+            },
         }
 
     except Exception as e:
@@ -313,7 +290,7 @@ async def detect_communities(
     algorithm: str = Query("spectral", description="Community detection algorithm"),
     _: str = Depends(verify_api_key),
     current_user: dict = Depends(get_current_user),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """
     Detect communities in the knowledge graph
@@ -322,8 +299,7 @@ async def detect_communities(
         # Build graph
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.get('user_id', 'default_user'),
-            limit=100
+            user_id=current_user.get("user_id", "default_user"), limit=100
         )
 
         # Extract entities and relationships
@@ -336,10 +312,7 @@ async def detect_communities(
         for memory in memories:
             entities = entity_extractor.extract_entities(memory.content)
             if len(entities) >= 2:
-                relationships = relationship_detector.detect_relationships(
-                    memory.content,
-                    entities
-                )
+                relationships = relationship_detector.detect_relationships(memory.content, entities)
                 all_entities.extend(entities)
                 all_relationships.extend(relationships)
 
@@ -356,8 +329,8 @@ async def detect_communities(
             "metadata": {
                 "algorithm": algorithm,
                 "total_entities": len(all_entities),
-                "total_relationships": len(all_relationships)
-            }
+                "total_relationships": len(all_relationships),
+            },
         }
 
     except Exception as e:
@@ -370,20 +343,21 @@ async def export_graph(
     format: str = "json",
     _: str = Depends(verify_api_key),
     current_user: dict = Depends(get_current_user),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """
     Export the knowledge graph in various formats
     """
     if format not in ["json", "graphml", "gexf"]:
-        raise HTTPException(status_code=400, detail="Unsupported format. Use json, graphml, or gexf")
+        raise HTTPException(
+            status_code=400, detail="Unsupported format. Use json, graphml, or gexf"
+        )
 
     try:
         # Build graph
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.get('user_id', 'default_user'),
-            limit=100
+            user_id=current_user.get("user_id", "default_user"), limit=100
         )
 
         # Extract entities and relationships
@@ -396,10 +370,7 @@ async def export_graph(
         for memory in memories:
             entities = entity_extractor.extract_entities(memory.content)
             if len(entities) >= 2:
-                relationships = relationship_detector.detect_relationships(
-                    memory.content,
-                    entities
-                )
+                relationships = relationship_detector.detect_relationships(memory.content, entities)
                 all_entities.extend(entities)
                 all_relationships.extend(relationships)
 
@@ -410,11 +381,7 @@ async def export_graph(
         # Export
         export_data = graph.export_to_format(format)
 
-        return {
-            "status": "success",
-            "format": format,
-            "data": export_data
-        }
+        return {"status": "success", "format": format, "data": export_data}
 
     except Exception as e:
         logger.error(f"Error exporting graph: {e}")

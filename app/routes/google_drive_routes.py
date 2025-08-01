@@ -1,18 +1,22 @@
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+
+from app.utils.logging_config import get_logger
+
 """
 Google Drive integration routes
 """
 
-from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from fastapi import BackgroundTasks
 
 from app.dependencies import get_current_user, get_db_instance
 from app.ingestion.engine import IngestionEngine
 from app.ingestion.google_drive_client import DriveFile, GoogleDriveClient
 from app.models.memory import User
 from app.repositories.memory_repository import MemoryRepository
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -21,11 +25,13 @@ router = APIRouter(prefix="/api/v1/google-drive", tags=["google-drive"])
 
 class GoogleAuthRequest(BaseModel):
     """Request for Google OAuth authentication"""
+
     auth_code: str = Field(..., description="Authorization code from Google OAuth")
 
 
 class GoogleDriveFileResponse(BaseModel):
     """Response for Google Drive file"""
+
     id: str
     name: str
     mime_type: str
@@ -39,6 +45,7 @@ class GoogleDriveFileResponse(BaseModel):
 
 class GoogleDriveIngestionRequest(BaseModel):
     """Request for ingesting files from Google Drive"""
+
     file_ids: list[str] = Field(..., description="List of Google Drive file IDs to ingest")
     tags: list[str] | None = Field(default_factory=list)
     metadata: dict[str, Any] | None = Field(default_factory=dict)
@@ -46,8 +53,11 @@ class GoogleDriveIngestionRequest(BaseModel):
 
 class FolderMonitorRequest(BaseModel):
     """Request for monitoring a Google Drive folder"""
+
     folder_id: str = Field(..., description="Google Drive folder ID to monitor")
-    check_interval: int = Field(default=300, ge=60, le=3600, description="Check interval in seconds")
+    check_interval: int = Field(
+        default=300, ge=60, le=3600, description="Check interval in seconds"
+    )
     auto_ingest: bool = Field(default=True, description="Automatically ingest new files")
     tags: list[str] | None = Field(default_factory=list)
 
@@ -76,18 +86,15 @@ async def get_auth_url(current_user: User = Depends(get_current_user)):
             "instructions": [
                 "1. Click the auth_url to authorize access to Google Drive",
                 "2. Copy the authorization code from Google",
-                "3. Call POST /api/v1/google-drive/auth/callback with the code"
-            ]
+                "3. Call POST /api/v1/google-drive/auth/callback with the code",
+            ],
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/auth/callback")
-async def auth_callback(
-    request: GoogleAuthRequest,
-    current_user: User = Depends(get_current_user)
-):
+async def auth_callback(request: GoogleAuthRequest, current_user: User = Depends(get_current_user)):
     """Complete Google OAuth authentication"""
     try:
         client = get_drive_client(current_user.id)
@@ -96,10 +103,7 @@ async def auth_callback(
         if not success:
             raise HTTPException(status_code=400, detail="Authentication failed")
 
-        return {
-            "success": True,
-            "message": "Successfully authenticated with Google Drive"
-        }
+        return {"success": True, "message": "Successfully authenticated with Google Drive"}
     except Exception as e:
         logger.error(f"Google Drive auth failed: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
@@ -110,10 +114,7 @@ async def get_auth_status(current_user: User = Depends(get_current_user)):
     """Check Google Drive authentication status"""
     client = get_drive_client(current_user.id)
 
-    return {
-        "authenticated": client.is_authenticated(),
-        "user_id": current_user.id
-    }
+    return {"authenticated": client.is_authenticated(), "user_id": current_user.id}
 
 
 @router.get("/files", response_model=dict[str, Any])
@@ -121,7 +122,7 @@ async def list_files(
     folder_id: str | None = Query(None, description="Google Drive folder ID"),
     page_size: int = Query(50, ge=1, le=100),
     page_token: str | None = Query(None),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """List files from Google Drive"""
     client = get_drive_client(current_user.id)
@@ -129,36 +130,35 @@ async def list_files(
     if not client.is_authenticated():
         raise HTTPException(
             status_code=401,
-            detail="Not authenticated with Google Drive. Use /auth/url endpoint first."
+            detail="Not authenticated with Google Drive. Use /auth/url endpoint first.",
         )
 
     try:
         result = await client.list_files(
-            folder_id=folder_id,
-            page_size=page_size,
-            page_token=page_token,
-            only_supported=True
+            folder_id=folder_id, page_size=page_size, page_token=page_token, only_supported=True
         )
 
         # Convert DriveFile objects to response format
         files = []
-        for file in result['files']:
-            files.append(GoogleDriveFileResponse(
-                id=file.id,
-                name=file.name,
-                mime_type=file.mime_type,
-                size=file.size,
-                created_time=file.created_time.isoformat() if file.created_time else None,
-                modified_time=file.modified_time.isoformat() if file.modified_time else None,
-                web_view_link=file.web_view_link,
-                is_folder=file.is_folder,
-                is_supported=file.mime_type in GoogleDriveClient.SUPPORTED_MIME_TYPES
-            ))
+        for file in result["files"]:
+            files.append(
+                GoogleDriveFileResponse(
+                    id=file.id,
+                    name=file.name,
+                    mime_type=file.mime_type,
+                    size=file.size,
+                    created_time=file.created_time.isoformat() if file.created_time else None,
+                    modified_time=file.modified_time.isoformat() if file.modified_time else None,
+                    web_view_link=file.web_view_link,
+                    is_folder=file.is_folder,
+                    is_supported=file.mime_type in GoogleDriveClient.SUPPORTED_MIME_TYPES,
+                )
+            )
 
         return {
             "files": files,
-            "next_page_token": result.get('next_page_token'),
-            "total": len(files)
+            "next_page_token": result.get("next_page_token"),
+            "total": len(files),
         }
     except Exception as e:
         logger.error(f"Failed to list Google Drive files: {str(e)}")
@@ -169,7 +169,7 @@ async def list_files(
 async def search_files(
     query: str = Query(..., description="Search query"),
     page_size: int = Query(50, ge=1, le=100),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Search files in Google Drive"""
     client = get_drive_client(current_user.id)
@@ -177,7 +177,7 @@ async def search_files(
     if not client.is_authenticated():
         raise HTTPException(
             status_code=401,
-            detail="Not authenticated with Google Drive. Use /auth/url endpoint first."
+            detail="Not authenticated with Google Drive. Use /auth/url endpoint first.",
         )
 
     try:
@@ -194,7 +194,7 @@ async def search_files(
                 modified_time=file.modified_time.isoformat() if file.modified_time else None,
                 web_view_link=file.web_view_link,
                 is_folder=file.is_folder,
-                is_supported=file.mime_type in GoogleDriveClient.SUPPORTED_MIME_TYPES
+                is_supported=file.mime_type in GoogleDriveClient.SUPPORTED_MIME_TYPES,
             )
             for file in files
         ]
@@ -208,7 +208,7 @@ async def ingest_drive_files(
     background_tasks: BackgroundTasks,
     request: GoogleDriveIngestionRequest,
     current_user: User = Depends(get_current_user),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """Ingest files from Google Drive into Second Brain"""
     client = get_drive_client(current_user.id)
@@ -216,7 +216,7 @@ async def ingest_drive_files(
     if not client.is_authenticated():
         raise HTTPException(
             status_code=401,
-            detail="Not authenticated with Google Drive. Use /auth/url endpoint first."
+            detail="Not authenticated with Google Drive. Use /auth/url endpoint first.",
         )
 
     # Process in background
@@ -227,13 +227,13 @@ async def ingest_drive_files(
         user_id=current_user.id,
         tags=request.tags,
         metadata=request.metadata,
-        db=db
+        db=db,
     )
 
     return {
         "success": True,
         "message": f"Queued {len(request.file_ids)} files for ingestion",
-        "file_count": len(request.file_ids)
+        "file_count": len(request.file_ids),
     }
 
 
@@ -242,7 +242,7 @@ async def monitor_folder(
     background_tasks: BackgroundTasks,
     request: FolderMonitorRequest,
     current_user: User = Depends(get_current_user),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """Monitor a Google Drive folder for new files"""
     client = get_drive_client(current_user.id)
@@ -250,7 +250,7 @@ async def monitor_folder(
     if not client.is_authenticated():
         raise HTTPException(
             status_code=401,
-            detail="Not authenticated with Google Drive. Use /auth/url endpoint first."
+            detail="Not authenticated with Google Drive. Use /auth/url endpoint first.",
         )
 
     # Start monitoring in background
@@ -262,14 +262,14 @@ async def monitor_folder(
         check_interval=request.check_interval,
         auto_ingest=request.auto_ingest,
         tags=request.tags,
-        db=db
+        db=db,
     )
 
     return {
         "success": True,
         "message": f"Started monitoring folder {request.folder_id}",
         "check_interval": request.check_interval,
-        "auto_ingest": request.auto_ingest
+        "auto_ingest": request.auto_ingest,
     }
 
 
@@ -279,7 +279,7 @@ async def process_drive_ingestion(
     user_id: str,
     tags: list[str],
     metadata: dict[str, Any],
-    db
+    db,
 ):
     """Process Google Drive file ingestion"""
     # Initialize services
@@ -287,7 +287,7 @@ async def process_drive_ingestion(
     service_factory = ServiceFactory(db)
     ingestion_engine = IngestionEngine(
         memory_repository=memory_repository,
-        extraction_pipeline=service_factory.core_extraction_pipeline
+        extraction_pipeline=service_factory.core_extraction_pipeline,
     )
 
     results = []
@@ -321,26 +321,28 @@ async def process_drive_ingestion(
                     "drive_metadata": {
                         "original_name": file_info.name,
                         "mime_type": file_info.mime_type,
-                        "created_time": file_info.created_time.isoformat() if file_info.created_time else None,
-                        "modified_time": file_info.modified_time.isoformat() if file_info.modified_time else None,
-                        "web_view_link": file_info.web_view_link
-                    }
+                        "created_time": (
+                            file_info.created_time.isoformat() if file_info.created_time else None
+                        ),
+                        "modified_time": (
+                            file_info.modified_time.isoformat() if file_info.modified_time else None
+                        ),
+                        "web_view_link": file_info.web_view_link,
+                    },
+                },
+            )
+
+            results.append(
+                {
+                    "file_name": file_info.name,
+                    "success": result.success,
+                    "memories_created": len(result.memories_created) if result.success else 0,
                 }
             )
 
-            results.append({
-                "file_name": file_info.name,
-                "success": result.success,
-                "memories_created": len(result.memories_created) if result.success else 0
-            })
-
         except Exception as e:
             logger.error(f"Failed to ingest file {file_id}: {str(e)}")
-            results.append({
-                "file_id": file_id,
-                "success": False,
-                "error": str(e)
-            })
+            results.append({"file_id": file_id, "success": False, "error": str(e)})
 
     logger.info(f"Google Drive ingestion complete: {len(results)} files processed")
     return results
@@ -353,7 +355,7 @@ async def monitor_drive_folder(
     check_interval: int,
     auto_ingest: bool,
     tags: list[str],
-    db
+    db,
 ):
     """Monitor Google Drive folder for changes"""
 
@@ -372,12 +374,10 @@ async def monitor_drive_folder(
             user_id=user_id,
             tags=tags,
             metadata={"auto_ingested": True, "folder_id": folder_id},
-            db=db
+            db=db,
         )
 
     # Start monitoring
     await client.monitor_folder(
-        folder_id=folder_id,
-        callback=process_new_files,
-        check_interval=check_interval
+        folder_id=folder_id, callback=process_new_files, check_interval=check_interval
     )

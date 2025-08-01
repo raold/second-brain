@@ -25,23 +25,26 @@ class TestV2APIIntegration:
 
     async def test_metrics_endpoint_full_workflow(self, client: AsyncClient, api_key: str):
         """Test complete metrics workflow with database interaction"""
-        response = await client.get(
-            "/api/v2/metrics",
-            params={"api_key": api_key}
-        )
-        
+        response = await client.get("/api/v2/metrics", params={"api_key": api_key})
+
         assert response.status_code == 200
         metrics = response.json()
-        
+
         # Verify all required fields are present and valid
         required_fields = [
-            "tests", "patterns", "version", "agents", 
-            "token_usage", "memories", "active_users", "system_health"
+            "tests",
+            "patterns",
+            "version",
+            "agents",
+            "token_usage",
+            "memories",
+            "active_users",
+            "system_health",
         ]
         for field in required_fields:
             assert field in metrics
             assert metrics[field] is not None
-        
+
         # Test that metrics are consistent with system state
         assert isinstance(metrics["tests"], int)
         assert metrics["tests"] > 0  # Should have some tests
@@ -51,39 +54,44 @@ class TestV2APIIntegration:
 
     async def test_detailed_metrics_comprehensive(self, client: AsyncClient, api_key: str):
         """Test detailed metrics with comprehensive data validation"""
-        response = await client.get(
-            "/api/v2/metrics/detailed",
-            params={"api_key": api_key}
-        )
-        
+        response = await client.get("/api/v2/metrics/detailed", params={"api_key": api_key})
+
         assert response.status_code == 200
         metrics = response.json()
-        
+
         # Verify top-level structure
         assert "memories" in metrics
         assert "performance" in metrics
         assert "system" in metrics
         assert "database" in metrics
         assert "timestamp" in metrics
-        
+
         # Validate memories data
         memories = metrics["memories"]
         memory_fields = [
-            "total", "unique_users", "type_distribution", 
-            "with_embeddings", "last_24h", "last_7d", "last_30d"
+            "total",
+            "unique_users",
+            "type_distribution",
+            "with_embeddings",
+            "last_24h",
+            "last_7d",
+            "last_30d",
         ]
         for field in memory_fields:
             assert field in memories
-        
+
         # Validate performance data
         performance = metrics["performance"]
         performance_fields = [
-            "api_response_time", "memory_usage", "cpu_usage", 
-            "disk_usage", "cache_hit_rate"
+            "api_response_time",
+            "memory_usage",
+            "cpu_usage",
+            "disk_usage",
+            "cache_hit_rate",
         ]
         for field in performance_fields:
             assert field in performance
-        
+
         # Verify timestamp is valid ISO format
         timestamp = datetime.fromisoformat(metrics["timestamp"])
         assert isinstance(timestamp, datetime)
@@ -108,24 +116,24 @@ class TestV2APIIntegration:
         | Development | 4 weeks | 3 people |
         | Testing | 2 weeks | 2 people |
         """
-        
+
         response = await client.post(
             "/api/v2/memories/ingest",
             params={
                 "content": structured_content,
                 "memory_type": "project",
                 "tags": ["ai", "research", "project"],
-                "api_key": api_key
-            }
+                "api_key": api_key,
+            },
         )
-        
+
         assert response.status_code == 200
         result = response.json()
-        
+
         assert result["success"] is True
         assert "memory_id" in result
         assert result["message"] == "Memory ingested successfully"
-        
+
         # Verify memory ID is a valid format
         memory_id = result["memory_id"]
         assert isinstance(memory_id, str)
@@ -133,19 +141,16 @@ class TestV2APIIntegration:
 
     async def test_git_activity_integration(self, client: AsyncClient, api_key: str):
         """Test git activity integration with real git data"""
-        response = await client.get(
-            "/api/v2/git/activity",
-            params={"api_key": api_key}
-        )
-        
+        response = await client.get("/api/v2/git/activity", params={"api_key": api_key})
+
         assert response.status_code == 200
         data = response.json()
-        
+
         # Verify structure
         assert "commits" in data
         assert "timeline" in data
         assert "stats" in data
-        
+
         # Verify timeline has proper structure
         timeline = data["timeline"]
         assert len(timeline) == 5  # Should have 5 timeline points
@@ -157,25 +162,22 @@ class TestV2APIIntegration:
 
     async def test_health_status_integration(self, client: AsyncClient, api_key: str):
         """Test health status with real system checks"""
-        response = await client.get(
-            "/api/v2/health",
-            params={"api_key": api_key}
-        )
-        
+        response = await client.get("/api/v2/health", params={"api_key": api_key})
+
         assert response.status_code == 200
         health = response.json()
-        
+
         # Verify all health checks are performed
         required_checks = ["api", "database", "redis", "disk", "memory", "cpu"]
         for check in required_checks:
             assert check in health["checks"]
             status = health["checks"][check]
             assert status in ["healthy", "degraded", "unhealthy", "unknown", "unavailable"]
-        
+
         # Verify overall status is calculated correctly
         overall_status = health["status"]
         assert overall_status in ["healthy", "degraded", "unhealthy", "error"]
-        
+
         # Verify metrics are included
         if "metrics" in health:
             metrics = health["metrics"]
@@ -186,26 +188,23 @@ class TestV2APIIntegration:
     async def test_todos_parsing_integration(self, client: AsyncClient, api_key: str):
         """Test TODO parsing with various formats"""
         # This test checks if TODO parsing handles different formats correctly
-        response = await client.get(
-            "/api/v2/todos",
-            params={"api_key": api_key}
-        )
-        
+        response = await client.get("/api/v2/todos", params={"api_key": api_key})
+
         assert response.status_code == 200
         data = response.json()
-        
+
         # Verify structure
         assert "todos" in data
         assert "stats" in data
         assert "last_updated" in data
-        
+
         # Verify stats calculation
         stats = data["stats"]
         required_stats = ["total", "completed", "in_progress", "pending", "completion_rate"]
         for stat in required_stats:
             assert stat in stats
             assert isinstance(stats[stat], int)
-        
+
         # Verify completion rate is calculated correctly
         if stats["total"] > 0:
             expected_rate = round((stats["completed"] / stats["total"]) * 100)
@@ -333,9 +332,9 @@ class TestStructuredDataExtractorIntegration:
         Review Date: 2024-07-15
         Next Milestone: 2024-02-15
         """
-        
+
         result = self.extractor.extract_advanced_structured_data(complex_document)
-        
+
         # Verify key-value pairs extraction
         assert len(result.key_value_pairs) >= 5
         assert "Project Manager" in result.key_value_pairs
@@ -343,10 +342,10 @@ class TestStructuredDataExtractorIntegration:
         assert "Timeline" in result.key_value_pairs
         assert "Status" in result.key_value_pairs
         assert "Priority" in result.key_value_pairs
-        
+
         # Verify list extraction
         assert len(result.lists) >= 3  # Objectives, backend, frontend components
-        
+
         # Find objectives list
         objectives_list = None
         for lst in result.lists:
@@ -355,30 +354,30 @@ class TestStructuredDataExtractorIntegration:
                 break
         assert objectives_list is not None
         assert len(objectives_list.items) >= 5
-        
+
         # Verify table extraction
         assert len(result.tables) >= 1
         budget_table = result.tables[0]
         assert "Category" in budget_table.headers
         assert "Amount" in budget_table.headers
         assert len(budget_table.rows) >= 4
-        
+
         # Verify code block extraction
         assert len(result.code_snippets) >= 1
         code_block = result.code_snippets[0]
         assert code_block.language == "python"
         assert "enhanced_search" in code_block.functions
         assert "CollaborationManager" in code_block.classes
-        
+
         # Verify entity extraction
         email_entities = [e for e in result.entities if e.entity_type == "email"]
         url_entities = [e for e in result.entities if e.entity_type == "url"]
         date_entities = [e for e in result.entities if e.entity_type == "date"]
-        
+
         assert len(email_entities) >= 2
         assert len(url_entities) >= 2
         assert len(date_entities) >= 3
-        
+
         # Verify metadata extraction
         assert "statistics" in result.metadata_fields
         stats = result.metadata_fields["statistics"]
@@ -406,7 +405,7 @@ class TestStructuredDataExtractorIntegration:
                 The API exposes endpoints for model training and inference.
                 Database optimization is crucial for performance.
                 """,
-                "expected_domain": "technical"
+                "expected_domain": "technical",
             },
             {
                 "content": """
@@ -427,7 +426,7 @@ class TestStructuredDataExtractorIntegration:
                 - Optimize customer onboarding
                 - Increase investment in R&D
                 """,
-                "expected_domain": "business"
+                "expected_domain": "business",
             },
             {
                 "content": """
@@ -461,20 +460,22 @@ class TestStructuredDataExtractorIntegration:
                 Smith, A., Johnson, B., & Lee, C. (2020). Digital distractions
                 in higher education. Journal of Educational Psychology, 45(2), 123-145.
                 """,
-                "expected_domain": "academic"
-            }
+                "expected_domain": "academic",
+            },
         ]
-        
+
         for case in test_cases:
             result = self.extractor.classify_domain(case["content"])
-            
+
             assert "domains" in result
             assert "primary_domain" in result
-            
+
             # Check if expected domain is detected
             domain_names = [d["name"] for d in result["domains"]]
-            assert (case["expected_domain"] in domain_names or 
-                   result["primary_domain"] == case["expected_domain"])
+            assert (
+                case["expected_domain"] in domain_names
+                or result["primary_domain"] == case["expected_domain"]
+            )
 
     async def test_extraction_statistics_comprehensive(self):
         """Test comprehensive extraction statistics"""
@@ -514,36 +515,36 @@ class TestStructuredDataExtractorIntegration:
         Effect Size: Magnitude of the observed effect
         Confidence Interval: Range of plausible values for the parameter
         """
-        
+
         result = self.extractor.extract_structured_data(content)
         stats = self.extractor.get_extraction_statistics(result)
-        
+
         # Verify comprehensive statistics
         assert "total_structured_elements" in stats
         assert stats["total_structured_elements"] > 0
-        
+
         # Key-value pairs stats
         kv_stats = stats["key_value_pairs"]
         assert kv_stats["count"] >= 3
         assert len(kv_stats["sample_keys"]) <= 5
-        
+
         # Lists stats
         lists_stats = stats["lists"]
         assert lists_stats["count"] >= 1
         assert lists_stats["total_items"] >= 3
-        
+
         # Tables stats
         tables_stats = stats["tables"]
         assert tables_stats["count"] >= 1
         assert tables_stats["total_cells"] >= 9  # 3x3 table minimum
         assert tables_stats["average_size"] > 0
-        
+
         # Code snippets stats
         code_stats = stats["code_snippets"]
         assert code_stats["count"] >= 1
         assert code_stats["total_lines"] > 0
         assert "r" in code_stats["languages"]
-        
+
         # Entities stats
         entities_stats = stats["entities"]
         assert entities_stats["count"] >= 2  # At least email and URL
@@ -563,7 +564,7 @@ class TestWebSocketIntegration:
         """Test WebSocket service singleton behavior"""
         service1 = get_websocket_service()
         service2 = get_websocket_service()
-        
+
         assert service1 is service2
         assert service1 is self.websocket_service
 
@@ -572,28 +573,30 @@ class TestWebSocketIntegration:
         mock_websocket = AsyncMock()
         connection_id = "test-conn-123"
         user_id = "test-user-456"
-        
+
         # Test connection
         await self.websocket_service.connection_manager.connect(
             mock_websocket, connection_id, user_id
         )
-        
+
         # Verify connection is tracked
         assert connection_id in self.websocket_service.connection_manager.active_connections
         assert user_id in self.websocket_service.connection_manager.user_connections
         assert connection_id in self.websocket_service.connection_manager.user_connections[user_id]
-        
+
         # Test notification
         notification = {"type": "test", "message": "Hello"}
         await self.websocket_service.send_notification(user_id, notification)
-        
+
         mock_websocket.send_text.assert_called_once()
-        
+
         # Test disconnection
         self.websocket_service.connection_manager.disconnect(connection_id)
-        
+
         assert connection_id not in self.websocket_service.connection_manager.active_connections
-        assert connection_id not in self.websocket_service.connection_manager.user_connections[user_id]
+        assert (
+            connection_id not in self.websocket_service.connection_manager.user_connections[user_id]
+        )
 
     async def test_broadcast_event_integration(self):
         """Test event broadcasting to multiple connections"""
@@ -603,24 +606,20 @@ class TestWebSocketIntegration:
             mock_ws = AsyncMock()
             conn_id = f"conn-{i}"
             user_id = f"user-{i}"
-            
-            await self.websocket_service.connection_manager.connect(
-                mock_ws, conn_id, user_id
-            )
+
+            await self.websocket_service.connection_manager.connect(mock_ws, conn_id, user_id)
             connections.append((mock_ws, conn_id, user_id))
-        
+
         # Broadcast event
         event_type = "memory.created"
         event_data = {"memory_id": "mem-123", "content": "test memory"}
-        
-        await self.websocket_service.event_broadcaster.broadcast_event(
-            event_type, event_data
-        )
-        
+
+        await self.websocket_service.event_broadcaster.broadcast_event(event_type, event_data)
+
         # Verify all connections received the event
         for mock_ws, _, _ in connections:
             mock_ws.send_text.assert_called_once()
-            
+
             # Verify message content
             call_args = mock_ws.send_text.call_args[0][0]
             assert event_type in call_args
@@ -634,10 +633,10 @@ class TestWebSocketIntegration:
             await self.websocket_service.connection_manager.connect(
                 mock_ws, f"conn-{i}", f"user-{i}"
             )
-        
+
         # Get metrics
         metrics = self.websocket_service.get_metrics()
-        
+
         assert metrics["active_connections"] == 5
         assert metrics["users_connected"] == 5
         assert "subscriptions" in metrics
@@ -647,21 +646,19 @@ class TestWebSocketIntegration:
         # Set up connection that will fail
         failing_ws = AsyncMock()
         failing_ws.send_text.side_effect = Exception("Connection failed")
-        
+
         good_ws = AsyncMock()
-        
+
         await self.websocket_service.connection_manager.connect(
             failing_ws, "failing-conn", "user-1"
         )
-        await self.websocket_service.connection_manager.connect(
-            good_ws, "good-conn", "user-2"
-        )
-        
+        await self.websocket_service.connection_manager.connect(good_ws, "good-conn", "user-2")
+
         # Broadcast event
         await self.websocket_service.event_broadcaster.broadcast_event(
             "test.event", {"data": "test"}
         )
-        
+
         # Both should be called, but failing one should handle error gracefully
         failing_ws.send_text.assert_called_once()
         good_ws.send_text.assert_called_once()
@@ -671,7 +668,9 @@ class TestWebSocketIntegration:
 class TestCrossComponentIntegration:
     """Integration tests across V2 API, StructuredDataExtractor, and WebSocket"""
 
-    async def test_memory_ingestion_with_structured_extraction(self, client: AsyncClient, api_key: str):
+    async def test_memory_ingestion_with_structured_extraction(
+        self, client: AsyncClient, api_key: str
+    ):
         """Test memory ingestion with structured data extraction"""
         # Create structured content
         structured_content = """
@@ -699,7 +698,7 @@ class TestCrossComponentIntegration:
         
         Next Meeting: 2024-02-15
         """
-        
+
         # Ingest the memory
         response = await client.post(
             "/api/v2/memories/ingest",
@@ -707,47 +706,45 @@ class TestCrossComponentIntegration:
                 "content": structured_content,
                 "memory_type": "meeting_notes",
                 "tags": ["meeting", "planning", "q1"],
-                "api_key": api_key
-            }
+                "api_key": api_key,
+            },
         )
-        
+
         assert response.status_code == 200
         result = response.json()
         assert result["success"] is True
-        
+
         # Test that structured data would be extracted correctly
         extractor = StructuredDataExtractor(use_ai=False)
         extracted = extractor.extract_structured_data(structured_content)
-        
+
         # Verify extraction worked
         assert len(extracted.key_value_pairs) >= 4
         assert len(extracted.lists) >= 2  # Agenda and action items
         assert len(extracted.tables) >= 1
-        
+
         # Verify entities were found
         date_entities = [e for e in extracted.entities if e.entity_type == "date"]
         assert len(date_entities) >= 2
 
-    @patch('app.routes.v2_unified_api.broadcast_update')
-    async def test_websocket_notification_on_memory_creation(self, mock_broadcast, client: AsyncClient, api_key: str):
+    @patch("app.routes.v2_unified_api.broadcast_update")
+    async def test_websocket_notification_on_memory_creation(
+        self, mock_broadcast, client: AsyncClient, api_key: str
+    ):
         """Test WebSocket notification when memory is created via API"""
         content = "Test memory for WebSocket notification"
-        
+
         response = await client.post(
             "/api/v2/memories/ingest",
-            params={
-                "content": content,
-                "memory_type": "note",
-                "api_key": api_key
-            }
+            params={"content": content, "memory_type": "note", "api_key": api_key},
         )
-        
+
         assert response.status_code == 200
-        
+
         # Verify broadcast was called
         mock_broadcast.assert_called_once()
         call_args = mock_broadcast.call_args
-        
+
         # Verify broadcast parameters
         assert call_args[0][0] == "memory_created"  # event type
         broadcast_data = call_args[0][1]  # event data
@@ -758,23 +755,18 @@ class TestCrossComponentIntegration:
     async def test_metrics_reflect_websocket_connections(self, client: AsyncClient, api_key: str):
         """Test that metrics endpoint reflects WebSocket connection state"""
         websocket_service = get_websocket_service()
-        
+
         # Add some mock connections
         for i in range(3):
             mock_ws = AsyncMock()
-            await websocket_service.connection_manager.connect(
-                mock_ws, f"conn-{i}", f"user-{i}"
-            )
-        
+            await websocket_service.connection_manager.connect(mock_ws, f"conn-{i}", f"user-{i}")
+
         # Get metrics via API
-        response = await client.get(
-            "/api/v2/metrics",
-            params={"api_key": api_key}
-        )
-        
+        response = await client.get("/api/v2/metrics", params={"api_key": api_key})
+
         assert response.status_code == 200
         metrics = response.json()
-        
+
         # While the API metrics might not directly show WebSocket connections,
         # we can verify the WebSocket service has the connections
         ws_metrics = websocket_service.get_metrics()
@@ -783,44 +775,39 @@ class TestCrossComponentIntegration:
 
     async def test_structured_data_in_health_check(self, client: AsyncClient, api_key: str):
         """Test that health check includes structured data about system state"""
-        response = await client.get(
-            "/api/v2/health",
-            params={"api_key": api_key}
-        )
-        
+        response = await client.get("/api/v2/health", params={"api_key": api_key})
+
         assert response.status_code == 200
         health = response.json()
-        
+
         # Verify structured health data
         assert "status" in health
         assert "checks" in health
         assert "timestamp" in health
-        
+
         # Test that we can extract structured data from health response
         extractor = StructuredDataExtractor(use_ai=False)
         health_json = json.dumps(health, indent=2)
         extracted = extractor.extract_structured_data(health_json)
-        
+
         # Should extract some key-value pairs from JSON
         assert len(extracted.key_value_pairs) > 0
 
     async def test_error_propagation_across_components(self, client: AsyncClient, api_key: str):
         """Test error handling across V2 API, extraction, and WebSocket components"""
         # Test with malformed content that might cause extraction issues
-        malformed_content = "```\nunclosed code block\n" + "x" * 10000  # Very long malformed content
-        
+        malformed_content = (
+            "```\nunclosed code block\n" + "x" * 10000
+        )  # Very long malformed content
+
         response = await client.post(
             "/api/v2/memories/ingest",
-            params={
-                "content": malformed_content,
-                "memory_type": "test",
-                "api_key": api_key
-            }
+            params={"content": malformed_content, "memory_type": "test", "api_key": api_key},
         )
-        
+
         # Should handle gracefully, either succeed or fail cleanly
         assert response.status_code in [200, 400, 422, 500]
-        
+
         if response.status_code == 200:
             # If successful, verify structure
             result = response.json()
@@ -832,6 +819,7 @@ class TestCrossComponentIntegration:
 
     async def test_performance_under_load(self, client: AsyncClient, api_key: str):
         """Test system performance under concurrent load"""
+
         # Create multiple concurrent requests
         async def make_request(i):
             content = f"Test memory {i} with some structured data:\nPriority: High\nStatus: Active"
@@ -841,31 +829,33 @@ class TestCrossComponentIntegration:
                     "content": content,
                     "memory_type": "test",
                     "tags": [f"test-{i}"],
-                    "api_key": api_key
-                }
+                    "api_key": api_key,
+                },
             )
-        
+
         # Make 10 concurrent requests
         tasks = [make_request(i) for i in range(10)]
         responses = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         # Most requests should succeed
-        successful_responses = [r for r in responses if not isinstance(r, Exception) and r.status_code == 200]
+        successful_responses = [
+            r for r in responses if not isinstance(r, Exception) and r.status_code == 200
+        ]
         assert len(successful_responses) >= 8  # At least 80% success rate
-        
+
         # Test WebSocket service can handle concurrent connections
         websocket_service = get_websocket_service()
         connection_tasks = []
-        
+
         for i in range(10):
             mock_ws = AsyncMock()
             task = websocket_service.connection_manager.connect(
                 mock_ws, f"load-test-{i}", f"user-{i}"
             )
             connection_tasks.append(task)
-        
+
         await asyncio.gather(*connection_tasks)
-        
+
         # Verify all connections were established
         metrics = websocket_service.get_metrics()
         assert metrics["active_connections"] >= 10
@@ -887,41 +877,38 @@ class TestCrossComponentIntegration:
         - [ ] UI implementation
         - [ ] Testing and deployment
         """
-        
+
         # Ingest memory
         ingest_response = await client.post(
             "/api/v2/memories/ingest",
             params={
                 "content": structured_content,
                 "memory_type": "status_report",
-                "api_key": api_key
-            }
+                "api_key": api_key,
+            },
         )
-        
+
         assert ingest_response.status_code == 200
-        
+
         # Get metrics after ingestion
-        metrics_response = await client.get(
-            "/api/v2/metrics",
-            params={"api_key": api_key}
-        )
-        
+        metrics_response = await client.get("/api/v2/metrics", params={"api_key": api_key})
+
         assert metrics_response.status_code == 200
         metrics = metrics_response.json()
-        
+
         # Memory count should have increased
         assert isinstance(metrics["memories"], int)
         assert metrics["memories"] >= 0
-        
+
         # Test structured extraction works consistently
         extractor = StructuredDataExtractor(use_ai=False)
         extracted1 = extractor.extract_structured_data(structured_content)
         extracted2 = extractor.extract_structured_data(structured_content)
-        
+
         # Should get consistent results
         assert len(extracted1.key_value_pairs) == len(extracted2.key_value_pairs)
         assert len(extracted1.lists) == len(extracted2.lists)
-        
+
         # Key-value pairs should be identical
         for key in extracted1.key_value_pairs:
             assert key in extracted2.key_value_pairs

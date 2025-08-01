@@ -39,10 +39,10 @@ class TestUserBehaviorProfile:
         assert profile.exploration_score == 0.0
 
         # Check creation patterns structure
-        assert 'peak_hours' in profile.creation_patterns
-        assert 'active_days' in profile.creation_patterns
-        assert 'avg_content_length' in profile.creation_patterns
-        assert isinstance(profile.creation_patterns['preferred_tags'], Counter)
+        assert "peak_hours" in profile.creation_patterns
+        assert "active_days" in profile.creation_patterns
+        assert "avg_content_length" in profile.creation_patterns
+        assert isinstance(profile.creation_patterns["preferred_tags"], Counter)
 
 
 class TestSuggestionEngine:
@@ -71,7 +71,7 @@ class TestSuggestionEngine:
             user_id="test_user",
             context_memory_ids=[uuid4(), uuid4()],
             suggestion_types=[SuggestionType.EXPLORE, SuggestionType.CONNECT],
-            limit=10
+            limit=10,
         )
 
     @pytest.fixture
@@ -79,9 +79,9 @@ class TestSuggestionEngine:
         """Create sample access logs"""
         memory_ids = [uuid4() for _ in range(5)]
         return [
-            {'memory_id': memory_ids[0], 'access_count': 10, 'last_access': datetime.utcnow()},
-            {'memory_id': memory_ids[1], 'access_count': 8, 'last_access': datetime.utcnow()},
-            {'memory_id': memory_ids[2], 'access_count': 5, 'last_access': datetime.utcnow()},
+            {"memory_id": memory_ids[0], "access_count": 10, "last_access": datetime.utcnow()},
+            {"memory_id": memory_ids[1], "access_count": 8, "last_access": datetime.utcnow()},
+            {"memory_id": memory_ids[2], "access_count": 5, "last_access": datetime.utcnow()},
         ]
 
     @pytest.fixture
@@ -90,12 +90,12 @@ class TestSuggestionEngine:
         base_time = datetime.utcnow()
         return [
             {
-                'id': uuid4(),
-                'content': 'Python programming is versatile',
-                'tags': ['Python', 'Programming'],
-                'importance': 8,
-                'created_at': base_time - timedelta(hours=i),
-                'updated_at': base_time - timedelta(hours=i)
+                "id": uuid4(),
+                "content": "Python programming is versatile",
+                "tags": ["Python", "Programming"],
+                "importance": 8,
+                "created_at": base_time - timedelta(hours=i),
+                "updated_at": base_time - timedelta(hours=i),
             }
             for i in range(10)
         ]
@@ -105,42 +105,46 @@ class TestSuggestionEngine:
         """Test successful suggestion generation"""
         # Mock profile building
         mock_profile = UserBehaviorProfile("test_user")
-        mock_profile.topic_interests = {'Python': 0.9, 'ML': 0.7}
+        mock_profile.topic_interests = {"Python": 0.9, "ML": 0.7}
         mock_profile.learning_velocity = 1.5
         engine._build_user_profile = AsyncMock(return_value=mock_profile)
 
         # Mock knowledge state
         mock_knowledge_state = {
-            'total_memories': 100,
-            'unique_topics': 20,
-            'coverage_score': 0.7,
-            'knowledge_gaps': [],
-            'clusters': []
+            "total_memories": 100,
+            "unique_topics": 20,
+            "coverage_score": 0.7,
+            "knowledge_gaps": [],
+            "clusters": [],
         }
         engine._analyze_knowledge_state = AsyncMock(return_value=mock_knowledge_state)
 
         # Mock suggestion generation methods
-        engine._generate_exploration_suggestions = AsyncMock(return_value=[
-            Suggestion(
-                id="explore_1",
-                type=SuggestionType.EXPLORE,
-                title="Explore Advanced Python",
-                description="Deepen your Python knowledge",
-                action=ActionType.CREATE,
-                priority=0.8
-            )
-        ])
+        engine._generate_exploration_suggestions = AsyncMock(
+            return_value=[
+                Suggestion(
+                    id="explore_1",
+                    type=SuggestionType.EXPLORE,
+                    title="Explore Advanced Python",
+                    description="Deepen your Python knowledge",
+                    action=ActionType.CREATE,
+                    priority=0.8,
+                )
+            ]
+        )
 
-        engine._generate_connection_suggestions = AsyncMock(return_value=[
-            Suggestion(
-                id="connect_1",
-                type=SuggestionType.CONNECT,
-                title="Connect Python and ML",
-                description="Bridge your interests",
-                action=ActionType.LINK,
-                priority=0.7
-            )
-        ])
+        engine._generate_connection_suggestions = AsyncMock(
+            return_value=[
+                Suggestion(
+                    id="connect_1",
+                    type=SuggestionType.CONNECT,
+                    title="Connect Python and ML",
+                    description="Bridge your interests",
+                    action=ActionType.LINK,
+                    priority=0.7,
+                )
+            ]
+        )
 
         engine._generate_learning_paths = AsyncMock(return_value=[])
         engine._generate_content_suggestions = AsyncMock(return_value=[])
@@ -152,9 +156,11 @@ class TestSuggestionEngine:
         # Verify
         assert isinstance(response, SuggestionResponse)
         assert len(response.suggestions) == 2
-        assert response.suggestions[0].priority > response.suggestions[1].priority  # Sorted by priority
-        assert 'profile_completeness' in response.metadata
-        assert 'knowledge_coverage' in response.metadata
+        assert (
+            response.suggestions[0].priority > response.suggestions[1].priority
+        )  # Sorted by priority
+        assert "profile_completeness" in response.metadata
+        assert "knowledge_coverage" in response.metadata
 
     @pytest.mark.asyncio
     async def test_generate_suggestions_error_handling(self, engine, sample_request):
@@ -164,20 +170,22 @@ class TestSuggestionEngine:
         response = await engine.generate_suggestions(sample_request)
 
         assert response.suggestions == []
-        assert 'error' in response.metadata
+        assert "error" in response.metadata
 
     @pytest.mark.asyncio
     async def test_build_user_profile(self, engine, sample_access_logs, sample_recent_memories):
         """Test user profile building"""
         # Mock database queries
-        engine.db.fetch_all = AsyncMock(side_effect=[
-            sample_access_logs,  # Access logs
-            sample_recent_memories  # Recent memories
-        ])
+        engine.db.fetch_all = AsyncMock(
+            side_effect=[
+                sample_access_logs,  # Access logs
+                sample_recent_memories,  # Recent memories
+            ]
+        )
 
         # Mock memory service
         mock_memory = MagicMock()
-        mock_memory.tags = ['Python', 'Programming']
+        mock_memory.tags = ["Python", "Programming"]
         engine.memory_service.get_memory = AsyncMock(return_value=mock_memory)
 
         # Execute
@@ -190,7 +198,7 @@ class TestSuggestionEngine:
         assert profile.learning_velocity > 0
         assert profile.exploration_score > 0
         assert len(profile.topic_interests) > 0
-        assert len(profile.creation_patterns['preferred_tags']) > 0
+        assert len(profile.creation_patterns["preferred_tags"]) > 0
 
     @pytest.mark.asyncio
     async def test_analyze_knowledge_state(self, engine):
@@ -198,19 +206,28 @@ class TestSuggestionEngine:
         # Mock analytics engine responses
         from uuid import uuid4
 
-        from app.insights.models import Insight, InsightResponse, InsightType, TimeFrame, UsageStatistics
+        from app.insights.models import (
+            Insight,
+            InsightResponse,
+            InsightType,
+            TimeFrame,
+            UsageStatistics,
+        )
+
         mock_insights = InsightResponse(
-            insights=[Insight(
-                id=uuid4(),
-                type=InsightType.KNOWLEDGE_GROWTH,
-                title="Rapid growth",
-                description="Your knowledge is growing",
-                confidence=0.8,
-                impact_score=7.5,
-                data={},
-                created_at=datetime.utcnow(),
-                time_frame=TimeFrame.WEEKLY
-            )],
+            insights=[
+                Insight(
+                    id=uuid4(),
+                    type=InsightType.KNOWLEDGE_GROWTH,
+                    title="Rapid growth",
+                    description="Your knowledge is growing",
+                    confidence=0.8,
+                    impact_score=7.5,
+                    data={},
+                    created_at=datetime.utcnow(),
+                    time_frame=TimeFrame.WEEKLY,
+                )
+            ],
             total=1,
             time_frame=TimeFrame.WEEKLY,
             generated_at=datetime.utcnow(),
@@ -223,15 +240,15 @@ class TestSuggestionEngine:
                 most_accessed_memories=[],
                 access_frequency={"Monday": 20, "Tuesday": 30},
                 peak_usage_times=["14:00", "20:00"],
-                growth_rate=0.15
-            )
+                growth_rate=0.15,
+            ),
         )
 
         # Mock cluster and gap analysis
         mock_clusters = MagicMock()
         mock_clusters.clusters = [
             MagicMock(cluster_theme="Python", size=20),
-            MagicMock(cluster_theme="ML", size=15)
+            MagicMock(cluster_theme="ML", size=15),
         ]
 
         mock_gaps = MagicMock()
@@ -245,46 +262,50 @@ class TestSuggestionEngine:
         engine.analytics_engine.analyze_knowledge_gaps = AsyncMock(return_value=mock_gaps)
 
         # Mock database stats
-        engine.db.fetch_one = AsyncMock(return_value={
-            'total_memories': 150,
-            'unique_tags': 25,
-            'avg_importance': 7.5,
-            'last_activity': datetime.utcnow()
-        })
+        engine.db.fetch_one = AsyncMock(
+            return_value={
+                "total_memories": 150,
+                "unique_tags": 25,
+                "avg_importance": 7.5,
+                "last_activity": datetime.utcnow(),
+            }
+        )
 
         # Execute
         state = await engine._analyze_knowledge_state("test_user")
 
         # Verify
-        assert state['total_memories'] == 150
-        assert state['unique_topics'] == 25
-        assert state['coverage_score'] == 0.75
-        assert len(state['insights']) == 1
-        assert len(state['clusters']) == 2
-        assert len(state['knowledge_gaps']) == 1
+        assert state["total_memories"] == 150
+        assert state["unique_topics"] == 25
+        assert state["coverage_score"] == 0.75
+        assert len(state["insights"]) == 1
+        assert len(state["clusters"]) == 2
+        assert len(state["knowledge_gaps"]) == 1
 
     @pytest.mark.asyncio
     async def test_generate_exploration_suggestions(self, engine):
         """Test exploration suggestion generation"""
         profile = UserBehaviorProfile("test_user")
-        profile.topic_interests = {'Python': 0.9, 'ML': 0.8, 'Web': 0.6}
-        profile.creation_patterns['preferred_tags'] = Counter(['Python', 'ML', 'Django'])
+        profile.topic_interests = {"Python": 0.9, "ML": 0.8, "Web": 0.6}
+        profile.creation_patterns["preferred_tags"] = Counter(["Python", "ML", "Django"])
 
         knowledge_state = {
-            'knowledge_gaps': [
+            "knowledge_gaps": [
                 MagicMock(area="Cloud Computing", suggested_topics=["AWS", "Docker"])
             ]
         }
 
         # Mock LLM response
         engine.openai_client.generate = AsyncMock(
-            return_value=json.dumps([
-                {
-                    'topic': 'Kubernetes',
-                    'reason': 'Natural progression from Docker',
-                    'starting_point': 'Container orchestration basics'
-                }
-            ])
+            return_value=json.dumps(
+                [
+                    {
+                        "topic": "Kubernetes",
+                        "reason": "Natural progression from Docker",
+                        "starting_point": "Container orchestration basics",
+                    }
+                ]
+            )
         )
 
         suggestions = await engine._generate_exploration_suggestions(profile, knowledge_state)
@@ -292,7 +313,7 @@ class TestSuggestionEngine:
         assert len(suggestions) > 0
         assert suggestions[0].type == SuggestionType.EXPLORE
         assert suggestions[0].action == ActionType.CREATE
-        assert 'topic' in suggestions[0].metadata
+        assert "topic" in suggestions[0].metadata
 
     @pytest.mark.asyncio
     async def test_generate_connection_suggestions(self, engine):
@@ -300,28 +321,22 @@ class TestSuggestionEngine:
         profile = UserBehaviorProfile("test_user")
 
         # Mock disconnected clusters
-        cluster1 = MagicMock(
-            cluster_id="c1",
-            cluster_theme="Python",
-            member_nodes=["n1", "n2"]
-        )
-        cluster2 = MagicMock(
-            cluster_id="c2",
-            cluster_theme="JavaScript",
-            member_nodes=["n3", "n4"]
-        )
+        cluster1 = MagicMock(cluster_id="c1", cluster_theme="Python", member_nodes=["n1", "n2"])
+        cluster2 = MagicMock(cluster_id="c2", cluster_theme="JavaScript", member_nodes=["n3", "n4"])
 
-        knowledge_state = {'clusters': [cluster1, cluster2]}
+        knowledge_state = {"clusters": [cluster1, cluster2]}
 
         # Mock database for isolated memories
-        engine.db.fetch_all = AsyncMock(return_value=[
-            {
-                'id': uuid4(),
-                'content': 'Important isolated knowledge',
-                'tags': ['Isolated'],
-                'importance': 8
-            }
-        ])
+        engine.db.fetch_all = AsyncMock(
+            return_value=[
+                {
+                    "id": uuid4(),
+                    "content": "Important isolated knowledge",
+                    "tags": ["Isolated"],
+                    "importance": 8,
+                }
+            ]
+        )
 
         # Mock LLM for connection suggestions
         engine.openai_client.generate = AsyncMock(
@@ -341,22 +356,22 @@ class TestSuggestionEngine:
 
         # Mock memories needing review
         old_access = datetime.utcnow() - timedelta(days=20)
-        engine.db.fetch_all = AsyncMock(side_effect=[
-            # Memories not accessed recently
-            [
-                {
-                    'id': uuid4(),
-                    'content': 'Important concept to review',
-                    'importance': 8,
-                    'created_at': datetime.utcnow() - timedelta(days=30),
-                    'last_accessed': old_access
-                }
-            ],
-            # Topics with many memories
-            [
-                {'tags': 'Python', 'memory_count': 25, 'avg_importance': 7.5}
+        engine.db.fetch_all = AsyncMock(
+            side_effect=[
+                # Memories not accessed recently
+                [
+                    {
+                        "id": uuid4(),
+                        "content": "Important concept to review",
+                        "importance": 8,
+                        "created_at": datetime.utcnow() - timedelta(days=30),
+                        "last_accessed": old_access,
+                    }
+                ],
+                # Topics with many memories
+                [{"tags": "Python", "memory_count": 25, "avg_importance": 7.5}],
             ]
-        ])
+        )
 
         knowledge_state = {}
 
@@ -365,24 +380,26 @@ class TestSuggestionEngine:
         assert len(suggestions) > 0
         assert suggestions[0].type == SuggestionType.REVIEW
         assert suggestions[0].action == ActionType.REVIEW
-        assert 'days_since_access' in suggestions[0].metadata
+        assert "days_since_access" in suggestions[0].metadata
 
     @pytest.mark.asyncio
     async def test_generate_organization_suggestions(self, engine):
         """Test organization suggestion generation"""
         profile = UserBehaviorProfile("test_user")
-        profile.creation_patterns['preferred_tags'] = Counter({
-            'Python': 20, 'ML': 15, 'Web': 10, 'Data': 8
-        })
+        profile.creation_patterns["preferred_tags"] = Counter(
+            {"Python": 20, "ML": 15, "Web": 10, "Data": 8}
+        )
 
         # Mock untagged memories
-        engine.db.fetch_all = AsyncMock(return_value=[
-            {'id': uuid4(), 'content': 'Untagged memory 1', 'importance': 7},
-            {'id': uuid4(), 'content': 'Untagged memory 2', 'importance': 6},
-            {'id': uuid4(), 'content': 'Untagged memory 3', 'importance': 8},
-        ])
+        engine.db.fetch_all = AsyncMock(
+            return_value=[
+                {"id": uuid4(), "content": "Untagged memory 1", "importance": 7},
+                {"id": uuid4(), "content": "Untagged memory 2", "importance": 6},
+                {"id": uuid4(), "content": "Untagged memory 3", "importance": 8},
+            ]
+        )
 
-        knowledge_state = {'total_memories': 100}
+        knowledge_state = {"total_memories": 100}
 
         suggestions = await engine._generate_organization_suggestions(profile, knowledge_state)
 
@@ -395,13 +412,12 @@ class TestSuggestionEngine:
     async def test_generate_learning_paths(self, engine):
         """Test learning path generation"""
         profile = UserBehaviorProfile("test_user")
-        profile.topic_interests = {'Python': 0.9, 'ML': 0.7}
+        profile.topic_interests = {"Python": 0.9, "ML": 0.7}
 
         knowledge_state = {
-            'knowledge_gaps': [
+            "knowledge_gaps": [
                 MagicMock(
-                    area="Deep Learning",
-                    suggested_topics=["Neural Networks", "CNNs", "RNNs"]
+                    area="Deep Learning", suggested_topics=["Neural Networks", "CNNs", "RNNs"]
                 )
             ]
         }
@@ -421,9 +437,9 @@ class TestSuggestionEngine:
         """Test content suggestion generation"""
         profile = UserBehaviorProfile("test_user")
         profile.learning_velocity = 2.0  # High velocity
-        profile.topic_interests = {'Python': 0.8, 'ML': 0.9}
+        profile.topic_interests = {"Python": 0.8, "ML": 0.9}
 
-        knowledge_state = {'total_memories': 120}
+        knowledge_state = {"total_memories": 120}
 
         suggestions = await engine._generate_content_suggestions(profile, knowledge_state)
 
@@ -437,11 +453,11 @@ class TestSuggestionEngine:
     async def test_generate_organization_tips(self, engine):
         """Test organization tips generation"""
         profile = UserBehaviorProfile("test_user")
-        profile.creation_patterns['preferred_tags'] = Counter({
-            f'tag_{i}': i for i in range(25)  # Many different tags
-        })
+        profile.creation_patterns["preferred_tags"] = Counter(
+            {f"tag_{i}": i for i in range(25)}  # Many different tags
+        )
 
-        knowledge_state = {'total_memories': 75}
+        knowledge_state = {"total_memories": 75}
 
         tips = await engine._generate_organization_tips(profile, knowledge_state)
 
@@ -453,13 +469,11 @@ class TestSuggestionEngine:
 
     def test_find_peak_hours(self, engine):
         """Test peak hour detection"""
-        times = [
-            datetime.utcnow().replace(hour=9) for _ in range(10)
-        ] + [
-            datetime.utcnow().replace(hour=14) for _ in range(8)
-        ] + [
-            datetime.utcnow().replace(hour=20) for _ in range(5)
-        ]
+        times = (
+            [datetime.utcnow().replace(hour=9) for _ in range(10)]
+            + [datetime.utcnow().replace(hour=14) for _ in range(8)]
+            + [datetime.utcnow().replace(hour=20) for _ in range(5)]
+        )
 
         peak_hours = engine._find_peak_hours(times)
 
@@ -492,9 +506,9 @@ class TestSuggestionEngine:
         """Test profile completeness calculation"""
         # Complete profile
         complete_profile = UserBehaviorProfile("user1")
-        complete_profile.access_patterns = {f'tag_{i}': i for i in range(10)}
-        complete_profile.topic_interests = {f'topic_{i}': 0.5 for i in range(5)}
-        complete_profile.creation_patterns['peak_hours'] = [9, 14, 20]
+        complete_profile.access_patterns = {f"tag_{i}": i for i in range(10)}
+        complete_profile.topic_interests = {f"topic_{i}": 0.5 for i in range(5)}
+        complete_profile.creation_patterns["peak_hours"] = [9, 14, 20]
         complete_profile.learning_velocity = 0.8
 
         completeness = engine._calculate_profile_completeness(complete_profile)
@@ -517,7 +531,7 @@ class TestSuggestionEngine:
                 title=f"Suggestion {i}",
                 description="High priority",
                 action=ActionType.CREATE,
-                priority=0.9
+                priority=0.9,
             )
             for i in range(4)
         ]
@@ -533,7 +547,7 @@ class TestSuggestionEngine:
                 title="Low priority",
                 description="Not important",
                 action=ActionType.REVIEW,
-                priority=0.3
+                priority=0.3,
             )
         ]
 
@@ -567,7 +581,7 @@ class TestSuggestionEngine:
                 title=f"Suggestion {i}",
                 description="Test",
                 action=ActionType.CREATE,
-                priority=min(0.5 + i * 0.05, 1.0)  # Ensure priority doesn't exceed 1.0
+                priority=min(0.5 + i * 0.05, 1.0),  # Ensure priority doesn't exceed 1.0
             )
             for i in range(10)
         ]
@@ -585,5 +599,7 @@ class TestSuggestionEngine:
 
         assert len(response.suggestions) == 3  # Respects limit
         # Check they're the highest priority ones
-        assert all(response.suggestions[i].priority >= response.suggestions[i+1].priority
-                  for i in range(len(response.suggestions)-1))
+        assert all(
+            response.suggestions[i].priority >= response.suggestions[i + 1].priority
+            for i in range(len(response.suggestions) - 1)
+        )

@@ -22,7 +22,12 @@ class TestDockerDeployment:
     @classmethod
     def setup_class(cls):
         """Detect docker compose command."""
-        cls.docker_compose_cmd = ["docker", "compose"] if subprocess.run(["docker", "compose", "--version"], capture_output=True).returncode == 0 else ["docker-compose"]
+        cls.docker_compose_cmd = (
+            ["docker", "compose"]
+            if subprocess.run(["docker", "compose", "--version"], capture_output=True).returncode
+            == 0
+            else ["docker-compose"]
+        )
 
     @pytest.fixture(scope="class", autouse=True)
     def docker_environment(self):
@@ -41,9 +46,7 @@ class TestDockerDeployment:
             # Start containers
             print("Starting Docker containers...")
             result = subprocess.run(
-                self.docker_compose_cmd + ["up", "-d", "--build"],
-                capture_output=True,
-                text=True
+                self.docker_compose_cmd + ["up", "-d", "--build"], capture_output=True, text=True
             )
 
             if result.returncode != 0:
@@ -82,18 +85,14 @@ class TestDockerDeployment:
     def test_docker_compose_valid(self):
         """Test that docker-compose.yml is valid."""
         result = subprocess.run(
-            self.docker_compose_cmd + ["config"],
-            capture_output=True,
-            text=True
+            self.docker_compose_cmd + ["config"], capture_output=True, text=True
         )
         assert result.returncode == 0, f"Invalid docker-compose.yml: {result.stderr}"
 
     def test_containers_running(self):
         """Test that all required containers are running."""
         result = subprocess.run(
-            self.docker_compose_cmd + ["ps", "--format", "json"],
-            capture_output=True,
-            text=True
+            self.docker_compose_cmd + ["ps", "--format", "json"], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -128,30 +127,30 @@ class TestDockerDeployment:
         data = {
             "content": "Docker test memory",
             "memory_type": "semantic",  # Valid types: semantic, episodic, procedural
-            "tags": ["docker", "test"]
+            "tags": ["docker", "test"],
         }
 
         # First test without API key (should get 422 for missing api_key)
-        response = requests.post(
-            "http://localhost:8000/memories",
-            json=data,
-            headers=headers
-        )
+        response = requests.post("http://localhost:8000/memories", json=data, headers=headers)
 
         # API requires api_key in query params
-        assert response.status_code == 422, \
-            f"Expected validation error, got {response.status_code}: {response.text}"
+        assert (
+            response.status_code == 422
+        ), f"Expected validation error, got {response.status_code}: {response.text}"
 
         # Test with valid API key
         response = requests.post(
             "http://localhost:8000/memories?api_key=test-token-for-development",
             json=data,
-            headers=headers
+            headers=headers,
         )
 
         # Should succeed or get validation error, not database connection error
-        assert response.status_code in [200, 201, 422], \
-            f"Expected success or validation error, got {response.status_code}: {response.text}"
+        assert response.status_code in [
+            200,
+            201,
+            422,
+        ], f"Expected success or validation error, got {response.status_code}: {response.text}"
 
     def test_redis_connection(self):
         """Test Redis connectivity through the API."""
@@ -162,9 +161,7 @@ class TestDockerDeployment:
     def test_container_logs_no_errors(self):
         """Test that container logs don't contain critical errors."""
         result = subprocess.run(
-            self.docker_compose_cmd + ["logs", "app", "--tail=100"],
-            capture_output=True,
-            text=True
+            self.docker_compose_cmd + ["logs", "app", "--tail=100"], capture_output=True, text=True
         )
 
         logs = result.stdout.lower()
@@ -177,9 +174,7 @@ class TestDockerDeployment:
     def test_environment_variables_set(self):
         """Test that required environment variables are set in container."""
         result = subprocess.run(
-            self.docker_compose_cmd + ["exec", "app", "env"],
-            capture_output=True,
-            text=True
+            self.docker_compose_cmd + ["exec", "app", "env"], capture_output=True, text=True
         )
 
         env_output = result.stdout
@@ -192,7 +187,7 @@ class TestDockerDeployment:
         result = subprocess.run(
             ["docker", "inspect", "secondbrain-app", "--format", "{{.State.Health.Status}}"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Note: healthcheck might not be configured yet, so we check if running
@@ -201,20 +196,16 @@ class TestDockerDeployment:
 
     def test_port_accessibility(self):
         """Test that all exposed ports are accessible."""
-        ports = {
-            8000: "App API",
-            5432: "PostgreSQL",
-            6379: "Redis",
-            8080: "Adminer"
-        }
+        ports = {8000: "App API", 5432: "PostgreSQL", 6379: "Redis", 8080: "Adminer"}
 
         for port, service in ports.items():
             try:
                 # Just test if port is open
                 import socket
+
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(2)
-                result = sock.connect_ex(('localhost', port))
+                result = sock.connect_ex(("localhost", port))
                 sock.close()
 
                 assert result == 0, f"{service} port {port} is not accessible"

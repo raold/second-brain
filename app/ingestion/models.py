@@ -1,17 +1,23 @@
+from datetime import datetime
+from typing import Any
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+
+from app.ingestion.models import StructuredData
+
 """
 Data models for the sophisticated ingestion engine
 """
 
-from datetime import datetime
 from enum import Enum
-from typing import Any
-from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import field_validator
 
 
 class EntityType(str, Enum):
     """Types of entities that can be extracted"""
+
     PERSON = "person"
     ORGANIZATION = "organization"
     LOCATION = "location"
@@ -28,6 +34,7 @@ class EntityType(str, Enum):
 
 class RelationshipType(str, Enum):
     """Types of relationships between entities"""
+
     RELATED_TO = "related_to"
     PART_OF = "part_of"
     LOCATED_IN = "located_in"
@@ -44,6 +51,7 @@ class RelationshipType(str, Enum):
 
 class IntentType(str, Enum):
     """Types of user intent in content"""
+
     QUESTION = "question"
     STATEMENT = "statement"
     TODO = "todo"
@@ -59,6 +67,7 @@ class IntentType(str, Enum):
 
 class ContentQuality(str, Enum):
     """Quality assessment of content"""
+
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -67,6 +76,7 @@ class ContentQuality(str, Enum):
 
 class Entity(BaseModel):
     """Represents an extracted entity"""
+
     text: str = Field(..., description="The entity text as it appears")
     type: EntityType = Field(..., description="Type of entity")
     normalized: str | None = Field(None, description="Normalized form of entity")
@@ -75,7 +85,7 @@ class Entity(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0, description="Extraction confidence")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional entity metadata")
 
-    @field_validator('confidence')
+    @field_validator("confidence")
     @classmethod
     def validate_confidence(cls, v: float) -> float:
         return max(0.0, min(1.0, v))
@@ -83,6 +93,7 @@ class Entity(BaseModel):
 
 class Relationship(BaseModel):
     """Represents a relationship between entities"""
+
     source: Entity = Field(..., description="Source entity")
     target: Entity = Field(..., description="Target entity")
     type: RelationshipType = Field(..., description="Type of relationship")
@@ -93,6 +104,7 @@ class Relationship(BaseModel):
 
 class Topic(BaseModel):
     """Represents an extracted topic"""
+
     name: str = Field(..., description="Topic name")
     keywords: list[str] = Field(..., description="Associated keywords")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Topic confidence")
@@ -102,6 +114,7 @@ class Topic(BaseModel):
 
 class Intent(BaseModel):
     """Represents extracted user intent"""
+
     type: IntentType = Field(..., description="Primary intent type")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Intent confidence")
     action_items: list[str] = Field(default_factory=list, description="Extracted action items")
@@ -111,6 +124,7 @@ class Intent(BaseModel):
 
 class StructuredData(BaseModel):
     """Represents extracted structured data"""
+
     key_value_pairs: dict[str, Any] = Field(default_factory=dict)
     lists: dict[str, list[str]] = Field(default_factory=dict)
     tables: list[dict[str, Any]] = Field(default_factory=list)
@@ -120,6 +134,7 @@ class StructuredData(BaseModel):
 
 class EmbeddingMetadata(BaseModel):
     """Metadata for generated embeddings"""
+
     model: str = Field(..., description="Model used for embedding")
     dimensions: int = Field(..., description="Embedding dimensions")
     chunk_id: int | None = Field(None, description="Chunk ID if content was chunked")
@@ -129,6 +144,7 @@ class EmbeddingMetadata(BaseModel):
 
 class ProcessedContent(BaseModel):
     """Complete processed content with all extractions"""
+
     # Original content
     original_content: str = Field(..., description="Original input content")
     content_hash: str = Field(..., description="Hash of original content")
@@ -167,10 +183,13 @@ class ProcessedContent(BaseModel):
 
 class IngestionRequest(BaseModel):
     """Request model for content ingestion"""
+
     content: str = Field(..., description="Content to ingest", min_length=1)
 
     # Optional context
-    user_context: dict[str, Any] | None = Field(None, description="User context for personalization")
+    user_context: dict[str, Any] | None = Field(
+        None, description="User context for personalization"
+    )
     domain_hint: str | None = Field(None, description="Hint about content domain")
     language: str | None = Field(default="en", description="Content language")
 
@@ -189,6 +208,7 @@ class IngestionRequest(BaseModel):
 
 class IngestionResponse(BaseModel):
     """Response model for content ingestion"""
+
     request_id: UUID = Field(..., description="Unique request ID")
     status: str = Field(..., description="Processing status")
     processed_content: ProcessedContent | None = None
@@ -200,10 +220,15 @@ class IngestionResponse(BaseModel):
 
 class IngestionConfig(BaseModel):
     """Configuration for the ingestion engine"""
+
     # Model configurations
     entity_model: str = Field(default="en_core_web_sm", description="SpaCy model for NER")
-    embedding_model: str = Field(default="text-embedding-ada-002", description="OpenAI embedding model")
-    classification_model: str = Field(default="bert-base-uncased", description="Classification model")
+    embedding_model: str = Field(
+        default="text-embedding-ada-002", description="OpenAI embedding model"
+    )
+    classification_model: str = Field(
+        default="bert-base-uncased", description="Classification model"
+    )
 
     # Processing thresholds
     min_entity_confidence: float = Field(default=0.7, ge=0.0, le=1.0)

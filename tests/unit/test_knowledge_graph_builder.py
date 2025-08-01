@@ -7,6 +7,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
 pytestmark = pytest.mark.unit
 
 from app.services.knowledge_graph_builder import (
@@ -100,7 +101,7 @@ class TestKnowledgeGraphBuilder:
         memory = {
             "id": "mem1",
             "content": "Python is a programming language used for web development",
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
         }
 
         mentions = await graph_builder._extract_entities_from_memory(memory)
@@ -117,10 +118,12 @@ class TestKnowledgeGraphBuilder:
 
         # Setup mock connection and result
         mock_conn = AsyncMock()
-        mock_conn.fetchrow = AsyncMock(side_effect=[
-            None,  # First check - entity doesn't exist
-            {"id": "new-id"}  # Insert returns new ID
-        ])
+        mock_conn.fetchrow = AsyncMock(
+            side_effect=[
+                None,  # First check - entity doesn't exist
+                {"id": "new-id"},  # Insert returns new ID
+            ]
+        )
         mock_db.pool.acquire.return_value.__aenter__.return_value = mock_conn
 
         entity_id = await graph_builder._ensure_entity_exists(entity)
@@ -154,7 +157,7 @@ class TestKnowledgeGraphBuilder:
             position_start=0,
             position_end=6,
             context="Python is great",
-            confidence=0.9
+            confidence=0.9,
         )
 
         # Setup mock connection for _ensure_entity_exists and INSERT
@@ -167,7 +170,11 @@ class TestKnowledgeGraphBuilder:
 
         # Check that INSERT was executed
         assert mock_conn.execute.call_count >= 1
-        insert_call = [call for call in mock_conn.execute.call_args_list if "INSERT INTO entity_mentions" in str(call)]
+        insert_call = [
+            call
+            for call in mock_conn.execute.call_args_list
+            if "INSERT INTO entity_mentions" in str(call)
+        ]
         assert len(insert_call) > 0
 
     @pytest.mark.asyncio
@@ -184,7 +191,7 @@ class TestKnowledgeGraphBuilder:
             "content": "Test content",
             "created_at": datetime.utcnow().isoformat(),
             "embedding": [0.1] * 1536,
-            "metadata": {}
+            "metadata": {},
         }
 
         mock_db.get_memory = AsyncMock(return_value=memory)
@@ -192,7 +199,7 @@ class TestKnowledgeGraphBuilder:
         graph = await graph_builder.build_graph_from_memories(
             memory_ids=["mem1"],
             extract_entities=False,  # Skip entity extraction for basic test
-            extract_relationships=False
+            extract_relationships=False,
         )
 
         assert isinstance(graph, dict)
@@ -210,15 +217,17 @@ class TestKnowledgeGraphBuilder:
         mock_db.pool.acquire.return_value.__aenter__.return_value = mock_conn
 
         # Mock entity fetch
-        mock_conn.fetchrow = AsyncMock(return_value={
-            "id": "e1",
-            "name": "Python",
-            "entity_type": "technology",  # Fixed column name
-            "description": "Programming language",
-            "metadata": {},
-            "importance_score": 0.8,
-            "occurrence_count": 5
-        })
+        mock_conn.fetchrow = AsyncMock(
+            return_value={
+                "id": "e1",
+                "name": "Python",
+                "entity_type": "technology",  # Fixed column name
+                "description": "Programming language",
+                "metadata": {},
+                "importance_score": 0.8,
+                "occurrence_count": 5,
+            }
+        )
 
         # Mock empty relationships (simplest case)
         mock_conn.fetch = AsyncMock(return_value=[])
@@ -248,11 +257,9 @@ class TestKnowledgeGraphBuilder:
         graph = {
             "nodes": [
                 {"id": "n1", "label": "Node1", "type": "concept", "size": 15},
-                {"id": "n2", "label": "Node2", "type": "technology", "size": 20}
+                {"id": "n2", "label": "Node2", "type": "technology", "size": 20},
             ],
-            "edges": [
-                {"source": "n1", "target": "n2", "type": "related", "weight": 0.8}
-            ]
+            "edges": [{"source": "n1", "target": "n2", "type": "related", "weight": 0.8}],
         }
 
         stats = graph_builder._calculate_graph_stats(graph)
@@ -271,9 +278,7 @@ class TestKnowledgeGraphBuilder:
         entity2 = Entity(id="e2", name="programming", entity_type=EntityType.CONCEPT)
 
         relationships = await graph_builder._extract_entity_relationships(
-            "Python is used for programming",
-            entity1,
-            entity2
+            "Python is used for programming", entity1, entity2
         )
 
         assert isinstance(relationships, list)
@@ -294,14 +299,14 @@ class TestKnowledgeGraphBuilder:
                 "id": "m1",
                 "content": "machine learning data science algorithms programming python",
                 "created_at": "2024-01-01T00:00:00",
-                "embedding": [0.1] * 1536
+                "embedding": [0.1] * 1536,
             },
             {
                 "id": "m2",
                 "content": "machine learning programming algorithms data science python",
                 "created_at": "2024-01-02T00:00:00",
-                "embedding": [0.15] * 1536
-            }
+                "embedding": [0.15] * 1536,
+            },
         ]
 
         relationships = await graph_builder._extract_memory_relationships(memories)

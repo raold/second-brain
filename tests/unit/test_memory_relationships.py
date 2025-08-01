@@ -55,7 +55,7 @@ class TestMemoryRelationshipAnalyzer:
             "content_overlap",
             "conceptual_hierarchy",
             "causal_relationship",
-            "contextual_association"
+            "contextual_association",
         }
 
         assert set(analyzer.relationship_types.keys()) == expected_types
@@ -63,37 +63,37 @@ class TestMemoryRelationshipAnalyzer:
     def test_semantic_similarity_method_exists(self):
         analyzer = MemoryRelationshipAnalyzer()
 
-        assert hasattr(analyzer, '_calculate_semantic_similarity')
+        assert hasattr(analyzer, "_calculate_semantic_similarity")
         assert callable(analyzer._calculate_semantic_similarity)
 
     def test_temporal_proximity_method_exists(self):
         analyzer = MemoryRelationshipAnalyzer()
 
-        assert hasattr(analyzer, '_calculate_temporal_proximity')
+        assert hasattr(analyzer, "_calculate_temporal_proximity")
         assert callable(analyzer._calculate_temporal_proximity)
 
     def test_content_overlap_method_exists(self):
         analyzer = MemoryRelationshipAnalyzer()
 
-        assert hasattr(analyzer, '_calculate_content_overlap')
+        assert hasattr(analyzer, "_calculate_content_overlap")
         assert callable(analyzer._calculate_content_overlap)
 
     def test_conceptual_hierarchy_method_exists(self):
         analyzer = MemoryRelationshipAnalyzer()
 
-        assert hasattr(analyzer, '_calculate_conceptual_hierarchy')
+        assert hasattr(analyzer, "_calculate_conceptual_hierarchy")
         assert callable(analyzer._calculate_conceptual_hierarchy)
 
     def test_causal_relationship_method_exists(self):
         analyzer = MemoryRelationshipAnalyzer()
 
-        assert hasattr(analyzer, '_detect_causal_relationship')
+        assert hasattr(analyzer, "_detect_causal_relationship")
         assert callable(analyzer._detect_causal_relationship)
 
     def test_contextual_association_method_exists(self):
         analyzer = MemoryRelationshipAnalyzer()
 
-        assert hasattr(analyzer, '_calculate_contextual_association')
+        assert hasattr(analyzer, "_calculate_contextual_association")
         assert callable(analyzer._calculate_contextual_association)
 
     def test_analyzer_with_custom_thresholds(self):

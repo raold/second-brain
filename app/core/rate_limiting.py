@@ -1,12 +1,15 @@
+import time
+from datetime import datetime
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Rate Limiting Middleware for Second Brain v3.0.0
 Enterprise-grade rate limiting with Redis backend and configurable limits
 """
 
-import time
 from collections.abc import Callable
-from datetime import datetime
-from typing import Any
 
 import redis.asyncio as redis
 from fastapi import Request, status
@@ -23,12 +26,12 @@ class RateLimitConfig:
 
     # Default limits (requests per window)
     DEFAULT_LIMITS = {
-        "default": {"requests": 1000, "window": 3600},      # 1000/hour
-        "health": {"requests": 10000, "window": 3600},      # 10000/hour (health checks)
-        "search": {"requests": 100, "window": 3600},        # 100/hour (expensive operations)
-        "upload": {"requests": 50, "window": 3600},         # 50/hour (file uploads)
-        "memories": {"requests": 500, "window": 3600},      # 500/hour (CRUD operations)
-        "auth": {"requests": 50, "window": 3600},           # 50/hour (authentication)
+        "default": {"requests": 1000, "window": 3600},  # 1000/hour
+        "health": {"requests": 10000, "window": 3600},  # 10000/hour (health checks)
+        "search": {"requests": 100, "window": 3600},  # 100/hour (expensive operations)
+        "upload": {"requests": 50, "window": 3600},  # 50/hour (file uploads)
+        "memories": {"requests": 500, "window": 3600},  # 500/hour (CRUD operations)
+        "auth": {"requests": 50, "window": 3600},  # 50/hour (authentication)
     }
 
     # Burst limits (requests per minute)
@@ -42,12 +45,7 @@ class RateLimitConfig:
     }
 
     # Rate limit by user role/tier
-    USER_TIER_MULTIPLIERS = {
-        "free": 1.0,
-        "premium": 2.0,
-        "enterprise": 5.0,
-        "admin": 10.0
-    }
+    USER_TIER_MULTIPLIERS = {"free": 1.0, "premium": 2.0, "enterprise": 5.0, "admin": 10.0}
 
 
 class RateLimiter:
@@ -57,8 +55,9 @@ class RateLimiter:
         self.redis = redis_client
         self.config = RateLimitConfig()
 
-    async def is_allowed(self, key: str, limit: dict[str, int],
-                        user_tier: str = "free") -> dict[str, Any]:
+    async def is_allowed(
+        self, key: str, limit: dict[str, int], user_tier: str = "free"
+    ) -> dict[str, Any]:
         """
         Check if request is allowed under rate limit
 
@@ -108,15 +107,15 @@ class RateLimiter:
                         "limit": adjusted_limit,
                         "current": current_count,
                         "user_tier": user_tier,
-                        "window": window
-                    }
+                        "window": window,
+                    },
                 )
 
                 return {
                     "allowed": False,
                     "remaining": remaining,
                     "reset_time": reset_time,
-                    "retry_after": retry_after
+                    "retry_after": retry_after,
                 }
 
             # Request allowed
@@ -127,7 +126,7 @@ class RateLimiter:
                 "allowed": True,
                 "remaining": remaining,
                 "reset_time": reset_time,
-                "retry_after": 0
+                "retry_after": 0,
             }
 
         except Exception as e:
@@ -137,11 +136,12 @@ class RateLimiter:
                 "allowed": True,
                 "remaining": adjusted_limit,
                 "reset_time": current_time + window,
-                "retry_after": 0
+                "retry_after": 0,
             }
 
-    async def get_rate_limit_status(self, key: str, limit: dict[str, int],
-                                  user_tier: str = "free") -> dict[str, Any]:
+    async def get_rate_limit_status(
+        self, key: str, limit: dict[str, int], user_tier: str = "free"
+    ) -> dict[str, Any]:
         """Get current rate limit status without incrementing"""
         multiplier = self.config.USER_TIER_MULTIPLIERS.get(user_tier, 1.0)
         adjusted_limit = int(limit["requests"] * multiplier)
@@ -162,7 +162,7 @@ class RateLimiter:
                 "remaining": remaining,
                 "reset_time": reset_time,
                 "used": current_count,
-                "window": window
+                "window": window,
             }
 
         except Exception as e:
@@ -172,7 +172,7 @@ class RateLimiter:
                 "remaining": adjusted_limit,
                 "reset_time": current_time + window,
                 "used": 0,
-                "window": window
+                "window": window,
             }
 
 
@@ -274,8 +274,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return "search"
 
         # Upload endpoints
-        if "upload" in path or method == "POST" and any(
-            upload_path in path for upload_path in ["/ingest/", "/attachments/", "/files/"]
+        if (
+            "upload" in path
+            or method == "POST"
+            and any(upload_path in path for upload_path in ["/ingest/", "/attachments/", "/files/"])
         ):
             return "upload"
 
@@ -291,10 +293,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Try to get user from request state (set by auth middleware)
         user = getattr(request.state, "user", None)
         if user:
-            return {
-                "user_id": str(user.get("id", "anonymous")),
-                "tier": user.get("tier", "free")
-            }
+            return {"user_id": str(user.get("id", "anonymous")), "tier": user.get("tier", "free")}
 
         # Try to get API key from request
         api_key = request.headers.get("X-API-Key") or request.query_params.get("api_key")
@@ -303,14 +302,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             # For now, use the API key as user identifier
             return {
                 "user_id": f"api:{api_key[:8]}",  # Use first 8 chars for privacy
-                "tier": "free"  # Default tier for API key users
+                "tier": "free",  # Default tier for API key users
             }
 
         # Anonymous user
-        return {
-            "user_id": "anonymous",
-            "tier": "free"
-        }
+        return {"user_id": "anonymous", "tier": "free"}
 
     def _get_client_ip(self, request: Request) -> str:
         """Get client IP address"""
@@ -332,8 +328,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         user = getattr(request.state, "user", None)
         return user and user.get("role") == "admin"
 
-    def _create_rate_limit_response(self, result: dict[str, Any],
-                                  limit_type: str) -> JSONResponse:
+    def _create_rate_limit_response(self, result: dict[str, Any], limit_type: str) -> JSONResponse:
         """Create rate limit exceeded response"""
         return JSONResponse(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -344,33 +339,37 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     "details": {
                         "limit_type": limit_type,
                         "retry_after": result["retry_after"],
-                        "reset_time": result["reset_time"]
-                    }
+                        "reset_time": result["reset_time"],
+                    },
                 }
             },
             headers={
                 "Retry-After": str(result["retry_after"]),
                 "X-RateLimit-Reset": str(result["reset_time"]),
-                "X-RateLimit-Remaining": "0"
-            }
+                "X-RateLimit-Remaining": "0",
+            },
         )
 
 
 # Rate limiting decorators for specific endpoints
 def rate_limit(category: str = "default", custom_limit: dict[str, int] | None = None):
     """Decorator for additional endpoint-specific rate limiting"""
+
     def decorator(func):
         async def wrapper(*args, **kwargs):
             # This would be implemented with dependency injection in FastAPI
             # For now, it's a placeholder for future enhancement
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
 # Utility functions for rate limit management
-async def get_user_rate_limit_status(redis_client: redis.Redis, user_id: str,
-                                   category: str = "default") -> dict[str, Any]:
+async def get_user_rate_limit_status(
+    redis_client: redis.Redis, user_id: str, category: str = "default"
+) -> dict[str, Any]:
     """Get rate limit status for a user"""
     rate_limiter = RateLimiter(redis_client)
     config = RateLimitConfig()
@@ -381,8 +380,7 @@ async def get_user_rate_limit_status(redis_client: redis.Redis, user_id: str,
     return await rate_limiter.get_rate_limit_status(key, limit)
 
 
-async def reset_user_rate_limit(redis_client: redis.Redis, user_id: str,
-                               category: str = "default"):
+async def reset_user_rate_limit(redis_client: redis.Redis, user_id: str, category: str = "default"):
     """Reset rate limit for a user (admin function)"""
     current_time = int(time.time())
     window = RateLimitConfig.DEFAULT_LIMITS[category]["window"]
@@ -409,15 +407,13 @@ def setup_rate_limiting(app, redis_client: redis.Redis):
 
         status = {}
         for category in RateLimitConfig.DEFAULT_LIMITS.keys():
-            status[category] = await get_user_rate_limit_status(
-                redis_client, user_id, category
-            )
+            status[category] = await get_user_rate_limit_status(redis_client, user_id, category)
 
         return {
             "user_id": user_id,
             "user_tier": user_info["tier"],
             "rate_limits": status,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     logger.info("Rate limiting middleware configured")

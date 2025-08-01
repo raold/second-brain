@@ -1,3 +1,5 @@
+import time
+
 """
 Observer pattern implementations for real-time updates.
 
@@ -11,12 +13,12 @@ from .observable import Observable, Observer
 from .websocket_observer import WebSocketManager, WebSocketObserver
 
 __all__ = [
-    'Observable',
-    'Observer',
-    'WebSocketObserver',
-    'WebSocketManager',
-    'MetricsObserver',
-    'PerformanceMetricsCollector',
-    'CacheObserver',
-    'CacheInvalidationObserver',
+    "Observable",
+    "Observer",
+    "WebSocketObserver",
+    "WebSocketManager",
+    "MetricsObserver",
+    "PerformanceMetricsCollector",
+    "CacheObserver",
+    "CacheInvalidationObserver",
 ]

@@ -23,15 +23,13 @@ class TestMemoryAPIEndpoints:
             "semantic_metadata": {
                 "domain": "technology",
                 "concepts": ["python", "programming", "dynamic typing"],
-                "confidence": 0.9
+                "confidence": 0.9,
             },
-            "importance_score": 0.8
+            "importance_score": 0.8,
         }
 
         response = await client.post(
-            "/memories/semantic",
-            json=payload,
-            params={"api_key": api_key}
+            "/memories/semantic", json=payload, params={"api_key": api_key}
         )
 
         assert response.status_code == 200
@@ -50,15 +48,13 @@ class TestMemoryAPIEndpoints:
                 "location": "Conference Room A",
                 "participants": ["John", "Sarah", "Mike"],
                 "event_type": "meeting",
-                "emotional_context": "productive"
+                "emotional_context": "productive",
             },
-            "importance_score": 0.7
+            "importance_score": 0.7,
         }
 
         response = await client.post(
-            "/memories/episodic",
-            json=payload,
-            params={"api_key": api_key}
+            "/memories/episodic", json=payload, params={"api_key": api_key}
         )
 
         assert response.status_code == 200
@@ -77,15 +73,13 @@ class TestMemoryAPIEndpoints:
                 "domain": "devops",
                 "steps": ["build", "push", "deploy"],
                 "tools": ["docker", "kubernetes"],
-                "estimated_time": "15 minutes"
+                "estimated_time": "15 minutes",
             },
-            "importance_score": 0.9
+            "importance_score": 0.9,
         }
 
         response = await client.post(
-            "/memories/procedural",
-            json=payload,
-            params={"api_key": api_key}
+            "/memories/procedural", json=payload, params={"api_key": api_key}
         )
 
         assert response.status_code == 200
@@ -104,25 +98,23 @@ class TestMemoryAPIEndpoints:
                 "payload": {
                     "content": "Machine learning is a subset of artificial intelligence",
                     "semantic_metadata": {"domain": "AI", "concepts": ["ML", "AI"]},
-                    "importance_score": 0.8
-                }
+                    "importance_score": 0.8,
+                },
             },
             {
                 "endpoint": "/memories/episodic",
                 "payload": {
                     "content": "Attended ML conference yesterday",
                     "episodic_metadata": {"event_type": "conference", "location": "San Francisco"},
-                    "importance_score": 0.6
-                }
-            }
+                    "importance_score": 0.6,
+                },
+            },
         ]
 
         # Store test memories
         for memory in memories:
             await client.post(
-                memory["endpoint"],
-                json=memory["payload"],
-                params={"api_key": api_key}
+                memory["endpoint"], json=memory["payload"], params={"api_key": api_key}
             )
 
         # Test contextual search
@@ -131,13 +123,11 @@ class TestMemoryAPIEndpoints:
             "memory_types": ["semantic"],
             "limit": 10,
             "importance_threshold": 0.5,
-            "include_archived": False
+            "include_archived": False,
         }
 
         response = await client.post(
-            "/memories/search/contextual",
-            json=search_payload,
-            params={"api_key": api_key}
+            "/memories/search/contextual", json=search_payload, params={"api_key": api_key}
         )
 
         assert response.status_code == 200
@@ -154,7 +144,7 @@ class TestMemoryAPIEndpoints:
         response = await client.post(
             "/memories/semantic",
             json={"content": "", "importance_score": 0.5},
-            params={"api_key": api_key}
+            params={"api_key": api_key},
         )
         assert response.status_code in [400, 422]  # Validation error
 
@@ -162,7 +152,7 @@ class TestMemoryAPIEndpoints:
         response = await client.post(
             "/memories/semantic",
             json={"content": "Valid content", "importance_score": 1.5},
-            params={"api_key": api_key}
+            params={"api_key": api_key},
         )
         assert response.status_code in [400, 422]  # Validation error
 
@@ -170,15 +160,10 @@ class TestMemoryAPIEndpoints:
     async def test_memory_crud_operations(self, client: AsyncClient, api_key: str):
         """Test complete CRUD cycle for memories"""
         # Create
-        create_payload = {
-            "content": "Test memory for CRUD operations",
-            "importance_score": 0.7
-        }
+        create_payload = {"content": "Test memory for CRUD operations", "importance_score": 0.7}
 
         create_response = await client.post(
-            "/memories/semantic",
-            json=create_payload,
-            params={"api_key": api_key}
+            "/memories/semantic", json=create_payload, params={"api_key": api_key}
         )
 
         assert create_response.status_code == 200
@@ -186,10 +171,7 @@ class TestMemoryAPIEndpoints:
         memory_id = memory["id"]
 
         # Read
-        read_response = await client.get(
-            f"/memories/{memory_id}",
-            params={"api_key": api_key}
-        )
+        read_response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
 
         assert read_response.status_code == 200
         retrieved_memory = read_response.json()
@@ -197,18 +179,12 @@ class TestMemoryAPIEndpoints:
         assert retrieved_memory["content"] == create_payload["content"]
 
         # Delete
-        delete_response = await client.delete(
-            f"/memories/{memory_id}",
-            params={"api_key": api_key}
-        )
+        delete_response = await client.delete(f"/memories/{memory_id}", params={"api_key": api_key})
 
         assert delete_response.status_code == 200
 
         # Verify deletion
-        verify_response = await client.get(
-            f"/memories/{memory_id}",
-            params={"api_key": api_key}
-        )
+        verify_response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
 
         assert verify_response.status_code == 404
 
@@ -217,20 +193,12 @@ class TestMemoryAPIEndpoints:
         """Test memory listing with pagination"""
         # Store multiple memories first
         for i in range(5):
-            payload = {
-                "content": f"Test memory {i} for pagination",
-                "importance_score": 0.5
-            }
-            await client.post(
-                "/memories/semantic",
-                json=payload,
-                params={"api_key": api_key}
-            )
+            payload = {"content": f"Test memory {i} for pagination", "importance_score": 0.5}
+            await client.post("/memories/semantic", json=payload, params={"api_key": api_key})
 
         # Test pagination
         response = await client.get(
-            "/memories",
-            params={"api_key": api_key, "limit": 3, "offset": 0}
+            "/memories", params={"api_key": api_key, "limit": 3, "offset": 0}
         )
 
         assert response.status_code == 200
@@ -240,8 +208,7 @@ class TestMemoryAPIEndpoints:
 
         # Test second page
         response = await client.get(
-            "/memories",
-            params={"api_key": api_key, "limit": 3, "offset": 3}
+            "/memories", params={"api_key": api_key, "limit": 3, "offset": 3}
         )
 
         assert response.status_code == 200
@@ -252,25 +219,16 @@ class TestMemoryAPIEndpoints:
         # Store a searchable memory
         payload = {
             "content": "Artificial intelligence and machine learning are transforming technology",
-            "importance_score": 0.8
+            "importance_score": 0.8,
         }
 
-        await client.post(
-            "/memories/semantic",
-            json=payload,
-            params={"api_key": api_key}
-        )
+        await client.post("/memories/semantic", json=payload, params={"api_key": api_key})
 
         # Search for the memory
-        search_payload = {
-            "query": "artificial intelligence technology",
-            "limit": 10
-        }
+        search_payload = {"query": "artificial intelligence technology", "limit": 10}
 
         response = await client.post(
-            "/memories/search",
-            json=search_payload,
-            params={"api_key": api_key}
+            "/memories/search", json=search_payload, params={"api_key": api_key}
         )
 
         assert response.status_code == 200
@@ -287,10 +245,7 @@ class TestMemoryAPIEndpoints:
         assert response.status_code in [401, 422]  # Unauthorized or validation error
 
         # Test with invalid API key
-        response = await client.get(
-            "/memories",
-            params={"api_key": "invalid-key"}
-        )
+        response = await client.get("/memories", params={"api_key": "invalid-key"})
         assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -302,16 +257,14 @@ class TestMemoryAPIEndpoints:
                 "domain": "programming",
                 "difficulty": "advanced",
                 "concepts": ["decorators", "metaclasses", "python"],
-                "confidence": 0.95
+                "confidence": 0.95,
             },
-            "importance_score": 0.9
+            "importance_score": 0.9,
         }
 
         # Store memory
         response = await client.post(
-            "/memories/semantic",
-            json=payload,
-            params={"api_key": api_key}
+            "/memories/semantic", json=payload, params={"api_key": api_key}
         )
 
         assert response.status_code == 200
@@ -319,10 +272,7 @@ class TestMemoryAPIEndpoints:
         memory_id = data["id"]
 
         # Retrieve and verify metadata
-        response = await client.get(
-            f"/memories/{memory_id}",
-            params={"api_key": api_key}
-        )
+        response = await client.get(f"/memories/{memory_id}", params={"api_key": api_key})
 
         assert response.status_code == 200
         retrieved = response.json()
@@ -339,10 +289,7 @@ class TestMemoryAPIEndpoints:
         # Make multiple rapid requests
         responses = []
         for _ in range(10):
-            response = await client.get(
-                "/health",
-                params={"api_key": api_key}
-            )
+            response = await client.get("/health", params={"api_key": api_key})
             responses.append(response.status_code)
 
         # Most should succeed, but might hit rate limits
@@ -352,18 +299,13 @@ class TestMemoryAPIEndpoints:
     @pytest.mark.asyncio
     async def test_error_handling_database_failures(self, client: AsyncClient, api_key: str):
         """Test error handling when database operations fail"""
-        with patch('app.database.Database.store_memory') as mock_store:
+        with patch("app.database.Database.store_memory") as mock_store:
             mock_store.side_effect = Exception("Database connection failed")
 
-            payload = {
-                "content": "Test memory that should fail",
-                "importance_score": 0.5
-            }
+            payload = {"content": "Test memory that should fail", "importance_score": 0.5}
 
             response = await client.post(
-                "/memories/semantic",
-                json=payload,
-                params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key}
             )
 
             # Should return server error
@@ -377,19 +319,14 @@ class TestMemoryAPIEndpoints:
             "<script>alert('xss')</script>",
             "'; DROP TABLE memories; --",
             "Content with unicode: 🧠🤖",
-            "Very long content: " + "A" * 10000
+            "Very long content: " + "A" * 10000,
         ]
 
         for content in dangerous_contents:
-            payload = {
-                "content": content,
-                "importance_score": 0.5
-            }
+            payload = {"content": content, "importance_score": 0.5}
 
             response = await client.post(
-                "/memories/semantic",
-                json=payload,
-                params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key}
             )
 
             # Should either succeed (sanitized) or fail with validation error

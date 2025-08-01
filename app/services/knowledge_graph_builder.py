@@ -1,19 +1,23 @@
+import json
+import re
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+from app.database import Database
+from app.utils.logging_config import get_logger
+
 """
 Knowledge Graph Builder for Second Brain
 Constructs and manages entity-relationship graphs from memories
 """
 
-import json
-import re
 from collections import defaultdict
-from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from app.utils.logging_config import get_logger
 
 if TYPE_CHECKING:
     from app.database import Database
@@ -23,6 +27,7 @@ logger = get_logger(__name__)
 
 class EntityType(Enum):
     """Types of entities in the knowledge graph"""
+
     PERSON = "person"
     ORGANIZATION = "organization"
     LOCATION = "location"
@@ -37,6 +42,7 @@ class EntityType(Enum):
 
 class RelationshipType(Enum):
     """Types of relationships between entities"""
+
     RELATED_TO = "related_to"
     CAUSED_BY = "caused_by"
     LEADS_TO = "leads_to"
@@ -56,6 +62,7 @@ class RelationshipType(Enum):
 @dataclass
 class Entity:
     """Represents an entity in the knowledge graph"""
+
     id: str | None
     name: str
     entity_type: EntityType
@@ -68,6 +75,7 @@ class Entity:
 @dataclass
 class EntityMention:
     """Represents a mention of an entity in a memory"""
+
     entity: Entity
     memory_id: str
     position_start: int
@@ -79,6 +87,7 @@ class EntityMention:
 @dataclass
 class Relationship:
     """Represents a relationship between entities"""
+
     source_entity_id: str
     target_entity_id: str
     relationship_type: RelationshipType
@@ -90,6 +99,7 @@ class Relationship:
 @dataclass
 class GraphNode:
     """Node in the knowledge graph for visualization"""
+
     id: str
     label: str
     type: str
@@ -100,6 +110,7 @@ class GraphNode:
 @dataclass
 class GraphEdge:
     """Edge in the knowledge graph for visualization"""
+
     source: str
     target: str
     type: str
@@ -121,24 +132,31 @@ class KnowledgeGraphBuilder:
         """Compile regex patterns for entity extraction"""
         return {
             EntityType.PERSON: [
-                re.compile(r'\b[A-Z][a-z]+ [A-Z][a-z]+\b'),  # Full names
-                re.compile(r'\b(?:Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.) [A-Z][a-z]+\b'),  # Titles
+                re.compile(r"\b[A-Z][a-z]+ [A-Z][a-z]+\b"),  # Full names
+                re.compile(r"\b(?:Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.) [A-Z][a-z]+\b"),  # Titles
             ],
             EntityType.ORGANIZATION: [
-                re.compile(r'\b[A-Z][a-zA-Z]+(?: [A-Z][a-zA-Z]+)*(?:Inc\.|Corp\.|LLC|Ltd\.?)\b'),
-                re.compile(r'\b(?:Google|Microsoft|Apple|Amazon|Facebook|Twitter|OpenAI)\b', re.I),
+                re.compile(r"\b[A-Z][a-zA-Z]+(?: [A-Z][a-zA-Z]+)*(?:Inc\.|Corp\.|LLC|Ltd\.?)\b"),
+                re.compile(r"\b(?:Google|Microsoft|Apple|Amazon|Facebook|Twitter|OpenAI)\b", re.I),
             ],
             EntityType.TECHNOLOGY: [
-                re.compile(r'\b(?:Python|JavaScript|React|Node\.js|PostgreSQL|Docker|Kubernetes)\b', re.I),
-                re.compile(r'\b(?:AI|ML|NLP|API|REST|GraphQL|SQL)\b'),
+                re.compile(
+                    r"\b(?:Python|JavaScript|React|Node\.js|PostgreSQL|Docker|Kubernetes)\b", re.I
+                ),
+                re.compile(r"\b(?:AI|ML|NLP|API|REST|GraphQL|SQL)\b"),
             ],
             EntityType.CONCEPT: [
-                re.compile(r'\b(?:machine learning|deep learning|neural network|algorithm|data structure)\b', re.I),
-                re.compile(r'\b(?:design pattern|architecture|framework|methodology)\b', re.I),
+                re.compile(
+                    r"\b(?:machine learning|deep learning|neural network|algorithm|data structure)\b",
+                    re.I,
+                ),
+                re.compile(r"\b(?:design pattern|architecture|framework|methodology)\b", re.I),
             ],
             EntityType.SKILL: [
-                re.compile(r'\b(?:programming|coding|debugging|testing|analysis|design)\b', re.I),
-                re.compile(r'\b(?:leadership|communication|problem-solving|critical thinking)\b', re.I),
+                re.compile(r"\b(?:programming|coding|debugging|testing|analysis|design)\b", re.I),
+                re.compile(
+                    r"\b(?:leadership|communication|problem-solving|critical thinking)\b", re.I
+                ),
             ],
         }
 
@@ -146,20 +164,20 @@ class KnowledgeGraphBuilder:
         """Compile regex patterns for relationship extraction"""
         return {
             RelationshipType.CAUSED_BY: [
-                re.compile(r'(?:caused by|due to|because of|resulted from)', re.I),
-                re.compile(r'(?:led to|resulted in|caused|triggered)', re.I),
+                re.compile(r"(?:caused by|due to|because of|resulted from)", re.I),
+                re.compile(r"(?:led to|resulted in|caused|triggered)", re.I),
             ],
             RelationshipType.DEPENDS_ON: [
-                re.compile(r'(?:depends on|requires|needs|relies on)', re.I),
-                re.compile(r'(?:based on|built on|uses)', re.I),
+                re.compile(r"(?:depends on|requires|needs|relies on)", re.I),
+                re.compile(r"(?:based on|built on|uses)", re.I),
             ],
             RelationshipType.PART_OF: [
-                re.compile(r'(?:part of|component of|module of|belongs to)', re.I),
-                re.compile(r'(?:includes|contains|consists of)', re.I),
+                re.compile(r"(?:part of|component of|module of|belongs to)", re.I),
+                re.compile(r"(?:includes|contains|consists of)", re.I),
             ],
             RelationshipType.LEARNED_FROM: [
-                re.compile(r'(?:learned from|studied|took course|read about)', re.I),
-                re.compile(r'(?:taught by|mentored by|guided by)', re.I),
+                re.compile(r"(?:learned from|studied|took course|read about)", re.I),
+                re.compile(r"(?:taught by|mentored by|guided by)", re.I),
             ],
         }
 
@@ -168,7 +186,7 @@ class KnowledgeGraphBuilder:
         memory_ids: list[str],
         extract_entities: bool = True,
         extract_relationships: bool = True,
-        min_confidence: float = 0.7
+        min_confidence: float = 0.7,
     ) -> dict[str, Any]:
         """
         Build a knowledge graph from a set of memories
@@ -232,7 +250,7 @@ class KnowledgeGraphBuilder:
                 if len(memory_entities) >= 2:
                     # Find relationships between entities
                     for i, entity1 in enumerate(memory_entities):
-                        for entity2 in memory_entities[i+1:]:
+                        for entity2 in memory_entities[i + 1 :]:
                             rels = await self._extract_entity_relationships(
                                 memory["content"], entity1, entity2
                             )
@@ -246,10 +264,7 @@ class KnowledgeGraphBuilder:
                     await self._store_memory_relationship(rel)
 
         # Build graph representation
-        graph = await self._build_graph_representation(
-            list(entities.values()),
-            relationships
-        )
+        graph = await self._build_graph_representation(list(entities.values()), relationships)
 
         # Calculate graph statistics
         stats = self._calculate_graph_stats(graph)
@@ -262,7 +277,7 @@ class KnowledgeGraphBuilder:
             "edges": graph["edges"],
             "stats": stats,
             "entity_count": len(entities),
-            "relationship_count": len(relationships)
+            "relationship_count": len(relationships),
         }
 
     async def _extract_entities_from_memory(self, memory: dict[str, Any]) -> list[EntityMention]:
@@ -289,7 +304,7 @@ class KnowledgeGraphBuilder:
                         name=entity_name,
                         entity_type=entity_type,
                         description=f"Found in memory: {content[:100]}...",
-                        metadata={"memory_type": memory.get("memory_type", "unknown")}
+                        metadata={"memory_type": memory.get("memory_type", "unknown")},
                     )
 
                     mention = EntityMention(
@@ -298,7 +313,7 @@ class KnowledgeGraphBuilder:
                         position_start=start_pos,
                         position_end=end_pos,
                         context=context,
-                        confidence=0.8  # Pattern-based extraction confidence
+                        confidence=0.8,  # Pattern-based extraction confidence
                     )
 
                     mentions.append(mention)
@@ -313,7 +328,7 @@ class KnowledgeGraphBuilder:
                     name=phrase,
                     entity_type=EntityType.CONCEPT,
                     description=f"Concept from: {content[:100]}...",
-                    metadata={}
+                    metadata={},
                 )
 
                 # Find position
@@ -324,8 +339,10 @@ class KnowledgeGraphBuilder:
                         memory_id=memory_id,
                         position_start=pos,
                         position_end=pos + len(phrase),
-                        context=content[max(0, pos-50):min(len(content), pos+len(phrase)+50)],
-                        confidence=0.6
+                        context=content[
+                            max(0, pos - 50) : min(len(content), pos + len(phrase) + 50)
+                        ],
+                        confidence=0.6,
                     )
                     mentions.append(mention)
 
@@ -338,8 +355,8 @@ class KnowledgeGraphBuilder:
 
         # Common noun phrase patterns
         patterns = [
-            r'\b(?:the |a |an )?[A-Z][a-z]+(?: [A-Z][a-z]+)*\b',
-            r'\b[a-z]+ [a-z]+(?:ing|ed|ion|ment|ness|ity)\b',
+            r"\b(?:the |a |an )?[A-Z][a-z]+(?: [A-Z][a-z]+)*\b",
+            r"\b[a-z]+ [a-z]+(?:ing|ed|ion|ment|ness|ity)\b",
         ]
 
         for pattern in patterns:
@@ -360,12 +377,24 @@ class KnowledgeGraphBuilder:
         words = phrase.lower().split()
 
         # Skip common phrases
-        skip_words = {'the', 'a', 'an', 'this', 'that', 'these', 'those', 'is', 'are', 'was', 'were'}
+        skip_words = {
+            "the",
+            "a",
+            "an",
+            "this",
+            "that",
+            "these",
+            "those",
+            "is",
+            "are",
+            "was",
+            "were",
+        }
         if any(word in skip_words for word in words):
             return False
 
         # Likely entity if it has certain patterns
-        if any(word.endswith(('tion', 'ment', 'ing', 'ness', 'ity')) for word in words):
+        if any(word.endswith(("tion", "ment", "ing", "ness", "ity")) for word in words):
             return True
 
         # Capitalized phrases are often entities
@@ -375,10 +404,7 @@ class KnowledgeGraphBuilder:
         return False
 
     async def _extract_entity_relationships(
-        self,
-        content: str,
-        entity1: Entity,
-        entity2: Entity
+        self, content: str, entity1: Entity, entity2: Entity
     ) -> list[Relationship]:
         """Extract relationships between two entities in content"""
         relationships = []
@@ -387,9 +413,7 @@ class KnowledgeGraphBuilder:
         for rel_type, patterns in self.relationship_patterns.items():
             for pattern in patterns:
                 # Look for pattern between entities
-                text_between = self._get_text_between_entities(
-                    content, entity1.name, entity2.name
-                )
+                text_between = self._get_text_between_entities(content, entity1.name, entity2.name)
 
                 if text_between and pattern.search(text_between):
                     rel = Relationship(
@@ -398,7 +422,7 @@ class KnowledgeGraphBuilder:
                         relationship_type=rel_type,
                         confidence=0.8,
                         weight=1.0,
-                        metadata={"pattern": pattern.pattern}
+                        metadata={"pattern": pattern.pattern},
                     )
                     relationships.append(rel)
 
@@ -414,7 +438,7 @@ class KnowledgeGraphBuilder:
                     relationship_type=RelationshipType.RELATED_TO,
                     confidence=similarity,
                     weight=similarity,
-                    metadata={"method": "co-occurrence"}
+                    metadata={"method": "co-occurrence"},
                 )
                 relationships.append(rel)
 
@@ -463,7 +487,9 @@ class KnowledgeGraphBuilder:
 
         return min(similarity, 1.0)
 
-    async def _extract_memory_relationships(self, memories: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def _extract_memory_relationships(
+        self, memories: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Extract relationships between memories based on content similarity"""
         relationships = []
 
@@ -471,7 +497,7 @@ class KnowledgeGraphBuilder:
         contents = [m["content"] for m in memories]
 
         if len(contents) >= 2:
-            vectorizer = TfidfVectorizer(max_features=100, stop_words='english')
+            vectorizer = TfidfVectorizer(max_features=100, stop_words="english")
             tfidf_matrix = vectorizer.fit_transform(contents)
             similarities = cosine_similarity(tfidf_matrix)
 
@@ -486,24 +512,23 @@ class KnowledgeGraphBuilder:
                             memories[i], memories[j], similarity
                         )
 
-                        relationships.append({
-                            "source_memory_id": memories[i]["id"],
-                            "target_memory_id": memories[j]["id"],
-                            "relationship_type": rel_type,
-                            "confidence": similarity,
-                            "metadata": {
-                                "method": "tfidf_similarity",
-                                "similarity_score": float(similarity)
+                        relationships.append(
+                            {
+                                "source_memory_id": memories[i]["id"],
+                                "target_memory_id": memories[j]["id"],
+                                "relationship_type": rel_type,
+                                "confidence": similarity,
+                                "metadata": {
+                                    "method": "tfidf_similarity",
+                                    "similarity_score": float(similarity),
+                                },
                             }
-                        })
+                        )
 
         return relationships
 
     def _determine_memory_relationship_type(
-        self,
-        memory1: dict[str, Any],
-        memory2: dict[str, Any],
-        similarity: float
+        self, memory1: dict[str, Any], memory2: dict[str, Any], similarity: float
     ) -> str:
         """Determine the type of relationship between two memories"""
         # Check temporal relationship
@@ -548,43 +573,62 @@ class KnowledgeGraphBuilder:
         # Store the mention
         if self.db.pool:
             async with self.db.pool.acquire() as conn:
-                await conn.execute("""
+                await conn.execute(
+                    """
                     INSERT INTO entity_mentions
                     (entity_id, memory_id, position_start, position_end, context, confidence)
                     VALUES ($1, $2, $3, $4, $5, $6)
                     ON CONFLICT DO NOTHING
-                """, entity_id, mention.memory_id, mention.position_start,
-                    mention.position_end, mention.context, mention.confidence)
+                """,
+                    entity_id,
+                    mention.memory_id,
+                    mention.position_start,
+                    mention.position_end,
+                    mention.context,
+                    mention.confidence,
+                )
 
     async def _ensure_entity_exists(self, entity: Entity) -> str:
         """Ensure entity exists in database and return its ID"""
         if self.db.pool:
             async with self.db.pool.acquire() as conn:
                 # Check if entity exists
-                existing = await conn.fetchrow("""
+                existing = await conn.fetchrow(
+                    """
                     SELECT id FROM entities
                     WHERE LOWER(name) = LOWER($1) AND entity_type = $2
-                """, entity.name, entity.entity_type.value)
+                """,
+                    entity.name,
+                    entity.entity_type.value,
+                )
 
                 if existing:
                     # Update occurrence count
-                    await conn.execute("""
+                    await conn.execute(
+                        """
                         UPDATE entities
                         SET occurrence_count = occurrence_count + 1,
                             last_seen = NOW()
                         WHERE id = $1
-                    """, existing["id"])
+                    """,
+                        existing["id"],
+                    )
                     return str(existing["id"])
                 else:
                     # Insert new entity
-                    result = await conn.fetchrow("""
+                    result = await conn.fetchrow(
+                        """
                         INSERT INTO entities
                         (name, entity_type, description, metadata, importance_score)
                         VALUES ($1, $2, $3, $4, $5)
                         RETURNING id
-                    """, entity.name, entity.entity_type.value,
-                        entity.description, json.dumps(entity.metadata or {}),
-                        entity.importance_score)
+                    """,
+                        entity.name,
+                        entity.entity_type.value,
+                        entity.description,
+                        json.dumps(entity.metadata or {}),
+                        entity.importance_score,
+                    )
                     return str(result["id"])
 
         return ""
@@ -593,20 +637,23 @@ class KnowledgeGraphBuilder:
         """Store a relationship between memories"""
         if self.db.pool:
             async with self.db.pool.acquire() as conn:
-                await conn.execute("""
+                await conn.execute(
+                    """
                     INSERT INTO memory_relationships
                     (source_memory_id, target_memory_id, relationship_type, confidence, metadata)
                     VALUES ($1, $2, $3, $4, $5)
                     ON CONFLICT (source_memory_id, target_memory_id, relationship_type)
                     DO UPDATE SET confidence = EXCLUDED.confidence
-                """, relationship["source_memory_id"], relationship["target_memory_id"],
-                    relationship["relationship_type"], relationship["confidence"],
-                    json.dumps(relationship.get("metadata", {})))
+                """,
+                    relationship["source_memory_id"],
+                    relationship["target_memory_id"],
+                    relationship["relationship_type"],
+                    relationship["confidence"],
+                    json.dumps(relationship.get("metadata", {})),
+                )
 
     async def _build_graph_representation(
-        self,
-        entities: list[Entity],
-        relationships: list[Relationship]
+        self, entities: list[Entity], relationships: list[Relationship]
     ) -> dict[str, list[dict[str, Any]]]:
         """Build graph representation for visualization"""
         nodes = []
@@ -622,16 +669,18 @@ class KnowledgeGraphBuilder:
                 metadata={
                     "description": entity.description,
                     "occurrence_count": entity.occurrence_count,
-                    "importance": entity.importance_score
+                    "importance": entity.importance_score,
+                },
+            )
+            nodes.append(
+                {
+                    "id": node.id,
+                    "label": node.label,
+                    "type": node.type,
+                    "size": node.size,
+                    "metadata": node.metadata,
                 }
             )
-            nodes.append({
-                "id": node.id,
-                "label": node.label,
-                "type": node.type,
-                "size": node.size,
-                "metadata": node.metadata
-            })
 
         # Create edges from relationships
         for rel in relationships:
@@ -640,15 +689,17 @@ class KnowledgeGraphBuilder:
                 target=rel.target_entity_id,
                 type=rel.relationship_type.value,
                 weight=rel.weight,
-                label=rel.relationship_type.value.replace("_", " ")
+                label=rel.relationship_type.value.replace("_", " "),
             )
-            edges.append({
-                "source": edge.source,
-                "target": edge.target,
-                "type": edge.type,
-                "weight": edge.weight,
-                "label": edge.label
-            })
+            edges.append(
+                {
+                    "source": edge.source,
+                    "target": edge.target,
+                    "type": edge.type,
+                    "weight": edge.weight,
+                    "label": edge.label,
+                }
+            )
 
         return {"nodes": nodes, "edges": edges}
 
@@ -691,13 +742,11 @@ class KnowledgeGraphBuilder:
             "edge_types": dict(edge_type_counts),
             "avg_degree": avg_degree,
             "max_degree": max_degree,
-            "connected_components": self._count_connected_components(nodes, edges)
+            "connected_components": self._count_connected_components(nodes, edges),
         }
 
     def _count_connected_components(
-        self,
-        nodes: list[dict[str, Any]],
-        edges: list[dict[str, Any]]
+        self, nodes: list[dict[str, Any]], edges: list[dict[str, Any]]
     ) -> int:
         """Count the number of connected components in the graph"""
         # Build adjacency list
@@ -729,12 +778,18 @@ class KnowledgeGraphBuilder:
         """Store graph metadata in database"""
         if self.db.pool:
             async with self.db.pool.acquire() as conn:
-                await conn.execute("""
+                await conn.execute(
+                    """
                     INSERT INTO graph_metadata
                     (graph_name, node_count, edge_count, density, metadata)
                     VALUES ($1, $2, $3, $4, $5)
-                """, "main_graph", stats["node_count"], stats["edge_count"],
-                    stats["density"], json.dumps(stats))
+                """,
+                    "main_graph",
+                    stats["node_count"],
+                    stats["edge_count"],
+                    stats["density"],
+                    json.dumps(stats),
+                )
 
     async def get_entity_graph(self, entity_id: str, depth: int = 2) -> dict[str, Any]:
         """Get subgraph centered on a specific entity"""
@@ -753,56 +808,64 @@ class KnowledgeGraphBuilder:
 
             async with self.db.pool.acquire() as conn:
                 # Get entity info
-                entity = await conn.fetchrow("""
+                entity = await conn.fetchrow(
+                    """
                     SELECT * FROM entities WHERE id = $1
-                """, eid)
+                """,
+                    eid,
+                )
 
                 if entity:
-                    nodes.append({
-                        "id": str(entity["id"]),
-                        "label": entity["name"],
-                        "type": entity["entity_type"],
-                        "size": 10 + (float(entity["importance_score"]) * 20),
-                        "metadata": {
-                            "description": entity["description"],
-                            "occurrence_count": entity["occurrence_count"]
+                    nodes.append(
+                        {
+                            "id": str(entity["id"]),
+                            "label": entity["name"],
+                            "type": entity["entity_type"],
+                            "size": 10 + (float(entity["importance_score"]) * 20),
+                            "metadata": {
+                                "description": entity["description"],
+                                "occurrence_count": entity["occurrence_count"],
+                            },
                         }
-                    })
+                    )
 
                 # Get relationships
-                relationships = await conn.fetch("""
+                relationships = await conn.fetch(
+                    """
                     SELECT * FROM entity_relationships
                     WHERE source_entity_id = $1 OR target_entity_id = $1
-                """, eid)
+                """,
+                    eid,
+                )
 
                 for rel in relationships:
-                    edges.append({
-                        "source": str(rel["source_entity_id"]),
-                        "target": str(rel["target_entity_id"]),
-                        "type": rel["relationship_type"],
-                        "weight": float(rel["weight"]),
-                        "label": rel["relationship_type"].replace("_", " ")
-                    })
+                    edges.append(
+                        {
+                            "source": str(rel["source_entity_id"]),
+                            "target": str(rel["target_entity_id"]),
+                            "type": rel["relationship_type"],
+                            "weight": float(rel["weight"]),
+                            "label": rel["relationship_type"].replace("_", " "),
+                        }
+                    )
 
                     # Explore connected entities
-                    other_id = (str(rel["target_entity_id"])
-                               if str(rel["source_entity_id"]) == eid
-                               else str(rel["source_entity_id"]))
+                    other_id = (
+                        str(rel["target_entity_id"])
+                        if str(rel["source_entity_id"]) == eid
+                        else str(rel["source_entity_id"])
+                    )
 
                     await explore_entity(other_id, current_depth + 1)
 
         await explore_entity(entity_id, 0)
 
-        return {
-            "nodes": nodes,
-            "edges": edges,
-            "center_entity": entity_id,
-            "depth": depth
-        }
+        return {"nodes": nodes, "edges": edges, "center_entity": entity_id, "depth": depth}
 
 
 class KnowledgeGraph:
     """Simple wrapper class for knowledge graph data"""
+
     def __init__(self, nodes=None, edges=None):
         self.nodes = nodes or []
         self.edges = edges or []

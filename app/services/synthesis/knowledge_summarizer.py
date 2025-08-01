@@ -1,16 +1,20 @@
+import json
+from datetime import datetime, timedelta
+from typing import Any
+
+import numpy as np
+
+from app.utils.logging_config import get_logger
+
 """Knowledge Summarizer Service with LLM Integration
 
 Real implementation that creates intelligent summaries of knowledge domains,
 topics, and memory collections using advanced NLP techniques.
 """
 
-import json
 from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Any
 
 from app.models.synthesis.summary_models import SummaryRequest, SummaryResponse, SummaryType
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -84,7 +88,7 @@ Content to summarize:
 {content}
 
 Create an educational summary optimized for learning and retention.
-"""
+""",
         }
 
     async def create_summary(self, request: SummaryRequest) -> SummaryResponse:
@@ -127,12 +131,12 @@ Create an educational summary optimized for learning and retention.
                 reading_time_minutes=max(1, len(summary_content.split()) // 200),
                 coverage_score=self._calculate_coverage_score(memories, domains),
                 metadata={
-                    'total_memories': len(memories),
-                    'domains_identified': len(domains),
-                    'topics_covered': sum(len(d.sub_topics) for d in domains.values()),
-                    'time_range': self._get_time_range(memories),
-                    'summary_focus': request.focus_areas or ['general']
-                }
+                    "total_memories": len(memories),
+                    "domains_identified": len(domains),
+                    "topics_covered": sum(len(d.sub_topics) for d in domains.values()),
+                    "time_range": self._get_time_range(memories),
+                    "summary_focus": request.focus_areas or ["general"],
+                },
             )
 
         except Exception as e:
@@ -149,14 +153,16 @@ Create an educational summary optimized for learning and retention.
                 try:
                     memory = await self.memory_service.get_memory(str(memory_id))
                     if memory:
-                        memories.append({
-                            'id': memory_id,
-                            'content': memory.content,
-                            'importance': memory.importance_score,
-                            'created_at': memory.created_at,
-                            'tags': getattr(memory, 'tags', []),
-                            'metadata': getattr(memory, 'metadata', {})
-                        })
+                        memories.append(
+                            {
+                                "id": memory_id,
+                                "content": memory.content,
+                                "importance": memory.importance_score,
+                                "created_at": memory.created_at,
+                                "tags": getattr(memory, "tags", []),
+                                "metadata": getattr(memory, "metadata", {}),
+                            }
+                        )
                 except Exception as e:
                     logger.error(f"Failed to fetch memory {memory_id}: {e}")
 
@@ -170,9 +176,7 @@ Create an educational summary optimized for learning and retention.
             LIMIT 500
             """
             results = await self.db.fetch_all(
-                query,
-                request.time_range.start_date,
-                request.time_range.end_date
+                query, request.time_range.start_date, request.time_range.end_date
             )
             memories = [dict(r) for r in results]
 
@@ -187,11 +191,7 @@ Create an educational summary optimized for learning and retention.
             LIMIT 500
             """
             topic_pattern = f"%{request.topic_filter}%"
-            results = await self.db.fetch_all(
-                query,
-                [request.topic_filter],
-                topic_pattern
-            )
+            results = await self.db.fetch_all(query, [request.topic_filter], topic_pattern)
             memories = [dict(r) for r in results]
 
         else:
@@ -208,13 +208,15 @@ Create an educational summary optimized for learning and retention.
 
         return memories
 
-    async def _organize_knowledge_domains(self, memories: list[dict[str, Any]]) -> dict[str, KnowledgeDomain]:
+    async def _organize_knowledge_domains(
+        self, memories: list[dict[str, Any]]
+    ) -> dict[str, KnowledgeDomain]:
         """Organize memories into knowledge domains and topics"""
         domains = {}
 
         # First pass: organize by explicit tags
         for memory in memories:
-            tags = memory.get('tags', [])
+            tags = memory.get("tags", [])
 
             # Use first tag as primary domain if available
             if tags:
@@ -232,15 +234,15 @@ Create an educational summary optimized for learning and retention.
                 # Update domain metrics
                 domain.key_concepts.update(tags)
                 if domain.temporal_range is None:
-                    domain.temporal_range = (memory['created_at'], memory['created_at'])
+                    domain.temporal_range = (memory["created_at"], memory["created_at"])
                 else:
                     domain.temporal_range = (
-                        min(domain.temporal_range[0], memory['created_at']),
-                        max(domain.temporal_range[1], memory['created_at'])
+                        min(domain.temporal_range[0], memory["created_at"]),
+                        max(domain.temporal_range[1], memory["created_at"]),
                     )
 
         # Second pass: use topic modeling for untagged memories
-        untagged = [m for m in memories if not m.get('tags')]
+        untagged = [m for m in memories if not m.get("tags")]
         if untagged:
             discovered_topics = await self._discover_topics(untagged)
             for topic_name, topic_memories in discovered_topics.items():
@@ -251,35 +253,30 @@ Create an educational summary optimized for learning and retention.
         # Calculate importance scores for domains
         for domain in domains.values():
             if domain.memories:
-                domain.importance_score = np.mean([m['importance'] for m in domain.memories])
+                domain.importance_score = np.mean([m["importance"] for m in domain.memories])
 
         return domains
 
-    async def _discover_topics(self, memories: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    async def _discover_topics(
+        self, memories: list[dict[str, Any]]
+    ) -> dict[str, list[dict[str, Any]]]:
         """Discover topics using LDA topic modeling"""
         if len(memories) < 5:
             return {"General": memories}
 
         try:
             # Prepare texts
-            texts = [m['content'] for m in memories]
+            texts = [m["content"] for m in memories]
 
             # TF-IDF vectorization
             vectorizer = TfidfVectorizer(
-                max_features=100,
-                min_df=2,
-                max_df=0.8,
-                stop_words='english'
+                max_features=100, min_df=2, max_df=0.8, stop_words="english"
             )
             doc_term_matrix = vectorizer.fit_transform(texts)
 
             # LDA topic modeling
             n_topics = min(5, len(memories) // 3)
-            lda = LatentDirichletAllocation(
-                n_components=n_topics,
-                random_state=42,
-                max_iter=10
-            )
+            lda = LatentDirichletAllocation(n_components=n_topics, random_state=42, max_iter=10)
             lda.fit(doc_term_matrix)
 
             # Get topic words
@@ -306,9 +303,7 @@ Create an educational summary optimized for learning and retention.
             return {"General": memories}
 
     async def _extract_key_insights(
-        self,
-        memories: list[dict[str, Any]],
-        domains: dict[str, KnowledgeDomain]
+        self, memories: list[dict[str, Any]], domains: dict[str, KnowledgeDomain]
     ) -> list[str]:
         """Extract key insights from memories and domains"""
         insights = []
@@ -318,7 +313,7 @@ Create an educational summary optimized for learning and retention.
         insights.extend(domain_insights)
 
         # Extract insights from high-importance memories
-        important_memories = sorted(memories, key=lambda m: m['importance'], reverse=True)[:10]
+        important_memories = sorted(memories, key=lambda m: m["importance"], reverse=True)[:10]
         memory_insights = await self._extract_memory_insights(important_memories)
         insights.extend(memory_insights)
 
@@ -340,9 +335,9 @@ Create an educational summary optimized for learning and retention.
                 continue
 
             # Prepare domain summary
-            memory_contents = "\n".join([
-                f"- {m['content'][:100]}..." for m in domain.memories[:10]
-            ])
+            memory_contents = "\n".join(
+                [f"- {m['content'][:100]}..." for m in domain.memories[:10]]
+            )
 
             prompt = f"""
 Analyze this knowledge domain '{domain_name}' and identify 1-2 key insights or patterns:
@@ -360,9 +355,7 @@ Focus on actionable, non-obvious insights.
 
             try:
                 response = await self.openai_client.generate(
-                    prompt=prompt,
-                    max_tokens=300,
-                    temperature=0.7
+                    prompt=prompt, max_tokens=300, temperature=0.7
                 )
 
                 domain_insights = json.loads(response)
@@ -381,7 +374,7 @@ Focus on actionable, non-obvious insights.
 
         for memory in memories[:5]:  # Top 5 important memories
             # Simple insight extraction based on content analysis
-            content_length = len(memory['content'])
+            content_length = len(memory["content"])
 
             if content_length > 500:  # Substantial memory
                 # Extract key point
@@ -397,9 +390,7 @@ Provide a JSON object with:
 
                 try:
                     response = await self.openai_client.generate(
-                        prompt=prompt,
-                        max_tokens=100,
-                        temperature=0.5
+                        prompt=prompt, max_tokens=100, temperature=0.5
                     )
 
                     insight_data = json.loads(response)
@@ -426,17 +417,17 @@ Provide a JSON object with:
                 common_concepts = domain1.key_concepts.intersection(domain2.key_concepts)
 
                 if common_concepts:
-                    connection_desc = (f"Connection: {domain1_name} ↔ {domain2_name} - "
-                                     f"These domains share concepts: {', '.join(list(common_concepts)[:3])}. "
-                                     f"This suggests potential for knowledge transfer or integration.")
+                    connection_desc = (
+                        f"Connection: {domain1_name} ↔ {domain2_name} - "
+                        f"These domains share concepts: {', '.join(list(common_concepts)[:3])}. "
+                        f"This suggests potential for knowledge transfer or integration."
+                    )
                     insights.append(connection_desc)
 
         return insights[:3]  # Limit cross-domain insights
 
     async def _create_executive_summary(
-        self,
-        domains: dict[str, KnowledgeDomain],
-        key_insights: list[str]
+        self, domains: dict[str, KnowledgeDomain], key_insights: list[str]
     ) -> str:
         """Create executive summary"""
         # Prepare content
@@ -456,9 +447,7 @@ Top Insights:
 
         try:
             summary = await self.openai_client.generate(
-                prompt=prompt,
-                max_tokens=500,
-                temperature=0.7
+                prompt=prompt, max_tokens=500, temperature=0.7
             )
             return summary
         except Exception as e:
@@ -466,9 +455,7 @@ Top Insights:
             return self._create_fallback_summary(domains, key_insights)
 
     async def _create_detailed_summary(
-        self,
-        domains: dict[str, KnowledgeDomain],
-        key_insights: list[str]
+        self, domains: dict[str, KnowledgeDomain], key_insights: list[str]
     ) -> str:
         """Create detailed comprehensive summary"""
         sections = []
@@ -476,8 +463,10 @@ Top Insights:
         # Add overview
         sections.append("# Comprehensive Knowledge Summary\n")
         sections.append("## Overview\n")
-        sections.append(f"This summary covers {len(domains)} knowledge domains with "
-                       f"{sum(len(d.memories) for d in domains.values())} total memories.\n")
+        sections.append(
+            f"This summary covers {len(domains)} knowledge domains with "
+            f"{sum(len(d.memories) for d in domains.values())} total memories.\n"
+        )
 
         # Add insights section
         sections.append("## Key Insights\n")
@@ -485,19 +474,25 @@ Top Insights:
             sections.append(f"{i}. **{insight.title}**\n   {insight.description}\n")
 
         # Add domain sections
-        for domain_name, domain in sorted(domains.items(), key=lambda x: x[1].importance_score, reverse=True):
+        for domain_name, domain in sorted(
+            domains.items(), key=lambda x: x[1].importance_score, reverse=True
+        ):
             sections.append(f"\n## Domain: {domain_name}\n")
 
             # Domain overview
             sections.append(f"- **Memories**: {len(domain.memories)}\n")
             sections.append(f"- **Importance**: {domain.importance_score:.1f}/10\n")
             if domain.temporal_range:
-                sections.append(f"- **Time Span**: {domain.temporal_range[0].strftime('%Y-%m-%d')} to "
-                              f"{domain.temporal_range[1].strftime('%Y-%m-%d')}\n")
+                sections.append(
+                    f"- **Time Span**: {domain.temporal_range[0].strftime('%Y-%m-%d')} to "
+                    f"{domain.temporal_range[1].strftime('%Y-%m-%d')}\n"
+                )
 
             # Sub-topics
             if domain.sub_topics:
-                sections.append(f"- **Sub-topics**: {', '.join(list(domain.sub_topics.keys())[:5])}\n")
+                sections.append(
+                    f"- **Sub-topics**: {', '.join(list(domain.sub_topics.keys())[:5])}\n"
+                )
 
             # Key memories
             sections.append("\n### Key Content\n")
@@ -507,16 +502,17 @@ Top Insights:
         return "\n".join(sections)
 
     async def _create_technical_summary(
-        self,
-        domains: dict[str, KnowledgeDomain],
-        key_insights: list[str]
+        self, domains: dict[str, KnowledgeDomain], key_insights: list[str]
     ) -> str:
         """Create technical summary focusing on technical details"""
         # Filter for technical content
         tech_domains = {
-            name: domain for name, domain in domains.items()
-            if any(tech_word in name.lower() for tech_word in
-                   ['code', 'api', 'system', 'data', 'algorithm', 'tech'])
+            name: domain
+            for name, domain in domains.items()
+            if any(
+                tech_word in name.lower()
+                for tech_word in ["code", "api", "system", "data", "algorithm", "tech"]
+            )
         }
 
         if not tech_domains:
@@ -525,9 +521,14 @@ Top Insights:
         # Prepare technical content
         content_parts = []
         for domain_name, domain in tech_domains.items():
-            tech_memories = [m for m in domain.memories if
-                           any(word in m['content'].lower() for word in
-                               ['function', 'class', 'api', 'endpoint', 'algorithm'])]
+            tech_memories = [
+                m
+                for m in domain.memories
+                if any(
+                    word in m["content"].lower()
+                    for word in ["function", "class", "api", "endpoint", "algorithm"]
+                )
+            ]
 
             if tech_memories:
                 content_parts.append(f"\n{domain_name}:")
@@ -541,9 +542,7 @@ Top Insights:
 
         try:
             summary = await self.openai_client.generate(
-                prompt=prompt,
-                max_tokens=800,
-                temperature=0.5
+                prompt=prompt, max_tokens=800, temperature=0.5
             )
             return summary
         except Exception as e:
@@ -551,17 +550,15 @@ Top Insights:
             return self._create_fallback_summary(tech_domains, key_insights)
 
     async def _create_learning_summary(
-        self,
-        domains: dict[str, KnowledgeDomain],
-        key_insights: list[str]
+        self, domains: dict[str, KnowledgeDomain], key_insights: list[str]
     ) -> str:
         """Create learning-oriented summary"""
         # Structure content for learning
         learning_structure = {
-            'prerequisites': [],
-            'core_concepts': [],
-            'learning_path': [],
-            'practice_areas': []
+            "prerequisites": [],
+            "core_concepts": [],
+            "learning_path": [],
+            "practice_areas": [],
         }
 
         # Analyze domains for learning structure
@@ -569,21 +566,21 @@ Top Insights:
 
         for i, (domain_name, domain) in enumerate(sorted_domains):
             if i == 0:
-                learning_structure['prerequisites'].append(domain_name)
+                learning_structure["prerequisites"].append(domain_name)
             elif i < 3:
-                learning_structure['core_concepts'].append(domain_name)
+                learning_structure["core_concepts"].append(domain_name)
             else:
-                learning_structure['practice_areas'].append(domain_name)
+                learning_structure["practice_areas"].append(domain_name)
 
         # Create learning path
         for i, (domain_name, domain) in enumerate(sorted_domains):
             step = {
-                'step': i + 1,
-                'topic': domain_name,
-                'concepts': list(domain.key_concepts)[:5],
-                'estimated_items': len(domain.memories)
+                "step": i + 1,
+                "topic": domain_name,
+                "concepts": list(domain.key_concepts)[:5],
+                "estimated_items": len(domain.memories),
             }
-            learning_structure['learning_path'].append(step)
+            learning_structure["learning_path"].append(step)
 
         # Format content
         content = f"""
@@ -604,16 +601,16 @@ Key Insights for Learning:
 
         try:
             summary = await self.openai_client.generate(
-                prompt=prompt,
-                max_tokens=800,
-                temperature=0.7
+                prompt=prompt, max_tokens=800, temperature=0.7
             )
             return summary
         except Exception as e:
             logger.error(f"Learning summary generation failed: {e}")
             return self._create_fallback_summary(domains, key_insights)
 
-    async def _create_topic_summaries(self, domains: dict[str, KnowledgeDomain]) -> list[dict[str, Any]]:
+    async def _create_topic_summaries(
+        self, domains: dict[str, KnowledgeDomain]
+    ) -> list[dict[str, Any]]:
         """Create summaries for individual topics"""
         summaries = []
 
@@ -622,13 +619,13 @@ Key Insights for Learning:
             domain_summary = dict(
                 topic_name=domain_name,
                 summary=f"Domain containing {len(domain.memories)} memories covering "
-                       f"{len(domain.key_concepts)} key concepts.",
+                f"{len(domain.key_concepts)} key concepts.",
                 memory_count=len(domain.memories),
                 key_points=[
                     f"Importance: {domain.importance_score:.1f}/10",
-                    f"Key concepts: {', '.join(list(domain.key_concepts)[:3])}"
+                    f"Key concepts: {', '.join(list(domain.key_concepts)[:3])}",
                 ],
-                temporal_coverage=self._format_temporal_coverage(domain.temporal_range)
+                temporal_coverage=self._format_temporal_coverage(domain.temporal_range),
             )
             summaries.append(domain_summary)
 
@@ -639,37 +636,44 @@ Key Insights for Learning:
                         topic_name=f"{domain_name} → {sub_topic}",
                         summary=f"Sub-topic with {len(sub_memories)} related memories.",
                         memory_count=len(sub_memories),
-                        key_points=[m['content'][:50] + "..." for m in sub_memories[:2]],
-                        temporal_coverage=None
+                        key_points=[m["content"][:50] + "..." for m in sub_memories[:2]],
+                        temporal_coverage=None,
                     )
                     summaries.append(sub_summary)
 
         return summaries
 
-    async def _create_domain_overviews(self, domains: dict[str, KnowledgeDomain]) -> list[dict[str, Any]]:
+    async def _create_domain_overviews(
+        self, domains: dict[str, KnowledgeDomain]
+    ) -> list[dict[str, Any]]:
         """Create domain overview summaries"""
         overviews = []
 
-        for domain_name, domain in sorted(domains.items(), key=lambda x: x[1].importance_score, reverse=True):
+        for domain_name, domain in sorted(
+            domains.items(), key=lambda x: x[1].importance_score, reverse=True
+        ):
             # Calculate domain statistics
-            memory_contents = [m['content'] for m in domain.memories]
+            memory_contents = [m["content"] for m in domain.memories]
             avg_length = np.mean([len(c) for c in memory_contents]) if memory_contents else 0
 
             overview = dict(
                 domain_name=domain_name,
                 description=f"Knowledge domain focused on {domain_name} with "
-                           f"{len(domain.sub_topics)} identified sub-topics.",
+                f"{len(domain.sub_topics)} identified sub-topics.",
                 total_memories=len(domain.memories),
                 sub_topics=list(domain.sub_topics.keys())[:10],  # Top 10 sub-topics
                 importance_score=domain.importance_score,
                 growth_trend=self._calculate_growth_trend(domain),
                 key_contributors=[],  # Could be enhanced with author tracking
                 metadata={
-                    'avg_memory_length': int(avg_length),
-                    'unique_concepts': len(domain.key_concepts),
-                    'time_span_days': (domain.temporal_range[1] - domain.temporal_range[0]).days
-                                     if domain.temporal_range else 0
-                }
+                    "avg_memory_length": int(avg_length),
+                    "unique_concepts": len(domain.key_concepts),
+                    "time_span_days": (
+                        (domain.temporal_range[1] - domain.temporal_range[0]).days
+                        if domain.temporal_range
+                        else 0
+                    ),
+                },
             )
             overviews.append(overview)
 
@@ -678,9 +682,13 @@ Key Insights for Learning:
     def _prepare_domain_summary(self, domains: dict[str, KnowledgeDomain]) -> str:
         """Prepare domain summary text"""
         lines = []
-        for domain_name, domain in sorted(domains.items(), key=lambda x: x[1].importance_score, reverse=True)[:5]:
-            lines.append(f"- {domain_name}: {len(domain.memories)} memories, "
-                        f"importance {domain.importance_score:.1f}/10")
+        for domain_name, domain in sorted(
+            domains.items(), key=lambda x: x[1].importance_score, reverse=True
+        )[:5]:
+            lines.append(
+                f"- {domain_name}: {len(domain.memories)} memories, "
+                f"importance {domain.importance_score:.1f}/10"
+            )
         return "\n".join(lines)
 
     def _prepare_insights_summary(self, insights: list[str]) -> str:
@@ -694,11 +702,14 @@ Key Insights for Learning:
         """Format learning path for display"""
         lines = []
         for step in path[:5]:
-            lines.append(f"Step {step['step']}: {step['topic']} "
-                        f"({step['estimated_items']} items)")
+            lines.append(
+                f"Step {step['step']}: {step['topic']} " f"({step['estimated_items']} items)"
+            )
         return "\n".join(lines)
 
-    def _format_temporal_coverage(self, temporal_range: tuple[datetime, datetime] | None) -> str | None:
+    def _format_temporal_coverage(
+        self, temporal_range: tuple[datetime, datetime] | None
+    ) -> str | None:
         """Format temporal coverage for display"""
         if not temporal_range:
             return None
@@ -721,11 +732,11 @@ Key Insights for Learning:
             return "stable"
 
         # Sort memories by date
-        sorted_memories = sorted(domain.memories, key=lambda m: m['created_at'])
+        sorted_memories = sorted(domain.memories, key=lambda m: m["created_at"])
 
         # Calculate memories per month for recent period
         recent_cutoff = datetime.utcnow() - timedelta(days=90)
-        recent_memories = [m for m in sorted_memories if m['created_at'] > recent_cutoff]
+        recent_memories = [m for m in sorted_memories if m["created_at"] > recent_cutoff]
 
         if len(recent_memories) > len(sorted_memories) * 0.5:
             return "growing"
@@ -734,7 +745,9 @@ Key Insights for Learning:
         else:
             return "stable"
 
-    def _calculate_coverage_score(self, memories: list[dict[str, Any]], domains: dict[str, KnowledgeDomain]) -> float:
+    def _calculate_coverage_score(
+        self, memories: list[dict[str, Any]], domains: dict[str, KnowledgeDomain]
+    ) -> float:
         """Calculate how well the summary covers the knowledge base"""
         if not memories:
             return 0.0
@@ -749,27 +762,28 @@ Key Insights for Learning:
 
         # Temporal coverage
         if memories:
-            time_range = max(m['created_at'] for m in memories) - min(m['created_at'] for m in memories)
+            time_range = max(m["created_at"] for m in memories) - min(
+                m["created_at"] for m in memories
+            )
             temporal_coverage = min(time_range.days / 365, 1.0)  # Longer range = better
         else:
             temporal_coverage = 0.0
 
         # Weighted average
         coverage_score = (
-            domain_diversity * 0.3 +
-            memory_coverage * 0.3 +
-            topic_diversity * 0.2 +
-            temporal_coverage * 0.2
+            domain_diversity * 0.3
+            + memory_coverage * 0.3
+            + topic_diversity * 0.2
+            + temporal_coverage * 0.2
         )
 
         return coverage_score
 
-    def _create_fallback_summary(self, domains: dict[str, KnowledgeDomain], insights: list[str]) -> str:
+    def _create_fallback_summary(
+        self, domains: dict[str, KnowledgeDomain], insights: list[str]
+    ) -> str:
         """Create a basic fallback summary"""
-        lines = [
-            "# Knowledge Summary\n",
-            f"This summary covers {len(domains)} domains:\n"
-        ]
+        lines = ["# Knowledge Summary\n", f"This summary covers {len(domains)} domains:\n"]
 
         for domain_name, domain in list(domains.items())[:5]:
             lines.append(f"- **{domain_name}**: {len(domain.memories)} memories")
@@ -792,5 +806,5 @@ Key Insights for Learning:
             word_count=0,
             reading_time_minutes=0,
             coverage_score=0.0,
-            metadata={'empty': True}
+            metadata={"empty": True},
         )

@@ -1,3 +1,12 @@
+import asyncio
+import json
+import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
+
+from app.services.monitoring.metrics_collector import MetricsCollector
+
 """
 Monitoring and metrics collection for Second Brain v3.0.0
 
@@ -9,23 +18,25 @@ This module provides:
 - Custom metrics
 """
 
-import asyncio
-import json
-import time
 from collections import defaultdict, deque
 from collections.abc import Callable
-from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
-from typing import Any
 
 import psutil
 from fastapi import Response
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, Summary, generate_latest
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    Summary,
+    generate_latest,
+)
 
 # Optional Redis dependency
 try:
     import redis.asyncio as redis
+
     HAS_REDIS = True
 except ImportError:
     HAS_REDIS = False
@@ -34,6 +45,7 @@ except ImportError:
 
 class MetricType(str, Enum):
     """Types of metrics"""
+
     COUNTER = "counter"
     GAUGE = "gauge"
     HISTOGRAM = "histogram"
@@ -43,6 +55,7 @@ class MetricType(str, Enum):
 @dataclass
 class MetricPoint:
     """A single metric data point"""
+
     timestamp: float
     value: float
     labels: dict[str, str] = field(default_factory=dict)
@@ -51,6 +64,7 @@ class MetricPoint:
 @dataclass
 class MetricDefinition:
     """Definition of a metric"""
+
     name: str
     type: MetricType
     description: str
@@ -83,59 +97,47 @@ class MetricsCollector:
         self.request_count = Counter(
             f"{self.app_name}_requests_total",
             "Total number of requests",
-            ["method", "endpoint", "status"]
+            ["method", "endpoint", "status"],
         )
 
         self.request_duration = Histogram(
             f"{self.app_name}_request_duration_seconds",
             "Request duration in seconds",
             ["method", "endpoint"],
-            buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+            buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
         )
 
         # Memory metrics
         self.memory_count = Gauge(
-            f"{self.app_name}_memories_total",
-            "Total number of memories",
-            ["type"]
+            f"{self.app_name}_memories_total", "Total number of memories", ["type"]
         )
 
         self.memory_operations = Counter(
             f"{self.app_name}_memory_operations_total",
             "Total number of memory operations",
-            ["operation", "status"]
+            ["operation", "status"],
         )
 
         # Database metrics
         self.db_connections = Gauge(
-            f"{self.app_name}_database_connections",
-            "Number of database connections",
-            ["state"]
+            f"{self.app_name}_database_connections", "Number of database connections", ["state"]
         )
 
         self.db_query_duration = Histogram(
             f"{self.app_name}_database_query_duration_seconds",
             "Database query duration",
             ["query_type"],
-            buckets=[0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]
+            buckets=[0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0],
         )
 
         # System metrics
-        self.cpu_usage = Gauge(
-            f"{self.app_name}_cpu_usage_percent",
-            "CPU usage percentage"
-        )
+        self.cpu_usage = Gauge(f"{self.app_name}_cpu_usage_percent", "CPU usage percentage")
 
-        self.memory_usage = Gauge(
-            f"{self.app_name}_memory_usage_bytes",
-            "Memory usage in bytes"
-        )
+        self.memory_usage = Gauge(f"{self.app_name}_memory_usage_bytes", "Memory usage in bytes")
 
         # Error metrics
         self.error_count = Counter(
-            f"{self.app_name}_errors_total",
-            "Total number of errors",
-            ["error_type", "endpoint"]
+            f"{self.app_name}_errors_total", "Total number of errors", ["error_type", "endpoint"]
         )
 
         # Custom metrics registry
@@ -145,28 +147,22 @@ class MetricsCollector:
         """Register a custom metric"""
         if definition.type == MetricType.COUNTER:
             metric = Counter(
-                f"{self.app_name}_{definition.name}",
-                definition.description,
-                definition.labels
+                f"{self.app_name}_{definition.name}", definition.description, definition.labels
             )
         elif definition.type == MetricType.GAUGE:
             metric = Gauge(
-                f"{self.app_name}_{definition.name}",
-                definition.description,
-                definition.labels
+                f"{self.app_name}_{definition.name}", definition.description, definition.labels
             )
         elif definition.type == MetricType.HISTOGRAM:
             metric = Histogram(
                 f"{self.app_name}_{definition.name}",
                 definition.description,
                 definition.labels,
-                buckets=definition.buckets or [0.1, 0.5, 1.0, 2.5, 5.0, 10.0]
+                buckets=definition.buckets or [0.1, 0.5, 1.0, 2.5, 5.0, 10.0],
             )
         elif definition.type == MetricType.SUMMARY:
             metric = Summary(
-                f"{self.app_name}_{definition.name}",
-                definition.description,
-                definition.labels
+                f"{self.app_name}_{definition.name}", definition.description, definition.labels
             )
         else:
             raise ValueError(f"Unknown metric type: {definition.type}")
@@ -192,11 +188,9 @@ class MetricsCollector:
     def record_timeseries(self, name: str, value: float, **labels):
         """Record a timeseries data point"""
         key = f"{name}:{json.dumps(labels, sort_keys=True)}"
-        self._timeseries_data[key].append(MetricPoint(
-            timestamp=time.time(),
-            value=value,
-            labels=labels
-        ))
+        self._timeseries_data[key].append(
+            MetricPoint(timestamp=time.time(), value=value, labels=labels)
+        )
 
     async def collect_system_metrics(self):
         """Collect system metrics"""
@@ -221,12 +215,12 @@ class MetricsCollector:
                 "cpu_usage": psutil.cpu_percent(interval=0.1),
                 "memory_usage_mb": psutil.virtual_memory().used / 1024 / 1024,
                 "memory_percent": psutil.virtual_memory().percent,
-                "disk_usage_percent": psutil.disk_usage('/').percent
+                "disk_usage_percent": psutil.disk_usage("/").percent,
             },
             "application": {
-                "uptime_seconds": time.time() - getattr(self, '_start_time', time.time())
+                "uptime_seconds": time.time() - getattr(self, "_start_time", time.time())
             },
-            "timeseries": {}
+            "timeseries": {},
         }
 
         # Add recent timeseries data
@@ -234,8 +228,7 @@ class MetricsCollector:
             if points:
                 recent = list(points)[-10:]  # Last 10 points
                 summary["timeseries"][key] = [
-                    {"timestamp": p.timestamp, "value": p.value}
-                    for p in recent
+                    {"timestamp": p.timestamp, "value": p.value} for p in recent
                 ]
 
         return summary
@@ -254,11 +247,7 @@ class HealthChecker:
 
     async def run_checks(self) -> dict[str, Any]:
         """Run all registered health checks"""
-        results = {
-            "status": "healthy",
-            "timestamp": datetime.utcnow().isoformat(),
-            "checks": {}
-        }
+        results = {"status": "healthy", "timestamp": datetime.utcnow().isoformat(), "checks": {}}
 
         for name, check_func in self.checks.items():
             try:
@@ -273,7 +262,7 @@ class HealthChecker:
                 results["checks"][name] = {
                     "status": "healthy" if result.get("healthy", True) else "unhealthy",
                     "duration_ms": duration * 1000,
-                    **result
+                    **result,
                 }
 
                 if not result.get("healthy", True):
@@ -283,7 +272,7 @@ class HealthChecker:
                 results["checks"][name] = {
                     "status": "unhealthy",
                     "error": str(e),
-                    "error_type": type(e).__name__
+                    "error_type": type(e).__name__,
                 }
                 results["status"] = "unhealthy"
 
@@ -300,14 +289,10 @@ class HealthChecker:
             return {
                 "healthy": result == 1,
                 "pool_size": pool_size,
-                "message": "Database connection is healthy"
+                "message": "Database connection is healthy",
             }
         except Exception as e:
-            return {
-                "healthy": False,
-                "error": str(e),
-                "message": "Database connection failed"
-            }
+            return {"healthy": False, "error": str(e), "message": "Database connection failed"}
 
     async def check_redis(self, redis_url: str) -> dict[str, Any]:
         """Check Redis health"""
@@ -315,7 +300,7 @@ class HealthChecker:
             return {
                 "healthy": False,
                 "error": "redis not installed",
-                "message": "Redis monitoring unavailable"
+                "message": "Redis monitoring unavailable",
             }
 
         try:
@@ -328,33 +313,25 @@ class HealthChecker:
                 "healthy": True,
                 "connected_clients": info.get("connected_clients", 0),
                 "used_memory_mb": info.get("used_memory", 0) / 1024 / 1024,
-                "message": "Redis connection is healthy"
+                "message": "Redis connection is healthy",
             }
         except Exception as e:
-            return {
-                "healthy": False,
-                "error": str(e),
-                "message": "Redis connection failed"
-            }
+            return {"healthy": False, "error": str(e), "message": "Redis connection failed"}
 
     async def check_disk_space(self, min_free_gb: float = 1.0) -> dict[str, Any]:
         """Check disk space"""
         try:
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             free_gb = disk.free / 1024 / 1024 / 1024
 
             return {
                 "healthy": free_gb >= min_free_gb,
                 "free_gb": round(free_gb, 2),
                 "used_percent": disk.percent,
-                "message": f"Disk space: {free_gb:.2f}GB free"
+                "message": f"Disk space: {free_gb:.2f}GB free",
             }
         except Exception as e:
-            return {
-                "healthy": False,
-                "error": str(e),
-                "message": "Disk space check failed"
-            }
+            return {"healthy": False, "error": str(e), "message": "Disk space check failed"}
 
 
 class RequestTracker:
@@ -387,24 +364,21 @@ class RequestTracker:
 
             # Update metrics
             self.metrics.request_count.labels(
-                method=method,
-                endpoint=path,
-                status=str(status)
+                method=method, endpoint=path, status=str(status)
             ).inc()
 
-            self.metrics.request_duration.labels(
-                method=method,
-                endpoint=path
-            ).observe(duration)
+            self.metrics.request_duration.labels(method=method, endpoint=path).observe(duration)
 
             # Record in history
-            self.request_history.append({
-                "timestamp": start_time,
-                "method": method,
-                "path": path,
-                "status": status,
-                "duration_ms": duration * 1000
-            })
+            self.request_history.append(
+                {
+                    "timestamp": start_time,
+                    "method": method,
+                    "path": path,
+                    "status": status,
+                    "duration_ms": duration * 1000,
+                }
+            )
 
             # Add metrics headers
             response.headers["X-Response-Time"] = f"{duration * 1000:.2f}ms"
@@ -414,10 +388,7 @@ class RequestTracker:
         except Exception as e:
             # Record error
             duration = time.time() - start_time
-            self.metrics.error_count.labels(
-                error_type=type(e).__name__,
-                endpoint=path
-            ).inc()
+            self.metrics.error_count.labels(error_type=type(e).__name__, endpoint=path).inc()
 
             raise
 
@@ -459,15 +430,13 @@ def get_request_tracker() -> RequestTracker:
 async def export_metrics() -> Response:
     """Export metrics in Prometheus format"""
     metrics_output = generate_latest()
-    return Response(
-        content=metrics_output,
-        media_type=CONTENT_TYPE_LATEST
-    )
+    return Response(content=metrics_output, media_type=CONTENT_TYPE_LATEST)
 
 
 # Monitoring decorators
 def monitor_performance(operation: str):
     """Decorator to monitor function performance"""
+
     def decorator(func):
         async def async_wrapper(*args, **kwargs):
             start_time = time.time()
@@ -479,10 +448,7 @@ def monitor_performance(operation: str):
 
                 # Record success
                 metrics.observe_histogram(
-                    "operation_duration",
-                    duration,
-                    operation=operation,
-                    status="success"
+                    "operation_duration", duration, operation=operation, status="success"
                 )
 
                 return result
@@ -492,16 +458,11 @@ def monitor_performance(operation: str):
 
                 # Record failure
                 metrics.observe_histogram(
-                    "operation_duration",
-                    duration,
-                    operation=operation,
-                    status="failure"
+                    "operation_duration", duration, operation=operation, status="failure"
                 )
 
                 metrics.increment_counter(
-                    "operation_errors",
-                    operation=operation,
-                    error_type=type(e).__name__
+                    "operation_errors", operation=operation, error_type=type(e).__name__
                 )
 
                 raise
@@ -516,10 +477,7 @@ def monitor_performance(operation: str):
 
                 # Record success
                 metrics.observe_histogram(
-                    "operation_duration",
-                    duration,
-                    operation=operation,
-                    status="success"
+                    "operation_duration", duration, operation=operation, status="success"
                 )
 
                 return result
@@ -529,16 +487,11 @@ def monitor_performance(operation: str):
 
                 # Record failure
                 metrics.observe_histogram(
-                    "operation_duration",
-                    duration,
-                    operation=operation,
-                    status="failure"
+                    "operation_duration", duration, operation=operation, status="failure"
                 )
 
                 metrics.increment_counter(
-                    "operation_errors",
-                    operation=operation,
-                    error_type=type(e).__name__
+                    "operation_errors", operation=operation, error_type=type(e).__name__
                 )
 
                 raise

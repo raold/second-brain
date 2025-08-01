@@ -1,3 +1,10 @@
+import json
+from datetime import datetime
+from typing import Any
+
+from app.models.memory import Memory, MemoryType
+from app.utils.logging_config import get_logger
+
 """
 Memory repository implementation following Repository pattern.
 
@@ -5,17 +12,13 @@ Provides data access abstraction for Memory entities, separating
 database concerns from business logic.
 """
 
-import json
 from abc import abstractmethod
-from datetime import datetime
-from typing import Any
 
 import asyncpg
 
-from app.models.memory import Memory, MemoryMetrics, MemoryType
+from app.models.memory import MemoryMetrics
 from app.models.search import SearchCriteria
 from app.repositories.base_repository import BaseRepository
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -44,7 +47,7 @@ class MemoryRepository(BaseRepository[Memory]):
         query: str,
         limit: int = 50,
         memory_type: MemoryType | None = None,
-        user_id: str | None = None
+        user_id: str | None = None,
     ) -> list[Memory]:
         """Search memories by content similarity."""
         pass
@@ -95,33 +98,33 @@ class PostgreSQLMemoryRepository(MemoryRepository):
     async def _map_row_to_entity(self, row: asyncpg.Record) -> Memory:
         """Map database row to Memory entity."""
         return Memory(
-            id=row['id'],
-            content=row['content'],
-            memory_type=MemoryType(row['memory_type']),
-            importance_score=float(row['importance_score']),
-            created_at=row['created_at'],
-            updated_at=row['updated_at'],
-            user_id=row.get('user_id'),
-            metadata=json.loads(row['metadata']) if row.get('metadata') else {},
-            embedding=list(row['embedding']) if row.get('embedding') else None,
-            access_count=row.get('access_count', 0),
-            last_accessed=row.get('last_accessed')
+            id=row["id"],
+            content=row["content"],
+            memory_type=MemoryType(row["memory_type"]),
+            importance_score=float(row["importance_score"]),
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            user_id=row.get("user_id"),
+            metadata=json.loads(row["metadata"]) if row.get("metadata") else {},
+            embedding=list(row["embedding"]) if row.get("embedding") else None,
+            access_count=row.get("access_count", 0),
+            last_accessed=row.get("last_accessed"),
         )
 
     async def _map_entity_to_values(self, memory: Memory) -> dict[str, Any]:
         """Map Memory entity to database values."""
         return {
-            'id': memory.id,
-            'content': memory.content,
-            'memory_type': memory.memory_type.value,
-            'importance_score': memory.importance_score,
-            'created_at': memory.created_at,
-            'updated_at': memory.updated_at,
-            'user_id': memory.user_id,
-            'metadata': json.dumps(memory.metadata) if memory.metadata else '{}',
-            'embedding': memory.embedding,
-            'access_count': memory.access_count,
-            'last_accessed': memory.last_accessed
+            "id": memory.id,
+            "content": memory.content,
+            "memory_type": memory.memory_type.value,
+            "importance_score": memory.importance_score,
+            "created_at": memory.created_at,
+            "updated_at": memory.updated_at,
+            "user_id": memory.user_id,
+            "metadata": json.dumps(memory.metadata) if memory.metadata else "{}",
+            "embedding": memory.embedding,
+            "access_count": memory.access_count,
+            "last_accessed": memory.last_accessed,
         }
 
     async def save(self, memory: Memory) -> str:
@@ -147,20 +150,20 @@ class PostgreSQLMemoryRepository(MemoryRepository):
 
             memory_id = await conn.fetchval(
                 query,
-                values['id'],
-                values['content'],
-                values['memory_type'],
-                values['importance_score'],
-                values['created_at'],
-                values['updated_at'],
-                values['user_id'],
-                values['metadata'],
-                values['embedding'],
-                values['access_count'],
-                values['last_accessed']
+                values["id"],
+                values["content"],
+                values["memory_type"],
+                values["importance_score"],
+                values["created_at"],
+                values["updated_at"],
+                values["user_id"],
+                values["metadata"],
+                values["embedding"],
+                values["access_count"],
+                values["last_accessed"],
             )
 
-            await self._log_operation('save', memory_id)
+            await self._log_operation("save", memory_id)
             return memory_id
 
     async def update(self, memory: Memory) -> bool:
@@ -192,23 +195,23 @@ class PostgreSQLMemoryRepository(MemoryRepository):
 
             result = await conn.execute(
                 query,
-                values['id'],
-                values['content'],
-                values['memory_type'],
-                values['importance_score'],
-                values['updated_at'],
-                values['user_id'],
-                values['metadata'],
-                values['embedding'],
-                values['access_count'],
-                values['last_accessed']
+                values["id"],
+                values["content"],
+                values["memory_type"],
+                values["importance_score"],
+                values["updated_at"],
+                values["user_id"],
+                values["metadata"],
+                values["embedding"],
+                values["access_count"],
+                values["last_accessed"],
             )
 
             rows_affected = int(result.split()[-1]) if result.split() else 0
             success = rows_affected > 0
 
             if success:
-                await self._log_operation('update', memory.id)
+                await self._log_operation("update", memory.id)
 
             return success
 
@@ -217,7 +220,7 @@ class PostgreSQLMemoryRepository(MemoryRepository):
         query: str,
         limit: int = 50,
         memory_type: MemoryType | None = None,
-        user_id: str | None = None
+        user_id: str | None = None,
     ) -> list[Memory]:
         """
         Search memories by content using full-text search.
@@ -257,7 +260,9 @@ class PostgreSQLMemoryRepository(MemoryRepository):
             rows = await conn.fetch(query_sql, *params)
             memories = [await self._map_row_to_entity(row) for row in rows]
 
-            await self._log_operation('search_by_content', query_text=query, results_count=len(memories))
+            await self._log_operation(
+                "search_by_content", query_text=query, results_count=len(memories)
+            )
             return memories
 
     async def search_by_criteria(self, criteria: SearchCriteria) -> list[Memory]:
@@ -308,10 +313,10 @@ class PostgreSQLMemoryRepository(MemoryRepository):
             params,
             limit=criteria.limit,
             offset=criteria.offset or 0,
-            order_by=order_by
+            order_by=order_by,
         )
 
-        await self._log_operation('search_by_criteria', results_count=len(memories))
+        await self._log_operation("search_by_criteria", results_count=len(memories))
         return memories
 
     async def find_by_user(self, user_id: str, limit: int = 100) -> list[Memory]:
@@ -320,13 +325,10 @@ class PostgreSQLMemoryRepository(MemoryRepository):
         params = [user_id]
 
         memories = await self.find_by_criteria(
-            where_clause,
-            params,
-            limit=limit,
-            order_by="created_at DESC"
+            where_clause, params, limit=limit, order_by="created_at DESC"
         )
 
-        await self._log_operation('find_by_user', user_id=user_id, results_count=len(memories))
+        await self._log_operation("find_by_user", user_id=user_id, results_count=len(memories))
         return memories
 
     async def find_related(self, memory_id: str, limit: int = 10) -> list[Memory]:
@@ -354,16 +356,14 @@ class PostgreSQLMemoryRepository(MemoryRepository):
             """
 
             rows = await conn.fetch(
-                query,
-                memory_id,
-                target_memory.content,
-                target_memory.user_id,
-                limit
+                query, memory_id, target_memory.content, target_memory.user_id, limit
             )
 
             memories = [await self._map_row_to_entity(row) for row in rows]
 
-            await self._log_operation('find_related', memory_id=memory_id, results_count=len(memories))
+            await self._log_operation(
+                "find_related", memory_id=memory_id, results_count=len(memories)
+            )
             return memories
 
     async def get_metrics(self, user_id: str | None = None) -> MemoryMetrics:
@@ -386,10 +386,12 @@ class PostgreSQLMemoryRepository(MemoryRepository):
                 GROUP BY memory_type
             """
             type_rows = await conn.fetch(type_query, *params)
-            type_counts = {row['memory_type']: row['count'] for row in type_rows}
+            type_counts = {row["memory_type"]: row["count"] for row in type_rows}
 
             # Get average importance
-            avg_importance = await conn.fetchval(f"SELECT AVG(importance_score) {base_query}", *params) or 0.0
+            avg_importance = (
+                await conn.fetchval(f"SELECT AVG(importance_score) {base_query}", *params) or 0.0
+            )
 
             # Get recent activity (last 7 days)
             recent_query = f"""
@@ -404,7 +406,7 @@ class PostgreSQLMemoryRepository(MemoryRepository):
                 average_importance=float(avg_importance),
                 recent_memories=recent_count,
                 total_access_count=0,  # Would need additional query
-                last_updated=datetime.utcnow()
+                last_updated=datetime.utcnow(),
             )
 
     async def update_importance_score(self, memory_id: str, score: float) -> bool:
@@ -421,7 +423,7 @@ class PostgreSQLMemoryRepository(MemoryRepository):
             success = rows_affected > 0
 
             if success:
-                await self._log_operation('update_importance', memory_id, new_score=score)
+                await self._log_operation("update_importance", memory_id, new_score=score)
 
             return success
 
@@ -437,4 +439,4 @@ class PostgreSQLMemoryRepository(MemoryRepository):
             """
 
             await conn.execute(query, memory_id)
-            await self._log_operation('mark_accessed', memory_id)
+            await self._log_operation("mark_accessed", memory_id)

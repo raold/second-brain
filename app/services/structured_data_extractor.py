@@ -1,3 +1,10 @@
+import json
+import re
+from dataclasses import dataclass, field
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Structured data extraction service for intelligent parsing.
 
@@ -8,16 +15,11 @@ This service specializes in:
 - Converting unstructured content to structured formats
 """
 
-import json
-import re
 from collections import Counter, OrderedDict, defaultdict
-from dataclasses import dataclass, field
-from typing import Any
 
 import markdown
 from bs4 import BeautifulSoup
 
-from app.utils.logging_config import get_logger
 from app.utils.openai_client import get_openai_client
 
 logger = get_logger(__name__)
@@ -26,6 +28,7 @@ logger = get_logger(__name__)
 @dataclass
 class ExtractedTable:
     """Represents an extracted table with metadata"""
+
     headers: list[str]
     rows: list[list[str]]
     caption: str | None = None
@@ -36,6 +39,7 @@ class ExtractedTable:
 @dataclass
 class ExtractedList:
     """Represents an extracted list with metadata"""
+
     items: list[str]
     list_type: str = "unordered"  # unordered, ordered, definition
     title: str | None = None
@@ -45,6 +49,7 @@ class ExtractedList:
 @dataclass
 class ExtractedCodeBlock:
     """Represents an extracted code snippet"""
+
     code: str
     language: str
     line_count: int
@@ -57,6 +62,7 @@ class ExtractedCodeBlock:
 @dataclass
 class ExtractedEntity:
     """Represents an extracted entity (person, place, date, etc.)"""
+
     text: str
     entity_type: str
     context: str
@@ -66,13 +72,16 @@ class ExtractedEntity:
 @dataclass
 class StructuredDataContainer:
     """Container for all extracted structured data"""
+
     key_value_pairs: dict[str, Any] = field(default_factory=dict)
     lists: list[ExtractedList] = field(default_factory=list)
     tables: list[ExtractedTable] = field(default_factory=list)
     code_snippets: list[ExtractedCodeBlock] = field(default_factory=list)
     metadata_fields: dict[str, Any] = field(default_factory=dict)
     entities: list[ExtractedEntity] = field(default_factory=list)
-    relationships: list[tuple[str, str, str]] = field(default_factory=list)  # (entity1, relation, entity2)
+    relationships: list[tuple[str, str, str]] = field(
+        default_factory=list
+    )  # (entity1, relation, entity2)
 
 
 class StructuredDataExtractor:
@@ -81,74 +90,78 @@ class StructuredDataExtractor:
     # Patterns for various structured data types
     KEY_VALUE_PATTERNS = [
         # Standard patterns
-        r'^([A-Za-z][A-Za-z0-9\s_-]{0,30}):\s*(.+)$',  # Key: value
-        r'^([A-Za-z][A-Za-z0-9\s_-]{0,30})\s*=\s*(.+)$',  # Key = value
-        r'^([A-Za-z][A-Za-z0-9\s_-]{0,30})\s*->\s*(.+)$',  # Key -> value
-        r'^\*\*([A-Za-z][A-Za-z0-9\s_-]{0,30})\*\*:\s*(.+)$',  # **Key**: value
+        r"^([A-Za-z][A-Za-z0-9\s_-]{0,30}):\s*(.+)$",  # Key: value
+        r"^([A-Za-z][A-Za-z0-9\s_-]{0,30})\s*=\s*(.+)$",  # Key = value
+        r"^([A-Za-z][A-Za-z0-9\s_-]{0,30})\s*->\s*(.+)$",  # Key -> value
+        r"^\*\*([A-Za-z][A-Za-z0-9\s_-]{0,30})\*\*:\s*(.+)$",  # **Key**: value
         # Definition patterns
-        r'^([A-Z][A-Za-z0-9\s]{0,30})\s+is\s+(.+)$',  # Term is definition
-        r'^([A-Z][A-Za-z0-9\s]{0,30})\s+means\s+(.+)$',  # Term means definition
+        r"^([A-Z][A-Za-z0-9\s]{0,30})\s+is\s+(.+)$",  # Term is definition
+        r"^([A-Z][A-Za-z0-9\s]{0,30})\s+means\s+(.+)$",  # Term means definition
     ]
 
     LIST_PATTERNS = {
-        'bullet': [
-            r'^\s*[\u2022\u2023\u25E6\u2043\u2219]\s+(.+)$',  # Unicode bullets
-            r'^\s*[-*+]\s+(.+)$',  # Markdown bullets
+        "bullet": [
+            r"^\s*[\u2022\u2023\u25E6\u2043\u2219]\s+(.+)$",  # Unicode bullets
+            r"^\s*[-*+]\s+(.+)$",  # Markdown bullets
         ],
-        'numbered': [
-            r'^\s*(\d+)[.)]\s+(.+)$',  # 1. or 1)
-            r'^\s*\((\d+)\)\s+(.+)$',  # (1)
-            r'^\s*([a-z])[.)]\s+(.+)$',  # a. or a)
-            r'^\s*\(([a-z])\)\s+(.+)$',  # (a)
+        "numbered": [
+            r"^\s*(\d+)[.)]\s+(.+)$",  # 1. or 1)
+            r"^\s*\((\d+)\)\s+(.+)$",  # (1)
+            r"^\s*([a-z])[.)]\s+(.+)$",  # a. or a)
+            r"^\s*\(([a-z])\)\s+(.+)$",  # (a)
         ],
-        'definition': [
-            r'^([A-Za-z][A-Za-z0-9\s]{0,30}):\s*(.+)$',  # Term: definition
-        ]
+        "definition": [
+            r"^([A-Za-z][A-Za-z0-9\s]{0,30}):\s*(.+)$",  # Term: definition
+        ],
     }
 
     # Entity patterns
     ENTITY_PATTERNS = {
-        'date': [
-            r'\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b',
-            r'\b(\d{4}[/-]\d{1,2}[/-]\d{1,2})\b',
-            r'\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}\b',
+        "date": [
+            r"\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b",
+            r"\b(\d{4}[/-]\d{1,2}[/-]\d{1,2})\b",
+            r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}\b",
         ],
-        'time': [
-            r'\b(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[APap][Mm])?)\b',
+        "time": [
+            r"\b(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[APap][Mm])?)\b",
         ],
-        'email': [
-            r'\b([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})\b',
+        "email": [
+            r"\b([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})\b",
         ],
-        'url': [
+        "url": [
             r'(https?://[^\s<>"{}|\\^`\[\]]+)',
         ],
-        'phone': [
-            r'\b(\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})\b',
+        "phone": [
+            r"\b(\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})\b",
         ],
-        'money': [
-            r'\$\s*(\d+(?:,\d{3})*(?:\.\d{2})?)',
-            r'(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:USD|EUR|GBP)',
+        "money": [
+            r"\$\s*(\d+(?:,\d{3})*(?:\.\d{2})?)",
+            r"(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:USD|EUR|GBP)",
         ],
     }
 
     def __init__(self, **kwargs):
         self.config = kwargs
         self.openai_client = None
-        self.use_ai = kwargs.get('use_ai', True)
+        self.use_ai = kwargs.get("use_ai", True)
 
         # Configuration
-        self.min_confidence = kwargs.get('min_confidence', 0.5)
-        self.extract_entities = kwargs.get('extract_entities', True)
-        self.extract_relationships = kwargs.get('extract_relationships', True)
+        self.min_confidence = kwargs.get("min_confidence", 0.5)
+        self.extract_entities = kwargs.get("extract_entities", True)
+        self.extract_relationships = kwargs.get("extract_relationships", True)
 
         if self.use_ai:
             try:
                 self.openai_client = get_openai_client()
             except Exception as e:
-                logger.warning(f"Failed to initialize OpenAI client: {e}. Using pattern-based extraction only.")
+                logger.warning(
+                    f"Failed to initialize OpenAI client: {e}. Using pattern-based extraction only."
+                )
                 self.use_ai = False
 
-        logger.info(f"Initialized StructuredDataExtractor (AI={'enabled' if self.use_ai else 'disabled'})")
+        logger.info(
+            f"Initialized StructuredDataExtractor (AI={'enabled' if self.use_ai else 'disabled'})"
+        )
 
     def extract_structured_data(self, content: str) -> StructuredDataContainer:
         """Extract all types of structured data from content"""
@@ -214,10 +227,10 @@ class StructuredDataExtractor:
         try:
             # Calculate statistics
             total_elements = (
-                len(data.key_value_pairs) +
-                len(data.lists) +
-                len(data.tables) +
-                len(data.code_snippets)
+                len(data.key_value_pairs)
+                + len(data.lists)
+                + len(data.tables)
+                + len(data.code_snippets)
             )
 
             # List statistics
@@ -241,39 +254,38 @@ class StructuredDataExtractor:
                 "total_structured_elements": total_elements,
                 "key_value_pairs": {
                     "count": len(data.key_value_pairs),
-                    "sample_keys": list(data.key_value_pairs.keys())[:5]
+                    "sample_keys": list(data.key_value_pairs.keys())[:5],
                 },
                 "lists": {
                     "count": len(data.lists),
                     "total_items": list_items_total,
                     "nested_count": nested_lists,
-                    "types": dict(Counter(lst.list_type for lst in data.lists))
+                    "types": dict(Counter(lst.list_type for lst in data.lists)),
                 },
                 "tables": {
                     "count": len(data.tables),
                     "total_cells": table_cells_total,
                     "average_size": avg_table_size,
-                    "types": dict(Counter(table.table_type for table in data.tables))
+                    "types": dict(Counter(table.table_type for table in data.tables)),
                 },
                 "code_snippets": {
                     "count": len(data.code_snippets),
                     "total_lines": total_code_lines,
                     "languages": languages,
                     "functions_found": sum(len(block.functions) for block in data.code_snippets),
-                    "classes_found": sum(len(block.classes) for block in data.code_snippets)
+                    "classes_found": sum(len(block.classes) for block in data.code_snippets),
                 },
-                "entities": {
-                    "count": len(data.entities),
-                    "types": dict(entity_types)
-                },
-                "relationships": {
-                    "count": len(data.relationships)
-                },
+                "entities": {"count": len(data.entities), "types": dict(entity_types)},
+                "relationships": {"count": len(data.relationships)},
                 "metadata": {
                     "fields": len(data.metadata_fields),
-                    "has_dates": any(k in data.metadata_fields for k in ['date', 'created', 'modified']),
-                    "has_author": any(k in data.metadata_fields for k in ['author', 'creator', 'by'])
-                }
+                    "has_dates": any(
+                        k in data.metadata_fields for k in ["date", "created", "modified"]
+                    ),
+                    "has_author": any(
+                        k in data.metadata_fields for k in ["author", "creator", "by"]
+                    ),
+                },
             }
 
         except Exception as e:
@@ -289,32 +301,32 @@ class StructuredDataExtractor:
             # Extract section headers as topics
             headers = self._extract_headers(content)
             for header in headers:
-                topics.append({
-                    "type": "section",
-                    "title": header['text'],
-                    "level": header['level'],
-                    "content_preview": header.get('preview', '')
-                })
+                topics.append(
+                    {
+                        "type": "section",
+                        "title": header["text"],
+                        "level": header["level"],
+                        "content_preview": header.get("preview", ""),
+                    }
+                )
 
             # Extract definition lists as topics
             definitions = self._extract_definitions(content)
             for term, definition in definitions.items():
-                topics.append({
-                    "type": "definition",
-                    "term": term,
-                    "definition": definition
-                })
+                topics.append({"type": "definition", "term": term, "definition": definition})
 
             # Extract categorized lists as topics
             data = self.extract_structured_data(content)
             for lst in data.lists:
                 if lst.title:
-                    topics.append({
-                        "type": "list_topic",
-                        "title": lst.title,
-                        "items": lst.items[:5],  # First 5 items
-                        "item_count": len(lst.items)
-                    })
+                    topics.append(
+                        {
+                            "type": "list_topic",
+                            "title": lst.title,
+                            "items": lst.items[:5],  # First 5 items
+                            "item_count": len(lst.items),
+                        }
+                    )
 
             return topics
 
@@ -333,7 +345,7 @@ class StructuredDataExtractor:
 
             # Enhance with context
             for topic in hierarchy:
-                topic['context'] = self._extract_topic_context(content, topic)
+                topic["context"] = self._extract_topic_context(content, topic)
 
             return hierarchy
 
@@ -347,14 +359,15 @@ class StructuredDataExtractor:
             if not topics:
                 return {"total_topics": 0}
 
-            type_counts = Counter(t['type'] for t in topics)
+            type_counts = Counter(t["type"] for t in topics)
 
             return {
                 "total_topics": len(topics),
                 "topic_types": dict(type_counts),
-                "has_hierarchy": any('children' in t for t in topics),
+                "has_hierarchy": any("children" in t for t in topics),
                 "max_depth": self._calculate_max_depth(topics),
-                "average_content_length": sum(len(t.get('content_preview', '')) for t in topics) / len(topics)
+                "average_content_length": sum(len(t.get("content_preview", "")) for t in topics)
+                / len(topics),
             }
 
         except Exception as e:
@@ -372,18 +385,19 @@ class StructuredDataExtractor:
                 "technical": {
                     "code_presence": len(data.code_snippets) > 0,
                     "technical_terms": self._count_technical_terms(content),
-                    "structured_data": len(data.tables) > 0
+                    "structured_data": len(data.tables) > 0,
                 },
                 "academic": {
                     "citations": self._count_citations(content),
                     "formal_structure": self._has_formal_structure(content),
-                    "references": 'references' in content.lower() or 'bibliography' in content.lower()
+                    "references": "references" in content.lower()
+                    or "bibliography" in content.lower(),
                 },
                 "business": {
-                    "financial_data": any('$' in str(v) for v in data.key_value_pairs.values()),
+                    "financial_data": any("$" in str(v) for v in data.key_value_pairs.values()),
                     "business_terms": self._count_business_terms(content),
-                    "metrics": self._has_metrics(data)
-                }
+                    "metrics": self._has_metrics(data),
+                },
             }
 
             # Calculate domain scores
@@ -400,7 +414,11 @@ class StructuredDataExtractor:
             return {
                 "domains": [{"name": d, "confidence": s} for d, s in sorted_domains if s > 0.1],
                 "confidence_scores": domain_scores,
-                "primary_domain": sorted_domains[0][0] if sorted_domains and sorted_domains[0][1] > 0.1 else "general"
+                "primary_domain": (
+                    sorted_domains[0][0]
+                    if sorted_domains and sorted_domains[0][1] > 0.1
+                    else "general"
+                ),
             }
 
         except Exception as e:
@@ -412,7 +430,9 @@ class StructuredDataExtractor:
         return {
             "total_domains": len(domains),
             "primary_domain": domains[0]["name"] if domains else None,
-            "average_confidence": sum(d["confidence"] for d in domains) / len(domains) if domains else 0.0
+            "average_confidence": (
+                sum(d["confidence"] for d in domains) / len(domains) if domains else 0.0
+            ),
         }
 
     # Private helper methods
@@ -420,19 +440,19 @@ class StructuredDataExtractor:
     def _clean_content(self, content: str) -> str:
         """Clean and normalize content"""
         # Remove excessive whitespace
-        content = re.sub(r'\s+', ' ', content)
-        content = re.sub(r'\n{3,}', '\n\n', content)
+        content = re.sub(r"\s+", " ", content)
+        content = re.sub(r"\n{3,}", "\n\n", content)
 
         # Normalize quotes
         content = content.replace('"', '"').replace('"', '"')
-        content = content.replace(''', "'").replace(''', "'")
+        content = content.replace(""", "'").replace(""", "'")
 
         return content.strip()
 
     def _extract_key_value_pairs(self, content: str) -> dict[str, Any]:
         """Extract key-value pairs from content"""
         pairs = OrderedDict()
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         for line in lines:
             line = line.strip()
@@ -446,7 +466,7 @@ class StructuredDataExtractor:
                     value = match.group(2).strip()
 
                     # Clean up the value
-                    value = value.rstrip('.,;')
+                    value = value.rstrip(".,;")
 
                     # Skip if key is too long or value is empty
                     if len(key) > 50 or not value:
@@ -464,7 +484,7 @@ class StructuredDataExtractor:
     def _extract_lists(self, content: str) -> list[ExtractedList]:
         """Extract lists from content"""
         lists = []
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         current_list = None
         current_type = None
@@ -472,16 +492,19 @@ class StructuredDataExtractor:
 
         for i, line in enumerate(lines):
             # Check for list title (line before list starts)
-            if i < len(lines) - 1 and not current_list and line.strip() and line.strip().endswith(':'):
+            if (
+                i < len(lines) - 1
+                and not current_list
+                and line.strip()
+                and line.strip().endswith(":")
+            ):
                 next_line = lines[i + 1].strip()
                 for list_type, patterns in self.LIST_PATTERNS.items():
                     for pattern in patterns:
                         if re.match(pattern, next_line):
                             # Start new list with title
                             current_list = ExtractedList(
-                                items=[],
-                                list_type=list_type,
-                                title=line.strip().rstrip(':')
+                                items=[], list_type=list_type, title=line.strip().rstrip(":")
                             )
                             current_type = list_type
                             break
@@ -500,7 +523,11 @@ class StructuredDataExtractor:
                             else:
                                 item_text = match.group(0).strip()
 
-                            if current_list and current_type == list_type and abs(indent - current_indent) < 4:
+                            if (
+                                current_list
+                                and current_type == list_type
+                                and abs(indent - current_indent) < 4
+                            ):
                                 # Add to current list
                                 current_list.items.append(item_text)
                             else:
@@ -509,10 +536,7 @@ class StructuredDataExtractor:
                                     lists.append(current_list)
 
                                 # Start new list
-                                current_list = ExtractedList(
-                                    items=[item_text],
-                                    list_type=list_type
-                                )
+                                current_list = ExtractedList(items=[item_text], list_type=list_type)
                                 current_type = list_type
                                 current_indent = indent
                             break
@@ -556,26 +580,26 @@ class StructuredDataExtractor:
     def _extract_markdown_tables(self, content: str) -> list[ExtractedTable]:
         """Extract markdown-style tables"""
         tables = []
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         i = 0
         while i < len(lines):
             line = lines[i].strip()
 
             # Check for table header
-            if '|' in line and i + 1 < len(lines):
+            if "|" in line and i + 1 < len(lines):
                 next_line = lines[i + 1].strip()
 
                 # Check for separator line
-                if re.match(r'^[\|\s\-:]+$', next_line) and '|' in next_line:
+                if re.match(r"^[\|\s\-:]+$", next_line) and "|" in next_line:
                     # Extract headers
-                    headers = [cell.strip() for cell in line.split('|') if cell.strip()]
+                    headers = [cell.strip() for cell in line.split("|") if cell.strip()]
 
                     # Extract rows
                     rows = []
                     j = i + 2
-                    while j < len(lines) and '|' in lines[j]:
-                        row = [cell.strip() for cell in lines[j].split('|') if cell.strip()]
+                    while j < len(lines) and "|" in lines[j]:
+                        row = [cell.strip() for cell in lines[j].split("|") if cell.strip()]
                         if len(row) == len(headers):
                             rows.append(row)
                         j += 1
@@ -585,10 +609,7 @@ class StructuredDataExtractor:
                         table_type = self._classify_table_type(headers, rows)
 
                         table = ExtractedTable(
-                            headers=headers,
-                            rows=rows,
-                            table_type=table_type,
-                            confidence=0.9
+                            headers=headers, rows=rows, table_type=table_type, confidence=0.9
                         )
                         tables.append(table)
 
@@ -602,14 +623,14 @@ class StructuredDataExtractor:
     def _extract_ascii_tables(self, content: str) -> list[ExtractedTable]:
         """Extract ASCII-art style tables"""
         tables = []
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         # Look for box-drawing characters
         table_lines = []
         in_table = False
 
         for line in lines:
-            if any(char in line for char in ['+', '-', '|', '═', '║', '╔', '╗', '╚', '╝']):
+            if any(char in line for char in ["+", "-", "|", "═", "║", "╔", "╗", "╚", "╝"]):
                 if not in_table:
                     in_table = True
                     table_lines = []
@@ -627,12 +648,12 @@ class StructuredDataExtractor:
     def _extract_tsv_tables(self, content: str) -> list[ExtractedTable]:
         """Extract tab-separated value tables"""
         tables = []
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         # Look for consistent tab-separated lines
         tab_lines = []
         for i, line in enumerate(lines):
-            if '\t' in line:
+            if "\t" in line:
                 tab_lines.append((i, line))
 
         # Group consecutive tab lines
@@ -641,7 +662,7 @@ class StructuredDataExtractor:
             current_group = [tab_lines[0]]
 
             for i in range(1, len(tab_lines)):
-                if tab_lines[i][0] - tab_lines[i-1][0] == 1:
+                if tab_lines[i][0] - tab_lines[i - 1][0] == 1:
                     current_group.append(tab_lines[i])
                 else:
                     if len(current_group) >= 2:
@@ -654,11 +675,11 @@ class StructuredDataExtractor:
             # Parse each group as a table
             for group in groups:
                 lines_only = [line for _, line in group]
-                headers = lines_only[0].split('\t')
+                headers = lines_only[0].split("\t")
                 rows = []
 
                 for line in lines_only[1:]:
-                    row = line.split('\t')
+                    row = line.split("\t")
                     if len(row) == len(headers):
                         rows.append(row)
 
@@ -667,7 +688,7 @@ class StructuredDataExtractor:
                         headers=[h.strip() for h in headers],
                         rows=[[cell.strip() for cell in row] for row in rows],
                         table_type="data",
-                        confidence=0.7
+                        confidence=0.7,
                     )
                     tables.append(table)
 
@@ -678,7 +699,7 @@ class StructuredDataExtractor:
         code_blocks = []
 
         # Pattern 1: Markdown code blocks
-        pattern = r'```(\w*)\n(.*?)```'
+        pattern = r"```(\w*)\n(.*?)```"
         matches = re.findall(pattern, content, re.DOTALL)
 
         for language, code in matches:
@@ -689,19 +710,19 @@ class StructuredDataExtractor:
             code_blocks.append(block)
 
         # Pattern 2: Indented code blocks
-        lines = content.split('\n')
+        lines = content.split("\n")
         code_lines = []
         in_code_block = False
 
         for line in lines:
-            if line.startswith('    ') or line.startswith('\t'):
+            if line.startswith("    ") or line.startswith("\t"):
                 if not in_code_block:
                     in_code_block = True
                     code_lines = []
-                code_lines.append(line[4:] if line.startswith('    ') else line[1:])
+                code_lines.append(line[4:] if line.startswith("    ") else line[1:])
             elif in_code_block and code_lines:
                 # End of code block
-                code = '\n'.join(code_lines)
+                code = "\n".join(code_lines)
                 if len(code_lines) >= 2:  # Minimum 2 lines
                     language = self._detect_language(code)
                     block = self._analyze_code_block(code, language)
@@ -711,7 +732,7 @@ class StructuredDataExtractor:
 
         # Don't forget last block
         if in_code_block and code_lines and len(code_lines) >= 2:
-            code = '\n'.join(code_lines)
+            code = "\n".join(code_lines)
             language = self._detect_language(code)
             block = self._analyze_code_block(code, language)
             code_blocks.append(block)
@@ -724,41 +745,43 @@ class StructuredDataExtractor:
 
         # Extract dates
         date_patterns = [
-            r'\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b',
-            r'\b(\d{4}[/-]\d{1,2}[/-]\d{1,2})\b',
-            r'\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}\b'
+            r"\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b",
+            r"\b(\d{4}[/-]\d{1,2}[/-]\d{1,2})\b",
+            r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}\b",
         ]
 
         for pattern in date_patterns:
             matches = re.findall(pattern, content, re.IGNORECASE)
             if matches:
-                metadata['dates'] = list(set(matches))[:5]  # First 5 unique dates
+                metadata["dates"] = list(set(matches))[:5]  # First 5 unique dates
                 break
 
         # Extract URLs
         url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
         urls = re.findall(url_pattern, content)
         if urls:
-            metadata['urls'] = list(set(urls))[:10]
+            metadata["urls"] = list(set(urls))[:10]
 
         # Extract emails
-        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        email_pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
         emails = re.findall(email_pattern, content)
         if emails:
-            metadata['emails'] = list(set(emails))[:5]
+            metadata["emails"] = list(set(emails))[:5]
 
         # Extract file references
-        file_pattern = r'[A-Za-z0-9_\-]+\.(txt|pdf|doc|docx|xls|xlsx|csv|json|xml|html|py|js|java|cpp|c|h)'
+        file_pattern = (
+            r"[A-Za-z0-9_\-]+\.(txt|pdf|doc|docx|xls|xlsx|csv|json|xml|html|py|js|java|cpp|c|h)"
+        )
         files = re.findall(file_pattern, content, re.IGNORECASE)
         if files:
-            metadata['files'] = list(set(f[0] + '.' + f[1] for f in files))[:10]
+            metadata["files"] = list(set(f[0] + "." + f[1] for f in files))[:10]
 
         # Basic statistics
-        metadata['statistics'] = {
-            'word_count': len(re.findall(r'\b\w+\b', content)),
-            'line_count': len(content.split('\n')),
-            'character_count': len(content),
-            'paragraph_count': len(re.split(r'\n\s*\n', content))
+        metadata["statistics"] = {
+            "word_count": len(re.findall(r"\b\w+\b", content)),
+            "line_count": len(content.split("\n")),
+            "character_count": len(content),
+            "paragraph_count": len(re.split(r"\n\s*\n", content)),
         }
 
         return metadata
@@ -776,10 +799,7 @@ class StructuredDataExtractor:
                     context = self._extract_context(content, match_text, 50)
 
                     entity = ExtractedEntity(
-                        text=match_text,
-                        entity_type=entity_type,
-                        context=context,
-                        confidence=0.8
+                        text=match_text, entity_type=entity_type, context=context, confidence=0.8
                     )
                     entities.append(entity)
 
@@ -794,7 +814,9 @@ class StructuredDataExtractor:
 
         return unique_entities
 
-    def _extract_relationships(self, content: str, entities: list[ExtractedEntity]) -> list[tuple[str, str, str]]:
+    def _extract_relationships(
+        self, content: str, entities: list[ExtractedEntity]
+    ) -> list[tuple[str, str, str]]:
         """Extract relationships between entities"""
         relationships = []
 
@@ -803,15 +825,18 @@ class StructuredDataExtractor:
 
         # Simple pattern-based relationship extraction
         relationship_patterns = [
-            (r'{0}\s+(?:is|was|are|were)\s+(?:a|an|the)?\s*(\w+)\s+(?:of|for|to)\s+{1}', 'related_to'),
-            (r'{0}\s+(?:works|worked)\s+(?:at|for|with)\s+{1}', 'works_at'),
-            (r'{0}\s+(?:owns|owned|has|had)\s+{1}', 'owns'),
-            (r'{0}\s+(?:created|made|built|developed)\s+{1}', 'created'),
+            (
+                r"{0}\s+(?:is|was|are|were)\s+(?:a|an|the)?\s*(\w+)\s+(?:of|for|to)\s+{1}",
+                "related_to",
+            ),
+            (r"{0}\s+(?:works|worked)\s+(?:at|for|with)\s+{1}", "works_at"),
+            (r"{0}\s+(?:owns|owned|has|had)\s+{1}", "owns"),
+            (r"{0}\s+(?:created|made|built|developed)\s+{1}", "created"),
         ]
 
         # Check pairs of entities
         for i, entity1 in enumerate(entities):
-            for entity2 in entities[i+1:]:
+            for entity2 in entities[i + 1 :]:
                 # Skip if same type (e.g., two dates)
                 if entity1.entity_type == entity2.entity_type:
                     continue
@@ -819,8 +844,7 @@ class StructuredDataExtractor:
                 # Check each pattern
                 for pattern_template, relation in relationship_patterns:
                     pattern = pattern_template.format(
-                        re.escape(entity1.text),
-                        re.escape(entity2.text)
+                        re.escape(entity1.text), re.escape(entity2.text)
                     )
 
                     if re.search(pattern, content, re.IGNORECASE):
@@ -834,14 +858,14 @@ class StructuredDataExtractor:
         value = value.strip()
 
         # Try boolean
-        if value.lower() in ['true', 'yes', 'on']:
+        if value.lower() in ["true", "yes", "on"]:
             return True
-        elif value.lower() in ['false', 'no', 'off']:
+        elif value.lower() in ["false", "no", "off"]:
             return False
 
         # Try number
         try:
-            if '.' in value:
+            if "." in value:
                 return float(value)
             else:
                 return int(value)
@@ -849,8 +873,8 @@ class StructuredDataExtractor:
             pass
 
         # Try list (comma-separated)
-        if ',' in value:
-            items = [item.strip() for item in value.split(',')]
+        if "," in value:
+            items = [item.strip() for item in value.split(",")]
             if len(items) > 1:
                 return items
 
@@ -860,44 +884,40 @@ class StructuredDataExtractor:
     def _detect_language(self, code: str) -> str:
         """Detect programming language from code snippet"""
         # Simple heuristics
-        if 'import' in code and 'from' in code:
-            return 'python'
-        elif 'function' in code or 'const' in code or 'var' in code:
-            return 'javascript'
-        elif '#include' in code:
-            return 'cpp'
-        elif 'public class' in code or 'public static' in code:
-            return 'java'
-        elif 'package main' in code:
-            return 'go'
-        elif 'def' in code or 'class' in code:
-            return 'python'
+        if "import" in code and "from" in code:
+            return "python"
+        elif "function" in code or "const" in code or "var" in code:
+            return "javascript"
+        elif "#include" in code:
+            return "cpp"
+        elif "public class" in code or "public static" in code:
+            return "java"
+        elif "package main" in code:
+            return "go"
+        elif "def" in code or "class" in code:
+            return "python"
         else:
-            return 'unknown'
+            return "unknown"
 
     def _analyze_code_block(self, code: str, language: str) -> ExtractedCodeBlock:
         """Analyze a code block to extract metadata"""
-        lines = code.split('\n')
+        lines = code.split("\n")
 
-        block = ExtractedCodeBlock(
-            code=code,
-            language=language,
-            line_count=len(lines)
-        )
+        block = ExtractedCodeBlock(code=code, language=language, line_count=len(lines))
 
         # Extract imports (Python/JavaScript)
-        if language in ['python', 'javascript']:
-            import_pattern = r'^(?:import|from)\s+[\w\.]+'
+        if language in ["python", "javascript"]:
+            import_pattern = r"^(?:import|from)\s+[\w\.]+"
             imports = re.findall(import_pattern, code, re.MULTILINE)
             block.imports = imports
 
         # Extract function definitions
-        if language == 'python':
-            func_pattern = r'^def\s+(\w+)\s*\('
+        if language == "python":
+            func_pattern = r"^def\s+(\w+)\s*\("
             functions = re.findall(func_pattern, code, re.MULTILINE)
             block.functions = functions
 
-            class_pattern = r'^class\s+(\w+)'
+            class_pattern = r"^class\s+(\w+)"
             classes = re.findall(class_pattern, code, re.MULTILINE)
             block.classes = classes
 
@@ -920,13 +940,13 @@ class StructuredDataExtractor:
         if end < len(content):
             context = context + "..."
 
-        return context.replace('\n', ' ').strip()
+        return context.replace("\n", " ").strip()
 
     def _classify_table_type(self, headers: list[str], rows: list[list[str]]) -> str:
         """Classify the type of table based on content"""
         # Check for comparison table
-        if any(word in ' '.join(headers).lower() for word in ['vs', 'versus', 'comparison']):
-            return 'comparison'
+        if any(word in " ".join(headers).lower() for word in ["vs", "versus", "comparison"]):
+            return "comparison"
 
         # Check for data table (numbers)
         numeric_cells = 0
@@ -935,19 +955,19 @@ class StructuredDataExtractor:
         for row in rows:
             for cell in row:
                 try:
-                    float(cell.replace(',', '').replace('$', ''))
+                    float(cell.replace(",", "").replace("$", ""))
                     numeric_cells += 1
                 except ValueError:
                     pass
 
         if total_cells > 0 and numeric_cells / total_cells > 0.5:
-            return 'data'
+            return "data"
 
         # Check for matrix
-        if headers and rows and headers[0] == '' and all(row[0] for row in rows):
-            return 'matrix'
+        if headers and rows and headers[0] == "" and all(row[0] for row in rows):
+            return "matrix"
 
-        return 'generic'
+        return "generic"
 
     def _parse_ascii_table(self, lines: list[str]) -> ExtractedTable | None:
         """Parse an ASCII art table"""
@@ -958,7 +978,7 @@ class StructuredDataExtractor:
             data_rows = []
 
             for _i, line in enumerate(lines):
-                if '|' in line and not all(c in '-+=|' for c in line):
+                if "|" in line and not all(c in "-+=|" for c in line):
                     if header_row is None:
                         header_row = line
                     else:
@@ -966,20 +986,17 @@ class StructuredDataExtractor:
 
             if header_row and data_rows:
                 # Extract cells
-                headers = [cell.strip() for cell in header_row.split('|') if cell.strip()]
+                headers = [cell.strip() for cell in header_row.split("|") if cell.strip()]
                 rows = []
 
                 for row_line in data_rows:
-                    cells = [cell.strip() for cell in row_line.split('|') if cell.strip()]
+                    cells = [cell.strip() for cell in row_line.split("|") if cell.strip()]
                     if len(cells) == len(headers):
                         rows.append(cells)
 
                 if rows:
                     return ExtractedTable(
-                        headers=headers,
-                        rows=rows,
-                        table_type='generic',
-                        confidence=0.7
+                        headers=headers, rows=rows, table_type="generic", confidence=0.7
                     )
 
             return None
@@ -989,12 +1006,12 @@ class StructuredDataExtractor:
 
     def _is_markdown(self, content: str) -> bool:
         """Check if content is markdown formatted"""
-        markdown_indicators = ['#', '```', '**', '- ', '1.', '[', ']', '|']
+        markdown_indicators = ["#", "```", "**", "- ", "1.", "[", "]", "|"]
         return sum(1 for indicator in markdown_indicators if indicator in content) >= 3
 
     def _is_html(self, content: str) -> bool:
         """Check if content is HTML"""
-        return bool(re.search(r'<[^>]+>', content))
+        return bool(re.search(r"<[^>]+>", content))
 
     def _is_json(self, content: str) -> bool:
         """Check if content is JSON"""
@@ -1004,20 +1021,22 @@ class StructuredDataExtractor:
         except Exception:
             return False
 
-    def _enhance_markdown_extraction(self, content: str, container: StructuredDataContainer) -> StructuredDataContainer:
+    def _enhance_markdown_extraction(
+        self, content: str, container: StructuredDataContainer
+    ) -> StructuredDataContainer:
         """Enhance extraction for markdown content"""
         try:
             # Parse markdown
-            html = markdown.markdown(content, extensions=['tables', 'fenced_code'])
-            soup = BeautifulSoup(html, 'html.parser')
+            html = markdown.markdown(content, extensions=["tables", "fenced_code"])
+            soup = BeautifulSoup(html, "html.parser")
 
             # Extract additional tables
-            for table in soup.find_all('table'):
-                headers = [th.text.strip() for th in table.find_all('th')]
+            for table in soup.find_all("table"):
+                headers = [th.text.strip() for th in table.find_all("th")]
                 rows = []
 
-                for tr in table.find_all('tr')[1:]:  # Skip header row
-                    cells = [td.text.strip() for td in tr.find_all('td')]
+                for tr in table.find_all("tr")[1:]:  # Skip header row
+                    cells = [td.text.strip() for td in tr.find_all("td")]
                     if cells:
                         rows.append(cells)
 
@@ -1026,7 +1045,7 @@ class StructuredDataExtractor:
                         headers=headers,
                         rows=rows,
                         table_type=self._classify_table_type(headers, rows),
-                        confidence=0.95
+                        confidence=0.95,
                     )
                     container.tables.append(extracted_table)
 
@@ -1036,23 +1055,25 @@ class StructuredDataExtractor:
             logger.warning(f"Markdown enhancement failed: {e}")
             return container
 
-    def _enhance_html_extraction(self, content: str, container: StructuredDataContainer) -> StructuredDataContainer:
+    def _enhance_html_extraction(
+        self, content: str, container: StructuredDataContainer
+    ) -> StructuredDataContainer:
         """Enhance extraction for HTML content"""
         try:
-            soup = BeautifulSoup(content, 'html.parser')
+            soup = BeautifulSoup(content, "html.parser")
 
             # Extract definition lists
-            for dl in soup.find_all('dl'):
-                for dt, dd in zip(dl.find_all('dt'), dl.find_all('dd'), strict=False):
+            for dl in soup.find_all("dl"):
+                for dt, dd in zip(dl.find_all("dt"), dl.find_all("dd"), strict=False):
                     key = dt.text.strip()
                     value = dd.text.strip()
                     if key and value:
                         container.key_value_pairs[key] = value
 
             # Extract metadata from meta tags
-            for meta in soup.find_all('meta'):
-                if meta.get('name') and meta.get('content'):
-                    container.metadata_fields[meta['name']] = meta['content']
+            for meta in soup.find_all("meta"):
+                if meta.get("name") and meta.get("content"):
+                    container.metadata_fields[meta["name"]] = meta["content"]
 
             return container
 
@@ -1060,7 +1081,9 @@ class StructuredDataExtractor:
             logger.warning(f"HTML enhancement failed: {e}")
             return container
 
-    def _enhance_json_extraction(self, content: str, container: StructuredDataContainer) -> StructuredDataContainer:
+    def _enhance_json_extraction(
+        self, content: str, container: StructuredDataContainer
+    ) -> StructuredDataContainer:
         """Enhance extraction for JSON content"""
         try:
             data = json.loads(content)
@@ -1075,7 +1098,7 @@ class StructuredDataExtractor:
             logger.warning(f"JSON enhancement failed: {e}")
             return container
 
-    def _flatten_json(self, obj: Any, prefix: str = '') -> dict[str, Any]:
+    def _flatten_json(self, obj: Any, prefix: str = "") -> dict[str, Any]:
         """Flatten nested JSON structure"""
         result = {}
 
@@ -1098,13 +1121,17 @@ class StructuredDataExtractor:
 
         return result
 
-    def _enhance_with_ai(self, content: str, container: StructuredDataContainer) -> StructuredDataContainer:
+    def _enhance_with_ai(
+        self, content: str, container: StructuredDataContainer
+    ) -> StructuredDataContainer:
         """Enhance extraction using AI (placeholder for OpenAI integration)"""
         # This would use OpenAI to identify additional structures
         # For now, return container as-is
         return container
 
-    def _post_process_extraction(self, container: StructuredDataContainer) -> StructuredDataContainer:
+    def _post_process_extraction(
+        self, container: StructuredDataContainer
+    ) -> StructuredDataContainer:
         """Post-process and validate extracted data"""
         # Remove duplicates
         container.lists = self._deduplicate_lists(container.lists)
@@ -1140,7 +1167,7 @@ class StructuredDataExtractor:
         headers = []
 
         # Markdown headers
-        pattern = r'^(#{1,6})\s+(.+)$'
+        pattern = r"^(#{1,6})\s+(.+)$"
         for match in re.finditer(pattern, content, re.MULTILINE):
             level = len(match.group(1))
             text = match.group(2).strip()
@@ -1150,11 +1177,13 @@ class StructuredDataExtractor:
             end = min(start + 200, len(content))
             preview = content[start:end].strip()
 
-            headers.append({
-                'level': level,
-                'text': text,
-                'preview': preview[:100] + '...' if len(preview) > 100 else preview
-            })
+            headers.append(
+                {
+                    "level": level,
+                    "text": text,
+                    "preview": preview[:100] + "..." if len(preview) > 100 else preview,
+                }
+            )
 
         return headers
 
@@ -1164,11 +1193,11 @@ class StructuredDataExtractor:
 
         # Pattern: "Term: definition" or "Term - definition"
         patterns = [
-            r'^([A-Z][A-Za-z\s]{2,30}):\s*(.+)$',
-            r'^([A-Z][A-Za-z\s]{2,30})\s*-\s*(.+)$',
+            r"^([A-Z][A-Za-z\s]{2,30}):\s*(.+)$",
+            r"^([A-Z][A-Za-z\s]{2,30})\s*-\s*(.+)$",
         ]
 
-        for line in content.split('\n'):
+        for line in content.split("\n"):
             for pattern in patterns:
                 match = re.match(pattern, line.strip())
                 if match:
@@ -1187,26 +1216,26 @@ class StructuredDataExtractor:
         stack = []
 
         for topic in topics:
-            if topic['type'] == 'section':
-                level = topic.get('level', 1)
+            if topic["type"] == "section":
+                level = topic.get("level", 1)
 
                 # Pop stack until we find parent level
-                while stack and stack[-1]['level'] >= level:
+                while stack and stack[-1]["level"] >= level:
                     stack.pop()
 
                 # Add as child to current top of stack
                 if stack:
-                    if 'children' not in stack[-1]:
-                        stack[-1]['children'] = []
-                    stack[-1]['children'].append(topic)
+                    if "children" not in stack[-1]:
+                        stack[-1]["children"] = []
+                    stack[-1]["children"].append(topic)
                 else:
                     hierarchy.append(topic)
 
                 stack.append(topic)
             else:
                 # Non-section topics go at current level
-                if stack and 'children' in stack[-1]:
-                    stack[-1]['children'].append(topic)
+                if stack and "children" in stack[-1]:
+                    stack[-1]["children"].append(topic)
                 else:
                     hierarchy.append(topic)
 
@@ -1214,23 +1243,24 @@ class StructuredDataExtractor:
 
     def _extract_topic_context(self, content: str, topic: dict[str, Any]) -> str:
         """Extract context for a topic"""
-        if 'content_preview' in topic:
-            return topic['content_preview']
+        if "content_preview" in topic:
+            return topic["content_preview"]
 
         # For other topic types, generate context
-        if topic['type'] == 'definition':
-            return topic.get('definition', '')[:200]
-        elif topic['type'] == 'list_topic':
+        if topic["type"] == "definition":
+            return topic.get("definition", "")[:200]
+        elif topic["type"] == "list_topic":
             return f"List with {topic.get('item_count', 0)} items"
 
         return ""
 
     def _calculate_max_depth(self, topics: list[dict[str, Any]]) -> int:
         """Calculate maximum depth of topic hierarchy"""
+
         def get_depth(topic: dict[str, Any]) -> int:
-            if 'children' not in topic:
+            if "children" not in topic:
                 return 1
-            return 1 + max(get_depth(child) for child in topic['children'])
+            return 1 + max(get_depth(child) for child in topic["children"])
 
         if not topics:
             return 0
@@ -1240,8 +1270,18 @@ class StructuredDataExtractor:
     def _count_technical_terms(self, content: str) -> int:
         """Count technical terms in content"""
         technical_terms = [
-            'algorithm', 'api', 'database', 'function', 'variable', 'class',
-            'method', 'parameter', 'framework', 'library', 'protocol', 'interface'
+            "algorithm",
+            "api",
+            "database",
+            "function",
+            "variable",
+            "class",
+            "method",
+            "parameter",
+            "framework",
+            "library",
+            "protocol",
+            "interface",
         ]
 
         content_lower = content.lower()
@@ -1251,8 +1291,18 @@ class StructuredDataExtractor:
     def _count_business_terms(self, content: str) -> int:
         """Count business terms in content"""
         business_terms = [
-            'revenue', 'profit', 'market', 'customer', 'strategy', 'roi',
-            'kpi', 'growth', 'investment', 'stakeholder', 'quarterly', 'fiscal'
+            "revenue",
+            "profit",
+            "market",
+            "customer",
+            "strategy",
+            "roi",
+            "kpi",
+            "growth",
+            "investment",
+            "stakeholder",
+            "quarterly",
+            "fiscal",
         ]
 
         content_lower = content.lower()
@@ -1263,9 +1313,9 @@ class StructuredDataExtractor:
         """Count academic citations in content"""
         # Simple pattern for citations like [1], (Smith, 2020), etc.
         patterns = [
-            r'\[\d+\]',  # [1], [2], etc.
-            r'\([A-Z][a-z]+(?:\s+et\s+al\.)?,\s*\d{4}\)',  # (Smith, 2020)
-            r'\([A-Z][a-z]+\s+&\s+[A-Z][a-z]+,\s*\d{4}\)',  # (Smith & Jones, 2020)
+            r"\[\d+\]",  # [1], [2], etc.
+            r"\([A-Z][a-z]+(?:\s+et\s+al\.)?,\s*\d{4}\)",  # (Smith, 2020)
+            r"\([A-Z][a-z]+\s+&\s+[A-Z][a-z]+,\s*\d{4}\)",  # (Smith & Jones, 2020)
         ]
 
         count = 0
@@ -1277,8 +1327,14 @@ class StructuredDataExtractor:
     def _has_formal_structure(self, content: str) -> bool:
         """Check if content has formal academic structure"""
         formal_sections = [
-            'abstract', 'introduction', 'methodology', 'results',
-            'discussion', 'conclusion', 'references', 'bibliography'
+            "abstract",
+            "introduction",
+            "methodology",
+            "results",
+            "discussion",
+            "conclusion",
+            "references",
+            "bibliography",
         ]
 
         content_lower = content.lower()
@@ -1288,7 +1344,7 @@ class StructuredDataExtractor:
 
     def _has_metrics(self, data: StructuredDataContainer) -> bool:
         """Check if data contains business metrics"""
-        metric_keywords = ['rate', 'percentage', 'ratio', 'score', 'index', 'average']
+        metric_keywords = ["rate", "percentage", "ratio", "score", "index", "average"]
 
         for key in data.key_value_pairs:
             if any(keyword in key.lower() for keyword in metric_keywords):

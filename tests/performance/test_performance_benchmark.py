@@ -15,8 +15,8 @@ from typing import Any
 import httpx
 import psutil
 import pytest
-pytestmark = pytest.mark.performance
 
+pytestmark = pytest.mark.performance
 
 
 @dataclass
@@ -403,7 +403,9 @@ class PerformanceBenchmark:
         print("🚀 PERFORMANCE BENCHMARK REPORT")
         print("=" * 60)
         print(f"Overall Performance: {report['summary']['overall_performance']}")
-        print(f"Tests Passed: {report['summary']['passed_tests']}/{report['summary']['total_tests']}")
+        print(
+            f"Tests Passed: {report['summary']['passed_tests']}/{report['summary']['total_tests']}"
+        )
         print(f"Success Rate: {report['summary']['success_rate']:.1%}")
         print("\n" + "-" * 60)
         print("📊 INDIVIDUAL TEST RESULTS")

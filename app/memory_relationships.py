@@ -1,3 +1,12 @@
+import math
+from datetime import datetime, timedelta
+from typing import Any
+
+import numpy as np
+
+from app.database import get_database
+from app.utils.logging_config import get_logger
+
 """
 Advanced Memory Relationship System.
 Analyzes and manages complex relationships between memories including semantic similarity,
@@ -5,10 +14,6 @@ temporal connections, causal relationships, and conceptual hierarchies.
 """
 
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -30,7 +35,11 @@ class MemoryRelationshipAnalyzer:
         self.temporal_window_hours = 24
 
     async def analyze_memory_relationships(
-        self, memory_id: str, relationship_types: list[str] | None = None, depth: int = 2, max_connections: int = 50
+        self,
+        memory_id: str,
+        relationship_types: list[str] | None = None,
+        depth: int = 2,
+        max_connections: int = 50,
     ) -> dict[str, Any]:
         """
         Perform comprehensive relationship analysis for a specific memory.
@@ -82,11 +91,15 @@ class MemoryRelationshipAnalyzer:
 
         # Analyze relationships
         relationships = await self._analyze_relationships_batch(
-            target_memory, candidate_memories, relationship_types or list(self.relationship_types.keys())
+            target_memory,
+            candidate_memories,
+            relationship_types or list(self.relationship_types.keys()),
         )
 
         # Filter and rank relationships
-        significant_relationships = self._filter_significant_relationships(relationships, max_connections)
+        significant_relationships = self._filter_significant_relationships(
+            relationships, max_connections
+        )
 
         # Perform multi-level analysis if depth > 1
         extended_network = {}
@@ -99,7 +112,9 @@ class MemoryRelationshipAnalyzer:
         insights = self._generate_relationship_insights(significant_relationships, extended_network)
 
         # Calculate network metrics
-        network_metrics = self._calculate_network_metrics(significant_relationships, extended_network)
+        network_metrics = self._calculate_network_metrics(
+            significant_relationships, extended_network
+        )
 
         return {
             "target_memory": {
@@ -117,7 +132,8 @@ class MemoryRelationshipAnalyzer:
                 "total_relationships": len(significant_relationships),
                 "network_size": len(extended_network),
                 "analyzed_at": datetime.now().isoformat(),
-                "relationship_types_analyzed": relationship_types or list(self.relationship_types.keys()),
+                "relationship_types_analyzed": relationship_types
+                or list(self.relationship_types.keys()),
             },
         }
 
@@ -238,7 +254,9 @@ class MemoryRelationshipAnalyzer:
             return self._empty_evolution_analysis(concept_keywords)
 
         # Group memories by time periods
-        time_periods = self._group_memories_by_time(concept_memories, time_range_days // 7)  # Weekly periods
+        time_periods = self._group_memories_by_time(
+            concept_memories, time_range_days // 7
+        )  # Weekly periods
 
         # Analyze relationships within and between time periods
         temporal_relationships = await self._analyze_temporal_relationships(time_periods)
@@ -309,7 +327,9 @@ class MemoryRelationshipAnalyzer:
                     },
                     "relationship_scores": relationship_scores,
                     "composite_score": composite_score,
-                    "primary_relationship_type": max(relationship_scores.keys(), key=relationship_scores.get),
+                    "primary_relationship_type": max(
+                        relationship_scores.keys(), key=relationship_scores.get
+                    ),
                     "strength": self._categorize_strength(composite_score),
                 }
                 relationships.append(relationship)
@@ -503,7 +523,9 @@ class MemoryRelationshipAnalyzer:
         else:
             return "very_weak"
 
-    def _filter_significant_relationships(self, relationships: list[dict], max_connections: int) -> list[dict]:
+    def _filter_significant_relationships(
+        self, relationships: list[dict], max_connections: int
+    ) -> list[dict]:
         """Filter and rank relationships by significance."""
         # Remove very weak relationships
         filtered = [r for r in relationships if r["composite_score"] > self.similarity_threshold]
@@ -533,7 +555,9 @@ class MemoryRelationshipAnalyzer:
 
                 extended_network[related_id] = {
                     "memory_preview": relationship["related_memory"],
-                    "secondary_relationships": sub_analysis["direct_relationships"][:5],  # Limit depth
+                    "secondary_relationships": sub_analysis["direct_relationships"][
+                        :5
+                    ],  # Limit depth
                     "relationship_count": len(sub_analysis["direct_relationships"]),
                 }
 
@@ -543,7 +567,9 @@ class MemoryRelationshipAnalyzer:
 
         return extended_network
 
-    def _generate_relationship_insights(self, relationships: list[dict], extended_network: dict) -> dict[str, Any]:
+    def _generate_relationship_insights(
+        self, relationships: list[dict], extended_network: dict
+    ) -> dict[str, Any]:
         """Generate insights from relationship analysis."""
         if not relationships:
             return {}
@@ -573,9 +599,11 @@ class MemoryRelationshipAnalyzer:
                 "total_direct_relationships": len(relationships),
                 "network_size": network_size,
                 "avg_relationship_strength": avg_composite_score,
-                "strongest_relationship_type": max(avg_scores_by_type.keys(), key=avg_scores_by_type.get)
-                if avg_scores_by_type
-                else None,
+                "strongest_relationship_type": (
+                    max(avg_scores_by_type.keys(), key=avg_scores_by_type.get)
+                    if avg_scores_by_type
+                    else None
+                ),
             },
             "distributions": {
                 "relationship_types": type_distribution,
@@ -591,7 +619,9 @@ class MemoryRelationshipAnalyzer:
             },
         }
 
-    def _calculate_network_metrics(self, relationships: list[dict], extended_network: dict) -> dict[str, Any]:
+    def _calculate_network_metrics(
+        self, relationships: list[dict], extended_network: dict
+    ) -> dict[str, Any]:
         """Calculate network topology metrics."""
         if not relationships:
             return {}
@@ -842,7 +872,11 @@ class MemoryRelationshipAnalyzer:
             "clusters": [],
             "cluster_relationships": {},
             "insights": {},
-            "metadata": {"total_memories": 0, "cluster_count": 0, "analyzed_at": datetime.now().isoformat()},
+            "metadata": {
+                "total_memories": 0,
+                "cluster_count": 0,
+                "analyzed_at": datetime.now().isoformat(),
+            },
         }
 
     def _empty_evolution_analysis(self, concept_keywords: list[str]) -> dict[str, Any]:
@@ -854,7 +888,11 @@ class MemoryRelationshipAnalyzer:
             "evolution_metrics": {},
             "transition_points": [],
             "insights": {},
-            "metadata": {"total_memories": 0, "analysis_periods": 0, "analyzed_at": datetime.now().isoformat()},
+            "metadata": {
+                "total_memories": 0,
+                "analysis_periods": 0,
+                "analyzed_at": datetime.now().isoformat(),
+            },
         }
 
 

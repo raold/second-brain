@@ -1,13 +1,19 @@
+import json
+from datetime import datetime, timedelta
+from typing import Any
+
+import numpy as np
+
+from app.models.synthesis.suggestion_models import SuggestionType
+from app.utils.logging_config import get_logger
+
 """Suggestion Engine for Smart Recommendations
 
 Real implementation that provides intelligent suggestions for memory organization,
 knowledge exploration, and learning paths based on user behavior and content analysis.
 """
 
-import json
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
-from typing import Any
 
 from app.models.synthesis.suggestion_models import (
     ActionType,
@@ -17,9 +23,7 @@ from app.models.synthesis.suggestion_models import (
     Suggestion,
     SuggestionRequest,
     SuggestionResponse,
-    SuggestionType,
 )
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -32,10 +36,10 @@ class UserBehaviorProfile:
         self.access_patterns: dict[str, int] = defaultdict(int)
         self.topic_interests: dict[str, float] = defaultdict(float)
         self.creation_patterns: dict[str, Any] = {
-            'peak_hours': [],
-            'active_days': [],
-            'avg_content_length': 0,
-            'preferred_tags': Counter()
+            "peak_hours": [],
+            "active_days": [],
+            "avg_content_length": 0,
+            "preferred_tags": Counter(),
         }
         self.learning_velocity: float = 0.0
         self.exploration_score: float = 0.0
@@ -52,7 +56,7 @@ class SuggestionEngine:
 
         # Suggestion generation prompts
         self.suggestion_prompts = {
-            'exploration': """
+            "exploration": """
 Based on this user's knowledge profile, suggest 3 new topics or areas to explore:
 
 Current interests: {interests}
@@ -64,7 +68,7 @@ Provide suggestions as a JSON array with:
 - "reason": Why this would be valuable
 - "starting_point": Where to begin
 """,
-            'connection': """
+            "connection": """
 Analyze these disconnected knowledge areas and suggest how to connect them:
 
 Area 1: {area1}
@@ -73,14 +77,14 @@ Current knowledge: {context}
 
 Suggest 2-3 ways to bridge these areas with specific actions.
 """,
-            'consolidation': """
+            "consolidation": """
 These memories appear related but scattered. Suggest how to consolidate:
 
 Memories:
 {memories}
 
 Provide consolidation suggestions focusing on organization and synthesis.
-"""
+""",
         }
 
     async def generate_suggestions(self, request: SuggestionRequest) -> SuggestionResponse:
@@ -95,20 +99,40 @@ Provide consolidation suggestions focusing on organization and synthesis.
             # Generate different types of suggestions
             suggestions = []
 
-            if request.suggestion_types is None or SuggestionType.EXPLORE in request.suggestion_types:
-                exploration_suggestions = await self._generate_exploration_suggestions(profile, knowledge_state)
+            if (
+                request.suggestion_types is None
+                or SuggestionType.EXPLORE in request.suggestion_types
+            ):
+                exploration_suggestions = await self._generate_exploration_suggestions(
+                    profile, knowledge_state
+                )
                 suggestions.extend(exploration_suggestions)
 
-            if request.suggestion_types is None or SuggestionType.CONNECT in request.suggestion_types:
-                connection_suggestions = await self._generate_connection_suggestions(profile, knowledge_state)
+            if (
+                request.suggestion_types is None
+                or SuggestionType.CONNECT in request.suggestion_types
+            ):
+                connection_suggestions = await self._generate_connection_suggestions(
+                    profile, knowledge_state
+                )
                 suggestions.extend(connection_suggestions)
 
-            if request.suggestion_types is None or SuggestionType.REVIEW in request.suggestion_types:
-                review_suggestions = await self._generate_review_suggestions(profile, knowledge_state)
+            if (
+                request.suggestion_types is None
+                or SuggestionType.REVIEW in request.suggestion_types
+            ):
+                review_suggestions = await self._generate_review_suggestions(
+                    profile, knowledge_state
+                )
                 suggestions.extend(review_suggestions)
 
-            if request.suggestion_types is None or SuggestionType.ORGANIZE in request.suggestion_types:
-                organization_suggestions = await self._generate_organization_suggestions(profile, knowledge_state)
+            if (
+                request.suggestion_types is None
+                or SuggestionType.ORGANIZE in request.suggestion_types
+            ):
+                organization_suggestions = await self._generate_organization_suggestions(
+                    profile, knowledge_state
+                )
                 suggestions.extend(organization_suggestions)
 
             # Generate specialized suggestions
@@ -121,7 +145,7 @@ Provide consolidation suggestions focusing on organization and synthesis.
 
             # Apply limit
             if request.limit:
-                suggestions = suggestions[:request.limit]
+                suggestions = suggestions[: request.limit]
 
             return SuggestionResponse(
                 suggestions=suggestions,
@@ -129,11 +153,11 @@ Provide consolidation suggestions focusing on organization and synthesis.
                 content_suggestions=content_suggestions,
                 organization_suggestions=organization_tips,
                 metadata={
-                    'profile_completeness': self._calculate_profile_completeness(profile),
-                    'knowledge_coverage': knowledge_state.get('coverage_score', 0.0),
-                    'suggestion_confidence': self._calculate_suggestion_confidence(suggestions),
-                    'generated_at': datetime.utcnow().isoformat()
-                }
+                    "profile_completeness": self._calculate_profile_completeness(profile),
+                    "knowledge_coverage": knowledge_state.get("coverage_score", 0.0),
+                    "suggestion_confidence": self._calculate_suggestion_confidence(suggestions),
+                    "generated_at": datetime.utcnow().isoformat(),
+                },
             )
 
         except Exception as e:
@@ -143,7 +167,7 @@ Provide consolidation suggestions focusing on organization and synthesis.
                 learning_paths=[],
                 content_suggestions=[],
                 organization_suggestions=[],
-                metadata={'error': str(e)}
+                metadata={"error": str(e)},
             )
 
     async def _build_user_profile(self, user_id: str) -> UserBehaviorProfile:
@@ -176,26 +200,26 @@ Provide consolidation suggestions focusing on organization and synthesis.
 
         # Process access patterns
         for log in access_logs:
-            memory = await self.memory_service.get_memory(str(log['memory_id']))
-            if memory and hasattr(memory, 'tags'):
+            memory = await self.memory_service.get_memory(str(log["memory_id"]))
+            if memory and hasattr(memory, "tags"):
                 for tag in memory.tags:
-                    profile.access_patterns[tag] += log['access_count']
+                    profile.access_patterns[tag] += log["access_count"]
 
         # Process creation patterns
         if recent_memories:
             # Extract patterns
-            creation_times = [m['created_at'] for m in recent_memories]
-            profile.creation_patterns['peak_hours'] = self._find_peak_hours(creation_times)
-            profile.creation_patterns['active_days'] = self._find_active_days(creation_times)
+            creation_times = [m["created_at"] for m in recent_memories]
+            profile.creation_patterns["peak_hours"] = self._find_peak_hours(creation_times)
+            profile.creation_patterns["active_days"] = self._find_active_days(creation_times)
 
             # Content analysis
-            content_lengths = [len(m['content']) for m in recent_memories]
-            profile.creation_patterns['avg_content_length'] = np.mean(content_lengths)
+            content_lengths = [len(m["content"]) for m in recent_memories]
+            profile.creation_patterns["avg_content_length"] = np.mean(content_lengths)
 
             # Tag preferences
             for memory in recent_memories:
-                if memory.get('tags'):
-                    profile.creation_patterns['preferred_tags'].update(memory['tags'])
+                if memory.get("tags"):
+                    profile.creation_patterns["preferred_tags"].update(memory["tags"])
 
             # Calculate learning velocity (memories per day)
             days_span = (creation_times[0] - creation_times[-1]).days + 1
@@ -203,18 +227,18 @@ Provide consolidation suggestions focusing on organization and synthesis.
 
         # Calculate topic interests based on importance and recency
         for memory in recent_memories:
-            if memory.get('tags'):
-                recency_factor = 1.0 - ((datetime.utcnow() - memory['created_at']).days / 30)
-                importance_factor = memory['importance'] / 10.0
+            if memory.get("tags"):
+                recency_factor = 1.0 - ((datetime.utcnow() - memory["created_at"]).days / 30)
+                importance_factor = memory["importance"] / 10.0
 
-                for tag in memory['tags']:
-                    profile.topic_interests[tag] += (recency_factor * importance_factor)
+                for tag in memory["tags"]:
+                    profile.topic_interests[tag] += recency_factor * importance_factor
 
         # Calculate exploration score (diversity of topics)
         unique_tags = set()
         for memory in recent_memories:
-            if memory.get('tags'):
-                unique_tags.update(memory['tags'])
+            if memory.get("tags"):
+                unique_tags.update(memory["tags"])
 
         profile.exploration_score = len(unique_tags) / max(len(recent_memories), 1)
 
@@ -231,13 +255,11 @@ Provide consolidation suggestions focusing on organization and synthesis.
 
         # Get knowledge clusters
         clusters = await self.analytics_engine.analyze_clusters(
-            {'user_id': user_id}  # Simplified request
+            {"user_id": user_id}  # Simplified request
         )
 
         # Analyze gaps
-        gap_analysis = await self.analytics_engine.analyze_knowledge_gaps(
-            {'user_id': user_id}
-        )
+        gap_analysis = await self.analytics_engine.analyze_knowledge_gaps({"user_id": user_id})
 
         # Get memory statistics
         stats_query = """
@@ -253,90 +275,89 @@ Provide consolidation suggestions focusing on organization and synthesis.
         stats = await self.db.fetch_one(stats_query, user_id)
 
         return {
-            'total_memories': stats['total_memories'] if stats else 0,
-            'unique_topics': stats['unique_tags'] if stats else 0,
-            'avg_importance': stats['avg_importance'] if stats else 0,
-            'last_activity': stats['last_activity'] if stats else None,
-            'insights': insights.insights if insights else [],
-            'clusters': clusters.clusters if clusters else [],
-            'knowledge_gaps': gap_analysis.gaps if gap_analysis else [],
-            'coverage_score': gap_analysis.coverage_score if gap_analysis else 0.0
+            "total_memories": stats["total_memories"] if stats else 0,
+            "unique_topics": stats["unique_tags"] if stats else 0,
+            "avg_importance": stats["avg_importance"] if stats else 0,
+            "last_activity": stats["last_activity"] if stats else None,
+            "insights": insights.insights if insights else [],
+            "clusters": clusters.clusters if clusters else [],
+            "knowledge_gaps": gap_analysis.gaps if gap_analysis else [],
+            "coverage_score": gap_analysis.coverage_score if gap_analysis else 0.0,
         }
 
     async def _generate_exploration_suggestions(
-        self,
-        profile: UserBehaviorProfile,
-        knowledge_state: dict[str, Any]
+        self, profile: UserBehaviorProfile, knowledge_state: dict[str, Any]
     ) -> list[Suggestion]:
         """Generate suggestions for new topics to explore"""
         suggestions = []
 
         # Get top interests and gaps
-        top_interests = sorted(profile.topic_interests.items(), key=lambda x: x[1], reverse=True)[:5]
-        knowledge_gaps = knowledge_state.get('knowledge_gaps', [])[:5]
+        top_interests = sorted(profile.topic_interests.items(), key=lambda x: x[1], reverse=True)[
+            :5
+        ]
+        knowledge_gaps = knowledge_state.get("knowledge_gaps", [])[:5]
 
         # Use LLM to generate exploration suggestions
-        prompt = self.suggestion_prompts['exploration'].format(
-            interests=', '.join([t[0] for t in top_interests]),
-            recent_topics=', '.join(list(profile.creation_patterns['preferred_tags'])[:5]),
-            gaps=', '.join([g.area for g in knowledge_gaps]) if knowledge_gaps else 'None identified'
+        prompt = self.suggestion_prompts["exploration"].format(
+            interests=", ".join([t[0] for t in top_interests]),
+            recent_topics=", ".join(list(profile.creation_patterns["preferred_tags"])[:5]),
+            gaps=(
+                ", ".join([g.area for g in knowledge_gaps]) if knowledge_gaps else "None identified"
+            ),
         )
 
         try:
             response = await self.openai_client.generate(
-                prompt=prompt,
-                max_tokens=300,
-                temperature=0.8
+                prompt=prompt, max_tokens=300, temperature=0.8
             )
 
             exploration_ideas = json.loads(response)
 
             for i, idea in enumerate(exploration_ideas[:3]):
-                suggestions.append(Suggestion(
-                    id=f"explore_{i}",
-                    type=SuggestionType.EXPLORE,
-                    title=f"Explore: {idea['topic']}",
-                    description=idea['reason'],
-                    action=ActionType.CREATE,
-                    priority=0.8 - (i * 0.1),
-                    metadata={
-                        'topic': idea['topic'],
-                        'starting_point': idea.get('starting_point', ''),
-                        'related_interests': [t[0] for t in top_interests[:3]]
-                    }
-                ))
+                suggestions.append(
+                    Suggestion(
+                        id=f"explore_{i}",
+                        type=SuggestionType.EXPLORE,
+                        title=f"Explore: {idea['topic']}",
+                        description=idea["reason"],
+                        action=ActionType.CREATE,
+                        priority=0.8 - (i * 0.1),
+                        metadata={
+                            "topic": idea["topic"],
+                            "starting_point": idea.get("starting_point", ""),
+                            "related_interests": [t[0] for t in top_interests[:3]],
+                        },
+                    )
+                )
 
         except Exception as e:
             logger.error(f"Exploration suggestion generation failed: {e}")
 
             # Fallback suggestions based on gaps
             for i, gap in enumerate(knowledge_gaps[:2]):
-                suggestions.append(Suggestion(
-                    id=f"explore_gap_{i}",
-                    type=SuggestionType.EXPLORE,
-                    title=f"Fill Gap: {gap.area}",
-                    description=f"You have limited knowledge in {gap.area}. "
-                               f"Consider exploring: {', '.join(gap.suggested_topics[:3])}",
-                    action=ActionType.CREATE,
-                    priority=0.7,
-                    metadata={
-                        'gap_area': gap.area,
-                        'suggested_topics': gap.suggested_topics
-                    }
-                ))
+                suggestions.append(
+                    Suggestion(
+                        id=f"explore_gap_{i}",
+                        type=SuggestionType.EXPLORE,
+                        title=f"Fill Gap: {gap.area}",
+                        description=f"You have limited knowledge in {gap.area}. "
+                        f"Consider exploring: {', '.join(gap.suggested_topics[:3])}",
+                        action=ActionType.CREATE,
+                        priority=0.7,
+                        metadata={"gap_area": gap.area, "suggested_topics": gap.suggested_topics},
+                    )
+                )
 
         return suggestions
 
     async def _generate_connection_suggestions(
-        self,
-        profile: UserBehaviorProfile,
-        knowledge_state: dict[str, Any]
+        self, profile: UserBehaviorProfile, knowledge_state: dict[str, Any]
     ) -> list[Suggestion]:
         """Generate suggestions for connecting disparate knowledge areas"""
         suggestions = []
 
         # Find disconnected clusters
-        clusters = knowledge_state.get('clusters', [])
+        clusters = knowledge_state.get("clusters", [])
 
         if len(clusters) >= 2:
             # Find clusters with low interconnection
@@ -366,27 +387,27 @@ Provide consolidation suggestions focusing on organization and synthesis.
         isolated_memories = await self.db.fetch_all(isolated_query, profile.user_id)
 
         for memory in isolated_memories[:2]:
-            suggestions.append(Suggestion(
-                id=f"connect_isolated_{memory['id']}",
-                type=SuggestionType.CONNECT,
-                title="Connect Isolated Knowledge",
-                description=f"This important memory is not connected to others: "
-                           f"{memory['content'][:100]}...",
-                action=ActionType.LINK,
-                priority=0.7,
-                metadata={
-                    'memory_id': str(memory['id']),
-                    'tags': memory.get('tags', []),
-                    'importance': memory['importance']
-                }
-            ))
+            suggestions.append(
+                Suggestion(
+                    id=f"connect_isolated_{memory['id']}",
+                    type=SuggestionType.CONNECT,
+                    title="Connect Isolated Knowledge",
+                    description=f"This important memory is not connected to others: "
+                    f"{memory['content'][:100]}...",
+                    action=ActionType.LINK,
+                    priority=0.7,
+                    metadata={
+                        "memory_id": str(memory["id"]),
+                        "tags": memory.get("tags", []),
+                        "importance": memory["importance"],
+                    },
+                )
+            )
 
         return suggestions
 
     async def _generate_review_suggestions(
-        self,
-        profile: UserBehaviorProfile,
-        knowledge_state: dict[str, Any]
+        self, profile: UserBehaviorProfile, knowledge_state: dict[str, Any]
     ) -> list[Suggestion]:
         """Generate suggestions for reviewing and reinforcing knowledge"""
         suggestions = []
@@ -408,22 +429,25 @@ Provide consolidation suggestions focusing on organization and synthesis.
         memories_to_review = await self.db.fetch_all(review_query, profile.user_id, review_cutoff)
 
         for _i, memory in enumerate(memories_to_review[:3]):
-            days_since_access = (datetime.utcnow() - memory['last_accessed']).days
+            days_since_access = (datetime.utcnow() - memory["last_accessed"]).days
 
-            suggestions.append(Suggestion(
-                id=f"review_{memory['id']}",
-                type=SuggestionType.REVIEW,
-                title="Review Important Knowledge",
-                description=f"Haven't reviewed in {days_since_access} days: "
-                           f"{memory['content'][:100]}...",
-                action=ActionType.REVIEW,
-                priority=0.6 + (memory['importance'] / 20),  # Higher importance = higher priority
-                metadata={
-                    'memory_id': str(memory['id']),
-                    'days_since_access': days_since_access,
-                    'importance': memory['importance']
-                }
-            ))
+            suggestions.append(
+                Suggestion(
+                    id=f"review_{memory['id']}",
+                    type=SuggestionType.REVIEW,
+                    title="Review Important Knowledge",
+                    description=f"Haven't reviewed in {days_since_access} days: "
+                    f"{memory['content'][:100]}...",
+                    action=ActionType.REVIEW,
+                    priority=0.6
+                    + (memory["importance"] / 20),  # Higher importance = higher priority
+                    metadata={
+                        "memory_id": str(memory["id"]),
+                        "days_since_access": days_since_access,
+                        "importance": memory["importance"],
+                    },
+                )
+            )
 
         # Suggest review sessions for topics with many memories
         topic_review_query = """
@@ -439,27 +463,27 @@ Provide consolidation suggestions focusing on organization and synthesis.
         topic_reviews = await self.db.fetch_all(topic_review_query, profile.user_id)
 
         for topic in topic_reviews[:2]:
-            suggestions.append(Suggestion(
-                id=f"review_topic_{topic['tags']}",
-                type=SuggestionType.REVIEW,
-                title=f"Deep Review: {topic['tags']}",
-                description=f"You have {topic['memory_count']} memories on {topic['tags']}. "
-                           f"Consider a focused review session.",
-                action=ActionType.REVIEW,
-                priority=0.65,
-                metadata={
-                    'topic': topic['tags'],
-                    'memory_count': topic['memory_count'],
-                    'avg_importance': float(topic['avg_importance'])
-                }
-            ))
+            suggestions.append(
+                Suggestion(
+                    id=f"review_topic_{topic['tags']}",
+                    type=SuggestionType.REVIEW,
+                    title=f"Deep Review: {topic['tags']}",
+                    description=f"You have {topic['memory_count']} memories on {topic['tags']}. "
+                    f"Consider a focused review session.",
+                    action=ActionType.REVIEW,
+                    priority=0.65,
+                    metadata={
+                        "topic": topic["tags"],
+                        "memory_count": topic["memory_count"],
+                        "avg_importance": float(topic["avg_importance"]),
+                    },
+                )
+            )
 
         return suggestions
 
     async def _generate_organization_suggestions(
-        self,
-        profile: UserBehaviorProfile,
-        knowledge_state: dict[str, Any]
+        self, profile: UserBehaviorProfile, knowledge_state: dict[str, Any]
     ) -> list[Suggestion]:
         """Generate suggestions for better organization"""
         suggestions = []
@@ -476,56 +500,63 @@ Provide consolidation suggestions focusing on organization and synthesis.
         untagged_memories = await self.db.fetch_all(untagged_query, profile.user_id)
 
         if len(untagged_memories) >= 3:
-            suggestions.append(Suggestion(
-                id="organize_untagged",
-                type=SuggestionType.ORGANIZE,
-                title="Tag Unorganized Memories",
-                description=f"You have {len(untagged_memories)} untagged memories. "
-                           f"Adding tags will improve organization and discovery.",
-                action=ActionType.TAG,
-                priority=0.75,
-                metadata={
-                    'memory_ids': [str(m['id']) for m in untagged_memories[:5]],
-                    'suggested_tags': list(profile.creation_patterns['preferred_tags'])[:5]
-                }
-            ))
+            suggestions.append(
+                Suggestion(
+                    id="organize_untagged",
+                    type=SuggestionType.ORGANIZE,
+                    title="Tag Unorganized Memories",
+                    description=f"You have {len(untagged_memories)} untagged memories. "
+                    f"Adding tags will improve organization and discovery.",
+                    action=ActionType.TAG,
+                    priority=0.75,
+                    metadata={
+                        "memory_ids": [str(m["id"]) for m in untagged_memories[:5]],
+                        "suggested_tags": list(profile.creation_patterns["preferred_tags"])[:5],
+                    },
+                )
+            )
 
         # Suggest consolidation for similar memories
-        if knowledge_state.get('total_memories', 0) > 50:
-            suggestions.append(Suggestion(
-                id="organize_consolidate",
-                type=SuggestionType.ORGANIZE,
-                title="Consolidate Similar Memories",
-                description="Run duplicate detection to find and merge similar memories. "
-                           "This will reduce clutter and improve clarity.",
-                action=ActionType.CONSOLIDATE,
-                priority=0.7,
-                metadata={
-                    'estimated_duplicates': int(knowledge_state['total_memories'] * 0.1),  # Estimate
-                    'recommended_threshold': 0.85
-                }
-            ))
+        if knowledge_state.get("total_memories", 0) > 50:
+            suggestions.append(
+                Suggestion(
+                    id="organize_consolidate",
+                    type=SuggestionType.ORGANIZE,
+                    title="Consolidate Similar Memories",
+                    description="Run duplicate detection to find and merge similar memories. "
+                    "This will reduce clutter and improve clarity.",
+                    action=ActionType.CONSOLIDATE,
+                    priority=0.7,
+                    metadata={
+                        "estimated_duplicates": int(
+                            knowledge_state["total_memories"] * 0.1
+                        ),  # Estimate
+                        "recommended_threshold": 0.85,
+                    },
+                )
+            )
 
         # Suggest creating synthesis for large topics
         large_topics = [
-            tag for tag, count in profile.creation_patterns['preferred_tags'].items()
-            if count >= 10
+            tag for tag, count in profile.creation_patterns["preferred_tags"].items() if count >= 10
         ]
 
         for topic in large_topics[:2]:
-            suggestions.append(Suggestion(
-                id=f"organize_synthesize_{topic}",
-                type=SuggestionType.ORGANIZE,
-                title=f"Synthesize: {topic}",
-                description=f"You have many memories about {topic}. "
-                           f"Create a synthesis to consolidate this knowledge.",
-                action=ActionType.SYNTHESIZE,
-                priority=0.72,
-                metadata={
-                    'topic': topic,
-                    'memory_count': profile.creation_patterns['preferred_tags'][topic]
-                }
-            ))
+            suggestions.append(
+                Suggestion(
+                    id=f"organize_synthesize_{topic}",
+                    type=SuggestionType.ORGANIZE,
+                    title=f"Synthesize: {topic}",
+                    description=f"You have many memories about {topic}. "
+                    f"Create a synthesis to consolidate this knowledge.",
+                    action=ActionType.SYNTHESIZE,
+                    priority=0.72,
+                    metadata={
+                        "topic": topic,
+                        "memory_count": profile.creation_patterns["preferred_tags"][topic],
+                    },
+                )
+            )
 
         return suggestions
 
@@ -533,7 +564,7 @@ Provide consolidation suggestions focusing on organization and synthesis.
         self,
         profile: UserBehaviorProfile,
         knowledge_state: dict[str, Any],
-        request: SuggestionRequest
+        request: SuggestionRequest,
     ) -> list[LearningPathSuggestion]:
         """Generate personalized learning path suggestions"""
         paths = []
@@ -550,7 +581,7 @@ Provide consolidation suggestions focusing on organization and synthesis.
                     f"Explore advanced {top_interest} techniques",
                     f"Study real-world {top_interest} applications",
                     f"Create synthesis of {top_interest} knowledge",
-                    f"Connect {top_interest} to related fields"
+                    f"Connect {top_interest} to related fields",
                 ],
                 estimated_duration_days=30,
                 difficulty_level="intermediate",
@@ -558,14 +589,14 @@ Provide consolidation suggestions focusing on organization and synthesis.
                 learning_objectives=[
                     f"Master advanced {top_interest} concepts",
                     "Apply knowledge to practical problems",
-                    "Identify connections to other domains"
-                ]
+                    "Identify connections to other domains",
+                ],
             )
             paths.append(deepening_path)
 
         # Path 2: Bridge knowledge gaps
-        if knowledge_state.get('knowledge_gaps'):
-            gap = knowledge_state['knowledge_gaps'][0]
+        if knowledge_state.get("knowledge_gaps"):
+            gap = knowledge_state["knowledge_gaps"][0]
 
             gap_filling_path = LearningPathSuggestion(
                 path_name=f"Explore {gap.area}",
@@ -575,12 +606,12 @@ Provide consolidation suggestions focusing on organization and synthesis.
                     f"Core concepts of {gap.area}",
                     f"Connect {gap.area} to existing knowledge",
                     f"Practical exercises in {gap.area}",
-                    "Integration with current interests"
+                    "Integration with current interests",
                 ],
                 estimated_duration_days=21,
                 difficulty_level="beginner",
                 prerequisites=[],
-                learning_objectives=gap.suggested_topics[:3]
+                learning_objectives=gap.suggested_topics[:3],
             )
             paths.append(gap_filling_path)
 
@@ -596,7 +627,7 @@ Provide consolidation suggestions focusing on organization and synthesis.
                     "Research interdisciplinary applications",
                     "Create synthesis memories",
                     "Develop integrated mental models",
-                    "Apply combined knowledge"
+                    "Apply combined knowledge",
                 ],
                 estimated_duration_days=14,
                 difficulty_level="advanced",
@@ -604,142 +635,145 @@ Provide consolidation suggestions focusing on organization and synthesis.
                 learning_objectives=[
                     "Discover unexpected connections",
                     "Develop holistic understanding",
-                    "Create innovative combinations"
-                ]
+                    "Create innovative combinations",
+                ],
             )
             paths.append(interdisciplinary_path)
 
         return paths
 
     async def _generate_content_suggestions(
-        self,
-        profile: UserBehaviorProfile,
-        knowledge_state: dict[str, Any]
+        self, profile: UserBehaviorProfile, knowledge_state: dict[str, Any]
     ) -> list[ContentSuggestion]:
         """Generate content creation suggestions"""
         suggestions = []
 
         # Suggest content based on learning velocity
         if profile.learning_velocity > 1.0:  # More than 1 memory per day
-            suggestions.append(ContentSuggestion(
-                content_type="synthesis",
-                topic="Weekly Knowledge Review",
-                rationale="Your high learning velocity suggests regular synthesis would be valuable",
-                prompts=[
-                    "What were the key insights from this week?",
-                    "How do this week's learnings connect?",
-                    "What questions emerged from your exploration?"
-                ],
-                estimated_value=0.9
-            ))
+            suggestions.append(
+                ContentSuggestion(
+                    content_type="synthesis",
+                    topic="Weekly Knowledge Review",
+                    rationale="Your high learning velocity suggests regular synthesis would be valuable",
+                    prompts=[
+                        "What were the key insights from this week?",
+                        "How do this week's learnings connect?",
+                        "What questions emerged from your exploration?",
+                    ],
+                    estimated_value=0.9,
+                )
+            )
 
         # Suggest content for incomplete topics
         for topic, interest in profile.topic_interests.items():
             if interest > 0.7:  # High interest topic
-                suggestions.append(ContentSuggestion(
-                    content_type="deep_dive",
-                    topic=topic,
-                    rationale=f"You show strong interest in {topic} - time for deeper exploration",
-                    prompts=[
-                        f"What advanced aspects of {topic} intrigue you?",
-                        f"How does {topic} connect to your other interests?",
-                        f"What practical applications of {topic} have you discovered?"
-                    ],
-                    estimated_value=interest
-                ))
+                suggestions.append(
+                    ContentSuggestion(
+                        content_type="deep_dive",
+                        topic=topic,
+                        rationale=f"You show strong interest in {topic} - time for deeper exploration",
+                        prompts=[
+                            f"What advanced aspects of {topic} intrigue you?",
+                            f"How does {topic} connect to your other interests?",
+                            f"What practical applications of {topic} have you discovered?",
+                        ],
+                        estimated_value=interest,
+                    )
+                )
 
         # Suggest reflection content
-        if knowledge_state.get('total_memories', 0) > 100:
-            suggestions.append(ContentSuggestion(
-                content_type="reflection",
-                topic="Knowledge Journey Reflection",
-                rationale="With 100+ memories, reflection can reveal patterns and growth",
-                prompts=[
-                    "How has your understanding evolved?",
-                    "What surprising connections have you discovered?",
-                    "What would you tell your past self?"
-                ],
-                estimated_value=0.8
-            ))
+        if knowledge_state.get("total_memories", 0) > 100:
+            suggestions.append(
+                ContentSuggestion(
+                    content_type="reflection",
+                    topic="Knowledge Journey Reflection",
+                    rationale="With 100+ memories, reflection can reveal patterns and growth",
+                    prompts=[
+                        "How has your understanding evolved?",
+                        "What surprising connections have you discovered?",
+                        "What would you tell your past self?",
+                    ],
+                    estimated_value=0.8,
+                )
+            )
 
         return suggestions[:5]  # Limit to top 5
 
     async def _generate_organization_tips(
-        self,
-        profile: UserBehaviorProfile,
-        knowledge_state: dict[str, Any]
+        self, profile: UserBehaviorProfile, knowledge_state: dict[str, Any]
     ) -> list[OrganizationSuggestion]:
         """Generate organization improvement suggestions"""
         tips = []
 
         # Tip 1: Consistent tagging
-        tag_variance = len(profile.creation_patterns['preferred_tags'])
+        tag_variance = len(profile.creation_patterns["preferred_tags"])
         if tag_variance > 20:
-            tips.append(OrganizationSuggestion(
-                organization_type="tagging",
-                title="Standardize Your Tags",
-                description=f"You use {tag_variance} different tags. Consider consolidating similar ones.",
-                impact_areas=["searchability", "organization", "synthesis"],
-                implementation_steps=[
-                    "Review your current tags",
-                    "Identify similar or redundant tags",
-                    "Create a tag hierarchy",
-                    "Bulk update memories with new schema"
-                ],
-                estimated_effort="medium"
-            ))
+            tips.append(
+                OrganizationSuggestion(
+                    organization_type="tagging",
+                    title="Standardize Your Tags",
+                    description=f"You use {tag_variance} different tags. Consider consolidating similar ones.",
+                    impact_areas=["searchability", "organization", "synthesis"],
+                    implementation_steps=[
+                        "Review your current tags",
+                        "Identify similar or redundant tags",
+                        "Create a tag hierarchy",
+                        "Bulk update memories with new schema",
+                    ],
+                    estimated_effort="medium",
+                )
+            )
 
         # Tip 2: Create collections
-        if knowledge_state.get('total_memories', 0) > 50:
-            tips.append(OrganizationSuggestion(
-                organization_type="structure",
-                title="Create Memory Collections",
-                description="Group related memories into collections for easier navigation",
-                impact_areas=["navigation", "context", "learning"],
-                implementation_steps=[
-                    "Identify major themes in your memories",
-                    "Create collection categories",
-                    "Assign memories to collections",
-                    "Add collection summaries"
-                ],
-                estimated_effort="high"
-            ))
+        if knowledge_state.get("total_memories", 0) > 50:
+            tips.append(
+                OrganizationSuggestion(
+                    organization_type="structure",
+                    title="Create Memory Collections",
+                    description="Group related memories into collections for easier navigation",
+                    impact_areas=["navigation", "context", "learning"],
+                    implementation_steps=[
+                        "Identify major themes in your memories",
+                        "Create collection categories",
+                        "Assign memories to collections",
+                        "Add collection summaries",
+                    ],
+                    estimated_effort="high",
+                )
+            )
 
         # Tip 3: Regular maintenance
-        tips.append(OrganizationSuggestion(
-            organization_type="maintenance",
-            title="Weekly Knowledge Maintenance",
-            description="Establish a routine for knowledge base maintenance",
-            impact_areas=["quality", "relevance", "growth"],
-            implementation_steps=[
-                "Review and tag new memories weekly",
-                "Update importance scores monthly",
-                "Create synthesis quarterly",
-                "Archive outdated content annually"
-            ],
-            estimated_effort="low"
-        ))
+        tips.append(
+            OrganizationSuggestion(
+                organization_type="maintenance",
+                title="Weekly Knowledge Maintenance",
+                description="Establish a routine for knowledge base maintenance",
+                impact_areas=["quality", "relevance", "growth"],
+                implementation_steps=[
+                    "Review and tag new memories weekly",
+                    "Update importance scores monthly",
+                    "Create synthesis quarterly",
+                    "Archive outdated content annually",
+                ],
+                estimated_effort="low",
+            )
+        )
 
         return tips
 
     async def _create_connection_suggestion(
-        self,
-        cluster1: Any,
-        cluster2: Any,
-        profile: UserBehaviorProfile
+        self, cluster1: Any, cluster2: Any, profile: UserBehaviorProfile
     ) -> Suggestion | None:
         """Create suggestion for connecting two clusters"""
         try:
-            prompt = self.suggestion_prompts['connection'].format(
+            prompt = self.suggestion_prompts["connection"].format(
                 area1=cluster1.cluster_theme,
                 area2=cluster2.cluster_theme,
-                context=f"User interests: {', '.join(list(profile.topic_interests.keys())[:5])}"
+                context=f"User interests: {', '.join(list(profile.topic_interests.keys())[:5])}",
             )
 
             response = await self.openai_client.generate(
-                prompt=prompt,
-                max_tokens=200,
-                temperature=0.7
+                prompt=prompt, max_tokens=200, temperature=0.7
             )
 
             return Suggestion(
@@ -750,11 +784,11 @@ Provide consolidation suggestions focusing on organization and synthesis.
                 action=ActionType.CREATE,
                 priority=0.75,
                 metadata={
-                    'cluster1_id': cluster1.cluster_id,
-                    'cluster2_id': cluster2.cluster_id,
-                    'cluster1_size': cluster1.size,
-                    'cluster2_size': cluster2.size
-                }
+                    "cluster1_id": cluster1.cluster_id,
+                    "cluster2_id": cluster2.cluster_id,
+                    "cluster1_size": cluster1.size,
+                    "cluster2_size": cluster2.size,
+                },
             )
 
         except Exception as e:
@@ -778,7 +812,7 @@ Provide consolidation suggestions focusing on organization and synthesis.
 
     def _find_active_days(self, creation_times: list[datetime]) -> list[str]:
         """Find most active days of week"""
-        weekdays = [t.strftime('%A') for t in creation_times]
+        weekdays = [t.strftime("%A") for t in creation_times]
         day_counts = Counter(weekdays)
 
         # Get top 2 days
@@ -796,7 +830,7 @@ Provide consolidation suggestions focusing on organization and synthesis.
         scores.append(min(len(profile.topic_interests) / 5, 1.0))
 
         # Creation patterns
-        scores.append(1.0 if profile.creation_patterns['peak_hours'] else 0.0)
+        scores.append(1.0 if profile.creation_patterns["peak_hours"] else 0.0)
 
         # Learning velocity
         scores.append(min(profile.learning_velocity / 0.5, 1.0))  # 0.5 memories/day is good

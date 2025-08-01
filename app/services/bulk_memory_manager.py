@@ -1,3 +1,13 @@
+import json
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Union
+
+import pandas as pd
+from pydantic import BaseModel, Field
+
+from app.database import get_database
+
 #!/usr/bin/env python3
 """
 Comprehensive Bulk Memory Management System
@@ -5,18 +15,9 @@ Advanced import/export functionality with multiple format support
 """
 
 import csv
-import json
 import zipfile
-from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
 from io import BytesIO, StringIO
-from typing import Any, Union
-
-import pandas as pd
-from pydantic import BaseModel, Field
-
-from app.database import get_database
 
 
 class ImportFormat(str, Enum):
@@ -170,7 +171,9 @@ class BulkMemoryManager:
                 file_size_bytes=len(export_data) if isinstance(export_data, str | bytes) else 0,
                 processing_time=(datetime.now() - start_time).total_seconds(),
                 export_format=format_type.value,
-                file_content=export_data if isinstance(export_data, bytes) else export_data.encode("utf-8"),
+                file_content=(
+                    export_data if isinstance(export_data, bytes) else export_data.encode("utf-8")
+                ),
             )
 
             await db.close()
@@ -186,7 +189,10 @@ class BulkMemoryManager:
             )
 
     async def _parse_import_data(
-        self, data: Union[str, bytes, list[dict], pd.DataFrame], format_type: ImportFormat, options: dict[str, Any]
+        self,
+        data: Union[str, bytes, list[dict], pd.DataFrame],
+        format_type: ImportFormat,
+        options: dict[str, Any],
     ) -> list[dict[str, Any]]:
         """Parse import data based on format type"""
 
@@ -223,7 +229,9 @@ class BulkMemoryManager:
         else:
             raise ValueError("JSON data must be an object or array")
 
-    async def _parse_csv(self, data: Union[str, bytes], options: dict[str, Any]) -> list[dict[str, Any]]:
+    async def _parse_csv(
+        self, data: Union[str, bytes], options: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Parse CSV data"""
         if isinstance(data, bytes):
             data = data.decode("utf-8")
@@ -244,7 +252,10 @@ class BulkMemoryManager:
             else:
                 # Assume first column is content, rest is metadata
                 memories.append(
-                    {"content": row[0] if row else "", "metadata": {"imported_data": row[1:] if len(row) > 1 else []}}
+                    {
+                        "content": row[0] if row else "",
+                        "metadata": {"imported_data": row[1:] if len(row) > 1 else []},
+                    }
                 )
 
         return memories
@@ -304,12 +315,17 @@ class BulkMemoryManager:
                 content = "\n".join(lines[1:]) if len(lines) > 1 else lines[0]
 
                 memories.append(
-                    {"content": content, "metadata": {"title": title, "format": "markdown", "section": i + 1}}
+                    {
+                        "content": content,
+                        "metadata": {"title": title, "format": "markdown", "section": i + 1},
+                    }
                 )
 
         return memories
 
-    async def _parse_plain_text(self, data: Union[str, bytes], options: dict[str, Any]) -> list[dict[str, Any]]:
+    async def _parse_plain_text(
+        self, data: Union[str, bytes], options: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Parse plain text data"""
         if isinstance(data, bytes):
             data = data.decode("utf-8")
@@ -320,7 +336,9 @@ class BulkMemoryManager:
         if split_method == "lines":
             chunks = [line.strip() for line in data.split("\n") if len(line.strip()) >= min_length]
         elif split_method == "paragraphs":
-            chunks = [para.strip() for para in data.split("\n\n") if len(para.strip()) >= min_length]
+            chunks = [
+                para.strip() for para in data.split("\n\n") if len(para.strip()) >= min_length
+            ]
         elif split_method == "sentences":
             # Simple sentence splitting
             import re
@@ -333,12 +351,21 @@ class BulkMemoryManager:
         memories = []
         for i, chunk in enumerate(chunks):
             memories.append(
-                {"content": chunk, "metadata": {"format": "plain_text", "chunk_index": i, "split_method": split_method}}
+                {
+                    "content": chunk,
+                    "metadata": {
+                        "format": "plain_text",
+                        "chunk_index": i,
+                        "split_method": split_method,
+                    },
+                }
             )
 
         return memories
 
-    async def _parse_excel(self, data: Union[str, bytes], options: dict[str, Any]) -> list[dict[str, Any]]:
+    async def _parse_excel(
+        self, data: Union[str, bytes], options: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Parse Excel data"""
         try:
             if isinstance(data, str):
@@ -362,7 +389,9 @@ class BulkMemoryManager:
 
         return df.to_dict("records")
 
-    async def _process_memory_imports(self, memories: list[dict[str, Any]], options: dict[str, Any]) -> ImportResult:
+    async def _process_memory_imports(
+        self, memories: list[dict[str, Any]], options: dict[str, Any]
+    ) -> ImportResult:
         """Process and validate memory imports"""
         db = await get_database()
 
@@ -393,7 +422,9 @@ class BulkMemoryManager:
                                 continue
 
                     # Import memory
-                    memory_id = await db.store_memory(validated_memory["content"], validated_memory["metadata"])
+                    memory_id = await db.store_memory(
+                        validated_memory["content"], validated_memory["metadata"]
+                    )
 
                     imported_ids.append(memory_id)
                     successful_imports += 1
@@ -455,7 +486,9 @@ class BulkMemoryManager:
 
         return False
 
-    async def _get_memories_for_export(self, db, filter_criteria: dict[str, Any] | None) -> list[dict[str, Any]]:
+    async def _get_memories_for_export(
+        self, db, filter_criteria: dict[str, Any] | None
+    ) -> list[dict[str, Any]]:
         """Get memories for export based on filter criteria"""
         if not filter_criteria:
             # Export all memories
@@ -476,13 +509,17 @@ class BulkMemoryManager:
         for key, value in criteria.items():
             if key == "memory_type" and memory.get("metadata", {}).get("memory_type") != value:
                 return False
-            elif key == "tags" and not any(tag in memory.get("metadata", {}).get("tags", []) for tag in value):
+            elif key == "tags" and not any(
+                tag in memory.get("metadata", {}).get("tags", []) for tag in value
+            ):
                 return False
             elif key == "date_from" and memory.get("created_at", "") < value:
                 return False
             elif key == "date_to" and memory.get("created_at", "") > value:
                 return False
-            elif key == "content_contains" and value.lower() not in memory.get("content", "").lower():
+            elif (
+                key == "content_contains" and value.lower() not in memory.get("content", "").lower()
+            ):
                 return False
 
         return True
@@ -634,7 +671,9 @@ class BulkMemoryManager:
         df.to_parquet(output)
         return output.getvalue()
 
-    async def _format_zip_archive(self, memories: list[dict[str, Any]], options: dict[str, Any]) -> bytes:
+    async def _format_zip_archive(
+        self, memories: list[dict[str, Any]], options: dict[str, Any]
+    ) -> bytes:
         """Format memories as ZIP archive with multiple formats"""
         output = BytesIO()
 

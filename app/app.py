@@ -1,3 +1,14 @@
+import os
+from datetime import datetime
+
+from fastapi import Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+
+from app.core.redis_manager import get_redis_client
+from app.database import get_database
+from app.models.memory import MemoryType
+from app.utils.logging_config import get_logger
+
 """
 Second Brain API Application Module
 
@@ -12,15 +23,12 @@ It handles:
 The application is initialized and run from main.py in the project root.
 """
 
-import os
 from contextlib import asynccontextmanager
-from datetime import datetime
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
 from starlette.responses import Response
 
 from app.connection_pool import PoolConfig, close_pool, get_pool_manager, initialize_pool
@@ -36,9 +44,16 @@ from app.core.monitoring import (
     get_request_tracker,
 )
 from app.core.rate_limiting import setup_rate_limiting
-from app.core.redis_manager import cleanup_redis, get_redis_client, get_redis_manager, redis_health_check
-from app.core.security_audit import SecurityHeadersManager, get_security_auditor, get_security_monitor
-from app.database import get_database
+from app.core.redis_manager import (
+    cleanup_redis,
+    get_redis_manager,
+    redis_health_check,
+)
+from app.core.security_audit import (
+    SecurityHeadersManager,
+    get_security_auditor,
+    get_security_monitor,
+)
 from app.docs import (
     ContextualSearchRequest,
     EpisodicMemoryRequest,
@@ -61,7 +76,6 @@ from app.routes import (
 from app.routes.analysis_routes import router as analysis_router
 from app.routes.bulk_operations_routes import bulk_router
 from app.routes.dashboard_routes import router as dashboard_router
-from app.routes.v2_unified_api import router as v2_unified_router
 from app.routes.google_drive_routes import router as google_drive_router
 from app.routes.graph_routes import router as graph_router
 from app.routes.importance_routes import router as importance_router
@@ -69,19 +83,25 @@ from app.routes.ingestion_routes import router as ingestion_router
 from app.routes.insights import router as insights_router
 from app.routes.relationship_routes import router as relationship_router
 from app.routes.synthesis_routes import router as synthesis_router
+from app.routes.v2_unified_api import router as v2_unified_router
+
 # from app.routes.v2_api import router as v2_router  # Replaced by v2_unified_router
 from app.security import SecurityConfig, SecurityManager
+
 # from app.services.service_factory import get_service_factory  # Not needed
 from app.session_manager import get_session_manager
 
 # Version info
 __version__ = "3.1.0"
 
+
 # Simple replacements for archived functions
 async def get_db_instance():
     """Get database instance"""
     from app.database import get_database
+
     return await get_database()
+
 
 async def verify_api_key(api_key: str = Query(..., alias="api_key")):
     """Simple API key verification"""
@@ -89,13 +109,11 @@ async def verify_api_key(api_key: str = Query(..., alias="api_key")):
         raise HTTPException(status_code=401, detail="Invalid API key")
     return api_key
 
+
 def get_version_info():
     """Get version information"""
-    return {
-        "version": __version__,
-        "api_version": "v1",
-        "python_version": "3.10+"
-    }
+    return {"version": __version__, "api_version": "v1", "python_version": "3.10+"}
+
 
 # Configure structured logging
 log_config = LogConfig(
@@ -105,7 +123,7 @@ log_config = LogConfig(
     file_path="logs/second-brain.log",
     enable_performance_logging=True,
     enable_audit_logging=True,
-    enable_request_logging=True
+    enable_request_logging=True,
 )
 configure_logging(log_config)
 logger = get_logger(__name__)
@@ -141,7 +159,11 @@ class SearchRequest(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Handle application startup and shutdown."""
-    logger.info("Starting Second Brain application", version=__version__, environment=os.getenv("ENVIRONMENT", "production"))
+    logger.info(
+        "Starting Second Brain application",
+        version=__version__,
+        environment=os.getenv("ENVIRONMENT", "production"),
+    )
 
     # Register custom metrics
     metrics_collector.register_custom_metric(
@@ -149,7 +171,7 @@ async def lifespan(app: FastAPI):
             name="memory_searches",
             type=MetricType.COUNTER,
             description="Number of memory searches",
-            labels=["query_type"]
+            labels=["query_type"],
         )
     )
 
@@ -159,7 +181,7 @@ async def lifespan(app: FastAPI):
             type=MetricType.HISTOGRAM,
             description="Operation duration in seconds",
             labels=["operation", "status"],
-            buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 2.5, 5.0]
+            buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 2.5, 5.0],
         )
     )
 
@@ -168,22 +190,30 @@ async def lifespan(app: FastAPI):
             name="operation_errors",
             type=MetricType.COUNTER,
             description="Number of operation errors",
-            labels=["operation", "error_type"]
+            labels=["operation", "error_type"],
         )
     )
 
     # Initialize database - mock database removed, always use real PostgreSQL
     database_url = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/secondbrain")
-    pool_config = PoolConfig(min_connections=5, max_connections=20, max_inactive_connection_lifetime=300.0)
+    pool_config = PoolConfig(
+        min_connections=5, max_connections=20, max_inactive_connection_lifetime=300.0
+    )
 
     try:
         await initialize_pool(database_url, pool_config)
-        logger.info("Database connection pool initialized", min_connections=pool_config.min_connections, max_connections=pool_config.max_connections)
+        logger.info(
+            "Database connection pool initialized",
+            min_connections=pool_config.min_connections,
+            max_connections=pool_config.max_connections,
+        )
 
         # Register database health check
         db = await get_database()
+
         async def check_db():
             return await health_checker.check_database(db)
+
         health_checker.register_check("database", check_db)
     except Exception as e:
         logger.error(f"Failed to initialize database pool: {e}")
@@ -237,7 +267,7 @@ app = FastAPI(
     description="Simple memory storage and search system",
     version=__version__,
     lifespan=lifespan,
-    route_class=LoggingRoute
+    route_class=LoggingRoute,
 )
 
 # Setup OpenAPI documentation
@@ -257,6 +287,7 @@ async def setup_rate_limiting_if_redis():
         logger.info("Rate limiting middleware enabled")
     else:
         logger.info("Rate limiting middleware disabled (Redis not available)")
+
 
 # We'll call this during startup, but need to define it here for later use
 
@@ -282,12 +313,13 @@ async def track_requests(request: Request, call_next):
                         event_type="SUSPICIOUS_ACTIVITY",
                         severity="HIGH",
                         source_ip=request.client.host if request.client else "unknown",
-                        details={"activities": activities}
+                        details={"activities": activities},
                     )
         except Exception:
             pass  # Don't break request processing
 
     return response
+
 
 # Add security middleware
 for middleware_class, middleware_kwargs in security_manager.get_security_middleware():
@@ -298,7 +330,11 @@ allowed_origins = security_config.allowed_origins or []
 if not allowed_origins:
     # Default to localhost for development only
     if os.getenv("ENVIRONMENT", "development") == "development":
-        allowed_origins = ["http://localhost:3000", "http://localhost:8000", "http://127.0.0.1:8000"]
+        allowed_origins = [
+            "http://localhost:3000",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+        ]
     else:
         # Production requires explicit origins
         allowed_origins = []
@@ -547,6 +583,7 @@ async def ingestion_dashboard():
 async def favicon():
     """Redirect favicon.ico requests to the SVG favicon"""
     from fastapi.responses import RedirectResponse
+
     return RedirectResponse(url="/static/favicon.svg")
 
 
@@ -586,7 +623,9 @@ async def health_check():
     from datetime import datetime
 
     version_info = get_version_info()
-    return HealthResponse(status="healthy", version=version_info["version"], timestamp=datetime.utcnow())
+    return HealthResponse(
+        status="healthy", version=version_info["version"], timestamp=datetime.utcnow()
+    )
 
 
 # Database and index status
@@ -605,15 +644,18 @@ async def get_status(db=Depends(get_db_instance), _: str = Depends(verify_api_ke
             database="connected",
             index_status=stats,
             recommendations={
-                "create_index": not stats["index_ready"] and stats["memories_with_embeddings"] >= 1000,
-                "index_type": "HNSW (preferred)"
-                if stats["hnsw_index_exists"]
-                else "IVFFlat (fallback)"
-                if stats["ivf_index_exists"]
-                else "None",
-                "performance_note": "Index recommended for 1000+ memories"
-                if stats["memories_with_embeddings"] < 1000
-                else "Index should be active for optimal performance",
+                "create_index": not stats["index_ready"]
+                and stats["memories_with_embeddings"] >= 1000,
+                "index_type": (
+                    "HNSW (preferred)"
+                    if stats["hnsw_index_exists"]
+                    else "IVFFlat (fallback)" if stats["ivf_index_exists"] else "None"
+                ),
+                "performance_note": (
+                    "Index recommended for 1000+ memories"
+                    if stats["memories_with_embeddings"] < 1000
+                    else "Index should be active for optimal performance"
+                ),
             },
         )
     except Exception as e:
@@ -630,7 +672,10 @@ async def get_status(db=Depends(get_db_instance), _: str = Depends(verify_api_ke
     description="Semantic search across stored memories",
 )
 async def search_memories(
-    request: SearchRequest, request_obj: Request, db=Depends(get_db_instance), _: str = Depends(verify_api_key)
+    request: SearchRequest,
+    request_obj: Request,
+    db=Depends(get_db_instance),
+    _: str = Depends(verify_api_key),
 ):
     """Search memories using vector similarity."""
     try:
@@ -680,9 +725,14 @@ async def get_memory(memory_id: str, db=Depends(get_db_instance), _: str = Depen
 
 # Delete memory
 @app.delete(
-    "/memories/{memory_id}", tags=["Memories"], summary="Delete Memory", description="Delete a specific memory by ID"
+    "/memories/{memory_id}",
+    tags=["Memories"],
+    summary="Delete Memory",
+    description="Delete a specific memory by ID",
 )
-async def delete_memory(memory_id: str, db=Depends(get_db_instance), _: str = Depends(verify_api_key)):
+async def delete_memory(
+    memory_id: str, db=Depends(get_db_instance), _: str = Depends(verify_api_key)
+):
     """Delete a memory by ID."""
     try:
         deleted = await db.delete_memory(memory_id)
@@ -708,7 +758,10 @@ async def delete_memory(memory_id: str, db=Depends(get_db_instance), _: str = De
     description="Store a semantic memory (facts, concepts, general knowledge)",
 )
 async def store_semantic_memory(
-    request: SemanticMemoryRequest, request_obj: Request, db=Depends(get_db_instance), _: str = Depends(verify_api_key)
+    request: SemanticMemoryRequest,
+    request_obj: Request,
+    db=Depends(get_db_instance),
+    _: str = Depends(verify_api_key),
 ):
     """Store a semantic memory with domain-specific metadata."""
     try:
@@ -750,7 +803,10 @@ async def store_semantic_memory(
     description="Store an episodic memory (time-bound experiences, contextual events)",
 )
 async def store_episodic_memory(
-    request: EpisodicMemoryRequest, request_obj: Request, db=Depends(get_db_instance), _: str = Depends(verify_api_key)
+    request: EpisodicMemoryRequest,
+    request_obj: Request,
+    db=Depends(get_db_instance),
+    _: str = Depends(verify_api_key),
 ):
     """Store an episodic memory with temporal and contextual metadata."""
     try:
@@ -807,7 +863,9 @@ async def store_procedural_memory(
         validator = security_manager.input_validator
         validated_content = validator.validate_memory_content(request.content)
 
-        procedural_metadata = request.procedural_metadata.dict() if request.procedural_metadata else {}
+        procedural_metadata = (
+            request.procedural_metadata.dict() if request.procedural_metadata else {}
+        )
 
         memory_id = await db.store_memory(
             content=validated_content,
@@ -892,7 +950,11 @@ async def get_security_status(_: str = Depends(verify_api_key)):
         if pool_manager:
             pool_health = await pool_manager.health_check()
 
-        return {"security": security_stats, "database_pool": pool_health, "timestamp": datetime.utcnow()}
+        return {
+            "security": security_stats,
+            "database_pool": pool_health,
+            "timestamp": datetime.utcnow(),
+        }
     except Exception as e:
         logger.error(f"Failed to get security status: {e}")
         raise HTTPException(status_code=500, detail="Failed to get security status")
@@ -918,7 +980,9 @@ async def get_metrics(_: str = Depends(verify_api_key)):
             "memory_percent": psutil.virtual_memory().percent,
             "memory_used_mb": psutil.virtual_memory().used // 1024 // 1024,
             "memory_available_mb": psutil.virtual_memory().available // 1024 // 1024,
-            "disk_percent": psutil.disk_usage("/").percent if hasattr(psutil.disk_usage("/"), "percent") else 0,
+            "disk_percent": (
+                psutil.disk_usage("/").percent if hasattr(psutil.disk_usage("/"), "percent") else 0
+            ),
             "uptime_seconds": time.time() - psutil.boot_time(),
         }
 
@@ -934,7 +998,8 @@ async def get_metrics(_: str = Depends(verify_api_key)):
         # Application metrics
         app_metrics = {
             "version": get_version_info()["version"],
-            "environment": os.getenv("ENVIRONMENT", "production"),        }
+            "environment": os.getenv("ENVIRONMENT", "production"),
+        }
 
         return {
             "status": "healthy",
@@ -1030,7 +1095,7 @@ async def monitoring_summary():
         summary["requests"] = {
             "active": request_tracker.active_requests,
             "recent_count": len(recent_requests),
-            "average_duration_ms": avg_duration
+            "average_duration_ms": avg_duration,
         }
 
     return summary

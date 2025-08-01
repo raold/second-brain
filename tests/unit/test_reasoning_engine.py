@@ -5,9 +5,16 @@ Tests for the multi-hop reasoning engine
 from unittest.mock import AsyncMock
 
 import pytest
+
 pytestmark = pytest.mark.unit
 
-from app.services.reasoning_engine import ReasoningEngine, ReasoningNode, ReasoningPath, ReasoningQuery, ReasoningType
+from app.services.reasoning_engine import (
+    ReasoningEngine,
+    ReasoningNode,
+    ReasoningPath,
+    ReasoningQuery,
+    ReasoningType,
+)
 
 
 class TestReasoningEngine:
@@ -44,28 +51,33 @@ class TestReasoningEngine:
         assert result2.reasoning_type == ReasoningType.TEMPORAL
         assert result2.include_temporal
 
-    @pytest.mark.parametrize("query,expected_type", [
-        ("What caused this?", ReasoningType.CAUSAL),
-        ("Why did this happen?", ReasoningType.CAUSAL),
-        ("What led to this outcome?", ReasoningType.CAUSAL),
-        ("What happened before?", ReasoningType.TEMPORAL),
-        ("Show timeline", ReasoningType.TEMPORAL),
-        ("When did this occur?", ReasoningType.TEMPORAL),
-        ("How did this evolve?", ReasoningType.EVOLUTIONARY),
-        ("How has this changed?", ReasoningType.EVOLUTIONARY),
-        ("What's the progression?", ReasoningType.EVOLUTIONARY),
-        ("Compare A to B", ReasoningType.COMPARATIVE),
-        ("What's the difference?", ReasoningType.COMPARATIVE),
-        ("How do they differ?", ReasoningType.COMPARATIVE),
-        ("Tell me about this", ReasoningType.SEMANTIC),
-        ("Explain this concept", ReasoningType.SEMANTIC),
-        ("Random query", ReasoningType.SEMANTIC),
-    ])
+    @pytest.mark.parametrize(
+        "query,expected_type",
+        [
+            ("What caused this?", ReasoningType.CAUSAL),
+            ("Why did this happen?", ReasoningType.CAUSAL),
+            ("What led to this outcome?", ReasoningType.CAUSAL),
+            ("What happened before?", ReasoningType.TEMPORAL),
+            ("Show timeline", ReasoningType.TEMPORAL),
+            ("When did this occur?", ReasoningType.TEMPORAL),
+            ("How did this evolve?", ReasoningType.EVOLUTIONARY),
+            ("How has this changed?", ReasoningType.EVOLUTIONARY),
+            ("What's the progression?", ReasoningType.EVOLUTIONARY),
+            ("Compare A to B", ReasoningType.COMPARATIVE),
+            ("What's the difference?", ReasoningType.COMPARATIVE),
+            ("How do they differ?", ReasoningType.COMPARATIVE),
+            ("Tell me about this", ReasoningType.SEMANTIC),
+            ("Explain this concept", ReasoningType.SEMANTIC),
+            ("Random query", ReasoningType.SEMANTIC),
+        ],
+    )
     @pytest.mark.asyncio
     async def test_detect_reasoning_type(self, reasoning_engine, query, expected_type):
         """Test reasoning type detection with various queries."""
         detected_type = reasoning_engine._detect_reasoning_type(query)
-        assert detected_type == expected_type, f"Query '{query}' should detect {expected_type}, got {detected_type}"
+        assert (
+            detected_type == expected_type
+        ), f"Query '{query}' should detect {expected_type}, got {detected_type}"
 
     @pytest.mark.asyncio
     async def test_find_starting_nodes(self, reasoning_engine, mock_db):
@@ -78,7 +90,7 @@ class TestReasoningEngine:
                 "contextual_score": 0.9,
                 "memory_type": "episodic",
                 "importance_score": 0.8,
-                "created_at": "2024-01-01T10:00:00"
+                "created_at": "2024-01-01T10:00:00",
             },
             {
                 "id": "mem2",
@@ -86,8 +98,8 @@ class TestReasoningEngine:
                 "similarity": 0.7,
                 "memory_type": "semantic",
                 "importance_score": 0.6,
-                "created_at": "2024-01-01T09:00:00"
-            }
+                "created_at": "2024-01-01T09:00:00",
+            },
         ]
 
         query = ReasoningQuery(text="career change", max_hops=3)
@@ -111,7 +123,7 @@ class TestReasoningEngine:
                 relevance_score=0.9,
                 hop_number=0,
                 relationship_type="start",
-                metadata={}
+                metadata={},
             ),
             ReasoningNode(
                 memory_id="2",
@@ -119,7 +131,7 @@ class TestReasoningEngine:
                 relevance_score=0.8,
                 hop_number=1,
                 relationship_type="semantic",
-                metadata={}
+                metadata={},
             ),
             ReasoningNode(
                 memory_id="3",
@@ -127,8 +139,8 @@ class TestReasoningEngine:
                 relevance_score=0.7,
                 hop_number=2,
                 relationship_type="semantic",
-                metadata={}
-            )
+                metadata={},
+            ),
         ]
 
         score = reasoning_engine._calculate_path_score(nodes)
@@ -148,7 +160,7 @@ class TestReasoningEngine:
             relevance_score=0.8,
             hop_number=1,
             relationship_type="semantic",
-            metadata={"importance_score": 0.9}
+            metadata={"importance_score": 0.9},
         )
 
         previous_node = ReasoningNode(
@@ -157,19 +169,16 @@ class TestReasoningEngine:
             relevance_score=0.9,
             hop_number=0,
             relationship_type="start",
-            metadata={}
+            metadata={},
         )
 
         query = ReasoningQuery(
-            text="How did machine learning evolve?",
-            reasoning_type=ReasoningType.EVOLUTIONARY
+            text="How did machine learning evolve?", reasoning_type=ReasoningType.EVOLUTIONARY
         )
 
         # Test with evolutionary content
         current_node.content = "Machine learning has evolved significantly"
-        score = await reasoning_engine._score_node_relevance(
-            current_node, previous_node, query
-        )
+        score = await reasoning_engine._score_node_relevance(current_node, previous_node, query)
 
         # Should get boost for evolutionary keywords and high importance
         # Base: 0.8 * 1.2 (evolutionary) * 0.9 (hop decay) * 1.1 (importance)
@@ -190,13 +199,13 @@ class TestReasoningEngine:
                         relevance_score=0.5 + i * 0.1,
                         hop_number=0,
                         relationship_type="test",
-                        metadata={}
+                        metadata={},
                     )
                 ],
                 total_score=0.5 + i * 0.1,
                 reasoning_type=ReasoningType.SEMANTIC,
                 insights=[],
-                execution_time_ms=100
+                execution_time_ms=100,
             )
             paths.append(path)
 
@@ -222,7 +231,7 @@ class TestReasoningEngine:
                     relevance_score=0.9,
                     hop_number=0,
                     relationship_type="start",
-                    metadata={}
+                    metadata={},
                 ),
                 ReasoningNode(
                     memory_id="2",
@@ -230,7 +239,7 @@ class TestReasoningEngine:
                     relevance_score=0.8,
                     hop_number=1,
                     relationship_type="semantic_similarity",
-                    metadata={}
+                    metadata={},
                 ),
                 ReasoningNode(
                     memory_id="3",
@@ -238,13 +247,13 @@ class TestReasoningEngine:
                     relevance_score=0.7,
                     hop_number=2,
                     relationship_type="temporal_proximity",
-                    metadata={}
-                )
+                    metadata={},
+                ),
             ],
             total_score=0.8,
             reasoning_type=ReasoningType.EVOLUTIONARY,
             insights=[],
-            execution_time_ms=100
+            execution_time_ms=100,
         )
 
         insights = await reasoning_engine._extract_insights(path)
@@ -276,7 +285,7 @@ class TestReasoningEngine:
                     "contextual_score": 0.9,
                     "memory_type": "episodic",
                     "importance_score": 0.7,
-                    "created_at": "2024-01-01"
+                    "created_at": "2024-01-01",
                 }
             ],
             # Second call - semantic neighbors for hop 1
@@ -286,7 +295,7 @@ class TestReasoningEngine:
                     "content": "Python was my first language",
                     "similarity": 0.8,
                     "memory_type": "semantic",
-                    "importance_score": 0.6
+                    "importance_score": 0.6,
                 }
             ],
             # Third call - temporal neighbors (empty)
@@ -298,11 +307,11 @@ class TestReasoningEngine:
                     "content": "Now I'm a software engineer",
                     "similarity": 0.7,
                     "memory_type": "episodic",
-                    "importance_score": 0.9
+                    "importance_score": 0.9,
                 }
             ],
             # Fifth call - temporal neighbors (empty)
-            []
+            [],
         ]
 
         # Use an iterator to return different results on each call
@@ -310,11 +319,12 @@ class TestReasoningEngine:
 
         # Capture warnings to see if starting nodes were found
         import logging
+
         with caplog.at_level(logging.WARNING):
             paths = await reasoning_engine.multi_hop_query(
                 query="How did I become a programmer?",
                 max_hops=2,
-                reasoning_type=ReasoningType.EVOLUTIONARY
+                reasoning_type=ReasoningType.EVOLUTIONARY,
             )
 
         # Check if we got the "No starting nodes" warning
@@ -337,7 +347,6 @@ class TestReasoningEngine:
         assert len(paths[0].nodes) >= 2  # Should have multiple hops
         assert paths[0].execution_time_ms >= 0
 
-
     @pytest.mark.asyncio
     async def test_find_causal_chains(self, reasoning_engine, mock_db):
         """Test finding causal chains"""
@@ -345,7 +354,7 @@ class TestReasoningEngine:
             "id": "event1",
             "content": "Lost my job due to company downsizing",
             "memory_type": "episodic",
-            "created_at": "2024-02-01"
+            "created_at": "2024-02-01",
         }
 
         mock_db.contextual_search.return_value = [
@@ -353,14 +362,12 @@ class TestReasoningEngine:
                 "id": "cause1",
                 "content": "Economic recession led to budget cuts",
                 "similarity": 0.8,
-                "memory_type": "semantic"
+                "memory_type": "semantic",
             }
         ]
 
         paths = await reasoning_engine.find_causal_chains(
-            "event1",
-            direction="backward",
-            max_depth=2
+            "event1", direction="backward", max_depth=2
         )
 
         assert isinstance(paths, list)
@@ -368,7 +375,7 @@ class TestReasoningEngine:
         assert mock_db.contextual_search.called
         # Get keyword arguments
         call_kwargs = mock_db.contextual_search.call_args.kwargs
-        query_text = call_kwargs.get('query', '')
+        query_text = call_kwargs.get("query", "")
         assert "caused" in query_text.lower() or "led to" in query_text.lower()
 
     @pytest.mark.asyncio
@@ -377,20 +384,16 @@ class TestReasoningEngine:
         # Mock memories
         mock_db.get_memory.side_effect = lambda id: {
             "mem1": {"id": "mem1", "content": "Started with Python", "metadata": {}},
-            "mem2": {"id": "mem2", "content": "Learned machine learning", "metadata": {}}
+            "mem2": {"id": "mem2", "content": "Learned machine learning", "metadata": {}},
         }.get(id)
 
         # Mock search for path finding
         mock_db.contextual_search.side_effect = [
             [{"id": "mem2", "content": "Learned machine learning", "similarity": 0.7}],
-            []
+            [],
         ]
 
-        path = await reasoning_engine.trace_reasoning_path(
-            "mem1",
-            "mem2",
-            max_hops=3
-        )
+        path = await reasoning_engine.trace_reasoning_path("mem1", "mem2", max_hops=3)
 
         # Should attempt to find path
         assert mock_db.get_memory.called
@@ -424,22 +427,21 @@ class TestReasoningEngine:
         # Create many candidate paths
         candidates = []
         for i in range(20):
-            candidates.append({
-                "id": f"mem{i}",
-                "content": f"Memory {i}",
-                "similarity": 0.9 - (i * 0.04),  # Decreasing scores
-                "memory_type": "semantic"
-            })
+            candidates.append(
+                {
+                    "id": f"mem{i}",
+                    "content": f"Memory {i}",
+                    "similarity": 0.9 - (i * 0.04),  # Decreasing scores
+                    "memory_type": "semantic",
+                }
+            )
 
         mock_db.contextual_search.return_value = candidates
 
         # Set small beam width
         reasoning_engine.beam_width = 3
 
-        paths = await reasoning_engine.multi_hop_query(
-            "test query",
-            max_hops=1
-        )
+        paths = await reasoning_engine.multi_hop_query("test query", max_hops=1)
 
         # Should only keep top beam_width paths
         assert len(paths) <= reasoning_engine.beam_width * reasoning_engine.max_paths

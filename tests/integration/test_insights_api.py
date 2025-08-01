@@ -5,6 +5,7 @@ Integration tests for AI insights API endpoints
 from datetime import datetime
 
 import pytest
+
 pytestmark = pytest.mark.integration
 
 
@@ -19,13 +20,9 @@ class TestInsightsAPI:
             memory_data = {
                 "content": f"Test memory about programming concept {i}",
                 "memory_type": "semantic",
-                "importance_score": 0.75
+                "importance_score": 0.75,
             }
-            response = await client.post(
-                "/memories",
-                json=memory_data,
-                params={"api_key": api_key}
-            )
+            response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
             assert response.status_code == 200
 
         # Generate insights
@@ -33,13 +30,11 @@ class TestInsightsAPI:
             "time_frame": "all_time",
             "limit": 5,
             "min_confidence": 0.5,
-            "include_recommendations": True
+            "include_recommendations": True,
         }
 
         response = await client.post(
-            "/insights/generate",
-            json=insight_request,
-            params={"api_key": api_key}
+            "/insights/generate", json=insight_request, params={"api_key": api_key}
         )
 
         assert response.status_code == 200
@@ -67,13 +62,9 @@ class TestInsightsAPI:
             memory_data = {
                 "content": f"Morning routine memory {i}",
                 "memory_type": "episodic",
-                "importance_score": 0.6
+                "importance_score": 0.6,
             }
-            response = await client.post(
-                "/memories",
-                json=memory_data,
-                params={"api_key": api_key}
-            )
+            response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
             assert response.status_code == 200
 
         # Detect patterns
@@ -81,13 +72,11 @@ class TestInsightsAPI:
             "pattern_types": ["temporal", "structural"],
             "time_frame": "all_time",
             "min_occurrences": 2,
-            "min_strength": 0.3
+            "min_strength": 0.3,
         }
 
         response = await client.post(
-            "/insights/patterns",
-            json=pattern_request,
-            params={"api_key": api_key}
+            "/insights/patterns", json=pattern_request, params={"api_key": api_key}
         )
 
         assert response.status_code == 200
@@ -109,16 +98,11 @@ class TestInsightsAPI:
                 memory_data = {
                     "content": f"Learning about {topic} - concept {i}",
                     "memory_type": "semantic",
-                    "semantic_metadata": {
-                        "category": topic,
-                        "domain": "programming"
-                    },
-                    "importance_score": 0.7
+                    "semantic_metadata": {"category": topic, "domain": "programming"},
+                    "importance_score": 0.7,
                 }
                 response = await client.post(
-                    "/memories",
-                    json=memory_data,
-                    params={"api_key": api_key}
+                    "/memories", json=memory_data, params={"api_key": api_key}
                 )
                 assert response.status_code == 200
 
@@ -127,13 +111,11 @@ class TestInsightsAPI:
             "algorithm": "kmeans",
             "num_clusters": 3,
             "min_cluster_size": 3,
-            "similarity_threshold": 0.6
+            "similarity_threshold": 0.6,
         }
 
         response = await client.post(
-            "/insights/clusters",
-            json=cluster_request,
-            params={"api_key": api_key}
+            "/insights/clusters", json=cluster_request, params={"api_key": api_key}
         )
 
         # The endpoint might fail if embeddings aren't available
@@ -153,17 +135,10 @@ class TestInsightsAPI:
         memory_data = {
             "content": "Basic programming concepts in Python",
             "memory_type": "semantic",
-            "semantic_metadata": {
-                "category": "python",
-                "domain": "programming"
-            },
-            "importance_score": 0.6
+            "semantic_metadata": {"category": "python", "domain": "programming"},
+            "importance_score": 0.6,
         }
-        response = await client.post(
-            "/memories",
-            json=memory_data,
-            params={"api_key": api_key}
-        )
+        response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
         assert response.status_code == 200
 
         # Analyze gaps
@@ -171,13 +146,11 @@ class TestInsightsAPI:
             "domains": ["programming", "databases", "algorithms"],
             "min_severity": 0.5,
             "include_suggestions": True,
-            "limit": 10
+            "limit": 10,
         }
 
         response = await client.post(
-            "/insights/gaps",
-            json=gap_request,
-            params={"api_key": api_key}
+            "/insights/gaps", json=gap_request, params={"api_key": api_key}
         )
 
         assert response.status_code == 200
@@ -202,26 +175,15 @@ class TestInsightsAPI:
             memory_data = {
                 "content": f"Advanced concepts in {topic}",
                 "memory_type": "semantic",
-                "semantic_metadata": {
-                    "category": topic,
-                    "domain": "programming"
-                },
-                "importance_score": 0.8
+                "semantic_metadata": {"category": topic, "domain": "programming"},
+                "importance_score": 0.8,
             }
-            response = await client.post(
-                "/memories",
-                json=memory_data,
-                params={"api_key": api_key}
-            )
+            response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
             assert response.status_code == 200
 
         # Get learning progress
         response = await client.get(
-            "/insights/progress",
-            params={
-                "api_key": api_key,
-                "time_frame": "all_time"
-            }
+            "/insights/progress", params={"api_key": api_key, "time_frame": "all_time"}
         )
 
         assert response.status_code == 200
@@ -246,11 +208,7 @@ class TestInsightsAPI:
         """Test comprehensive analytics endpoint"""
         # Get all analytics
         response = await client.get(
-            "/insights/analytics",
-            params={
-                "api_key": api_key,
-                "time_frame": "all_time"
-            }
+            "/insights/analytics", params={"api_key": api_key, "time_frame": "all_time"}
         )
 
         assert response.status_code == 200
@@ -272,10 +230,7 @@ class TestInsightsAPI:
     @pytest.mark.asyncio
     async def test_quick_insights_endpoint(self, client, api_key):
         """Test quick insights endpoint for dashboard"""
-        response = await client.get(
-            "/insights/quick-insights",
-            params={"api_key": api_key}
-        )
+        response = await client.get("/insights/quick-insights", params={"api_key": api_key})
 
         assert response.status_code == 200
         data = response.json()
@@ -302,11 +257,8 @@ class TestInsightsAPI:
         for timeframe in timeframes:
             response = await client.post(
                 "/insights/generate",
-                json={
-                    "time_frame": timeframe,
-                    "limit": 3
-                },
-                params={"api_key": api_key}
+                json={"time_frame": timeframe, "limit": 3},
+                params={"api_key": api_key},
             )
 
             assert response.status_code == 200
@@ -324,9 +276,9 @@ class TestInsightsAPI:
                 json={
                     "pattern_types": [pattern_type],
                     "time_frame": "all_time",
-                    "min_occurrences": 1
+                    "min_occurrences": 1,
                 },
-                params={"api_key": api_key}
+                params={"api_key": api_key},
             )
 
             assert response.status_code == 200
@@ -345,11 +297,8 @@ class TestInsightsAPI:
         for algo in algorithms:
             response = await client.post(
                 "/insights/clusters",
-                json={
-                    "algorithm": algo,
-                    "min_cluster_size": 2
-                },
-                params={"api_key": api_key}
+                json={"algorithm": algo, "min_cluster_size": 2},
+                params={"api_key": api_key},
             )
 
             # May fail due to lack of embeddings in test mode
@@ -361,29 +310,21 @@ class TestInsightsAPI:
         # Invalid time frame
         response = await client.post(
             "/insights/generate",
-            json={
-                "time_frame": "invalid_timeframe"
-            },
-            params={"api_key": api_key}
+            json={"time_frame": "invalid_timeframe"},
+            params={"api_key": api_key},
         )
         assert response.status_code == 422
 
         # Invalid pattern type
         response = await client.post(
             "/insights/patterns",
-            json={
-                "pattern_types": ["invalid_pattern"]
-            },
-            params={"api_key": api_key}
+            json={"pattern_types": ["invalid_pattern"]},
+            params={"api_key": api_key},
         )
         assert response.status_code == 422
 
         # Invalid clustering algorithm
         response = await client.post(
-            "/insights/clusters",
-            json={
-                "algorithm": "invalid_algo"
-            },
-            params={"api_key": api_key}
+            "/insights/clusters", json={"algorithm": "invalid_algo"}, params={"api_key": api_key}
         )
         assert response.status_code == 422

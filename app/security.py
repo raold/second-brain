@@ -1,17 +1,20 @@
+import asyncio
+import re
+import time
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
+
+from fastapi import HTTPException
+
 """
 Security Hardening Implementation for Second Brain v2.2.0
 Comprehensive security enhancements with input validation, rate limiting, and security headers
 """
 
-import asyncio
-import re
-import time
 from collections import defaultdict, deque
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any
 
-from fastapi import HTTPException, Request
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
@@ -78,7 +81,9 @@ class RateLimiter:
 
         # Clean up expired blocked IPs
         expired_blocks = [
-            ip for ip, block_time in self.blocked_ips.items() if datetime.now() - block_time > timedelta(minutes=15)
+            ip
+            for ip, block_time in self.blocked_ips.items()
+            if datetime.now() - block_time > timedelta(minutes=15)
         ]
         for ip in expired_blocks:
             del self.blocked_ips[ip]
@@ -142,7 +147,9 @@ class RateLimiter:
 
         return {
             "X-RateLimit-Limit": str(self.config.max_requests_per_minute),
-            "X-RateLimit-Remaining": str(max(0, self.config.max_requests_per_minute - recent_requests)),
+            "X-RateLimit-Remaining": str(
+                max(0, self.config.max_requests_per_minute - recent_requests)
+            ),
             "X-RateLimit-Reset": str(int(current_time + 60)),
         }
 
@@ -181,22 +188,29 @@ class InputValidator:
             raise HTTPException(status_code=400, detail="Content is required and must be a string")
 
         # Check for null bytes
-        if '\x00' in content:
-            raise HTTPException(status_code=400, detail="Content contains potentially dangerous null bytes")
+        if "\x00" in content:
+            raise HTTPException(
+                status_code=400, detail="Content contains potentially dangerous null bytes"
+            )
 
         # Check length
         if len(content) > self.config.max_content_length:
             raise HTTPException(
-                status_code=400, detail=f"Content too long. Maximum {self.config.max_content_length} characters allowed"
+                status_code=400,
+                detail=f"Content too long. Maximum {self.config.max_content_length} characters allowed",
             )
 
         # Check for potential SQL injection
         if self.sql_injection_pattern.search(content):
-            raise HTTPException(status_code=400, detail="Content contains potentially dangerous SQL patterns")
+            raise HTTPException(
+                status_code=400, detail="Content contains potentially dangerous SQL patterns"
+            )
 
         # Check for XSS attempts
         if self.xss_pattern.search(content):
-            raise HTTPException(status_code=400, detail="Content contains potentially dangerous script patterns")
+            raise HTTPException(
+                status_code=400, detail="Content contains potentially dangerous script patterns"
+            )
 
         # Sanitize content
         sanitized = self._sanitize_string(content)
@@ -211,7 +225,8 @@ class InputValidator:
         # Check number of fields
         if len(metadata) > self.config.max_metadata_fields:
             raise HTTPException(
-                status_code=400, detail=f"Too many metadata fields. Maximum {self.config.max_metadata_fields} allowed"
+                status_code=400,
+                detail=f"Too many metadata fields. Maximum {self.config.max_metadata_fields} allowed",
             )
 
         sanitized_metadata = {}
@@ -219,7 +234,9 @@ class InputValidator:
         for key, value in metadata.items():
             # Validate key
             if not isinstance(key, str) or len(key) > 100:
-                raise HTTPException(status_code=400, detail="Metadata keys must be strings under 100 characters")
+                raise HTTPException(
+                    status_code=400, detail="Metadata keys must be strings under 100 characters"
+                )
 
             # Sanitize key
             sanitized_key = self._sanitize_string(key)
@@ -227,7 +244,9 @@ class InputValidator:
             # Validate and sanitize value
             if isinstance(value, str):
                 if len(value) > 1000:
-                    raise HTTPException(status_code=400, detail="Metadata values must be under 1000 characters")
+                    raise HTTPException(
+                        status_code=400, detail="Metadata values must be under 1000 characters"
+                    )
                 sanitized_value = self._sanitize_string(value)
             elif isinstance(value, int | float | bool):
                 sanitized_value = value
@@ -235,7 +254,8 @@ class InputValidator:
                 sanitized_value = None
             else:
                 raise HTTPException(
-                    status_code=400, detail="Metadata values must be strings, numbers, booleans, or null"
+                    status_code=400,
+                    detail="Metadata values must be strings, numbers, booleans, or null",
                 )
 
             sanitized_metadata[sanitized_key] = sanitized_value
@@ -245,15 +265,21 @@ class InputValidator:
     def validate_search_query(self, query: str) -> str:
         """Validate and sanitize search query"""
         if not query or not isinstance(query, str):
-            raise HTTPException(status_code=400, detail="Search query is required and must be a string")
+            raise HTTPException(
+                status_code=400, detail="Search query is required and must be a string"
+            )
 
         # Check length
         if len(query) > 1000:
-            raise HTTPException(status_code=400, detail="Search query too long. Maximum 1000 characters allowed")
+            raise HTTPException(
+                status_code=400, detail="Search query too long. Maximum 1000 characters allowed"
+            )
 
         # Check for SQL injection attempts
         if self.sql_injection_pattern.search(query):
-            raise HTTPException(status_code=400, detail="Search query contains potentially dangerous SQL patterns")
+            raise HTTPException(
+                status_code=400, detail="Search query contains potentially dangerous SQL patterns"
+            )
 
         return self._sanitize_string(query)
 
@@ -264,7 +290,8 @@ class InputValidator:
 
         if limit > self.config.max_search_results:
             raise HTTPException(
-                status_code=400, detail=f"Limit too high. Maximum {self.config.max_search_results} results allowed"
+                status_code=400,
+                detail=f"Limit too high. Maximum {self.config.max_search_results} results allowed",
             )
 
         return limit
@@ -297,7 +324,8 @@ class InputValidator:
 
         # Normalize multiple spaces (but preserve newlines and tabs)
         import re
-        text = re.sub(r' +', ' ', text)
+
+        text = re.sub(r" +", " ", text)
 
         return text.strip()
 
@@ -401,7 +429,9 @@ class SecurityManager:
             (RateLimitingMiddleware, {"rate_limiter": self.rate_limiter}),
         ]
 
-    def _log_security_event(self, event_type: str, request: Request, details: dict[str, Any] | None = None):
+    def _log_security_event(
+        self, event_type: str, request: Request, details: dict[str, Any] | None = None
+    ):
         """Log security event"""
         event = {
             "timestamp": datetime.now().isoformat(),

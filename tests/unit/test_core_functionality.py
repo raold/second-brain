@@ -3,8 +3,8 @@ Core functionality test suite for the Second Brain application.
 Comprehensive testing of all major features.
 """
 
-
 import pytest
+
 pytestmark = pytest.mark.unit
 
 
@@ -88,13 +88,17 @@ class TestAPI:
             "semantic_metadata": {"domain": "programming", "category": "language"},
         }
 
-        store_response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
+        store_response = await client.post(
+            "/memories", json=memory_data, params={"api_key": api_key}
+        )
         assert store_response.status_code == 200
 
         # Then search for it
         search_data = {"query": "Python programming", "limit": 10}
 
-        response = await client.post("/memories/search", json=search_data, params={"api_key": api_key})
+        response = await client.post(
+            "/memories/search", json=search_data, params={"api_key": api_key}
+        )
 
         assert response.status_code == 200
         results = response.json()
@@ -129,9 +133,16 @@ class TestAPI:
             assert response.status_code == 200
 
         # Search with advanced parameters
-        search_data = {"query": "data analysis", "limit": 5, "threshold": 0.0, "memory_type": "semantic"}
+        search_data = {
+            "query": "data analysis",
+            "limit": 5,
+            "threshold": 0.0,
+            "memory_type": "semantic",
+        }
 
-        response = await client.post("/memories/search", json=search_data, params={"api_key": api_key})
+        response = await client.post(
+            "/memories/search", json=search_data, params={"api_key": api_key}
+        )
 
         assert response.status_code == 200
         results = response.json()
@@ -147,7 +158,9 @@ class TestAPI:
             "metadata": {"test_id": "get_by_id_test"},
         }
 
-        store_response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
+        store_response = await client.post(
+            "/memories", json=memory_data, params={"api_key": api_key}
+        )
         assert store_response.status_code == 200
         memory_id = store_response.json()["id"]
 
@@ -175,7 +188,9 @@ class TestAPI:
             assert response.status_code == 200
 
         # Test pagination
-        response = await client.get("/memories", params={"api_key": api_key, "limit": 3, "offset": 0})
+        response = await client.get(
+            "/memories", params={"api_key": api_key, "limit": 3, "offset": 0}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -192,7 +207,9 @@ class TestAPI:
             "metadata": {"test": "deletion"},
         }
 
-        store_response = await client.post("/memories", json=memory_data, params={"api_key": api_key})
+        store_response = await client.post(
+            "/memories", json=memory_data, params={"api_key": api_key}
+        )
         assert store_response.status_code == 200
         memory_id = store_response.json()["id"]
 
@@ -237,18 +254,24 @@ class TestDataValidation:
     async def test_invalid_memory_data(self, client, api_key):
         """Test handling of invalid memory data."""
         # Missing content
-        response = await client.post("/memories", json={"memory_type": "semantic"}, params={"api_key": api_key})
+        response = await client.post(
+            "/memories", json={"memory_type": "semantic"}, params={"api_key": api_key}
+        )
         assert response.status_code == 422
 
         # Invalid JSON structure
-        response = await client.post("/memories", json={"content": 123}, params={"api_key": api_key})
+        response = await client.post(
+            "/memories", json={"content": 123}, params={"api_key": api_key}
+        )
         assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_invalid_search_data(self, client, api_key):
         """Test handling of invalid search data."""
         # Missing query
-        response = await client.post("/memories/search", json={"limit": 10}, params={"api_key": api_key})
+        response = await client.post(
+            "/memories/search", json={"limit": 10}, params={"api_key": api_key}
+        )
         assert response.status_code == 422
 
         # Invalid limit

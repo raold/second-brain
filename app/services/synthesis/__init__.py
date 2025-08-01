@@ -1,3 +1,5 @@
+from fastapi import WebSocket
+
 """
 Synthesis Services - v3.0.0
 

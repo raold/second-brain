@@ -23,7 +23,7 @@ class TestWebSocketModels:
             priority=EventPriority.HIGH,
             data={"memory_id": "mem-123", "action": "created"},
             broadcast_to=["user-456", "user-789"],
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         assert message.event_type == "memory_update"
@@ -37,12 +37,8 @@ class TestWebSocketModels:
         event = WebSocketEvent(
             id="event-123",
             type="synthesis_complete",
-            payload={
-                "synthesis_id": "syn-456",
-                "result": "success",
-                "insights_count": 5
-            },
-            created_at=datetime.utcnow()
+            payload={"synthesis_id": "syn-456", "result": "success", "insights_count": 5},
+            created_at=datetime.utcnow(),
         )
 
         assert event.id == "event-123"
@@ -58,7 +54,7 @@ class TestWebSocketModels:
             connected=True,
             connected_at=datetime.utcnow(),
             last_ping=datetime.utcnow(),
-            subscriptions=["memory_updates", "synthesis_results"]
+            subscriptions=["memory_updates", "synthesis_results"],
         )
 
         assert status.client_id == "client-789"
@@ -73,10 +69,7 @@ class TestWebSocketModels:
         request = SubscriptionRequest(
             client_id="client-999",
             event_types=["memory_created", "memory_updated", "synthesis_complete"],
-            filters={
-                "user_id": "user-123",
-                "memory_types": ["semantic", "episodic"]
-            }
+            filters={"user_id": "user-123", "memory_types": ["semantic", "episodic"]},
         )
 
         assert request.client_id == "client-999"

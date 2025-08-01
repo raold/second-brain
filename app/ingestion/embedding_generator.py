@@ -1,16 +1,22 @@
-"""
-Embedding generation component for automatic vector embeddings
-"""
-
 import asyncio
 import hashlib
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+import numpy as np
+
+from app.utils.logging_config import get_logger
+
+"""
+Embedding generation component for automatic vector embeddings
+"""
+
+
 # Optional imports
 try:
     import numpy as np
+
     NUMPY_AVAILABLE = True
 except ImportError:
     NUMPY_AVAILABLE = False
@@ -18,12 +24,12 @@ except ImportError:
 
 try:
     from sentence_transformers import SentenceTransformer
+
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
     SentenceTransformer = None
 
-from app.utils.logging_config import get_logger
 from app.utils.openai_client import get_openai_client
 
 logger = get_logger(__name__)
@@ -32,6 +38,7 @@ logger = get_logger(__name__)
 @dataclass
 class EmbeddingMetadata:
     """Metadata about generated embeddings"""
+
     model: str
     dimensions: int
     chunk_id: int | None = None
@@ -42,12 +49,14 @@ class EmbeddingMetadata:
 class EmbeddingGenerator:
     """Generate embeddings for content using various models"""
 
-    def __init__(self,
-                 model_type: str = "sentence-transformers",
-                 model_name: str = "all-MiniLM-L6-v2",
-                 chunk_size: int = 1000,
-                 chunk_overlap: int = 200,
-                 cache_embeddings: bool = True):
+    def __init__(
+        self,
+        model_type: str = "sentence-transformers",
+        model_name: str = "all-MiniLM-L6-v2",
+        chunk_size: int = 1000,
+        chunk_overlap: int = 200,
+        cache_embeddings: bool = True,
+    ):
         """
         Initialize embedding generator
 
@@ -80,7 +89,7 @@ class EmbeddingGenerator:
                 advanced_models = [
                     "all-mpnet-base-v2",  # Best quality
                     "all-MiniLM-L12-v2",  # Good balance
-                    "all-MiniLM-L6-v2",   # Faster
+                    "all-MiniLM-L6-v2",  # Faster
                 ]
 
                 model_to_load = self.model_name
@@ -100,7 +109,9 @@ class EmbeddingGenerator:
                 # Get embedding dimensions
                 dummy_embedding = self.model.encode("test")
                 self.dimensions = len(dummy_embedding)
-                logger.info(f"Loaded sentence-transformers model: {model_to_load} ({self.dimensions}D)")
+                logger.info(
+                    f"Loaded sentence-transformers model: {model_to_load} ({self.dimensions}D)"
+                )
 
                 # Set max sequence length for better performance
                 self.model.max_seq_length = 512
@@ -121,9 +132,9 @@ class EmbeddingGenerator:
         self.model_type = "mock"
         self.dimensions = 384  # Standard dimension
 
-    async def generate_embeddings(self,
-                                text: str,
-                                generate_chunks: bool = True) -> tuple[dict[str, list[float]], EmbeddingMetadata]:
+    async def generate_embeddings(
+        self, text: str, generate_chunks: bool = True
+    ) -> tuple[dict[str, list[float]], EmbeddingMetadata]:
         """
         Generate embeddings for text
 
@@ -160,7 +171,7 @@ class EmbeddingGenerator:
             dimensions=self.dimensions,
             chunk_id=len(chunks) if generate_chunks and len(text) > self.chunk_size else None,
             chunk_overlap=self.chunk_overlap if generate_chunks else None,
-            generated_at=datetime.utcnow()
+            generated_at=datetime.utcnow(),
         )
 
         return embeddings, metadata
@@ -193,8 +204,7 @@ class EmbeddingGenerator:
             # Run in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
             embedding = await loop.run_in_executor(
-                None,
-                lambda: self.model.encode(text, convert_to_numpy=True)
+                None, lambda: self.model.encode(text, convert_to_numpy=True)
             )
             return embedding.tolist()
         except Exception as e:
@@ -225,14 +235,14 @@ class EmbeddingGenerator:
         embedding = []
         for i in range(0, self.dimensions * 2, 2):
             # Use pairs of hex digits to generate values
-            hex_pair = text_hash[i % len(text_hash):i % len(text_hash) + 2]
+            hex_pair = text_hash[i % len(text_hash) : i % len(text_hash) + 2]
             value = int(hex_pair, 16) / 255.0 - 0.5  # Normalize to [-0.5, 0.5]
             embedding.append(value)
 
         # Add some variation based on text features
         text_features = [
             len(text) / 1000.0,  # Length feature
-            text.count(' ') / max(len(text), 1),  # Word density
+            text.count(" ") / max(len(text), 1),  # Word density
             sum(1 for c in text if c.isupper()) / max(len(text), 1),  # Uppercase ratio
             sum(1 for c in text if c.isdigit()) / max(len(text), 1),  # Digit ratio
         ]
@@ -249,7 +259,7 @@ class EmbeddingGenerator:
             if norm > 0:
                 embedding = (embedding / norm).tolist()
 
-        return embedding[:self.dimensions]
+        return embedding[: self.dimensions]
 
     def _chunk_text(self, text: str) -> list[str]:
         """Split text into overlapping chunks"""
@@ -270,7 +280,7 @@ class EmbeddingGenerator:
             # Get chunk
             chunk_end = min(i + chunk_size_words, len(words))
             chunk_words = words[i:chunk_end]
-            chunk = ' '.join(chunk_words)
+            chunk = " ".join(chunk_words)
 
             # Add chunk
             chunks.append(chunk)
@@ -302,7 +312,9 @@ class EmbeddingGenerator:
         text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
         return f"{self.model_name}_{key}_{text_hash}"
 
-    def generate_embedding_similarity(self, embedding1: list[float], embedding2: list[float]) -> float:
+    def generate_embedding_similarity(
+        self, embedding1: list[float], embedding2: list[float]
+    ) -> float:
         """Calculate cosine similarity between two embeddings"""
         if not NUMPY_AVAILABLE:
             # Simple dot product for similarity
@@ -321,11 +333,13 @@ class EmbeddingGenerator:
 
         return float(dot_product / (norm1 * norm2))
 
-    def find_similar_chunks(self,
-                          query_embedding: list[float],
-                          chunk_embeddings: dict[str, list[float]],
-                          top_k: int = 5,
-                          min_similarity: float = 0.5) -> list[tuple[str, float]]:
+    def find_similar_chunks(
+        self,
+        query_embedding: list[float],
+        chunk_embeddings: dict[str, list[float]],
+        top_k: int = 5,
+        min_similarity: float = 0.5,
+    ) -> list[tuple[str, float]]:
         """Find most similar chunks to query embedding"""
         similarities = []
 
@@ -342,9 +356,9 @@ class EmbeddingGenerator:
 
         return similarities[:top_k]
 
-    def reduce_embedding_dimensions(self,
-                                  embedding: list[float],
-                                  target_dimensions: int) -> list[float]:
+    def reduce_embedding_dimensions(
+        self, embedding: list[float], target_dimensions: int
+    ) -> list[float]:
         """Reduce embedding dimensions using PCA-like approach"""
         if len(embedding) <= target_dimensions:
             return embedding
@@ -366,9 +380,9 @@ class EmbeddingGenerator:
 
         return reduced
 
-    def combine_embeddings(self,
-                         embeddings: list[list[float]],
-                         weights: list[float] | None = None) -> list[float]:
+    def combine_embeddings(
+        self, embeddings: list[list[float]], weights: list[float] | None = None
+    ) -> list[float]:
         """Combine multiple embeddings with optional weights"""
         if not embeddings:
             return []
@@ -401,12 +415,7 @@ class EmbeddingGenerator:
     def get_embedding_statistics(self, embeddings: dict[str, list[float]]) -> dict[str, Any]:
         """Get statistics about generated embeddings"""
         if not embeddings:
-            return {
-                "total_embeddings": 0,
-                "dimensions": 0,
-                "types": [],
-                "chunk_count": 0
-            }
+            return {"total_embeddings": 0, "dimensions": 0, "types": [], "chunk_count": 0}
 
         # Count chunk embeddings
         chunk_count = sum(1 for key in embeddings if key.startswith("chunk_"))
@@ -421,7 +430,7 @@ class EmbeddingGenerator:
             "chunk_count": chunk_count,
             "has_full_embedding": "full" in embeddings,
             "has_average_embedding": "average" in embeddings,
-            "cache_size": len(self.embedding_cache) if self.embedding_cache else 0
+            "cache_size": len(self.embedding_cache) if self.embedding_cache else 0,
         }
 
         # Add similarity matrix for chunks if available
@@ -437,8 +446,7 @@ class EmbeddingGenerator:
                         row.append(1.0)
                     else:
                         sim = self.generate_embedding_similarity(
-                            chunk_embeddings[chunk_id1],
-                            chunk_embeddings[chunk_id2]
+                            chunk_embeddings[chunk_id1], chunk_embeddings[chunk_id2]
                         )
                         row.append(round(sim, 3))
                 similarity_matrix.append(row)

@@ -1,3 +1,9 @@
+import asyncio
+import re
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
 #!/usr/bin/env python3
 """
 Conversation Processor - Automatic Dashboard Updates
@@ -5,11 +11,6 @@ Monitors conversation context and automatically updates project dashboard
 when CTO discusses new features, architectural challenges, or project goals
 """
 
-import asyncio
-import re
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Any
 
 from app.docs import Priority
 
@@ -172,7 +173,9 @@ class ConversationProcessor:
 
         # Split into words and filter
         words = [word.strip(".,!?()[]{}") for word in raw_name.split()]
-        filtered_words = [word for word in words if word.lower() not in stop_words and len(word) > 1]
+        filtered_words = [
+            word for word in words if word.lower() not in stop_words and len(word) > 1
+        ]
 
         if not filtered_words:
             return ""
@@ -255,11 +258,16 @@ class ConversationProcessor:
 
             # Generate description with context
             description = self._generate_feature_description(
-                feature_name, context.message, context.architectural_elements, context.timeline_mentions
+                feature_name,
+                context.message,
+                context.architectural_elements,
+                context.timeline_mentions,
             )
 
             # Add to dashboard
-            milestone_id = self.dashboard.add_new_feature_context(feature_name, description, priority)
+            milestone_id = self.dashboard.add_new_feature_context(
+                feature_name, description, priority
+            )
 
             updates["features_added"].append(
                 {
@@ -274,13 +282,20 @@ class ConversationProcessor:
         if context.detected_features:
             # Record conversation-driven feature addition metric
             self.dashboard.record_metric(
-                "conversation_driven_features", len(context.detected_features), "features", target=None
+                "conversation_driven_features",
+                len(context.detected_features),
+                "features",
+                target=None,
             )
 
         return updates
 
     def _generate_feature_description(
-        self, feature_name: str, original_message: str, architectural_elements: list[str], timeline_mentions: list[str]
+        self,
+        feature_name: str,
+        original_message: str,
+        architectural_elements: list[str],
+        timeline_mentions: list[str],
     ) -> str:
         """Generate rich feature description based on conversation context"""
 
@@ -408,7 +423,9 @@ if __name__ == "__main__":
             result = await processor.simulate_cto_conversation(message)
 
             print(f"🔍 Detected features: {result['conversation_context'].detected_features}")
-            print(f"📊 Dashboard updates: {len(result['dashboard_updates']['features_added'])} new features")
+            print(
+                f"📊 Dashboard updates: {len(result['dashboard_updates']['features_added'])} new features"
+            )
 
         print("\n📈 Final dashboard state:")
         dashboard = None

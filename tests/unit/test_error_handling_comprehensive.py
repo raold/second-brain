@@ -98,7 +98,7 @@ class TestDatabaseErrorHandling:
     @pytest.mark.asyncio
     async def test_openai_api_failure(self):
         """Test handling of OpenAI API failures"""
-        with patch.object(self.database, 'openai_client'):
+        with patch.object(self.database, "openai_client"):
             mock_openai = AsyncMock()
             mock_openai.embeddings.create.side_effect = Exception("OpenAI API error")
             self.database.openai_client = mock_openai
@@ -114,7 +114,7 @@ class TestDatabaseErrorHandling:
         mock_response.data = [MagicMock()]
         mock_response.data[0].embedding = [0.1, 0.2, 0.3]  # Wrong size (should be 1536)
 
-        with patch.object(self.database, 'openai_client'):
+        with patch.object(self.database, "openai_client"):
             mock_openai = AsyncMock()
             mock_openai.embeddings.create.return_value = mock_response
             self.database.openai_client = mock_openai
@@ -165,7 +165,7 @@ class TestMemoryServiceErrorHandling:
     @pytest.mark.asyncio
     async def test_service_initialization_failure(self):
         """Test handling of service initialization failures"""
-        with patch('app.services.memory_service.get_database') as mock_get_db:
+        with patch("app.services.memory_service.get_database") as mock_get_db:
             mock_get_db.side_effect = Exception("Database initialization failed")
 
             service = MemoryService()
@@ -181,8 +181,7 @@ class TestMemoryServiceErrorHandling:
 
         with pytest.raises(ValidationException):
             await self.memory_service.store_memory(
-                content="test",
-                metadata={"importance": 2.0}  # Invalid score > 1.0
+                content="test", metadata={"importance": 2.0}  # Invalid score > 1.0
             )
 
     @pytest.mark.asyncio
@@ -191,7 +190,7 @@ class TestMemoryServiceErrorHandling:
         # Simulate concurrent modification
         self.mock_db.get_memory.side_effect = [
             {"id": "test", "version": 1},
-            {"id": "test", "version": 2}  # Version changed
+            {"id": "test", "version": 2},  # Version changed
         ]
 
         # This might raise a conflict error or handle gracefully
@@ -225,7 +224,7 @@ class TestMemoryServiceErrorHandling:
     @pytest.mark.asyncio
     async def test_importance_engine_failure(self):
         """Test handling when importance engine fails"""
-        with patch('app.services.memory_service.get_importance_engine') as mock_get_engine:
+        with patch("app.services.memory_service.get_importance_engine") as mock_get_engine:
             mock_engine = AsyncMock()
             mock_engine.track_memory_access.side_effect = Exception("Importance tracking failed")
             mock_get_engine.return_value = mock_engine
@@ -250,7 +249,7 @@ class TestAPIErrorHandling:
             '{"incomplete": json',
             '{"trailing": "comma",}',
             '{"key": undefined}',
-            '',
+            "",
         ]
 
         for payload in malformed_payloads:
@@ -258,7 +257,7 @@ class TestAPIErrorHandling:
                 "/memories/semantic",
                 content=payload,
                 headers={"content-type": "application/json"},
-                params={"api_key": api_key}
+                params={"api_key": api_key},
             )
 
             # Should return proper error, not crash
@@ -284,9 +283,7 @@ class TestAPIErrorHandling:
 
         for payload in incomplete_payloads:
             response = await client.post(
-                "/memories/semantic",
-                json=payload,
-                params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key}
             )
 
             # Should return validation error
@@ -305,10 +302,7 @@ class TestAPIErrorHandling:
         ]
 
         for invalid_id in invalid_ids:
-            response = await client.get(
-                f"/memories/{invalid_id}",
-                params={"api_key": api_key}
-            )
+            response = await client.get(f"/memories/{invalid_id}", params={"api_key": api_key})
 
             # Should return proper error (404 or 400), not crash
             assert response.status_code in [400, 404, 422]
@@ -336,20 +330,23 @@ class TestAPIErrorHandling:
                     # Rate limit response should have proper headers
                     headers = response.headers
                     # Common rate limit headers
-                    rate_limit_headers = ["x-ratelimit-limit", "x-ratelimit-remaining", "retry-after"]
+                    rate_limit_headers = [
+                        "x-ratelimit-limit",
+                        "x-ratelimit-remaining",
+                        "retry-after",
+                    ]
                     # At least some rate limiting info should be present
-                    assert any(header in headers for header in rate_limit_headers) or True  # Allow if not implemented
+                    assert (
+                        any(header in headers for header in rate_limit_headers) or True
+                    )  # Allow if not implemented
 
     @pytest.mark.asyncio
     async def test_database_connection_failure_handling(self, client: AsyncClient, api_key: str):
         """Test API behavior when database is unavailable"""
-        with patch('app.database.Database.get_memory') as mock_get:
+        with patch("app.database.Database.get_memory") as mock_get:
             mock_get.side_effect = Exception("Database connection failed")
 
-            response = await client.get(
-                "/memories/some-id",
-                params={"api_key": api_key}
-            )
+            response = await client.get("/memories/some-id", params={"api_key": api_key})
 
             # Should return server error, not crash
             assert response.status_code in [500, 503]
@@ -375,9 +372,7 @@ class TestAPIErrorHandling:
 
         for search_params in extreme_searches:
             response = await client.post(
-                "/memories/search",
-                json=search_params,
-                params={"api_key": api_key}
+                "/memories/search", json=search_params, params={"api_key": api_key}
             )
 
             # Should handle gracefully
@@ -401,9 +396,7 @@ class TestAPIErrorHandling:
             else:
                 # Invalid request
                 return await client.post(
-                    "/memories/semantic",
-                    json={"invalid": "data"},
-                    params={"api_key": api_key}
+                    "/memories/semantic", json={"invalid": "data"}, params={"api_key": api_key}
                 )
 
         # Make concurrent requests
@@ -433,15 +426,10 @@ class TestAPIErrorHandling:
         ]
 
         for content in problematic_content:
-            payload = {
-                "content": content,
-                "importance_score": 0.5
-            }
+            payload = {"content": content, "importance_score": 0.5}
 
             response = await client.post(
-                "/memories/semantic",
-                json=payload,
-                params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key}
             )
 
             # Should handle encoding issues gracefully
@@ -450,15 +438,11 @@ class TestAPIErrorHandling:
     @pytest.mark.asyncio
     async def test_timeout_handling(self, client: AsyncClient, api_key: str):
         """Test handling of request timeouts"""
-        with patch('asyncio.wait_for') as mock_wait:
+        with patch("asyncio.wait_for") as mock_wait:
             mock_wait.side_effect = TimeoutError("Request timed out")
 
             try:
-                response = await client.get(
-                    "/health",
-                    params={"api_key": api_key},
-                    timeout=1.0
-                )
+                response = await client.get("/health", params={"api_key": api_key}, timeout=1.0)
 
                 # If we get a response, it should be a timeout error
                 assert response.status_code in [408, 500, 503]
@@ -471,19 +455,13 @@ class TestAPIErrorHandling:
     async def test_memory_deletion_error_scenarios(self, client: AsyncClient, api_key: str):
         """Test error scenarios in memory deletion"""
         # Try to delete non-existent memory
-        response = await client.delete(
-            "/memories/nonexistent-id",
-            params={"api_key": api_key}
-        )
+        response = await client.delete("/memories/nonexistent-id", params={"api_key": api_key})
 
         # Should return 404 or similar
         assert response.status_code in [404, 400]
 
         # Try to delete with invalid ID format
-        response = await client.delete(
-            "/memories/invalid-id-format",
-            params={"api_key": api_key}
-        )
+        response = await client.delete("/memories/invalid-id-format", params={"api_key": api_key})
 
         assert response.status_code in [400, 404, 422]
 
@@ -491,28 +469,14 @@ class TestAPIErrorHandling:
     async def test_contextual_search_parameter_validation(self, client: AsyncClient, api_key: str):
         """Test contextual search with invalid parameters"""
         invalid_searches = [
-            {
-                "query": "test",
-                "memory_types": ["invalid_type"],  # Invalid memory type
-                "limit": 10
-            },
-            {
-                "query": "test",
-                "importance_threshold": -1.0,  # Invalid threshold
-                "limit": 10
-            },
-            {
-                "query": "test",
-                "timeframe": "invalid_timeframe",  # Invalid timeframe
-                "limit": 10
-            },
+            {"query": "test", "memory_types": ["invalid_type"], "limit": 10},  # Invalid memory type
+            {"query": "test", "importance_threshold": -1.0, "limit": 10},  # Invalid threshold
+            {"query": "test", "timeframe": "invalid_timeframe", "limit": 10},  # Invalid timeframe
         ]
 
         for search_params in invalid_searches:
             response = await client.post(
-                "/memories/search/contextual",
-                json=search_params,
-                params={"api_key": api_key}
+                "/memories/search/contextual", json=search_params, params={"api_key": api_key}
             )
 
             # Should validate parameters and return appropriate error

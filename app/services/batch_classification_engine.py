@@ -1,22 +1,24 @@
-"""
-Enhanced Batch Classification Engine for bulk memory operations
-Supports multiple classification methods and parallel processing
-"""
-
 import re
 from datetime import datetime
-from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 from app.utils.logging_config import get_logger
 
+"""
+Enhanced Batch Classification Engine for bulk memory operations
+Supports multiple classification methods and parallel processing
+"""
+
+from enum import Enum
+
 logger = get_logger(__name__)
 
 
 class ClassificationMethod(str, Enum):
     """Available classification methods"""
+
     AUTO = "auto"
     MANUAL = "manual"
     AI = "ai"
@@ -29,6 +31,7 @@ class ClassificationMethod(str, Enum):
 
 class ClassificationConfig(BaseModel):
     """Configuration for classification"""
+
     method: ClassificationMethod = ClassificationMethod.AUTO
     auto_apply_results: bool = False
     confidence_threshold: float = Field(0.7, ge=0.0, le=1.0)
@@ -40,6 +43,7 @@ class ClassificationConfig(BaseModel):
 
 class ClassificationResult(BaseModel):
     """Individual classification result"""
+
     memory_id: str
     original_category: str | None = None
     new_category: str
@@ -51,6 +55,7 @@ class ClassificationResult(BaseModel):
 
 class BatchClassificationResult(BaseModel):
     """Result of batch classification"""
+
     classified_count: int = 0
     failed_count: int = 0
     skipped_count: int = 0
@@ -106,20 +111,20 @@ class PatternClassifier:
         """Default regex patterns"""
         return {
             "technical": [
-                re.compile(r'\b(code|programming|debug|api|function|class|method)\b', re.I),
-                re.compile(r'\b(python|javascript|java|cpp|golang)\b', re.I),
+                re.compile(r"\b(code|programming|debug|api|function|class|method)\b", re.I),
+                re.compile(r"\b(python|javascript|java|cpp|golang)\b", re.I),
             ],
             "communication": [
-                re.compile(r'\b(email|call|message|discuss|meeting|conversation)\b', re.I),
-                re.compile(r'@\w+'),  # Mentions
+                re.compile(r"\b(email|call|message|discuss|meeting|conversation)\b", re.I),
+                re.compile(r"@\w+"),  # Mentions
             ],
             "documentation": [
-                re.compile(r'\b(document|guide|manual|readme|specification)\b', re.I),
-                re.compile(r'#+\s+\w+'),  # Markdown headers
+                re.compile(r"\b(document|guide|manual|readme|specification)\b", re.I),
+                re.compile(r"#+\s+\w+"),  # Markdown headers
             ],
             "task": [
-                re.compile(r'\b(todo|task|complete|pending|done|action)\b', re.I),
-                re.compile(r'^\s*[-*]\s+\[[ x]\]', re.M),  # Checkboxes
+                re.compile(r"\b(todo|task|complete|pending|done|action)\b", re.I),
+                re.compile(r"^\s*[-*]\s+\[[ x]\]", re.M),  # Checkboxes
             ],
         }
 
@@ -152,21 +157,23 @@ class RulesBasedClassifier:
         return [
             {
                 "name": "url_link",
-                "condition": lambda m: "http://" in m.get("content", "") or "https://" in m.get("content", ""),
+                "condition": lambda m: "http://" in m.get("content", "")
+                or "https://" in m.get("content", ""),
                 "category": "reference",
-                "confidence": 0.8
+                "confidence": 0.8,
             },
             {
                 "name": "question",
                 "condition": lambda m: m.get("content", "").strip().endswith("?"),
                 "category": "question",
-                "confidence": 0.9
+                "confidence": 0.9,
             },
             {
                 "name": "code_block",
-                "condition": lambda m: "```" in m.get("content", "") or "def " in m.get("content", ""),
+                "condition": lambda m: "```" in m.get("content", "")
+                or "def " in m.get("content", ""),
                 "category": "code",
-                "confidence": 0.95
+                "confidence": 0.95,
             },
         ]
 
@@ -192,9 +199,7 @@ class BatchClassifier:
         self.executor = ThreadPoolExecutor(max_workers=4)
 
     async def classify_batch(
-        self,
-        memories: list[dict[str, Any]],
-        config: ClassificationConfig
+        self, memories: list[dict[str, Any]], config: ClassificationConfig
     ) -> list[ClassificationResult]:
         """Classify a batch of memories using configured method"""
 
@@ -203,7 +208,9 @@ class BatchClassifier:
             return await self._classify_with_method(memories, classifier.classify, config)
 
         elif config.method == ClassificationMethod.PATTERN:
-            return await self._classify_with_method(memories, self.pattern_classifier.classify, config)
+            return await self._classify_with_method(
+                memories, self.pattern_classifier.classify, config
+            )
 
         elif config.method == ClassificationMethod.RULES_BASED:
             classifier = RulesBasedClassifier(config.custom_rules)
@@ -216,10 +223,7 @@ class BatchClassifier:
             return await self._classify_auto(memories, config)
 
     async def _classify_with_method(
-        self,
-        memories: list[dict[str, Any]],
-        classify_func,
-        config: ClassificationConfig
+        self, memories: list[dict[str, Any]], classify_func, config: ClassificationConfig
     ) -> list[ClassificationResult]:
         """Generic classification with a specific method"""
         results = []
@@ -236,7 +240,7 @@ class BatchClassifier:
                         new_category=category,
                         confidence=confidence,
                         method_used=config.method,
-                        tags_added=self._generate_tags(category)
+                        tags_added=self._generate_tags(category),
                     )
                     results.append(result)
             except Exception as e:
@@ -248,7 +252,7 @@ class BatchClassifier:
         self,
         memories: list[dict[str, Any]],
         classifier: RulesBasedClassifier,
-        config: ClassificationConfig
+        config: ClassificationConfig,
     ) -> list[ClassificationResult]:
         """Classification using rules that operate on full memory object"""
         results = []
@@ -264,7 +268,7 @@ class BatchClassifier:
                         new_category=category,
                         confidence=confidence,
                         method_used=ClassificationMethod.RULES_BASED,
-                        tags_added=self._generate_tags(category)
+                        tags_added=self._generate_tags(category),
                     )
                     results.append(result)
             except Exception as e:
@@ -273,9 +277,7 @@ class BatchClassifier:
         return results
 
     async def _classify_hybrid(
-        self,
-        memories: list[dict[str, Any]],
-        config: ClassificationConfig
+        self, memories: list[dict[str, Any]], config: ClassificationConfig
     ) -> list[ClassificationResult]:
         """Hybrid classification using multiple methods"""
         results = []
@@ -293,7 +295,7 @@ class BatchClassifier:
                 all_results = [
                     (keyword_cat, keyword_conf * 0.3),
                     (pattern_cat, pattern_conf * 0.3),
-                    (rules_cat, rules_conf * 0.4)
+                    (rules_cat, rules_conf * 0.4),
                 ]
 
                 # Group by category and sum scores
@@ -313,7 +315,7 @@ class BatchClassifier:
                             new_category=best_category,
                             confidence=confidence,
                             method_used=ClassificationMethod.HYBRID,
-                            tags_added=self._generate_tags(best_category)
+                            tags_added=self._generate_tags(best_category),
                         )
                         results.append(result)
             except Exception as e:
@@ -322,9 +324,7 @@ class BatchClassifier:
         return results
 
     async def _classify_auto(
-        self,
-        memories: list[dict[str, Any]],
-        config: ClassificationConfig
+        self, memories: list[dict[str, Any]], config: ClassificationConfig
     ) -> list[ClassificationResult]:
         """Automatic classification choosing best method per memory"""
         # For now, use hybrid approach
@@ -353,13 +353,11 @@ class BatchClassificationEngine:
             "total_failed": 0,
             "cache_hits": 0,
             "cache_misses": 0,
-            "processing_time_avg": 0.0
+            "processing_time_avg": 0.0,
         }
 
     async def classify_batch(
-        self,
-        memories: list[dict[str, Any]],
-        config: ClassificationConfig
+        self, memories: list[dict[str, Any]], config: ClassificationConfig
     ) -> BatchClassificationResult:
         """Classify a batch of memories with given configuration"""
         start_time = datetime.utcnow()
@@ -368,8 +366,10 @@ class BatchClassificationEngine:
 
         try:
             # Process in chunks for better performance
-            chunks = [memories[i:i + config.batch_size]
-                     for i in range(0, len(memories), config.batch_size)]
+            chunks = [
+                memories[i : i + config.batch_size]
+                for i in range(0, len(memories), config.batch_size)
+            ]
 
             all_results = []
             for chunk in chunks:
@@ -386,7 +386,8 @@ class BatchClassificationEngine:
                 "processing_time": processing_time,
                 "memories_per_second": len(memories) / max(processing_time, 0.001),
                 "success_rate": result.classified_count / max(result.processed_memories, 1),
-                "average_confidence": sum(r.confidence for r in all_results) / max(len(all_results), 1)
+                "average_confidence": sum(r.confidence for r in all_results)
+                / max(len(all_results), 1),
             }
 
             # Update statistics
@@ -400,9 +401,7 @@ class BatchClassificationEngine:
         return result
 
     async def apply_classification_results(
-        self,
-        results: list[ClassificationResult],
-        config: ClassificationConfig
+        self, results: list[ClassificationResult], config: ClassificationConfig
     ) -> dict[str, Any]:
         """Apply classification results to memories"""
         applied = 0
@@ -420,7 +419,7 @@ class BatchClassificationEngine:
         return {
             "applied": applied,
             "failed": failed,
-            "message": f"Applied {applied} classifications successfully"
+            "message": f"Applied {applied} classifications successfully",
         }
 
     def get_classification_statistics(self) -> dict[str, Any]:

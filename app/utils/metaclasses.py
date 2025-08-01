@@ -1,3 +1,10 @@
+import asyncio
+import os
+import time
+from typing import Any, Union
+
+from app.utils.logging_config import get_logger
+
 """
 Tasteful metaclass implementations for the Second Brain application.
 
@@ -6,24 +13,22 @@ simplify complexity and provide framework-like features. Each metaclass solves
 real problems and enhances developer experience without being overly clever.
 """
 
-import asyncio
 import functools
 import inspect
 from collections import defaultdict
 from collections.abc import Callable
-from typing import Any, TypeVar, Union
-
-from app.utils.logging_config import get_logger
+from typing import TypeVar
 
 logger = get_logger(__name__)
 
-T = TypeVar('T')
-C = TypeVar('C', bound=type)
+T = TypeVar("T")
+C = TypeVar("C", bound=type)
 
 
 # ============================================================================
 # Registry Metaclass - Automatic Registration and Discovery
 # ============================================================================
+
 
 class RegistryMeta(type):
     """
@@ -38,9 +43,9 @@ class RegistryMeta(type):
 
     def __new__(mcs, name, bases, namespace, **kwargs):
         # Extract registration info from class definition
-        registry_name = kwargs.pop('registry', None)
-        category = kwargs.pop('category', 'default')
-        auto_register = kwargs.pop('auto_register', True)
+        registry_name = kwargs.pop("registry", None)
+        category = kwargs.pop("category", "default")
+        auto_register = kwargs.pop("auto_register", True)
 
         cls = super().__new__(mcs, name, bases, namespace)
 
@@ -48,18 +53,20 @@ class RegistryMeta(type):
         if auto_register and registry_name:
             mcs.register(cls, registry_name, category)
 
-            logger.debug(f"Auto-registered {name} in registry '{registry_name}' category '{category}'")
+            logger.debug(
+                f"Auto-registered {name} in registry '{registry_name}' category '{category}'"
+            )
 
         return cls
 
     @classmethod
-    def register(mcs, cls: type, registry_name: str, category: str = 'default') -> None:
+    def register(mcs, cls: type, registry_name: str, category: str = "default") -> None:
         """Manually register a class in the registry."""
         if registry_name not in mcs._registries:
             mcs._registries[registry_name] = {}
 
         # Use class name as key, or custom key if provided
-        key = getattr(cls, '_registry_key', cls.__name__)
+        key = getattr(cls, "_registry_key", cls.__name__)
         mcs._registries[registry_name][key] = cls
         mcs._categories[registry_name].add(category)
 
@@ -104,6 +111,7 @@ class RegistryMeta(type):
 # ============================================================================
 # Singleton Metaclass - Thread-Safe Singleton Pattern
 # ============================================================================
+
 
 class SingletonMeta(type):
     """
@@ -167,6 +175,7 @@ class SingletonMeta(type):
 # Validation Metaclass - Automatic Method and Attribute Validation
 # ============================================================================
 
+
 class ValidationMeta(type):
     """
     Metaclass that adds automatic validation to classes.
@@ -177,9 +186,9 @@ class ValidationMeta(type):
 
     def __new__(mcs, name, bases, namespace, **kwargs):
         # Extract validation options
-        validate_types = kwargs.pop('validate_types', True)
-        validate_methods = kwargs.pop('validate_methods', True)
-        strict_mode = kwargs.pop('strict_mode', False)
+        validate_types = kwargs.pop("validate_types", True)
+        validate_methods = kwargs.pop("validate_methods", True)
+        strict_mode = kwargs.pop("strict_mode", False)
 
         cls = super().__new__(mcs, name, bases, namespace)
 
@@ -197,22 +206,30 @@ class ValidationMeta(type):
         type_hints = get_type_hints(cls)
 
         for attr_name, expected_type in type_hints.items():
-            if not attr_name.startswith('_'):  # Don't validate private attributes
+            if not attr_name.startswith("_"):  # Don't validate private attributes
                 mcs._create_validated_property(cls, attr_name, expected_type, strict_mode)
 
     @classmethod
-    def _create_validated_property(mcs, cls: type, attr_name: str, expected_type: type, strict_mode: bool) -> None:
+    def _create_validated_property(
+        mcs, cls: type, attr_name: str, expected_type: type, strict_mode: bool
+    ) -> None:
         """Create a validated property for an attribute."""
-        private_name = f'_{attr_name}_value'
+        private_name = f"_{attr_name}_value"
 
         def getter(self):
             return getattr(self, private_name, None)
 
         def setter(self, value):
             if strict_mode and not mcs._check_type(value, expected_type):
-                raise TypeError(f"Invalid type for {attr_name}: expected {expected_type}, got {type(value)}")
-            elif not strict_mode and value is not None and not mcs._check_type(value, expected_type):
-                logger.warning(f"Type mismatch for {cls.__name__}.{attr_name}: expected {expected_type}, got {type(value)}")
+                raise TypeError(
+                    f"Invalid type for {attr_name}: expected {expected_type}, got {type(value)}"
+                )
+            elif (
+                not strict_mode and value is not None and not mcs._check_type(value, expected_type)
+            ):
+                logger.warning(
+                    f"Type mismatch for {cls.__name__}.{attr_name}: expected {expected_type}, got {type(value)}"
+                )
 
             setattr(self, private_name, value)
 
@@ -224,11 +241,11 @@ class ValidationMeta(type):
     def _add_method_validation(mcs, cls: type, strict_mode: bool) -> None:
         """Add validation to class methods based on type hints."""
         for method_name in dir(cls):
-            if method_name.startswith('_'):
+            if method_name.startswith("_"):
                 continue
 
             method = getattr(cls, method_name)
-            if callable(method) and hasattr(method, '__annotations__'):
+            if callable(method) and hasattr(method, "__annotations__"):
                 validated_method = mcs._create_validated_method(method, strict_mode)
                 setattr(cls, method_name, validated_method)
 
@@ -265,8 +282,8 @@ class ValidationMeta(type):
             result = method(*args, **kwargs)
 
             # Validate return type if specified
-            if 'return' in type_hints:
-                return_type = type_hints['return']
+            if "return" in type_hints:
+                return_type = type_hints["return"]
                 if not mcs._check_type(result, return_type):
                     msg = f"Invalid return type from {method.__name__}: expected {return_type}, got {type(result)}"
                     if strict_mode:
@@ -287,13 +304,15 @@ class ValidationMeta(type):
                 return True
 
             # Handle Union types (simplified)
-            if hasattr(expected_type, '__origin__') and expected_type.__origin__ is Union:
+            if hasattr(expected_type, "__origin__") and expected_type.__origin__ is Union:
                 return any(isinstance(value, arg) for arg in expected_type.__args__)
 
             # Handle Optional (Union[T, None])
-            if (hasattr(expected_type, '__origin__') and
-                expected_type.__origin__ is Union and
-                type(None) in expected_type.__args__):
+            if (
+                hasattr(expected_type, "__origin__")
+                and expected_type.__origin__ is Union
+                and type(None) in expected_type.__args__
+            ):
                 if value is None:
                     return True
                 non_none_types = [arg for arg in expected_type.__args__ if arg is not type(None)]
@@ -310,6 +329,7 @@ class ValidationMeta(type):
 # ============================================================================
 # Observer Metaclass - Automatic Event Handling Registration
 # ============================================================================
+
 
 class ObserverMeta(type):
     """
@@ -334,7 +354,7 @@ class ObserverMeta(type):
 
         # Find all handler methods (methods starting with 'on_')
         for attr_name in dir(cls):
-            if attr_name.startswith('on_') and callable(getattr(cls, attr_name)):
+            if attr_name.startswith("on_") and callable(getattr(cls, attr_name)):
                 event_name = attr_name[3:]  # Remove 'on_' prefix
                 handler = getattr(cls, attr_name)
                 handlers[event_name] = handler
@@ -343,7 +363,7 @@ class ObserverMeta(type):
         cls._event_handlers = handlers
 
         # Add event dispatch method if not present
-        if not hasattr(cls, 'handle_event'):
+        if not hasattr(cls, "handle_event"):
             cls.handle_event = mcs._create_event_dispatcher(cls)
 
     @classmethod
@@ -370,6 +390,7 @@ class ObserverMeta(type):
 # Configuration Metaclass - Automatic Configuration Management
 # ============================================================================
 
+
 class ConfigMeta(type):
     """
     Metaclass that automatically handles configuration loading and validation.
@@ -380,9 +401,9 @@ class ConfigMeta(type):
 
     def __new__(mcs, name, bases, namespace, **kwargs):
         # Extract configuration options
-        config_prefix = kwargs.pop('config_prefix', name.lower())
-        auto_load = kwargs.pop('auto_load', True)
-        env_var_support = kwargs.pop('env_var_support', True)
+        config_prefix = kwargs.pop("config_prefix", name.lower())
+        auto_load = kwargs.pop("auto_load", True)
+        env_var_support = kwargs.pop("env_var_support", True)
 
         cls = super().__new__(mcs, name, bases, namespace)
 
@@ -404,12 +425,12 @@ class ConfigMeta(type):
         type_hints = get_type_hints(cls)
 
         for attr_name, attr_type in type_hints.items():
-            if not attr_name.startswith('_'):
+            if not attr_name.startswith("_"):
                 default_value = getattr(cls, attr_name, None)
                 fields[attr_name] = {
-                    'type': attr_type,
-                    'default': default_value,
-                    'env_var': f"{cls._config_prefix.upper()}_{attr_name.upper()}"
+                    "type": attr_type,
+                    "default": default_value,
+                    "env_var": f"{cls._config_prefix.upper()}_{attr_name.upper()}",
                 }
 
         return fields
@@ -420,7 +441,6 @@ class ConfigMeta(type):
 
         def load_config(self, config_dict: dict[str, Any] | None = None) -> None:
             """Load configuration from dictionary and environment variables."""
-            import os
 
             config_dict = config_dict or {}
 
@@ -430,11 +450,11 @@ class ConfigMeta(type):
                 # Priority: explicit config dict > environment variable > default
                 if field_name in config_dict:
                     value = config_dict[field_name]
-                elif env_var_support and field_info['env_var'] in os.environ:
-                    env_value = os.environ[field_info['env_var']]
-                    value = mcs._convert_env_value(env_value, field_info['type'])
+                elif env_var_support and field_info["env_var"] in os.environ:
+                    env_value = os.environ[field_info["env_var"]]
+                    value = mcs._convert_env_value(env_value, field_info["type"])
                 else:
-                    value = field_info['default']
+                    value = field_info["default"]
 
                 setattr(self, field_name, value)
 
@@ -455,12 +475,14 @@ class ConfigMeta(type):
             for field_name, field_info in self._config_fields.items():
                 if hasattr(self, field_name):
                     value = getattr(self, field_name)
-                    expected_type = field_info['type']
+                    expected_type = field_info["type"]
 
                     if value is not None and not isinstance(value, expected_type):
-                        issues.append(f"Invalid type for {field_name}: expected {expected_type}, got {type(value)}")
+                        issues.append(
+                            f"Invalid type for {field_name}: expected {expected_type}, got {type(value)}"
+                        )
                 else:
-                    if field_info['default'] is None:
+                    if field_info["default"] is None:
                         issues.append(f"Required configuration field '{field_name}' is missing")
 
             return issues
@@ -475,13 +497,13 @@ class ConfigMeta(type):
         """Convert environment variable string to expected type."""
         try:
             if expected_type == bool:
-                return env_value.lower() in ('true', '1', 'yes', 'on')
+                return env_value.lower() in ("true", "1", "yes", "on")
             elif expected_type == int:
                 return int(env_value)
             elif expected_type == float:
                 return float(env_value)
             elif expected_type == list:
-                return env_value.split(',')
+                return env_value.split(",")
             else:
                 return env_value
         except (ValueError, TypeError):
@@ -493,6 +515,7 @@ class ConfigMeta(type):
 # Performance Monitoring Metaclass
 # ============================================================================
 
+
 class PerformanceMeta(type):
     """
     Metaclass that automatically adds performance monitoring to methods.
@@ -503,24 +526,27 @@ class PerformanceMeta(type):
 
     def __new__(mcs, name, bases, namespace, **kwargs):
         # Extract monitoring options
-        monitor_all = kwargs.pop('monitor_all', False)
-        monitor_methods = kwargs.pop('monitor_methods', [])
-        performance_threshold = kwargs.pop('performance_threshold', 1.0)  # seconds
+        monitor_all = kwargs.pop("monitor_all", False)
+        monitor_methods = kwargs.pop("monitor_methods", [])
+        performance_threshold = kwargs.pop("performance_threshold", 1.0)  # seconds
 
         cls = super().__new__(mcs, name, bases, namespace)
 
         if monitor_all or monitor_methods:
-            mcs._add_performance_monitoring(cls, monitor_all, monitor_methods, performance_threshold)
+            mcs._add_performance_monitoring(
+                cls, monitor_all, monitor_methods, performance_threshold
+            )
 
         return cls
 
     @classmethod
-    def _add_performance_monitoring(mcs, cls: type, monitor_all: bool,
-                                    monitor_methods: list[str], threshold: float) -> None:
+    def _add_performance_monitoring(
+        mcs, cls: type, monitor_all: bool, monitor_methods: list[str], threshold: float
+    ) -> None:
         """Add performance monitoring to specified methods."""
 
         for method_name in dir(cls):
-            if method_name.startswith('_'):
+            if method_name.startswith("_"):
                 continue
 
             method = getattr(cls, method_name)
@@ -534,10 +560,13 @@ class PerformanceMeta(type):
                 setattr(cls, method_name, monitored_method)
 
     @classmethod
-    def _create_monitored_method(mcs, method: Callable, method_name: str, threshold: float) -> Callable:
+    def _create_monitored_method(
+        mcs, method: Callable, method_name: str, threshold: float
+    ) -> Callable:
         """Create a performance-monitored version of a method."""
 
         if asyncio.iscoroutinefunction(method):
+
             @functools.wraps(method)
             async def async_wrapper(*args, **kwargs):
                 start_time = time.perf_counter()
@@ -560,6 +589,7 @@ class PerformanceMeta(type):
 
             return async_wrapper
         else:
+
             @functools.wraps(method)
             def sync_wrapper(*args, **kwargs):
                 start_time = time.perf_counter()
@@ -587,8 +617,9 @@ class PerformanceMeta(type):
 # Example Usage Classes
 # ============================================================================
 
+
 # Registry example
-class MemoryProcessor(metaclass=RegistryMeta, registry='processors', category='memory'):
+class MemoryProcessor(metaclass=RegistryMeta, registry="processors", category="memory"):
     """Base memory processor registered automatically."""
 
     def process(self, content: str) -> str:
@@ -597,7 +628,8 @@ class MemoryProcessor(metaclass=RegistryMeta, registry='processors', category='m
 
 class SemanticProcessor(MemoryProcessor):
     """Semantic processor - automatically inherits registration."""
-    _registry_key = 'semantic'
+
+    _registry_key = "semantic"
 
     def process(self, content: str) -> str:
         return f"SEMANTIC: {content}"
@@ -605,7 +637,8 @@ class SemanticProcessor(MemoryProcessor):
 
 class EpisodicProcessor(MemoryProcessor):
     """Episodic processor."""
-    _registry_key = 'episodic'
+
+    _registry_key = "episodic"
 
     def process(self, content: str) -> str:
         return f"EPISODIC: {content}"
@@ -659,10 +692,10 @@ class EventHandler(metaclass=ObserverMeta):
 
 
 # Configuration example
-class ServiceConfig(metaclass=ConfigMeta, config_prefix='service', auto_load=True):
+class ServiceConfig(metaclass=ConfigMeta, config_prefix="service", auto_load=True):
     """Service configuration with automatic environment variable support."""
 
-    host: str = 'localhost'
+    host: str = "localhost"
     port: int = 8000
     debug: bool = False
     timeout: float = 30.0
@@ -683,7 +716,7 @@ class AnalyticsService(metaclass=PerformanceMeta, monitor_all=True, performance_
         return {
             "mean": sum(data) / len(data) if data else 0,
             "min": min(data) if data else 0,
-            "max": max(data) if data else 0
+            "max": max(data) if data else 0,
         }
 
 
@@ -691,17 +724,18 @@ class AnalyticsService(metaclass=PerformanceMeta, monitor_all=True, performance_
 # Metaclass Utilities and Testing
 # ============================================================================
 
+
 def demonstrate_metaclass_features():
     """Demonstrate the metaclass functionality."""
 
     print("=== Registry Metaclass Demo ===")
 
     # Show automatic registration
-    processors = RegistryMeta.get_registry('processors')
+    processors = RegistryMeta.get_registry("processors")
     print(f"Registered processors: {list(processors.keys())}")
 
     # Create instances from registry
-    semantic = RegistryMeta.create_instance('processors', 'semantic')
+    semantic = RegistryMeta.create_instance("processors", "semantic")
     result = semantic.process("test content")
     print(f"Semantic processing result: {result}")
 
@@ -730,15 +764,15 @@ def demonstrate_metaclass_features():
     handler = EventHandler()
 
     # Simulate events
-    asyncio.run(handler.handle_event('memory_created', 'mem123', 'test content'))
-    asyncio.run(handler.handle_event('memory_updated', 'mem123', 'old', 'new'))
-    asyncio.run(handler.handle_event('unknown_event'))  # Should log debug message
+    asyncio.run(handler.handle_event("memory_created", "mem123", "test content"))
+    asyncio.run(handler.handle_event("memory_updated", "mem123", "old", "new"))
+    asyncio.run(handler.handle_event("unknown_event"))  # Should log debug message
 
     print("\n=== Configuration Metaclass Demo ===")
 
     # Test configuration loading
     config = ServiceConfig()
-    config.load_config({'host': 'example.com', 'port': 9000})
+    config.load_config({"host": "example.com", "port": 9000})
     print(f"Loaded config: {config.get_config()}")
 
     validation_issues = config.validate_config()
@@ -750,7 +784,7 @@ def demonstrate_metaclass_features():
     analytics = AnalyticsService()
 
     # This should trigger slow method warning
-    result = asyncio.run(analytics.analyze_memories(['mem1', 'mem2', 'mem3']))
+    result = asyncio.run(analytics.analyze_memories(["mem1", "mem2", "mem3"]))
     print(f"Analysis result: {result}")
 
     # This should be fast
@@ -764,36 +798,36 @@ class MetaclassRegistry:
     """Registry of available metaclasses with their capabilities."""
 
     AVAILABLE_METACLASSES = {
-        'RegistryMeta': {
-            'description': 'Automatic class registration and discovery',
-            'use_cases': ['Plugin systems', 'Handler registration', 'Factory patterns'],
-            'options': ['registry', 'category', 'auto_register']
+        "RegistryMeta": {
+            "description": "Automatic class registration and discovery",
+            "use_cases": ["Plugin systems", "Handler registration", "Factory patterns"],
+            "options": ["registry", "category", "auto_register"],
         },
-        'SingletonMeta': {
-            'description': 'Thread-safe singleton pattern implementation',
-            'use_cases': ['Database connections', 'Configuration objects', 'Caches'],
-            'options': []
+        "SingletonMeta": {
+            "description": "Thread-safe singleton pattern implementation",
+            "use_cases": ["Database connections", "Configuration objects", "Caches"],
+            "options": [],
         },
-        'ValidationMeta': {
-            'description': 'Automatic type validation for methods and attributes',
-            'use_cases': ['API models', 'Configuration classes', 'Data validation'],
-            'options': ['validate_types', 'validate_methods', 'strict_mode']
+        "ValidationMeta": {
+            "description": "Automatic type validation for methods and attributes",
+            "use_cases": ["API models", "Configuration classes", "Data validation"],
+            "options": ["validate_types", "validate_methods", "strict_mode"],
         },
-        'ObserverMeta': {
-            'description': 'Automatic event handler registration',
-            'use_cases': ['Event systems', 'UI callbacks', 'Notification systems'],
-            'options': []
+        "ObserverMeta": {
+            "description": "Automatic event handler registration",
+            "use_cases": ["Event systems", "UI callbacks", "Notification systems"],
+            "options": [],
         },
-        'ConfigMeta': {
-            'description': 'Automatic configuration management with environment variables',
-            'use_cases': ['Application settings', 'Service configuration', 'Feature flags'],
-            'options': ['config_prefix', 'auto_load', 'env_var_support']
+        "ConfigMeta": {
+            "description": "Automatic configuration management with environment variables",
+            "use_cases": ["Application settings", "Service configuration", "Feature flags"],
+            "options": ["config_prefix", "auto_load", "env_var_support"],
         },
-        'PerformanceMeta': {
-            'description': 'Automatic performance monitoring for methods',
-            'use_cases': ['Performance profiling', 'Bottleneck detection', 'SLA monitoring'],
-            'options': ['monitor_all', 'monitor_methods', 'performance_threshold']
-        }
+        "PerformanceMeta": {
+            "description": "Automatic performance monitoring for methods",
+            "use_cases": ["Performance profiling", "Bottleneck detection", "SLA monitoring"],
+            "options": ["monitor_all", "monitor_methods", "performance_threshold"],
+        },
     }
 
     @classmethod
@@ -812,8 +846,8 @@ class MetaclassRegistry:
         suitable = []
 
         for name, info in cls.AVAILABLE_METACLASSES.items():
-            use_cases = [case.lower() for case in info['use_cases']]
-            if any(req.lower() in ' '.join(use_cases) for req in requirements):
+            use_cases = [case.lower() for case in info["use_cases"]]
+            if any(req.lower() in " ".join(use_cases) for req in requirements):
                 suitable.append(name)
 
         return suitable

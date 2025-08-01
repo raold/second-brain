@@ -93,10 +93,7 @@ class TestMemoryEndpoints:
     async def test_create_memory_endpoint_exists(self, client: AsyncClient, api_key: str):
         """Test that create memory endpoint exists"""
         headers = {"X-API-Key": api_key}
-        memory_data = {
-            "content": "Test memory content",
-            "memory_type": "factual"
-        }
+        memory_data = {"content": "Test memory content", "memory_type": "factual"}
 
         response = await client.post("/memories", json=memory_data, headers=headers)
 
@@ -124,17 +121,10 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_malformed_json(self, client: AsyncClient, api_key: str):
         """Test handling of malformed JSON"""
-        headers = {
-            "X-API-Key": api_key,
-            "Content-Type": "application/json"
-        }
+        headers = {"X-API-Key": api_key, "Content-Type": "application/json"}
 
         # Send malformed JSON
-        response = await client.post(
-            "/memories",
-            content="{'invalid': json,}",
-            headers=headers
-        )
+        response = await client.post("/memories", content="{'invalid': json,}", headers=headers)
 
         # Should return 400 or 422 for malformed JSON
         assert response.status_code in [400, 422]
@@ -157,10 +147,7 @@ class TestErrorHandling:
 
         # Create a large payload
         large_content = "x" * 10000  # 10KB string
-        memory_data = {
-            "content": large_content,
-            "memory_type": "factual"
-        }
+        memory_data = {"content": large_content, "memory_type": "factual"}
 
         response = await client.post("/memories", json=memory_data, headers=headers)
 
@@ -174,15 +161,9 @@ class TestContentTypes:
     @pytest.mark.asyncio
     async def test_json_content_type(self, client: AsyncClient, api_key: str):
         """Test JSON content type handling"""
-        headers = {
-            "X-API-Key": api_key,
-            "Content-Type": "application/json"
-        }
+        headers = {"X-API-Key": api_key, "Content-Type": "application/json"}
 
-        memory_data = {
-            "content": "JSON test content",
-            "memory_type": "factual"
-        }
+        memory_data = {"content": "JSON test content", "memory_type": "factual"}
 
         response = await client.post("/memories", json=memory_data, headers=headers)
 

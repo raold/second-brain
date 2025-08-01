@@ -15,6 +15,7 @@ def test_import(module_name):
         print(f"   {traceback.format_exc().splitlines()[-1]}")
         return False
 
+
 # Test key imports
 modules_to_test = [
     "app.app",
@@ -24,7 +25,7 @@ modules_to_test = [
     "app.core.dependencies",
     "app.routes.memory_routes",
     "app.database",
-    "app.ingestion.engine"
+    "app.ingestion.engine",
 ]
 
 print("Testing critical imports...")

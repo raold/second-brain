@@ -1,16 +1,18 @@
+import json
+import os
+from typing import Any
+
+from app.database import Database, get_database
+from app.utils.logging_config import get_logger
+
 """
 Simple PostgreSQL database client with pgvector support.
 Single source of truth for all data operations.
 """
 
-import json
-import os
-from typing import Any
 
 import asyncpg
 from openai import AsyncOpenAI
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -25,7 +27,7 @@ class Database:
     async def initialize(self):
         """Initialize database connection and OpenAI client."""
         # Database connection - prefer DATABASE_URL if provided
-        db_url = os.getenv('DATABASE_URL')
+        db_url = os.getenv("DATABASE_URL")
         if not db_url:
             # Fall back to individual components
             db_url = f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'postgres')}@{os.getenv('POSTGRES_HOST', 'localhost')}:{os.getenv('POSTGRES_PORT', '5432')}/{os.getenv('POSTGRES_DB', 'secondbrain')}"
@@ -56,7 +58,8 @@ class Database:
             await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
             # Create memories table if it doesn't exist
-            await conn.execute("""
+            await conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS memories (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     content TEXT NOT NULL,
@@ -68,29 +71,33 @@ class Database:
                     tags TEXT[] DEFAULT '{}',
                     memory_type VARCHAR(50) DEFAULT 'general'
                 )
-            """)
+            """
+            )
 
             # Create index on embedding column for fast similarity search
-            await conn.execute("""
+            await conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS memories_embedding_idx
                 ON memories USING hnsw (embedding vector_cosine_ops)
-            """)
+            """
+            )
 
             # Create additional useful indexes
-            await conn.execute("""
+            await conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS memories_created_at_idx
                 ON memories (created_at DESC)
-            """)
-            await conn.execute("""
+            """
+            )
+            await conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS memories_importance_idx
                 ON memories (importance_score DESC)
-            """)
+            """
+            )
 
     async def get_memories(
-        self,
-        limit: int | None = None,
-        offset: int | None = None,
-        memory_type: str | None = None
+        self, limit: int | None = None, offset: int | None = None, memory_type: str | None = None
     ) -> list[dict[str, Any]]:
         """Get memories with optional filtering and pagination."""
         if not self.pool:
@@ -123,10 +130,7 @@ class Database:
             raise RuntimeError("Database not initialized")
 
         async with self.pool.acquire() as conn:
-            row = await conn.fetchrow(
-                "SELECT * FROM memories WHERE id = $1",
-                memory_id
-            )
+            row = await conn.fetchrow("SELECT * FROM memories WHERE id = $1", memory_id)
             return dict(row) if row else None
 
     async def create_memory(
@@ -135,7 +139,7 @@ class Database:
         metadata: dict[str, Any] | None = None,
         importance_score: int = 5,
         tags: list[str] | None = None,
-        memory_type: str = "general"
+        memory_type: str = "general",
     ) -> dict[str, Any]:
         """Create a new memory with automatic embedding generation."""
         if not self.pool or not self.openai_client:
@@ -144,8 +148,7 @@ class Database:
         # Generate embedding
         try:
             embedding_response = await self.openai_client.embeddings.create(
-                input=content,
-                model="text-embedding-ada-002"
+                input=content, model="text-embedding-ada-002"
             )
             embedding = embedding_response.data[0].embedding
         except Exception as e:
@@ -153,19 +156,24 @@ class Database:
             embedding = None
 
         async with self.pool.acquire() as conn:
-            row = await conn.fetchrow("""
+            row = await conn.fetchrow(
+                """
                 INSERT INTO memories (content, embedding, metadata, importance_score, tags, memory_type)
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *
-            """, content, embedding, json.dumps(metadata or {}), importance_score, tags or [], memory_type)
+            """,
+                content,
+                embedding,
+                json.dumps(metadata or {}),
+                importance_score,
+                tags or [],
+                memory_type,
+            )
 
             return dict(row)
 
     async def search_memories(
-        self,
-        query: str,
-        limit: int = 10,
-        similarity_threshold: float = 0.7
+        self, query: str, limit: int = 10, similarity_threshold: float = 0.7
     ) -> list[dict[str, Any]]:
         """Search memories using embedding similarity."""
         if not self.pool or not self.openai_client:
@@ -174,8 +182,7 @@ class Database:
         # Generate query embedding
         try:
             embedding_response = await self.openai_client.embeddings.create(
-                input=query,
-                model="text-embedding-ada-002"
+                input=query, model="text-embedding-ada-002"
             )
             query_embedding = embedding_response.data[0].embedding
         except Exception as e:
@@ -183,14 +190,19 @@ class Database:
             return []
 
         async with self.pool.acquire() as conn:
-            rows = await conn.fetch("""
+            rows = await conn.fetch(
+                """
                 SELECT *, 1 - (embedding <=> $1) as similarity_score
                 FROM memories
                 WHERE embedding IS NOT NULL
                 AND 1 - (embedding <=> $1) > $2
                 ORDER BY similarity_score DESC
                 LIMIT $3
-            """, query_embedding, similarity_threshold, limit)
+            """,
+                query_embedding,
+                similarity_threshold,
+                limit,
+            )
 
             return [dict(row) for row in rows]
 
@@ -200,7 +212,7 @@ class Database:
         content: str | None = None,
         metadata: dict[str, Any] | None = None,
         importance_score: int | None = None,
-        tags: list[str] | None = None
+        tags: list[str] | None = None,
     ) -> dict[str, Any] | None:
         """Update an existing memory."""
         if not self.pool:
@@ -219,8 +231,7 @@ class Database:
             if self.openai_client:
                 try:
                     embedding_response = await self.openai_client.embeddings.create(
-                        input=content,
-                        model="text-embedding-ada-002"
+                        input=content, model="text-embedding-ada-002"
                     )
                     embedding = embedding_response.data[0].embedding
                     updates.append(f"embedding = ${arg_count}")
@@ -267,10 +278,7 @@ class Database:
             raise RuntimeError("Database not initialized")
 
         async with self.pool.acquire() as conn:
-            result = await conn.execute(
-                "DELETE FROM memories WHERE id = $1",
-                memory_id
-            )
+            result = await conn.execute("DELETE FROM memories WHERE id = $1", memory_id)
             return result == "DELETE 1"
 
     async def get_stats(self) -> dict[str, Any]:
@@ -279,7 +287,8 @@ class Database:
             raise RuntimeError("Database not initialized")
 
         async with self.pool.acquire() as conn:
-            stats = await conn.fetchrow("""
+            stats = await conn.fetchrow(
+                """
                 SELECT
                     COUNT(*) as total_memories,
                     COUNT(embedding) as memories_with_embeddings,
@@ -287,7 +296,8 @@ class Database:
                     MIN(created_at) as oldest_memory,
                     MAX(created_at) as newest_memory
                 FROM memories
-            """)
+            """
+            )
 
             return dict(stats) if stats else {}
 
@@ -298,25 +308,29 @@ class Database:
 
         async with self.pool.acquire() as conn:
             # Basic stats
-            basic_stats = await conn.fetchrow("""
+            basic_stats = await conn.fetchrow(
+                """
                 SELECT
                     COUNT(*) as total_memories,
                     COUNT(embedding) as memories_with_embeddings,
                     AVG(LENGTH(content)) as avg_content_length
                 FROM memories
-            """)
+            """
+            )
 
             # Check if HNSW index exists and is ready
-            index_info = await conn.fetchrow("""
+            index_info = await conn.fetchrow(
+                """
                 SELECT EXISTS(
                     SELECT 1 FROM pg_indexes
                     WHERE tablename = 'memories'
                     AND indexname = 'memories_embedding_idx'
                 ) as index_exists
-            """)
+            """
+            )
 
             result = dict(basic_stats) if basic_stats else {}
-            result['index_ready'] = index_info['index_exists'] if index_info else False
+            result["index_ready"] = index_info["index_exists"] if index_info else False
 
             return result
 

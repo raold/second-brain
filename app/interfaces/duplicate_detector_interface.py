@@ -1,3 +1,8 @@
+import time
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Duplicate Detector Interface
 
@@ -5,9 +10,7 @@ Abstract interface for all duplicate detection algorithms,
 enabling modular, testable, and extensible detection methods.
 """
 
-from typing import Any
 
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -96,7 +99,9 @@ class DuplicateDetectorInterface(ABC):
                 if field not in memory or memory[field] is None:
                     errors.append(f"Memory {i} missing required field: {field}")
                 elif field == "content" and not isinstance(memory[field], str):
-                    errors.append(f"Memory {i} field '{field}' must be string, got {type(memory[field])}")
+                    errors.append(
+                        f"Memory {i} field '{field}' must be string, got {type(memory[field])}"
+                    )
                 elif field == "id" and not memory[field]:
                     errors.append(f"Memory {i} has empty ID")
 
@@ -217,7 +222,9 @@ class BaseDuplicateDetector(DuplicateDetectorInterface):
 
         processing_time = time.time() - self.stats["start_time"]
         average_confidence = (
-            sum(self.stats["confidences"]) / len(self.stats["confidences"]) if self.stats["confidences"] else 0.0
+            sum(self.stats["confidences"]) / len(self.stats["confidences"])
+            if self.stats["confidences"]
+            else 0.0
         )
 
         return DetectionStats(
@@ -252,7 +259,9 @@ class BaseDuplicateDetector(DuplicateDetectorInterface):
             elif strategy == "keep_longest":
                 primary = max(memories, key=lambda m: len(m.get("content", "")))
             elif strategy == "keep_highest_importance":
-                primary = max(memories, key=lambda m: m.get("metadata", {}).get("importance_score", 0.5))
+                primary = max(
+                    memories, key=lambda m: m.get("metadata", {}).get("importance_score", 0.5)
+                )
             else:
                 # Default to first memory for unknown strategies
                 primary = memories[0]
@@ -263,7 +272,9 @@ class BaseDuplicateDetector(DuplicateDetectorInterface):
             logger.warning(f"Error selecting primary memory with strategy {strategy}: {e}")
             return memories[0].get("id", f"fallback_{hash(str(memories[0]))}")
 
-    def _calculate_metadata_similarity(self, memory1: dict[str, Any], memory2: dict[str, Any]) -> float:
+    def _calculate_metadata_similarity(
+        self, memory1: dict[str, Any], memory2: dict[str, Any]
+    ) -> float:
         """
         Calculate similarity between memory metadata.
 

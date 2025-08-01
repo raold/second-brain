@@ -1,18 +1,21 @@
+import json
+from datetime import datetime
+from typing import Any
+from uuid import uuid4
+
+from app.utils.logging_config import get_logger
+
 """
 Session repository implementation following Repository pattern.
 
 Provides data access abstraction for Session entities.
 """
 
-import json
 from abc import abstractmethod
-from datetime import datetime
-from typing import Any
 
 import asyncpg
 
 from app.repositories.base_repository import BaseRepository
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -27,7 +30,7 @@ class Session:
         created_at: datetime,
         last_accessed: datetime,
         metadata: dict[str, Any] | None = None,
-        is_active: bool = True
+        is_active: bool = True,
     ):
         self.session_id = session_id
         self.user_id = user_id
@@ -101,28 +104,27 @@ class PostgreSQLSessionRepository(SessionRepository):
     async def _map_row_to_entity(self, row: asyncpg.Record) -> Session:
         """Map database row to Session entity."""
         return Session(
-            session_id=row['session_id'],
-            user_id=row['user_id'],
-            created_at=row['created_at'],
-            last_accessed=row['last_accessed'],
-            metadata=json.loads(row['metadata']) if row.get('metadata') else {},
-            is_active=row.get('is_active', True)
+            session_id=row["session_id"],
+            user_id=row["user_id"],
+            created_at=row["created_at"],
+            last_accessed=row["last_accessed"],
+            metadata=json.loads(row["metadata"]) if row.get("metadata") else {},
+            is_active=row.get("is_active", True),
         )
 
     async def _map_entity_to_values(self, session: Session) -> dict[str, Any]:
         """Map Session entity to database values."""
         return {
-            'session_id': session.session_id,
-            'user_id': session.user_id,
-            'created_at': session.created_at,
-            'last_accessed': session.last_accessed,
-            'metadata': json.dumps(session.metadata),
-            'is_active': session.is_active
+            "session_id": session.session_id,
+            "user_id": session.user_id,
+            "created_at": session.created_at,
+            "last_accessed": session.last_accessed,
+            "metadata": json.dumps(session.metadata),
+            "is_active": session.is_active,
         }
 
     async def create_session(self, user_id: str, metadata: dict[str, Any] | None = None) -> str:
         """Create a new session and return session ID."""
-        from uuid import uuid4
 
         session_id = str(uuid4())
         now = datetime.utcnow()
@@ -133,7 +135,7 @@ class PostgreSQLSessionRepository(SessionRepository):
             created_at=now,
             last_accessed=now,
             metadata=metadata or {},
-            is_active=True
+            is_active=True,
         )
 
         values = await self._map_entity_to_values(session)
@@ -148,22 +150,22 @@ class PostgreSQLSessionRepository(SessionRepository):
 
             result = await conn.fetchval(
                 query,
-                values['session_id'],
-                values['user_id'],
-                values['created_at'],
-                values['last_accessed'],
-                values['metadata'],
-                values['is_active']
+                values["session_id"],
+                values["user_id"],
+                values["created_at"],
+                values["last_accessed"],
+                values["metadata"],
+                values["is_active"],
             )
 
-            await self._log_operation('create_session', session_id, user_id=user_id)
+            await self._log_operation("create_session", session_id, user_id=user_id)
             return result
 
     async def find_by_session_id(self, session_id: str) -> Session | None:
         """Find session by session ID."""
         session = await self.find_by_id(session_id)
         if session:
-            await self._log_operation('find_by_session_id', session_id)
+            await self._log_operation("find_by_session_id", session_id)
         return session
 
     async def find_active_sessions(self, user_id: str) -> list[Session]:
@@ -171,13 +173,9 @@ class PostgreSQLSessionRepository(SessionRepository):
         where_clause = "user_id = $1 AND is_active = TRUE"
         params = [user_id]
 
-        sessions = await self.find_by_criteria(
-            where_clause,
-            params,
-            order_by="last_accessed DESC"
-        )
+        sessions = await self.find_by_criteria(where_clause, params, order_by="last_accessed DESC")
 
-        await self._log_operation('find_active_sessions', user_id=user_id, count=len(sessions))
+        await self._log_operation("find_active_sessions", user_id=user_id, count=len(sessions))
         return sessions
 
     async def update_access_time(self, session_id: str) -> bool:
@@ -194,7 +192,7 @@ class PostgreSQLSessionRepository(SessionRepository):
             success = rows_affected > 0
 
             if success:
-                await self._log_operation('update_access_time', session_id)
+                await self._log_operation("update_access_time", session_id)
 
             return success
 
@@ -212,7 +210,7 @@ class PostgreSQLSessionRepository(SessionRepository):
             success = rows_affected > 0
 
             if success:
-                await self._log_operation('deactivate_session', session_id)
+                await self._log_operation("deactivate_session", session_id)
 
             return success
 
@@ -228,7 +226,9 @@ class PostgreSQLSessionRepository(SessionRepository):
             """
 
             deactivate_result = await conn.execute(deactivate_query)
-            deactivated_count = int(deactivate_result.split()[-1]) if deactivate_result.split() else 0
+            deactivated_count = (
+                int(deactivate_result.split()[-1]) if deactivate_result.split() else 0
+            )
 
             # Then delete very old inactive sessions (older than 7 days)
             delete_query = """
@@ -243,10 +243,10 @@ class PostgreSQLSessionRepository(SessionRepository):
             total_cleaned = deactivated_count + deleted_count
 
             await self._log_operation(
-                'cleanup_expired_sessions',
+                "cleanup_expired_sessions",
                 deactivated=deactivated_count,
                 deleted=deleted_count,
-                total=total_cleaned
+                total=total_cleaned,
             )
 
             return total_cleaned

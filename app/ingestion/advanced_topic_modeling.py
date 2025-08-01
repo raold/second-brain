@@ -1,11 +1,14 @@
+from typing import Any, Union
+
+import numpy as np
+
+from app.utils.logging_config import get_logger
+
 """
 Advanced topic modeling with transformer-based models and hierarchical clustering
 """
 
 from collections import Counter, defaultdict
-from typing import Any, Union
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -13,13 +16,15 @@ logger = get_logger(__name__)
 class AdvancedTopicModeling:
     """Advanced topic modeling with transformer models and hierarchical clustering"""
 
-    def __init__(self,
-                 enable_bertopic: bool = True,
-                 enable_hierarchical: bool = True,
-                 enable_dynamic: bool = True,
-                 min_topic_size: int = 10,
-                 nr_topics: Union[int, str] = "auto",
-                 embedding_model: str | None = None):
+    def __init__(
+        self,
+        enable_bertopic: bool = True,
+        enable_hierarchical: bool = True,
+        enable_dynamic: bool = True,
+        min_topic_size: int = 10,
+        nr_topics: Union[int, str] = "auto",
+        embedding_model: str | None = None,
+    ):
         """
         Initialize advanced topic modeling
 
@@ -60,7 +65,7 @@ class AdvancedTopicModeling:
                 model_candidates = [
                     "all-MiniLM-L6-v2",  # Fast and good quality
                     "all-mpnet-base-v2",  # Higher quality
-                    "paraphrase-MiniLM-L6-v2"  # Fallback
+                    "paraphrase-MiniLM-L6-v2",  # Fallback
                 ]
 
                 for model_name in model_candidates:
@@ -77,7 +82,7 @@ class AdvancedTopicModeling:
                 min_topic_size=self.min_topic_size,
                 nr_topics=self.nr_topics,
                 calculate_probabilities=True,
-                verbose=False
+                verbose=False,
             )
 
             logger.info("BERTopic model initialized successfully")
@@ -86,11 +91,13 @@ class AdvancedTopicModeling:
             logger.error(f"Failed to initialize BERTopic: {e}")
             self.enable_bertopic = False
 
-    def extract_advanced_topics(self,
-                              texts: Union[str, list[str]],
-                              min_relevance: float = 0.3,
-                              max_topics: int = 10,
-                              include_hierarchy: bool = True) -> list[Topic]:
+    def extract_advanced_topics(
+        self,
+        texts: Union[str, list[str]],
+        min_relevance: float = 0.3,
+        max_topics: int = 10,
+        include_hierarchy: bool = True,
+    ) -> list[Topic]:
         """
         Extract topics using advanced modeling techniques
 
@@ -117,9 +124,7 @@ class AdvancedTopicModeling:
         # Fall back to basic classification for smaller datasets
         if not all_topics:
             for text in texts:
-                basic_topics = self.basic_classifier.extract_topics(
-                    text, min_relevance, max_topics
-                )
+                basic_topics = self.basic_classifier.extract_topics(text, min_relevance, max_topics)
                 all_topics.extend(basic_topics)
 
         # Apply hierarchical clustering if enabled
@@ -127,15 +132,9 @@ class AdvancedTopicModeling:
             all_topics = self._apply_hierarchical_clustering(all_topics)
 
         # Filter and sort topics
-        filtered_topics = [
-            topic for topic in all_topics
-            if topic.relevance >= min_relevance
-        ]
+        filtered_topics = [topic for topic in all_topics if topic.relevance >= min_relevance]
 
-        filtered_topics.sort(
-            key=lambda t: (t.relevance * t.confidence),
-            reverse=True
-        )
+        filtered_topics.sort(key=lambda t: (t.relevance * t.confidence), reverse=True)
 
         return filtered_topics[:max_topics]
 
@@ -155,10 +154,10 @@ class AdvancedTopicModeling:
 
             # Process each discovered topic
             for _index, row in topic_info.iterrows():
-                if row['Topic'] == -1:  # Skip outlier topic
+                if row["Topic"] == -1:  # Skip outlier topic
                     continue
 
-                topic_id = row['Topic']
+                topic_id = row["Topic"]
                 topic_words = self.bertopic_model.get_topic(topic_id)
 
                 if not topic_words:
@@ -173,13 +172,14 @@ class AdvancedTopicModeling:
                     keyword_scores.append(score)
 
                 # Calculate relevance based on topic size and probability
-                topic_size = row['Count']
+                topic_size = row["Count"]
                 total_docs = len(texts)
                 size_relevance = min(1.0, topic_size / (total_docs * 0.1))
 
                 # Average probability for this topic
-                topic_probs = [probs[i][topic_id] for i in range(len(texts))
-                              if topics[i] == topic_id]
+                topic_probs = [
+                    probs[i][topic_id] for i in range(len(texts)) if topics[i] == topic_id
+                ]
                 avg_prob = np.mean(topic_probs) if topic_probs else 0.0
 
                 relevance = (size_relevance + avg_prob) / 2
@@ -199,8 +199,8 @@ class AdvancedTopicModeling:
                         "cluster_id": topic_id,
                         "cluster_size": topic_size,
                         "keyword_scores": keyword_scores[:7],
-                        "representative_docs": row.get('Representative_Docs', [])[:3]
-                    }
+                        "representative_docs": row.get("Representative_Docs", [])[:3],
+                    },
                 )
 
                 topics_list.append(topic)
@@ -241,9 +241,7 @@ class AdvancedTopicModeling:
 
             # Perform hierarchical clustering
             clustering = AgglomerativeClustering(
-                n_clusters=None,
-                distance_threshold=0.5,
-                linkage='ward'
+                n_clusters=None, distance_threshold=0.5, linkage="ward"
             )
 
             cluster_labels = clustering.fit_predict(keyword_vectors)
@@ -275,8 +273,8 @@ class AdvancedTopicModeling:
                     # Add cluster metadata
                     if not topic.metadata:
                         topic.metadata = {}
-                    topic.metadata['cluster_id'] = cluster_id
-                    topic.metadata['cluster_size'] = len(cluster_members)
+                    topic.metadata["cluster_id"] = cluster_id
+                    topic.metadata["cluster_size"] = len(cluster_members)
 
         except Exception as e:
             logger.error(f"Hierarchical clustering failed: {e}")
@@ -294,7 +292,7 @@ class AdvancedTopicModeling:
                 if not topic1.metadata:
                     topic1.metadata = {}
 
-                topic1.metadata['related_topics'] = []
+                topic1.metadata["related_topics"] = []
 
                 for j, topic2 in enumerate(topics):
                     if i == j:
@@ -308,20 +306,19 @@ class AdvancedTopicModeling:
                         jaccard = len(keywords1 & keywords2) / len(keywords1 | keywords2)
 
                         if jaccard > 0.2:  # Threshold for relationship
-                            topic1.metadata['related_topics'].append({
-                                'name': topic2.name,
-                                'similarity': round(jaccard, 3),
-                                'shared_keywords': list(keywords1 & keywords2)
-                            })
+                            topic1.metadata["related_topics"].append(
+                                {
+                                    "name": topic2.name,
+                                    "similarity": round(jaccard, 3),
+                                    "shared_keywords": list(keywords1 & keywords2),
+                                }
+                            )
 
                 # Sort by similarity
-                topic1.metadata['related_topics'].sort(
-                    key=lambda x: x['similarity'],
-                    reverse=True
-                )
+                topic1.metadata["related_topics"].sort(key=lambda x: x["similarity"], reverse=True)
 
                 # Keep only top 3 relationships
-                topic1.metadata['related_topics'] = topic1.metadata['related_topics'][:3]
+                topic1.metadata["related_topics"] = topic1.metadata["related_topics"][:3]
 
         except Exception as e:
             logger.error(f"Failed to add topic relationships: {e}")
@@ -335,7 +332,7 @@ class AdvancedTopicModeling:
         clean_keywords = []
         for kw in keywords[:2]:
             # Remove special characters and capitalize
-            clean_kw = ''.join(c for c in kw if c.isalnum() or c.isspace())
+            clean_kw = "".join(c for c in kw if c.isalnum() or c.isspace())
             clean_kw = clean_kw.strip().title()
             if clean_kw:
                 clean_keywords.append(clean_kw)
@@ -345,10 +342,9 @@ class AdvancedTopicModeling:
         else:
             return f"Topic {topic_id}"
 
-    def extract_temporal_topics(self,
-                              documents: list[dict],
-                              time_field: str = "created_at",
-                              min_relevance: float = 0.3) -> dict[str, list[Topic]]:
+    def extract_temporal_topics(
+        self, documents: list[dict], time_field: str = "created_at", min_relevance: float = 0.3
+    ) -> dict[str, list[Topic]]:
         """
         Extract topics over time for temporal analysis
 
@@ -367,7 +363,7 @@ class AdvancedTopicModeling:
         time_groups = defaultdict(list)
 
         for doc in documents:
-            if time_field in doc and 'content' in doc:
+            if time_field in doc and "content" in doc:
                 # Extract time period (e.g., month)
                 timestamp = doc[time_field]
                 if isinstance(timestamp, str):
@@ -376,7 +372,7 @@ class AdvancedTopicModeling:
                 else:
                     time_period = str(timestamp)[:7]
 
-                time_groups[time_period].append(doc['content'])
+                time_groups[time_period].append(doc["content"])
 
         # Extract topics for each time period
         temporal_topics = {}
@@ -384,9 +380,7 @@ class AdvancedTopicModeling:
         for period, texts in time_groups.items():
             if len(texts) >= 3:  # Minimum texts for meaningful topics
                 topics = self.extract_advanced_topics(
-                    texts,
-                    min_relevance=min_relevance,
-                    include_hierarchy=False  # Faster processing
+                    texts, min_relevance=min_relevance, include_hierarchy=False  # Faster processing
                 )
                 temporal_topics[period] = topics
 
@@ -417,11 +411,9 @@ class AdvancedTopicModeling:
 
             for topic in topics:
                 topic_key = topic.name
-                topic_timeline[topic_key].append({
-                    'period': period,
-                    'relevance': topic.relevance,
-                    'keywords': topic.keywords
-                })
+                topic_timeline[topic_key].append(
+                    {"period": period, "relevance": topic.relevance, "keywords": topic.keywords}
+                )
 
                 if topic_key not in topic_first_seen:
                     topic_first_seen[topic_key] = period
@@ -429,10 +421,10 @@ class AdvancedTopicModeling:
 
         # Analyze evolution patterns
         evolution_analysis = {
-            'emerging_topics': [],
-            'declining_topics': [],
-            'stable_topics': [],
-            'trending_topics': []
+            "emerging_topics": [],
+            "declining_topics": [],
+            "stable_topics": [],
+            "trending_topics": [],
         }
 
         # Identify patterns
@@ -444,38 +436,48 @@ class AdvancedTopicModeling:
 
             # Calculate metrics
             presence_ratio = appearances / total_periods
-            sum(1 for t in timeline if t['period'] in recent_periods)
+            sum(1 for t in timeline if t["period"] in recent_periods)
 
             # Classify topic evolution
             if topic_first_seen[topic_name] in recent_periods:
-                evolution_analysis['emerging_topics'].append({
-                    'name': topic_name,
-                    'first_seen': topic_first_seen[topic_name],
-                    'appearances': appearances
-                })
+                evolution_analysis["emerging_topics"].append(
+                    {
+                        "name": topic_name,
+                        "first_seen": topic_first_seen[topic_name],
+                        "appearances": appearances,
+                    }
+                )
             elif topic_last_seen[topic_name] not in recent_periods:
-                evolution_analysis['declining_topics'].append({
-                    'name': topic_name,
-                    'last_seen': topic_last_seen[topic_name],
-                    'peak_relevance': max(t['relevance'] for t in timeline)
-                })
+                evolution_analysis["declining_topics"].append(
+                    {
+                        "name": topic_name,
+                        "last_seen": topic_last_seen[topic_name],
+                        "peak_relevance": max(t["relevance"] for t in timeline),
+                    }
+                )
             elif presence_ratio > 0.7:
-                evolution_analysis['stable_topics'].append({
-                    'name': topic_name,
-                    'consistency': presence_ratio,
-                    'avg_relevance': np.mean([t['relevance'] for t in timeline])
-                })
+                evolution_analysis["stable_topics"].append(
+                    {
+                        "name": topic_name,
+                        "consistency": presence_ratio,
+                        "avg_relevance": np.mean([t["relevance"] for t in timeline]),
+                    }
+                )
 
             # Check for trending (increasing relevance)
             if len(timeline) >= 3:
-                recent_relevances = [t['relevance'] for t in timeline[-3:]]
-                if all(recent_relevances[i] <= recent_relevances[i+1]
-                      for i in range(len(recent_relevances)-1)):
-                    evolution_analysis['trending_topics'].append({
-                        'name': topic_name,
-                        'growth_rate': recent_relevances[-1] / recent_relevances[0],
-                        'current_relevance': recent_relevances[-1]
-                    })
+                recent_relevances = [t["relevance"] for t in timeline[-3:]]
+                if all(
+                    recent_relevances[i] <= recent_relevances[i + 1]
+                    for i in range(len(recent_relevances) - 1)
+                ):
+                    evolution_analysis["trending_topics"].append(
+                        {
+                            "name": topic_name,
+                            "growth_rate": recent_relevances[-1] / recent_relevances[0],
+                            "current_relevance": recent_relevances[-1],
+                        }
+                    )
 
         return evolution_analysis
 

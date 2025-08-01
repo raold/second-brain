@@ -1,14 +1,17 @@
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+from app.database import Database
+from app.utils.logging_config import get_logger
+
 """
 Multi-hop Reasoning Engine for Second Brain
 Enables complex queries that traverse multiple memories to find connections and insights
 """
 
-from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
-from typing import Any, TYPE_CHECKING
-
-from app.utils.logging_config import get_logger
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.database import Database
@@ -18,6 +21,7 @@ logger = get_logger(__name__)
 
 class ReasoningType(Enum):
     """Types of reasoning operations"""
+
     CAUSAL = "causal"  # What caused X?
     TEMPORAL = "temporal"  # What happened before/after X?
     SEMANTIC = "semantic"  # What is related to X?
@@ -28,6 +32,7 @@ class ReasoningType(Enum):
 @dataclass
 class ReasoningNode:
     """Represents a node in the reasoning path"""
+
     memory_id: str
     content: str
     relevance_score: float
@@ -39,6 +44,7 @@ class ReasoningNode:
 @dataclass
 class ReasoningPath:
     """Represents a complete reasoning path from query to answer"""
+
     query: str
     nodes: list[ReasoningNode]
     total_score: float
@@ -50,6 +56,7 @@ class ReasoningPath:
 @dataclass
 class ReasoningQuery:
     """Structured reasoning query"""
+
     text: str
     max_hops: int = 3
     reasoning_type: ReasoningType | None = None
@@ -70,10 +77,7 @@ class ReasoningEngine:
         self.beam_width = 5  # Beam search width for path exploration
 
     async def multi_hop_query(
-        self,
-        query: str,
-        max_hops: int = 3,
-        reasoning_type: ReasoningType | None = None
+        self, query: str, max_hops: int = 3, reasoning_type: ReasoningType | None = None
     ) -> list[ReasoningPath]:
         """
         Execute a multi-hop reasoning query
@@ -122,14 +126,13 @@ class ReasoningEngine:
         for path in ranked_paths:
             path.execution_time_ms = execution_time
 
-        logger.info(f"Multi-hop query completed in {execution_time:.2f}ms with {len(ranked_paths)} paths")
+        logger.info(
+            f"Multi-hop query completed in {execution_time:.2f}ms with {len(ranked_paths)} paths"
+        )
         return ranked_paths
 
     async def _parse_query(
-        self,
-        query: str,
-        max_hops: int,
-        reasoning_type: ReasoningType | None
+        self, query: str, max_hops: int, reasoning_type: ReasoningType | None
     ) -> ReasoningQuery:
         """Parse natural language query into structured format"""
 
@@ -138,20 +141,22 @@ class ReasoningEngine:
             reasoning_type = self._detect_reasoning_type(query)
 
         # Determine which relationship types to include
-        include_temporal = any(word in query.lower() for word in [
-            "when", "before", "after", "during", "timeline", "evolved", "changed"
-        ])
+        include_temporal = any(
+            word in query.lower()
+            for word in ["when", "before", "after", "during", "timeline", "evolved", "changed"]
+        )
 
-        include_semantic = any(word in query.lower() for word in [
-            "related", "similar", "like", "about", "concerning", "regarding"
-        ])
+        include_semantic = any(
+            word in query.lower()
+            for word in ["related", "similar", "like", "about", "concerning", "regarding"]
+        )
 
         return ReasoningQuery(
             text=query,
             max_hops=max_hops,
             reasoning_type=reasoning_type,
             include_temporal=include_temporal,
-            include_semantic=include_semantic
+            include_semantic=include_semantic,
         )
 
     def _detect_reasoning_type(self, query: str) -> ReasoningType:
@@ -160,11 +165,16 @@ class ReasoningEngine:
 
         if any(word in query_lower for word in ["caused", "why", "because", "led to", "resulted"]):
             return ReasoningType.CAUSAL
-        elif any(word in query_lower for word in ["evolve", "evolved", "changed", "developed", "progressed", "progression"]):
+        elif any(
+            word in query_lower
+            for word in ["evolve", "evolved", "changed", "developed", "progressed", "progression"]
+        ):
             return ReasoningType.EVOLUTIONARY
         elif any(word in query_lower for word in ["before", "after", "when", "timeline"]):
             return ReasoningType.TEMPORAL
-        elif any(word in query_lower for word in ["compare", "differ", "difference", "similar", "versus"]):
+        elif any(
+            word in query_lower for word in ["compare", "differ", "difference", "similar", "versus"]
+        ):
             return ReasoningType.COMPARATIVE
         else:
             return ReasoningType.SEMANTIC
@@ -174,9 +184,7 @@ class ReasoningEngine:
 
         # Search for memories matching the query
         search_results = await self.db.contextual_search(
-            query=query.text,
-            limit=self.beam_width * 2,
-            importance_threshold=0.3
+            query=query.text, limit=self.beam_width * 2, importance_threshold=0.3
         )
 
         starting_nodes = []
@@ -191,16 +199,14 @@ class ReasoningEngine:
                     "memory_type": result.get("memory_type", "semantic"),
                     "importance_score": result.get("importance_score", 0.5),
                     "created_at": result.get("created_at"),
-                }
+                },
             )
             starting_nodes.append(node)
 
-        return starting_nodes[:self.beam_width]
+        return starting_nodes[: self.beam_width]
 
     async def _execute_multi_hop(
-        self,
-        starting_nodes: list[ReasoningNode],
-        query: ReasoningQuery
+        self, starting_nodes: list[ReasoningNode], query: ReasoningQuery
     ) -> list[ReasoningPath]:
         """Execute multi-hop traversal using beam search"""
 
@@ -214,7 +220,7 @@ class ReasoningEngine:
                 total_score=node.relevance_score,
                 reasoning_type=query.reasoning_type,
                 insights=[],
-                execution_time_ms=0
+                execution_time_ms=0,
             )
             for node in starting_nodes
         ]
@@ -229,10 +235,7 @@ class ReasoningEngine:
 
                 # Find next hop candidates
                 next_nodes = await self._find_next_hop_nodes(
-                    last_node,
-                    query,
-                    hop,
-                    visited_ids=set(n.memory_id for n in path.nodes)
+                    last_node, query, hop, visited_ids=set(n.memory_id for n in path.nodes)
                 )
 
                 # Create new paths with each next node
@@ -243,13 +246,13 @@ class ReasoningEngine:
                         total_score=self._calculate_path_score(path.nodes + [next_node]),
                         reasoning_type=path.reasoning_type,
                         insights=[],
-                        execution_time_ms=0
+                        execution_time_ms=0,
                     )
                     next_paths.append(new_path)
 
             # Keep top paths using beam search
             next_paths.sort(key=lambda p: p.total_score, reverse=True)
-            current_paths = next_paths[:self.beam_width]
+            current_paths = next_paths[: self.beam_width]
 
             # Add completed paths to results
             paths.extend(current_paths)
@@ -261,7 +264,7 @@ class ReasoningEngine:
         current_node: ReasoningNode,
         query: ReasoningQuery,
         hop_number: int,
-        visited_ids: set[str]
+        visited_ids: set[str],
     ) -> list[ReasoningNode]:
         """Find candidate nodes for the next hop"""
 
@@ -269,38 +272,29 @@ class ReasoningEngine:
 
         # Find semantically related memories
         if query.include_semantic:
-            semantic_nodes = await self._find_semantic_neighbors(
-                current_node, query, visited_ids
-            )
+            semantic_nodes = await self._find_semantic_neighbors(current_node, query, visited_ids)
             next_nodes.extend(semantic_nodes)
 
         # Find temporally related memories
         if query.include_temporal:
-            temporal_nodes = await self._find_temporal_neighbors(
-                current_node, query, visited_ids
-            )
+            temporal_nodes = await self._find_temporal_neighbors(current_node, query, visited_ids)
             next_nodes.extend(temporal_nodes)
 
         # Score and filter nodes
         scored_nodes = []
         for node in next_nodes:
             node.hop_number = hop_number
-            node.relevance_score = await self._score_node_relevance(
-                node, current_node, query
-            )
+            node.relevance_score = await self._score_node_relevance(node, current_node, query)
 
             if node.relevance_score >= query.min_relevance:
                 scored_nodes.append(node)
 
         # Return top nodes
         scored_nodes.sort(key=lambda n: n.relevance_score, reverse=True)
-        return scored_nodes[:self.beam_width]
+        return scored_nodes[: self.beam_width]
 
     async def _find_semantic_neighbors(
-        self,
-        node: ReasoningNode,
-        query: ReasoningQuery,
-        visited_ids: set[str]
+        self, node: ReasoningNode, query: ReasoningQuery, visited_ids: set[str]
     ) -> list[ReasoningNode]:
         """Find semantically related memories"""
 
@@ -308,7 +302,7 @@ class ReasoningEngine:
         results = await self.db.contextual_search(
             query=node.content[:200],  # Use first 200 chars as query
             limit=10,
-            importance_threshold=0.2
+            importance_threshold=0.2,
         )
 
         neighbors = []
@@ -323,17 +317,14 @@ class ReasoningEngine:
                     metadata={
                         "similarity_score": result.get("similarity", 0.5),
                         "memory_type": result.get("memory_type", "semantic"),
-                    }
+                    },
                 )
                 neighbors.append(neighbor)
 
         return neighbors
 
     async def _find_temporal_neighbors(
-        self,
-        node: ReasoningNode,
-        query: ReasoningQuery,
-        visited_ids: set[str]
+        self, node: ReasoningNode, query: ReasoningQuery, visited_ids: set[str]
     ) -> list[ReasoningNode]:
         """Find temporally related memories"""
 
@@ -348,9 +339,7 @@ class ReasoningEngine:
         # This would ideally be a custom query - for now using contextual search
         time_context = f"memories from around {created_at}"
         results = await self.db.contextual_search(
-            query=time_context,
-            limit=5,
-            timeframe="last_year"  # Adjust based on the timestamp
+            query=time_context, limit=5, timeframe="last_year"  # Adjust based on the timestamp
         )
 
         neighbors = []
@@ -365,17 +354,14 @@ class ReasoningEngine:
                     metadata={
                         "temporal_distance": "close",  # Would calculate actual distance
                         "memory_type": result.get("memory_type", "episodic"),
-                    }
+                    },
                 )
                 neighbors.append(neighbor)
 
         return neighbors
 
     async def _score_node_relevance(
-        self,
-        node: ReasoningNode,
-        previous_node: ReasoningNode,
-        query: ReasoningQuery
+        self, node: ReasoningNode, previous_node: ReasoningNode, query: ReasoningQuery
     ) -> float:
         """Score the relevance of a node in the reasoning path"""
 
@@ -394,7 +380,7 @@ class ReasoningEngine:
                 score *= 1.2
 
         # Decay score based on hop number
-        hop_decay = 0.9 ** node.hop_number
+        hop_decay = 0.9**node.hop_number
         score *= hop_decay
 
         # Boost for high importance memories
@@ -411,7 +397,7 @@ class ReasoningEngine:
 
         # Weighted average of node scores
         scores = [node.relevance_score for node in nodes]
-        weights = [0.8 ** i for i in range(len(scores))]  # More weight to earlier nodes
+        weights = [0.8**i for i in range(len(scores))]  # More weight to earlier nodes
 
         weighted_sum = sum(s * w for s, w in zip(scores, weights, strict=False))
         total_weight = sum(weights)
@@ -435,7 +421,7 @@ class ReasoningEngine:
         # Sort by total score
         unique_paths.sort(key=lambda p: p.total_score, reverse=True)
 
-        return unique_paths[:self.max_paths]
+        return unique_paths[: self.max_paths]
 
     async def _extract_insights(self, path: ReasoningPath) -> list[str]:
         """Extract insights from a reasoning path"""
@@ -452,9 +438,7 @@ class ReasoningEngine:
         # Insight 2: Relationship types
         relationship_types = set(node.relationship_type for node in path.nodes[1:])
         if relationship_types:
-            insights.append(
-                f"Relationships discovered: {', '.join(relationship_types)}"
-            )
+            insights.append(f"Relationships discovered: {', '.join(relationship_types)}")
 
         # Insight 3: Temporal progression (if applicable)
         if path.reasoning_type == ReasoningType.TEMPORAL:
@@ -467,10 +451,7 @@ class ReasoningEngine:
         return insights
 
     async def trace_reasoning_path(
-        self,
-        start_memory_id: str,
-        end_memory_id: str,
-        max_hops: int = 5
+        self, start_memory_id: str, end_memory_id: str, max_hops: int = 5
     ) -> ReasoningPath | None:
         """
         Find the reasoning path between two specific memories
@@ -496,7 +477,7 @@ class ReasoningEngine:
             relevance_score=1.0,
             hop_number=0,
             relationship_type="start",
-            metadata=start_memory.get("metadata", {})
+            metadata=start_memory.get("metadata", {}),
         )
 
         # Use BFS to find path
@@ -513,15 +494,13 @@ class ReasoningEngine:
                     total_score=self._calculate_path_score(path),
                     reasoning_type=ReasoningType.SEMANTIC,
                     insights=[f"Found {len(path)}-hop connection"],
-                    execution_time_ms=0
+                    execution_time_ms=0,
                 )
 
             if len(path) < max_hops:
                 # Get neighbors
                 neighbors = await self._find_semantic_neighbors(
-                    current_node,
-                    ReasoningQuery(text="", max_hops=max_hops),
-                    visited
+                    current_node, ReasoningQuery(text="", max_hops=max_hops), visited
                 )
 
                 for neighbor in neighbors:
@@ -533,10 +512,7 @@ class ReasoningEngine:
         return None
 
     async def find_causal_chains(
-        self,
-        event_memory_id: str,
-        direction: str = "backward",
-        max_depth: int = 3
+        self, event_memory_id: str, direction: str = "backward", max_depth: int = 3
     ) -> list[ReasoningPath]:
         """
         Find causal chains leading to or from an event
@@ -562,7 +538,5 @@ class ReasoningEngine:
             query = f"What resulted from or was caused by: {event_desc[:100]}"
 
         return await self.multi_hop_query(
-            query=query,
-            max_hops=max_depth,
-            reasoning_type=ReasoningType.CAUSAL
+            query=query, max_hops=max_depth, reasoning_type=ReasoningType.CAUSAL
         )

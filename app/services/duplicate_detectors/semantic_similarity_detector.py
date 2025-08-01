@@ -1,3 +1,7 @@
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Semantic Similarity Detector
 
@@ -6,9 +10,6 @@ Handles conceptual similarity beyond lexical matching.
 """
 
 from collections import defaultdict
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -69,7 +70,9 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
 
         # Filter memories with sufficient content
         valid_memories = [
-            mem for mem in memories if mem.get("content", "") and len(mem.get("content", "").strip()) > 10
+            mem
+            for mem in memories
+            if mem.get("content", "") and len(mem.get("content", "").strip()) > 10
         ]
 
         if len(valid_memories) < 2:
@@ -93,7 +96,9 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
         # Group pairs into duplicate groups
         duplicate_groups = self._group_semantic_pairs(similar_pairs, config)
 
-        logger.info(f"Semantic similarity detection completed: {len(duplicate_groups)} groups found")
+        logger.info(
+            f"Semantic similarity detection completed: {len(duplicate_groups)} groups found"
+        )
         return duplicate_groups
 
     async def _get_embeddings_batch(
@@ -128,9 +133,13 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
         try:
             # Generate embeddings using service or fallback method
             if self.embedding_service:
-                new_embeddings = await self._generate_embeddings_with_service(memories_needing_embeddings, config)
+                new_embeddings = await self._generate_embeddings_with_service(
+                    memories_needing_embeddings, config
+                )
             else:
-                new_embeddings = await self._generate_fallback_embeddings(memories_needing_embeddings)
+                new_embeddings = await self._generate_fallback_embeddings(
+                    memories_needing_embeddings
+                )
 
             # Cache new embeddings
             for memory_id, embedding in new_embeddings.items():
@@ -140,7 +149,9 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
         except Exception as e:
             logger.error(f"Error generating embeddings: {e}")
             # Use fallback method on error
-            fallback_embeddings = await self._generate_fallback_embeddings(memories_needing_embeddings)
+            fallback_embeddings = await self._generate_fallback_embeddings(
+                memories_needing_embeddings
+            )
             embeddings_map.update(fallback_embeddings)
 
         return embeddings_map
@@ -188,7 +199,9 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
 
         return embeddings_map
 
-    async def _simulate_embedding_service(self, content_list: list[str], model: str) -> list[list[float]]:
+    async def _simulate_embedding_service(
+        self, content_list: list[str], model: str
+    ) -> list[list[float]]:
         """
         Simulate embedding service for testing/fallback.
 
@@ -238,7 +251,9 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
 
         return embedding
 
-    async def _generate_fallback_embeddings(self, memories: list[dict[str, Any]]) -> dict[str, list[float]]:
+    async def _generate_fallback_embeddings(
+        self, memories: list[dict[str, Any]]
+    ) -> dict[str, list[float]]:
         """
         Generate simple fallback embeddings when service is unavailable.
 
@@ -283,7 +298,10 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
         return cleaned
 
     async def _find_semantically_similar_pairs(
-        self, memories: list[dict[str, Any]], embeddings_map: dict[str, list[float]], threshold: float
+        self,
+        memories: list[dict[str, Any]],
+        embeddings_map: dict[str, list[float]],
+        threshold: float,
     ) -> list[tuple[dict[str, Any], dict[str, Any], float]]:
         """
         Find pairs of memories with semantic similarity above threshold.
@@ -329,7 +347,9 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
                 # Add to pairs if above threshold
                 if similarity >= threshold:
                     similar_pairs.append((mem1, mem2, similarity))
-                    logger.debug(f"Found semantic match: {mem1_id} <-> {mem2_id} (similarity: {similarity:.3f})")
+                    logger.debug(
+                        f"Found semantic match: {mem1_id} <-> {mem2_id} (similarity: {similarity:.3f})"
+                    )
 
         return similar_pairs
 
@@ -423,7 +443,9 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
                         stack.append(connected_id)
 
             if len(group_memory_ids) >= 2:
-                group = self._create_semantic_duplicate_group(group_memory_ids, pair_similarities, pairs, config)
+                group = self._create_semantic_duplicate_group(
+                    group_memory_ids, pair_similarities, pairs, config
+                )
                 if group:
                     duplicate_groups.append(group)
                     self._record_duplicate_found()
@@ -485,14 +507,17 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
                     # Calculate weighted overall similarity
                     content_weight = config.content_weight
                     metadata_weight = config.metadata_weight
-                    overall_similarity = content_weight * semantic_similarity + metadata_weight * metadata_similarity
+                    overall_similarity = (
+                        content_weight * semantic_similarity + metadata_weight * metadata_similarity
+                    )
 
                     similarity_score = SimilarityScore(
                         memory_id_1=id1,
                         memory_id_2=id2,
                         content_similarity=semantic_similarity,
                         metadata_similarity=metadata_similarity,
-                        structural_similarity=semantic_similarity * 0.9,  # Slightly lower for semantic
+                        structural_similarity=semantic_similarity
+                        * 0.9,  # Slightly lower for semantic
                         overall_similarity=overall_similarity,
                         method_used=SimilarityMethod.SEMANTIC_SIMILARITY,
                         confidence=semantic_similarity * 0.9,  # Semantic similarity confidence
@@ -536,7 +561,9 @@ class SemanticSimilarityDetector(BaseDuplicateDetector):
         """
         try:
             if self.embedding_service:
-                embeddings = await self._generate_embeddings_with_service([{"id": "temp", "content": content}], config)
+                embeddings = await self._generate_embeddings_with_service(
+                    [{"id": "temp", "content": content}], config
+                )
                 return embeddings.get("temp")
             else:
                 return self._create_simple_embedding(content)

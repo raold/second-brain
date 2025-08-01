@@ -1,3 +1,8 @@
+import logging
+import sys
+
+from app.utils.logging_config import get_logger
+
 """
 DEPRECATED: Legacy logger utility for Second Brain application.
 
@@ -8,15 +13,13 @@ This module is deprecated. Please use:
 For new code, use the modern structured logging system.
 """
 
-import logging
-import sys
 import warnings
 
 # Issue deprecation warning
 warnings.warn(
     "app.utils.logger is deprecated. Use app.utils.logging_config instead.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 # Legacy configuration for backward compatibility
@@ -30,7 +33,12 @@ logger = logging.getLogger("second-brain")
 
 # Re-export modern logger functions for migration
 try:
-    from app.utils.logging_config import LogContext, PerformanceLogger, configure_logging, get_logger
+    from app.utils.logging_config import (
+        LogContext,
+        PerformanceLogger,
+        configure_logging,
+        get_logger,
+    )
 
     # Provide migration path
     def get_modern_logger(name: str = "second-brain"):
@@ -44,5 +52,6 @@ except ImportError:
 
     LogContext = None
     PerformanceLogger = None
+
     def configure_logging():
         return None

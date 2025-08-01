@@ -1,13 +1,23 @@
+import asyncio
+import hashlib
+import time
+from typing import Any
+from uuid import uuid4
+
+from app.utils.logging_config import get_logger
+
 """
 Core extraction pipeline that integrates all enhanced NLP components
 """
 
-import asyncio
-import hashlib
-from typing import Any
 
-from app.ingestion.models import ContentQuality, IngestionConfig, IngestionRequest, IngestionResponse, ProcessedContent
-from app.utils.logging_config import get_logger
+from app.ingestion.models import (
+    ContentQuality,
+    IngestionConfig,
+    IngestionRequest,
+    IngestionResponse,
+    ProcessedContent,
+)
 
 logger = get_logger(__name__)
 
@@ -37,14 +47,12 @@ class CoreExtractionPipeline:
         self.entity_extractor = EntityExtractor(
             model_name=self.config.entity_model,
             enable_custom=self.config.enable_custom_entities,
-            use_gpu=self.use_gpu
+            use_gpu=self.use_gpu,
         )
 
         # Relationship detection with transformers
         self.relationship_detector = RelationshipDetector(
-            model_name=self.config.entity_model,
-            enable_patterns=True,
-            use_gpu=self.use_gpu
+            model_name=self.config.entity_model, enable_patterns=True, use_gpu=self.use_gpu
         )
 
         # Intent recognition with transformers
@@ -59,12 +67,18 @@ class CoreExtractionPipeline:
         self.structured_extractor = StructuredDataExtractor()
 
         # Embedding generation
-        embedding_model_type = "openai" if "ada" in self.config.embedding_model else "sentence-transformers"
+        embedding_model_type = (
+            "openai" if "ada" in self.config.embedding_model else "sentence-transformers"
+        )
         self.embedding_generator = EmbeddingGenerator(
             model_type=embedding_model_type,
-            model_name=self.config.embedding_model if embedding_model_type == "sentence-transformers" else "auto",
+            model_name=(
+                self.config.embedding_model
+                if embedding_model_type == "sentence-transformers"
+                else "auto"
+            ),
             chunk_size=self.config.chunk_size,
-            chunk_overlap=self.config.chunk_overlap
+            chunk_overlap=self.config.chunk_overlap,
         )
 
     async def process(self, request: IngestionRequest) -> IngestionResponse:
@@ -90,22 +104,23 @@ class CoreExtractionPipeline:
             processed_content = ProcessedContent(
                 original_content=request.content,
                 content_hash=content_hash,
-                processor_version="2.0.0"  # Enhanced with transformers
+                processor_version="2.0.0",  # Enhanced with transformers
             )
 
             # Extract entities
             if request.extract_entities:
                 try:
                     entities = self.entity_extractor.extract_entities(
-                        request.content,
-                        min_confidence=self.config.min_entity_confidence
+                        request.content, min_confidence=self.config.min_entity_confidence
                     )
 
                     # Limit entities if configured
                     if len(entities) > self.config.max_entities_per_content:
                         entities = sorted(entities, key=lambda e: e.confidence, reverse=True)
-                        entities = entities[:self.config.max_entities_per_content]
-                        warnings.append(f"Entity count limited to {self.config.max_entities_per_content}")
+                        entities = entities[: self.config.max_entities_per_content]
+                        warnings.append(
+                            f"Entity count limited to {self.config.max_entities_per_content}"
+                        )
 
                     processed_content.entities = entities
                 except Exception as e:
@@ -118,14 +133,18 @@ class CoreExtractionPipeline:
                     relationships = self.relationship_detector.detect_relationships(
                         request.content,
                         processed_content.entities,
-                        min_confidence=self.config.min_relationship_confidence
+                        min_confidence=self.config.min_relationship_confidence,
                     )
 
                     # Limit relationships if configured
                     if len(relationships) > self.config.max_relationships_per_content:
-                        relationships = sorted(relationships, key=lambda r: r.confidence, reverse=True)
-                        relationships = relationships[:self.config.max_relationships_per_content]
-                        warnings.append(f"Relationship count limited to {self.config.max_relationships_per_content}")
+                        relationships = sorted(
+                            relationships, key=lambda r: r.confidence, reverse=True
+                        )
+                        relationships = relationships[: self.config.max_relationships_per_content]
+                        warnings.append(
+                            f"Relationship count limited to {self.config.max_relationships_per_content}"
+                        )
 
                     processed_content.relationships = relationships
                 except Exception as e:
@@ -145,8 +164,7 @@ class CoreExtractionPipeline:
             if request.extract_topics:
                 try:
                     topics = await self.topic_classifier.classify_topics(
-                        request.content,
-                        domain_hint=request.domain_hint
+                        request.content, domain_hint=request.domain_hint
                     )
 
                     # Filter by relevance
@@ -155,12 +173,14 @@ class CoreExtractionPipeline:
                     # Limit topics if configured
                     if len(topics) > self.config.max_topics_per_content:
                         topics = sorted(topics, key=lambda t: t.relevance, reverse=True)
-                        topics = topics[:self.config.max_topics_per_content]
+                        topics = topics[: self.config.max_topics_per_content]
 
                     processed_content.topics = topics
                     if topics:
                         processed_content.primary_topic = topics[0]
-                        processed_content.domain = topics[0].hierarchy[0] if topics[0].hierarchy else None
+                        processed_content.domain = (
+                            topics[0].hierarchy[0] if topics[0].hierarchy else None
+                        )
                 except Exception as e:
                     logger.error(f"Topic classification failed: {e}")
                     errors.append(f"Topic classification error: {str(e)}")
@@ -177,9 +197,11 @@ class CoreExtractionPipeline:
             # Generate embeddings
             if request.generate_embeddings:
                 try:
-                    embeddings, embedding_metadata = await self.embedding_generator.generate_embeddings(
-                        request.content,
-                        generate_chunks=len(request.content) > self.config.chunk_size
+                    embeddings, embedding_metadata = (
+                        await self.embedding_generator.generate_embeddings(
+                            request.content,
+                            generate_chunks=len(request.content) > self.config.chunk_size,
+                        )
                     )
                     processed_content.embeddings = embeddings
                     processed_content.embedding_metadata = embedding_metadata
@@ -216,9 +238,9 @@ class CoreExtractionPipeline:
                     "model_info": {
                         "entity_model": self.entity_extractor.model_name,
                         "embedding_model": self.embedding_generator.model_name,
-                        "use_transformers": True
-                    }
-                }
+                        "use_transformers": True,
+                    },
+                },
             )
 
         except Exception as e:
@@ -227,7 +249,7 @@ class CoreExtractionPipeline:
                 request_id=request_id,
                 status="failed",
                 errors=[f"Pipeline error: {str(e)}"],
-                processing_stats={"processing_time_ms": int((time.time() - start_time) * 1000)}
+                processing_stats={"processing_time_ms": int((time.time() - start_time) * 1000)},
             )
 
     def _assess_content_quality(self, content: ProcessedContent) -> ContentQuality:
@@ -237,12 +259,16 @@ class CoreExtractionPipeline:
 
         # Entity quality
         if content.entities:
-            avg_entity_confidence = sum(e.confidence for e in content.entities) / len(content.entities)
+            avg_entity_confidence = sum(e.confidence for e in content.entities) / len(
+                content.entities
+            )
             quality_score += avg_entity_confidence * 0.3
 
         # Relationship quality
         if content.relationships:
-            avg_rel_confidence = sum(r.confidence for r in content.relationships) / len(content.relationships)
+            avg_rel_confidence = sum(r.confidence for r in content.relationships) / len(
+                content.relationships
+            )
             quality_score += avg_rel_confidence * 0.2
 
         # Intent clarity
@@ -367,7 +393,9 @@ class CoreExtractionPipeline:
                 return "knowledge"
 
         # Default based on content characteristics
-        if content.structured_data and (content.structured_data.code_snippets or content.structured_data.tables):
+        if content.structured_data and (
+            content.structured_data.code_snippets or content.structured_data.tables
+        ):
             return "technical"
         elif len(content.entities) > 5:
             return "note"
@@ -401,22 +429,25 @@ class CoreExtractionPipeline:
             "components": {
                 "entity_extractor": {
                     "model": self.entity_extractor.model_name,
-                    "custom_patterns": self.entity_extractor.enable_custom
+                    "custom_patterns": self.entity_extractor.enable_custom,
                 },
                 "relationship_detector": {
                     "model": self.relationship_detector.model_name,
-                    "patterns_enabled": self.relationship_detector.enable_patterns
+                    "patterns_enabled": self.relationship_detector.enable_patterns,
                 },
                 "intent_recognizer": {
                     "sentiment_enabled": self.intent_recognizer.enable_sentiment,
-                    "transformer_available": hasattr(self.intent_recognizer, "transformer_classifier") and self.intent_recognizer.transformer_classifier is not None
+                    "transformer_available": hasattr(
+                        self.intent_recognizer, "transformer_classifier"
+                    )
+                    and self.intent_recognizer.transformer_classifier is not None,
                 },
                 "embedding_generator": {
                     "model_type": self.embedding_generator.model_type,
                     "model_name": self.embedding_generator.model_name,
-                    "dimensions": self.embedding_generator.dimensions
-                }
+                    "dimensions": self.embedding_generator.dimensions,
+                },
             },
             "config": self.config.dict(),
-            "gpu_enabled": self.use_gpu
+            "gpu_enabled": self.use_gpu,
         }

@@ -1,3 +1,9 @@
+import asyncio
+from datetime import datetime
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Event bus implementation for handling domain events.
 
@@ -5,16 +11,12 @@ Provides a centralized event dispatching mechanism following
 the Observer pattern for loose coupling between components.
 """
 
-import asyncio
 import traceback
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable
-from datetime import datetime
-from typing import Any
 
 from app.events.domain_events import DomainEvent
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -197,11 +199,7 @@ class EventBus:
                 if isinstance(result, Exception):
                     logger.error(f"Event handler failed: {result}")
 
-    async def _handle_event_with_retry(
-        self,
-        event: DomainEvent,
-        handler: EventHandler
-    ) -> None:
+    async def _handle_event_with_retry(self, event: DomainEvent, handler: EventHandler) -> None:
         """
         Handle an event with retry logic.
 
@@ -217,7 +215,7 @@ class EventBus:
                 end_time = datetime.utcnow()
 
                 # Update success stats
-                self._handler_stats[handler.handler_name]['success'] += 1
+                self._handler_stats[handler.handler_name]["success"] += 1
 
                 # Log performance if slow
                 duration_ms = (end_time - start_time).total_seconds() * 1000
@@ -230,11 +228,11 @@ class EventBus:
                 return  # Success, no retry needed
 
             except Exception as e:
-                self._handler_stats[handler.handler_name]['error'] += 1
+                self._handler_stats[handler.handler_name]["error"] += 1
 
                 if attempt < self._max_retry_attempts:
                     # Wait before retry (exponential backoff)
-                    wait_time = 2 ** attempt
+                    wait_time = 2**attempt
                     logger.warning(
                         f"Handler {handler.handler_name} failed for {event.event_type}, "
                         f"retrying in {wait_time}s (attempt {attempt + 1}/{self._max_retry_attempts})"
@@ -245,16 +243,16 @@ class EventBus:
                     logger.error(
                         f"Handler {handler.handler_name} failed permanently for {event.event_type}: {e}",
                         extra={
-                            'event_id': event.event_id,
-                            'event_type': event.event_type,
-                            'handler': handler.handler_name,
-                            'attempts': self._max_retry_attempts + 1,
-                            'stack_trace': traceback.format_exc()
-                        }
+                            "event_id": event.event_id,
+                            "event_type": event.event_type,
+                            "handler": handler.handler_name,
+                            "attempts": self._max_retry_attempts + 1,
+                            "stack_trace": traceback.format_exc(),
+                        },
                     )
 
         # If we get here, all retries failed
-        self._handler_stats[handler.handler_name]['permanent_failure'] += 1
+        self._handler_stats[handler.handler_name]["permanent_failure"] += 1
 
     def get_subscribers(self, event_type: type[DomainEvent]) -> list[EventHandler]:
         """
@@ -276,12 +274,13 @@ class EventBus:
             Dictionary containing event and handler statistics
         """
         return {
-            'event_stats': dict(self._event_stats),
-            'handler_stats': dict(self._handler_stats),
-            'total_events_published': sum(self._event_stats.values()),
-            'total_handlers': len(self._global_handlers) + sum(len(handlers) for handlers in self._handlers.values()),
-            'event_types_count': len(self._handlers),
-            'global_handlers_count': len(self._global_handlers)
+            "event_stats": dict(self._event_stats),
+            "handler_stats": dict(self._handler_stats),
+            "total_events_published": sum(self._event_stats.values()),
+            "total_handlers": len(self._global_handlers)
+            + sum(len(handlers) for handlers in self._handlers.values()),
+            "event_types_count": len(self._handlers),
+            "global_handlers_count": len(self._global_handlers),
         }
 
     def clear_stats(self) -> None:
@@ -300,31 +299,30 @@ class EventBus:
 
         # Calculate error rates
         total_successes = sum(
-            handler_stats.get('success', 0)
-            for handler_stats in self._handler_stats.values()
+            handler_stats.get("success", 0) for handler_stats in self._handler_stats.values()
         )
         total_errors = sum(
-            handler_stats.get('error', 0) + handler_stats.get('permanent_failure', 0)
+            handler_stats.get("error", 0) + handler_stats.get("permanent_failure", 0)
             for handler_stats in self._handler_stats.values()
         )
 
         total_handled = total_successes + total_errors
         error_rate = (total_errors / total_handled) if total_handled > 0 else 0
 
-        health_status = 'healthy'
+        health_status = "healthy"
         if error_rate > 0.1:  # > 10% error rate
-            health_status = 'unhealthy'
+            health_status = "unhealthy"
         elif error_rate > 0.05:  # > 5% error rate
-            health_status = 'degraded'
+            health_status = "degraded"
 
         return {
-            'status': health_status,
-            'error_rate': error_rate,
-            'total_events_handled': total_handled,
-            'total_successes': total_successes,
-            'total_errors': total_errors,
-            'handlers_registered': stats['total_handlers'],
-            'event_types_registered': stats['event_types_count']
+            "status": health_status,
+            "error_rate": error_rate,
+            "total_events_handled": total_handled,
+            "total_successes": total_successes,
+            "total_errors": total_errors,
+            "handlers_registered": stats["total_handlers"],
+            "event_types_registered": stats["event_types_count"],
         }
 
 
@@ -358,6 +356,7 @@ def set_event_bus(event_bus: EventBus) -> None:
 
 # Utility decorators and functions
 
+
 def event_handler(event_type: type[DomainEvent]):
     """
     Decorator to automatically register event handlers.
@@ -365,13 +364,15 @@ def event_handler(event_type: type[DomainEvent]):
     Args:
         event_type: The event type to handle
     """
+
     def decorator(handler_class):
         # Register the handler when the class is created
-        if hasattr(handler_class, '_auto_register') and handler_class._auto_register:
+        if hasattr(handler_class, "_auto_register") and handler_class._auto_register:
             bus = get_event_bus()
             handler = handler_class()
             bus.subscribe(event_type, handler)
         return handler_class
+
     return decorator
 
 

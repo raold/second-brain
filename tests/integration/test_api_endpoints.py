@@ -6,12 +6,15 @@ Comprehensive test coverage for all components
 import os
 
 import pytest
+
 pytestmark = pytest.mark.integration
 
 from app.version import get_version_info
 
 # Set up test environment
-os.environ["API_TOKENS"] = "test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba"
+os.environ["API_TOKENS"] = (
+    "test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba"
+)
 
 
 class TestIntegrationSuite:
@@ -88,7 +91,9 @@ class TestIntegrationSuite:
 
         # Search for memory
         search_response = await client.post(
-            "/memories/search", json={"query": "unicode special", "limit": 5}, params={"api_key": api_key}
+            "/memories/search",
+            json={"query": "unicode special", "limit": 5},
+            params={"api_key": api_key},
         )
         assert search_response.status_code == 200
         search_results = search_response.json()
@@ -123,7 +128,9 @@ class TestIntegrationSuite:
         page1 = response.json()
         assert len(page1) == 10
 
-        response = await client.get("/memories", params={"api_key": api_key, "limit": 10, "offset": 10})
+        response = await client.get(
+            "/memories", params={"api_key": api_key, "limit": 10, "offset": 10}
+        )
         assert response.status_code == 200
         page2 = response.json()
         # We expect the remaining memories (15 total - 10 from first page = 5)
@@ -159,7 +166,9 @@ class TestIntegrationSuite:
         assert response.status_code == 404
 
         # Test invalid search query
-        response = await client.post("/memories/search", json={"limit": -1}, params={"api_key": api_key})
+        response = await client.post(
+            "/memories/search", json={"limit": -1}, params={"api_key": api_key}
+        )
         assert response.status_code == 422
 
     @pytest.mark.asyncio
@@ -178,7 +187,9 @@ class TestIntegrationSuite:
         assert response.status_code == 401
 
         # Test valid API key from list
-        response = await client.get("/memories", params={"api_key": "test-token-32-chars-long-for-auth-0987654321fedcba"})
+        response = await client.get(
+            "/memories", params={"api_key": "test-token-32-chars-long-for-auth-0987654321fedcba"}
+        )
         assert response.status_code == 200
 
     @pytest.mark.asyncio
@@ -189,7 +200,9 @@ class TestIntegrationSuite:
         # FastAPI handles OPTIONS automatically
 
         # Test with custom headers
-        response = await client.get("/memories", params={"api_key": api_key}, headers={"X-Test-Header": "test-value"})
+        response = await client.get(
+            "/memories", params={"api_key": api_key}, headers={"X-Test-Header": "test-value"}
+        )
         assert response.status_code == 200
 
 
@@ -238,7 +251,12 @@ class TestMockDatabaseEdgeCases:
         assert memory["metadata"] == {"type": "semantic"}  # Type is added automatically
 
         # Complex nested metadata
-        complex_metadata = {"nested": {"deep": {"value": 42}}, "array": [1, 2, 3], "boolean": True, "null": None}
+        complex_metadata = {
+            "nested": {"deep": {"value": 42}},
+            "array": [1, 2, 3],
+            "boolean": True,
+            "null": None,
+        }
         memory_id = await db.store_memory("test", complex_metadata)
         memory = await db.get_memory(memory_id)
         assert memory["metadata"]["nested"]["deep"]["value"] == 42

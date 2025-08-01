@@ -1,15 +1,18 @@
+import math
+import re
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 #!/usr/bin/env python3
 """
 Automated Importance Scoring Engine for Second Brain
 Intelligent memory importance calculation based on access patterns, content analysis, and temporal factors
 """
 
-from dataclasses import dataclass
-from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -98,7 +101,12 @@ class ImportanceEngine:
                 "has_urls": r"https?://\S+",
                 "has_structured_data": r"(\d+\.\s|\-\s|\*\s)",
                 "technical_terms": r"\b(API|SQL|JSON|HTTP|algorithm|function|class|method)\b",
-                "complexity_words": ["implementation", "architecture", "optimization", "integration"],
+                "complexity_words": [
+                    "implementation",
+                    "architecture",
+                    "optimization",
+                    "integration",
+                ],
             },
         }
 
@@ -148,7 +156,12 @@ class ImportanceEngine:
 
             # Generate explanation
             explanation = self._generate_explanation(
-                frequency_score, recency_score, search_relevance_score, content_quality_score, type_weight, decay_factor
+                frequency_score,
+                recency_score,
+                search_relevance_score,
+                content_quality_score,
+                type_weight,
+                decay_factor,
             )
 
             return ImportanceScore(
@@ -234,9 +247,11 @@ class ImportanceEngine:
                 recent_accesses=recent_accesses,
                 last_accessed=memory_data["last_accessed"] or datetime.now(),
                 search_appearances=search_data["appearances"] if search_data else 0,
-                avg_search_position=float(search_data["avg_position"])
-                if search_data and search_data["avg_position"]
-                else 10.0,
+                avg_search_position=(
+                    float(search_data["avg_position"])
+                    if search_data and search_data["avg_position"]
+                    else 10.0
+                ),
                 user_interactions={},
             )
 
@@ -364,7 +379,9 @@ class ImportanceEngine:
         score += min(0.1, tech_matches * 0.02)
 
         # Complexity indicators
-        complexity_matches = sum(1 for word in indicators["complexity_words"] if word.lower() in content.lower())
+        complexity_matches = sum(
+            1 for word in indicators["complexity_words"] if word.lower() in content.lower()
+        )
         score += min(0.1, complexity_matches * 0.03)
 
         return min(1.0, score)
@@ -432,12 +449,16 @@ class ImportanceEngine:
         recent_boost = 0.0
         if pattern.recent_accesses > 0:
             days_since_recent = min(7, days_since_creation)  # Cap at week
-            recent_boost = min(0.3, pattern.recent_accesses * 0.08) * math.exp(-days_since_recent / 3.0)
+            recent_boost = min(0.3, pattern.recent_accesses * 0.08) * math.exp(
+                -days_since_recent / 3.0
+            )
 
         # 7. Frequency protection with logarithmic scaling
         # Prevents over-weighting of extremely high-access memories
         if pattern.total_accesses > 1:
-            frequency_protection = min(0.25, math.log1p(pattern.total_accesses) / math.log(21) * 0.25)
+            frequency_protection = min(
+                0.25, math.log1p(pattern.total_accesses) / math.log(21) * 0.25
+            )
         else:
             frequency_protection = 0.0
 
@@ -503,7 +524,13 @@ class ImportanceEngine:
         return min(1.0, confidence)
 
     def _generate_explanation(
-        self, frequency: float, recency: float, search_rel: float, quality: float, type_weight: float, decay: float
+        self,
+        frequency: float,
+        recency: float,
+        search_rel: float,
+        quality: float,
+        type_weight: float,
+        decay: float,
     ) -> str:
         """Generate human-readable explanation of importance score"""
         explanations = []
@@ -560,7 +587,10 @@ class ImportanceEngine:
 
                 # Calculate new importance score
                 score = await self.calculate_importance_score(
-                    memory_id, memory_data["content"], memory_data["memory_type"], memory_data["importance_score"]
+                    memory_id,
+                    memory_data["content"],
+                    memory_data["memory_type"],
+                    memory_data["importance_score"],
                 )
 
                 # Update database
@@ -574,7 +604,9 @@ class ImportanceEngine:
                     score.final_score,
                 )
 
-                logger.info(f"Updated importance for {memory_id}: {score.final_score:.3f} ({score.explanation})")
+                logger.info(
+                    f"Updated importance for {memory_id}: {score.final_score:.3f} ({score.explanation})"
+                )
                 return score.final_score
 
         except Exception as e:
@@ -713,7 +745,8 @@ class ImportanceEngine:
         try:
             async with self.database.pool.acquire() as conn:
                 # Importance score distribution
-                distribution = await conn.fetch("""
+                distribution = await conn.fetch(
+                    """
                     SELECT
                         CASE
                             WHEN importance_score >= 0.8 THEN 'high'
@@ -725,26 +758,31 @@ class ImportanceEngine:
                     FROM memories
                     GROUP BY 1
                     ORDER BY avg_score DESC
-                """)
+                """
+                )
 
                 # Top important memories
-                top_memories = await conn.fetch("""
+                top_memories = await conn.fetch(
+                    """
                     SELECT id, content[1:100] as content_preview,
                            importance_score, memory_type, access_count
                     FROM memories
                     ORDER BY importance_score DESC
                     LIMIT 10
-                """)
+                """
+                )
 
                 # Memory type analysis
-                type_analysis = await conn.fetch("""
+                type_analysis = await conn.fetch(
+                    """
                     SELECT memory_type,
                            COUNT(*) as count,
                            AVG(importance_score) as avg_importance,
                            AVG(access_count) as avg_accesses
                     FROM memories
                     GROUP BY memory_type
-                """)
+                """
+                )
 
                 return {
                     "distribution": [dict(row) for row in distribution],

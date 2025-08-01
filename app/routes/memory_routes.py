@@ -1,3 +1,11 @@
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+
+from app.services.service_factory import get_memory_service
+from app.utils.logging_config import get_logger
+
 """
 Memory Management API Routes
 
@@ -5,10 +13,7 @@ Handles CRUD operations for memories with cognitive type classification
 and advanced search capabilities.
 """
 
-from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
 
 from app.dependencies import get_current_user
 from app.models.api_models import (
@@ -19,13 +24,12 @@ from app.models.api_models import (
     SearchRequest,
     SemanticMemoryRequest,
 )
-from app.services.service_factory import get_memory_service
 from app.shared import verify_api_key
-from app.utils.logging_config import get_logger
 
 
 class MemoryResponse(BaseModel):
     """Memory response model"""
+
     id: str
     user_id: str
     content: str
@@ -35,6 +39,7 @@ class MemoryResponse(BaseModel):
     updated_at: str
     metadata: dict[str, Any] | None = None
     tags: list[str] | None = None
+
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/memories", tags=["Memories"])
@@ -59,7 +64,7 @@ async def test_memory_routes():
 async def create_memory(
     request: MemoryRequest,
     current_user: dict = Depends(get_current_user),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """Create a new memory"""
     try:
@@ -67,9 +72,7 @@ async def create_memory(
 
         # Create memory with service
         memory = await memory_service.create_memory(
-            content=request.content,
-            importance_score=request.importance_score,
-            tags=request.tags
+            content=request.content, importance_score=request.importance_score, tags=request.tags
         )
 
         return MemoryResponse(
@@ -81,7 +84,7 @@ async def create_memory(
             created_at=memory["created_at"],
             updated_at=memory["created_at"],
             metadata=memory.get("metadata", {}),
-            tags=memory.get("tags", [])
+            tags=memory.get("tags", []),
         )
 
     except Exception as e:
@@ -93,7 +96,7 @@ async def create_memory(
 async def get_memory(
     memory_id: str,
     current_user: dict = Depends(get_current_user),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """Get a specific memory by ID"""
     try:
@@ -112,7 +115,7 @@ async def get_memory(
             created_at=memory["created_at"],
             updated_at=memory["created_at"],
             metadata=memory.get("metadata", {}),
-            tags=memory.get("tags", [])
+            tags=memory.get("tags", []),
         )
 
     except HTTPException:
@@ -127,7 +130,7 @@ async def list_memories(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     current_user: dict = Depends(get_current_user),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """List memories with pagination"""
     try:
@@ -144,7 +147,7 @@ async def list_memories(
                 created_at=memory["created_at"],
                 updated_at=memory["created_at"],
                 metadata=memory.get("metadata", {}),
-                tags=memory.get("tags", [])
+                tags=memory.get("tags", []),
             )
             for memory in memories
         ]
@@ -158,15 +161,12 @@ async def list_memories(
 async def search_memories(
     request: SearchRequest,
     current_user: dict = Depends(get_current_user),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """Search memories by content similarity"""
     try:
         memory_service = get_memory_service()
-        memories = await memory_service.search_memories(
-            query=request.query,
-            limit=request.limit
-        )
+        memories = await memory_service.search_memories(query=request.query, limit=request.limit)
 
         return [
             MemoryResponse(
@@ -178,7 +178,7 @@ async def search_memories(
                 created_at=memory["created_at"],
                 updated_at=memory["created_at"],
                 metadata=memory.get("metadata", {}),
-                tags=memory.get("tags", [])
+                tags=memory.get("tags", []),
             )
             for memory in memories
         ]
@@ -192,7 +192,7 @@ async def search_memories(
 async def create_semantic_memory(
     request: SemanticMemoryRequest,
     current_user: dict = Depends(get_current_user),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """Create a semantic memory (facts, knowledge)"""
     try:
@@ -201,14 +201,14 @@ async def create_semantic_memory(
         memory = await memory_service.create_memory(
             content=request.content,
             importance_score=request.importance_score,
-            tags=request.tags + ["semantic"]
+            tags=request.tags + ["semantic"],
         )
 
         return {
             "status": "success",
             "memory_id": memory["id"],
             "type": "semantic",
-            "message": "Semantic memory created successfully"
+            "message": "Semantic memory created successfully",
         }
 
     except Exception as e:
@@ -220,7 +220,7 @@ async def create_semantic_memory(
 async def create_episodic_memory(
     request: EpisodicMemoryRequest,
     current_user: dict = Depends(get_current_user),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """Create an episodic memory (personal experiences)"""
     try:
@@ -229,7 +229,7 @@ async def create_episodic_memory(
         memory = await memory_service.create_memory(
             content=request.content,
             importance_score=request.importance_score,
-            tags=request.tags + ["episodic", request.context]
+            tags=request.tags + ["episodic", request.context],
         )
 
         return {
@@ -237,7 +237,7 @@ async def create_episodic_memory(
             "memory_id": memory["id"],
             "type": "episodic",
             "context": request.context,
-            "message": "Episodic memory created successfully"
+            "message": "Episodic memory created successfully",
         }
 
     except Exception as e:
@@ -249,7 +249,7 @@ async def create_episodic_memory(
 async def create_procedural_memory(
     request: ProceduralMemoryRequest,
     current_user: dict = Depends(get_current_user),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """Create a procedural memory (how-to knowledge)"""
     try:
@@ -258,7 +258,7 @@ async def create_procedural_memory(
         memory = await memory_service.create_memory(
             content=request.content,
             importance_score=request.importance_score,
-            tags=request.tags + ["procedural", f"skill:{request.skill}"]
+            tags=request.tags + ["procedural", f"skill:{request.skill}"],
         )
 
         return {
@@ -266,7 +266,7 @@ async def create_procedural_memory(
             "memory_id": memory["id"],
             "type": "procedural",
             "skill": request.skill,
-            "message": "Procedural memory created successfully"
+            "message": "Procedural memory created successfully",
         }
 
     except Exception as e:
@@ -278,7 +278,7 @@ async def create_procedural_memory(
 async def contextual_search(
     request: ContextualSearchRequest,
     current_user: dict = Depends(get_current_user),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """Perform intelligent contextual search"""
     try:
@@ -286,8 +286,7 @@ async def contextual_search(
 
         # Enhanced search with context
         memories = await memory_service.search_memories(
-            query=f"{request.query} {request.context}",
-            limit=request.limit
+            query=f"{request.query} {request.context}", limit=request.limit
         )
 
         return {
@@ -298,17 +297,23 @@ async def contextual_search(
             "memories": [
                 {
                     "id": memory["id"],
-                    "content": memory["content"][:200] + "..." if len(memory["content"]) > 200 else memory["content"],
+                    "content": (
+                        memory["content"][:200] + "..."
+                        if len(memory["content"]) > 200
+                        else memory["content"]
+                    ),
                     "similarity_score": memory.get("similarity_score", 0),
-                    "tags": memory.get("tags", [])
+                    "tags": memory.get("tags", []),
                 }
                 for memory in memories
-            ]
+            ],
         }
 
     except Exception as e:
         logger.error(f"Failed to perform contextual search: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to perform contextual search: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to perform contextual search: {str(e)}"
+        )
 
 
 # Health check for memory service
@@ -320,16 +325,12 @@ async def memory_service_health():
         # Try a simple operation to verify service works
         await memory_service.get_memories(limit=1)
 
-        return {
-            "status": "healthy",
-            "service": "memory",
-            "timestamp": "2025-07-31T16:00:00Z"
-        }
+        return {"status": "healthy", "service": "memory", "timestamp": "2025-07-31T16:00:00Z"}
     except Exception as e:
         logger.error(f"Memory service health check failed: {e}")
         return {
             "status": "unhealthy",
             "service": "memory",
             "error": str(e),
-            "timestamp": "2025-07-31T16:00:00Z"
+            "timestamp": "2025-07-31T16:00:00Z",
         }

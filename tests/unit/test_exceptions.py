@@ -33,7 +33,7 @@ class TestErrorResponse:
         response = ErrorResponse(
             error_code=ErrorCode.NOT_FOUND,
             message="Resource not found",
-            details={"resource": "Memory", "id": "123"}
+            details={"resource": "Memory", "id": "123"},
         )
 
         assert response.error_code == ErrorCode.NOT_FOUND
@@ -46,7 +46,7 @@ class TestErrorResponse:
         response = ErrorResponse(
             error_code=ErrorCode.INTERNAL_ERROR,
             message="Something went wrong",
-            request_id="req-123"
+            request_id="req-123",
         )
 
         assert response.request_id == "req-123"
@@ -61,7 +61,7 @@ class TestExceptions:
             message="Test error",
             error_code=ErrorCode.INTERNAL_ERROR,
             status_code=500,
-            details={"info": "test"}
+            details={"info": "test"},
         )
 
         assert exc.message == "Test error"
@@ -90,9 +90,7 @@ class TestExceptions:
     def test_validation_exception(self):
         """Test ValidationException"""
         exc = ValidationException(
-            message="Invalid input",
-            field="content",
-            details={"min_length": 10}
+            message="Invalid input", field="content", details={"min_length": 10}
         )
 
         assert exc.message == "Invalid input"
@@ -111,11 +109,7 @@ class TestExceptions:
 
     def test_rate_limit_exception(self):
         """Test RateLimitExceededException"""
-        exc = RateLimitExceededException(
-            limit=100,
-            window="minute",
-            retry_after=30
-        )
+        exc = RateLimitExceededException(limit=100, window="minute", retry_after=30)
 
         assert exc.message == "Rate limit exceeded: 100 requests per minute"
         assert exc.error_code == ErrorCode.RATE_LIMIT_EXCEEDED
@@ -141,7 +135,7 @@ class TestExceptionHandlers:
                 "query_string": b"",
                 "root_path": "",
                 "scheme": "http",
-                "server": ("testserver", 80)
+                "server": ("testserver", 80),
             }
         )
 
@@ -172,7 +166,7 @@ class TestExceptionHandlers:
                 "query_string": b"",
                 "root_path": "",
                 "scheme": "http",
-                "server": ("testserver", 80)
+                "server": ("testserver", 80),
             }
         )
 

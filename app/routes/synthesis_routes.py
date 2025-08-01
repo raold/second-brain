@@ -1,3 +1,10 @@
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket
+from pydantic import BaseModel
+
+from app.utils.logging_config import get_logger
+
 """
 Synthesis Routes - v2.8.2
 
@@ -5,122 +12,136 @@ API endpoints for synthesis features including report generation,
 spaced repetition, and WebSocket connections.
 """
 
-from datetime import datetime
-from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket
 from fastapi.responses import StreamingResponse
 
 from app.dependencies import get_db
 from app.services.synthesis.report_generator import ReportGenerator
 from app.services.synthesis.websocket_service import WebSocketService
 from app.shared import verify_api_key
-from app.utils.logging_config import get_logger
 
 # Import models with fallback stubs
 try:
     from app.models.synthesis import (
         BulkReviewRequest,
-        ReportRequest, 
+        ReportRequest,
         ReportResponse,
         SubscriptionRequest,
     )
 except ImportError:
     # Create stub models
     from pydantic import BaseModel
-    
+
     class BulkReviewRequest(BaseModel):
         memory_ids: list[str] = []
-    
+
     class ReportRequest(BaseModel):
         title: str = "Report"
-    
+
     class ReportResponse(BaseModel):
         id: str = "stub-report"
         title: str = "Stub Report"
-    
+
     class SubscriptionRequest(BaseModel):
         events: list[str] = []
+
 
 # Import additional missing models with stubs
 try:
     from app.models.synthesis import (
-        ReportGeneratorConfig,
+        EventType,
+        LearningStatistics,
+        RepetitionAlgorithm,
+        RepetitionConfig,
         RepetitionScheduler,
         ReportFilter,
         ReportFormat,
+        ReportGeneratorConfig,
         ReportSchedule,
         ReportTemplate,
-        ReviewSchedule,
-        RepetitionAlgorithm,
-        RepetitionConfig,
-        ReviewSession,
         ReviewDifficulty,
-        LearningStatistics,
+        ReviewSchedule,
+        ReviewSession,
         WebSocketMetrics,
-        EventType,
     )
 except ImportError:
     from enum import Enum
+
     from pydantic import BaseModel
-    
+
     class ReportGeneratorConfig(BaseModel):
         pass
-    
+
     class RepetitionScheduler:
-        def __init__(self, db_pool): pass
-        async def schedule_review(self, *args, **kwargs): pass
-        async def bulk_schedule_reviews(self, *args, **kwargs): return []
-        async def get_due_reviews(self, *args, **kwargs): return []
-        async def start_review_session(self, *args, **kwargs): pass
-        async def end_review_session(self, *args, **kwargs): pass
-        async def record_review(self, *args, **kwargs): pass
-        async def get_learning_statistics(self, *args, **kwargs): pass
-    
+        def __init__(self, db_pool):
+            pass
+
+        async def schedule_review(self, *args, **kwargs):
+            pass
+
+        async def bulk_schedule_reviews(self, *args, **kwargs):
+            return []
+
+        async def get_due_reviews(self, *args, **kwargs):
+            return []
+
+        async def start_review_session(self, *args, **kwargs):
+            pass
+
+        async def end_review_session(self, *args, **kwargs):
+            pass
+
+        async def record_review(self, *args, **kwargs):
+            pass
+
+        async def get_learning_statistics(self, *args, **kwargs):
+            pass
+
     class ReportFilter(BaseModel):
         pass
-    
+
     class ReportFormat(Enum):
         PDF = "pdf"
         HTML = "html"
-    
+
     class ReportSchedule(BaseModel):
         id: str = "stub"
-    
+
     class ReportTemplate(BaseModel):
         id: str = "stub"
-    
+
     class ReviewSchedule(BaseModel):
         scheduled_date: datetime = datetime.now()
-    
+
     class RepetitionAlgorithm(Enum):
         SM2 = "sm2"
-    
+
     class RepetitionConfig(BaseModel):
         pass
-    
+
     class ReviewSession(BaseModel):
         pass
-    
+
     class ReviewDifficulty(Enum):
         EASY = "easy"
         NORMAL = "normal"
         HARD = "hard"
-        
+
         @property
         def name(self):
             return self.value
-    
+
     class LearningStatistics(BaseModel):
         pass
-    
+
     class WebSocketMetrics(BaseModel):
         pass
-    
+
     class EventType(Enum):
         REPORT_COMPLETED = "report_completed"
         REVIEW_SCHEDULED = "review_scheduled"
         REVIEW_COMPLETED = "review_completed"
+
 
 logger = get_logger(__name__)
 
@@ -142,6 +163,7 @@ async def get_report_generator() -> ReportGenerator:
             config = ReportGeneratorConfig()
             # Would get memory service from dependency injection
             from app.services.memory_service import MemoryService
+
             memory_service = MemoryService(db)
             report_generator = ReportGenerator(db.pool, memory_service, config) if db else None
         except Exception as e:
@@ -160,6 +182,7 @@ async def get_repetition_scheduler() -> RepetitionScheduler:
 
 
 # Report Generation Endpoints
+
 
 @router.post("/reports/generate", response_model=ReportResponse)
 async def generate_report(
@@ -290,6 +313,7 @@ async def list_templates(
 
 
 # Spaced Repetition Endpoints
+
 
 @router.post("/repetition/schedule", response_model=ReviewSchedule)
 async def schedule_review(
@@ -464,6 +488,7 @@ async def get_learning_statistics(
 
 # WebSocket Endpoints
 
+
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
@@ -546,6 +571,7 @@ async def get_websocket_metrics(
 
 
 # Utility Endpoints
+
 
 @router.get("/synthesis/status")
 async def get_synthesis_status(

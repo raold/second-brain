@@ -4,11 +4,13 @@ import pytest
 
 pytestmark = pytest.mark.validation
 
+
 def test_imports():
     """Test that critical imports work."""
 
     print("All imports successful!")
     assert True
+
 
 def test_versions():
     """Check package versions."""
@@ -20,6 +22,7 @@ def test_versions():
 
     assert fastapi.__version__.startswith("0.109")
     assert pydantic.__version__.startswith("2.5")
+
 
 if __name__ == "__main__":
     test_imports()

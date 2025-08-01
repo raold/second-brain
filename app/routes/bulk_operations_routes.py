@@ -1,16 +1,19 @@
+import json
+from datetime import datetime
+from typing import Any, Union
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+
 #!/usr/bin/env python3
 """
 Comprehensive Bulk Operations API Routes
 Advanced endpoints for import/export, migration, classification, and deduplication
 """
 
-import json
-from datetime import datetime
-from typing import Any, Union
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import BackgroundTasks, File, Form, UploadFile
 from fastapi.responses import Response
-from pydantic import BaseModel, Field
 
 from app.memory_migration_tools import (
     MigrationConfig,
@@ -71,7 +74,9 @@ class MigrationRequest(BaseModel):
 
     migration_type: str = Field(..., description="Type of migration")
     config: MigrationConfig | None = Field(None, description="Migration configuration")
-    parameters: dict[str, Any] | None = Field(default_factory=dict, description="Migration parameters")
+    parameters: dict[str, Any] | None = Field(
+        default_factory=dict, description="Migration parameters"
+    )
 
 
 class ClassificationRequest(BaseModel):
@@ -108,7 +113,9 @@ async def import_memories(
 
         # Log import operation in background
         background_tasks.add_task(
-            _log_bulk_operation, "import", {"format": request.format_type.value, "total": result.total_processed}
+            _log_bulk_operation,
+            "import",
+            {"format": request.format_type.value, "total": result.total_processed},
         )
 
         return result
@@ -138,7 +145,9 @@ async def import_from_file(
         import_options = json.loads(options) if options else {}
 
         # Import memories
-        result = await bulk_manager.import_memories(data=file_content, format_type=format_type, options=import_options)
+        result = await bulk_manager.import_memories(
+            data=file_content, format_type=format_type, options=import_options
+        )
 
         return result
 
@@ -159,7 +168,9 @@ async def export_memories(
     """
     try:
         result = await bulk_manager.export_memories(
-            filter_criteria=request.filter_criteria, format_type=request.format_type, options=request.options
+            filter_criteria=request.filter_criteria,
+            format_type=request.format_type,
+            options=request.options,
         )
 
         # Determine content type and filename
@@ -222,9 +233,13 @@ async def execute_migration(
             )
         elif request.migration_type == "metadata_enrichment":
             # This would require a custom enrichment function
-            raise HTTPException(status_code=400, detail="Metadata enrichment migration requires custom function")
+            raise HTTPException(
+                status_code=400, detail="Metadata enrichment migration requires custom function"
+            )
         else:
-            raise HTTPException(status_code=400, detail=f"Unknown migration type: {request.migration_type}")
+            raise HTTPException(
+                status_code=400, detail=f"Unknown migration type: {request.migration_type}"
+            )
 
         # Execute migration
         config = request.config or MigrationConfig()
@@ -232,7 +247,9 @@ async def execute_migration(
 
         # Log migration in background
         background_tasks.add_task(
-            _log_bulk_operation, "migration", {"type": request.migration_type, "status": result.status.value}
+            _log_bulk_operation,
+            "migration",
+            {"type": request.migration_type, "status": result.status.value},
         )
 
         return result
@@ -243,7 +260,8 @@ async def execute_migration(
 
 @bulk_router.get("/migrations")
 async def list_migrations(
-    api_key: str = Depends(verify_api_key), migration_manager: MigrationManager = Depends(get_migration_manager)
+    api_key: str = Depends(verify_api_key),
+    migration_manager: MigrationManager = Depends(get_migration_manager),
 ):
     """
     List available migrations
@@ -310,13 +328,16 @@ async def classify_memories(
     try:
         # Get memories to classify
         from app.database import get_database
+
         db = await get_database()
 
         # Apply filter criteria if provided
         all_memories = await db.get_all_memories(limit=10000)
         if request.filter_criteria:
             filtered_memories = [
-                memory for memory in all_memories if _matches_filter_criteria(memory, request.filter_criteria)
+                memory
+                for memory in all_memories
+                if _matches_filter_criteria(memory, request.filter_criteria)
             ]
         else:
             filtered_memories = all_memories
@@ -359,7 +380,9 @@ async def get_classification_statistics(
         return stats
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get classification statistics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get classification statistics: {str(e)}"
+        )
 
 
 @bulk_router.post("/classify/cache/clear")
@@ -426,7 +449,9 @@ async def get_deduplication_statistics(
         return stats
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get deduplication statistics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get deduplication statistics: {str(e)}"
+        )
 
 
 # Utility Endpoints
@@ -465,7 +490,10 @@ async def get_bulk_operations_capabilities(api_key: str = Depends(verify_api_key
     """
     return {
         "import_export": {
-            "supported_formats": {"import": [f.value for f in ImportFormat], "export": [f.value for f in ExportFormat]},
+            "supported_formats": {
+                "import": [f.value for f in ImportFormat],
+                "export": [f.value for f in ExportFormat],
+            },
             "max_file_size": "100MB",
             "supported_encodings": ["utf-8", "utf-16", "latin-1", "cp1252"],
         },
@@ -518,7 +546,11 @@ def _matches_filter_criteria(memory: dict[str, Any], criteria: dict[str, Any]) -
 
 async def _log_bulk_operation(operation_type: str, details: dict[str, Any]):
     """Log bulk operation for monitoring and analytics"""
-    log_entry = {"timestamp": datetime.now().isoformat(), "operation_type": operation_type, "details": details}
+    log_entry = {
+        "timestamp": datetime.now().isoformat(),
+        "operation_type": operation_type,
+        "details": details,
+    }
     # In a real implementation, this would log to a monitoring system
     print(f"Bulk operation logged: {log_entry}")
 

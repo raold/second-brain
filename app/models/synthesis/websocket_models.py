@@ -1,3 +1,10 @@
+from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+from app.models.synthesis.websocket_models import WebSocketMessage
+
 """
 WebSocket Event Models - v2.8.2
 
@@ -5,15 +12,14 @@ Data models for real-time WebSocket communication including events,
 subscriptions, and connection management.
 """
 
-from datetime import datetime
 from enum import Enum, IntEnum
-from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import field_validator
 
 
 class EventPriority(IntEnum):
     """Priority levels for websocket events"""
+
     LOW = 1
     MEDIUM = 2
     HIGH = 3
@@ -27,6 +33,7 @@ class EventPriority(IntEnum):
 
 class BroadcastMessage(BaseModel):
     """Message to broadcast via websocket"""
+
     event_type: str
 
     # Support both field names for compatibility
@@ -37,16 +44,17 @@ class BroadcastMessage(BaseModel):
     priority: EventPriority = Field(default=EventPriority.MEDIUM)
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
-    @field_validator('data', mode='before')
+    @field_validator("data", mode="before")
     def set_payload_from_data(cls, v, info):
         """Support data field as alias for payload"""
-        if v is not None and info.data.get('payload') is None:
-            info.data['payload'] = v
+        if v is not None and info.data.get("payload") is None:
+            info.data["payload"] = v
         return v
 
 
 class ConnectionState(str, Enum):
     """WebSocket connection states"""
+
     CONNECTING = "connecting"
     CONNECTED = "connected"
     DISCONNECTED = "disconnected"
@@ -55,6 +63,7 @@ class ConnectionState(str, Enum):
 
 class SubscriptionType(str, Enum):
     """Types of subscriptions for websocket updates"""
+
     ALL = "all"
     MEMORY = "memory"
     SYNTHESIS = "synthesis"
@@ -175,10 +184,10 @@ class SubscriptionRequest(BaseModel):
     include_historical: bool = Field(False, description="Include recent historical events")
     historical_limit: int = Field(10, description="Number of historical events")
 
-    @field_validator('action')
+    @field_validator("action")
     def validate_action(cls, v):
         """Validate subscription action."""
-        if v not in ['subscribe', 'unsubscribe']:
+        if v not in ["subscribe", "unsubscribe"]:
             raise ValueError("Action must be 'subscribe' or 'unsubscribe'")
         return v
 
@@ -223,8 +232,7 @@ class ConnectionInfo(BaseModel):
 
     # Subscriptions
     subscriptions: list[EventSubscription] = Field(
-        default_factory=list,
-        description="Active subscriptions"
+        default_factory=list, description="Active subscriptions"
     )
 
     # Metrics
@@ -249,11 +257,10 @@ class EventBatch(BaseModel):
     target_connections: list[str] = Field(..., description="Target connection IDs")
     delivered_to: list[str] = Field(default_factory=list, description="Successfully delivered")
     failed_deliveries: dict[str, str] = Field(
-        default_factory=dict,
-        description="Failed deliveries with reasons"
+        default_factory=dict, description="Failed deliveries with reasons"
     )
 
-    @field_validator('events')
+    @field_validator("events")
     def validate_batch_size(cls, v):
         """Validate batch size."""
         if len(v) > 100:
@@ -267,17 +274,13 @@ class BroadcastRequest(BaseModel):
     event: WebSocketEvent = Field(..., description="Event to broadcast")
 
     # Targeting
-    broadcast_type: str = Field(
-        "all",
-        description="Broadcast type: all, channel, users, filters"
-    )
+    broadcast_type: str = Field("all", description="Broadcast type: all, channel, users, filters")
     channels: list[str] = Field(default_factory=list, description="Target channels")
     user_ids: list[str] = Field(default_factory=list, description="Target users")
 
     # Filters
     connection_filters: dict[str, Any] = Field(
-        default_factory=dict,
-        description="Filter connections by attributes"
+        default_factory=dict, description="Filter connections by attributes"
     )
 
     # Options
@@ -285,10 +288,10 @@ class BroadcastRequest(BaseModel):
     ttl_seconds: int | None = Field(None, description="Message TTL")
     priority: str = Field("normal", description="Delivery priority: low, normal, high")
 
-    @field_validator('broadcast_type')
+    @field_validator("broadcast_type")
     def validate_broadcast_type(cls, v):
         """Validate broadcast type."""
-        valid_types = ['all', 'channel', 'users', 'filters']
+        valid_types = ["all", "channel", "users", "filters"]
         if v not in valid_types:
             raise ValueError(f"Invalid broadcast type. Must be one of: {valid_types}")
         return v
@@ -319,10 +322,7 @@ class WebSocketMetrics(BaseModel):
     failed_deliveries: int = Field(0, description="Failed delivery count")
 
     # By event type
-    events_by_type: dict[str, int] = Field(
-        default_factory=dict,
-        description="Event counts by type"
-    )
+    events_by_type: dict[str, int] = Field(default_factory=dict, description="Event counts by type")
 
     # Timestamp
     measured_at: datetime = Field(default_factory=datetime.utcnow)
@@ -330,6 +330,7 @@ class WebSocketMetrics(BaseModel):
 
 class SystemNotification(BaseModel):
     """System-wide notification for WebSocket clients"""
+
     id: str
     title: str
     message: str
@@ -346,6 +347,7 @@ class SystemNotification(BaseModel):
 # Models expected by tests (aliases for backward compatibility)
 class ConnectionStatus(BaseModel):
     """Connection status tracking (test compatibility)"""
+
     client_id: str
     connected: bool
     connected_at: datetime | None = None

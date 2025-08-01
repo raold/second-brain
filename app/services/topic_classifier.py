@@ -1,3 +1,11 @@
+import math
+import re
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
+
+from app.utils.logging_config import get_logger
+
 """
 Advanced topic classification and modeling service.
 
@@ -8,12 +16,7 @@ This service specializes in:
 - Cross-topic relationship mapping
 """
 
-import math
-import re
 from collections import Counter, defaultdict
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any
 
 import nltk
 from nltk.corpus import stopwords
@@ -23,26 +26,26 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from app.utils.logging_config import get_logger
 from app.utils.openai_client import get_openai_client
 
 logger = get_logger(__name__)
 
 # Download required NLTK data
 try:
-    nltk.data.find('tokenizers/punkt')
+    nltk.data.find("tokenizers/punkt")
 except LookupError:
-    nltk.download('punkt', quiet=True)
+    nltk.download("punkt", quiet=True)
 
 try:
-    nltk.data.find('corpora/stopwords')
+    nltk.data.find("corpora/stopwords")
 except LookupError:
-    nltk.download('stopwords', quiet=True)
+    nltk.download("stopwords", quiet=True)
 
 
 @dataclass
 class TopicModel:
     """Represents a topic with comprehensive metadata"""
+
     id: str
     name: str
     keywords: list[tuple[str, float]]  # (keyword, weight)
@@ -57,6 +60,7 @@ class TopicModel:
 @dataclass
 class TopicHierarchy:
     """Represents hierarchical topic structure"""
+
     parent_topic: TopicModel
     sub_topics: list[TopicModel] = field(default_factory=list)
     depth: int = 0
@@ -65,6 +69,7 @@ class TopicHierarchy:
 @dataclass
 class TopicEvolution:
     """Tracks topic evolution over time"""
+
     topic_id: str
     timeline: list[tuple[datetime, float]]  # (timestamp, prevalence)
     keywords_evolution: dict[str, list[tuple[datetime, float]]] = field(default_factory=dict)
@@ -76,28 +81,32 @@ class TopicClassifier:
     def __init__(self, **kwargs):
         self.config = kwargs
         self.openai_client = None
-        self.use_ai = kwargs.get('use_ai', True)
+        self.use_ai = kwargs.get("use_ai", True)
 
         # NLP components
         self.stemmer = PorterStemmer()
-        self.stop_words = set(stopwords.words('english'))
+        self.stop_words = set(stopwords.words("english"))
         self.vectorizer = None
         self.lda_model = None
         self.topic_cache = {}
 
         # Topic modeling parameters
-        self.n_topics = kwargs.get('n_topics', 10)
-        self.min_topic_size = kwargs.get('min_topic_size', 3)
-        self.coherence_threshold = kwargs.get('coherence_threshold', 0.5)
+        self.n_topics = kwargs.get("n_topics", 10)
+        self.min_topic_size = kwargs.get("min_topic_size", 3)
+        self.coherence_threshold = kwargs.get("coherence_threshold", 0.5)
 
         if self.use_ai:
             try:
                 self.openai_client = get_openai_client()
             except Exception as e:
-                logger.warning(f"Failed to initialize OpenAI client: {e}. Using statistical methods only.")
+                logger.warning(
+                    f"Failed to initialize OpenAI client: {e}. Using statistical methods only."
+                )
                 self.use_ai = False
 
-        logger.info(f"Initialized TopicClassifier (AI={'enabled' if self.use_ai else 'disabled'}, n_topics={self.n_topics})")
+        logger.info(
+            f"Initialized TopicClassifier (AI={'enabled' if self.use_ai else 'disabled'}, n_topics={self.n_topics})"
+        )
 
     def extract_topics(self, content: str) -> list[TopicModel]:
         """Extract topics using LDA topic modeling"""
@@ -109,7 +118,9 @@ class TopicClassifier:
                 return []
 
             # Convert to document list (split by paragraphs for better modeling)
-            documents = [p.strip() for p in content.split('\n\n') if p.strip() and len(p.strip()) > 50]
+            documents = [
+                p.strip() for p in content.split("\n\n") if p.strip() and len(p.strip()) > 50
+            ]
 
             if len(documents) < 2:
                 # For single document, use keyword extraction instead
@@ -117,20 +128,14 @@ class TopicClassifier:
 
             # Vectorize documents
             self.vectorizer = TfidfVectorizer(
-                max_features=100,
-                stop_words='english',
-                ngram_range=(1, 2),
-                min_df=1,
-                max_df=0.8
+                max_features=100, stop_words="english", ngram_range=(1, 2), min_df=1, max_df=0.8
             )
 
             doc_term_matrix = self.vectorizer.fit_transform(documents)
 
             # Apply LDA
             self.lda_model = LatentDirichletAllocation(
-                n_components=min(self.n_topics, len(documents)),
-                random_state=42,
-                max_iter=50
+                n_components=min(self.n_topics, len(documents)), random_state=42, max_iter=50
             )
 
             lda_output = self.lda_model.fit_transform(doc_term_matrix)
@@ -160,7 +165,7 @@ class TopicClassifier:
                     documents=[doc for i, doc in enumerate(documents) if lda_output[i, idx] > 0.2],
                     coherence_score=coherence,
                     prevalence=topic_prevalence,
-                    trend=self._analyze_trend(topic_prevalence)
+                    trend=self._analyze_trend(topic_prevalence),
                 )
 
                 topics.append(topic_model)
@@ -228,7 +233,7 @@ class TopicClassifier:
                     "average_coherence": 0.0,
                     "topic_diversity": 0.0,
                     "dominant_topics": [],
-                    "topic_coverage": 0.0
+                    "topic_coverage": 0.0,
                 }
 
             # Basic statistics
@@ -255,18 +260,17 @@ class TopicClassifier:
             return {
                 "total_topics": len(topics),
                 "average_coherence": sum(coherence_scores) / len(coherence_scores),
-                "coherence_range": {
-                    "min": min(coherence_scores),
-                    "max": max(coherence_scores)
-                },
+                "coherence_range": {"min": min(coherence_scores), "max": max(coherence_scores)},
                 "average_prevalence": sum(prevalence_scores) / len(prevalence_scores),
                 "topic_diversity": diversity,
-                "dominant_topics": [{"name": t.name, "prevalence": t.prevalence} for t in dominant_topics],
+                "dominant_topics": [
+                    {"name": t.name, "prevalence": t.prevalence} for t in dominant_topics
+                ],
                 "topic_coverage": sum(prevalence_scores),
                 "keyword_uniqueness": 1.0 - (keyword_overlap / max(len(all_keywords), 1)),
                 "trend_distribution": dict(trend_dist),
                 "hierarchical_depth": max(self._get_hierarchy_depth(topics), 1),
-                "top_keywords": self._get_global_keywords(topics)[:10]
+                "top_keywords": self._get_global_keywords(topics)[:10],
             }
 
         except Exception as e:
@@ -283,7 +287,7 @@ class TopicClassifier:
                 "topic_network": {},
                 "keyword_index": {},
                 "document_topics": {},
-                "topic_evolution": []
+                "topic_evolution": [],
             }
 
             # Build topic models
@@ -294,7 +298,7 @@ class TopicClassifier:
                     "keywords": [{"word": kw[0], "weight": kw[1]} for kw in topic.keywords],
                     "prevalence": topic.prevalence,
                     "coherence": topic.coherence_score,
-                    "document_count": len(topic.documents)
+                    "document_count": len(topic.documents),
                 }
                 structured_data["topic_models"].append(topic_data)
 
@@ -303,16 +307,15 @@ class TopicClassifier:
                 for keyword, weight in topic.keywords:
                     if keyword not in structured_data["keyword_index"]:
                         structured_data["keyword_index"][keyword] = []
-                    structured_data["keyword_index"][keyword].append({
-                        "topic_id": topic.id,
-                        "weight": weight
-                    })
+                    structured_data["keyword_index"][keyword].append(
+                        {"topic_id": topic.id, "weight": weight}
+                    )
 
             # Build topic network (relationships)
             for topic in topics:
                 structured_data["topic_network"][topic.id] = {
                     "related": topic.related_topics,
-                    "strength": [0.8] * len(topic.related_topics)  # Placeholder strengths
+                    "strength": [0.8] * len(topic.related_topics),  # Placeholder strengths
                 }
 
             return structured_data
@@ -338,12 +341,10 @@ class TopicClassifier:
                 hierarchy_data = {
                     "parent": {
                         "id": hierarchy.parent_topic.id,
-                        "name": hierarchy.parent_topic.name
+                        "name": hierarchy.parent_topic.name,
                     },
-                    "children": [
-                        {"id": st.id, "name": st.name} for st in hierarchy.sub_topics
-                    ],
-                    "depth": hierarchy.depth
+                    "children": [{"id": st.id, "name": st.name} for st in hierarchy.sub_topics],
+                    "depth": hierarchy.depth,
                 }
                 data["topic_hierarchies"].append(hierarchy_data)
 
@@ -368,7 +369,9 @@ class TopicClassifier:
 
             # Calculate statistics
             total_keywords = len(keyword_index)
-            avg_keywords_per_topic = sum(len(t.get("keywords", [])) for t in topic_models) / max(len(topic_models), 1)
+            avg_keywords_per_topic = sum(len(t.get("keywords", [])) for t in topic_models) / max(
+                len(topic_models), 1
+            )
 
             # Hierarchy statistics
             hierarchy_depths = [h.get("depth", 0) for h in hierarchies]
@@ -385,9 +388,10 @@ class TopicClassifier:
                 "hierarchy_levels": max_depth,
                 "total_hierarchies": len(hierarchies),
                 "network_connections": connections,
-                "network_density": connections / max(len(topic_models) * (len(topic_models) - 1), 1),
+                "network_density": connections
+                / max(len(topic_models) * (len(topic_models) - 1), 1),
                 "has_temporal_data": "temporal_analysis" in data,
-                "has_similarity_data": "similarity_matrix" in data
+                "has_similarity_data": "similarity_matrix" in data,
             }
 
         except Exception as e:
@@ -405,11 +409,52 @@ class TopicClassifier:
 
             # Define topical domains based on keyword patterns
             domain_keywords = {
-                "technical": ["software", "code", "system", "data", "algorithm", "api", "database", "framework"],
-                "scientific": ["research", "study", "analysis", "hypothesis", "experiment", "theory", "evidence"],
-                "business": ["market", "strategy", "customer", "revenue", "growth", "investment", "management"],
-                "educational": ["learn", "teach", "student", "course", "knowledge", "skill", "training"],
-                "creative": ["design", "art", "create", "inspiration", "innovation", "aesthetic", "style"]
+                "technical": [
+                    "software",
+                    "code",
+                    "system",
+                    "data",
+                    "algorithm",
+                    "api",
+                    "database",
+                    "framework",
+                ],
+                "scientific": [
+                    "research",
+                    "study",
+                    "analysis",
+                    "hypothesis",
+                    "experiment",
+                    "theory",
+                    "evidence",
+                ],
+                "business": [
+                    "market",
+                    "strategy",
+                    "customer",
+                    "revenue",
+                    "growth",
+                    "investment",
+                    "management",
+                ],
+                "educational": [
+                    "learn",
+                    "teach",
+                    "student",
+                    "course",
+                    "knowledge",
+                    "skill",
+                    "training",
+                ],
+                "creative": [
+                    "design",
+                    "art",
+                    "create",
+                    "inspiration",
+                    "innovation",
+                    "aesthetic",
+                    "style",
+                ],
             }
 
             # Calculate domain scores
@@ -420,7 +465,11 @@ class TopicClassifier:
 
                 for domain, keywords in domain_keywords.items():
                     # Calculate overlap
-                    overlap = sum(1 for kw in keywords if any(kw in tkw or tkw in kw for tkw in topic_keywords))
+                    overlap = sum(
+                        1
+                        for kw in keywords
+                        if any(kw in tkw or tkw in kw for tkw in topic_keywords)
+                    )
                     if overlap > 0:
                         domain_scores[domain] += overlap * topic.prevalence
 
@@ -439,17 +488,23 @@ class TopicClassifier:
 
             for domain, score in sorted_domains[:3]:
                 if score > 0.1:  # Minimum threshold
-                    domains.append({
-                        "name": domain,
-                        "confidence": score,
-                        "supporting_topics": [t.name for t in topics if self._topic_matches_domain(t, domain_keywords[domain])][:3]
-                    })
+                    domains.append(
+                        {
+                            "name": domain,
+                            "confidence": score,
+                            "supporting_topics": [
+                                t.name
+                                for t in topics
+                                if self._topic_matches_domain(t, domain_keywords[domain])
+                            ][:3],
+                        }
+                    )
                     confidence_scores[domain] = score
 
             return {
                 "domains": domains,
                 "confidence_scores": confidence_scores,
-                "primary_domain": domains[0]["name"] if domains else "general"
+                "primary_domain": domains[0]["name"] if domains else "general",
             }
 
         except Exception as e:
@@ -464,7 +519,7 @@ class TopicClassifier:
                     "total_domains": 0,
                     "primary_domain": None,
                     "average_confidence": 0.0,
-                    "domain_distribution": {}
+                    "domain_distribution": {},
                 }
 
             confidences = [d.get("confidence", 0.0) for d in domains]
@@ -473,13 +528,12 @@ class TopicClassifier:
                 "total_domains": len(domains),
                 "primary_domain": domains[0]["name"] if domains else None,
                 "average_confidence": sum(confidences) / len(confidences),
-                "confidence_range": {
-                    "min": min(confidences),
-                    "max": max(confidences)
-                },
+                "confidence_range": {"min": min(confidences), "max": max(confidences)},
                 "domain_distribution": {d["name"]: d["confidence"] for d in domains},
                 "high_confidence_domains": [d["name"] for d in domains if d["confidence"] > 0.7],
-                "supporting_topics_count": sum(len(d.get("supporting_topics", [])) for d in domains)
+                "supporting_topics_count": sum(
+                    len(d.get("supporting_topics", [])) for d in domains
+                ),
             }
 
         except Exception as e:
@@ -494,7 +548,7 @@ class TopicClassifier:
         text = text.lower()
 
         # Remove special characters and digits
-        text = re.sub(r'[^a-zA-Z\s]', ' ', text)
+        text = re.sub(r"[^a-zA-Z\s]", " ", text)
 
         # Tokenize
         tokens = word_tokenize(text)
@@ -506,18 +560,32 @@ class TopicClassifier:
             if token not in self.stop_words and len(token) > 2
         ]
 
-        return ' '.join(processed_tokens)
+        return " ".join(processed_tokens)
 
     def _extract_topics_from_keywords(self, content: str) -> list[TopicModel]:
         """Fallback method using keyword extraction"""
         try:
             # Simple keyword extraction
-            words = re.findall(r'\b\w+\b', content.lower())
+            words = re.findall(r"\b\w+\b", content.lower())
             word_freq = Counter(words)
 
             # Filter out common words
-            common_words = self.stop_words | {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for'}
-            important_words = [(w, f) for w, f in word_freq.most_common(50) if w not in common_words and len(w) > 3]
+            common_words = self.stop_words | {
+                "the",
+                "a",
+                "an",
+                "and",
+                "or",
+                "but",
+                "in",
+                "on",
+                "at",
+                "to",
+                "for",
+            }
+            important_words = [
+                (w, f) for w, f in word_freq.most_common(50) if w not in common_words and len(w) > 3
+            ]
 
             # Group into topics (simple clustering by co-occurrence)
             topics = []
@@ -528,18 +596,24 @@ class TopicClassifier:
                     continue
 
                 # Find related words
-                related = [(w, f) for w, f in important_words if w != word and self._words_related(word, w, content)]
+                related = [
+                    (w, f)
+                    for w, f in important_words
+                    if w != word and self._words_related(word, w, content)
+                ]
                 related = sorted(related, key=lambda x: x[1], reverse=True)[:5]
 
                 # Create topic
-                keywords = [(word, float(freq) / len(words))] + [(w, float(f) / len(words)) for w, f in related]
+                keywords = [(word, float(freq) / len(words))] + [
+                    (w, float(f) / len(words)) for w, f in related
+                ]
 
                 topic = TopicModel(
                     id=f"topic_kw_{len(topics)}",
                     name=f"{word.title()} Topic",
                     keywords=keywords,
                     prevalence=sum(kw[1] for kw in keywords),
-                    coherence_score=0.6  # Default coherence
+                    coherence_score=0.6,  # Default coherence
                 )
 
                 topics.append(topic)
@@ -561,11 +635,13 @@ class TopicClassifier:
         words = [w[0] for w in top_words[:3]]
 
         # Clean up words
-        words = [w.replace('_', ' ').title() for w in words]
+        words = [w.replace("_", " ").title() for w in words]
 
-        return ' & '.join(words)
+        return " & ".join(words)
 
-    def _calculate_coherence(self, top_words: list[tuple[str, float]], documents: list[str]) -> float:
+    def _calculate_coherence(
+        self, top_words: list[tuple[str, float]], documents: list[str]
+    ) -> float:
         """Calculate topic coherence score"""
         try:
             # Simple coherence: how often top words appear together
@@ -599,7 +675,9 @@ class TopicClassifier:
         else:
             return "stable"
 
-    def _enhance_with_clustering(self, content: str, base_topics: list[TopicModel]) -> list[TopicModel]:
+    def _enhance_with_clustering(
+        self, content: str, base_topics: list[TopicModel]
+    ) -> list[TopicModel]:
         """Enhance topics with clustering analysis"""
         try:
             if len(base_topics) < 3:
@@ -629,7 +707,8 @@ class TopicClassifier:
             # Update topics with cluster info
             for i, topic in enumerate(base_topics):
                 topic.related_topics = [
-                    base_topics[j].id for j in range(len(base_topics))
+                    base_topics[j].id
+                    for j in range(len(base_topics))
                     if i != j and clusters[i] == clusters[j]
                 ]
 
@@ -647,7 +726,7 @@ class TopicClassifier:
 
             keywords1 = set(kw[0] for kw in topic1.keywords[:5])
 
-            for _j, topic2 in enumerate(topics[i+1:], i+1):
+            for _j, topic2 in enumerate(topics[i + 1 :], i + 1):
                 keywords2 = set(kw[0] for kw in topic2.keywords[:5])
 
                 # Calculate overlap
@@ -668,11 +747,7 @@ class TopicClassifier:
         remaining_topics = sorted_topics[3:]
 
         for parent in parent_topics:
-            hierarchy = TopicHierarchy(
-                parent_topic=parent,
-                sub_topics=[],
-                depth=1
-            )
+            hierarchy = TopicHierarchy(parent_topic=parent, sub_topics=[], depth=1)
 
             # Assign children based on keyword overlap
             parent_keywords = set(kw[0] for kw in parent.keywords[:5])
@@ -703,7 +778,7 @@ class TopicClassifier:
         for i, topic1 in enumerate(topics):
             keywords1 = set(kw[0] for kw in topic1.keywords[:5])
 
-            for topic2 in topics[i+1:]:
+            for topic2 in topics[i + 1 :]:
                 keywords2 = set(kw[0] for kw in topic2.keywords[:5])
 
                 overlap = len(keywords1 & keywords2)
@@ -743,14 +818,16 @@ class TopicClassifier:
     def _words_related(self, word1: str, word2: str, content: str) -> bool:
         """Check if two words are related in the content"""
         # Simple co-occurrence check
-        sentences = re.split(r'[.!?]+', content.lower())
+        sentences = re.split(r"[.!?]+", content.lower())
         co_occurrences = sum(1 for s in sentences if word1 in s and word2 in s)
         return co_occurrences >= 2
 
     def _topic_matches_domain(self, topic: TopicModel, domain_keywords: list[str]) -> bool:
         """Check if a topic matches a domain"""
         topic_keywords = [kw[0].lower() for kw in topic.keywords[:10]]
-        matches = sum(1 for dkw in domain_keywords if any(dkw in tkw or tkw in dkw for tkw in topic_keywords))
+        matches = sum(
+            1 for dkw in domain_keywords if any(dkw in tkw or tkw in dkw for tkw in topic_keywords)
+        )
         return matches >= 2
 
     def _simulate_temporal_analysis(self, topics: list[TopicModel]) -> list[dict[str, Any]]:
@@ -759,15 +836,17 @@ class TopicClassifier:
         temporal_data = []
 
         for topic in topics[:5]:  # Top 5 topics
-            temporal_data.append({
-                "topic_id": topic.id,
-                "topic_name": topic.name,
-                "timeline": [
-                    {"timestamp": datetime.now().isoformat(), "prevalence": topic.prevalence}
-                ],
-                "trend": topic.trend,
-                "forecast": "stable"  # Would be calculated from historical data
-            })
+            temporal_data.append(
+                {
+                    "topic_id": topic.id,
+                    "topic_name": topic.name,
+                    "timeline": [
+                        {"timestamp": datetime.now().isoformat(), "prevalence": topic.prevalence}
+                    ],
+                    "trend": topic.trend,
+                    "forecast": "stable",  # Would be calculated from historical data
+                }
+            )
 
         return temporal_data
 

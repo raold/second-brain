@@ -1,12 +1,17 @@
+from datetime import datetime
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+
+from app.utils.logging_config import get_logger
+
 """
 Ingestion routes for file upload and processing
 """
 
-from datetime import datetime
-from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
-from pydantic import BaseModel, Field
+from fastapi import BackgroundTasks, File, Form, UploadFile
 
 from app.dependencies import get_current_user, get_db_instance
 from app.dependencies.auth import get_current_user, get_db_instance
@@ -14,7 +19,6 @@ from app.ingestion.engine import IngestionEngine
 from app.models.memory import User
 from app.repositories.memory_repository import MemoryRepository
 from app.services.service_factory import ServiceFactory
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -23,6 +27,7 @@ router = APIRouter(prefix="/api/v1/ingest", tags=["ingestion"])
 
 class IngestionStatus(BaseModel):
     """Status of an ingestion job"""
+
     job_id: str
     status: str = Field(..., description="pending, processing, completed, failed")
     filename: str
@@ -35,6 +40,7 @@ class IngestionStatus(BaseModel):
 
 class IngestionResponse(BaseModel):
     """Response for file ingestion"""
+
     success: bool
     job_id: str
     message: str
@@ -43,6 +49,7 @@ class IngestionResponse(BaseModel):
 
 class BatchIngestionRequest(BaseModel):
     """Request for batch file ingestion"""
+
     tags: list[str] | None = Field(default_factory=list)
     metadata: dict[str, Any] | None = Field(default_factory=dict)
 
@@ -58,7 +65,7 @@ async def upload_file(
     tags: str | None = Form(None),
     metadata: str | None = Form(None),
     current_user: User = Depends(get_current_user),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """
     Upload and ingest a single file
@@ -84,6 +91,7 @@ async def upload_file(
     if metadata:
         try:
             import json
+
             meta_dict = json.loads(metadata)
         except Exception:
             logger.warning(f"Failed to parse metadata: {metadata}")
@@ -97,7 +105,7 @@ async def upload_file(
         status="pending",
         filename=file.filename,
         file_type=file.content_type or "unknown",
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
     ingestion_jobs[job_id] = job_status
 
@@ -110,13 +118,11 @@ async def upload_file(
         user_id=current_user.id,
         tags=tag_list,
         metadata=meta_dict,
-        db=db
+        db=db,
     )
 
     return IngestionResponse(
-        success=True,
-        job_id=job_id,
-        message=f"File '{file.filename}' queued for processing"
+        success=True, job_id=job_id, message=f"File '{file.filename}' queued for processing"
     )
 
 
@@ -126,7 +132,7 @@ async def upload_files_batch(
     files: list[UploadFile] = File(...),
     request: BatchIngestionRequest = BatchIngestionRequest(),
     current_user: User = Depends(get_current_user),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """
     Upload and ingest multiple files in batch
@@ -143,7 +149,7 @@ async def upload_files_batch(
         status="pending",
         filename=f"{len(files)} files",
         file_type="batch",
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
     ingestion_jobs[job_id] = job_status
 
@@ -155,21 +161,16 @@ async def upload_files_batch(
         user_id=current_user.id,
         tags=request.tags,
         metadata=request.metadata,
-        db=db
+        db=db,
     )
 
     return IngestionResponse(
-        success=True,
-        job_id=job_id,
-        message=f"Batch of {len(files)} files queued for processing"
+        success=True, job_id=job_id, message=f"Batch of {len(files)} files queued for processing"
     )
 
 
 @router.get("/status/{job_id}", response_model=IngestionStatus)
-async def get_ingestion_status(
-    job_id: str,
-    current_user: User = Depends(get_current_user)
-):
+async def get_ingestion_status(job_id: str, current_user: User = Depends(get_current_user)):
     """Get status of an ingestion job"""
     if job_id not in ingestion_jobs:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -177,20 +178,22 @@ async def get_ingestion_status(
     job_status = ingestion_jobs[job_id]
 
     # Verify user owns this job
-    if not job_id.startswith(f"{current_user.id}_") and not job_id.startswith(f"batch_{current_user.id}_"):
+    if not job_id.startswith(f"{current_user.id}_") and not job_id.startswith(
+        f"batch_{current_user.id}_"
+    ):
         raise HTTPException(status_code=403, detail="Access denied")
 
     return job_status
 
 
 @router.get("/jobs", response_model=list[IngestionStatus])
-async def list_ingestion_jobs(
-    current_user: User = Depends(get_current_user)
-):
+async def list_ingestion_jobs(current_user: User = Depends(get_current_user)):
     """List all ingestion jobs for the current user"""
     user_jobs = [
-        job for job_id, job in ingestion_jobs.items()
-        if job_id.startswith(f"{current_user.id}_") or job_id.startswith(f"batch_{current_user.id}_")
+        job
+        for job_id, job in ingestion_jobs.items()
+        if job_id.startswith(f"{current_user.id}_")
+        or job_id.startswith(f"batch_{current_user.id}_")
     ]
 
     # Sort by created_at descending
@@ -208,18 +211,21 @@ async def get_supported_file_types():
                 "category": "Documents",
                 "types": [
                     {"extension": ".pdf", "mime_type": "application/pdf"},
-                    {"extension": ".docx", "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
+                    {
+                        "extension": ".docx",
+                        "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    },
                     {"extension": ".doc", "mime_type": "application/msword"},
                     {"extension": ".txt", "mime_type": "text/plain"},
-                    {"extension": ".md", "mime_type": "text/markdown"}
-                ]
+                    {"extension": ".md", "mime_type": "text/markdown"},
+                ],
             },
             {
                 "category": "Web",
                 "types": [
                     {"extension": ".html", "mime_type": "text/html"},
-                    {"extension": ".htm", "mime_type": "text/html"}
-                ]
+                    {"extension": ".htm", "mime_type": "text/html"},
+                ],
             },
             {
                 "category": "Images",
@@ -229,24 +235,27 @@ async def get_supported_file_types():
                     {"extension": ".png", "mime_type": "image/png"},
                     {"extension": ".gif", "mime_type": "image/gif"},
                     {"extension": ".bmp", "mime_type": "image/bmp"},
-                    {"extension": ".tiff", "mime_type": "image/tiff"}
-                ]
+                    {"extension": ".tiff", "mime_type": "image/tiff"},
+                ],
             },
             {
                 "category": "Spreadsheets",
                 "types": [
-                    {"extension": ".xlsx", "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+                    {
+                        "extension": ".xlsx",
+                        "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    },
                     {"extension": ".xls", "mime_type": "application/vnd.ms-excel"},
-                    {"extension": ".csv", "mime_type": "text/csv"}
-                ]
-            }
+                    {"extension": ".csv", "mime_type": "text/csv"},
+                ],
+            },
         ],
         "max_file_size_mb": 100,
         "notes": [
             "Images are processed using OCR to extract text",
             "Large files may take longer to process",
-            "Batch upload supports up to 10 files at once"
-        ]
+            "Batch upload supports up to 10 files at once",
+        ],
     }
 
 
@@ -257,7 +266,7 @@ async def process_file_ingestion(
     user_id: str,
     tags: list[str],
     metadata: dict[str, Any],
-    db
+    db,
 ):
     """Process file ingestion in background"""
     job_status = ingestion_jobs[job_id]
@@ -269,7 +278,7 @@ async def process_file_ingestion(
         service_factory = ServiceFactory(db)
         ingestion_engine = IngestionEngine(
             memory_repository=memory_repository,
-            extraction_pipeline=service_factory.core_extraction_pipeline
+            extraction_pipeline=service_factory.core_extraction_pipeline,
         )
 
         # Read file content
@@ -277,11 +286,7 @@ async def process_file_ingestion(
 
         # Ingest file
         result = await ingestion_engine.ingest_file(
-            file=content,
-            filename=filename,
-            user_id=user_id,
-            tags=tags,
-            metadata=metadata
+            file=content, filename=filename, user_id=user_id, tags=tags, metadata=metadata
         )
 
         # Update job status
@@ -292,7 +297,7 @@ async def process_file_ingestion(
             "memories_created": len(result.memories_created),
             "chunks_processed": result.chunks_processed,
             "processing_time": result.processing_time,
-            "file_hash": result.file_metadata.hash
+            "file_hash": result.file_metadata.hash,
         }
 
         if not result.success:
@@ -312,7 +317,7 @@ async def process_batch_ingestion(
     user_id: str,
     tags: list[str],
     metadata: dict[str, Any],
-    db
+    db,
 ):
     """Process batch file ingestion in background"""
     job_status = ingestion_jobs[job_id]
@@ -324,7 +329,7 @@ async def process_batch_ingestion(
         service_factory = ServiceFactory(db)
         ingestion_engine = IngestionEngine(
             memory_repository=memory_repository,
-            extraction_pipeline=service_factory.core_extraction_pipeline
+            extraction_pipeline=service_factory.core_extraction_pipeline,
         )
 
         # Process each file
@@ -341,26 +346,22 @@ async def process_batch_ingestion(
                     filename=file.filename,
                     user_id=user_id,
                     tags=tags,
-                    metadata=metadata
+                    metadata=metadata,
                 )
 
                 if result.success:
                     total_memories += len(result.memories_created)
                     total_chunks += result.chunks_processed
                 else:
-                    failed_files.append({
-                        "filename": file.filename,
-                        "error": "; ".join(result.errors)
-                    })
+                    failed_files.append(
+                        {"filename": file.filename, "error": "; ".join(result.errors)}
+                    )
 
                 results.append(result)
 
             except Exception as e:
                 logger.error(f"Failed to process file {file.filename}: {str(e)}")
-                failed_files.append({
-                    "filename": file.filename,
-                    "error": str(e)
-                })
+                failed_files.append({"filename": file.filename, "error": str(e)})
 
         # Update job status
         job_status.status = "completed"
@@ -371,7 +372,7 @@ async def process_batch_ingestion(
             "failed_files": len(failed_files),
             "total_memories_created": total_memories,
             "total_chunks_processed": total_chunks,
-            "failures": failed_files if failed_files else None
+            "failures": failed_files if failed_files else None,
         }
 
         if len(failed_files) == len(files):

@@ -63,7 +63,12 @@ async def test_core_bulk_operations():
     print("\n🔧 Testing Core Bulk Operations...")
 
     try:
-        from app.bulk_memory_operations import BulkMemoryItem, BulkOperationConfig, ValidationLevel, get_bulk_engine
+        from app.bulk_memory_operations import (
+            BulkMemoryItem,
+            BulkOperationConfig,
+            ValidationLevel,
+            get_bulk_engine,
+        )
 
         # Initialize bulk engine
         print("  ✓ Initializing bulk engine...")
@@ -89,7 +94,10 @@ async def test_core_bulk_operations():
         # Test bulk insert
         print("  ✓ Testing bulk insert...")
         config = BulkOperationConfig(
-            batch_size=10, validation_level=ValidationLevel.STANDARD, enable_rollback=True, parallel_workers=2
+            batch_size=10,
+            validation_level=ValidationLevel.STANDARD,
+            enable_rollback=True,
+            parallel_workers=2,
         )
 
         result = await bulk_engine.bulk_insert_memories(bulk_items, config)
@@ -155,7 +163,9 @@ async def test_advanced_operations():
         print("  ✓ Testing import...")
         generate_test_memories(10)
         ImportConfig(
-            format=ExportFormat.JSON, strategy=ImportStrategy.SKIP, validation_level=ValidationLevel.STANDARD
+            format=ExportFormat.JSON,
+            strategy=ImportStrategy.SKIP,
+            validation_level=ValidationLevel.STANDARD,
         )
 
         # Note: This would work with actual database
@@ -267,7 +277,10 @@ async def test_performance_optimization():
         # Initialize performance optimizer
         print("  ✓ Initializing performance optimizer...")
         config = OptimizationConfig(
-            optimization_level=OptimizationLevel.BALANCED, max_workers=4, max_memory_usage_mb=1024, enable_caching=True
+            optimization_level=OptimizationLevel.BALANCED,
+            max_workers=4,
+            max_memory_usage_mb=1024,
+            enable_caching=True,
         )
 
         optimizer = await get_performance_optimizer(config)
@@ -292,7 +305,9 @@ async def test_performance_optimization():
         print("  ✓ Generating performance report...")
         report = await optimizer.generate_performance_report()
 
-        print(f"    - System performance: {report.get('system_performance', {}).get('current', 'N/A')}")
+        print(
+            f"    - System performance: {report.get('system_performance', {}).get('current', 'N/A')}"
+        )
         print(f"    - Connection pool: {report.get('connection_pool', 'N/A')}")
         print(f"    - Recommendations: {len(report.get('recommendations', []))} items")
 
@@ -321,7 +336,9 @@ async def test_monitoring_analytics():
 
         # Test analytics
         print("  ✓ Testing analytics...")
-        trends = await dashboard.analytics_engine.analyze_performance_trends(AnalyticsTimeframe.HOUR)
+        trends = await dashboard.analytics_engine.analyze_performance_trends(
+            AnalyticsTimeframe.HOUR
+        )
 
         print(f"    - Performance trends analyzed: {len(trends)} metrics")
 
@@ -353,13 +370,21 @@ async def test_api_integration():
 
     try:
         # Test API request/response models
-        from app.routes.bulk_routes import BulkInsertRequest, BulkMemoryItemRequest, ExportRequest, ImportRequest
+        from app.routes.bulk_routes import (
+            BulkInsertRequest,
+            BulkMemoryItemRequest,
+            ExportRequest,
+            ImportRequest,
+        )
 
         print("  ✓ Testing request models...")
 
         # Test bulk insert request
         bulk_item = BulkMemoryItemRequest(
-            content="Test API memory content", memory_type="semantic", importance_score=0.8, metadata={"api_test": True}
+            content="Test API memory content",
+            memory_type="semantic",
+            importance_score=0.8,
+            metadata={"api_test": True},
         )
 
         bulk_request = BulkInsertRequest(

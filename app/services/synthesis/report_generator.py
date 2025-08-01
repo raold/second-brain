@@ -1,9 +1,11 @@
-"""Report generator for memory synthesis"""
-
 from datetime import datetime
 from typing import Any
 
 from app.utils.logging_config import get_logger
+
+"""Report generator for memory synthesis"""
+
+
 
 logger = get_logger(__name__)
 
@@ -15,7 +17,7 @@ class ReportGenerator:
         self.report_templates = {
             "summary": self._generate_summary_report,
             "detailed": self._generate_detailed_report,
-            "insights": self._generate_insights_report
+            "insights": self._generate_insights_report,
         }
 
     async def generate_report(self, report_type: str, parameters: dict[str, Any]) -> dict[str, Any]:
@@ -32,8 +34,8 @@ class ReportGenerator:
             "statistics": {
                 "total_memories": 100,
                 "recent_memories": 10,
-                "top_tags": ["learning", "work", "ideas"]
-            }
+                "top_tags": ["learning", "work", "ideas"],
+            },
         }
 
     async def _generate_detailed_report(self, parameters: dict[str, Any]) -> dict[str, Any]:
@@ -42,7 +44,7 @@ class ReportGenerator:
             "type": "detailed",
             "generated_at": datetime.utcnow().isoformat(),
             "content": "Detailed report placeholder",
-            "sections": []
+            "sections": [],
         }
 
     async def _generate_insights_report(self, parameters: dict[str, Any]) -> dict[str, Any]:
@@ -51,7 +53,7 @@ class ReportGenerator:
             "type": "insights",
             "generated_at": datetime.utcnow().isoformat(),
             "insights": [],
-            "recommendations": []
+            "recommendations": [],
         }
 
     async def get_available_templates(self) -> list[str]:

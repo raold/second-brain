@@ -1,3 +1,5 @@
+from app.services.service_factory import get_health_service, get_memory_service, get_session_service
+
 """
 Core application infrastructure
 """

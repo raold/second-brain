@@ -8,12 +8,13 @@ Tests the new modular deduplication architecture including:
 - Integration and performance testing
 """
 
-
 import pytest
+
 pytestmark = pytest.mark.unit
 
 # We'll import our modules once they're fully created
 # For now, this shows the test structure we'll implement
+
 
 class TestDeduplicationModels:
     """Test deduplication data models."""
@@ -224,7 +225,7 @@ def test_phase_2_advanced_structure():
         "app/services/duplicate_detectors/exact_match_detector.py",
         "app/services/duplicate_detectors/fuzzy_match_detector.py",
         "app/services/duplicate_detectors/semantic_similarity_detector.py",
-        "app/services/duplicate_detectors/hybrid_detector.py"
+        "app/services/duplicate_detectors/hybrid_detector.py",
     ]
 
     for file_path in expected_files:

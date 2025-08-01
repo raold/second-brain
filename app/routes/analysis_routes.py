@@ -1,15 +1,17 @@
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+
+from app.utils.logging_config import get_logger
+
 """
 API routes for advanced analysis features including domain classification
 """
 
 from collections import Counter, defaultdict
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
-
 from app.dependencies import get_current_user, get_db_instance
 from app.shared import verify_api_key
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -21,57 +23,86 @@ try:
     from app.services.topic_classifier import TopicClassifier
 except ImportError as e:
     logger.warning(f"Could not import services: {e}")
+
     # Stub classes for missing services
     class TopicClassifier:
-        def __init__(self, **kwargs): pass
-        def extract_topics(self, content): return []
-        def extract_advanced_topics(self, content): return []
-        def get_topic_statistics(self, topics): return {}
+        def __init__(self, **kwargs):
+            pass
+
+        def extract_topics(self, content):
+            return []
+
+        def extract_advanced_topics(self, content):
+            return []
+
+        def get_topic_statistics(self, topics):
+            return {}
 
     class StructuredDataExtractor:
-        def __init__(self): pass
+        def __init__(self):
+            pass
+
         def extract_structured_data(self, content):
-            return type('obj', (object,), {
-                'key_value_pairs': {},
-                'lists': [],
-                'tables': [],
-                'code_snippets': [],
-                'metadata_fields': {}
-            })()
+            return type(
+                "obj",
+                (object,),
+                {
+                    "key_value_pairs": {},
+                    "lists": [],
+                    "tables": [],
+                    "code_snippets": [],
+                    "metadata_fields": {},
+                },
+            )()
+
         def extract_advanced_structured_data(self, content):
             return self.extract_structured_data(content)
-        def get_extraction_statistics(self, data): return {}
+
+        def get_extraction_statistics(self, data):
+            return {}
 
     class DomainClassifier:
-        def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs):
+            pass
+
         def classify_domain(self, content, **kwargs):
             return {"domains": [], "confidence_scores": {}}
-        def get_domain_statistics(self, domains): return {}
+
+        def get_domain_statistics(self, domains):
+            return {}
 
     class MemoryService:
-        def __init__(self, db): pass
-        async def get_memory(self, memory_id, user_id): return None
-        async def search_memories(self, **kwargs): return []
+        def __init__(self, db):
+            pass
+
+        async def get_memory(self, memory_id, user_id):
+            return None
+
+        async def search_memories(self, **kwargs):
+            return []
+
 
 # Simple stub for missing dependencies
 async def verify_api_key():
     return "valid"
 
+
 async def get_current_user():
     return {"user_id": "default"}
+
 
 async def get_db_instance():
     return None
 
+
 router = APIRouter(
-    prefix="/analysis",
-    tags=["analysis"],
-    responses={404: {"description": "Not found"}}
+    prefix="/analysis", tags=["analysis"], responses={404: {"description": "Not found"}}
 )
 
 
 class AnalysisRequest(BaseModel):
     """Request model for content analysis"""
+
     content: str = Field(..., description="Content to analyze")
     include_topics: bool = Field(True, description="Include topic analysis")
     include_structure: bool = Field(True, description="Include structured data extraction")
@@ -81,6 +112,7 @@ class AnalysisRequest(BaseModel):
 
 class BatchAnalysisRequest(BaseModel):
     """Request model for batch analysis"""
+
     memory_ids: list[str] | None = Field(None, description="Memory IDs to analyze")
     tags: list[str] | None = Field(None, description="Filter by tags")
     limit: int = Field(50, description="Maximum memories to analyze")
@@ -91,6 +123,7 @@ class BatchAnalysisRequest(BaseModel):
 
 class DomainClassificationRequest(BaseModel):
     """Request model for domain classification"""
+
     content: str = Field(..., description="Content to classify")
     multi_label: bool = Field(True, description="Allow multiple domain labels")
     include_hierarchy: bool = Field(True, description="Include domain hierarchy")
@@ -98,18 +131,12 @@ class DomainClassificationRequest(BaseModel):
 
 
 @router.post("/analyze")
-async def analyze_content(
-    request: AnalysisRequest,
-    _: str = Depends(verify_api_key)
-):
+async def analyze_content(request: AnalysisRequest, _: str = Depends(verify_api_key)):
     """
     Perform comprehensive content analysis
     """
     try:
-        results = {
-            "status": "success",
-            "analysis": {}
-        }
+        results = {"status": "success", "analysis": {}}
 
         # Topic analysis
         if request.include_topics:
@@ -127,11 +154,11 @@ async def analyze_content(
                         "keywords": topic.keywords,
                         "confidence": topic.confidence,
                         "relevance": topic.relevance,
-                        "hierarchy": topic.hierarchy
+                        "hierarchy": topic.hierarchy,
                     }
                     for topic in topics
                 ],
-                "statistics": topic_classifier.get_topic_statistics(topics)
+                "statistics": topic_classifier.get_topic_statistics(topics),
             }
 
         # Structured data extraction
@@ -149,16 +176,14 @@ async def analyze_content(
                 "tables": structured_data.tables,
                 "code_snippets": structured_data.code_snippets,
                 "metadata": structured_data.metadata_fields,
-                "statistics": extractor.get_extraction_statistics(structured_data)
+                "statistics": extractor.get_extraction_statistics(structured_data),
             }
 
         # Domain classification
         if request.include_domain:
             domain_classifier = DomainClassifier()
             domain_results = domain_classifier.classify_domain(
-                request.content,
-                multi_label=True,
-                include_hierarchy=True
+                request.content, multi_label=True, include_hierarchy=True
             )
 
             results["analysis"]["domains"] = domain_results
@@ -175,7 +200,7 @@ async def batch_analyze(
     request: BatchAnalysisRequest,
     current_user: dict = Depends(get_current_user),
     _: str = Depends(verify_api_key),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """
     Perform batch analysis on multiple memories
@@ -187,21 +212,20 @@ async def batch_analyze(
         if request.memory_ids:
             memories = []
             for memory_id in request.memory_ids:
-                memory = await memory_service.get_memory(memory_id, current_user.get('user_id', 'default_user'))
+                memory = await memory_service.get_memory(
+                    memory_id, current_user.get("user_id", "default_user")
+                )
                 if memory:
                     memories.append(memory)
         else:
             memories = await memory_service.search_memories(
-                user_id=current_user.get('user_id', 'default_user'),
+                user_id=current_user.get("user_id", "default_user"),
                 tags=request.tags,
-                limit=request.limit
+                limit=request.limit,
             )
 
         if not memories:
-            return {
-                "status": "no_data",
-                "message": "No memories found with specified filters"
-            }
+            return {"status": "no_data", "message": "No memories found with specified filters"}
 
         # Initialize analyzers
         topic_classifier = TopicClassifier() if request.include_topics else None
@@ -214,10 +238,7 @@ async def batch_analyze(
         all_domains = []
 
         for memory in memories:
-            analysis = {
-                "memory_id": memory.id,
-                "title": memory.title
-            }
+            analysis = {"memory_id": memory.id, "title": memory.title}
 
             # Topic analysis
             if topic_classifier:
@@ -232,7 +253,7 @@ async def batch_analyze(
                     "kv_pairs": len(structured_data.key_value_pairs),
                     "lists": len(structured_data.lists),
                     "tables": len(structured_data.tables),
-                    "code_snippets": len(structured_data.code_snippets)
+                    "code_snippets": len(structured_data.code_snippets),
                 }
 
             # Domain classification
@@ -244,10 +265,7 @@ async def batch_analyze(
             analyzed_memories.append(analysis)
 
         # Aggregate statistics
-        statistics = {
-            "total_memories": len(memories),
-            "memories_analyzed": len(analyzed_memories)
-        }
+        statistics = {"total_memories": len(memories), "memories_analyzed": len(analyzed_memories)}
 
         if topic_classifier and all_topics:
             statistics["topic_statistics"] = topic_classifier.get_topic_statistics(all_topics)
@@ -258,7 +276,7 @@ async def batch_analyze(
         return {
             "status": "success",
             "analyzed_memories": analyzed_memories,
-            "statistics": statistics
+            "statistics": statistics,
         }
 
     except Exception as e:
@@ -267,28 +285,20 @@ async def batch_analyze(
 
 
 @router.post("/classify-domain")
-async def classify_domain(
-    request: DomainClassificationRequest,
-    _: str = Depends(verify_api_key)
-):
+async def classify_domain(request: DomainClassificationRequest, _: str = Depends(verify_api_key)):
     """
     Classify content into knowledge domains
     """
     try:
-        classifier = DomainClassifier(
-            confidence_threshold=request.confidence_threshold
-        )
+        classifier = DomainClassifier(confidence_threshold=request.confidence_threshold)
 
         results = classifier.classify_domain(
             request.content,
             multi_label=request.multi_label,
-            include_hierarchy=request.include_hierarchy
+            include_hierarchy=request.include_hierarchy,
         )
 
-        return {
-            "status": "success",
-            "classification": results
-        }
+        return {"status": "success", "classification": results}
 
     except Exception as e:
         logger.error(f"Error classifying domain: {e}")
@@ -301,7 +311,7 @@ async def get_trending_topics(
     limit: int = Query(10, description="Number of top topics"),
     current_user: dict = Depends(get_current_user),
     _: str = Depends(verify_api_key),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """
     Get trending topics from recent memories
@@ -311,19 +321,15 @@ async def get_trending_topics(
 
         # Get recent memories
         from datetime import datetime, timedelta
+
         since = datetime.utcnow() - timedelta(days=days)
 
         memories = await memory_service.search_memories(
-            user_id=current_user.get('user_id', 'default_user'),
-            created_after=since,
-            limit=100
+            user_id=current_user.get("user_id", "default_user"), created_after=since, limit=100
         )
 
         if not memories:
-            return {
-                "status": "no_data",
-                "message": "No recent memories found"
-            }
+            return {"status": "no_data", "message": "No recent memories found"}
 
         # Extract topics from all memories
         topic_classifier = TopicClassifier()
@@ -346,18 +352,20 @@ async def get_trending_topics(
         # Get top trending topics
         trending = []
         for topic_name, count in topic_counts.most_common(limit):
-            trending.append({
-                "topic": topic_name,
-                "occurrences": count,
-                "keywords": list(topic_keywords[topic_name])[:5],
-                "trend_score": count / len(memories)
-            })
+            trending.append(
+                {
+                    "topic": topic_name,
+                    "occurrences": count,
+                    "keywords": list(topic_keywords[topic_name])[:5],
+                    "trend_score": count / len(memories),
+                }
+            )
 
         return {
             "status": "success",
             "period_days": days,
             "memories_analyzed": len(memories),
-            "trending_topics": trending
+            "trending_topics": trending,
         }
 
     except Exception as e:
@@ -369,7 +377,7 @@ async def get_trending_topics(
 async def get_domain_distribution(
     current_user: dict = Depends(get_current_user),
     _: str = Depends(verify_api_key),
-    db=Depends(get_db_instance)
+    db=Depends(get_db_instance),
 ):
     """
     Get distribution of content across domains
@@ -377,15 +385,11 @@ async def get_domain_distribution(
     try:
         memory_service = MemoryService(db)
         memories = await memory_service.search_memories(
-            user_id=current_user.get('user_id', 'default_user'),
-            limit=200
+            user_id=current_user.get("user_id", "default_user"), limit=200
         )
 
         if not memories:
-            return {
-                "status": "no_data",
-                "message": "No memories found"
-            }
+            return {"status": "no_data", "message": "No memories found"}
 
         # Classify all memories
         domain_classifier = DomainClassifier()
@@ -410,19 +414,21 @@ async def get_domain_distribution(
         distribution = []
         for domain, count in domain_counts.most_common():
             avg_confidence = sum(domain_confidence[domain]) / len(domain_confidence[domain])
-            distribution.append({
-                "domain": domain,
-                "count": count,
-                "percentage": (count / len(memories)) * 100,
-                "avg_confidence": avg_confidence
-            })
+            distribution.append(
+                {
+                    "domain": domain,
+                    "count": count,
+                    "percentage": (count / len(memories)) * 100,
+                    "avg_confidence": avg_confidence,
+                }
+            )
 
         return {
             "status": "success",
             "total_memories": len(memories),
             "domain_distribution": distribution,
             "cross_domain_percentage": (cross_domain_count / len(memories)) * 100,
-            "unique_domains": len(domain_counts)
+            "unique_domains": len(domain_counts),
         }
 
     except Exception as e:

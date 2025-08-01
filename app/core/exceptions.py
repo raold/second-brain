@@ -1,3 +1,12 @@
+from datetime import datetime
+from typing import Any
+
+from fastapi import HTTPException
+from pydantic import BaseModel
+
+from app.core.exceptions import DatabaseException, SecondBrainException, UnauthorizedException, ValidationException
+from app.utils.logging_config import get_logger
+
 """
 Centralized exception handling for Second Brain v3.0.0
 
@@ -9,15 +18,10 @@ This module provides:
 """
 
 import traceback
-from datetime import datetime
 from enum import Enum
-from typing import Any
 
-from fastapi import HTTPException, Request, status
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -72,8 +76,8 @@ class ErrorResponse(BaseModel):
     request_id: str | None = None
 
     def __init__(self, **data):
-        if not data.get('timestamp'):
-            data['timestamp'] = datetime.utcnow().isoformat()
+        if not data.get("timestamp"):
+            data["timestamp"] = datetime.utcnow().isoformat()
         super().__init__(**data)
 
 
@@ -85,7 +89,7 @@ class SecondBrainException(Exception):
         message: str,
         error_code: ErrorCode = ErrorCode.INTERNAL_ERROR,
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        details: dict[str, Any] | None = None
+        details: dict[str, Any] | None = None,
     ):
         self.message = message
         self.error_code = error_code
@@ -99,7 +103,7 @@ class SecondBrainException(Exception):
             error_code=self.error_code,
             message=self.message,
             details=self.details,
-            request_id=request_id
+            request_id=request_id,
         )
 
 
@@ -107,12 +111,14 @@ class SecondBrainException(Exception):
 class UnauthorizedException(SecondBrainException):
     """Raised when authentication is required but not provided"""
 
-    def __init__(self, message: str = "Authentication required", details: dict[str, Any] | None = None):
+    def __init__(
+        self, message: str = "Authentication required", details: dict[str, Any] | None = None
+    ):
         super().__init__(
             message=message,
             error_code=ErrorCode.UNAUTHORIZED,
             status_code=status.HTTP_401_UNAUTHORIZED,
-            details=details
+            details=details,
         )
 
 
@@ -124,7 +130,7 @@ class ForbiddenException(SecondBrainException):
             message=message,
             error_code=ErrorCode.FORBIDDEN,
             status_code=status.HTTP_403_FORBIDDEN,
-            details=details
+            details=details,
         )
 
 
@@ -136,7 +142,7 @@ class InvalidTokenException(SecondBrainException):
             message=message,
             error_code=ErrorCode.INVALID_TOKEN,
             status_code=status.HTTP_401_UNAUTHORIZED,
-            details=details
+            details=details,
         )
 
 
@@ -153,7 +159,7 @@ class NotFoundException(SecondBrainException):
             message=message,
             error_code=ErrorCode.NOT_FOUND,
             status_code=status.HTTP_404_NOT_FOUND,
-            details={"resource": resource, "identifier": str(identifier) if identifier else None}
+            details={"resource": resource, "identifier": str(identifier) if identifier else None},
         )
 
 
@@ -169,7 +175,7 @@ class AlreadyExistsException(SecondBrainException):
             message=message,
             error_code=ErrorCode.ALREADY_EXISTS,
             status_code=status.HTTP_409_CONFLICT,
-            details={"resource": resource, "identifier": str(identifier) if identifier else None}
+            details={"resource": resource, "identifier": str(identifier) if identifier else None},
         )
 
 
@@ -181,7 +187,7 @@ class ConflictException(SecondBrainException):
             message=message,
             error_code=ErrorCode.CONFLICT,
             status_code=status.HTTP_409_CONFLICT,
-            details=details
+            details=details,
         )
 
 
@@ -189,7 +195,9 @@ class ConflictException(SecondBrainException):
 class ValidationException(SecondBrainException):
     """Raised when input validation fails"""
 
-    def __init__(self, message: str, field: str | None = None, details: dict[str, Any] | None = None):
+    def __init__(
+        self, message: str, field: str | None = None, details: dict[str, Any] | None = None
+    ):
         if not details:
             details = {}
         if field:
@@ -199,7 +207,7 @@ class ValidationException(SecondBrainException):
             message=message,
             error_code=ErrorCode.VALIDATION_ERROR,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            details=details
+            details=details,
         )
 
 
@@ -212,18 +220,17 @@ class DatabaseException(SecondBrainException):
             message=message,
             error_code=ErrorCode.DATABASE_ERROR,
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            details=details
+            details=details,
         )
 
 
 class DatabaseConnectionException(DatabaseException):
     """Raised when database connection fails"""
 
-    def __init__(self, message: str = "Database connection failed", details: dict[str, Any] | None = None):
-        super().__init__(
-            message=message,
-            details=details
-        )
+    def __init__(
+        self, message: str = "Database connection failed", details: dict[str, Any] | None = None
+    ):
+        super().__init__(message=message, details=details)
         self.error_code = ErrorCode.CONNECTION_ERROR
 
 
@@ -239,7 +246,7 @@ class ServiceUnavailableException(SecondBrainException):
             message=message,
             error_code=ErrorCode.SERVICE_UNAVAILABLE,
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            details={"service": service}
+            details={"service": service},
         )
 
 
@@ -255,7 +262,7 @@ class ExternalServiceException(SecondBrainException):
             message=message,
             error_code=ErrorCode.EXTERNAL_SERVICE_ERROR,
             status_code=status.HTTP_502_BAD_GATEWAY,
-            details=details
+            details=details,
         )
 
 
@@ -274,7 +281,7 @@ class TimeoutException(SecondBrainException):
             message=message,
             error_code=ErrorCode.TIMEOUT,
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            details=details
+            details=details,
         )
 
 
@@ -282,7 +289,9 @@ class TimeoutException(SecondBrainException):
 class BusinessRuleViolationException(SecondBrainException):
     """Raised when business rule is violated"""
 
-    def __init__(self, rule: str, message: str | None = None, details: dict[str, Any] | None = None):
+    def __init__(
+        self, rule: str, message: str | None = None, details: dict[str, Any] | None = None
+    ):
         if not message:
             message = f"Business rule violation: {rule}"
 
@@ -294,7 +303,7 @@ class BusinessRuleViolationException(SecondBrainException):
             message=message,
             error_code=ErrorCode.BUSINESS_RULE_VIOLATION,
             status_code=status.HTTP_400_BAD_REQUEST,
-            details=details
+            details=details,
         )
 
 
@@ -303,10 +312,7 @@ class RateLimitExceededException(SecondBrainException):
 
     def __init__(self, limit: int, window: str, retry_after: int | None = None):
         message = f"Rate limit exceeded: {limit} requests per {window}"
-        details = {
-            "limit": limit,
-            "window": window
-        }
+        details = {"limit": limit, "window": window}
 
         if retry_after:
             details["retry_after_seconds"] = retry_after
@@ -315,12 +321,14 @@ class RateLimitExceededException(SecondBrainException):
             message=message,
             error_code=ErrorCode.RATE_LIMIT_EXCEEDED,
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            details=details
+            details=details,
         )
 
 
 # Exception Handlers for FastAPI
-async def second_brain_exception_handler(request: Request, exc: SecondBrainException) -> JSONResponse:
+async def second_brain_exception_handler(
+    request: Request, exc: SecondBrainException
+) -> JSONResponse:
     """Handle SecondBrainException and return structured error response"""
 
     # Extract request ID from headers or generate one
@@ -335,8 +343,8 @@ async def second_brain_exception_handler(request: Request, exc: SecondBrainExcep
             "status_code": exc.status_code,
             "details": exc.details,
             "path": request.url.path,
-            "method": request.method
-        }
+            "method": request.method,
+        },
     )
 
     # Create error response
@@ -345,9 +353,7 @@ async def second_brain_exception_handler(request: Request, exc: SecondBrainExcep
     return JSONResponse(
         status_code=exc.status_code,
         content=error_response.model_dump(),
-        headers={
-            "X-Request-ID": request_id
-        }
+        headers={"X-Request-ID": request_id},
     )
 
 
@@ -364,8 +370,8 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
             "request_id": request_id,
             "path": request.url.path,
             "method": request.method,
-            "traceback": traceback.format_exc()
-        }
+            "traceback": traceback.format_exc(),
+        },
     )
 
     # Create generic error response
@@ -374,17 +380,15 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
         message="An unexpected error occurred",
         details={
             "type": type(exc).__name__,
-            "message": str(exc) if not isinstance(exc, Exception) or str(exc) else None
+            "message": str(exc) if not isinstance(exc, Exception) or str(exc) else None,
         },
-        request_id=request_id
+        request_id=request_id,
     )
 
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=error_response.model_dump(),
-        headers={
-            "X-Request-ID": request_id
-        }
+        headers={"X-Request-ID": request_id},
     )
 
 
@@ -395,27 +399,27 @@ async def validation_exception_handler(request: Request, exc: Exception) -> JSON
 
     # Extract validation errors
     errors = []
-    if hasattr(exc, 'errors'):
+    if hasattr(exc, "errors"):
         for error in exc.errors():
-            errors.append({
-                "field": " -> ".join(str(loc) for loc in error.get("loc", [])),
-                "message": error.get("msg", "Validation error"),
-                "type": error.get("type", "validation_error")
-            })
+            errors.append(
+                {
+                    "field": " -> ".join(str(loc) for loc in error.get("loc", [])),
+                    "message": error.get("msg", "Validation error"),
+                    "type": error.get("type", "validation_error"),
+                }
+            )
 
     error_response = ErrorResponse(
         error_code=ErrorCode.VALIDATION_ERROR,
         message="Request validation failed",
         details={"errors": errors},
-        request_id=request_id
+        request_id=request_id,
     )
 
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=error_response.model_dump(),
-        headers={
-            "X-Request-ID": request_id
-        }
+        headers={"X-Request-ID": request_id},
     )
 
 
@@ -443,21 +447,17 @@ def register_exception_handlers(app):
             500: ErrorCode.INTERNAL_ERROR,
             502: ErrorCode.EXTERNAL_SERVICE_ERROR,
             503: ErrorCode.SERVICE_UNAVAILABLE,
-            504: ErrorCode.TIMEOUT
+            504: ErrorCode.TIMEOUT,
         }
 
         error_code = status_to_error_code.get(exc.status_code, ErrorCode.UNKNOWN_ERROR)
 
         error_response = ErrorResponse(
-            error_code=error_code,
-            message=exc.detail,
-            request_id=request_id
+            error_code=error_code, message=exc.detail, request_id=request_id
         )
 
         return JSONResponse(
             status_code=exc.status_code,
             content=error_response.model_dump(),
-            headers={
-                "X-Request-ID": request_id
-            }
+            headers={"X-Request-ID": request_id},
         )
