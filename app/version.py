@@ -1,6 +1,6 @@
 """Version information for the application"""
 
-__version__ = "3.0.0"
+__version__ = "3.1.0"
 
 
 def get_version_info():
@@ -8,7 +8,7 @@ def get_version_info():
     return {
         "version": __version__,
         "major": 3,
-        "minor": 0,
+        "minor": 1,
         "patch": 0,
         "release": "stable"
     }

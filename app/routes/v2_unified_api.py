@@ -106,7 +106,7 @@ async def get_simple_metrics(db=Depends(get_database), _: str = Depends(verify_a
         return SimpleMetrics(
             tests=test_count,
             patterns=27,  # Number of agent patterns
-            version="3.0.0",
+            version="3.1.0",
             agents=27,
             token_usage="15x" if memory_count > 1000 else "6x",
             memories=memory_count,
@@ -532,7 +532,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 "data": {
                     "tests": 436,
                     "patterns": 27,
-                    "version": "3.0.0",
+                    "version": "3.1.0",
                     "agents": 27,
                     "token_usage": "6x",
                     "memories": memory_count,
@@ -571,7 +571,7 @@ async def websocket_endpoint(websocket: WebSocket):
                             "data": {
                                 "tests": 436,
                                 "patterns": 27,
-                                "version": "3.0.0",
+                                "version": "3.1.0",
                                 "agents": 27,
                                 "token_usage": "15x" if memory_count > 1000 else "6x",
                                 "memories": memory_count,

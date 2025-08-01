@@ -75,7 +75,7 @@ from app.security import SecurityConfig, SecurityManager
 from app.session_manager import get_session_manager
 
 # Version info
-__version__ = "3.0.0"
+__version__ = "3.1.0"
 
 # Simple replacements for archived functions
 async def get_db_instance():
