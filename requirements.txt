@@ -13,6 +13,7 @@ python-multipart==0.0.6
 
 # AI & Embeddings
 openai==1.3.8
+anthropic==0.60.0
 
 # Vector database support
 numpy==1.24.3
