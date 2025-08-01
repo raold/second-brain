@@ -3,18 +3,15 @@ import hashlib
 import time
 from typing import Any
 from uuid import uuid4
-
 from app.utils.logging_config import get_logger
 from app.ingestion.models import ExtractedData, ProcessingResult
 from app.services.monitoring.metrics_collector import MetricsCollector
-
+from app.ingestion.models import (
 
 """
 Core extraction pipeline that integrates all enhanced NLP components
 """
 
-
-from app.ingestion.models import (
     ContentQuality,
     IngestionConfig,
     IngestionRequest,
@@ -23,7 +20,6 @@ from app.ingestion.models import (
 )
 
 logger = get_logger(__name__)
-
 
 class CoreExtractionPipeline:
     """

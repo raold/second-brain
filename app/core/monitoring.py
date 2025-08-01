@@ -1,29 +1,3 @@
-import asyncio
-import json
-import time
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any
-
-from app.services.monitoring.metrics_collector import MetricsCollector
-
-"""
-Monitoring and metrics collection for Second Brain v3.0.0
-
-This module provides:
-- Application metrics collection
-- Performance monitoring
-- Health checks
-- Resource usage tracking
-- Custom metrics
-"""
-
-from collections import defaultdict, deque
-from collections.abc import Callable
-from enum import Enum
-
-import psutil
-from fastapi import Response
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     Counter,
@@ -32,7 +6,19 @@ from prometheus_client import (
     Summary,
     generate_latest,
 )
-import redis.asyncio as redis
+
+import asyncio
+import json
+import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
+# from app.services.monitoring.metrics_collector import MetricsCollector  # Defined in this file
+from collections import defaultdict, deque
+from collections.abc import Callable
+from enum import Enum
+import psutil
+from fastapi import Response
 
 # Optional Redis dependency
 try:
@@ -42,7 +28,6 @@ except ImportError:
     HAS_REDIS = False
     redis = None
 
-
 class MetricType(str, Enum):
     """Types of metrics"""
 
@@ -51,7 +36,6 @@ class MetricType(str, Enum):
     HISTOGRAM = "histogram"
     SUMMARY = "summary"
 
-
 @dataclass
 class MetricPoint:
     """A single metric data point"""
@@ -59,7 +43,6 @@ class MetricPoint:
     timestamp: float
     value: float
     labels: dict[str, str] = field(default_factory=dict)
-
 
 @dataclass
 class MetricDefinition:
@@ -70,7 +53,6 @@ class MetricDefinition:
     description: str
     labels: list[str] = field(default_factory=list)
     buckets: list[float] | None = None  # For histograms
-
 
 class MetricsCollector:
     """Collects and manages application metrics"""
@@ -233,7 +215,6 @@ class MetricsCollector:
 
         return summary
 
-
 class HealthChecker:
     """Performs health checks on various components"""
 
@@ -333,7 +314,6 @@ class HealthChecker:
         except Exception as e:
             return {"healthy": False, "error": str(e), "message": "Disk space check failed"}
 
-
 class RequestTracker:
     """Tracks request metrics and performance"""
 
@@ -396,12 +376,10 @@ class RequestTracker:
             # Decrement active requests
             self.active_requests -= 1
 
-
 # Global instances
 _metrics_collector: MetricsCollector | None = None
 _health_checker: HealthChecker | None = None
 _request_tracker: RequestTracker | None = None
-
 
 def get_metrics_collector() -> MetricsCollector:
     """Get the global metrics collector"""
@@ -410,14 +388,12 @@ def get_metrics_collector() -> MetricsCollector:
         _metrics_collector = MetricsCollector()
     return _metrics_collector
 
-
 def get_health_checker() -> HealthChecker:
     """Get the global health checker"""
     global _health_checker
     if _health_checker is None:
         _health_checker = HealthChecker()
     return _health_checker
-
 
 def get_request_tracker() -> RequestTracker:
     """Get the global request tracker"""
@@ -426,12 +402,10 @@ def get_request_tracker() -> RequestTracker:
         _request_tracker = RequestTracker(get_metrics_collector())
     return _request_tracker
 
-
 async def export_metrics() -> Response:
     """Export metrics in Prometheus format"""
     metrics_output = generate_latest()
     return Response(content=metrics_output, media_type=CONTENT_TYPE_LATEST)
-
 
 # Monitoring decorators
 def monitor_performance(operation: str):

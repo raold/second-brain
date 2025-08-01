@@ -3,6 +3,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
+from app.docs import Priority
 
 #!/usr/bin/env python3
 """
@@ -10,10 +11,6 @@ Conversation Processor - Automatic Dashboard Updates
 Monitors conversation context and automatically updates project dashboard
 when CTO discusses new features, architectural challenges, or project goals
 """
-
-
-from app.docs import Priority
-
 
 @dataclass
 class ConversationContext:
@@ -26,7 +23,6 @@ class ConversationContext:
     priorities: list[str]
     architectural_elements: list[str]
     timeline_mentions: list[str]
-
 
 class ConversationProcessor:
     """
@@ -354,10 +350,8 @@ class ConversationProcessor:
             "last_processed": datetime.now().isoformat(),
         }
 
-
 # Global processor instance
 _processor_instance = None
-
 
 def get_conversation_processor() -> ConversationProcessor:
     """Get or create global conversation processor instance"""
@@ -366,7 +360,6 @@ def get_conversation_processor() -> ConversationProcessor:
         _processor_instance = ConversationProcessor()
     return _processor_instance
 
-
 async def process_cto_message(message: str) -> dict[str, Any]:
     """
     Main entry point for processing CTO messages
@@ -374,7 +367,6 @@ async def process_cto_message(message: str) -> dict[str, Any]:
     """
     processor = get_conversation_processor()
     return await processor.simulate_cto_conversation(message)
-
 
 def setup_conversation_monitoring():
     """
@@ -398,7 +390,6 @@ def setup_conversation_monitoring():
     print("   - Technical improvements")
 
     return processor
-
 
 if __name__ == "__main__":
     # Demo conversation processing

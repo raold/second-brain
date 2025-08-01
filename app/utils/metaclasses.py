@@ -2,8 +2,12 @@ import asyncio
 import os
 import time
 from typing import Any, Union
-
 from app.utils.logging_config import get_logger
+import functools
+import inspect
+from collections import defaultdict
+from collections.abc import Callable
+from typing import TypeVar
 
 """
 Tasteful metaclass implementations for the Second Brain application.
@@ -13,22 +17,14 @@ simplify complexity and provide framework-like features. Each metaclass solves
 real problems and enhances developer experience without being overly clever.
 """
 
-import functools
-import inspect
-from collections import defaultdict
-from collections.abc import Callable
-from typing import TypeVar
-
 logger = get_logger(__name__)
 
 T = TypeVar("T")
 C = TypeVar("C", bound=type)
 
-
 # ============================================================================
 # Registry Metaclass - Automatic Registration and Discovery
 # ============================================================================
-
 
 class RegistryMeta(type):
     """
@@ -107,11 +103,9 @@ class RegistryMeta(type):
             return cls(*args, **kwargs)
         raise KeyError(f"Class '{class_key}' not found in registry '{registry_name}'")
 
-
 # ============================================================================
 # Singleton Metaclass - Thread-Safe Singleton Pattern
 # ============================================================================
-
 
 class SingletonMeta(type):
     """
@@ -170,11 +164,9 @@ class SingletonMeta(type):
         """Get singleton instance if it exists."""
         return mcs._instances.get(cls)
 
-
 # ============================================================================
 # Validation Metaclass - Automatic Method and Attribute Validation
 # ============================================================================
-
 
 class ValidationMeta(type):
     """
@@ -325,11 +317,9 @@ class ValidationMeta(type):
             # Fallback to basic check
             return isinstance(value, expected_type)
 
-
 # ============================================================================
 # Observer Metaclass - Automatic Event Handling Registration
 # ============================================================================
-
 
 class ObserverMeta(type):
     """
@@ -385,11 +375,9 @@ class ObserverMeta(type):
 
         return handle_event
 
-
 # ============================================================================
 # Configuration Metaclass - Automatic Configuration Management
 # ============================================================================
-
 
 class ConfigMeta(type):
     """
@@ -510,11 +498,9 @@ class ConfigMeta(type):
             logger.warning(f"Failed to convert environment value '{env_value}' to {expected_type}")
             return env_value
 
-
 # ============================================================================
 # Performance Monitoring Metaclass
 # ============================================================================
-
 
 class PerformanceMeta(type):
     """
@@ -612,11 +598,9 @@ class PerformanceMeta(type):
 
             return sync_wrapper
 
-
 # ============================================================================
 # Example Usage Classes
 # ============================================================================
-
 
 # Registry example
 class MemoryProcessor(metaclass=RegistryMeta, registry="processors", category="memory"):
@@ -624,7 +608,6 @@ class MemoryProcessor(metaclass=RegistryMeta, registry="processors", category="m
 
     def process(self, content: str) -> str:
         return content
-
 
 class SemanticProcessor(MemoryProcessor):
     """Semantic processor - automatically inherits registration."""
@@ -634,7 +617,6 @@ class SemanticProcessor(MemoryProcessor):
     def process(self, content: str) -> str:
         return f"SEMANTIC: {content}"
 
-
 class EpisodicProcessor(MemoryProcessor):
     """Episodic processor."""
 
@@ -642,7 +624,6 @@ class EpisodicProcessor(MemoryProcessor):
 
     def process(self, content: str) -> str:
         return f"EPISODIC: {content}"
-
 
 # Singleton example
 class DatabaseConnection(metaclass=SingletonMeta):
@@ -656,7 +637,6 @@ class DatabaseConnection(metaclass=SingletonMeta):
     def connect(self):
         self.connected = True
         return f"Connected to {self.connection_string}"
-
 
 # Validation example
 class ValidatedMemory(metaclass=ValidationMeta, validate_types=True, strict_mode=False):
@@ -676,7 +656,6 @@ class ValidatedMemory(metaclass=ValidationMeta, validate_types=True, strict_mode
         self.importance_score = new_score
         return new_score
 
-
 # Observer example
 class EventHandler(metaclass=ObserverMeta):
     """Event handler with automatic method registration."""
@@ -690,7 +669,6 @@ class EventHandler(metaclass=ObserverMeta):
     def on_memory_deleted(self, memory_id: str):
         logger.info(f"Memory deleted: {memory_id}")
 
-
 # Configuration example
 class ServiceConfig(metaclass=ConfigMeta, config_prefix="service", auto_load=True):
     """Service configuration with automatic environment variable support."""
@@ -700,7 +678,6 @@ class ServiceConfig(metaclass=ConfigMeta, config_prefix="service", auto_load=Tru
     debug: bool = False
     timeout: float = 30.0
     features: list[str] = []
-
 
 # Performance monitoring example
 class AnalyticsService(metaclass=PerformanceMeta, monitor_all=True, performance_threshold=0.1):
@@ -719,11 +696,9 @@ class AnalyticsService(metaclass=PerformanceMeta, monitor_all=True, performance_
             "max": max(data) if data else 0,
         }
 
-
 # ============================================================================
 # Metaclass Utilities and Testing
 # ============================================================================
-
 
 def demonstrate_metaclass_features():
     """Demonstrate the metaclass functionality."""
@@ -793,7 +768,6 @@ def demonstrate_metaclass_features():
 
     print("\nAll metaclass demonstrations completed!")
 
-
 class MetaclassRegistry:
     """Registry of available metaclasses with their capabilities."""
 
@@ -851,7 +825,6 @@ class MetaclassRegistry:
                 suitable.append(name)
 
         return suitable
-
 
 if __name__ == "__main__":
     demonstrate_metaclass_features()

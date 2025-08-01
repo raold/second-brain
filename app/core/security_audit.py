@@ -4,9 +4,17 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
-
 from app.core.exceptions import UnauthorizedException
 from app.utils.logging_config import get_logger
+import base64
+import hmac
+import secrets
+from enum import Enum
+from argon2 import PasswordHasher
+from cryptography.fernet import Fernet
+from fastapi import Request, Response
+from jose import JWTError, jwt
+from app.core.logging import get_audit_logger
 
 """
 Security Audit and Hardening for Second Brain v3.0.0
@@ -20,19 +28,6 @@ This module provides:
 - Security event monitoring
 """
 
-import base64
-import hmac
-import secrets
-from enum import Enum
-
-from argon2 import PasswordHasher
-from cryptography.fernet import Fernet
-from fastapi import Request, Response
-from jose import JWTError, jwt
-
-from app.core.logging import get_audit_logger, get_logger
-
-
 class SecurityLevel(str, Enum):
     """Security levels for different operations"""
 
@@ -40,7 +35,6 @@ class SecurityLevel(str, Enum):
     AUTHENTICATED = "authenticated"
     ADMIN = "admin"
     SYSTEM = "system"
-
 
 @dataclass
 class SecurityAuditResult:
@@ -52,7 +46,6 @@ class SecurityAuditResult:
     message: str
     recommendation: str | None = None
     details: dict[str, Any] | None = None
-
 
 class PasswordPolicy:
     """Password policy enforcement"""
@@ -140,7 +133,6 @@ class PasswordPolicy:
                 return True
         return False
 
-
 class SecureTokenManager:
     """Secure token generation and validation"""
 
@@ -223,7 +215,6 @@ class SecureTokenManager:
             details={"token_id": token_id},
         )
 
-
 class DataEncryption:
     """Data encryption utilities"""
 
@@ -282,7 +273,6 @@ class DataEncryption:
         except Exception:
             return False
 
-
 class SecurityHeadersManager:
     """Manage security headers for responses"""
 
@@ -326,7 +316,6 @@ class SecurityHeadersManager:
 
         for header, value in headers.items():
             response.headers[header] = value
-
 
 class SecurityAuditor:
     """Perform security audits on the application"""
@@ -595,7 +584,6 @@ class SecurityAuditor:
             ],
         }
 
-
 class SecurityEventMonitor:
     """Monitor and log security events"""
 
@@ -669,28 +657,23 @@ class SecurityEventMonitor:
 
         return suspicious_activities
 
-
 # Global instances
 _password_hasher = PasswordHasher()
 _password_policy = PasswordPolicy()
 _security_auditor = SecurityAuditor()
 _security_monitor = SecurityEventMonitor()
 
-
 def get_password_hasher() -> PasswordHasher:
     """Get the global password hasher"""
     return _password_hasher
-
 
 def get_password_policy() -> PasswordPolicy:
     """Get the global password policy"""
     return _password_policy
 
-
 def get_security_auditor() -> SecurityAuditor:
     """Get the global security auditor"""
     return _security_auditor
-
 
 def get_security_monitor() -> SecurityEventMonitor:
     """Get the global security event monitor"""

@@ -3,8 +3,8 @@ import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
-
 from app.utils.logging_config import get_logger
+from enum import Enum
 
 #!/usr/bin/env python3
 """
@@ -12,10 +12,7 @@ Advanced Memory Aging Algorithms for Second Brain
 Implements multiple cognitive science-based memory aging models with sophisticated temporal decay
 """
 
-from enum import Enum
-
 logger = get_logger(__name__)
-
 
 class AgingModel(Enum):
     """Different memory aging models based on cognitive science"""
@@ -27,7 +24,6 @@ class AgingModel(Enum):
     INTERFERENCE = "interference"  # Memory interference model
     CONSOLIDATION = "consolidation"  # Memory consolidation theory
 
-
 class MemoryStrength(Enum):
     """Memory strength levels affecting aging rates"""
 
@@ -35,7 +31,6 @@ class MemoryStrength(Enum):
     MODERATE = "moderate"  # 0.3-0.6 - Standard decay rate
     STRONG = "strong"  # 0.6-0.8 - Reduced decay rate
     CRYSTAL = "crystal"  # 0.8-1.0 - Minimal decay rate
-
 
 @dataclass
 class AgingParameters:
@@ -55,7 +50,6 @@ class AgingParameters:
         if self.spacing_intervals is None:
             self.spacing_intervals = [1, 3, 7, 14, 30, 90]
 
-
 @dataclass
 class MemoryAccess:
     """Represents a memory access event"""
@@ -65,7 +59,6 @@ class MemoryAccess:
     success_rate: float = 1.0
     retrieval_time_ms: int | None = None
     context_similarity: float = 0.5
-
 
 @dataclass
 class AgingResult:
@@ -79,7 +72,6 @@ class AgingResult:
     next_optimal_review: datetime | None
     confidence: float
     explanation: str
-
 
 class AdvancedMemoryAging:
     """
@@ -679,7 +671,6 @@ class AdvancedMemoryAging:
 
         return insights
 
-
 # Example usage and testing
 async def demo_memory_aging():
     """Demonstrate advanced memory aging algorithms"""
@@ -753,7 +744,6 @@ async def demo_memory_aging():
         print(f"   Selected Model: {result.model_used.value.title().replace('_', ' ')}")
         print(f"   Current Strength: {result.current_strength:.3f}")
         print(f"   Explanation: {result.explanation}")
-
 
 if __name__ == "__main__":
     asyncio.run(demo_memory_aging())

@@ -4,6 +4,31 @@ import numpy as np
 
 from app.utils.logging_config import get_logger
 
+# Optional dependencies
+try:
+    from bertopic import BERTopic
+    BERTOPIC_AVAILABLE = True
+except ImportError:
+    BERTOPIC_AVAILABLE = False
+
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.decomposition import LatentDirichletAllocation
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+
+try:
+    from sentence_transformers import SentenceTransformer
+except ImportError:
+    SentenceTransformer = None
+
+# Import TopicClassifier if available
+try:
+    from app.ingestion.topic_classifier import TopicClassifier
+except ImportError:
+    TopicClassifier = None
+
 """
 Advanced topic modeling with transformer-based models and hierarchical clustering
 """

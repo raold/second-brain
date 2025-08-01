@@ -2,8 +2,10 @@ import json
 from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
-
 from app.utils.logging_config import get_logger
+from collections import defaultdict
+from app.models.synthesis.advanced_models import (
+        from collections import OrderedDict
 
 """Advanced Synthesis Engine Service
 
@@ -11,16 +13,12 @@ Real implementation of memory synthesis using hierarchical processing,
 theme extraction, and LLM-powered consolidation.
 """
 
-from collections import defaultdict
-
-from app.models.synthesis.advanced_models import (
     SynthesisRequest,
     SynthesisResult,
     SynthesisStrategy,
 )
 
 logger = get_logger(__name__)
-
 
 class ThemeCluster:
     """Represents a thematic cluster of memories"""
@@ -53,7 +51,6 @@ class ThemeCluster:
     def add_sub_theme(self, sub_cluster: "ThemeCluster"):
         """Add a sub-theme cluster"""
         self.sub_themes.append(sub_cluster)
-
 
 class AdvancedSynthesisEngine:
     """Advanced synthesis engine for memory processing with real implementation"""
@@ -424,7 +421,6 @@ Focus on cause-and-effect relationships and the progression of concepts.
         self, memories: list[dict[str, Any]]
     ) -> dict[str, list[dict[str, Any]]]:
         """Group memories by time period"""
-        from collections import OrderedDict
 
         groups = OrderedDict()
 

@@ -1,23 +1,19 @@
 import time
 from datetime import datetime
 from typing import Any
+from collections.abc import Callable
+import redis.asyncio as redis
+from fastapi import Request, status
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from app.core.logging import get_logger
 
 """
 Rate Limiting Middleware for Second Brain v3.0.0
 Enterprise-grade rate limiting with Redis backend and configurable limits
 """
 
-from collections.abc import Callable
-
-import redis.asyncio as redis
-from fastapi import Request, status
-from fastapi.responses import JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware
-
-from app.core.logging import get_logger
-
 logger = get_logger(__name__)
-
 
 class RateLimitConfig:
     """Rate limiting configuration"""
@@ -44,7 +40,6 @@ class RateLimitConfig:
 
     # Rate limit by user role/tier
     USER_TIER_MULTIPLIERS = {"free": 1.0, "premium": 2.0, "enterprise": 5.0, "admin": 10.0}
-
 
 class RateLimiter:
     """Redis-based distributed rate limiter"""
@@ -172,7 +167,6 @@ class RateLimiter:
                 "used": 0,
                 "window": window,
             }
-
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """FastAPI middleware for rate limiting"""
@@ -348,7 +342,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             },
         )
 
-
 # Rate limiting decorators for specific endpoints
 def rate_limit(category: str = "default", custom_limit: dict[str, int] | None = None):
     """Decorator for additional endpoint-specific rate limiting"""
@@ -363,7 +356,6 @@ def rate_limit(category: str = "default", custom_limit: dict[str, int] | None = 
 
     return decorator
 
-
 # Utility functions for rate limit management
 async def get_user_rate_limit_status(
     redis_client: redis.Redis, user_id: str, category: str = "default"
@@ -377,7 +369,6 @@ async def get_user_rate_limit_status(
 
     return await rate_limiter.get_rate_limit_status(key, limit)
 
-
 async def reset_user_rate_limit(redis_client: redis.Redis, user_id: str, category: str = "default"):
     """Reset rate limit for a user (admin function)"""
     current_time = int(time.time())
@@ -388,7 +379,6 @@ async def reset_user_rate_limit(redis_client: redis.Redis, user_id: str, categor
     await redis_client.delete(key)
 
     logger.info(f"Rate limit reset for user {user_id}, category {category}")
-
 
 # Integration with FastAPI app
 def setup_rate_limiting(app, redis_client: redis.Redis):

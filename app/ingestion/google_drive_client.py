@@ -3,26 +3,24 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
-
 from fastapi import Path
-
 from app.utils.logging_config import get_logger
-
-"""
-Google Drive integration for Second Brain
-"""
-
 import io
 import pickle
 from pathlib import Path
-
-# Optional Google Drive dependencies
-try:
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import Flow
     from googleapiclient.discovery import build
     from googleapiclient.http import MediaIoBaseDownload
+from app.utils.logger import get_logger
+
+"""
+Google Drive integration for Second Brain
+"""
+
+# Optional Google Drive dependencies
+try:
 
     GOOGLE_DRIVE_AVAILABLE = True
 except ImportError:
@@ -32,10 +30,7 @@ except ImportError:
     Credentials = None
     Flow = None
 
-from app.utils.logger import get_logger
-
 logger = get_logger(__name__)
-
 
 @dataclass
 class DriveFile:
@@ -51,7 +46,6 @@ class DriveFile:
     web_view_link: str | None = None
     download_link: str | None = None
     is_folder: bool = False
-
 
 class GoogleDriveClient:
     """Client for interacting with Google Drive API"""

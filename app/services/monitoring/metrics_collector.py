@@ -9,14 +9,11 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
-
 from app.utils.logging_config import get_logger
-
 from collections import defaultdict
 from enum import Enum
 
 logger = get_logger(__name__)
-
 
 class MetricType(str, Enum):
     """Prometheus metric types."""
@@ -25,7 +22,6 @@ class MetricType(str, Enum):
     GAUGE = "gauge"
     HISTOGRAM = "histogram"
     SUMMARY = "summary"
-
 
 @dataclass
 class Metric:
@@ -38,14 +34,12 @@ class Metric:
     timestamp: float
     help: str = ""
 
-
 @dataclass
 class HistogramBucket:
     """Histogram bucket for latency metrics."""
 
     le: float  # Less than or equal to
     count: int
-
 
 class MetricsCollector:
     """Collects and exports Prometheus-style metrics from logs."""
@@ -333,10 +327,8 @@ class MetricsCollector:
             "current_memory_usage": dict(self.memory_usage_mb),
         }
 
-
 # Global metrics collector instance
 _metrics_collector: MetricsCollector | None = None
-
 
 def get_metrics_collector() -> MetricsCollector:
     """Get global metrics collector instance."""

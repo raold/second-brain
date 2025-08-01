@@ -1,11 +1,12 @@
 import json
 from datetime import datetime, timedelta
 from typing import Any
-
 import numpy as np
-
 from app.models.synthesis.suggestion_models import SuggestionType
 from app.utils.logging_config import get_logger
+from collections import Counter, defaultdict
+from app.models.synthesis.suggestion_models import (
+        from app.insights.models import InsightRequest, TimeFrame
 
 """Suggestion Engine for Smart Recommendations
 
@@ -13,9 +14,6 @@ Real implementation that provides intelligent suggestions for memory organizatio
 knowledge exploration, and learning paths based on user behavior and content analysis.
 """
 
-from collections import Counter, defaultdict
-
-from app.models.synthesis.suggestion_models import (
     ActionType,
     ContentSuggestion,
     LearningPathSuggestion,
@@ -26,7 +24,6 @@ from app.models.synthesis.suggestion_models import (
 )
 
 logger = get_logger(__name__)
-
 
 class UserBehaviorProfile:
     """Tracks user behavior patterns for personalized suggestions"""
@@ -43,7 +40,6 @@ class UserBehaviorProfile:
         }
         self.learning_velocity: float = 0.0
         self.exploration_score: float = 0.0
-
 
 class SuggestionEngine:
     """Engine for generating intelligent suggestions and recommendations"""
@@ -247,7 +243,6 @@ Provide consolidation suggestions focusing on organization and synthesis.
     async def _analyze_knowledge_state(self, user_id: str) -> dict[str, Any]:
         """Analyze current state of user's knowledge base"""
         # Get comprehensive analytics
-        from app.insights.models import InsightRequest, TimeFrame
 
         insights = await self.analytics_engine.generate_insights(
             InsightRequest(time_frame=TimeFrame.MONTHLY, user_id=user_id)

@@ -277,6 +277,33 @@ class ErrorOccurredEvent(DomainEvent):
 
 # Factory functions for common event creation scenarios
 
+
+class DuplicatesDetectedEvent(DomainEvent):
+    """Duplicates detected in the system."""
+
+    event_type = "duplicates_detected"
+
+    def __init__(
+        self,
+        duplicate_groups: list[dict[str, Any]],
+        total_duplicates: int,
+        detection_method: str = "similarity",
+    ):
+        super().__init__()
+        self.duplicate_groups = duplicate_groups
+        self.total_duplicates = total_duplicates
+        self.detection_method = detection_method
+
+    def get_event_type(self) -> str:
+        return self.event_type
+
+    def get_event_data(self) -> dict[str, Any]:
+        return {
+            "duplicate_groups": self.duplicate_groups,
+            "total_duplicates": self.total_duplicates,
+            "detection_method": self.detection_method,
+        }
+
 def create_memory_event(memory_id: str, user_id: str, event_type: str, **kwargs) -> DomainEvent:
     """Factory function to create memory-related events."""
     event_map = {

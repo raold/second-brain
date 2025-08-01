@@ -8,6 +8,24 @@ import pandas as pd
 from app.ingestion.models import StructuredData
 from app.utils.logging_config import get_logger
 
+# Optional dependencies
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+
+try:
+    from bs4 import BeautifulSoup
+    BS4_AVAILABLE = True
+except ImportError:
+    BS4_AVAILABLE = False
+
+try:
+    import xml.etree.ElementTree as ET
+except ImportError:
+    ET = None
+
 """
 Advanced structured data extraction with enhanced parsing capabilities
 """

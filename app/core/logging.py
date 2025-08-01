@@ -4,10 +4,17 @@ import sys
 import time
 from datetime import datetime
 from typing import Any
-
 from pydantic import BaseModel
-
-from app.utils.logging_config import get_logger
+# from app.utils.logging_config import get_logger # Removed - defined in this file
+import traceback
+from contextvars import ContextVar
+from functools import wraps
+import structlog
+from fastapi import Request, Response
+from fastapi.routing import APIRoute
+from pythonjsonlogger import jsonlogger
+import os
+from logging.handlers import RotatingFileHandler
 
 """
 Centralized logging configuration for Second Brain v3.0.0
@@ -20,22 +27,10 @@ This module provides:
 - Audit logging
 """
 
-import traceback
-from contextvars import ContextVar
-from functools import wraps
-
-import structlog
-from fastapi import Request, Response
-from fastapi.routing import APIRoute
-from pythonjsonlogger import jsonlogger
-
 # Context variables for request tracking
-import os
-from logging.handlers import RotatingFileHandler
 
 request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
 user_id_var: ContextVar[str | None] = ContextVar("user_id", default=None)
-
 
 class LogConfig(BaseModel):
     """Logging configuration"""
@@ -51,7 +46,6 @@ class LogConfig(BaseModel):
     enable_audit_logging: bool = True
     enable_request_logging: bool = True
     slow_request_threshold: float = 1.0  # seconds
-
 
 class StructuredLogger:
     """Structured logger with context support"""
@@ -149,7 +143,6 @@ class StructuredLogger:
         extra = self._add_context(kwargs)
         self.logger.critical(message, extra={"structured": extra})
 
-
 class PerformanceLogger:
     """Context manager for performance logging"""
 
@@ -184,7 +177,6 @@ class PerformanceLogger:
                 **self.extra,
             )
 
-
 class AuditLogger:
     """Logger for audit events"""
 
@@ -211,7 +203,6 @@ class AuditLogger:
             details=details or {},
             audit=True,
         )
-
 
 class LoggingRoute(APIRoute):
     """Custom route class that logs requests and responses"""
@@ -270,17 +261,14 @@ class LoggingRoute(APIRoute):
 
         return logging_route_handler
 
-
 # Global logger instances
 _loggers: dict[str, StructuredLogger] = {}
 _config: LogConfig = LogConfig()
-
 
 def configure_logging(config: LogConfig):
     """Configure global logging settings"""
     global _config
     _config = config
-
 
 def get_logger(name: str) -> StructuredLogger:
     """Get or create a logger instance"""
@@ -288,11 +276,9 @@ def get_logger(name: str) -> StructuredLogger:
         _loggers[name] = StructuredLogger(name, _config)
     return _loggers[name]
 
-
 def get_audit_logger() -> AuditLogger:
     """Get the audit logger"""
     return AuditLogger(get_logger("audit"))
-
 
 def log_function_call(func):
     """Decorator to log function calls"""
@@ -314,7 +300,6 @@ def log_function_call(func):
     else:
         return sync_wrapper
 
-
 # Structured logging with structlog
 def setup_structlog():
     """Configure structlog for structured logging"""
@@ -334,7 +319,6 @@ def setup_structlog():
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
-
 
 # Initialize logging on import
 setup_structlog()

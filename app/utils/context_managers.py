@@ -2,10 +2,16 @@ import asyncio
 import time
 from dataclasses import dataclass, field
 from typing import Any, Union
-
 from fastapi import Path
-
 from app.utils.logging_config import get_logger
+import contextlib
+from enum import Enum
+from typing import TypeVar
+    import uuid
+            import shutil
+    import shutil
+    import tempfile
+        import psutil
 
 """
 Sophisticated context managers for resource management in the Second Brain application.
@@ -15,20 +21,14 @@ and handle resource lifecycle management with proper error handling
 and cleanup semantics.
 """
 
-import contextlib
-from enum import Enum
-from typing import TypeVar
-
 logger = get_logger(__name__)
 
 T = TypeVar("T")
 R = TypeVar("R")
 
-
 # ============================================================================
 # Resource Management Context Managers
 # ============================================================================
-
 
 class ResourceState(Enum):
     """States for managed resources."""
@@ -40,7 +40,6 @@ class ResourceState(Enum):
     RELEASED = "released"
     ERROR = "error"
 
-
 @dataclass
 class ResourceMetrics:
     """Metrics for resource usage tracking."""
@@ -51,7 +50,6 @@ class ResourceMetrics:
     error_count: int = 0
     total_uses: int = 0
     peak_concurrent_uses: int = 0
-
 
 class ManagedResource(ABC, Generic[T]):
     """Abstract base for managed resources with lifecycle tracking."""
@@ -168,7 +166,6 @@ class ManagedResource(ABC, Generic[T]):
             "recent_errors": [str(e) for e in self._error_history[-5:]],  # Last 5 errors
         }
 
-
 @contextlib.asynccontextmanager
 async def managed_resource(resource: ManagedResource[T]) -> AsyncGenerator[T, None]:
     """Context manager for automatic resource lifecycle management."""
@@ -183,11 +180,9 @@ async def managed_resource(resource: ManagedResource[T]) -> AsyncGenerator[T, No
             except Exception as e:
                 logger.error(f"Error in resource cleanup: {e}")
 
-
 # ============================================================================
 # Database Connection Context Managers
 # ============================================================================
-
 
 class DatabaseTransaction:
     """Context manager for database transactions with sophisticated error handling."""
@@ -279,7 +274,6 @@ class DatabaseTransaction:
         """Track that an operation was performed in this transaction."""
         self.operations_count += 1
 
-
 @contextlib.asynccontextmanager
 async def database_transaction(
     connection,
@@ -318,11 +312,9 @@ async def database_transaction(
 
     raise RuntimeError("Transaction failed after all retry attempts") from last_error
 
-
 # ============================================================================
 # Processing Context Managers
 # ============================================================================
-
 
 @dataclass
 class ProcessingContext:
@@ -341,7 +333,6 @@ class ProcessingContext:
     progress_percent: float = field(default=0.0, init=False)
     steps_completed: int = field(default=0, init=False)
     total_steps: int | None = field(default=None, init=False)
-
 
 class ProcessingManager(Observable):
     """Manager for processing operations with observable progress."""
@@ -472,7 +463,6 @@ class ProcessingManager(Observable):
             "priority_distribution": priority_counts,
         }
 
-
 @contextlib.asynccontextmanager
 async def processing_operation(
     manager: ProcessingManager,
@@ -483,8 +473,6 @@ async def processing_operation(
     **metadata,
 ) -> AsyncGenerator[ProcessingContext, None]:
     """Context manager for processing operations with automatic lifecycle management."""
-
-    import uuid
 
     operation_id = str(uuid.uuid4())
 
@@ -520,11 +508,9 @@ async def processing_operation(
         await manager.complete_operation(operation_id, result=f"error: {e}")
         raise
 
-
 # ============================================================================
 # File and Path Context Managers
 # ============================================================================
-
 
 @contextlib.contextmanager
 def atomic_file_write(
@@ -543,7 +529,6 @@ def atomic_file_write(
     # Create backup if requested and file exists
     if backup and file_path.exists():
         try:
-            import shutil
 
             shutil.copy2(file_path, backup_path)
             logger.debug(f"Created backup: {backup_path}")
@@ -587,15 +572,11 @@ def atomic_file_write(
 
         raise
 
-
 @contextlib.asynccontextmanager
 async def temporary_directory(
     prefix: str = "temp_", cleanup: bool = True, base_dir: Path | None = None
 ) -> AsyncGenerator[Path, None]:
     """Context manager for temporary directories with async cleanup."""
-
-    import shutil
-    import tempfile
 
     base_dir = base_dir or Path(tempfile.gettempdir())
     temp_dir = None
@@ -614,11 +595,9 @@ async def temporary_directory(
             except Exception as e:
                 logger.warning(f"Failed to clean up temporary directory {temp_dir}: {e}")
 
-
 # ============================================================================
 # Memory and Resource Monitoring Context Managers
 # ============================================================================
-
 
 @dataclass
 class ResourceSnapshot:
@@ -630,7 +609,6 @@ class ResourceSnapshot:
     open_files: int
     thread_count: int
     custom_metrics: dict[str, Any] = field(default_factory=dict)
-
 
 class ResourceMonitor:
     """Monitor resource usage during operations."""
@@ -668,7 +646,6 @@ class ResourceMonitor:
 
     async def _monitor_loop(self) -> None:
         """Main monitoring loop."""
-        import psutil
 
         process = psutil.Process()
 
@@ -725,7 +702,6 @@ class ResourceMonitor:
             },
         }
 
-
 @contextlib.asynccontextmanager
 async def resource_monitoring(
     sample_interval: float = 1.0, log_summary: bool = True
@@ -750,11 +726,9 @@ async def resource_monitoring(
                     f"Duration: {summary['duration_seconds']:.1f}s"
                 )
 
-
 # ============================================================================
 # Composable Context Manager Utilities
 # ============================================================================
-
 
 @contextlib.asynccontextmanager
 async def combine_contexts(*context_managers) -> AsyncGenerator[tuple, None]:
@@ -766,7 +740,6 @@ async def combine_contexts(*context_managers) -> AsyncGenerator[tuple, None]:
             result = await stack.enter_async_context(cm)
             results.append(result)
         yield tuple(results)
-
 
 class ContextManagerChain:
     """Builder for chaining context managers with error handling."""
@@ -801,7 +774,6 @@ class ContextManagerChain:
                     raise
 
             yield tuple(results)
-
 
 # ============================================================================
 # Example Usage and Testing

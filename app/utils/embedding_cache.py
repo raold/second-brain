@@ -2,19 +2,15 @@ import asyncio
 import hashlib
 import json
 from datetime import datetime, timedelta
-
 from app.utils.logging_config import get_logger
+import redis.asyncio as aioredis
 
 """
 Embedding cache implementation for performance optimization.
 Caches OpenAI embeddings to reduce API calls and improve response times.
 """
 
-
-import redis.asyncio as aioredis
-
 logger = get_logger(__name__)
-
 
 class EmbeddingCache:
     """Cache for OpenAI embeddings with Redis and in-memory LRU cache."""
@@ -218,10 +214,8 @@ class EmbeddingCache:
         if self.redis_client:
             await self.redis_client.close()
 
-
 # Global cache instance
 _embedding_cache: EmbeddingCache | None = None
-
 
 def get_embedding_cache(redis_url: str | None = None) -> EmbeddingCache:
     """Get global embedding cache instance."""

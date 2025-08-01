@@ -15,20 +15,20 @@ import sys
 import time
 from datetime import datetime
 from typing import Any
-
 import logging.config
 import logging.handlers
 import traceback
 import uuid
 from contextvars import ContextVar
-
 from app.config import Config
+        import sys
+        import psutil
+        import psutil
 
 # Context variables for request tracing
 request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
 user_id_var: ContextVar[str | None] = ContextVar("user_id", default=None)
 operation_var: ContextVar[str | None] = ContextVar("operation", default=None)
-
 
 class StructuredFormatter(logging.Formatter):
     """Custom formatter for structured JSON logging."""
@@ -74,7 +74,6 @@ class StructuredFormatter(logging.Formatter):
 
         return json.dumps(log_data, ensure_ascii=False)
 
-
 class DevelopmentFormatter(logging.Formatter):
     """Human-readable formatter for development."""
 
@@ -97,7 +96,6 @@ class DevelopmentFormatter(logging.Formatter):
             record.msg = f"[{' | '.join(context_parts)}] {record.msg}"
 
         return super().format(record)
-
 
 class SecondBrainLogger:
     """Enhanced logger with context and structured logging support."""
@@ -156,7 +154,6 @@ class SecondBrainLogger:
 
     def exception(self, message: str, *args, **kwargs):
         # Get current exception info properly
-        import sys
 
         exc_info = sys.exc_info()
         if exc_info and exc_info[0] is not None:
@@ -165,7 +162,6 @@ class SecondBrainLogger:
             # If no exception, just log as error
             kwargs.pop("exc_info", None)
         self.error(message, *args, **kwargs)
-
 
 def configure_logging() -> None:
     """Configure application logging based on environment."""
@@ -224,11 +220,9 @@ def configure_logging() -> None:
         },
     )
 
-
 def get_logger(name: str) -> SecondBrainLogger:
     """Get enhanced logger instance."""
     return SecondBrainLogger(name)
-
 
 class LogContext:
     """Context manager for request/operation logging context."""
@@ -252,7 +246,6 @@ class LogContext:
         for token in reversed(self.tokens):
             token.var.set(token.old_value)
 
-
 class PerformanceLogger:
     """Context manager for performance logging."""
 
@@ -263,8 +256,6 @@ class PerformanceLogger:
         self.start_memory = None
 
     def __enter__(self):
-
-        import psutil
 
         self.start_time = time.time()
         try:
@@ -277,8 +268,6 @@ class PerformanceLogger:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-
-        import psutil
 
         duration_ms = (time.time() - self.start_time) * 1000
 
@@ -303,7 +292,6 @@ class PerformanceLogger:
         else:
             level = "warning" if duration_ms > 1000 else "info"
             getattr(self.logger, level)(f"Operation completed: {self.operation}", extra=extra)
-
 
 # Export commonly used functions
 __all__ = ["configure_logging", "get_logger", "LogContext", "PerformanceLogger"]

@@ -12,6 +12,7 @@
   "permissions": {
     "allow": [
       "Bash(**)",
+      "Bash(/Users/*)",
       "Bash(make status:*)",
       "Bash(wsl:*)",
       "Bash(docker logs:*)",
@@ -95,7 +96,16 @@
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python /Users/dro/Documents/second-brain/scripts/fix_all_self_imports.py)",
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"from app import app; print(''Import successful'')\")",
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"from app import app; print(''Import successful'')\")",
-      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"from app import app; print(''Import successful'')\")"
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"from app import app; print(''Import successful'')\")",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"from app import app; print(''App import:'', ''SUCCESS'')\")",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m ruff check app/ --select=E999,F821,E901 --output-format=concise)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m ruff check app/ --select=E999,F821 --output-format=concise)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"from app import app; print(''App import: SUCCESS'')\")",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m uvicorn app.app:app --reload --port 8000)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python /Users/dro/Documents/second-brain/scripts/fix_module_level_imports.py)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python /Users/dro/Documents/second-brain/scripts/fix_redefinitions.py)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m ruff check app/ --select=F821,F811,E402 --output-format=concise)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python /Users/dro/Documents/second-brain/scripts/fix_final_imports.py)"
     ],
     "deny": []
   },

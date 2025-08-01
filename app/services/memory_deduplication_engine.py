@@ -4,22 +4,17 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
-
 from pydantic import BaseModel, Field
-
 from app.database import get_database
 from app.events.domain_events import DuplicatesDetectedEvent
-
+from collections import defaultdict
+from enum import Enum
 
 #!/usr/bin/env python3
 """
 Advanced Memory Deduplication Engine
 Intelligent duplicate detection with similarity analysis and smart merging
 """
-
-from collections import defaultdict
-from enum import Enum
-
 
 class SimilarityMethod(str, Enum):
     """Methods for similarity detection"""
@@ -30,7 +25,6 @@ class SimilarityMethod(str, Enum):
     STRUCTURAL_SIMILARITY = "structural_similarity"
     HYBRID = "hybrid"
 
-
 class DuplicateAction(str, Enum):
     """Actions to take with duplicates"""
 
@@ -39,7 +33,6 @@ class DuplicateAction(str, Enum):
     MARK_DUPLICATE = "mark_duplicate"
     NO_ACTION = "no_action"
     MANUAL_REVIEW = "manual_review"
-
 
 class MergeStrategy(str, Enum):
     """Strategies for merging duplicate memories"""
@@ -50,7 +43,6 @@ class MergeStrategy(str, Enum):
     KEEP_HIGHEST_IMPORTANCE = "keep_highest_importance"
     SMART_MERGE = "smart_merge"
     MANUAL_MERGE = "manual_merge"
-
 
 @dataclass
 class SimilarityScore:
@@ -66,7 +58,6 @@ class SimilarityScore:
     confidence: float
     reasoning: str
 
-
 @dataclass
 class DuplicateGroup:
     """Group of duplicate memories"""
@@ -79,7 +70,6 @@ class DuplicateGroup:
     action_taken: DuplicateAction | None = None
     merged_content: str | None = None
     merged_metadata: dict[str, Any] | None = None
-
 
 @dataclass
 class DeduplicationResult:
@@ -96,7 +86,6 @@ class DeduplicationResult:
     performance_metrics: dict[str, Any]
     errors: list[str]
     warnings: list[str]
-
 
 class DeduplicationConfig(BaseModel):
     """Configuration for deduplication process"""
@@ -126,7 +115,6 @@ class DeduplicationConfig(BaseModel):
     preserve_metadata: bool = Field(True, description="Preserve metadata from all duplicates")
     create_backup: bool = Field(True, description="Create backup before deduplication")
     dry_run: bool = Field(False, description="Perform dry run without making changes")
-
 
 class ExactMatchDetector:
     """Detector for exact content matches"""
@@ -226,7 +214,6 @@ class ExactMatchDetector:
                 matches += 1
 
         return matches / len(common_keys) if common_keys else 0.0
-
 
 class FuzzyMatchDetector:
     """Detector for fuzzy content matches"""
@@ -522,7 +509,6 @@ class FuzzyMatchDetector:
         else:
             return memories[0].get("id", "unknown")
 
-
 class SemanticSimilarityDetector:
     """Detector for semantic similarity"""
 
@@ -686,7 +672,6 @@ class SemanticSimilarityDetector:
     ) -> str:
         """Select primary memory based on strategy"""
         return memories[0].get("id", "unknown")
-
 
 class MemoryDeduplicationEngine:
     """Advanced memory deduplication engine"""
@@ -991,10 +976,8 @@ class MemoryDeduplicationEngine:
             "available_methods": list(self.detectors.keys()),
         }
 
-
 # Global deduplication engine
 memory_deduplication_engine = MemoryDeduplicationEngine()
-
 
 async def get_memory_deduplication_engine() -> MemoryDeduplicationEngine:
     """Get memory deduplication engine instance"""

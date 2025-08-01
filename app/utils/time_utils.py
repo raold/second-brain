@@ -6,8 +6,6 @@ Time Utilities - v2.8.2
 Utility functions for time and date manipulation.
 """
 
-
-
 def parse_relative_timeframe(timeframe: str) -> tuple[datetime, datetime]:
     """
     Parse relative timeframe string into start and end dates.
@@ -94,7 +92,6 @@ def parse_relative_timeframe(timeframe: str) -> tuple[datetime, datetime]:
         # Default to last 30 days
         return today - timedelta(days=30), now
 
-
 def format_duration(seconds: int) -> str:
     """
     Format duration in seconds to human-readable string.
@@ -133,7 +130,6 @@ def format_duration(seconds: int) -> str:
         parts.append(f"{minutes}m")
 
     return " ".join(parts)
-
 
 def calculate_time_ago(timestamp: datetime) -> str:
     """

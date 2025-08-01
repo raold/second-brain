@@ -1,13 +1,12 @@
 from datetime import datetime
 from typing import Any
 from uuid import UUID
-
 import numpy as np
-
 from app.models.synthesis.consolidation_models import ConsolidationResult
 from app.utils.logging_config import get_logger
 from app.events.domain_events import MemoryConsolidatedEvent, ConsolidationEvent
-
+from collections import defaultdict
+from app.models.synthesis.consolidation_models import (
 
 """Consolidation Engine for Memory Deduplication and Merging
 
@@ -15,16 +14,12 @@ Real implementation that detects duplicate/similar memories and consolidates
 them intelligently while preserving important information.
 """
 
-from collections import defaultdict
-
-from app.models.synthesis.consolidation_models import (
     ConsolidationRequest,
     DuplicateGroup,
     MergeStrategy,
 )
 
 logger = get_logger(__name__)
-
 
 class MemorySimilarity:
     """Represents similarity between two memories"""
@@ -36,7 +31,6 @@ class MemorySimilarity:
         self.memory2_id = memory2_id
         self.similarity_score = similarity_score
         self.similarity_type = similarity_type  # 'exact', 'semantic', 'partial'
-
 
 class ConsolidationEngine:
     """Engine for detecting and consolidating duplicate or similar memories"""

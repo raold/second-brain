@@ -2,8 +2,12 @@ import asyncio
 import time
 from dataclasses import dataclass, field
 from typing import Any, Optional
-
 from app.utils.logging_config import get_logger
+import functools
+from collections.abc import Callable
+from enum import Enum
+from typing import Protocol, TypeVar
+            from dataclasses import asdict
 
 """
 Pythonic utilities and patterns for the Second Brain application.
@@ -16,21 +20,14 @@ This module demonstrates idiomatic Python usage including:
 - Functional programming patterns
 """
 
-import functools
-from collections.abc import Callable
-from enum import Enum
-from typing import Protocol, TypeVar
-
 logger = get_logger(__name__)
 
 T = TypeVar("T")
 P = TypeVar("P")
 
-
 # ============================================================================
 # Enhanced Enums with Behavior
 # ============================================================================
-
 
 @unique
 class Priority(Enum):
@@ -72,7 +69,6 @@ class Priority(Enum):
         """Check if priority requires immediate attention."""
         return self.level >= Priority.HIGH.level
 
-
 class ProcessingStatus(Enum):
     """Processing status with transition logic."""
 
@@ -103,11 +99,9 @@ class ProcessingStatus(Enum):
         """Check if processing is currently active."""
         return self == self.PROCESSING
 
-
 # ============================================================================
 # Rich Dataclasses with Advanced Features
 # ============================================================================
-
 
 @dataclass(frozen=True, slots=True)
 class MetricSnapshot:
@@ -177,7 +171,6 @@ class MetricSnapshot:
             tags=self.tags,
             metadata={**self.metadata, "normalization": {"min": min_val, "max": max_val}},
         )
-
 
 @dataclass
 class ProcessingTask:
@@ -252,11 +245,9 @@ class ProcessingTask:
             return NotImplemented
         return self.priority > other.priority  # Higher priority = lower sort order
 
-
 # ============================================================================
 # Validation Descriptors
 # ============================================================================
-
 
 class ValidatedField(Generic[T]):
     """Descriptor for field validation with type safety."""
@@ -295,7 +286,6 @@ class ValidatedField(Generic[T]):
 
         setattr(obj, self.private_name, value)
 
-
 class PositiveFloat(ValidatedField[float]):
     """Descriptor for positive float values."""
 
@@ -306,7 +296,6 @@ class PositiveFloat(ValidatedField[float]):
             default=default,
             transform=float,
         )
-
 
 class NonEmptyString(ValidatedField[str]):
     """Descriptor for non-empty string values."""
@@ -320,11 +309,9 @@ class NonEmptyString(ValidatedField[str]):
             transform=transform_func,
         )
 
-
 # ============================================================================
 # Protocol Definitions for Duck Typing
 # ============================================================================
-
 
 @runtime_checkable
 class Processable(Protocol):
@@ -338,7 +325,6 @@ class Processable(Protocol):
     def processing_priority(self) -> Priority:
         """Get processing priority."""
         ...
-
 
 @runtime_checkable
 class Cacheable(Protocol):
@@ -354,7 +340,6 @@ class Cacheable(Protocol):
         """Cache time-to-live in seconds."""
         ...
 
-
 @runtime_checkable
 class Serializable(Protocol):
     """Protocol for serializable objects."""
@@ -368,14 +353,12 @@ class Serializable(Protocol):
         """Create object from dictionary."""
         ...
 
-
 class SerializableMixin:
     """Mixin providing default serialization behavior."""
 
     def to_dict(self) -> dict[str, Any]:
         """Convert dataclass to dictionary."""
         if hasattr(self, "__dataclass_fields__"):
-            from dataclasses import asdict
 
             return asdict(self)
 
@@ -394,21 +377,17 @@ class SerializableMixin:
         # Fallback for non-dataclass objects
         return cls(**data)
 
-
 # ============================================================================
 # Functional Programming Utilities
 # ============================================================================
-
 
 def compose(*functions: Callable) -> Callable:
     """Compose functions right to left."""
     return functools.reduce(lambda f, g: lambda x: f(g(x)), functions, lambda x: x)
 
-
 def pipe(value: T, *functions: Callable[[T], T]) -> T:
     """Pipe value through sequence of functions."""
     return functools.reduce(lambda acc, func: func(acc), functions, value)
-
 
 def curry(func: Callable) -> Callable:
     """Curry a function to enable partial application."""
@@ -421,19 +400,16 @@ def curry(func: Callable) -> Callable:
 
     return curried
 
-
 @curry
 def filter_by_attribute(attr_name: str, predicate: Callable, items: list[Any]) -> list[Any]:
     """Filter items by attribute value using predicate."""
     return [item for item in items if predicate(getattr(item, attr_name))]
-
 
 @curry
 def group_by_attribute(attr_name: str, items: list[Any]) -> dict[Any, list[Any]]:
     """Group items by attribute value."""
     sorted_items = sorted(items, key=attrgetter(attr_name))
     return {key: list(group) for key, group in groupby(sorted_items, key=attrgetter(attr_name))}
-
 
 def chunk_iterator(iterable: Iterator[T], chunk_size: int) -> Iterator[list[T]]:
     """Split iterator into chunks of specified size."""
@@ -444,16 +420,13 @@ def chunk_iterator(iterable: Iterator[T], chunk_size: int) -> Iterator[list[T]]:
             break
         yield chunk
 
-
 def flatten(nested_iterable: Iterator[Iterator[T]]) -> Iterator[T]:
     """Flatten nested iterables."""
     return chain.from_iterable(nested_iterable)
 
-
 # ============================================================================
 # Advanced Iterator Patterns
 # ============================================================================
-
 
 class BatchProcessor(Generic[T]):
     """Process items in batches with configurable behavior."""
@@ -497,7 +470,6 @@ class BatchProcessor(Generic[T]):
             for processed_item in processed_batch:
                 yield processed_item
 
-
 class SlidingWindow(Generic[T]):
     """Sliding window iterator for time series analysis."""
 
@@ -517,11 +489,9 @@ class SlidingWindow(Generic[T]):
         for i in range(0, len(items) - self.window_size + 1, self.step_size):
             yield items[i : i + self.window_size]
 
-
 # ============================================================================
 # Named Tuple Extensions
 # ============================================================================
-
 
 class Coordinate(NamedTuple):
     """2D coordinate with computed properties."""
@@ -545,7 +515,6 @@ class Coordinate(NamedTuple):
     def __mul__(self, scalar: float) -> "Coordinate":
         """Multiply by scalar."""
         return Coordinate(self.x * scalar, self.y * scalar)
-
 
 class Range(NamedTuple):
     """Range with validation and operations."""
@@ -582,11 +551,9 @@ class Range(NamedTuple):
 
         return Range(start=max(self.start, other.start), end=min(self.end, other.end))
 
-
 # ============================================================================
 # Examples of Usage
 # ============================================================================
-
 
 def demonstration_usage():
     """Demonstrate the pythonic patterns."""
@@ -642,7 +609,6 @@ def demonstration_usage():
     assert process_item(task) == "HELLO"
 
     print("All pythonic patterns demonstrated successfully!")
-
 
 if __name__ == "__main__":
     demonstration_usage()

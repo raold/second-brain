@@ -1,3 +1,12 @@
+from datetime import datetime
+from enum import Enum
+from typing import Any
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+
+
+class ConsolidationStrategy(str, Enum):
     """Consolidation strategies"""
 
     MERGE = "merge"
@@ -5,16 +14,9 @@
     HIERARCHICAL = "hierarchical"
     TEMPORAL = "temporal"
 
+
 class MergeStrategy(str, Enum):
     """Memory merge strategies"""
-
-from datetime import datetime
-from enum import Enum
-from typing import Any
-from uuid import UUID
-from pydantic import BaseModel, Field
-
-class ConsolidationStrategy(str, Enum):
 
     KEEP_NEWEST = "keep_newest"
     KEEP_OLDEST = "keep_oldest"
@@ -22,6 +24,7 @@ class ConsolidationStrategy(str, Enum):
     MERGE_CONTENT = "merge_content"
     CREATE_SUMMARY = "create_summary"
     HIERARCHICAL = "hierarchical"
+
 
 class ConsolidationRequest(BaseModel):
     memory_ids: list[UUID] | None = None
@@ -31,6 +34,7 @@ class ConsolidationRequest(BaseModel):
     include_metadata: bool = Field(default=True)
     options: dict[str, Any] = Field(default_factory=dict)
 
+
 class ConsolidationResult(BaseModel):
     kept_memory_id: UUID | None = None
     removed_memory_ids: list[UUID] = Field(default_factory=list)
@@ -38,10 +42,12 @@ class ConsolidationResult(BaseModel):
     merge_metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+
 class ConsolidationStatus(BaseModel):
     status: str
     progress: float = Field(default=0.0, ge=0, le=1)
     message: str | None = None
+
 
 class ConsolidatedMemory(BaseModel):
     """Represents a consolidated memory"""
@@ -56,6 +62,7 @@ class ConsolidatedMemory(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+
 class ConsolidationCandidate(BaseModel):
     """Candidate memories for consolidation"""
 
@@ -65,6 +72,7 @@ class ConsolidationCandidate(BaseModel):
     suggested_strategy: ConsolidationStrategy
     estimated_quality: float = Field(ge=0, le=1)
 
+
 class ConsolidationPreview(BaseModel):
     """Preview of consolidation result"""
 
@@ -72,6 +80,7 @@ class ConsolidationPreview(BaseModel):
     preview_content: str
     estimated_reduction: float = Field(ge=0, le=1)
     quality_assessment: dict[str, Any]
+
 
 class QualityAssessment(BaseModel):
     """Quality assessment for consolidation"""
@@ -82,6 +91,7 @@ class QualityAssessment(BaseModel):
     overall_score: float = Field(ge=0, le=1)
     issues: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
+
 
 class DuplicateGroup(BaseModel):
     """Group of duplicate or similar memories"""

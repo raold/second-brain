@@ -1,20 +1,11 @@
 import asyncio
 from typing import Any
-
-from app.database import get_database
-from app.services.service_factory import get_health_service, get_memory_service, get_session_service
+# from app.database import get_database # Commented - redefined below
+# from app.services.service_factory import get_health_service, get_memory_service, get_session_service # Commented - redefined below
 from app.utils.logging_config import get_logger
-
-"""
-Centralized Dependency Injection Container
-Implements the Service Factory pattern for clean, testable dependency management
-"""
-
 from collections.abc import Callable
 from functools import lru_cache
 from typing import TypeVar
-
-import asyncio
 from app.services.service_factory import DashboardService
 from app.services.service_factory import GitService
 from app.services.service_factory import HealthService
@@ -23,10 +14,14 @@ from app.services.service_factory import SessionService
 from app.services.importance_engine import get_importance_engine as _get_importance_engine
 from app.services.monitoring import get_metrics_collector as _get_metrics_collector
 
+"""
+Centralized Dependency Injection Container
+Implements the Service Factory pattern for clean, testable dependency management
+"""
+
 logger = get_logger(__name__)
 
 T = TypeVar("T")
-
 
 class DependencyContainer:
     """Centralized container for managing service dependencies"""
@@ -79,21 +74,23 @@ class DependencyContainer:
         self._singletons.clear()
         logger.debug("Reset dependency container")
 
-
 # Global container instance (initialize at end of file)
 _container = None
-
 
 def get_container() -> DependencyContainer:
     """Get the global dependency container"""
     return _container
 
-
 # Service factory functions following the established pattern
+
+async def _get_database():
+    """Async database getter."""
+    from app.database import Database
+    return Database()
+
 @lru_cache(maxsize=1)
 def get_database():
     """Get database instance (cached)"""
-
 
     # Handle async database initialization in sync context
     try:
@@ -106,7 +103,6 @@ def get_database():
         asyncio.set_event_loop(loop)
         return loop.run_until_complete(_get_database())
 
-
 def get_dashboard_service():
     """Get dashboard service instance"""
     try:
@@ -116,7 +112,6 @@ def get_dashboard_service():
         service = DashboardService()
         _container.register_singleton("dashboard_service", service)
         return service
-
 
 def get_git_service():
     """Get git service instance"""
@@ -128,7 +123,6 @@ def get_git_service():
         _container.register_singleton("git_service", service)
         return service
 
-
 def get_health_service():
     """Get health service instance"""
     try:
@@ -138,7 +132,6 @@ def get_health_service():
         service = HealthService()
         _container.register_singleton("health_service", service)
         return service
-
 
 def get_memory_service():
     """Get memory service instance"""
@@ -150,7 +143,6 @@ def get_memory_service():
         _container.register_singleton("memory_service", service)
         return service
 
-
 def get_session_service():
     """Get session service instance"""
     try:
@@ -160,7 +152,6 @@ def get_session_service():
         service = SessionService()
         _container.register_singleton("session_service", service)
         return service
-
 
 def get_importance_engine():
     """Get importance engine instance"""
@@ -173,7 +164,6 @@ def get_importance_engine():
         _container.register_singleton("importance_engine", engine)
         return engine
 
-
 def get_metrics_collector():
     """Get metrics collector instance"""
     try:
@@ -184,42 +174,34 @@ def get_metrics_collector():
         _container.register_singleton("metrics_collector", collector)
         return collector
 
-
 # FastAPI dependency functions
 def get_dashboard_service_dep():
     """FastAPI dependency for dashboard service"""
     return get_dashboard_service()
 
-
 def get_git_service_dep():
     """FastAPI dependency for git service"""
     return get_git_service()
-
 
 def get_health_service_dep():
     """FastAPI dependency for health service"""
     return get_health_service()
 
-
 def get_memory_service_dep():
     """FastAPI dependency for memory service"""
     return get_memory_service()
-
 
 def get_session_service_dep():
     """FastAPI dependency for session service"""
     return get_session_service()
 
-
 def get_importance_engine_dep():
     """FastAPI dependency for importance engine"""
     return get_importance_engine()
 
-
 def get_metrics_collector_dep():
     """FastAPI dependency for metrics collector"""
     return get_metrics_collector()
-
 
 # Initialize container with default services
 def initialize_dependencies():
@@ -231,13 +213,11 @@ def initialize_dependencies():
 
     logger.info("Dependency injection container initialized")
 
-
 # Utility functions for testing
 def override_service(service_name: str, mock_instance: Any):
     """Override a service with a mock instance (for testing)"""
     _container.register_singleton(service_name, mock_instance)
     logger.debug(f"Overrode service {service_name} with mock instance")
-
 
 def clear_service_cache():
     """Clear service cache (for testing)"""
@@ -245,12 +225,10 @@ def clear_service_cache():
     # Re-initialize to register factories again
     initialize_dependencies()
 
-
 def reset_dependencies():
     """Reset all dependencies (for testing)"""
     _container.reset()
     initialize_dependencies()
-
 
 # Initialize the global container at module import
 if _container is None:

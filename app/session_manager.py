@@ -3,8 +3,14 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
-
 from fastapi import Path
+import gzip
+import uuid
+from collections import deque
+from dataclasses import asdict
+from enum import Enum
+from pathlib import Path
+from app.conversation_processor import get_conversation_processor
 
 #!/usr/bin/env python3
 """
@@ -13,16 +19,6 @@ Preserves complete conversation context, project state, and coding momentum
 across sessions, interruptions, and devices for seamless AI pair programming
 """
 
-import gzip
-import uuid
-from collections import deque
-from dataclasses import asdict
-from enum import Enum
-from pathlib import Path
-
-from app.conversation_processor import get_conversation_processor
-
-
 class SessionState(Enum):
     """Session states"""
 
@@ -30,7 +26,6 @@ class SessionState(Enum):
     PAUSED = "paused"
     ARCHIVED = "archived"
     SYNCING = "syncing"
-
 
 class ContextType(Enum):
     """Types of context to preserve"""
@@ -41,7 +36,6 @@ class ContextType(Enum):
     CODE_CHANGES = "code_changes"
     MOMENTUM = "momentum"
     PERSONALITY = "personality"
-
 
 @dataclass
 class ConversationMessage:
@@ -58,7 +52,6 @@ class ConversationMessage:
     semantic_summary: str  # AI-generated summary of key points
     emotional_tone: str  # "collaborative", "urgent", "exploratory", etc.
 
-
 @dataclass
 class ProjectMomentum:
     """Current project momentum and focus"""
@@ -71,7 +64,6 @@ class ProjectMomentum:
     last_major_achievement: str
     upcoming_deadlines: list[str]
     technical_context: str  # Current technical state/understanding
-
 
 @dataclass
 class CodingSession:
@@ -89,7 +81,6 @@ class CodingSession:
     session_summary: str
     productivity_metrics: dict[str, Any]
     sync_hash: str  # For cross-device conflict resolution
-
 
 class SessionManager:
     """
@@ -723,10 +714,8 @@ TO RESUME SEAMLESSLY:
             },
         }
 
-
 # Global session manager instance
 _session_manager_instance = None
-
 
 def get_session_manager() -> SessionManager:
     """Get or create global session manager instance"""
@@ -735,18 +724,15 @@ def get_session_manager() -> SessionManager:
         _session_manager_instance = SessionManager()
     return _session_manager_instance
 
-
 def ingest_idea(idea: str, source: str = "mobile") -> dict[str, Any]:
     """Main entry point for idea ingestion - the "woodchipper" function"""
     session_manager = get_session_manager()
     return session_manager.ingest_mobile_idea(idea, source)
 
-
 def pause_and_preserve_context(reason: str = "Manual pause") -> str:
     """Pause session and generate resume context"""
     session_manager = get_session_manager()
     return session_manager.pause_session(reason)
-
 
 def resume_coding_session(session_id: str | None = None) -> bool:
     """Resume coding session with full context"""
@@ -759,7 +745,6 @@ def resume_coding_session(session_id: str | None = None) -> bool:
         if last_session:
             return session_manager.resume_session(last_session.session_id)
         return False
-
 
 if __name__ == "__main__":
     # Demo session management
