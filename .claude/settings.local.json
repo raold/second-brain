@@ -55,7 +55,17 @@
       "Bash(/dev/null)",
       "Bash(docker compose exec:*)",
       "Bash(.venv/Scripts/python.exe -m pip install:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python scripts/test_runner.py:*)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/pip install markdown==3.5.2 networkx==3.2.1)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m pytest tests/unit/test_basic_functionality.py::TestBasicImports::test_database_mock_import -v)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"from app.services.knowledge_graph_builder import KnowledgeGraphBuilder; print(''Import successful'')\")",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"from app.services.reasoning_engine import ReasoningEngine; print(''Import successful'')\")",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"import tests.unit.test_websocket_functionality; print(''WebSocket test import successful'')\")",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"import tests.unit.test_service_factory; print(''Service factory test import successful'')\")",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m pytest tests/unit/test_basic_functionality.py -v --tb=no -q)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"import ast; ast.parse(open(''tests/unit/test_websocket_functionality.py'').read()); print(''WebSocket test syntax is valid'')\")",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -c \"import ast; ast.parse(open(''tests/unit/test_service_factory.py'').read()); print(''Service factory test syntax is valid'')\")"
     ],
     "deny": []
   },
