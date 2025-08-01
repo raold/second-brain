@@ -16,8 +16,6 @@ from pydantic import BaseModel
 from app.version import get_dashboard_version, get_version_info
 
 # Set mock database
-os.environ["USE_MOCK_DATABASE"] = "true"
-
 # Get current version info
 current_version_info = get_version_info()
 dashboard_version_info = get_dashboard_version()

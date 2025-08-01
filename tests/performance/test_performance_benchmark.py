@@ -16,7 +16,6 @@ import httpx
 import psutil
 import pytest
 
-from app.database_mock import MockDatabase
 
 
 @dataclass
@@ -304,7 +303,7 @@ class PerformanceBenchmark:
 
         # This would require database connection
         # For now, we'll simulate with mock database
-        mock_db = MockDatabase()
+        db = await get_database()  # Use real test database
         await mock_db.initialize()
 
         response_times = []

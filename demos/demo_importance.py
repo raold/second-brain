@@ -9,8 +9,6 @@ import os
 from datetime import datetime
 
 # Set environment for testing
-os.environ["USE_MOCK_DATABASE"] = "true"
-
 from app.database import get_database
 from app.importance_engine import get_importance_engine
 

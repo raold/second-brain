@@ -134,8 +134,7 @@ async def test_mock_database_functionality():
     print("\n Testing Mock Database Functionality...")
 
     try:
-        from app.database_mock import get_mock_database
-
+        
         # Test database operations
         db = await get_mock_database()
 

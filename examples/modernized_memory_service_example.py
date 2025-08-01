@@ -8,7 +8,6 @@ This is an EXAMPLE file - not for production use.
 from typing import Union
 
 from app.database import Database
-from app.database_mock import MockDatabase
 from app.models.memory import Memory
 from app.utils.logging_config import LogContext, PerformanceLogger, get_logger
 

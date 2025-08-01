@@ -67,8 +67,7 @@ def run_migration_cli_tests() -> dict[str, Any]:
     # Test list command (should work even without migrations)
     try:
         env = os.environ.copy()
-        env["USE_MOCK_DATABASE"] = "true"
-
+        env["
         result = subprocess.run(
             [sys.executable, "scripts/migrate.py", "list"],
             capture_output=True,
@@ -207,9 +206,7 @@ def main():
     print("=" * 60)
 
     # Set environment for testing
-    os.environ["USE_MOCK_DATABASE"] = "true"
-
-    results = {}
+        results = {}
 
     # Run all test categories
     results["Framework Tests"] = run_pytest_tests()

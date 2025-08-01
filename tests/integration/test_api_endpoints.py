@@ -7,11 +7,9 @@ import os
 
 import pytest
 
-from app.database_mock import MockDatabase
 from app.version import get_version_info
 
 # Set up test environment
-os.environ["USE_MOCK_DATABASE"] = "true"
 os.environ["API_TOKENS"] = "test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba"
 
 

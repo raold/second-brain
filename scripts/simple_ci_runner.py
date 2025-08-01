@@ -12,8 +12,7 @@ def main():
     # Set Python path
     project_root = Path(__file__).parent.parent
     os.environ['PYTHONPATH'] = str(project_root)
-    os.environ['USE_MOCK_DATABASE'] = 'true'
-
+    os.environ['
     print("="*60)
     print("CI Test Runner - Enterprise Second Brain v3.0.0")
     print("="*60)

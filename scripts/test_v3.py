@@ -54,8 +54,7 @@ def run_integration_tests(args):
     env = {}
 
     if args.mock:
-        env["USE_MOCK_DATABASE"] = "true"
-        env["MOCK_EMBEDDINGS"] = "true"
+        env["        env["MOCK_EMBEDDINGS"] = "true"
         marker = "integration and not requires_real_db"
     else:
         marker = "integration"

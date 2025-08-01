@@ -499,9 +499,7 @@ class ImportanceSystemTester:
 async def main():
     """Run the comprehensive importance system test"""
     # Set environment for testing
-    os.environ["USE_MOCK_DATABASE"] = "true"
-
-    print("🧠 Second Brain - Automated Importance Scoring Test Suite")
+        print("🧠 Second Brain - Automated Importance Scoring Test Suite")
     print("Testing comprehensive AI-powered memory importance calculation")
     print("\nThis test demonstrates:")
     print("• Intelligent content quality analysis")

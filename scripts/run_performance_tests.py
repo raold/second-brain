@@ -24,8 +24,7 @@ def setup_performance_environment():
     # Ensure test database is ready
     env_vars = {
         "ENVIRONMENT": "performance",
-        "USE_MOCK_DATABASE": "false",
-        "LOG_LEVEL": "WARNING",  # Reduce logging overhead
+        "        "LOG_LEVEL": "WARNING",  # Reduce logging overhead
         "API_TOKENS": "test-performance-key,test-load-key",
         "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", "mock-key-for-testing")
     }

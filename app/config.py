@@ -49,8 +49,7 @@ class Config:
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
     # Test Configuration
-    USE_MOCK_DATABASE: bool = os.getenv("USE_MOCK_DATABASE", "false").lower() == "true"
-
+    
     # Environment Configurations
     ENVIRONMENTS = {
         "development": EnvironmentConfig(
@@ -75,12 +74,8 @@ class Config:
     @classmethod
     def should_use_mock_database(cls) -> bool:
         """Determine if mock database should be used."""
-        env_config = cls.get_environment_config()
-        # Explicit override takes precedence
-        if cls.USE_MOCK_DATABASE:
-            return True
-        # Otherwise use environment default
-        return env_config.use_mock_database
+        # Mock database removed - always use real database
+        return False
 
     @classmethod
     def should_require_openai(cls) -> bool:

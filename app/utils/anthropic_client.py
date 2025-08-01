@@ -90,7 +90,15 @@ def create_claude_completion(
         )
         return message.content[0].text
     except Exception as e:
-        logger.error(f"Failed to create Claude completion: {e}")
+        error_msg = str(e)
+        if "credit balance is too low" in error_msg:
+            logger.error(
+                "Anthropic API requires credits. Note: Claude Pro/Max subscriptions "
+                "are separate from API credits. Add API credits at: "
+                "https://console.anthropic.com/settings/billing"
+            )
+        else:
+            logger.error(f"Failed to create Claude completion: {e}")
         return None
 
 

@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 # Set up environment for testing
-os.environ["USE_MOCK_DATABASE"] = "true"
 os.environ["API_TOKENS"] = "test-key-1,test-key-2"
 
 # Add project root to path
@@ -99,8 +98,7 @@ class ComprehensiveTestRunner:
     async def test_mock_database(self):
         """Test mock database functionality"""
         try:
-            from app.database_mock import get_mock_database
-
+            
             # Initialize mock database
             db = await get_mock_database()
             self.results.append(TestResult("Mock DB Init", True, "Mock database initialized"))

@@ -37,8 +37,7 @@ class TestBasicImports:
 
     def test_database_mock_import(self):
         """Test database mock import"""
-        from app.database_mock import MockDatabase
-        assert MockDatabase is not None
+                assert MockDatabase is not None
 
 
 class TestAppInitialization:
@@ -66,9 +65,8 @@ class TestAppInitialization:
     @pytest.mark.asyncio
     async def test_mock_database_initialization(self):
         """Test mock database initialization"""
-        from app.database_mock import MockDatabase
-
-        mock_db = MockDatabase()
+        
+        db = await get_database()  # Use real test database
         await mock_db.initialize()
 
         assert mock_db.memories == {}
@@ -87,8 +85,7 @@ class TestEnvironmentSetup:
 
         # These should be set by conftest.py
         assert os.environ.get("ENVIRONMENT") == "test"
-        assert os.environ.get("USE_MOCK_DATABASE") == "true"
-        assert os.environ.get("API_TOKENS") is not None
+        assert os.environ.get("        assert os.environ.get("API_TOKENS") is not None
 
     def test_pythonpath_setup(self):
         """Test Python path is set correctly"""

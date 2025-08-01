@@ -5,8 +5,6 @@ Minimal test server to verify Project Pipeline functionality
 
 import os
 
-os.environ["USE_MOCK_DATABASE"] = "true"
-
 import uvicorn
 from fastapi import FastAPI
 

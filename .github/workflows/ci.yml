@@ -8,7 +8,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.11'
-  USE_MOCK_DATABASE: 'true'
+      # USE_MOCK_DATABASE removed
   PYTHONDONTWRITEBYTECODE: 1
   PYTHONUNBUFFERED: 1
 
@@ -40,7 +40,7 @@ jobs:
     - name: Set environment variables
       run: |
         echo "ENVIRONMENT=test" >> $GITHUB_ENV
-        echo "USE_MOCK_DATABASE=true" >> $GITHUB_ENV
+                # USE_MOCK_DATABASE removed
         echo "SECURITY_LEVEL=development" >> $GITHUB_ENV
         echo "API_TOKENS=test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba" >> $GITHUB_ENV
         echo "API_KEY=test-token-32-chars-long-for-auth-1234567890abcdef" >> $GITHUB_ENV

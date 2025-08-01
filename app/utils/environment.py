@@ -12,8 +12,7 @@ def validate_test_environment() -> dict[str, Any]:
     """Validate and setup test environment configuration."""
     # Set test environment
     os.environ["ENVIRONMENT"] = "test"
-    os.environ["USE_MOCK_DATABASE"] = "true"
-    os.environ["API_TOKENS"] = "test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba"
+        os.environ["API_TOKENS"] = "test-token-32-chars-long-for-auth-1234567890abcdef,test-token-32-chars-long-for-auth-0987654321fedcba"
 
     # Use real OpenAI key if available (from GitHub secrets), otherwise use mock
     if "OPENAI_API_KEY" not in os.environ:
@@ -37,8 +36,7 @@ def validate_ci_environment() -> dict[str, Any]:
     """Validate and setup CI environment configuration."""
     # Set CI environment
     os.environ["ENVIRONMENT"] = "ci"
-    os.environ["USE_MOCK_DATABASE"] = "true"
-    os.environ["DEBUG"] = "false"
+        os.environ["DEBUG"] = "false"
     os.environ["LOG_LEVEL"] = "WARNING"
 
     # Validate configuration

@@ -20,8 +20,7 @@ class TestEnvironmentValidation:
         """Test that required environment variables are set"""
         required_vars = [
             "ENVIRONMENT",
-            "USE_MOCK_DATABASE",
-            "API_TOKENS",
+            "            "API_TOKENS",
         ]
 
         for var in required_vars:
@@ -29,8 +28,7 @@ class TestEnvironmentValidation:
 
         # Test specific values
         assert os.environ.get("ENVIRONMENT") == "test"
-        assert os.environ.get("USE_MOCK_DATABASE") == "true"
-
+        assert os.environ.get("
     def test_project_structure(self):
         """Test that required project files exist"""
         project_root = Path(__file__).parent.parent.parent
@@ -142,8 +140,7 @@ class TestApplicationValidation:
     def test_database_mock_import(self):
         """Test that database mock can be imported"""
         try:
-            from app.database_mock import MockDatabase
-            assert MockDatabase is not None
+                        assert MockDatabase is not None
         except Exception as e:
             pytest.fail(f"Failed to import MockDatabase: {e}")
 
@@ -240,8 +237,7 @@ class TestSecurityValidation:
     def test_environment_isolation(self):
         """Test that test environment is isolated"""
         assert os.environ.get("ENVIRONMENT") == "test"
-        assert os.environ.get("USE_MOCK_DATABASE") == "true"
-
+        assert os.environ.get("
         # Should not use production settings in tests
         production_indicators = [
             "PRODUCTION",
@@ -342,10 +338,9 @@ class TestCICompatibility:
         # Test that mock database can be created and cleaned up
         import asyncio
 
-        from app.database_mock import MockDatabase
-
+        
         async def test_cleanup():
-            mock_db = MockDatabase()
+            db = await get_database()  # Use real test database
             await mock_db.initialize()
 
             # Add some data

@@ -11,7 +11,6 @@ import traceback
 from pathlib import Path
 
 # Set up environment
-os.environ["USE_MOCK_DATABASE"] = "true"
 os.environ["API_TOKENS"] = "test-key-1,test-key-2"
 
 # Add project root to path
@@ -83,8 +82,7 @@ class TestValidator:
         print("=" * 50)
 
         try:
-            from app.database_mock import get_mock_database
-
+            
             # Initialize database
             db = await get_mock_database()
             self.test_result("Database Init", True, "Mock database initialized")

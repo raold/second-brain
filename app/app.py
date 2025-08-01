@@ -171,38 +171,24 @@ async def lifespan(app: FastAPI):
         )
     )
 
-    # Check if using mock database
-    use_mock = os.getenv("USE_MOCK_DATABASE", "false").lower() == "true"
+    # Initialize database - mock database removed, always use real PostgreSQL
+    database_url = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/secondbrain")
+    pool_config = PoolConfig(min_connections=5, max_connections=20, max_inactive_connection_lifetime=300.0)
 
-    # Initialize database
-    db = None
-    if use_mock:
-        logger.info("Using mock database - skipping PostgreSQL initialization")
-        # Initialize mock database
-        from app.database_mock import MockDatabase
+    try:
+        await initialize_pool(database_url, pool_config)
+        logger.info("Database connection pool initialized", min_connections=pool_config.min_connections, max_connections=pool_config.max_connections)
 
-        db = MockDatabase()
-        await db.initialize()
-        logger.info("Mock database initialized")
-    else:
-        # Initialize database connection pool
-        database_url = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/secondbrain")
-        pool_config = PoolConfig(min_connections=5, max_connections=20, max_inactive_connection_lifetime=300.0)
-
-        try:
-            await initialize_pool(database_url, pool_config)
-            logger.info("Database connection pool initialized", min_connections=pool_config.min_connections, max_connections=pool_config.max_connections)
-
-            # Register database health check
-            async def check_db():
-                return await health_checker.check_database(db)
-            health_checker.register_check("database", check_db)
-            db = await get_database()
-        except Exception as e:
-            logger.error(f"Failed to initialize database pool: {e}")
-            # Fallback to regular database connection
-            db = await get_database()
-            logger.info("Database initialized (fallback mode)")
+        # Register database health check
+        db = await get_database()
+        async def check_db():
+            return await health_checker.check_database(db)
+        health_checker.register_check("database", check_db)
+    except Exception as e:
+        logger.error(f"Failed to initialize database pool: {e}")
+        # Fallback to regular database connection
+        db = await get_database()
+        logger.info("Database initialized (fallback mode)")
 
     # Initialize Redis for caching and rate limiting
     await get_redis_manager()
@@ -223,24 +209,19 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Cleanup
-    use_mock = os.getenv("USE_MOCK_DATABASE", "false").lower() == "true"
-
-    if use_mock:
-        logger.info("Mock database cleanup - no action needed")
-    else:
+    # Cleanup - always cleanup real database
+    try:
+        await close_pool()
+        logger.info("Database connection pool closed")
+    except Exception as e:
+        logger.error(f"Error closing database pool: {e}")
+        # Fallback cleanup
         try:
-            await close_pool()
-            logger.info("Database connection pool closed")
-        except Exception as e:
-            logger.error(f"Error closing database pool: {e}")
-            # Fallback cleanup
-            try:
-                db = await get_database()
-                await db.close()
-                logger.info("Database closed (fallback mode)")
-            except Exception as cleanup_error:
-                logger.error(f"Error in fallback cleanup: {cleanup_error}")
+            db = await get_database()
+            await db.close()
+            logger.info("Database closed (fallback mode)")
+        except Exception as cleanup_error:
+            logger.error(f"Error in fallback cleanup: {cleanup_error}")
 
     # Cleanup Redis
     try:
@@ -955,8 +936,7 @@ async def get_metrics(_: str = Depends(verify_api_key)):
         # Application metrics
         app_metrics = {
             "version": get_version_info()["version"],
-            "environment": "test" if os.getenv("USE_MOCK_DATABASE", "false").lower() == "true" else "production",
-        }
+            "environment": os.getenv("ENVIRONMENT", "production"),        }
 
         return {
             "status": "healthy",

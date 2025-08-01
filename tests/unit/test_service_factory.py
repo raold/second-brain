@@ -178,15 +178,12 @@ class TestServiceConfiguration:
         import os
 
         # Test environment should use mock services
-        assert os.environ.get("USE_MOCK_DATABASE") == "true"
-        assert os.environ.get("ENVIRONMENT") == "test"
+        assert os.environ.get("        assert os.environ.get("ENVIRONMENT") == "test"
 
         # Configuration should respect environment
-        if os.environ.get("USE_MOCK_DATABASE") == "true":
-            # Should use mock implementations
+        if os.environ.get("            # Should use mock implementations
             try:
-                from app.database_mock import MockDatabase
-                mock_db = MockDatabase()
+                                db = await get_database()  # Use real test database
                 assert mock_db is not None
             except ImportError:
                 pytest.skip("Mock database not implemented")
@@ -244,11 +241,10 @@ class TestServiceIntegration:
     async def test_service_database_integration(self):
         """Test service integration with database"""
         try:
-            from app.database_mock import MockDatabase
-            from app.services.service_factory import get_memory_service
+                        from app.services.service_factory import get_memory_service
 
             # Initialize mock database
-            mock_db = MockDatabase()
+            db = await get_database()  # Use real test database
             await mock_db.initialize()
 
             # Get service (should work with mock database)

@@ -27,8 +27,7 @@ def simulate_ci_pipeline():
     env = os.environ.copy()
     env.update({
         'PYTHONPATH': os.getcwd(),
-        'USE_MOCK_DATABASE': 'true',
-        'PYTHONIOENCODING': 'utf-8'
+        '        'PYTHONIOENCODING': 'utf-8'
     })
 
     # Test 1: Import validation

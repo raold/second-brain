@@ -309,9 +309,8 @@ async def classify_memories(
     """
     try:
         # Get memories to classify
-        from app.database_mock import get_mock_database
-
-        db = await get_mock_database()
+        from app.database import get_database
+        db = await get_database()
 
         # Apply filter criteria if provided
         all_memories = await db.get_all_memories(limit=10000)

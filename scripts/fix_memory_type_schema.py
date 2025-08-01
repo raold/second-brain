@@ -18,9 +18,7 @@ async def fix_memory_type_schema():
     """Add memory_type column and enum if missing."""
 
     # Use mock database to avoid connection issues
-    os.environ["USE_MOCK_DATABASE"] = "true"
-
-    # For production database, uncomment these lines:
+        # For production database, uncomment these lines:
     # db_url = f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'postgres')}@{os.getenv('POSTGRES_HOST', 'localhost')}:{os.getenv('POSTGRES_PORT', '5432')}/{os.getenv('POSTGRES_DB', 'secondbrain')}"
     # conn = await asyncpg.connect(db_url)
 
