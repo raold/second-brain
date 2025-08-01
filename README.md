@@ -5,8 +5,6 @@
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](tests/)
-[![CI Tests](https://github.com/raold/second-brain/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/raold/second-brain/actions/workflows/test.yml)
-[![CD Tests](https://github.com/raold/second-brain/actions/workflows/cd.yml/badge.svg?branch=main)](https://github.com/raold/second-brain/actions/workflows/cd.yml)
 
 > **🐳 Docker-First Development**: Zero host dependencies, bulletproof cross-platform development experience.
 
