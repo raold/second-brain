@@ -7,6 +7,7 @@ from fastapi import APIRouter
 
 # Import only the essential routers that work
 from .health_routes import router as health_router
+from .dashboard_routes import router as dashboard_router
 
 # Create stub routers for all imports to prevent ImportError
 try:
@@ -18,11 +19,6 @@ try:
     from .bulk_operations_routes import bulk_router as bulk_operations_router
 except ImportError:
     bulk_operations_router = APIRouter(prefix="/api/v1/bulk", tags=["bulk"])
-
-try:
-    from .dashboard_routes import router as dashboard_router
-except ImportError:
-    dashboard_router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
 
 try:
     from .google_drive_routes import router as google_drive_router

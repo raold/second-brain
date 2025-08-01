@@ -7,8 +7,8 @@ import sys
 # Add the current directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Import minimal app
-from app.app_minimal import app
+# Import full app (not minimal)
+from app.app import app
 
 # For running with python main.py
 if __name__ == "__main__":

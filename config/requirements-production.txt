@@ -1,11 +1,14 @@
 # Production requirements for Second Brain
-# Optimized for performance and security
+# Optimized for performance and security - SECURITY UPDATES APPLIED
 
-# Core web framework
-fastapi==0.109.0
+# Core web framework - SECURITY UPDATE
+fastapi==0.109.1
 uvicorn[standard]==0.27.0
 gunicorn==21.2.0
 python-multipart==0.0.6
+
+# WebSocket support - MISSING DEPENDENCY ADDED
+websockets>=12.0
 
 # Data validation
 pydantic==2.5.3
@@ -17,8 +20,8 @@ asyncpg==0.29.0
 psycopg2-binary==2.9.10
 alembic==1.13.1
 
-# Redis
-redis==5.0.1
+# Redis - SECURITY UPDATE
+redis==5.0.3
 hiredis==2.3.2
 
 # HTTP client
@@ -51,10 +54,10 @@ PyPDF2==3.0.1
 python-docx==0.8.11
 jinja2==3.1.2
 
-# Security
+# Security - UPDATED VERSIONS
 cryptography>=42.0.8
 passlib[bcrypt]==1.7.4
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.5.0
 
 # Utilities
 numpy==1.26.3

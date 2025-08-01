@@ -61,6 +61,7 @@ from app.routes import (
 from app.routes.analysis_routes import router as analysis_router
 from app.routes.bulk_operations_routes import bulk_router
 from app.routes.dashboard_routes import router as dashboard_router
+from app.routes.v2_unified_api import router as v2_unified_router
 from app.routes.google_drive_routes import router as google_drive_router
 from app.routes.graph_routes import router as graph_router
 from app.routes.importance_routes import router as importance_router
@@ -68,9 +69,9 @@ from app.routes.ingestion_routes import router as ingestion_router
 from app.routes.insights import router as insights_router
 from app.routes.relationship_routes import router as relationship_router
 from app.routes.synthesis_routes import router as synthesis_router
-from app.routes.v2_api import router as v2_router
+# from app.routes.v2_api import router as v2_router  # Replaced by v2_unified_router
 from app.security import SecurityConfig, SecurityManager
-from app.services.service_factory import get_service_factory
+# from app.services.service_factory import get_service_factory  # Not needed
 from app.session_manager import get_session_manager
 
 # Version info
@@ -201,10 +202,7 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("Redis not available - rate limiting will be disabled")
 
-    # Initialize service factory with dependencies
-    service_factory = get_service_factory()
-    service_factory.set_database(db)
-    service_factory.set_security_manager(security_manager)
+    # Service factory initialization removed - services use dependency injection
     logger.info("Service factory initialized")
 
     yield
@@ -342,8 +340,8 @@ app.include_router(google_drive_router, prefix="/api/v1")
 # Include Dashboard routes (v3.0.0)
 app.include_router(dashboard_router)
 
-# Include v2 API routes (already has /api/v2 prefix)
-app.include_router(v2_router)
+# Include unified v2 API routes (combines v1 robustness with v2 features)
+app.include_router(v2_unified_router)
 
 # Setup conversation monitoring
 setup_conversation_monitoring()

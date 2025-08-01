@@ -3,12 +3,31 @@ Structured data extraction component for extracting tables, lists, key-value pai
 """
 
 import json
+import re
 from collections import defaultdict
+from dataclasses import dataclass, field
 from typing import Any
+
+try:
+    import yaml
+    YAML_AVAILABLE = True
+except ImportError:
+    yaml = None
+    YAML_AVAILABLE = False
 
 from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
+
+
+@dataclass
+class StructuredData:
+    """Container for extracted structured data"""
+    key_value_pairs: dict[str, Any] = field(default_factory=dict)
+    lists: dict[str, list[str]] = field(default_factory=dict)
+    tables: list[dict[str, Any]] = field(default_factory=list)
+    code_snippets: list[dict[str, str]] = field(default_factory=list)
+    metadata_fields: dict[str, Any] = field(default_factory=dict)
 
 
 class StructuredDataExtractor:
@@ -32,57 +51,65 @@ class StructuredDataExtractor:
         Returns:
             Extracted structured data
         """
-        # Extract different types of structured data
-        key_value_pairs = self._extract_key_value_pairs(text)
-        lists = self._extract_lists(text)
-        tables = self._extract_tables(text)
-        code_snippets = self._extract_code_snippets(text)
-        metadata_fields = self._extract_metadata_fields(text)
+        try:
+            # Extract different types of structured data
+            key_value_pairs = self._extract_key_value_pairs(text) or {}
+            lists = self._extract_lists(text) or {}
+            tables = self._extract_tables(text) or []
+            code_snippets = self._extract_code_snippets(text) or []
+            metadata_fields = self._extract_metadata_fields(text) or {}
 
-        return StructuredData(
-            key_value_pairs=key_value_pairs,
-            lists=lists,
-            tables=tables,
-            code_snippets=code_snippets,
-            metadata_fields=metadata_fields
-        )
+            return StructuredData(
+                key_value_pairs=key_value_pairs,
+                lists=lists,
+                tables=tables,
+                code_snippets=code_snippets,
+                metadata_fields=metadata_fields
+            )
+        except Exception as e:
+            logger.error(f"Failed to extract structured data: {e}")
+            # Return empty but valid StructuredData
+            return StructuredData()
 
     def _extract_key_value_pairs(self, text: str) -> dict[str, Any]:
         """Extract key-value pairs from text"""
         kv_pairs = {}
 
-        # Try different patterns
-        for pattern_info in self.kv_patterns:
-            pattern = pattern_info["pattern"]
-            processor = pattern_info.get("processor")
+        try:
+            # Try different patterns
+            for pattern_info in self.kv_patterns:
+                pattern = pattern_info["pattern"]
+                processor = pattern_info.get("processor")
 
-            for match in re.finditer(pattern, text, re.MULTILINE | re.IGNORECASE):
-                if len(match.groups()) >= 2:
-                    key = match.group(1).strip()
-                    value = match.group(2).strip()
+                for match in re.finditer(pattern, text, re.MULTILINE | re.IGNORECASE):
+                    if len(match.groups()) >= 2:
+                        key = match.group(1).strip()
+                        value = match.group(2).strip()
 
-                    # Clean up key
-                    key = self._normalize_key(key)
+                        # Clean up key
+                        key = self._normalize_key(key)
 
-                    # Process value if processor provided
-                    if processor:
-                        value = processor(value)
-                    else:
-                        value = self._parse_value(value)
+                        # Process value if processor provided
+                        if processor:
+                            value = processor(value)
+                        else:
+                            value = self._parse_value(value)
 
-                    # Store the pair
-                    if key and value is not None:
-                        kv_pairs[key] = value
+                        # Store the pair
+                        if key and value is not None:
+                            kv_pairs[key] = value
 
-        # Try to extract JSON/YAML blocks
-        json_data = self._extract_json_data(text)
-        if json_data:
-            kv_pairs.update(self._flatten_dict(json_data, prefix="json"))
+            # Try to extract JSON/YAML blocks
+            json_data = self._extract_json_data(text)
+            if json_data:
+                kv_pairs.update(self._flatten_dict(json_data, prefix="json"))
 
-        if YAML_AVAILABLE:
-            yaml_data = self._extract_yaml_data(text)
-            if yaml_data:
-                kv_pairs.update(self._flatten_dict(yaml_data, prefix="yaml"))
+            if YAML_AVAILABLE:
+                yaml_data = self._extract_yaml_data(text)
+                if yaml_data:
+                    kv_pairs.update(self._flatten_dict(yaml_data, prefix="yaml"))
+        except Exception as e:
+            logger.error(f"Failed to extract key-value pairs: {e}")
 
         return kv_pairs
 
@@ -90,24 +117,27 @@ class StructuredDataExtractor:
         """Extract lists from text"""
         lists = {}
 
-        # Extract bullet lists
-        bullet_lists = self._extract_bullet_lists(text)
-        for i, lst in enumerate(bullet_lists):
-            if lst:
-                lists[f"bullet_list_{i+1}"] = lst
+        try:
+            # Extract bullet lists
+            bullet_lists = self._extract_bullet_lists(text)
+            for i, lst in enumerate(bullet_lists):
+                if lst:
+                    lists[f"bullet_list_{i+1}"] = lst
 
-        # Extract numbered lists
-        numbered_lists = self._extract_numbered_lists(text)
-        for i, lst in enumerate(numbered_lists):
-            if lst:
-                lists[f"numbered_list_{i+1}"] = lst
+            # Extract numbered lists
+            numbered_lists = self._extract_numbered_lists(text)
+            for i, lst in enumerate(numbered_lists):
+                if lst:
+                    lists[f"numbered_list_{i+1}"] = lst
 
-        # Extract comma-separated lists
-        comma_lists = self._extract_comma_lists(text)
-        for i, (title, lst) in enumerate(comma_lists):
-            if lst:
-                key = self._normalize_key(title) if title else f"comma_list_{i+1}"
-                lists[key] = lst
+            # Extract comma-separated lists
+            comma_lists = self._extract_comma_lists(text)
+            for i, (title, lst) in enumerate(comma_lists):
+                if lst:
+                    key = self._normalize_key(title) if title else f"comma_list_{i+1}"
+                    lists[key] = lst
+        except Exception as e:
+            logger.error(f"Failed to extract lists: {e}")
 
         return lists
 
@@ -115,17 +145,20 @@ class StructuredDataExtractor:
         """Extract tables from text"""
         tables = []
 
-        # Extract markdown tables
-        markdown_tables = self._extract_markdown_tables(text)
-        tables.extend(markdown_tables)
+        try:
+            # Extract markdown tables
+            markdown_tables = self._extract_markdown_tables(text)
+            tables.extend(markdown_tables)
 
-        # Extract ASCII tables
-        ascii_tables = self._extract_ascii_tables(text)
-        tables.extend(ascii_tables)
+            # Extract ASCII tables
+            ascii_tables = self._extract_ascii_tables(text)
+            tables.extend(ascii_tables)
 
-        # Extract structured data that looks like tables
-        structured_tables = self._extract_structured_tables(text)
-        tables.extend(structured_tables)
+            # Extract structured data that looks like tables
+            structured_tables = self._extract_structured_tables(text)
+            tables.extend(structured_tables)
+        except Exception as e:
+            logger.error(f"Failed to extract tables: {e}")
 
         return tables
 
@@ -133,42 +166,45 @@ class StructuredDataExtractor:
         """Extract code snippets from text"""
         snippets = []
 
-        # Extract fenced code blocks (```language ... ```)
-        fenced_pattern = r'```(\w*)\n(.*?)```'
-        for match in re.finditer(fenced_pattern, text, re.DOTALL):
-            language = match.group(1) or "unknown"
-            code = match.group(2).strip()
+        try:
+            # Extract fenced code blocks (```language ... ```)
+            fenced_pattern = r'```(\w*)\n(.*?)```'
+            for match in re.finditer(fenced_pattern, text, re.DOTALL):
+                language = match.group(1) or "unknown"
+                code = match.group(2).strip()
 
-            snippets.append({
-                "language": language,
-                "code": code,
-                "type": "fenced",
-                "lines": str(len(code.splitlines()))
-            })
-
-        # Extract indented code blocks
-        indented_blocks = self._extract_indented_code(text)
-        for block in indented_blocks:
-            snippets.append({
-                "language": self._detect_language(block),
-                "code": block,
-                "type": "indented",
-                "lines": len(block.splitlines())
-            })
-
-        # Extract inline code (single backticks)
-        inline_pattern = r'`([^`]+)`'
-        inline_codes = re.findall(inline_pattern, text)
-
-        # Only keep substantial inline code (not just single words)
-        for code in inline_codes:
-            if len(code) > 10 and any(char in code for char in ['(', ')', '{', '}', '=', ':']):
                 snippets.append({
-                    "language": self._detect_language(code),
+                    "language": language,
                     "code": code,
-                    "type": "inline",
-                    "lines": 1
+                    "type": "fenced",
+                    "lines": len(code.splitlines())
                 })
+
+            # Extract indented code blocks
+            indented_blocks = self._extract_indented_code(text)
+            for block in indented_blocks:
+                snippets.append({
+                    "language": self._detect_language(block),
+                    "code": block,
+                    "type": "indented",
+                    "lines": len(block.splitlines())
+                })
+
+            # Extract inline code (single backticks)
+            inline_pattern = r'`([^`]+)`'
+            inline_codes = re.findall(inline_pattern, text)
+
+            # Only keep substantial inline code (not just single words)
+            for code in inline_codes:
+                if len(code) > 10 and any(char in code for char in ['(', ')', '{', '}', '=', ':']):
+                    snippets.append({
+                        "language": self._detect_language(code),
+                        "code": code,
+                        "type": "inline",
+                        "lines": 1
+                    })
+        except Exception as e:
+            logger.error(f"Failed to extract code snippets: {e}")
 
         return snippets
 
@@ -176,36 +212,39 @@ class StructuredDataExtractor:
         """Extract metadata-like fields from text"""
         metadata = {}
 
-        # Extract header metadata (e.g., from markdown files)
-        header_match = re.match(r'^---\n(.*?)\n---', text, re.DOTALL)
-        if header_match:
-            try:
-                if YAML_AVAILABLE:
-                    header_data = yaml.safe_load(header_match.group(1))
-                    if isinstance(header_data, dict):
-                        metadata.update(header_data)
-            except Exception as e:
-                logger.debug(f"Failed to parse header metadata: {e}")
+        try:
+            # Extract header metadata (e.g., from markdown files)
+            header_match = re.match(r'^---\n(.*?)\n---', text, re.DOTALL)
+            if header_match:
+                try:
+                    if YAML_AVAILABLE:
+                        header_data = yaml.safe_load(header_match.group(1))
+                        if isinstance(header_data, dict):
+                            metadata.update(header_data)
+                except Exception as e:
+                    logger.debug(f"Failed to parse header metadata: {e}")
 
-        # Extract common metadata patterns
-        metadata_patterns = [
-            (r'(?:Author|Created by|By):\s*(.+)', 'author'),
-            (r'(?:Date|Created|Updated):\s*(.+)', 'date'),
-            (r'(?:Title|Subject|Topic):\s*(.+)', 'title'),
-            (r'(?:Tags|Labels|Categories):\s*(.+)', 'tags'),
-            (r'(?:Version|Revision):\s*(.+)', 'version'),
-            (r'(?:Status|State):\s*(.+)', 'status'),
-            (r'(?:Priority|Importance):\s*(.+)', 'priority'),
-        ]
+            # Extract common metadata patterns
+            metadata_patterns = [
+                (r'(?:Author|Created by|By):\s*(.+)', 'author'),
+                (r'(?:Date|Created|Updated):\s*(.+)', 'date'),
+                (r'(?:Title|Subject|Topic):\s*(.+)', 'title'),
+                (r'(?:Tags|Labels|Categories):\s*(.+)', 'tags'),
+                (r'(?:Version|Revision):\s*(.+)', 'version'),
+                (r'(?:Status|State):\s*(.+)', 'status'),
+                (r'(?:Priority|Importance):\s*(.+)', 'priority'),
+            ]
 
-        for pattern, field_name in metadata_patterns:
-            match = re.search(pattern, text, re.IGNORECASE)
-            if match:
-                value = match.group(1).strip()
-                # Parse tags as list
-                if field_name == 'tags':
-                    value = [tag.strip() for tag in re.split(r'[,;]', value)]
-                metadata[field_name] = value
+            for pattern, field_name in metadata_patterns:
+                match = re.search(pattern, text, re.IGNORECASE)
+                if match:
+                    value = match.group(1).strip()
+                    # Parse tags as list
+                    if field_name == 'tags':
+                        value = [tag.strip() for tag in re.split(r'[,;]', value)]
+                    metadata[field_name] = value
+        except Exception as e:
+            logger.error(f"Failed to extract metadata fields: {e}")
 
         return metadata
 
@@ -349,43 +388,50 @@ class StructuredDataExtractor:
     def _parse_markdown_table(self, lines: list[str]) -> dict[str, Any] | None:
         """Parse a markdown table from lines"""
         if len(lines) < 2:
+            logger.debug("Not enough lines for markdown table")
             return None
 
-        # Parse header
-        header_line = lines[0].strip()
-        headers = [cell.strip() for cell in header_line.split('|') if cell.strip()]
+        try:
+            # Parse header
+            header_line = lines[0].strip()
+            headers = [cell.strip() for cell in header_line.split('|') if cell.strip()]
 
-        if not headers:
+            if not headers:
+                logger.debug("No headers found in markdown table")
+                return None
+
+            # Skip separator line
+            rows = []
+            raw_lines = [lines[0], lines[1]]
+
+            for i in range(2, len(lines)):
+                line = lines[i].strip()
+
+                if not line or '|' not in line:
+                    break
+
+                cells = [cell.strip() for cell in line.split('|') if cell.strip()]
+
+                if len(cells) == len(headers):
+                    row_dict = dict(zip(headers, cells))
+                    rows.append(row_dict)
+                    raw_lines.append(lines[i])
+                else:
+                    break
+
+            if rows:
+                return {
+                    "headers": headers,
+                    "rows": rows,
+                    "type": "markdown",
+                    "_raw_lines": raw_lines
+                }
+
+            logger.debug("No rows found in markdown table")
             return None
-
-        # Skip separator line
-        rows = []
-        raw_lines = [lines[0], lines[1]]
-
-        for i in range(2, len(lines)):
-            line = lines[i].strip()
-
-            if not line or '|' not in line:
-                break
-
-            cells = [cell.strip() for cell in line.split('|') if cell.strip()]
-
-            if len(cells) == len(headers):
-                row_dict = dict(zip(headers, cells, strict=False))
-                rows.append(row_dict)
-                raw_lines.append(lines[i])
-            else:
-                break
-
-        if rows:
-            return {
-                "headers": headers,
-                "rows": rows,
-                "type": "markdown",
-                "_raw_lines": raw_lines
-            }
-
-        return None
+        except Exception as e:
+            logger.warning(f"Failed to parse markdown table: {e}")
+            return None
 
     def _extract_ascii_tables(self, text: str) -> list[dict[str, Any]]:
         """Extract ASCII art tables"""
@@ -421,9 +467,11 @@ class StructuredDataExtractor:
         # This is a basic parser that handles simple ASCII tables
 
         if len(lines) < 3:
+            logger.debug("Not enough lines for ASCII table")
             return None
 
-        # Skip implementation for now - ASCII tables are complex to parse
+        # TODO: Implement ASCII table parsing
+        logger.debug("ASCII table parsing not yet implemented")
         return None
 
     def _extract_structured_tables(self, text: str) -> list[dict[str, Any]]:
@@ -547,14 +595,20 @@ class StructuredDataExtractor:
                 data = json.loads(match.group(0))
                 if isinstance(data, dict):
                     return data
-            except Exception:
+            except json.JSONDecodeError as e:
+                logger.debug(f"Failed to parse JSON: {e}")
+                continue
+            except Exception as e:
+                logger.debug(f"Unexpected error parsing JSON: {e}")
                 continue
 
+        logger.debug("No valid JSON data found")
         return None
 
     def _extract_yaml_data(self, text: str) -> dict[str, Any] | None:
         """Extract YAML data from text"""
         if not YAML_AVAILABLE:
+            logger.debug("YAML module not available")
             return None
 
         # Look for YAML blocks
@@ -566,9 +620,12 @@ class StructuredDataExtractor:
                 data = yaml.safe_load(match.group(1))
                 if isinstance(data, dict):
                     return data
-            except Exception:
-                pass
+            except yaml.YAMLError as e:
+                logger.warning(f"Failed to parse YAML: {e}")
+            except Exception as e:
+                logger.debug(f"Unexpected error parsing YAML: {e}")
 
+        logger.debug("No valid YAML data found")
         return None
 
     def _normalize_key(self, key: str) -> str:

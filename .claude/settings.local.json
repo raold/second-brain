@@ -50,7 +50,12 @@
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/pip install pydantic==2.10.5 asyncpg==0.29.0)",
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/pip list)",
       "Bash(.venv/Scripts/python.exe scripts/test_implemented_services.py:*)",
-      "Bash(.venv/bin/python:*)"
+      "Bash(.venv/bin/python:*)",
+      "Bash(docker cp:*)",
+      "Bash(/dev/null)",
+      "Bash(docker compose exec:*)",
+      "Bash(.venv/Scripts/python.exe -m pip install:*)",
+      "Bash(git reset:*)"
     ],
     "deny": []
   },

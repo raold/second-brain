@@ -1,0 +1,860 @@
+openapi: 3.0.3
+info:
+  title: Second Brain Unified V2 API
+  description: |
+    Comprehensive REST API with real-time WebSocket support for the Second Brain knowledge management system.
+    
+    ## Features
+    - Real PostgreSQL data (no mocks)
+    - Real-time WebSocket updates
+    - Comprehensive system metrics
+    - Git activity tracking
+    - TODO management from files
+    - Memory ingestion with broadcasting
+    
+    ## Authentication
+    All endpoints require API key authentication via Bearer token or query parameter.
+    
+    ## WebSocket
+    Real-time updates available at `ws://localhost:8000/api/v2/ws`
+    
+  version: 2.0.0
+  contact:
+    name: Second Brain API Support
+    email: support@secondbrain.dev
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000/api/v2
+    description: Development server
+  - url: https://api.secondbrain.dev/v2
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+  - ApiKeyQuery: []
+
+paths:
+  /metrics:
+    get:
+      summary: Get simple metrics
+      description: Retrieve simplified metrics optimized for user-facing interfaces
+      operationId: getSimpleMetrics
+      tags:
+        - System Metrics
+      responses:
+        '200':
+          description: Simple metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleMetrics'
+              example:
+                tests: 436
+                patterns: 27
+                version: "3.0.0"
+                agents: 27
+                token_usage: "6x"
+                memories: 150
+                active_users: 3
+                system_health: "healthy"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /metrics/detailed:
+    get:
+      summary: Get detailed metrics
+      description: Retrieve comprehensive metrics for development dashboards and monitoring
+      operationId: getDetailedMetrics
+      tags:
+        - System Metrics
+      responses:
+        '200':
+          description: Detailed metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedMetrics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /git/activity:
+    get:
+      summary: Get git activity
+      description: Retrieve git commit history and repository statistics
+      operationId: getGitActivity
+      tags:
+        - Development
+      responses:
+        '200':
+          description: Git activity retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitActivity'
+              example:
+                commits:
+                  - hash: "10cd929"
+                    message: "feat: Implement Second Brain v2.0 interface"
+                    timestamp: "2025-07-31T15:30:00Z"
+                    author: "Developer"
+                    relative_time: "2 hours ago"
+                timeline:
+                  - label: "2h"
+                    timestamp: "2025-08-01T08:30:00Z"
+                  - label: "1d"
+                    timestamp: "2025-07-31T10:30:00Z"
+                stats:
+                  total_commits: 10
+                  authors: 1
+                  branch: "main"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /todos:
+    get:
+      summary: Get TODO list
+      description: Parse and return TODO items from TODO.md with categorization and statistics
+      operationId: getTodos
+      tags:
+        - Project Management
+      responses:
+        '200':
+          description: TODOs retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodoResponse'
+              example:
+                todos:
+                  - id: "todo-0"
+                    content: "Implement load testing suite"
+                    status: "pending"
+                    priority: "high"
+                    description: "Add performance benchmarks to CI"
+                    category: "testing"
+                stats:
+                  total: 45
+                  completed: 23
+                  in_progress: 3
+                  pending: 19
+                  high_priority: 12
+                  completion_rate: 51
+                last_updated: "2025-08-01T10:30:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /health:
+    get:
+      summary: Get system health
+      description: Comprehensive system health monitoring including all subsystems
+      operationId: getHealthStatus
+      tags:
+        - System Health
+      responses:
+        '200':
+          description: Health status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+              example:
+                status: "healthy"
+                checks:
+                  api: "healthy"
+                  database: "healthy"
+                  redis: "healthy"
+                  disk: "healthy"
+                  memory: "healthy"
+                  cpu: "healthy"
+                metrics:
+                  cpu_percent: 15.2
+                  memory_percent: 42.1
+                  disk_percent: 35.8
+                timestamp: "2025-08-01T10:30:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /memories/ingest:
+    post:
+      summary: Ingest new memory
+      description: Create a new memory and broadcast update to all WebSocket clients
+      operationId: ingestMemory
+      tags:
+        - Memory Operations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemoryIngestRequest'
+            example:
+              content: "Important insights from today's research session on AI embeddings"
+              memory_type: "semantic"
+              tags: ["ai", "research", "embeddings"]
+      responses:
+        '200':
+          description: Memory ingested successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryIngestResponse'
+              example:
+                success: true
+                memory_id: "550e8400-e29b-41d4-a716-446655440000"
+                message: "Memory ingested successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: API key in Authorization header as Bearer token
+    ApiKeyQuery:
+      type: apiKey
+      in: query
+      name: api_key
+      description: API key as query parameter (development only)
+
+  schemas:
+    SimpleMetrics:
+      type: object
+      required:
+        - tests
+        - patterns
+        - version
+        - agents
+        - token_usage
+        - memories
+        - active_users
+        - system_health
+      properties:
+        tests:
+          type: integer
+          description: Number of automated tests
+          example: 436
+        patterns:
+          type: integer
+          description: Number of detected patterns/agents
+          example: 27
+        version:
+          type: string
+          description: Current system version
+          example: "3.0.0"
+        agents:
+          type: integer
+          description: Number of active agents
+          example: 27
+        token_usage:
+          type: string
+          description: Current token usage multiplier
+          example: "6x"
+        memories:
+          type: integer
+          description: Total number of memories stored
+          example: 150
+        active_users:
+          type: integer
+          description: Number of active users in last 24h
+          example: 3
+        system_health:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall system health status
+          example: "healthy"
+
+    DetailedMetrics:
+      type: object
+      required:
+        - memories
+        - performance
+        - timestamp
+        - system
+        - database
+      properties:
+        memories:
+          $ref: '#/components/schemas/MemoryMetrics'
+        performance:
+          $ref: '#/components/schemas/PerformanceMetrics'
+        system:
+          $ref: '#/components/schemas/SystemMetrics'
+        database:
+          $ref: '#/components/schemas/DatabaseMetrics'
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when metrics were generated
+          example: "2025-08-01T10:30:00Z"
+
+    MemoryMetrics:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of memories
+          example: 150
+        unique_users:
+          type: integer
+          description: Number of unique users
+          example: 5
+        avg_importance:
+          type: number
+          format: float
+          description: Average importance score
+          example: 0.65
+        last_created:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of last created memory
+          example: "2025-08-01T10:30:00Z"
+        with_embeddings:
+          type: integer
+          description: Number of memories with embeddings
+          example: 142
+        avg_length:
+          type: integer
+          description: Average content length in characters
+          example: 485
+        last_24h:
+          type: integer
+          description: Memories created in last 24 hours
+          example: 12
+        last_7d:
+          type: integer
+          description: Memories created in last 7 days
+          example: 89
+        last_30d:
+          type: integer
+          description: Memories created in last 30 days
+          example: 150
+        type_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Distribution of memory types
+          example:
+            semantic: 85
+            episodic: 45
+            procedural: 20
+        unique_tags:
+          type: integer
+          description: Number of unique tags
+          example: 47
+        top_tags:
+          type: array
+          items:
+            type: string
+          description: Most frequently used tags
+          example: ["ai", "learning", "productivity", "work", "research"]
+
+    PerformanceMetrics:
+      type: object
+      properties:
+        api_response_time:
+          type: string
+          description: Average API response time
+          example: "45ms"
+        rps_capacity:
+          type: string
+          description: Requests per second capacity
+          example: "1000+"
+        memory_usage:
+          type: string
+          description: System memory usage percentage
+          example: "42%"
+        cpu_usage:
+          type: string
+          description: CPU usage percentage
+          example: "15%"
+        disk_usage:
+          type: string
+          description: Disk usage percentage
+          example: "35%"
+        active_connections:
+          type: integer
+          description: Number of active database connections
+          example: 5
+        cache_hit_rate:
+          type: string
+          description: Cache hit rate percentage
+          example: "87%"
+        system_memory_mb:
+          type: integer
+          description: Used system memory in MB
+          example: 2048
+        system_memory_available_mb:
+          type: integer
+          description: Available system memory in MB
+          example: 6144
+        uptime_seconds:
+          type: integer
+          description: System uptime in seconds
+          example: 86400
+
+    SystemMetrics:
+      type: object
+      properties:
+        platform:
+          type: string
+          description: Operating system platform
+          example: "posix"
+        cpu_count:
+          type: integer
+          description: Number of CPU cores
+          example: 8
+        boot_time:
+          type: string
+          format: date-time
+          description: System boot time
+          example: "2025-07-31T08:00:00Z"
+        python_version:
+          type: string
+          description: Python version
+          example: "3.11.5"
+
+    DatabaseMetrics:
+      type: object
+      properties:
+        size_mb:
+          type: integer
+          description: Database size in MB
+          example: 245
+        active_connections:
+          type: integer
+          description: Active database connections
+          example: 5
+        index_count:
+          type: integer
+          description: Number of database indexes
+          example: 12
+        type:
+          type: string
+          description: Database type
+          example: "PostgreSQL"
+
+    GitActivity:
+      type: object
+      properties:
+        commits:
+          type: array
+          items:
+            $ref: '#/components/schemas/GitCommit'
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelinePoint'
+        stats:
+          $ref: '#/components/schemas/GitStats'
+
+    GitCommit:
+      type: object
+      properties:
+        hash:
+          type: string
+          description: Short commit hash
+          example: "10cd929"
+        message:
+          type: string
+          description: Commit message
+          example: "feat: Implement Second Brain v2.0 interface"
+        timestamp:
+          type: string
+          format: date-time
+          description: Commit timestamp
+          example: "2025-07-31T15:30:00Z"
+        author:
+          type: string
+          description: Commit author
+          example: "Developer"
+        relative_time:
+          type: string
+          description: Human-readable relative time
+          example: "2 hours ago"
+
+    TimelinePoint:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Timeline label
+          example: "2h"
+        timestamp:
+          type: string
+          format: date-time
+          description: Timeline timestamp
+          example: "2025-08-01T08:30:00Z"
+
+    GitStats:
+      type: object
+      properties:
+        total_commits:
+          type: integer
+          description: Total number of commits
+          example: 10
+        authors:
+          type: integer
+          description: Number of unique authors
+          example: 1
+        branch:
+          type: string
+          description: Current branch name
+          example: "main"
+
+    TodoResponse:
+      type: object
+      properties:
+        todos:
+          type: array
+          items:
+            $ref: '#/components/schemas/TodoItem'
+        stats:
+          $ref: '#/components/schemas/TodoStats'
+        last_updated:
+          type: string
+          format: date-time
+          description: When TODO list was last updated
+          example: "2025-08-01T10:30:00Z"
+
+    TodoItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique TODO identifier
+          example: "todo-0"
+        content:
+          type: string
+          description: TODO content/description
+          example: "Implement load testing suite"
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+          description: Current status
+          example: "pending"
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: Priority level
+          example: "high"
+        description:
+          type: string
+          nullable: true
+          description: Additional description
+          example: "Add performance benchmarks to CI"
+        category:
+          type: string
+          description: Auto-detected category
+          example: "testing"
+
+    TodoStats:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of TODOs
+          example: 45
+        completed:
+          type: integer
+          description: Number of completed TODOs
+          example: 23
+        in_progress:
+          type: integer
+          description: Number of in-progress TODOs
+          example: 3
+        pending:
+          type: integer
+          description: Number of pending TODOs
+          example: 19
+        high_priority:
+          type: integer
+          description: Number of high-priority TODOs
+          example: 12
+        completion_rate:
+          type: integer
+          description: Completion rate percentage
+          example: 51
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy, error]
+          description: Overall health status
+          example: "healthy"
+        checks:
+          type: object
+          description: Individual component health checks
+          properties:
+            api:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+            database:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+            redis:
+              type: string
+              enum: [healthy, degraded, unhealthy, unavailable]
+            disk:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+            memory:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+            cpu:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+        metrics:
+          type: object
+          description: Raw health metrics
+          properties:
+            cpu_percent:
+              type: number
+              format: float
+              example: 15.2
+            memory_percent:
+              type: number
+              format: float
+              example: 42.1
+            disk_percent:
+              type: number
+              format: float
+              example: 35.8
+        timestamp:
+          type: string
+          format: date-time
+          description: When health check was performed
+          example: "2025-08-01T10:30:00Z"
+
+    MemoryIngestRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: Memory content
+          example: "Important insights from today's research session on AI embeddings"
+          minLength: 1
+          maxLength: 10000
+        memory_type:
+          type: string
+          description: Type of memory
+          default: "semantic"
+          enum: [semantic, episodic, procedural, general]
+          example: "semantic"
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags to associate with memory
+          example: ["ai", "research", "embeddings"]
+          maxItems: 20
+
+    MemoryIngestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether ingestion was successful
+          example: true
+        memory_id:
+          type: string
+          format: uuid
+          description: ID of created memory
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        message:
+          type: string
+          description: Success message
+          example: "Memory ingested successfully"
+
+    WebSocketMessage:
+      type: object
+      required:
+        - type
+        - timestamp
+      properties:
+        type:
+          type: string
+          enum: [connection, heartbeat, metrics_update, memory_created]
+          description: Message type
+        data:
+          type: object
+          description: Message payload (varies by type)
+        status:
+          type: string
+          description: Status for connection messages
+        timestamp:
+          type: string
+          format: date-time
+          description: Message timestamp
+      example:
+        type: "metrics_update"
+        data:
+          tests: 436
+          patterns: 27
+          memories: 151
+          active_users: 3
+          system_health: "healthy"
+        timestamp: "2025-08-01T10:31:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error description
+          example: "Invalid API key"
+        status_code:
+          type: integer
+          description: HTTP status code
+          example: 401
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2025-08-01T10:30:00Z"
+        path:
+          type: string
+          description: Request path where error occurred
+          example: "/api/v2/metrics"
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "Invalid request parameters"
+            status_code: 400
+            timestamp: "2025-08-01T10:30:00Z"
+            path: "/api/v2/memories/ingest"
+
+    Unauthorized:
+      description: Unauthorized - missing or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "Invalid or missing API key"
+            status_code: 401
+            timestamp: "2025-08-01T10:30:00Z"
+            path: "/api/v2/metrics"
+
+    ValidationError:
+      description: Validation error - request data is invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "Content is required and cannot be empty"
+            status_code: 422
+            timestamp: "2025-08-01T10:30:00Z"
+            path: "/api/v2/memories/ingest"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "An internal error occurred"
+            status_code: 500
+            timestamp: "2025-08-01T10:30:00Z"
+            path: "/api/v2/metrics"
+
+  examples:
+    SimpleMetricsExample:
+      summary: Example simple metrics response
+      value:
+        tests: 436
+        patterns: 27
+        version: "3.0.0"
+        agents: 27
+        token_usage: "6x"
+        memories: 150
+        active_users: 3
+        system_health: "healthy"
+
+    MemoryIngestExample:
+      summary: Example memory ingestion request
+      value:
+        content: "Learned about FastAPI dependency injection system. Very powerful for testing."
+        memory_type: "episodic"
+        tags: ["learning", "fastapi", "python"]
+
+    WebSocketConnectionExample:
+      summary: WebSocket connection message
+      value:
+        type: "connection"
+        status: "connected"
+        timestamp: "2025-08-01T10:30:00Z"
+
+    WebSocketMetricsUpdateExample:
+      summary: WebSocket metrics update message
+      value:
+        type: "metrics_update"
+        data:
+          tests: 436
+          patterns: 27
+          version: "3.0.0"
+          agents: 27
+          token_usage: "6x"
+          memories: 151
+          active_users: 3
+          system_health: "healthy"
+        timestamp: "2025-08-01T10:31:00Z"
+
+    WebSocketMemoryCreatedExample:
+      summary: WebSocket memory created message
+      value:
+        type: "memory_created"
+        data:
+          id: "550e8400-e29b-41d4-a716-446655440000"
+          memory_type: "semantic"
+          tags: ["ai", "research", "embeddings"]
+          created_at: "2025-08-01T10:30:15Z"
+        timestamp: "2025-08-01T10:30:15Z"
+
+tags:
+  - name: System Metrics
+    description: System performance and usage metrics
+  - name: Development
+    description: Development and project management endpoints
+  - name: Project Management
+    description: TODO tracking and project status
+  - name: System Health
+    description: Health monitoring and diagnostics
+  - name: Memory Operations
+    description: Memory ingestion and management
+
+externalDocs:
+  description: Find more info about Second Brain
+  url: https://github.com/your-org/second-brain
