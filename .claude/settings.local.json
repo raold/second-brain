@@ -105,7 +105,10 @@
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python /Users/dro/Documents/second-brain/scripts/fix_module_level_imports.py)",
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python /Users/dro/Documents/second-brain/scripts/fix_redefinitions.py)",
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m ruff check app/ --select=F821,F811,E402 --output-format=concise)",
-      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python /Users/dro/Documents/second-brain/scripts/fix_final_imports.py)"
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python /Users/dro/Documents/second-brain/scripts/fix_final_imports.py)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m ruff check app/ tests/ --statistics)",
+      "Bash(touch:*)",
+      "Bash(pkill:*)"
     ],
     "deny": []
   },

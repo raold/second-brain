@@ -21,9 +21,7 @@ import traceback
 import uuid
 from contextvars import ContextVar
 from app.config import Config
-        import sys
-        import psutil
-        import psutil
+import psutil
 
 # Context variables for request tracing
 request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)

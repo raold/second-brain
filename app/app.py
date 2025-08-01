@@ -8,11 +8,11 @@ No circular imports, no bullshit, just clean code that works.
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
 
 # Version info
 __version__ = "3.2.0"
@@ -74,6 +74,57 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Setup dependency overrides for clean implementations
+def setup_dependencies():
+    """Setup dependency injection overrides."""
+    from app import dependencies as old_deps
+    from app import shared as old_shared
+    from app import dependencies_new, shared_new
+    from app.services import memory_service
+    from app.services import memory_service_new
+    
+    # Override old implementations with new ones
+    old_deps.get_current_user = dependencies_new.get_current_user
+    old_deps.verify_api_key = dependencies_new.verify_api_key
+    old_shared.verify_api_key = shared_new.verify_api_key
+    
+    # Override service factory
+    from app.services import service_factory
+    service_factory.get_memory_service = lambda: memory_service_new.MemoryService()
+    
+    print("✅ Dependencies configured")
+
+
+# Import and include routers
+def include_routers():
+    """Include all API routers."""
+    try:
+        # Setup dependencies first
+        setup_dependencies()
+        
+        # Import routers with error handling
+        from app.routes import health_routes
+        app.include_router(health_routes.router, prefix="/api/v1")
+        
+        # Memory routes - now should work with our implementations
+        try:
+            from app.routes import memory_routes
+            app.include_router(memory_routes.router, prefix="/api/v1")
+            print("✅ Memory routes included")
+        except Exception as e:
+            print(f"⚠️ Memory routes error: {e}")
+        
+        # More routes can be added incrementally
+        print("✅ Routers included successfully")
+    except Exception as e:
+        print(f"⚠️ Error including routers: {e}")
+        # Continue anyway - app will work with basic endpoints
+
+
+# Include routers after app creation
+include_routers()
 
 
 # Basic routes

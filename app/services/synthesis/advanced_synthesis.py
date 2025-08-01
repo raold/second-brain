@@ -4,8 +4,7 @@ from typing import Any
 from uuid import UUID, uuid4
 from app.utils.logging_config import get_logger
 from collections import defaultdict
-from app.models.synthesis.advanced_models import (
-        from collections import OrderedDict
+from collections import OrderedDict
 
 """Advanced Synthesis Engine Service
 
@@ -13,6 +12,7 @@ Real implementation of memory synthesis using hierarchical processing,
 theme extraction, and LLM-powered consolidation.
 """
 
+from app.models.synthesis.advanced_models import (
     SynthesisRequest,
     SynthesisResult,
     SynthesisStrategy,

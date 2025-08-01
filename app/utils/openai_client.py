@@ -4,8 +4,7 @@ from typing import Optional
 from app.utils.logging_config import get_logger
 from openai import AsyncOpenAI
 from app.config import Config
-            import json
-            import json
+import json
 
 """
 OpenAI client utility for embeddings.
