@@ -6,9 +6,12 @@ Enables complex queries that traverse multiple memories to find connections and 
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from app.utils.logging_config import get_logger
+
+if TYPE_CHECKING:
+    from app.database import Database
 
 logger = get_logger(__name__)
 
@@ -61,7 +64,7 @@ class ReasoningEngine:
     to answer complex questions and discover insights
     """
 
-    def __init__(self, database: Database):
+    def __init__(self, database: "Database"):
         self.db = database
         self.max_paths = 10  # Maximum reasoning paths to explore
         self.beam_width = 5  # Beam search width for path exploration

@@ -627,7 +627,7 @@ class TestWebSocketSecurity:
         mock_websocket = AsyncMock()
         
         # Mock potentially malicious message
-        malicious_message = '{"type": "<script>alert(\\'xss\\')</script>"}'
+        malicious_message = '{"type": "<script>alert(\'xss\')</script>"}'
         mock_websocket.receive_text.side_effect = [
             malicious_message,
             WebSocketDisconnect()

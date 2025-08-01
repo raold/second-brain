@@ -4,13 +4,19 @@ Constructs and manages entity-relationship graphs from memories
 """
 
 import json
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from app.utils.logging_config import get_logger
+
+if TYPE_CHECKING:
+    from app.database import Database
 
 logger = get_logger(__name__)
 
@@ -106,7 +112,7 @@ class KnowledgeGraphBuilder:
     Builds and manages knowledge graphs from memory content
     """
 
-    def __init__(self, database: Database):
+    def __init__(self, database: "Database"):
         self.db = database
         self.entity_patterns = self._compile_entity_patterns()
         self.relationship_patterns = self._compile_relationship_patterns()
