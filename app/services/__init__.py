@@ -1,10 +1,9 @@
 """
-Service layer for business logic separation.
-This layer handles all business logic, keeping routes thin and focused on HTTP concerns.
+Service layer for V2 API only.
+Clean, minimal services that work with the excellent V2 API.
 """
 
-from .health_service import HealthService
-from .memory_service import MemoryService
-from .session_service import SessionService
+# Only include services we actually use in V2 API
+from .memory_service_new import MemoryService
 
-__all__ = ["MemoryService", "SessionService", "HealthService"]
+__all__ = ["MemoryService"]
