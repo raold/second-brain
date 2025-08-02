@@ -12,7 +12,8 @@ def main():
     # Set Python path
     project_root = Path(__file__).parent.parent
     os.environ['PYTHONPATH'] = str(project_root)
-    os.environ['
+    os.environ['ENVIRONMENT'] = 'test'
+    
     print("="*60)
     print("CI Test Runner - Enterprise Second Brain v3.0.0")
     print("="*60)
