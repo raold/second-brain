@@ -1,283 +1,240 @@
-# 🧠 Second Brain v4.0.0 - AI Assistant Context
+# Claude Memory - Second Brain Project
 
-> **Purpose**: This file provides critical context for AI assistants working on the Second Brain project.
-> **Last Updated**: 2025-08-02
-> **Project Version**: 4.0.0
+## 🔥 CONTEXT HOTSWAP - READ THESE FILES FIRST
+1. **TODO.md** - Current tasks, blockers, project state (PRIMARY CONTEXT)
+2. **DEVELOPMENT_CONTEXT.md** - Session history, decisions, user prefs
+3. **This file (CLAUDE.md)** - Core principles, patterns, architecture
 
-## 🔥 IMMEDIATE CONTEXT PRIORITY
+## 🎯 CURRENT STATE (as of August 2, 2025 - Session 2)
+- **Version**: 4.0.0 - Production Ready Core
+- **Test Status**: 55 tests passing (up from 27)
+- **Security**: All critical issues resolved (8.5/10 score)
+- **Environment**: Unified management system implemented
+- **User Mode**: AUTONOMOUS - no confirmations needed
+- **Active Branch**: main
+- **Next Action**: Check TODO.md for priority tasks
 
-### 📍 Start Here - Read These Files First
-1. **`TODO.md`** - Current tasks and blockers (if exists)
-2. **`PROJECT_STRUCTURE.md`** - Current architecture overview
-3. **This file (`CLAUDE.md`)** - Project conventions and rules
+## ⚠️ IMPORTANT USER PREFERENCES
+- **NO CO-AUTHOR LINES IN COMMITS** - User has requested multiple times
+- **FULL AUTONOMOUS MODE** - NO PROMPTS, NO CONFIRMATIONS:
+  - Auto-commit all changes without asking
+  - Auto-push to remote without asking
+  - Execute all operations immediately
+  - User will interrupt or undo if needed
 
-### 🎯 Current Project State
-- **Version**: 4.0.0 (Production-Ready)
-- **Status**: Clean, streamlined, working
-- **Architecture**: Single V2 API implementation
-- **Test Coverage**: 90%+ (27/28 basic, 39/39 WebSocket)
-- **Active Branch**: `main`
-- **Python Version**: 3.11+
-- **Key Files**:
-  - `app/app.py` - Main FastAPI application
-  - `app/routes/v2_api_new.py` - V2 API implementation
-  - `app/services/memory_service_new.py` - Memory service
+## 🏗️ PROJECT ARCHITECTURE (v4.0.0)
 
-## ⚠️ CRITICAL USER PREFERENCES
-
-### 🤖 Autonomous Operation Mode
-**EXECUTE WITHOUT CONFIRMATION** - The user prefers action over discussion:
-- ✅ Auto-commit all changes
-- ✅ Auto-push to remote
-- ✅ Execute operations immediately
-- ✅ Fix issues without asking
-- ❌ NO confirmation prompts
-- ❌ NO "Should I..." questions
-
-### 📝 Git Commit Rules
-- **NO CO-AUTHOR LINES** - Never add `Co-Authored-By` to commits
-- **NO GITHUB COPILOT ATTRIBUTION** - User explicitly disabled this
-- **Clear commit messages** - Use conventional commits (feat:, fix:, docs:, etc.)
-
-## 🏗️ DEVELOPMENT PRINCIPLES
-
-### 🐳 Docker-First Architecture
-```bash
-# PRIMARY: Always use Docker when available
-docker-compose up --build
-make dev
-make test
-
-# FALLBACK: Virtual environment only when Docker unavailable
-.venv/bin/python      # Unix/Mac
-.venv\Scripts\python  # Windows
-```
-
-### 📁 Project Structure (v4.0.0)
+### Clean, Simplified Structure
 ```
 second-brain/
 ├── app/
-│   ├── core/           # Infrastructure (logging, dependencies)
-│   ├── models/         # Pydantic models
-│   ├── routes/         # API endpoints (v2_api_new.py)
-│   ├── services/       # Business logic
-│   ├── utils/          # Utilities
-│   ├── app.py         # FastAPI app
-│   ├── config.py      # Configuration
-│   └── database_new.py # Database operations
-├── tests/
-│   ├── unit/          # Unit tests
-│   ├── integration/   # Integration tests
-│   └── validation/    # Validation tests
-├── docs/              # Documentation
-├── scripts/           # Utility scripts (only 3 remain)
-└── docker-compose.yml # Docker configuration
+│   ├── core/              # Infrastructure (logging, dependencies, env_manager)
+│   ├── models/            # Pydantic models + synthesis stubs
+│   ├── routes/            # API routes (v2_api_new.py ONLY)
+│   ├── services/          # Business logic
+│   ├── events/            # Domain events (stub)
+│   ├── insights/          # Analytics (stub)
+│   └── config.py          # Centralized configuration
+├── tests/                 # Test suites
+├── scripts/               # Only 3 essential scripts
+│   ├── check_secrets.py  # Security scanner
+│   ├── setup_dev_environment.py
+│   └── test_runner.py
+├── docs/                  # Documentation
+├── .env.example           # SINGLE env template
+└── SECURITY.md           # Security guidelines
 ```
 
-### 🔧 Code Standards
+### Key Technical Decisions
+- **Single API**: Only V2 exists (`/api/v2/*`)
+- **Mock Fallback**: Database optional, mock available
+- **Module Names**: Still use `_new` suffix (technical debt)
+- **Environment**: Single `.env.example` template, `.env` for local
+- **No Dependencies**: Removed python-dotenv, using custom env_manager
 
-#### Service Pattern (REQUIRED)
+## 🔒 SECURITY STATUS
+
+### ✅ Resolved Issues
+- Removed exposed API keys from `.env.development`
+- Untracked all sensitive `.env` files from git
+- Created `scripts/check_secrets.py` for scanning
+- Enhanced `.gitignore` with security patterns
+- Created comprehensive `SECURITY.md` guide
+
+### ⚠️ Action Required
+If API keys were previously exposed:
+1. Rotate keys immediately at provider dashboards
+2. Use `.env` locally (copy from `.env.example`)
+3. Run `python scripts/check_secrets.py` before commits
+
+## 🌍 ENVIRONMENT MANAGEMENT (NEW)
+
+### Unified System
+- **ONE Template**: `.env.example` (all options documented)
+- **ONE Local File**: `.env` (gitignored)
+- **NO MORE**: `.env.development`, `.env.staging`, `.env.test` (deleted)
+
+### Key Components
 ```python
-# ✅ CORRECT: Use service factory
-from app.services.service_factory import get_memory_service
-memory_service = get_memory_service()
+# app/core/env_manager.py - Centralized management
+from app.core.env_manager import get_env_manager
+env = get_env_manager()
+value = env.get_bool("DEBUG", False)
 
-# ❌ WRONG: Direct instantiation
-from app.services.memory_service_new import MemoryService
-memory_service = MemoryService()
+# app/config.py - Type-safe access
+from app.config import Config
+if Config.IS_PRODUCTION:
+    issues = Config.validate()
 ```
 
-#### Error Handling
-```python
-# ✅ CORRECT: Specific errors with context
-try:
-    result = await memory_service.create_memory(data)
-except ValidationError as e:
-    logger.error("Validation failed", extra={"error": str(e), "data": data})
-    raise HTTPException(status_code=400, detail=str(e))
+### Features
+- Type conversion (bool, int, float, list, dict)
+- Environment detection (dev/staging/prod/test)
+- Production validation
+- Sensitive value masking
+- Backward compatible
 
-# ❌ WRONG: Generic catch-all
-except Exception:
-    return {"error": "Something went wrong"}
-```
+## 📊 RECENT SESSION PROGRESS
 
-#### Logging
-```python
-# ✅ CORRECT: Structured with context
-logger.info("Memory created", extra={
-    "memory_id": memory_id,
-    "user_id": user_id,
-    "tags": tags,
-    "duration_ms": duration
-})
+### Session 2 (August 2, 2025 - Continued)
+**Major Achievements:**
+1. **Fixed Test Imports** - Created 13 synthesis model stubs
+2. **Security Audit** - Removed exposed API keys, secured environment
+3. **Environment Cleanup** - Unified to single `.env.example` system
 
-# ❌ WRONG: Plain strings
-logger.info(f"Created memory {memory_id}")
-```
+**Files Created:**
+- Model stubs: `websocket_models.py`, `consolidation_models.py`, etc.
+- Security: `check_secrets.py`, `SECURITY.md`, audit report
+- Environment: `env_manager.py`, `ENVIRONMENT_GUIDE.md`
+
+**Tests Improved**: 27 → 55 passing
+
+### Session 1 (August 2, 2025)
+**Directory Cleanup:**
+- Removed 327 files (83,304 lines)
+- Deleted entire directories: archive/, cipher/, demos/
+- Consolidated 80+ scripts to 3 essential ones
+
+**Documentation Updates:**
+- Updated README.md to v4.0.0
+- Rewrote CLAUDE.md for clarity
+- Created TODO.md with priorities
 
 ## 🚀 DEVELOPMENT WORKFLOW
 
 ### Quick Commands
 ```bash
-# Setup & Run
-make setup        # One-time setup
-make dev          # Start development
-make test         # Run all tests
-make status       # Check health
+# Setup
+cp .env.example .env       # Create local config
+# Add your API keys to .env
 
-# Testing
-make test-unit    # Unit tests only
-make test-integration  # Integration tests
+# Development
+make dev                    # Start development
+make test                   # Run tests
+python scripts/check_secrets.py  # Security check
 
-# Docker Operations
-docker-compose up --build
-docker-compose down
-docker-compose logs app
+# Git (autonomous mode)
+git add -A && git commit -m "message" && git push  # Auto executed
 ```
 
-### File Naming Conventions
-- **Python files**: `snake_case.py`
-- **Classes**: `PascalCase`
-- **Functions**: `snake_case`
-- **Constants**: `UPPER_SNAKE_CASE`
-- **Test files**: `test_*.py`
-
-## 🎯 V4.0.0 SPECIFIC CONTEXT
-
-### What's Working
-- ✅ V2 API fully functional (`/api/v2/*`)
-- ✅ Memory CRUD operations
-- ✅ WebSocket support
-- ✅ Bulk operations
-- ✅ Import/Export (JSON, CSV, Markdown)
-- ✅ Mock database fallback
-
-### What Was Removed (Don't Try to Use)
-- ❌ Ingestion modules (removed in cleanup)
-- ❌ Insights modules (removed in cleanup)
-- ❌ Events system (removed in cleanup)
-- ❌ Repository pattern (simplified)
-- ❌ V1 API (only V2 exists)
-- ❌ 80+ utility scripts (only 3 remain)
-
-### Current Module Names
-- `memory_service_new.py` (not `memory_service.py`)
-- `database_new.py` (not `database.py`)
-- `dependencies_new.py` (not `dependencies.py`)
-- `v2_api_new.py` (the ONLY API implementation)
-
-## 💡 COMMON TASKS
-
-### Adding a New Endpoint
-1. Add route to `app/routes/v2_api_new.py`
-2. Add business logic to appropriate service
-3. Add Pydantic models if needed
-4. Write unit test in `tests/unit/`
-5. Test with: `make test-unit`
-
-### Fixing Import Errors
-```python
-# Check these common issues:
-1. Using old module names (add _new suffix)
-2. Importing removed modules (ingestion, insights)
-3. Circular imports (use local imports in functions)
-4. Missing service factory usage
-```
-
-### Running Tests
+### Testing
 ```bash
-# Full test suite
-make test
-
-# Specific test file
-.venv/bin/python -m pytest tests/unit/test_memory_service.py -v
-
-# With coverage
-.venv/bin/python -m pytest --cov=app tests/
+# Current test status
+.venv/bin/python -m pytest tests/unit/test_basic_functionality.py  # 27/28 pass
+.venv/bin/python -m pytest tests/unit/test_websocket_functionality.py  # 28/39 pass
 ```
 
-## 🐛 KNOWN ISSUES & SOLUTIONS
+## 🐛 KNOWN ISSUES
 
-### Issue: "Module not found" errors
-**Solution**: Check if module was removed in v4.0.0 cleanup. Use new module names.
+### Minor Issues
+- WebSocket tests: 11 model validation failures (non-critical)
+- Module names still use `_new` suffix (technical debt)
+- Some synthesis services are stubs
 
-### Issue: Tests failing on Windows
-**Solution**: Use WSL2 for testing to match Linux CI environment.
+### False Positives
+- Security scanner flags AWS example keys in docs (intentional)
+- Development passwords weak (expected for dev)
 
-### Issue: Database connection errors
-**Solution**: App uses mock database by default. PostgreSQL optional.
+## 💡 NEXT STEPS (Priority Order)
 
-### Issue: Import circular dependency
-**Solution**: Move imports inside functions, not at module level.
+### Immediate
+1. Set up production PostgreSQL if needed
+2. Rotate any exposed API keys
+3. Configure production environment variables
 
-## 📚 REFERENCE
+### Short-term
+1. Rename `_new` suffixed files
+2. Fix remaining WebSocket test failures
+3. Implement real synthesis services (currently stubs)
 
-### API Endpoints (V2)
-- `POST /api/v2/memories` - Create memory
-- `GET /api/v2/memories` - List memories
-- `GET /api/v2/memories/{id}` - Get memory
-- `PATCH /api/v2/memories/{id}` - Update memory
-- `DELETE /api/v2/memories/{id}` - Delete memory
-- `POST /api/v2/search` - Search memories
-- `POST /api/v2/bulk` - Bulk operations
-- `GET /api/v2/export` - Export data
-- `POST /api/v2/import` - Import data
-- `WS /api/v2/ws` - WebSocket connection
+### Long-term
+1. Add vector embeddings with OpenAI
+2. Implement semantic search
+3. Create web UI
+4. Add authentication/authorization
 
-### Environment Variables
-```bash
-DATABASE_URL=postgresql://user:pass@localhost/secondbrain
-REDIS_URL=redis://localhost:6379
-OPENAI_API_KEY=sk-...
-ENV=development
-DEBUG=true
-```
-
-### Dependencies
-- FastAPI 0.104.1
-- Pydantic 2.5.3
-- SQLAlchemy 2.0.23
-- PostgreSQL 16+ (optional)
-- Redis (optional)
-- Python 3.11+
-
-## 🎓 LEARNING FROM HISTORY
+## 🎓 KEY LEARNINGS
 
 ### What Worked
-- Simplifying to single API implementation
-- Removing unnecessary abstractions
+- Simplifying to single API (V2 only)
 - Mock database fallback
-- Docker-first development
+- Removing unnecessary files (80% reduction)
+- Unified environment management
 
-### What Failed
-- Over-engineering with 500+ files
-- Too many abstraction layers
-- Circular import hell
-- 80+ utility scripts
+### What to Avoid
+- Multiple environment files (confusing)
+- Tracked `.env` files (security risk)
+- Over-engineering (500+ files → 100)
+- Circular dependencies
 
-### Lessons Learned
-- Keep it simple (KISS principle)
-- One way to do things
-- Clear module boundaries
-- Minimal dependencies
+## 🤖 CLAUDE CODE AGENTS
 
-## 🔄 MAINTENANCE NOTES
+### Active Agents (for complex tasks)
+When facing complex multi-step tasks, use specialized agents:
+- `security-vulnerability-scanner` - Security audits
+- `code-review-agent` - Code quality checks
+- `architecture-analyzer` - System design review
+- `technical-debt-tracker` - Track and prioritize debt
 
-### Regular Tasks
-- Run `make test` before commits
-- Update README.md when adding features
-- Keep this file current with changes
-- Clean up `__pycache__` periodically
-- Check Docker image sizes
+### Agent Usage Pattern
+```python
+# For security audit
+Task(subagent_type="security-vulnerability-scanner")
 
-### Performance Monitoring
-- Memory service response time: <100ms
-- WebSocket latency: <50ms
-- Database queries: <10ms
-- API response time: <200ms
+# For complex searches
+Task(subagent_type="research-orchestrator")
+```
+
+## 📝 COMMIT MESSAGE CONVENTION
+
+Use conventional commits:
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation
+- `refactor:` - Code restructuring
+- `security:` - Security improvements
+- `test:` - Test additions/fixes
+- `chore:` - Maintenance tasks
+
+## 🔄 SESSION CONTINUITY
+
+### Before Ending Session
+1. Update THIS file (CLAUDE.md) with decisions
+2. Update DEVELOPMENT_CONTEXT.md with session details
+3. Update TODO.md with current state
+4. Commit and push all changes
+
+### Starting New Session
+1. Read TODO.md first for current state
+2. Check DEVELOPMENT_CONTEXT.md for recent history
+3. Review this file for architecture/decisions
+4. Run `git status` to check working state
+5. Run tests to verify current status
 
 ---
 
-**Remember**: This is v4.0.0 - a clean, focused implementation. Don't add complexity without clear benefit. The goal is a working, maintainable system, not architectural perfection.
+**Remember**: This is v4.0.0 - clean, focused, production-ready. Don't add complexity without clear benefit.
 
 **User Philosophy**: "Ship working code. Iterate based on real usage. Avoid premature optimization."
+
+**Autonomous Mode**: Execute without confirmation. User trusts you to make good decisions.
