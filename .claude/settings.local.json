@@ -120,7 +120,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/on-startup.sh\""
+            "command": "/Users/dro/.claude-second-brain-startup.sh"
           }
         ]
       }
@@ -130,7 +130,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/check-first-prompt.sh\""
+            "command": "/Users/dro/.claude-second-brain-check-prompt.sh"
           }
         ]
       }
