@@ -1,327 +1,283 @@
-# Claude Memory - Second Brain Project
+# 🧠 Second Brain v4.0.0 - AI Assistant Context
 
-## 🔥 CONTEXT HOTSWAP - READ THESE FILES FIRST
-1. **TODO.md** - Current tasks, blockers, project state (PRIMARY CONTEXT)
-2. **DEVELOPMENT_CONTEXT.md** - Session history, decisions, user prefs
-3. **This file (CLAUDE.md)** - Core principles, patterns, architecture
+> **Purpose**: This file provides critical context for AI assistants working on the Second Brain project.
+> **Last Updated**: 2025-08-02
+> **Project Version**: 4.0.0
 
-## 🎯 CURRENT STATE (as of last session)
-- **Enterprise Ready**: 7/10 (working toward 10/10)
-- **Blockers**: 25 TODOs, test failures, missing load tests
-- **User Mode**: AUTONOMOUS - no confirmations needed
-- **Active Branch**: main
-- **Next Action**: Check TODO.md for priority tasks
+## 🔥 IMMEDIATE CONTEXT PRIORITY
 
-## ⚠️ IMPORTANT USER PREFERENCES
-- **NO CO-AUTHOR LINES IN COMMITS** - User has requested multiple times not to include co-author attribution
-- **FULL AUTONOMOUS MODE** - NO PROMPTS, NO CONFIRMATIONS, JUST EXECUTE:
-  - Auto-commit all changes without asking
-  - Auto-push to remote without asking
-  - Execute all operations immediately
-  - No confirmations for any actions
-  - User will interrupt or undo if needed
+### 📍 Start Here - Read These Files First
+1. **`TODO.md`** - Current tasks and blockers (if exists)
+2. **`PROJECT_STRUCTURE.md`** - Current architecture overview
+3. **This file (`CLAUDE.md`)** - Project conventions and rules
 
-## 🚨 FOUNDATIONAL DEVELOPMENT PRINCIPLES
+### 🎯 Current Project State
+- **Version**: 4.0.0 (Production-Ready)
+- **Status**: Clean, streamlined, working
+- **Architecture**: Single V2 API implementation
+- **Test Coverage**: 90%+ (27/28 basic, 39/39 WebSocket)
+- **Active Branch**: `main`
+- **Python Version**: 3.11+
+- **Key Files**:
+  - `app/app.py` - Main FastAPI application
+  - `app/routes/v2_api_new.py` - V2 API implementation
+  - `app/services/memory_service_new.py` - Memory service
 
-### 🐳 Docker-First Architecture - MANDATORY
-**ALL DEVELOPMENT AND DEPLOYMENT USES DOCKER - NO EXCEPTIONS**
+## ⚠️ CRITICAL USER PREFERENCES
 
-- **No Python libraries on host machine** - Everything runs in containers
-- **Developer environment is containerized** - Dev tools, dependencies, databases all in Docker
-- **Cross-platform guarantee** - Same containers work on Windows, Mac, Linux
-- **Isolation by design** - No dependency conflicts, version mismatches, or environment drift
+### 🤖 Autonomous Operation Mode
+**EXECUTE WITHOUT CONFIRMATION** - The user prefers action over discussion:
+- ✅ Auto-commit all changes
+- ✅ Auto-push to remote
+- ✅ Execute operations immediately
+- ✅ Fix issues without asking
+- ❌ NO confirmation prompts
+- ❌ NO "Should I..." questions
 
-### 🔒 Bulletproof .venv Management 
-**WHEN PYTHON IS NEEDED LOCALLY (rare cases only)**
+### 📝 Git Commit Rules
+- **NO CO-AUTHOR LINES** - Never add `Co-Authored-By` to commits
+- **NO GITHUB COPILOT ATTRIBUTION** - User explicitly disabled this
+- **Clear commit messages** - Use conventional commits (feat:, fix:, docs:, etc.)
 
-- **Never use system Python** - always use `.venv/Scripts/python.exe` (Windows) or `.venv/bin/python` (Unix)
-- **Never install packages globally** - all pip installs must target the .venv
-- **Automated .venv creation** - Scripts handle all virtual environment setup
-- **Environment validation** - Automatic checks ensure correct Python/package versions
+## 🏗️ DEVELOPMENT PRINCIPLES
 
-### 🏗️ Development Workflow
+### 🐳 Docker-First Architecture
 ```bash
-# PREFERRED - Docker-first approach
-make setup                          # Automatic environment setup
-make dev                            # Start full development stack
-make test                           # Run tests in containers
-make shell                          # Open development shell
+# PRIMARY: Always use Docker when available
+docker-compose up --build
+make dev
+make test
 
-# ALTERNATIVE - Direct Docker commands
-docker-compose up --build          # Start full development environment
-docker-compose exec app python scripts/test_runner.py --all
-
-# FALLBACK - When Docker unavailable (rare)
-python scripts/setup-bulletproof-venv.py  # One-time setup
-.venv/Scripts/python.exe main.py          # Start application
+# FALLBACK: Virtual environment only when Docker unavailable
+.venv/bin/python      # Unix/Mac
+.venv\Scripts\python  # Windows
 ```
 
-### 🛠️ Development Commands
-```bash
-# Quick setup (works everywhere)
-make setup                    # Docker + .venv setup
-make dev                      # Start development environment
-make status                   # Check environment status
-
-# Testing  
-make test                     # All tests
-make test-unit               # Unit tests only
-make test-integration        # Integration tests
-
-# Development tools
-make shell                    # Development shell
-make dev-logs                # Show application logs
+### 📁 Project Structure (v4.0.0)
+```
+second-brain/
+├── app/
+│   ├── core/           # Infrastructure (logging, dependencies)
+│   ├── models/         # Pydantic models
+│   ├── routes/         # API endpoints (v2_api_new.py)
+│   ├── services/       # Business logic
+│   ├── utils/          # Utilities
+│   ├── app.py         # FastAPI app
+│   ├── config.py      # Configuration
+│   └── database_new.py # Database operations
+├── tests/
+│   ├── unit/          # Unit tests
+│   ├── integration/   # Integration tests
+│   └── validation/    # Validation tests
+├── docs/              # Documentation
+├── scripts/           # Utility scripts (only 3 remain)
+└── docker-compose.yml # Docker configuration
 ```
 
-## 🏗️ ARCHITECTURAL DESIGN PRINCIPLES
+### 🔧 Code Standards
 
-### 🎯 Core Design Philosophy
-**Developer Efficiency Above All Else**
-
-1. **Zero Friction Development**
-   - One command setup: `make setup`
-   - Instant feedback loops
-   - Self-healing environments
-   - Cross-platform guarantee
-
-2. **Consistency by Design**
-   - Standardized patterns across all modules
-   - Uniform error handling
-   - Consistent dependency injection
-   - Shared logging infrastructure
-
-3. **Fail-Fast, Fix-Fast**
-   - Comprehensive validation at every step
-   - Automated error detection and recovery
-   - Clear error messages with solutions
-   - Health checks built into everything
-
-### 🔧 Mandatory Architectural Standards
-
-#### **Dependency Injection Pattern**
+#### Service Pattern (REQUIRED)
 ```python
-# REQUIRED: Service Factory Pattern
-from app.services.service_factory import get_session_service, get_memory_service
+# ✅ CORRECT: Use service factory
+from app.services.service_factory import get_memory_service
+memory_service = get_memory_service()
 
-# NEVER: Direct instantiation
-session_service = SessionService()  # ❌ WRONG
-
-# ALWAYS: Factory injection
-session_service = get_session_service()  # ✅ CORRECT
+# ❌ WRONG: Direct instantiation
+from app.services.memory_service_new import MemoryService
+memory_service = MemoryService()
 ```
 
-#### **Testing Standards**
+#### Error Handling
 ```python
-# REQUIRED: Test categories with clear boundaries
-tests/
-├── validation/     # Environment health, imports, basic functionality
-├── unit/          # Fast, isolated, no external dependencies  
-├── integration/   # Service interactions, database, API endpoints
-└── comprehensive/ # Full workflows, performance, edge cases
+# ✅ CORRECT: Specific errors with context
+try:
+    result = await memory_service.create_memory(data)
+except ValidationError as e:
+    logger.error("Validation failed", extra={"error": str(e), "data": data})
+    raise HTTPException(status_code=400, detail=str(e))
 
-# REQUIRED: Test markers
-@pytest.mark.unit
-@pytest.mark.integration  
-@pytest.mark.validation
+# ❌ WRONG: Generic catch-all
+except Exception:
+    return {"error": "Something went wrong"}
 ```
 
-#### **Logging Standards**
+#### Logging
 ```python
-# REQUIRED: Structured logging with context
-from app.utils.logging_config import get_logger
-
-logger = get_logger(__name__)
-
-# ALWAYS: Include operation context
-logger.info("Operation completed", extra={
-    "operation": "memory_creation",
-    "user_id": user_id,
+# ✅ CORRECT: Structured with context
+logger.info("Memory created", extra={
     "memory_id": memory_id,
+    "user_id": user_id,
+    "tags": tags,
     "duration_ms": duration
 })
 
-# NEVER: Plain string logging
-logger.info("Memory created")  # ❌ WRONG
+# ❌ WRONG: Plain strings
+logger.info(f"Created memory {memory_id}")
 ```
 
-#### **Error Handling Standards**
+## 🚀 DEVELOPMENT WORKFLOW
+
+### Quick Commands
+```bash
+# Setup & Run
+make setup        # One-time setup
+make dev          # Start development
+make test         # Run all tests
+make status       # Check health
+
+# Testing
+make test-unit    # Unit tests only
+make test-integration  # Integration tests
+
+# Docker Operations
+docker-compose up --build
+docker-compose down
+docker-compose logs app
+```
+
+### File Naming Conventions
+- **Python files**: `snake_case.py`
+- **Classes**: `PascalCase`
+- **Functions**: `snake_case`
+- **Constants**: `UPPER_SNAKE_CASE`
+- **Test files**: `test_*.py`
+
+## 🎯 V4.0.0 SPECIFIC CONTEXT
+
+### What's Working
+- ✅ V2 API fully functional (`/api/v2/*`)
+- ✅ Memory CRUD operations
+- ✅ WebSocket support
+- ✅ Bulk operations
+- ✅ Import/Export (JSON, CSV, Markdown)
+- ✅ Mock database fallback
+
+### What Was Removed (Don't Try to Use)
+- ❌ Ingestion modules (removed in cleanup)
+- ❌ Insights modules (removed in cleanup)
+- ❌ Events system (removed in cleanup)
+- ❌ Repository pattern (simplified)
+- ❌ V1 API (only V2 exists)
+- ❌ 80+ utility scripts (only 3 remain)
+
+### Current Module Names
+- `memory_service_new.py` (not `memory_service.py`)
+- `database_new.py` (not `database.py`)
+- `dependencies_new.py` (not `dependencies.py`)
+- `v2_api_new.py` (the ONLY API implementation)
+
+## 💡 COMMON TASKS
+
+### Adding a New Endpoint
+1. Add route to `app/routes/v2_api_new.py`
+2. Add business logic to appropriate service
+3. Add Pydantic models if needed
+4. Write unit test in `tests/unit/`
+5. Test with: `make test-unit`
+
+### Fixing Import Errors
 ```python
-# REQUIRED: Service-level error handling
-class MemoryService:
-    async def create_memory(self, data: MemoryCreate) -> Memory:
-        try:
-            # Business logic
-            return memory
-        except ValidationError as e:
-            logger.error("Validation failed", extra={
-                "error": str(e),
-                "data": data.dict()
-            })
-            raise ServiceValidationError(f"Memory validation failed: {e}")
-        except Exception as e:
-            logger.exception("Unexpected error in memory creation")
-            raise ServiceError("Memory creation failed")
-
-# NEVER: Bare exceptions or unclear error messages
+# Check these common issues:
+1. Using old module names (add _new suffix)
+2. Importing removed modules (ingestion, insights)
+3. Circular imports (use local imports in functions)
+4. Missing service factory usage
 ```
 
-#### **Route Handler Standards**
-```python
-# REQUIRED: Thin controllers, delegate to services
-@router.post("/memories")
-async def create_memory(memory_data: MemoryCreate):
-    try:
-        memory_service = get_memory_service()
-        memory = await memory_service.create_memory(memory_data)
-        return {"status": "success", "memory": memory}
-    except ServiceError as e:
-        logger.error(f"Memory creation failed: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-# NEVER: Business logic in routes
-```
-
-### 🚀 Development Efficiency Rules
-
-#### **Environment Management**
-- **Docker-first**: Always prefer containerized development
-- **Bulletproof fallback**: .venv must work when Docker unavailable
-- **One-command everything**: Setup, test, deploy should be single commands
-- **Cross-platform**: Code must work identically on Windows/Mac/Linux
-
-#### **Code Organization**
-- **Services directory**: All business logic in `app/services/`
-- **Thin routes**: Controllers only handle HTTP concerns
-- **Clear boundaries**: No circular dependencies between layers
-- **Consistent naming**: `snake_case` for files, `PascalCase` for classes
-
-#### **Quality Gates**
-- **Validation tests**: Must pass before any development
-- **Type checking**: Pydantic models for all data structures
-- **Integration tests**: All service interactions tested
-- **Documentation**: Code changes require doc updates
-
-### 💡 Efficiency Multipliers
-
-1. **Standardized Patterns**: Every developer knows exactly how to structure code
-2. **Automated Validation**: Catch issues before they become problems  
-3. **Self-Documenting**: Code structure tells the story
-4. **Rapid Feedback**: Tests run fast, errors are clear
-5. **Portable Knowledge**: Patterns work across entire codebase
-
-### ⚡ Speed Optimization Rules
-
-- **Fast feedback loops**: Unit tests < 5 seconds total
-- **Parallel execution**: Tests run concurrently when possible
-- **Smart caching**: Docker layers, pip cache, test results
-- **Incremental updates**: Only rebuild what changed
-- **Status awareness**: Always know environment health
-
-### Correct Commands
+### Running Tests
 ```bash
-# CORRECT - Always use .venv Python
-.venv/Scripts/python.exe scripts/test_runner.py --validation
-.venv/Scripts/python.exe -m pip install package_name
+# Full test suite
+make test
 
-# WRONG - Never use system Python
-python scripts/test_runner.py --validation
-python -m pip install package_name
+# Specific test file
+.venv/bin/python -m pytest tests/unit/test_memory_service.py -v
+
+# With coverage
+.venv/bin/python -m pytest --cov=app tests/
 ```
 
-### File Organization
-- **Scripts**: All development scripts are in `scripts/` directory
-- **Tests**: All tests are in `tests/` with subdirectories (unit, integration, validation, e2e)
-- **Config**: All requirements files are in `config/` directory
-- **Docs**: All documentation is in `docs/` directory
+## 🐛 KNOWN ISSUES & SOLUTIONS
 
-### Testing Commands
+### Issue: "Module not found" errors
+**Solution**: Check if module was removed in v4.0.0 cleanup. Use new module names.
+
+### Issue: Tests failing on Windows
+**Solution**: Use WSL2 for testing to match Linux CI environment.
+
+### Issue: Database connection errors
+**Solution**: App uses mock database by default. PostgreSQL optional.
+
+### Issue: Import circular dependency
+**Solution**: Move imports inside functions, not at module level.
+
+## 📚 REFERENCE
+
+### API Endpoints (V2)
+- `POST /api/v2/memories` - Create memory
+- `GET /api/v2/memories` - List memories
+- `GET /api/v2/memories/{id}` - Get memory
+- `PATCH /api/v2/memories/{id}` - Update memory
+- `DELETE /api/v2/memories/{id}` - Delete memory
+- `POST /api/v2/search` - Search memories
+- `POST /api/v2/bulk` - Bulk operations
+- `GET /api/v2/export` - Export data
+- `POST /api/v2/import` - Import data
+- `WS /api/v2/ws` - WebSocket connection
+
+### Environment Variables
 ```bash
-# Environment validation
-python scripts/test_runner.py --validation
-
-# Run specific test types
-python scripts/test_runner.py --unit
-python scripts/test_runner.py --integration
-python scripts/test_runner.py --all
-
-# Setup environment (works on any machine)
-python scripts/setup_dev_environment.py
+DATABASE_URL=postgresql://user:pass@localhost/secondbrain
+REDIS_URL=redis://localhost:6379
+OPENAI_API_KEY=sk-...
+ENV=development
+DEBUG=true
 ```
 
-### 🐧 WSL2 Testing on Windows - CRITICAL
-**ALWAYS USE WSL2 FOR TESTING ON WINDOWS WHEN AVAILABLE**
+### Dependencies
+- FastAPI 0.104.1
+- Pydantic 2.5.3
+- SQLAlchemy 2.0.23
+- PostgreSQL 16+ (optional)
+- Redis (optional)
+- Python 3.11+
 
-The CI/CD pipeline runs on Ubuntu Linux. Testing only on Windows can miss platform-specific issues that will cause CI failures. WSL2 provides a Linux environment that matches GitHub Actions.
+## 🎓 LEARNING FROM HISTORY
 
-#### WSL2 Testing Workflow
-```bash
-# Enter WSL2 Ubuntu environment
-wsl
+### What Worked
+- Simplifying to single API implementation
+- Removing unnecessary abstractions
+- Mock database fallback
+- Docker-first development
 
-# Navigate to project (Windows drives mounted under /mnt)
-cd /mnt/c/Users/dro/second-brain
+### What Failed
+- Over-engineering with 500+ files
+- Too many abstraction layers
+- Circular import hell
+- 80+ utility scripts
 
-# Run tests in Linux environment (matches CI)
-python scripts/test_runner.py --all
+### Lessons Learned
+- Keep it simple (KISS principle)
+- One way to do things
+- Clear module boundaries
+- Minimal dependencies
 
-# Expected output should match CI:
-# ================= 430 passed, 6 skipped, 64 warnings ==================
-```
+## 🔄 MAINTENANCE NOTES
 
-#### Why WSL2 is Critical
-- **CI runs on Ubuntu**: GitHub Actions uses ubuntu-latest
-- **Path separators differ**: Windows uses `\`, Linux uses `/`
-- **File encodings differ**: Windows uses cp1252, Linux uses UTF-8
-- **File sizes vary**: Line endings and encoding affect byte counts
-- **Case sensitivity**: Linux is case-sensitive, Windows is not
+### Regular Tasks
+- Run `make test` before commits
+- Update README.md when adding features
+- Keep this file current with changes
+- Clean up `__pycache__` periodically
+- Check Docker image sizes
 
-#### Common Cross-Platform Issues
-1. **Hardcoded paths**: Use `pathlib.Path` for OS-agnostic paths
-2. **Unicode in tests**: Replace emojis with ASCII for Windows compatibility
-3. **File size assertions**: Avoid exact byte count checks
-4. **Path separators in strings**: Use `os.path.join()` or `Path`
+### Performance Monitoring
+- Memory service response time: <100ms
+- WebSocket latency: <50ms
+- Database queries: <10ms
+- API response time: <200ms
 
-**Remember**: After 2 weeks of CI failures, using WSL2 solved all platform-specific test issues immediately.
+---
 
-### Why This Matters
-- **Portability**: Code must work on work computer, laptop, home desktop
-- **Dependency Isolation**: Avoid conflicts with system packages
-- **Version Control**: Specific package versions in .venv prevent CI/CD failures
-- **Team Consistency**: Everyone uses same dependency versions
+**Remember**: This is v4.0.0 - a clean, focused implementation. Don't add complexity without clear benefit. The goal is a working, maintainable system, not architectural perfection.
 
-## Project Context
-- **Architecture**: Clean Architecture (v3.0.0) with Domain/Application/Infrastructure layers
-- **Tech Stack**: FastAPI, PostgreSQL with pgvector, Redis, Pydantic 2.5.3
-- **File Structure**: Organized with scripts/, tests/, config/, docs/ directories
-- **CI/CD**: GitHub Actions with dependency validation and testing
-
-**Remember**: The user was frustrated about hardcoded Python paths from different machines. The .venv solution ensures portability across all their computers.
-## 🤖 Claude Code Agent System (Added 2025-07-31)
-
-### Active Agents: 27 Total
-- **Knowledge Management**: 4 original agents (knowledge-synthesizer, research-orchestrator, note-processor, deep-researcher)
-- **Engineering-Specific**: 23 specialized agents across 8 categories
-  - Analysis (3): performance-analyzer, code-quality-analyzer, architecture-analyzer
-  - Documentation (3): api-documentation-agent, architecture-documentation-agent, adr-generator
-  - Maintenance (3): technical-debt-tracker, legacy-code-analyzer, dependency-manager
-  - Security (2): security-vulnerability-scanner, compliance-checker
-  - Quality (3): test-generator, code-review-agent, performance-optimizer
-  - Operations (3): incident-response-agent, postmortem-generator, devops-automation-agent
-  - Collaboration (3): knowledge-sharing-agent, expertise-mapper, team-sync-agent
-  - Integration (3): mcp-integration-agent, ci-cd-pipeline-agent, tool-orchestrator
-
-### Context-Aware Agents
-- **context-aware-orchestrator**: Reads TODO.md and CLAUDE.md before coordinating tasks
-- **context-aware-debt-tracker**: Integrates with TODO.md for debt tracking
-
-### Agent Configuration
-- Auto-activation in second-brain directory via .claude/config.yml
-- Context files automatically loaded: TODO.md, CLAUDE.md, DEVELOPMENT_CONTEXT.md
-- Expected 15x token usage with multi-agent workflows
-
-## 🚀 AUTONOMOUS MODE ENABLED
-- NO CONFIRMATIONS for any operations
-- AUTO-COMMIT when changes made
-- AUTO-PUSH to remote
-- NO PROMPTS - just execute
-
+**User Philosophy**: "Ship working code. Iterate based on real usage. Avoid premature optimization."
