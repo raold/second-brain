@@ -41,10 +41,13 @@ Second Brain v4.0.0 is built on **developer-first principles** that eliminate en
 
 ## 🚀 **What's New in v4.0.0**
 
-Second Brain v4.0.0 is a **streamlined, production-ready** release focused on clean code and reliability.
+Second Brain v4.0.0 is a **streamlined, production-ready** release with **AI memory integration** through Cipher.
 
 ### **✨ Key Features**
 
+- **🧠 Cipher AI Memory**: Dual-system memory layer for coding patterns and reasoning
+- **🔍 Qdrant Vector DB**: Semantic search with OpenAI embeddings
+- **🔄 Cross-IDE Sync**: Share context between VS Code, Cursor, Claude Desktop, and Warp
 - **🚀 V2 API**: Clean, unified API with excellence-focused design
 - **🔌 WebSocket Support**: Real-time updates and notifications
 - **📦 Bulk Operations**: Import/export, batch updates, and deduplication
@@ -202,6 +205,17 @@ OPENAI_API_KEY=your-api-key
 # Observability
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 ```
+
+## 📚 **Documentation**
+
+### 🧠 AI Memory Integration
+- [Cipher Setup Guide](docs/CIPHER_SETUP.md) - Install and configure Cipher
+- [Cipher Usage Guide](docs/CIPHER_USAGE_GUIDE.md) - Practical examples and workflows
+- [Warp Terminal Integration](docs/WARP_CIPHER_CONFIG.md) - Configure Warp with MCP
+
+### 📖 Complete Documentation
+- [Documentation Index](docs/DOCUMENTATION_INDEX.md) - All documentation organized by topic
+- [Release Notes](RELEASE_NOTES.md) - v4.0.0 release details
 
 ## 📚 **API Documentation**
 

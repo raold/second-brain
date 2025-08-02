@@ -1,13 +1,16 @@
-# Second Brain v3.0.0 - Complete Documentation Index
+# Second Brain v4.0.0 - Complete Documentation Index
 
 ## Overview
 
-This is the comprehensive documentation hub for Second Brain v3.0.0, providing complete guides for development, deployment, API usage, and CI/CD operations.
+This is the comprehensive documentation hub for Second Brain v4.0.0, featuring AI memory integration with Cipher, providing complete guides for development, deployment, API usage, and CI/CD operations.
 
 ## 🚀 Quick Start Guides
 
 | Guide | Purpose | Time Required | Audience |
 |-------|---------|---------------|----------|
+| [Cipher Setup Guide](CIPHER_SETUP.md) | AI memory layer installation | 10 minutes | All developers |
+| [Cipher Usage Guide](CIPHER_USAGE_GUIDE.md) | Practical Cipher usage examples | 5 minutes | All developers |
+| [Warp Terminal Integration](WARP_CIPHER_CONFIG.md) | Configure Warp with Cipher | 5 minutes | Warp users |
 | [API Documentation Index](API_DOCUMENTATION_INDEX.md) | API usage and integration | 10 minutes | Frontend developers, integrators |
 | [CI/CD Developer Quick Reference](CI_CD_DEVELOPER_QUICK_REFERENCE.md) | Daily CI/CD commands | 5 minutes | All developers |
 | [Development Guide](development/DEVELOPMENT_GUIDE_v3.0.0.md) | Local development setup | 15 minutes | New team members |
@@ -16,6 +19,21 @@ This is the comprehensive documentation hub for Second Brain v3.0.0, providing c
 ---
 
 ## 📋 Documentation Categories
+
+### 🧠 AI Memory Integration (NEW in v4.0.0)
+
+#### Cipher Integration
+- **[Cipher Setup Guide](CIPHER_SETUP.md)** - Complete installation and configuration
+- **[Cipher Usage Guide](CIPHER_USAGE_GUIDE.md)** - Practical examples and daily workflows
+- **[Warp Terminal Integration](WARP_CIPHER_CONFIG.md)** - MCP server configuration for Warp
+- **[Environment Guide](ENVIRONMENT_GUIDE.md)** - Environment variables and configuration
+
+#### Key Features
+- Dual memory system (System 1: Concepts, System 2: Reasoning)
+- Qdrant vector database integration
+- Cross-IDE synchronization (VS Code, Cursor, Claude Desktop, Warp)
+- Semantic search across all memories
+- Team knowledge sharing capabilities
 
 ### 🔧 Development Documentation
 
