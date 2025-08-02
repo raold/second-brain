@@ -1,0 +1,77 @@
+{
+  "name": "Second Brain v4.0.0",
+  "description": "AI-powered memory and knowledge management system",
+  "version": "4.0.0",
+  
+  "context": {
+    "autoLoad": true,
+    "files": [
+      "TODO.md",
+      "CLAUDE.md",
+      "DEVELOPMENT_CONTEXT.md",
+      "PROJECT_STRUCTURE.md",
+      ".env.example"
+    ],
+    "priority": {
+      "high": ["TODO.md", "CLAUDE.md"],
+      "medium": ["DEVELOPMENT_CONTEXT.md"],
+      "low": ["PROJECT_STRUCTURE.md", ".env.example"]
+    }
+  },
+  
+  "hooks": {
+    "onSessionStart": ".claude/hooks/startup.py",
+    "beforeCommit": "python scripts/check_secrets.py"
+  },
+  
+  "agents": {
+    "enabled": true,
+    "autoActivate": [
+      "security-vulnerability-scanner",
+      "code-review-agent"
+    ],
+    "available": [
+      "architecture-analyzer",
+      "technical-debt-tracker",
+      "test-generator",
+      "performance-optimizer"
+    ]
+  },
+  
+  "preferences": {
+    "autonomousMode": true,
+    "autoCommit": true,
+    "autoPush": true,
+    "confirmations": false,
+    "coAuthorAttribution": false
+  },
+  
+  "commands": {
+    "dev": "make dev",
+    "test": "make test",
+    "security": "python scripts/check_secrets.py",
+    "status": "python .claude/hooks/startup.py"
+  },
+  
+  "environment": {
+    "primaryFile": ".env",
+    "templateFile": ".env.example",
+    "requiredVars": ["OPENAI_API_KEY"],
+    "optionalVars": ["DATABASE_URL", "REDIS_URL"]
+  },
+  
+  "testing": {
+    "framework": "pytest",
+    "coverageTarget": 80,
+    "quickTest": "python -m pytest tests/unit/test_basic_functionality.py",
+    "fullTest": "python -m pytest tests/"
+  },
+  
+  "documentation": {
+    "main": "README.md",
+    "context": "CLAUDE.md",
+    "tasks": "TODO.md",
+    "security": "SECURITY.md",
+    "environment": "docs/ENVIRONMENT_GUIDE.md"
+  }
+}

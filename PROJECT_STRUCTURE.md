@@ -9,7 +9,7 @@ second-brain/
 ├── app/                            # Main application code
 │   ├── core/                      # Core infrastructure
 │   │   ├── dependencies.py        # Dependency injection
-│   │   ├── env_manager.py        # Environment variable management (NEW)
+│   │   ├── env_manager.py         # Environment variable management (NEW)
 │   │   ├── logging.py             # Logging configuration
 │   │   ├── monitoring.py          # Metrics and monitoring
 │   │   ├── rate_limiting.py       # Rate limiting
@@ -26,19 +26,19 @@ second-brain/
 │   │   │   ├── report_models.py
 │   │   │   ├── repetition_models.py
 │   │   │   └── advanced_models.py
-│   │   ├── memory.py              # Memory models
-│   │   ├── user.py                # User models
-│   │   └── api_models.py          # API request/response models
+│   │   ├── memory.py               # Memory models
+│   │   ├── user.py                 # User models
+│   │   └── api_models.py           # API request/response models
 │   │
 │   ├── routes/                     # API routes
-│   │   └── v2_api_new.py          # V2 API implementation (ONLY API)
+│   │   └── v2_api_new.py           # V2 API implementation (ONLY API)
 │   │
 │   ├── services/                   # Business logic services
-│   │   ├── synthesis/             # Synthesis services
-│   │   ├── memory_service_new.py  # Memory operations
-│   │   ├── knowledge_graph_builder.py  # Graph builder (stub)
-│   │   ├── reasoning_engine.py    # Reasoning (stub)
-│   │   └── service_factory.py     # Service instances factory
+│   │   ├── synthesis/              # Synthesis services
+│   │   ├── memory_service_new.py   # Memory operations
+│   │   ├── knowledge_graph_builder.py # Graph builder (stub)
+│   │   ├── reasoning_engine.py     # Reasoning (stub)
+│   │   └── service_factory.py      # Service instances factory
 │   │
 │   ├── events/                     # Domain events (minimal stubs)
 │   │   ├── __init__.py
@@ -55,35 +55,40 @@ second-brain/
 │   ├── database_new.py             # Database operations
 │   └── dependencies_new.py         # Dependency injection
 │
-├── tests/                           # Test suites
+├── tests/                          # Test suites
 │   ├── unit/                       # Unit tests (55 passing)
 │   ├── integration/                # Integration tests
 │   ├── validation/                 # Validation tests
-│   └── conftest.py                # Test configuration
+│   └── conftest.py                 # Test configuration
 │
-├── docs/                            # Documentation
+├── docs/                           # Documentation
 │   ├── ENVIRONMENT_GUIDE.md       # Environment setup guide (NEW)
 │   ├── SECURITY_AUDIT_REPORT.md   # Security audit results (NEW)
 │   └── [other docs...]
 │
-├── scripts/                         # Utility scripts (only 3!)
-│   ├── check_secrets.py           # Security scanner (NEW)
-│   ├── setup_dev_environment.py   # Development setup
-│   └── test_runner.py             # Test runner
+├── scripts/                        # Utility scripts (only 3!)
+│   ├── check_secrets.py            # Security scanner (NEW)
+│   ├── setup_dev_environment.py    # Development setup
+│   └── test_runner.py              # Test runner
 │
-├── migrations/                      # Database migrations
-├── examples/                        # Example usage code
-├── docker/                          # Docker configuration
+├── migrations/                     # Database migrations
+├── examples/                       # Example usage code
+├── docker/                         # Docker configuration
 │
-├── .github/                         # GitHub Actions CI/CD
+├── .claude/                        # Claude Code configuration
+│   ├── claude.json                 # Claude settings & preferences
+│   └── hooks/                      # Automation hooks
+│       └── startup.py              # Session startup hook
+│
+├── .github/                        # GitHub Actions CI/CD
 ├── .venv/                          # Python virtual environment
 │
-├── docker-compose.yml              # Docker compose configuration
-├── Dockerfile                      # Main Docker image
+├── docker-compose.yml              # Docker services
+├── Dockerfile                      # Container image
+├── Makefile                        # Development commands
 ├── requirements.txt                # Python dependencies
 ├── pyproject.toml                  # Project configuration
 ├── pytest.ini                      # Test configuration
-├── Makefile                        # Development commands
 │
 ├── .env.example                    # Environment template (ONLY ONE!)
 ├── .gitignore                      # Git ignore (enhanced security)
