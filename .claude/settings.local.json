@@ -110,7 +110,12 @@
       "Bash(touch:*)",
       "Bash(pkill:*)",
       "Bash(cp:*)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "Bash(cipher:*)",
+      "Bash(cipher config:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(/Users/dro/Documents/second-brain/.venv/bin/python scripts/setup_qdrant_cipher.py)",
+      "Bash(cd:*)"
     ],
     "deny": []
   },
