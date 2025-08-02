@@ -507,4 +507,4 @@ This project is licensed under the GNU Affero General Public License v3.0 (AGPL-
 
 ---
 
-Built with ❤️ by the Second Brain team
+Built with ❤️ by the SecondBrain team
