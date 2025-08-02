@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # Version info
-__version__ = "3.2.0"
+__version__ = "4.0.0"
 
 
 # Minimal models for basic endpoints

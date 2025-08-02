@@ -1,4 +1,4 @@
-# Second Brain v3.0.0 🧠 - **AI Memory System**
+# Second Brain v4.0.0 🧠 - **Production-Ready AI Memory System**
 
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://docker.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
