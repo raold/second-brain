@@ -5,13 +5,14 @@
 2. **DEVELOPMENT_CONTEXT.md** - Session history, decisions, user prefs
 3. **This file (CLAUDE.md)** - Core principles, patterns, architecture
 
-## 🎯 CURRENT STATE (as of August 2, 2025 - Session 2)
+## 🎯 CURRENT STATE (as of August 2, 2025 - Session 3)
 - **Version**: 4.0.0 - Production Ready Core
 - **Test Status**: 55 tests passing (up from 27)
 - **Security**: All critical issues resolved (8.5/10 score)
 - **Environment**: Unified management system implemented
 - **User Mode**: AUTONOMOUS - no confirmations needed
 - **Active Branch**: main
+- **Development**: Cross-platform with Google Drive sync
 - **Next Action**: Check TODO.md for priority tasks
 
 ## ⚠️ IMPORTANT USER PREFERENCES
@@ -21,6 +22,10 @@
   - Auto-push to remote without asking
   - Execute all operations immediately
   - User will interrupt or undo if needed
+- **CROSS-PLATFORM DEVELOPMENT** - User works across multiple machines:
+  - Windows, macOS, and Linux environments
+  - Project synced via Google Drive for seamless access
+  - "Developer kindness" for platform differences
 
 ## 🏗️ PROJECT ARCHITECTURE (v4.0.0)
 
@@ -67,7 +72,40 @@ If API keys were previously exposed:
 2. Use `.env` locally (copy from `.env.example`)
 3. Run `python scripts/check_secrets.py` before commits
 
-## 🌍 ENVIRONMENT MANAGEMENT (NEW)
+## 💻 CROSS-PLATFORM DEVELOPMENT (NEW - Session 3)
+
+### Google Drive Sync Paths
+The project is synced across machines via Google Drive:
+- **Windows**: `G:\My Drive\projects\second-brain`
+- **macOS**: `/Users/dro/Library/CloudStorage/GoogleDrive-dro@lynchburgsmiles.com/My Drive/projects/second-brain`
+- **Linux**: `~/GoogleDrive/My Drive/projects/second-brain` or `/mnt/googledrive/My Drive/projects/second-brain`
+
+### Cross-Platform Helper
+Created `app/utils/cross_platform.py` for platform-specific handling:
+```python
+from app.utils.cross_platform import get_platform_helper
+helper = get_platform_helper()
+
+# Automatically detects platform and project root
+python_cmd = helper.get_venv_python()  # Correct Python for platform
+test_cmd = helper.get_test_command()   # Platform-specific test command
+helper.print_platform_banner()         # Shows environment info
+```
+
+### Platform-Specific Considerations
+- **Windows**: UTF-8 encoding issues handled automatically
+- **Path separators**: Normalized across platforms
+- **Virtual environments**: `.venv/Scripts/` (Windows) vs `.venv/bin/` (Unix)
+- **Line endings**: Handled appropriately per platform
+
+### Developer Kindness Features
+- Auto-detects Google Drive location
+- Platform-aware command generation
+- UTF-8 encoding fixes for Windows
+- Startup hook shows platform status
+- Commands adapt to current OS
+
+## 🌍 ENVIRONMENT MANAGEMENT
 
 ### Unified System
 - **ONE Template**: `.env.example` (all options documented)
@@ -95,6 +133,18 @@ if Config.IS_PRODUCTION:
 - Backward compatible
 
 ## 📊 RECENT SESSION PROGRESS
+
+### Session 3 (August 2, 2025 - Cross-Platform Support)
+**Major Achievements:**
+1. **Cross-Platform Support** - Created `cross_platform.py` helper
+2. **Google Drive Integration** - Automatic path detection for all platforms
+3. **Startup Hook Enhanced** - Platform-aware commands and info
+4. **UTF-8 Fixes** - Windows encoding issues handled
+
+**Files Created/Updated:**
+- `app/utils/cross_platform.py` - Platform detection and normalization
+- `.claude/hooks/startup.py` - Enhanced with platform support
+- `CLAUDE.md` - Added cross-platform documentation
 
 ### Session 2 (August 2, 2025 - Continued)
 **Major Achievements:**

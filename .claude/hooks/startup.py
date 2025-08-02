@@ -2,12 +2,26 @@
 """
 Claude Code Startup Hook - Second Brain v4.0.0
 Automatically loads context and provides session status when Claude Code starts.
+Now with cross-platform support for Google Drive sync!
 """
 
 import os
+import sys
 import subprocess
 from pathlib import Path
 from datetime import datetime
+
+# Add project root to path for imports
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Import cross-platform utilities
+try:
+    from app.utils.cross_platform import get_platform_helper, setup_utf8_encoding
+    setup_utf8_encoding()  # Fix encoding issues on Windows
+    platform_helper = get_platform_helper()
+except ImportError:
+    platform_helper = None
 
 # Colors for terminal output
 GREEN = '\033[92m'
@@ -20,7 +34,10 @@ BOLD = '\033[1m'
 def print_header():
     """Print session startup header."""
     print(f"\n{BOLD}{BLUE}{'='*60}{RESET}")
-    print(f"{BOLD}{BLUE}🧠 Second Brain v4.0.0 - Session Started{RESET}")
+    print(f"{BOLD}{BLUE}Second Brain v4.0.0 - Session Started{RESET}")
+    if platform_helper:
+        platform_name = "Windows" if platform_helper.is_windows else "macOS" if platform_helper.is_mac else "Linux"
+        print(f"{BOLD}{BLUE}Platform: {platform_name} | Google Drive Sync Enabled{RESET}")
     print(f"{BOLD}{BLUE}{'='*60}{RESET}\n")
 
 def check_git_status():
@@ -61,14 +78,16 @@ def check_environment():
 
 def run_security_check():
     """Run quick security check."""
-    print(f"{BOLD}🔒 Security Check:{RESET}")
+    print(f"{BOLD}Security Check:{RESET}")
     try:
-        result = subprocess.run(['python', 'scripts/check_secrets.py'], 
+        # Use platform-specific Python
+        python_cmd = platform_helper.get_venv_python() if platform_helper else 'python'
+        result = subprocess.run([python_cmd, 'scripts/check_secrets.py'], 
                               capture_output=True, text=True, timeout=5)
         if result.returncode == 0:
             print(f"{GREEN}  ✓ No security issues detected{RESET}")
         else:
-            print(f"{RED}  ✗ Security issues found - run: python scripts/check_secrets.py{RESET}")
+            print(f"{RED}  ✗ Security issues found - run: {python_cmd} scripts/check_secrets.py{RESET}")
     except:
         print(f"{YELLOW}  ⚠ Could not run security check{RESET}")
     print()
@@ -115,25 +134,70 @@ def show_context_files():
 
 def show_quick_commands():
     """Show useful quick commands."""
-    print(f"{BOLD}⚡ Quick Commands:{RESET}")
-    commands = [
-        ("Start development", "make dev"),
-        ("Run tests", "make test"),
-        ("Security check", "python scripts/check_secrets.py"),
-        ("Check config", "python -c 'from app.config import Config; print(Config.get_summary())'")
-    ]
+    print(f"{BOLD}Quick Commands:{RESET}")
+    
+    # Platform-specific commands
+    if platform_helper:
+        python_cmd = platform_helper.get_venv_python()
+        test_cmd = platform_helper.get_test_command()
+        run_cmd = platform_helper.get_run_command()
+        
+        commands = [
+            ("Start development", run_cmd),
+            ("Run tests", test_cmd),
+            ("Security check", f"{python_cmd} scripts/check_secrets.py"),
+            ("Platform info", f"{python_cmd} -c \"from app.utils.cross_platform import get_platform_helper; get_platform_helper().print_platform_banner()\"")
+        ]
+    else:
+        commands = [
+            ("Start development", "make dev"),
+            ("Run tests", "make test"),
+            ("Security check", "python scripts/check_secrets.py"),
+            ("Check config", "python -c 'from app.config import Config; print(Config.get_summary())'")
+        ]
     
     for desc, cmd in commands:
-        print(f"  {desc:<20} → {BLUE}{cmd}{RESET}")
+        # Truncate long commands
+        if len(cmd) > 50:
+            cmd_display = cmd[:47] + "..."
+        else:
+            cmd_display = cmd
+        print(f"  {desc:<20} → {BLUE}{cmd_display}{RESET}")
     print()
+
+def show_platform_info():
+    """Show platform-specific information."""
+    if platform_helper:
+        print(f"{BOLD}Platform Information:{RESET}")
+        info = platform_helper.get_platform_info()
+        
+        # Show Google Drive sync status
+        project_path = str(info['project_root'])
+        if "GoogleDrive" in project_path or "Google Drive" in project_path or "My Drive" in project_path:
+            print(f"{GREEN}  ✓ Google Drive sync detected{RESET}")
+            print(f"  Path: {project_path[:60]}...")
+        else:
+            print(f"  Local development (not on Google Drive)")
+        
+        print(f"  System: {info['system']}")
+        print(f"  Python: {platform_helper.get_venv_python()}")
+        print(f"  Encoding: {info['encoding']} (File: {info['file_encoding']})")
+        print()
 
 def main():
     """Main startup hook."""
     print_header()
     
     # Change to project directory
-    project_dir = Path(__file__).parent.parent.parent
+    if platform_helper:
+        project_dir = platform_helper.project_root
+    else:
+        project_dir = Path(__file__).parent.parent.parent
     os.chdir(project_dir)
+    
+    # Show platform info if available
+    if platform_helper:
+        show_platform_info()
     
     # Run checks
     check_git_status()
