@@ -20,7 +20,7 @@ Second Brain v4.0.0 represents a major evolution in AI-assisted development, int
 ## 📦 What's New
 
 ### Cipher Integration
-The star feature of v4.0.0 is the integration with Cipher, an open-source memory layer for AI coding agents:
+The star feature of v4.0.0 is the integration with [Cipher](https://github.com/campfirein/cipher), an open-source memory layer for AI coding agents created by the [Byterover](https://github.com/byterover) team:
 
 - **System 1 Memory**: Captures programming concepts, patterns, and business logic
 - **System 2 Memory**: Stores reasoning chains and decision processes

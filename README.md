@@ -41,11 +41,11 @@ Second Brain v4.0.0 is built on **developer-first principles** that eliminate en
 
 ## 🚀 **What's New in v4.0.0**
 
-Second Brain v4.0.0 is a **streamlined, production-ready** release with **AI memory integration** through Cipher.
+Second Brain v4.0.0 is a **streamlined, production-ready** release with **AI memory integration** through [Cipher](https://github.com/campfirein/cipher) by [Byterover](https://github.com/byterover).
 
 ### **✨ Key Features**
 
-- **🧠 Cipher AI Memory**: Dual-system memory layer for coding patterns and reasoning
+- **🧠 Cipher AI Memory**: Dual-system memory layer powered by [Cipher](https://github.com/campfirein/cipher)
 - **🔍 Qdrant Vector DB**: Semantic search with OpenAI embeddings
 - **🔄 Cross-IDE Sync**: Share context between VS Code, Cursor, Claude Desktop, and Warp
 - **🚀 V2 API**: Clean, unified API with excellence-focused design
@@ -481,10 +481,23 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 
 ## 🙏 **Acknowledgments**
 
+### Third-Party Integrations
+- **[Cipher](https://github.com/campfirein/cipher)** by [Byterover](https://github.com/byterover) - AI memory layer for coding agents
+- **[Qdrant](https://qdrant.tech/)** - Vector database for semantic search
+- **[OpenAI](https://openai.com/)** - Embeddings and AI capabilities
+- **[FastAPI](https://fastapi.tiangolo.com/)** - Modern Python web framework
+
+### Architecture Inspiration
 - Clean Architecture principles by Robert C. Martin
 - Domain-Driven Design by Eric Evans
 - Event Sourcing patterns by Martin Fowler
 - The amazing Python community
+
+### Special Thanks
+- The Cipher team at Byterover for creating an amazing open-source memory layer
+- The open-source community for continuous feedback and contributions
+
+**Note**: This project integrates with but is not affiliated with Cipher, Qdrant, or OpenAI. Each integration maintains its own license.
 
 ## 📞 **Support**
 
