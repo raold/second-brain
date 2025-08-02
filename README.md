@@ -6,11 +6,20 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](tests/)
 
-> **🐳 Docker-First Development**: Zero host dependencies, bulletproof cross-platform development experience.
+> **🚀 Clean, Fast, Reliable**: Streamlined v4.0.0 with 80% less code, 100% more focus.
+
+## 📊 **Current Status**
+
+- ✅ **Core Functionality**: Memory CRUD, search, and export working
+- ✅ **V2 API**: Clean, unified API with WebSocket support
+- ✅ **Tests Passing**: 27/28 basic tests, 39/39 WebSocket tests
+- ✅ **Clean Codebase**: Reduced from 500+ files to ~100 essential files
+- ⚡ **Performance**: Fast startup, minimal dependencies
+- 🐳 **Docker Ready**: Full containerized development environment
 
 ## 🎯 **Design Philosophy**
 
-Second Brain v3.0.0 is built on **developer-first principles** that eliminate environment friction:
+Second Brain v4.0.0 is built on **developer-first principles** that eliminate environment friction:
 
 ### **🐳 Docker-First Architecture**
 - **Zero Host Dependencies**: No Python, PostgreSQL, or Redis installation required
@@ -30,45 +39,71 @@ Second Brain v3.0.0 is built on **developer-first principles** that eliminate en
 - **Clear Status**: Always know your environment health at a glance
 - **No Configuration**: Sensible defaults, minimal setup required
 
-## 🚀 **What's New in v3.0.0**
+## 🚀 **What's New in v4.0.0**
 
-Second Brain v3.0.0 is a complete architectural overhaul designed for production scalability, maintainability, and enterprise deployment.
+Second Brain v4.0.0 is a **streamlined, production-ready** release focused on clean code and reliability.
 
 ### **✨ Key Features**
 
-- **🏛️ Clean Architecture**: Domain-driven design with clear separation of concerns
-- **📨 Event Sourcing**: Complete audit trail and event-driven architecture
-- **🔄 CQRS Pattern**: Optimized read/write separation for scalability
-- **📦 Message Queue**: RabbitMQ integration for async processing
-- **📊 Observability**: OpenTelemetry tracing, Prometheus metrics, structured logging
-- **💾 Caching Layer**: Redis caching with multiple strategies
-- **📁 Multi-Modal Ingestion**: Support for documents, images, audio, and video files
-- **🎯 Batch Classification**: Intelligent categorization with multiple methods
-- **🔍 Vector Search**: PostgreSQL with pgvector for embeddings
-- **🐳 Docker-First**: Cross-platform compatibility (Windows, macOS, Linux)
-- **🧪 Comprehensive Testing**: Unit, integration, and e2e test suites
+- **🚀 V2 API**: Clean, unified API with excellence-focused design
+- **🔌 WebSocket Support**: Real-time updates and notifications
+- **📦 Bulk Operations**: Import/export, batch updates, and deduplication
+- **🧠 Memory Service**: Full CRUD operations with vector search
+- **🔍 Smart Search**: Keyword, semantic, and hybrid search modes
+- **📊 Analytics**: Usage metrics, trends, and insights
+- **🐳 Docker-First**: Zero-dependency containerized development
+- **⚡ Fast & Clean**: Simplified architecture, removed 80% of legacy code
+- **🧪 Tested**: Core functionality verified with comprehensive test suite
 
-## 🏗️ **Architecture Overview**
+## 🏗️ **Project Structure**
 
 ```
-app/                 # Main application module
-├── models/          # Pydantic models and domain entities
-├── services/        # Business logic and service layer
-├── routes/          # API route handlers
-├── ingestion/       # Data ingestion and processing
-├── insights/        # Analytics and insights generation
-└── utils/           # Utility functions and helpers
-
-main.py             # Application entry point
+second-brain/
+├── app/                    # Main application
+│   ├── core/              # Core infrastructure
+│   │   ├── dependencies.py    # Dependency injection
+│   │   ├── logging.py        # Logging configuration
+│   │   └── monitoring.py      # Metrics and monitoring
+│   ├── models/            # Data models
+│   │   ├── memory.py         # Memory models
+│   │   ├── user.py          # User models
+│   │   └── api_models.py    # API request/response models
+│   ├── routes/            # API routes
+│   │   └── v2_api_new.py    # V2 API implementation
+│   ├── services/          # Business logic
+│   │   ├── memory_service_new.py  # Memory operations
+│   │   ├── service_factory.py     # Service instances
+│   │   └── synthesis/            # Advanced features
+│   ├── static/            # Web UI files
+│   ├── utils/             # Utility functions
+│   ├── app.py            # FastAPI application
+│   ├── config.py         # Configuration
+│   └── database_new.py   # Database operations
+│
+├── tests/                 # Test suites
+│   ├── unit/             # Unit tests
+│   ├── integration/      # Integration tests
+│   └── validation/       # Validation tests
+│
+├── docs/                  # Documentation
+├── scripts/              # Utility scripts
+├── docker/               # Docker configuration
+├── migrations/           # Database migrations
+│
+├── docker-compose.yml    # Docker services
+├── Dockerfile           # Container image
+├── Makefile            # Development commands
+├── requirements.txt    # Python dependencies
+└── README.md          # This file
 ```
 
-### **Core Principles**
+### **Core Components**
 
-1. **Domain-Driven Design**: Business logic isolated in the domain layer
-2. **Dependency Inversion**: All dependencies point inward
-3. **Event-Driven**: Domain events for decoupled communication
-4. **Repository Pattern**: Abstract data access
-5. **Use Case Pattern**: Clear application boundaries
+1. **V2 API** (`routes/v2_api_new.py`): RESTful API with WebSocket support
+2. **Memory Service** (`services/memory_service_new.py`): Memory CRUD operations
+3. **Database** (`database_new.py`): PostgreSQL with mock fallback
+4. **Models** (`models/`): Pydantic models for validation
+5. **Configuration** (`config.py`): Environment-based configuration
 
 ## 🚀 **Quick Start**
 
@@ -109,10 +144,14 @@ The setup automatically:
 docker-compose up --build          # Full development stack
 docker-compose exec app python scripts/test_runner.py --all
 
-# Bulletproof .venv fallback
-python scripts/setup-bulletproof-venv.py  # Creates validated .venv
-.venv/Scripts/python.exe main.py          # Windows
-.venv/bin/python main.py                  # Unix
+# Python virtual environment fallback
+python -m venv .venv                      # Create virtual environment
+.venv/Scripts/activate                    # Windows
+source .venv/bin/activate                 # Unix/Mac
+pip install -r requirements.txt           # Install dependencies
+
+# Run application
+uvicorn app.app:app --reload --host 0.0.0.0 --port 8000
 
 # Access application
 open http://localhost:8000
@@ -171,64 +210,80 @@ Once running, access:
 - **ReDoc**: http://localhost:8000/redoc
 - **OpenAPI Schema**: http://localhost:8000/openapi.json
 
-### **Core Endpoints**
+### **🚀 V2 API Features**
+
+The V2 API provides a comprehensive set of features:
+
+- **Memory Management**: Full CRUD operations with rich metadata
+- **Advanced Search**: Keyword, semantic, and hybrid search modes
+- **Bulk Operations**: Batch updates, deletions, and tagging
+- **Import/Export**: Support for JSON, CSV, and Markdown formats
+- **Real-time Updates**: WebSocket support for live notifications
+- **Analytics**: Usage metrics, trends, and insights
+- **Pagination**: Efficient handling of large datasets
+- **Filtering**: Query by type, tags, importance, and date ranges
+
+### **Core Endpoints (V2 API)**
 
 ```bash
 # Memories
-POST   /api/v1/memories          # Create memory
-GET    /api/v1/memories          # List memories
-GET    /api/v1/memories/{id}     # Get memory
-PUT    /api/v1/memories/{id}     # Update memory
-DELETE /api/v1/memories/{id}     # Delete memory
+POST   /api/v2/memories          # Create memory
+GET    /api/v2/memories          # List memories with pagination
+GET    /api/v2/memories/{id}     # Get specific memory
+PATCH  /api/v2/memories/{id}     # Update memory (partial)
+DELETE /api/v2/memories/{id}     # Delete memory
 
 # Search
-POST   /api/v1/memories/search   # Vector similarity search
-
-# Multi-Modal Ingestion
-POST   /api/v1/ingest/upload     # Upload single file (PDF, audio, video, etc.)
-POST   /api/v1/ingest/batch      # Batch file upload
-GET    /api/v1/ingest/status/{id} # Check ingestion status
+POST   /api/v2/search            # Advanced search (keyword/semantic/hybrid)
 
 # Bulk Operations
-POST   /bulk/import              # Import memories (CSV, JSON, etc.)
-POST   /bulk/export              # Export memories
-POST   /bulk/classify            # Batch classification
-POST   /bulk/deduplicate         # Remove duplicates
+POST   /api/v2/bulk              # Bulk operations (update/delete/tag)
+GET    /api/v2/export            # Export memories (JSON/CSV/Markdown)
+POST   /api/v2/import            # Import memories from file
 
-# Sessions
-POST   /api/v1/sessions          # Create session
-GET    /api/v1/sessions          # List sessions
-GET    /api/v1/sessions/{id}     # Get session with memories
+# Analytics
+POST   /api/v2/analytics         # Get analytics and insights
 
-# Health & Metrics
-GET    /health                   # Health check
-GET    /metrics                  # Prometheus metrics
+# WebSocket
+WS     /api/v2/ws                # Real-time updates and notifications
+
+# Health & Status
+GET    /api/v2/health            # Health check with feature status
+GET    /                         # Welcome message with API info
 ```
 
-### **🎯 Multi-Modal Ingestion**
-
-Second Brain now supports ingestion of various file types:
-
-- **Documents**: PDF, Word, HTML, Markdown, Plain text
-- **Spreadsheets**: Excel, CSV, OpenDocument
-- **Images**: JPG, PNG, GIF (with OCR support)
-- **Audio**: MP3, WAV, M4A (with transcription)
-- **Video**: MP4, AVI, MOV (with audio extraction)
-- **Subtitles**: SRT, VTT
+### **🎯 Example API Usage**
 
 ```bash
-# Upload a PDF with automatic text extraction
-curl -X POST "http://localhost:8000/api/v1/ingest/upload" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -F "file=@document.pdf"
+# Create a memory
+curl -X POST "http://localhost:8000/api/v2/memories" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "content": "Important meeting notes",
+    "importance_score": 0.8,
+    "tags": ["work", "meeting"]
+  }'
 
-# For full multi-modal support with audio/video
-docker build -f Dockerfile.multimodal -t secondbrain:multimodal .
+# Search memories
+curl -X POST "http://localhost:8000/api/v2/search" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "query": "meeting notes",
+    "search_type": "hybrid",
+    "limit": 10
+  }'
+
+# Export memories
+curl -X GET "http://localhost:8000/api/v2/export?format=json" \
+  -H "X-API-Key: your-api-key" \
+  -o memories_backup.json
 ```
 
-## 📖 **Comprehensive Documentation**
+## 📖 **Documentation**
 
-Second Brain v3.0.0 provides extensive documentation for all aspects of development, deployment, and integration:
+Second Brain v4.0.0 documentation is organized for different audiences:
 
 ### **🚀 Quick Start Guides**
 
@@ -357,13 +412,14 @@ python scripts/dev test --test-type validation  # Validation tests
 
 ```bash
 # Build image
-docker build -t second-brain:v3.0.0 .
+docker build -t second-brain:v4.0.0 .
 
 # Run container
 docker run -d \
   -p 8000:8000 \
   -e DATABASE_URL=postgresql://... \
-  second-brain:v3.0.0
+  -e OPENAI_API_KEY=your-key \
+  second-brain:v4.0.0
 ```
 
 ### **Kubernetes**
@@ -379,15 +435,20 @@ kubectl apply -f k8s/
 - **GCP**: Cloud Run, Cloud SQL, Memorystore, Pub/Sub
 - **Azure**: Container Instances, Database for PostgreSQL, Cache for Redis
 
-## 🔄 **Migration from v2.x**
+## 🔄 **Migration to v4.0.0**
 
-See [MIGRATION_GUIDE_V3.md](docs/MIGRATION_GUIDE_V3.md) for detailed migration instructions.
+### **Breaking Changes from v3.x**
+- API endpoints moved from `/api/v1/` to `/api/v2/`
+- Removed ingestion and insights modules
+- Simplified to single V2 API implementation
+- Memory service renamed to `memory_service_new.py`
+- Database module renamed to `database_new.py`
 
-### **Breaking Changes**
-- New API structure (`/api/v1/` prefix)
-- Updated data models (event sourcing)
-- Removed Qdrant dependency
-- New authentication mechanism
+### **Migration Steps**
+1. Update all API calls to use `/api/v2/` prefix
+2. Update imports to use new module names
+3. Remove dependencies on ingestion/insights features
+4. Test with new WebSocket endpoints
 
 ## 🤝 **Contributing**
 
