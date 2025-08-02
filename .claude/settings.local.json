@@ -109,7 +109,8 @@
       "Bash(/Users/dro/Documents/second-brain/.venv/bin/python -m ruff check app/ tests/ --statistics)",
       "Bash(touch:*)",
       "Bash(pkill:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "WebFetch(domain:api.github.com)"
     ],
     "deny": []
   },
