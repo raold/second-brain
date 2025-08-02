@@ -1,10 +1,17 @@
-# Environment files
+# Environment files - NEVER commit these!
 .env
-.env.local
-.env.production
-.env.development
-.env.staging
-.env.test
+.env.*
+!.env.example
+!.env.*.template
+*.env
+
+# Security - Private keys and certificates
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
 
 # Dependencies
 node_modules/

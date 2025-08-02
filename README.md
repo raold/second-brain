@@ -59,42 +59,42 @@ Second Brain v4.0.0 is a **streamlined, production-ready** release focused on cl
 
 ```
 second-brain/
-├── app/                    # Main application
-│   ├── core/              # Core infrastructure
-│   │   ├── dependencies.py    # Dependency injection
-│   │   ├── logging.py        # Logging configuration
-│   │   └── monitoring.py      # Metrics and monitoring
-│   ├── models/            # Data models
-│   │   ├── memory.py         # Memory models
-│   │   ├── user.py          # User models
-│   │   └── api_models.py    # API request/response models
-│   ├── routes/            # API routes
-│   │   └── v2_api_new.py    # V2 API implementation
-│   ├── services/          # Business logic
+├── app/                             # Main application
+│   ├── core/                       # Core infrastructure
+│   │   ├── dependencies.py        # Dependency injection
+│   │   ├── logging.py             # Logging configuration
+│   │   └── monitoring.py          # Metrics and monitoring
+│   ├── models/                     # Data models
+│   │   ├── memory.py              # Memory models
+│   │   ├── user.py                # User models
+│   │   └── api_models.py          # API request/response models
+│   ├── routes/                     # API routes
+│   │   └── v2_api_new.py          # V2 API implementation
+│   ├── services/                   # Business logic
 │   │   ├── memory_service_new.py  # Memory operations
 │   │   ├── service_factory.py     # Service instances
-│   │   └── synthesis/            # Advanced features
-│   ├── static/            # Web UI files
-│   ├── utils/             # Utility functions
-│   ├── app.py            # FastAPI application
-│   ├── config.py         # Configuration
-│   └── database_new.py   # Database operations
+│   │   └── synthesis/             # Advanced features
+│   ├── static/                     # Web UI files
+│   ├── utils/                      # Utility functions
+│   ├── app.py                      # FastAPI application
+│   ├── config.py                   # Configuration
+│   └── database_new.py             # Database operations
 │
-├── tests/                 # Test suites
-│   ├── unit/             # Unit tests
-│   ├── integration/      # Integration tests
-│   └── validation/       # Validation tests
+├── tests/                           # Test suites
+│   ├── unit/                       # Unit tests
+│   ├── integration/                # Integration tests
+│   └── validation/                 # Validation tests
 │
-├── docs/                  # Documentation
-├── scripts/              # Utility scripts
-├── docker/               # Docker configuration
-├── migrations/           # Database migrations
+├── docs/                            # Documentation
+├── scripts/                         # Utility scripts
+├── docker/                          # Docker configuration
+├── migrations/                      # Database migrations
 │
-├── docker-compose.yml    # Docker services
-├── Dockerfile           # Container image
-├── Makefile            # Development commands
-├── requirements.txt    # Python dependencies
-└── README.md          # This file
+├── docker-compose.yml               # Docker services
+├── Dockerfile                       # Container image
+├── Makefile                         # Development commands
+├── requirements.txt                 # Python dependencies
+└── README.md
 ```
 
 ### **Core Components**
