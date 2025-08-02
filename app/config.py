@@ -1,165 +1,119 @@
-import os
-from dataclasses import dataclass
-
 """
 Configuration management for Second Brain application.
-Handles environment variables and application settings.
+Uses the centralized environment manager for consistent configuration.
 """
 
+from app.core.env_manager import get_env_manager, Environment
 
-
-@dataclass
-class EnvironmentConfig:
-    """Environment-specific configuration."""
-
-    name: str
-    use_mock_database: bool
-    require_openai: bool
-    debug_mode: bool
-    log_level: str
+# Get environment manager instance
+env = get_env_manager()
 
 
 class Config:
-    """Configuration class that handles environment variables."""
-
-    # Environment Detection
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
-
+    """
+    Application configuration using environment manager.
+    All environment variables are accessed through the centralized manager.
+    """
+    
+    # Environment
+    ENVIRONMENT: Environment = env.environment
+    IS_PRODUCTION: bool = env.is_production()
+    IS_DEVELOPMENT: bool = env.is_development()
+    IS_TEST: bool = env.is_test()
+    
     # Database Configuration
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
-
-    # PostgreSQL Configuration
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "")
-    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
-    POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
-    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "")
-
+    DATABASE_URL: str = env.get_database_url()
+    
+    # PostgreSQL Configuration (individual components)
+    POSTGRES_USER: str = env.get("POSTGRES_USER", "postgres")
+    POSTGRES_PASSWORD: str = env.get("POSTGRES_PASSWORD", "postgres")
+    POSTGRES_HOST: str = env.get("POSTGRES_HOST", "localhost")
+    POSTGRES_PORT: str = env.get("POSTGRES_PORT", "5432")
+    POSTGRES_DB: str = env.get("POSTGRES_DB", "secondbrain")
+    
+    # Redis Configuration
+    REDIS_URL: str = env.get("REDIS_URL", "redis://localhost:6379/0")
+    REDIS_MAX_CONNECTIONS: int = env.get_int("REDIS_MAX_CONNECTIONS", 50)
+    
     # OpenAI Configuration
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    OPENAI_EMBEDDING_MODEL: str = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-    OPENAI_CHAT_MODEL: str = os.getenv("OPENAI_CHAT_MODEL", "gpt-4")
-
+    OPENAI_API_KEY: str = env.get("OPENAI_API_KEY", "")
+    OPENAI_EMBEDDING_MODEL: str = env.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+    OPENAI_CHAT_MODEL: str = env.get("OPENAI_CHAT_MODEL", "gpt-4")
+    
+    # Anthropic Configuration (Optional)
+    ANTHROPIC_API_KEY: str = env.get("ANTHROPIC_API_KEY", "")
+    
+    # Security Configuration
+    JWT_SECRET_KEY: str = env.get("JWT_SECRET_KEY", "change-this-in-production")
+    JWT_ALGORITHM: str = env.get("JWT_ALGORITHM", "HS256")
+    JWT_EXPIRATION_DELTA: int = env.get_int("JWT_EXPIRATION_DELTA", 3600)
+    
     # API Configuration
-    API_TOKENS: str = os.getenv("API_TOKENS", "")
-
+    API_TOKENS: list = env.get_list("API_TOKENS", [])
+    
     # Application Configuration
-    HOST: str = os.getenv("HOST", "127.0.0.1")  # Changed from 0.0.0.0 for security
-    PORT: int = int(os.getenv("PORT", "8000"))
-    DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-
-    # Test Configuration
-
-    # Environment Configurations
-    ENVIRONMENTS = {
-        "development": EnvironmentConfig(
-            name="development",
-            use_mock_database=False,
-            require_openai=False,
-            debug_mode=True,
-            log_level="DEBUG",
-        ),
-        "testing": EnvironmentConfig(
-            name="testing",
-            use_mock_database=True,
-            require_openai=False,
-            debug_mode=True,
-            log_level="INFO",
-        ),
-        "ci": EnvironmentConfig(
-            name="ci",
-            use_mock_database=True,
-            require_openai=False,
-            debug_mode=False,
-            log_level="WARNING",
-        ),
-        "production": EnvironmentConfig(
-            name="production",
-            use_mock_database=False,
-            require_openai=True,
-            debug_mode=False,
-            log_level="WARNING",
-        ),
-    }
-
+    HOST: str = env.get("HOST", "127.0.0.1")
+    PORT: int = env.get_int("PORT", 8000)
+    DEBUG: bool = env.get_bool("DEBUG", False)
+    LOG_LEVEL: str = env.get("LOG_LEVEL", "INFO")
+    
+    # CORS Configuration
+    CORS_ORIGINS: list = env.get_list("CORS_ORIGINS", ["http://localhost:3000", "http://localhost:8000"])
+    
+    # Feature Flags
+    USE_MOCK_DATABASE: bool = env.get_bool("USE_MOCK_DATABASE", False)
+    USE_MOCK_OPENAI: bool = env.get_bool("USE_MOCK_OPENAI", False)
+    FEATURE_SESSIONS_ENABLED: bool = env.get_bool("FEATURE_SESSIONS_ENABLED", True)
+    FEATURE_ATTACHMENTS_ENABLED: bool = env.get_bool("FEATURE_ATTACHMENTS_ENABLED", True)
+    ENABLE_TELEMETRY: bool = env.get_bool("ENABLE_TELEMETRY", False)
+    ENABLE_ANALYTICS: bool = env.get_bool("ENABLE_ANALYTICS", False)
+    
+    # AI Model Configuration
+    VECTOR_DIMENSION: int = env.get_int("VECTOR_DIMENSION", 1536)
+    BATCH_SIZE: int = env.get_int("BATCH_SIZE", 100)
+    SIMILARITY_THRESHOLD: float = env.get_float("SIMILARITY_THRESHOLD", 0.7)
+    
+    # Monitoring Configuration
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = env.get("OTEL_EXPORTER_OTLP_ENDPOINT", "")
+    OTEL_SERVICE_NAME: str = env.get("OTEL_SERVICE_NAME", "second-brain")
+    SENTRY_DSN: str = env.get("SENTRY_DSN", "")
+    
+    # Development Configuration
+    ENABLE_HOT_RELOAD: bool = env.get_bool("ENABLE_HOT_RELOAD", IS_DEVELOPMENT)
+    ENABLE_DEBUG_TOOLBAR: bool = env.get_bool("ENABLE_DEBUG_TOOLBAR", False)
+    
     @classmethod
-    def get_environment_config(cls) -> EnvironmentConfig:
-        """Get the current environment configuration."""
-        return cls.ENVIRONMENTS.get(cls.ENVIRONMENT, cls.ENVIRONMENTS["development"])
-
+    def validate(cls) -> list:
+        """
+        Validate configuration for production readiness.
+        
+        Returns:
+            List of validation issues (empty if valid)
+        """
+        return env.validate_production_ready()
+    
     @classmethod
-    def should_use_mock_database(cls) -> bool:
-        """Determine if mock database should be used."""
-        # Mock database removed - always use real database
-        return False
-
+    def get_summary(cls) -> dict:
+        """
+        Get configuration summary for logging.
+        
+        Returns:
+            Dictionary of configuration values (sensitive values masked)
+        """
+        return env.get_config_summary()
+    
     @classmethod
-    def should_require_openai(cls) -> bool:
-        """Determine if OpenAI API key is required."""
-        env_config = cls.get_environment_config()
-        return env_config.require_openai
-
+    def is_ai_enabled(cls) -> bool:
+        """Check if AI features are enabled."""
+        return bool(cls.OPENAI_API_KEY) or cls.USE_MOCK_OPENAI
+    
     @classmethod
-    def get_database_url(cls) -> str:
-        """Get the complete database URL."""
-        if cls.DATABASE_URL:
-            return cls.DATABASE_URL
-        return f"postgresql://{cls.POSTGRES_USER}:{cls.POSTGRES_PASSWORD}@{cls.POSTGRES_HOST}:{cls.POSTGRES_PORT}/{cls.POSTGRES_DB}"
-
-    @classmethod
-    def get_api_tokens(cls) -> list[str]:
-        """Get list of valid API tokens."""
-        if not cls.API_TOKENS:
-            return []
-        return [token.strip() for token in cls.API_TOKENS.split(",") if token.strip()]
-
-    @classmethod
-    def validate_configuration(cls) -> list[str]:
-        """Validate current configuration and return list of issues."""
-        issues = []
-        env_config = cls.get_environment_config()
-
-        # Check OpenAI configuration if required
-        if env_config.require_openai and not cls.OPENAI_API_KEY:
-            issues.append(f"OPENAI_API_KEY is required for {cls.ENVIRONMENT} environment")
-
-        # Check API tokens for non-development environments
-        if cls.ENVIRONMENT != "development" and not cls.get_api_tokens():
-            issues.append(f"API_TOKENS must be configured for {cls.ENVIRONMENT} environment")
-
-        # Validate database configuration for non-mock environments
-        if not cls.should_use_mock_database():
-            if not cls.DATABASE_URL and (
-                not cls.POSTGRES_USER or not cls.POSTGRES_PASSWORD or not cls.POSTGRES_DB
-            ):
-                issues.append(
-                    "Database configuration required: Set DATABASE_URL or POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB"
-                )
-            if cls.POSTGRES_PASSWORD == "brain_password":
-                issues.append("Default PostgreSQL password detected - please set a secure password")
-
-        return issues
-
-    @classmethod
-    def get_effective_log_level(cls) -> str:
-        """Get the effective log level based on environment and explicit setting."""
-        env_config = cls.get_environment_config()
-        # Explicit LOG_LEVEL takes precedence
-        if os.getenv("LOG_LEVEL"):
-            return cls.LOG_LEVEL
-        return env_config.log_level
-
-    @classmethod
-    def is_debug_mode(cls) -> bool:
-        """Determine if debug mode should be enabled."""
-        env_config = cls.get_environment_config()
-        # Explicit DEBUG setting takes precedence
-        if os.getenv("DEBUG"):
-            return cls.DEBUG
-        return env_config.debug_mode
+    def is_database_configured(cls) -> bool:
+        """Check if database is configured."""
+        return bool(cls.DATABASE_URL) or cls.USE_MOCK_DATABASE
 
 
-def get_settings() -> Config:
-    """Get application settings instance."""
-    return Config()
+# Convenience function for backward compatibility
+def get_config() -> Config:
+    """Get configuration instance."""
+    return Config
