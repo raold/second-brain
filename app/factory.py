@@ -52,14 +52,10 @@ def create_lifespan(config_name: str):
             await app.state.degradation_manager.perform_health_checks()
             
             # Initialize memory service with PostgreSQL backend
-            from app.services.memory_service_postgres import MemoryServicePostgres
+            from app.services.memory_service import MemoryService
             
             # Use PostgreSQL for all environments
-            db_url = os.getenv("DATABASE_URL", "postgresql://secondbrain:changeme@localhost/secondbrain")
-            app.state.memory_service = MemoryServicePostgres(
-                connection_string=db_url,
-                enable_embeddings=(config_name != "testing")  # Disable embeddings for tests
-            )
+            app.state.memory_service = MemoryService()
             await app.state.memory_service.initialize()
             
             # Load existing memories

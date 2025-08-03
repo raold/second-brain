@@ -29,7 +29,7 @@ os.environ["POSTGRES_PASSWORD"] = "test_password"
 os.environ["POSTGRES_HOST"] = "localhost"
 os.environ["POSTGRES_PORT"] = "5432"
 os.environ["POSTGRES_DB"] = "test_db"
-os.environ["REDIS_URL"] = "redis://localhost:6379/1"
+# Redis removed - using PostgreSQL for everything
 
 # Disable external service connections in tests
 os.environ["DISABLE_EXTERNAL_SERVICES"] = "true"
@@ -45,7 +45,6 @@ modules_to_clear = [
     "app.database",
     "app.security",
     "app.connection_pool",
-    "app.core.redis_manager",
 ]
 for module in modules_to_clear:
     if module in sys.modules:

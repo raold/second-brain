@@ -31,9 +31,7 @@ class Config:
     POSTGRES_PORT: str = env.get("POSTGRES_PORT", "5432")
     POSTGRES_DB: str = env.get("POSTGRES_DB", "secondbrain")
     
-    # Redis Configuration
-    REDIS_URL: str = env.get("REDIS_URL", "redis://localhost:6379/0")
-    REDIS_MAX_CONNECTIONS: int = env.get_int("REDIS_MAX_CONNECTIONS", 50)
+    # Redis removed - using PostgreSQL for everything
     
     # OpenAI Configuration
     OPENAI_API_KEY: str = env.get("OPENAI_API_KEY", "")
