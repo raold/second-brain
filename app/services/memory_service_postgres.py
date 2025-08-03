@@ -128,7 +128,8 @@ class MemoryServicePostgres:
             logger.error(f"Failed to create memory: {e}")
             if self.degradation_manager.current_level < DegradationLevel.NO_PERSISTENCE:
                 # Try to degrade gracefully
-                self.degradation_manager.report_failure("persistence")
+                # Report failure to degradation manager
+                pass  # degradation_manager.report_failure not implemented yet
             raise
     
     async def get_memory(self, memory_id: str) -> Optional[Dict[str, Any]]:

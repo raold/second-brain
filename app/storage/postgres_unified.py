@@ -57,9 +57,19 @@ class PostgresUnifiedBackend:
             
             # Ensure extensions are installed
             async with self.pool.acquire() as conn:
-                await conn.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
-                await conn.execute('CREATE EXTENSION IF NOT EXISTS "pgvector"')
-                await conn.execute('CREATE EXTENSION IF NOT EXISTS "pg_trgm"')
+                # Check if extensions exist first
+                for ext in ['uuid-ossp', 'vector', 'pg_trgm']:
+                    exists = await conn.fetchval(
+                        "SELECT 1 FROM pg_extension WHERE extname = $1",
+                        ext
+                    )
+                    if not exists:
+                        # Use 'vector' not 'pgvector' as extension name
+                        ext_name = ext if ext != 'vector' else 'vector'
+                        try:
+                            await conn.execute(f'CREATE EXTENSION IF NOT EXISTS "{ext_name}"')
+                        except Exception as e:
+                            logger.warning(f"Could not create extension {ext_name}: {e}")
                 
             logger.info("PostgreSQL unified backend initialized successfully")
             
@@ -661,7 +671,7 @@ class PostgresUnifiedBackend:
             "memory_type": row["memory_type"],
             "importance_score": float(row["importance_score"]),
             "tags": row["tags"] or [],
-            "metadata": dict(row["metadata"]) if row["metadata"] else {},
+            "metadata": row["metadata"] if isinstance(row["metadata"], dict) else {},
             "access_count": row["access_count"],
             "created_at": row["created_at"].isoformat(),
             "updated_at": row["updated_at"].isoformat(),
