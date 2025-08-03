@@ -339,7 +339,7 @@ class MemoryServiceV2:
         limit: int
     ) -> List[Dict[str, Any]]:
         """Semantic search using embeddings (placeholder)"""
-        # This would use vector embeddings with Qdrant
+        # This would use vector embeddings with PostgreSQL pgvector
         # For now, fall back to keyword search
         return await self._keyword_search(query, limit)
     

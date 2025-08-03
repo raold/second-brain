@@ -8,6 +8,7 @@ websockets>=12.0
 # Database - PostgreSQL with vector support
 asyncpg==0.29.0
 psycopg2-binary==2.9.10
+pgvector==0.2.5
 alembic==1.13.1
 
 # Redis cache

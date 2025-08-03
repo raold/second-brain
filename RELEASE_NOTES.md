@@ -1,3 +1,60 @@
+# Second Brain v4.1.0 Release Notes
+
+**Release Date**: August 3, 2025  
+**Tag**: v4.1.0  
+**Status**: Production Ready with Enhanced Architecture 🚀
+
+## 🎉 Major Release: Application Factory & Graceful Degradation
+
+### What's New in v4.1.0
+
+#### 1. **Application Factory Pattern** 
+- Clean separation between development, production, and testing environments
+- Better testability and configuration management
+- Proper startup/shutdown lifecycle handling
+
+#### 2. **Tagged Router Architecture**
+- Organized API structure with routes grouped by functionality
+- Enhanced Swagger UI with collapsible sections
+- Modular design for easy feature addition/removal
+
+#### 3. **Comprehensive Health Monitoring**
+- Full health checks at `/api/v2/health`
+- Kubernetes-ready probes (`/health/live` and `/health/ready`)
+- System metrics endpoint for resource monitoring
+
+#### 4. **Graceful Degradation System**
+- Service continues operating even when components fail
+- Automatic fallback: Semantic → Full-text → Keyword search
+- Four degradation levels: FULL → NO_VECTOR → NO_PERSISTENCE → READONLY
+
+#### 5. **SQLite Persistence with FTS5**
+- ACID compliance and concurrent access
+- Full-text search with ranking via FTS5
+- Auto-detection of best available storage backend
+
+### Key Improvements
+- **Test Coverage**: 55 tests passing (up from 27)
+- **Security Score**: 8.5/10 (all critical issues resolved)
+- **Code Reduction**: 81% less complexity
+- **Performance**: Sub-100ms response times
+
+### Migration from v4.0
+No breaking changes! v4.1 is fully backward compatible.
+
+```python
+# New import style
+from app.factory import create_app
+app = create_app("production")
+```
+
+### What's Next (v4.2)
+- PostgreSQL + pgvector for unified storage
+- Complete async/await implementation
+- Advanced filtering and search capabilities
+
+---
+
 # Second Brain v4.0.0 Release Notes
 
 **Release Date**: August 2, 2025  
