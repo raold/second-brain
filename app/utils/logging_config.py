@@ -20,7 +20,6 @@ import logging.handlers
 import traceback
 import uuid
 from contextvars import ContextVar
-from app.config import Config
 import psutil
 
 # Context variables for request tracing
@@ -163,14 +162,15 @@ class SecondBrainLogger:
 
 def configure_logging() -> None:
     """Configure application logging based on environment."""
-    config = Config.get_environment_config()
+    # Get configuration from environment directly to avoid circular import
+    log_level_str = os.getenv("LOG_LEVEL", "INFO")
 
     # Determine if we should use structured logging
     use_structured = os.getenv("LOG_FORMAT", "structured").lower() == "structured"
     is_production = os.getenv("ENVIRONMENT", "development") == "production"
 
     # Get log level
-    log_level = getattr(logging, config.log_level.upper(), logging.INFO)
+    log_level = getattr(logging, log_level_str.upper(), logging.INFO)
 
     # Clear any existing configuration
     logging.getLogger().handlers.clear()
@@ -212,7 +212,7 @@ def configure_logging() -> None:
     logger.info(
         "Logging configured",
         extra={
-            "log_level": config.log_level,
+            "log_level": log_level_str,
             "structured": use_structured,
             "environment": os.getenv("ENVIRONMENT", "development"),
         },

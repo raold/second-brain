@@ -3,8 +3,8 @@ FastAPI Dependencies - Single User Implementation
 Simplified for single-user-per-container architecture
 """
 
-from typing import Optional
-from fastapi import HTTPException, Security
+from typing import Optional, Dict, Any
+from fastapi import HTTPException, Security, Depends
 from fastapi.security import APIKeyHeader
 from app.config import Config
 
@@ -51,3 +51,14 @@ def get_health_service():
             }
     
     return HealthService()
+
+
+# Compatibility aliases for routes
+verify_api_key = verify_container_access
+
+async def get_current_user(authenticated: bool = Depends(verify_container_access)) -> Dict[str, Any]:
+    """Get current user - for single-user container, returns static user."""
+    return {
+        "id": "container-user",
+        "is_authenticated": authenticated
+    }

@@ -3,7 +3,6 @@ import os
 from typing import Optional
 from app.utils.logging_config import get_logger
 from openai import AsyncOpenAI
-from app.config import Config
 import json
 
 """
@@ -25,11 +24,12 @@ class OpenAIClient:
 
     def __init__(self):
         if self._client is None:
-            api_key = Config.OPENAI_API_KEY
+            # Get API key directly from environment to avoid circular import
+            api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
-                env_config = Config.get_environment_config()
-                if env_config.require_openai:
-                    logger.error("OPENAI_API_KEY is required for this environment but not set")
+                # In production, require API key
+                if os.getenv("ENVIRONMENT", "development") == "production":
+                    logger.error("OPENAI_API_KEY is required for production but not set")
                     raise ValueError("OPENAI_API_KEY is required but not configured")
                 else:
                     logger.warning("OPENAI_API_KEY not set, OpenAI client will not be available")

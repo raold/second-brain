@@ -17,7 +17,7 @@ import json
 import io
 
 from app.utils.logging_config import get_logger
-from app.dependencies_new import verify_api_key, get_current_user
+from app.dependencies_new import verify_container_access, get_current_user
 from app.database_new import get_database
 from app.services.memory_service_new import MemoryService
 
