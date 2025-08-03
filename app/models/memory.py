@@ -9,13 +9,6 @@ from pydantic import BaseModel
 from enum import Enum
 from pydantic import ConfigDict
 
-class User(BaseModel):
-    """User model"""
-
-    id: str
-    email: str
-    username: str
-
 class MemoryType(str, Enum):
     """Memory type enumeration"""
 
@@ -33,7 +26,6 @@ class Memory(BaseModel):
     importance_score: float = 0.5
     created_at: datetime | None = None
     updated_at: datetime | None = None
-    user_id: str | None = None
     tags: list[str] = []
     metadata: dict[str, Any] = {}
     embedding: list[float] | None = None
@@ -43,7 +35,7 @@ class Memory(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     @classmethod
-    def create(cls, content: str, memory_type: MemoryType, user_id: str | None = None) -> "Memory":
+    def create(cls, content: str, memory_type: MemoryType) -> "Memory":
         """Create a new memory with default values."""
 
         now = datetime.utcnow()
@@ -53,7 +45,6 @@ class Memory(BaseModel):
             memory_type=memory_type,
             created_at=now,
             updated_at=now,
-            user_id=user_id,
         )
 
 class MemoryMetrics(BaseModel):

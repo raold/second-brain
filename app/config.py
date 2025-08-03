@@ -43,10 +43,9 @@ class Config:
     # Anthropic Configuration (Optional)
     ANTHROPIC_API_KEY: str = env.get("ANTHROPIC_API_KEY", "")
     
-    # Security Configuration
-    JWT_SECRET_KEY: str = env.get("JWT_SECRET_KEY", "change-this-in-production")
-    JWT_ALGORITHM: str = env.get("JWT_ALGORITHM", "HS256")
-    JWT_EXPIRATION_DELTA: int = env.get_int("JWT_EXPIRATION_DELTA", 3600)
+    # Container Security (Single User)
+    CONTAINER_API_KEY: str = env.get("CONTAINER_API_KEY", "")
+    # JWT removed - not needed for single user containers
     
     # API Configuration
     API_TOKENS: list = env.get_list("API_TOKENS", [])

@@ -53,7 +53,6 @@ class MemoryUpdate(BaseModel):
 class Memory(MemoryBase):
     """Complete memory model"""
     id: UUID
-    user_id: str
     created_at: datetime
     updated_at: datetime
     access_count: int = 0
