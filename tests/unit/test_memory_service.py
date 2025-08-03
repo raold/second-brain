@@ -10,7 +10,7 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-from app.services.memory_service_new import MemoryService
+from app.services.memory_service import MemoryService
 
 
 class TestMemoryService:

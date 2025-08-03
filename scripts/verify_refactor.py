@@ -13,8 +13,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.services.memory_service_new import MemoryService
-from app.dependencies_new import verify_container_access, get_current_user
+from app.services.memory_service import MemoryService
+from app.dependencies import verify_container_access
 from app.models.memory import Memory, MemoryType
 
 

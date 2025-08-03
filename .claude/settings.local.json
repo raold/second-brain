@@ -17,6 +17,16 @@
       "Bash(cd:*)",
       "Bash(MEMORY_PERSIST_PATH=data/memories.json /Users/dro/Library/CloudStorage/GoogleDrive-dro@lynchburgsmiles.com/My Drive/projects/second-brain/venv/bin/python -c \"\nimport asyncio\nfrom app.services.memory_service_new import MemoryService\n\nasync def test_persistence():\n    # Test with local persistence\n    service = MemoryService(persist_path=''data/memories.json'')\n    \n    # Create and save\n    memory = await service.create_memory(\n        content=''Persistent memory test'',\n        memory_type=''episodic'',\n        importance_score=0.7,\n        tags=[''persistent'', ''test'']\n    )\n    print(f''✅ Created persistent memory: {memory[\"\"id\"\"][:8]}...'')\n    \n    # Create another service instance to test loading\n    service2 = MemoryService(persist_path=''data/memories.json'')\n    memories = await service2.list_memories()\n    print(f''✅ Loaded {len(memories)} memories from disk'')\n    \n    if memories and memories[0][''content''] == ''Persistent memory test'':\n        print(''✅ Persistence verified - memory loaded correctly!'')\n    \n    print(''\\n🎉 Persistence test passed!'')\n\nasyncio.run(test_persistence())\n\")",
       "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
       "Bash(cd:*)"
     ],
     "deny": []

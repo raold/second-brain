@@ -14,7 +14,7 @@ from httpx import AsyncClient
 
 from app.core.exceptions import ValidationException
 from app.database import Database
-from app.services.memory_service_new import MemoryService
+from app.services.memory_service import MemoryService
 
 
 class TestDatabaseErrorHandling:

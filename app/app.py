@@ -67,8 +67,8 @@ def include_routers():
         setup_dependencies()
         
         # V2 API routes - the ONLY implementation we use
-        from app.routes import v2_api_new
-        app.include_router(v2_api_new.router, prefix="")
+        from app.routes.v2_api import router
+        app.include_router(router, prefix="")
         print("✅ V2 API routes included")
         
     except Exception as e:

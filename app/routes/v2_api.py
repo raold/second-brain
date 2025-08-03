@@ -1,6 +1,6 @@
 """
-Second Brain V2 API - Excellence Edition
-A modern, powerful, and elegant API that showcases FastAPI best practices
+Second Brain V2 API - Single User Edition
+A modern, powerful, and elegant API for single-user memory management
 """
 
 from datetime import datetime, timedelta, timezone
@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, BackgroundTasks, File, UploadFile, status
+from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect, BackgroundTasks, File, UploadFile, status, Depends
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, ConfigDict, validator
 from typing_extensions import Annotated
@@ -17,9 +17,9 @@ import json
 import io
 
 from app.utils.logging_config import get_logger
-from app.dependencies_new import verify_container_access, get_current_user
-from app.database_new import get_database
-from app.services.memory_service_new import MemoryService
+from app.dependencies import verify_container_access
+from app.database import get_database
+from app.services.memory_service import MemoryService
 
 logger = get_logger(__name__)
 
@@ -145,100 +145,53 @@ async def validate_pagination(
 # ========================= WEBSOCKET MANAGER =========================
 
 class ConnectionManager:
-    """Advanced WebSocket connection manager with channels"""
+    """Simple WebSocket connection manager for single user"""
     
     def __init__(self):
-        self.active_connections: Dict[str, List[WebSocket]] = {}
-        self.user_connections: Dict[str, List[WebSocket]] = {}
+        self.active_connections: List[WebSocket] = []
         self.connection_metadata: Dict[WebSocket, Dict[str, Any]] = {}
     
-    async def connect(self, websocket: WebSocket, user_id: str, channels: List[str] = None):
-        """Connect a WebSocket and subscribe to channels"""
+    async def connect(self, websocket: WebSocket):
+        """Connect a WebSocket"""
         await websocket.accept()
-        
-        # Track by user
-        if user_id not in self.user_connections:
-            self.user_connections[user_id] = []
-        self.user_connections[user_id].append(websocket)
-        
-        # Subscribe to channels
-        channels = channels or ["global"]
-        for channel in channels:
-            if channel not in self.active_connections:
-                self.active_connections[channel] = []
-            self.active_connections[channel].append(websocket)
+        self.active_connections.append(websocket)
         
         # Store metadata
         self.connection_metadata[websocket] = {
-            "user_id": user_id,
-            "channels": channels,
             "connected_at": datetime.now(timezone.utc)
         }
         
-        logger.info(f"WebSocket connected for user {user_id} to channels: {channels}")
+        logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
         
         # Send welcome message
         await websocket.send_json(WebSocketResponse(
             type="connected",
-            data={"channels": channels, "user_id": user_id}
+            data={"status": "connected"}
         ).dict())
     
     def disconnect(self, websocket: WebSocket):
-        """Disconnect a WebSocket from all channels"""
-        metadata = self.connection_metadata.get(websocket, {})
-        user_id = metadata.get("user_id")
-        channels = metadata.get("channels", [])
-        
-        # Remove from user connections
-        if user_id and user_id in self.user_connections:
-            self.user_connections[user_id].remove(websocket)
-            if not self.user_connections[user_id]:
-                del self.user_connections[user_id]
-        
-        # Remove from channels
-        for channel in channels:
-            if channel in self.active_connections:
-                self.active_connections[channel].remove(websocket)
-                if not self.active_connections[channel]:
-                    del self.active_connections[channel]
+        """Disconnect a WebSocket"""
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
         
         # Clean up metadata
         if websocket in self.connection_metadata:
             del self.connection_metadata[websocket]
         
-        logger.info(f"WebSocket disconnected for user {user_id}")
+        logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
     
-    async def send_to_user(self, user_id: str, message: WebSocketResponse):
-        """Send message to specific user"""
-        if user_id in self.user_connections:
-            disconnected = []
-            for connection in self.user_connections[user_id]:
-                try:
-                    await connection.send_json(message.dict())
-                except:
-                    disconnected.append(connection)
-            
-            # Clean up disconnected
-            for conn in disconnected:
-                self.disconnect(conn)
-    
-    async def broadcast_to_channel(self, channel: str, message: WebSocketResponse):
-        """Broadcast message to all connections in a channel"""
-        if channel in self.active_connections:
-            disconnected = []
-            for connection in self.active_connections[channel]:
-                try:
-                    await connection.send_json(message.dict())
-                except:
-                    disconnected.append(connection)
-            
-            # Clean up disconnected
-            for conn in disconnected:
-                self.disconnect(conn)
-    
-    async def broadcast_global(self, message: WebSocketResponse):
-        """Broadcast to all connected clients"""
-        await self.broadcast_to_channel("global", message)
+    async def broadcast(self, message: WebSocketResponse):
+        """Broadcast message to all connected clients"""
+        disconnected = []
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message.dict())
+            except:
+                disconnected.append(connection)
+        
+        # Clean up disconnected
+        for conn in disconnected:
+            self.disconnect(conn)
 
 
 # Global connection manager
@@ -265,24 +218,21 @@ router = APIRouter(
 async def create_memory(
     memory: MemoryCreate,
     background_tasks: BackgroundTasks,
-    current_user: Dict[str, Any] = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Create a new memory with advanced features"""
     try:
-        # Create memory
+        # Create memory (no user_id needed)
         created_memory = await memory_service.create_memory(
             content=memory.content,
             importance_score=memory.importance_score,
             tags=memory.tags,
-            metadata=memory.metadata,
-            user_id=current_user["id"]
+            metadata=memory.metadata
         )
         
         # Convert to Memory model
         memory_obj = Memory(
             id=UUID(created_memory["id"]),
-            user_id=created_memory["user_id"],
             content=created_memory["content"],
             memory_type=created_memory["memory_type"],
             importance_score=created_memory["importance_score"],
@@ -294,11 +244,7 @@ async def create_memory(
         )
         
         # Background tasks
-        background_tasks.add_task(
-            broadcast_memory_created,
-            memory_obj,
-            current_user["id"]
-        )
+        background_tasks.add_task(broadcast_memory_created, memory_obj)
         
         return MemoryResponse(
             success=True,
@@ -317,7 +263,6 @@ async def create_memory(
 @router.get("/memories/{memory_id}", response_model=MemoryResponse)
 async def get_memory(
     memory_id: UUID,
-    current_user: Dict[str, Any] = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Get a specific memory by ID"""
@@ -329,16 +274,8 @@ async def get_memory(
             detail="Memory not found"
         )
     
-    # Check ownership
-    if memory_data["user_id"] != current_user["id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
-        )
-    
     memory = Memory(
         id=UUID(memory_data["id"]),
-        user_id=memory_data["user_id"],
         content=memory_data["content"],
         memory_type=memory_data["memory_type"],
         importance_score=memory_data["importance_score"],
@@ -358,13 +295,11 @@ async def list_memories(
     memory_type: Optional[str] = Query(None, description="Filter by memory type"),
     tags: Optional[List[str]] = Query(None, description="Filter by tags"),
     importance_min: Optional[float] = Query(None, ge=0, le=1),
-    current_user: Dict[str, Any] = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
 ):
     """List memories with advanced filtering and pagination"""
-    # Get memories
+    # Get memories (no user_id filtering)
     memories_data = await memory_service.list_memories(
-        user_id=current_user["id"],
         limit=pagination["limit"],
         offset=pagination["offset"]
     )
@@ -382,7 +317,6 @@ async def list_memories(
             
         memories.append(Memory(
             id=UUID(mem_data["id"]),
-            user_id=mem_data["user_id"],
             content=mem_data["content"],
             memory_type=mem_data["memory_type"],
             importance_score=mem_data["importance_score"],
@@ -412,7 +346,6 @@ async def update_memory(
     memory_id: UUID,
     update: MemoryUpdate,
     background_tasks: BackgroundTasks,
-    current_user: Dict[str, Any] = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Update a memory with partial data"""
@@ -422,13 +355,6 @@ async def update_memory(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Memory not found"
-        )
-    
-    # Check ownership
-    if existing["user_id"] != current_user["id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
         )
     
     # Update memory
@@ -447,7 +373,6 @@ async def update_memory(
     
     memory = Memory(
         id=UUID(updated_data["id"]),
-        user_id=updated_data["user_id"],
         content=updated_data["content"],
         memory_type=updated_data["memory_type"],
         importance_score=updated_data["importance_score"],
@@ -459,11 +384,7 @@ async def update_memory(
     )
     
     # Background task
-    background_tasks.add_task(
-        broadcast_memory_updated,
-        memory,
-        current_user["id"]
-    )
+    background_tasks.add_task(broadcast_memory_updated, memory)
     
     return MemoryResponse(
         success=True,
@@ -476,22 +397,15 @@ async def update_memory(
 async def delete_memory(
     memory_id: UUID,
     background_tasks: BackgroundTasks,
-    current_user: Dict[str, Any] = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Delete a memory"""
-    # Check if exists and ownership
+    # Check if exists
     existing = await memory_service.get_memory(str(memory_id))
     if not existing:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Memory not found"
-        )
-    
-    if existing["user_id"] != current_user["id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
         )
     
     # Delete
@@ -503,11 +417,7 @@ async def delete_memory(
         )
     
     # Background task
-    background_tasks.add_task(
-        broadcast_memory_deleted,
-        str(memory_id),
-        current_user["id"]
-    )
+    background_tasks.add_task(broadcast_memory_deleted, str(memory_id))
     
     return {"success": True, "message": "Memory deleted successfully"}
 
@@ -517,13 +427,11 @@ async def delete_memory(
 @router.post("/search")
 async def search_memories(
     search: SearchRequest,
-    current_user: Dict[str, Any] = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Advanced search with multiple strategies"""
     results = await memory_service.search_memories(
         query=search.query,
-        user_id=current_user["id"],
         limit=search.limit
     )
     
@@ -532,7 +440,6 @@ async def search_memories(
     for mem_data in results:
         memories.append(Memory(
             id=UUID(mem_data["id"]),
-            user_id=mem_data["user_id"],
             content=mem_data["content"],
             memory_type=mem_data["memory_type"],
             importance_score=mem_data["importance_score"],
@@ -558,7 +465,6 @@ async def search_memories(
 async def bulk_operation(
     operation: BulkOperation,
     background_tasks: BackgroundTasks,
-    current_user: Dict[str, Any] = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Perform bulk operations on multiple memories"""
@@ -570,12 +476,12 @@ async def bulk_operation(
     
     for memory_id in operation.memory_ids:
         try:
-            # Check ownership
+            # Check if exists
             existing = await memory_service.get_memory(str(memory_id))
-            if not existing or existing["user_id"] != current_user["id"]:
+            if not existing:
                 results["failed"].append({
                     "id": str(memory_id),
-                    "error": "Not found or access denied"
+                    "error": "Not found"
                 })
                 continue
             
@@ -615,12 +521,7 @@ async def bulk_operation(
             })
     
     # Background notification
-    background_tasks.add_task(
-        broadcast_bulk_operation,
-        operation.operation,
-        results,
-        current_user["id"]
-    )
+    background_tasks.add_task(broadcast_bulk_operation, operation.operation, results)
     
     return {
         "success": True,
@@ -634,7 +535,6 @@ async def bulk_operation(
 @router.post("/analytics")
 async def get_analytics(
     query: AnalyticsQuery,
-    current_user: Dict[str, Any] = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Get advanced analytics and insights"""
@@ -700,13 +600,13 @@ async def get_analytics(
             {
                 "type": "pattern",
                 "title": "Peak productivity hours",
-                "description": "You create most memories between 9-11 AM",
+                "description": "Most memories created between 9-11 AM",
                 "confidence": 0.87
             },
             {
                 "type": "recommendation",
                 "title": "Consider reviewing old memories",
-                "description": "You have 45 memories not accessed in 30+ days",
+                "description": "45 memories not accessed in 30+ days",
                 "action": "review_old_memories"
             }
         ]
@@ -723,18 +623,16 @@ async def get_analytics(
 async def export_memories(
     format: str = Query("json", pattern="^(json|csv|markdown)$"),
     include_metadata: bool = Query(True),
-    current_user: Dict[str, Any] = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Export all memories in various formats"""
-    # Get all user memories
+    # Get all memories
     all_memories = []
     offset = 0
     batch_size = 100
     
     while True:
         batch = await memory_service.list_memories(
-            user_id=current_user["id"],
             limit=batch_size,
             offset=offset
         )
@@ -793,7 +691,6 @@ async def export_memories(
 async def import_memories(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    current_user: Dict[str, Any] = Depends(get_current_user),
     memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Import memories from file"""
@@ -825,20 +722,14 @@ async def import_memories(
                     content=mem_data.get("content", ""),
                     importance_score=mem_data.get("importance_score", 0.5),
                     tags=mem_data.get("tags", []),
-                    metadata=mem_data.get("metadata", {}),
-                    user_id=current_user["id"]
+                    metadata=mem_data.get("metadata", {})
                 )
                 imported += 1
             except:
                 failed += 1
         
         # Background notification
-        background_tasks.add_task(
-            broadcast_import_complete,
-            imported,
-            failed,
-            current_user["id"]
-        )
+        background_tasks.add_task(broadcast_import_complete, imported, failed)
         
         return {
             "success": True,
@@ -857,21 +748,10 @@ async def import_memories(
 # ========================= WEBSOCKET ENDPOINT =========================
 
 @router.websocket("/ws")
-async def websocket_endpoint(
-    websocket: WebSocket,
-    api_key: str = Query(...)
-):
+async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates"""
-    # Verify API key
-    if not api_key:  # Add proper verification
-        await websocket.close(code=4001, reason="Unauthorized")
-        return
-    
-    # Mock user ID for now
-    user_id = "user_" + api_key[:8]
-    
     try:
-        await manager.connect(websocket, user_id, ["global", f"user:{user_id}"])
+        await manager.connect(websocket)
         
         while True:
             # Receive message
@@ -885,36 +765,11 @@ async def websocket_endpoint(
                     correlation_id=message.data.get("id") if message.data else None
                 ).dict())
             
-            elif message.type == "subscribe" and message.channel:
-                # Add to channel
-                if message.channel not in manager.active_connections:
-                    manager.active_connections[message.channel] = []
-                if websocket not in manager.active_connections[message.channel]:
-                    manager.active_connections[message.channel].append(websocket)
-                
-                await websocket.send_json(WebSocketResponse(
-                    type="subscribed",
-                    channel=message.channel
-                ).dict())
-            
-            elif message.type == "unsubscribe" and message.channel:
-                # Remove from channel
-                if message.channel in manager.active_connections:
-                    if websocket in manager.active_connections[message.channel]:
-                        manager.active_connections[message.channel].remove(websocket)
-                
-                await websocket.send_json(WebSocketResponse(
-                    type="unsubscribed",
-                    channel=message.channel
-                ).dict())
-            
             elif message.type == "message":
-                # Broadcast message to channel
-                await manager.broadcast_to_channel(
-                    message.channel or "global",
+                # Broadcast message to all connections
+                await manager.broadcast(
                     WebSocketResponse(
                         type="message",
-                        channel=message.channel,
                         data=message.data
                     )
                 )
@@ -928,59 +783,41 @@ async def websocket_endpoint(
 
 # ========================= BACKGROUND TASKS =========================
 
-async def broadcast_memory_created(memory: Memory, user_id: str):
+async def broadcast_memory_created(memory: Memory):
     """Broadcast memory creation event"""
-    await manager.broadcast_to_channel(
-        f"user:{user_id}",
+    await manager.broadcast(
         WebSocketResponse(
             type="memory_created",
-            channel=f"user:{user_id}",
             data=memory.dict()
         )
     )
-    
-    # Also broadcast to global for admin monitoring
-    await manager.broadcast_to_channel(
-        "global",
-        WebSocketResponse(
-            type="memory_created",
-            channel="global",
-            data={"user_id": user_id, "memory_id": str(memory.id)}
-        )
-    )
 
 
-async def broadcast_memory_updated(memory: Memory, user_id: str):
+async def broadcast_memory_updated(memory: Memory):
     """Broadcast memory update event"""
-    await manager.broadcast_to_channel(
-        f"user:{user_id}",
+    await manager.broadcast(
         WebSocketResponse(
             type="memory_updated",
-            channel=f"user:{user_id}",
             data=memory.dict()
         )
     )
 
 
-async def broadcast_memory_deleted(memory_id: str, user_id: str):
+async def broadcast_memory_deleted(memory_id: str):
     """Broadcast memory deletion event"""
-    await manager.broadcast_to_channel(
-        f"user:{user_id}",
+    await manager.broadcast(
         WebSocketResponse(
             type="memory_deleted",
-            channel=f"user:{user_id}",
             data={"memory_id": memory_id}
         )
     )
 
 
-async def broadcast_bulk_operation(operation: str, results: Dict, user_id: str):
+async def broadcast_bulk_operation(operation: str, results: Dict):
     """Broadcast bulk operation results"""
-    await manager.broadcast_to_channel(
-        f"user:{user_id}",
+    await manager.broadcast(
         WebSocketResponse(
             type="bulk_operation_complete",
-            channel=f"user:{user_id}",
             data={
                 "operation": operation,
                 "results": results
@@ -989,13 +826,11 @@ async def broadcast_bulk_operation(operation: str, results: Dict, user_id: str):
     )
 
 
-async def broadcast_import_complete(imported: int, failed: int, user_id: str):
+async def broadcast_import_complete(imported: int, failed: int):
     """Broadcast import completion"""
-    await manager.broadcast_to_channel(
-        f"user:{user_id}",
+    await manager.broadcast(
         WebSocketResponse(
             type="import_complete",
-            channel=f"user:{user_id}",
             data={
                 "imported": imported,
                 "failed": failed

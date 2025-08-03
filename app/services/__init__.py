@@ -4,6 +4,6 @@ Clean, minimal services that work with the excellent V2 API.
 """
 
 # Only include services we actually use in V2 API
-from .memory_service_new import MemoryService
+from .memory_service import MemoryService
 
 __all__ = ["MemoryService"]

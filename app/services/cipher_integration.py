@@ -209,37 +209,6 @@ class CipherIntegrationService:
             logger.error(f"Failed to sync with Cipher: {e}")
             return False
             
-    async def get_team_memories(self, team_id: Optional[str] = None) -> List[CipherMemory]:
-        """
-        Get memories shared by team members
-        
-        Args:
-            team_id: Optional team ID filter
-        """
-        if not self.session:
-            await self.connect()
-            
-        params = {}
-        if team_id:
-            params["team_id"] = team_id
-            
-        try:
-            async with self.session.get(
-                f"{self.base_url}/api/team/memories",
-                params=params
-            ) as response:
-                response.raise_for_status()
-                data = await response.json()
-                
-                return [
-                    CipherMemory(**memory) 
-                    for memory in data.get("memories", [])
-                ]
-                
-        except aiohttp.ClientError as e:
-            logger.error(f"Failed to get team memories: {e}")
-            return []
-            
     async def get_context_for_ide(self, ide: str) -> Dict[str, Any]:
         """
         Get current context for a specific IDE
@@ -375,7 +344,6 @@ class CipherDashboardWidget:
             "system1_count": stats.get("system1_count", 0),
             "system2_count": stats.get("system2_count", 0),
             "active_context": stats.get("active_context", "None"),
-            "team_members": stats.get("team_members", 0),
             "last_sync": stats.get("last_sync", "Never"),
             "status": "connected" if self.cipher.session else "disconnected"
         }
@@ -391,7 +359,6 @@ class CipherDashboardWidget:
                 <div>System 1 (Concepts): {data['system1_count']} memories</div>
                 <div>System 2 (Reasoning): {data['system2_count']} chains</div>
                 <div>Active Context: {data['active_context']}</div>
-                <div>Team Members: {data['team_members']}</div>
                 <div>Last Sync: {data['last_sync']}</div>
             </div>
             <div class="status {data['status']}">{data['status'].upper()}</div>
@@ -426,9 +393,6 @@ async def main():
         for chain in chains:
             print(f"Reasoning: {chain.decision} (confidence: {chain.confidence})")
             
-        # Get team memories
-        team_memories = await cipher.get_team_memories()
-        print(f"Team has shared {len(team_memories)} memories")
         
         # Subscribe to events
         async def handle_event(event):

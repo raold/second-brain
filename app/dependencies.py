@@ -32,33 +32,10 @@ async def verify_container_access(api_key: str = Security(api_key_header)) -> bo
     return True
 
 
-# Service dependencies
+# Service dependencies - Simple direct instantiation for single-user container
 def get_memory_service():
     """Get memory service instance - single instance per container."""
-    from app.services.memory_service_new import MemoryService
+    from app.services.memory_service import MemoryService
     return MemoryService()
 
 
-def get_health_service():
-    """Get health service for container health checks."""
-    class HealthService:
-        async def check_health(self):
-            """Simple health check for K8s liveness/readiness probes."""
-            return {
-                "status": "healthy",
-                "container": "running",
-                "storage": "connected"
-            }
-    
-    return HealthService()
-
-
-# Compatibility aliases for routes
-verify_api_key = verify_container_access
-
-async def get_current_user(authenticated: bool = Depends(verify_container_access)) -> Dict[str, Any]:
-    """Get current user - for single-user container, returns static user."""
-    return {
-        "id": "container-user",
-        "is_authenticated": authenticated
-    }
