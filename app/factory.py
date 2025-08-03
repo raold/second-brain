@@ -18,7 +18,7 @@ from app.utils.logging_config import get_logger
 logger = get_logger(__name__)
 
 # Version
-__version__ = "4.1.0"
+__version__ = "4.2.0"
 
 
 class AppState:
@@ -51,15 +51,16 @@ def create_lifespan(config_name: str):
             app.state.degradation_manager = get_degradation_manager()
             await app.state.degradation_manager.perform_health_checks()
             
-            # Initialize memory service with appropriate backend
-            from app.services.memory_service_v2 import MemoryServiceV2
+            # Initialize memory service with PostgreSQL backend
+            from app.services.memory_service_postgres import MemoryServicePostgres
             
-            if config_name == "testing":
-                # Use in-memory only for tests
-                app.state.memory_service = MemoryServiceV2(storage_backend="memory")
-            else:
-                # Auto-detect best backend for dev/prod
-                app.state.memory_service = MemoryServiceV2()
+            # Use PostgreSQL for all environments
+            db_url = os.getenv("DATABASE_URL", "postgresql://secondbrain:changeme@localhost/secondbrain")
+            app.state.memory_service = MemoryServicePostgres(
+                connection_string=db_url,
+                enable_embeddings=(config_name != "testing")  # Disable embeddings for tests
+            )
+            await app.state.memory_service.initialize()
             
             # Load existing memories
             memories = await app.state.memory_service.list_memories()
