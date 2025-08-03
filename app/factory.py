@@ -46,21 +46,29 @@ def create_lifespan(config_name: str):
         app.state = AppState()
         
         try:
-            # Initialize memory service
-            from app.services.memory_service import MemoryService
+            # Initialize degradation manager
+            from app.core.degradation import get_degradation_manager
+            app.state.degradation_manager = get_degradation_manager()
+            await app.state.degradation_manager.perform_health_checks()
+            
+            # Initialize memory service with appropriate backend
+            from app.services.memory_service_v2 import MemoryServiceV2
             
             if config_name == "testing":
                 # Use in-memory only for tests
-                app.state.memory_service = MemoryService(persist_path=None)
+                app.state.memory_service = MemoryServiceV2(storage_backend="memory")
             else:
-                # Use persistence for dev/prod
-                persist_path = os.getenv("MEMORY_PERSIST_PATH", "/data/memories.json")
-                app.state.memory_service = MemoryService(persist_path=persist_path)
+                # Auto-detect best backend for dev/prod
+                app.state.memory_service = MemoryServiceV2()
             
             # Load existing memories
             memories = await app.state.memory_service.list_memories()
             app.state.memory_count = len(memories)
-            logger.info(f"📚 Loaded {app.state.memory_count} existing memories")
+            
+            # Log status
+            stats = await app.state.memory_service.get_statistics()
+            logger.info(f"📚 Loaded {app.state.memory_count} memories using {stats['backend']} backend")
+            logger.info(f"⚡ Degradation level: {stats['degradation_level']}")
             
             # Start background persistence task (if not testing)
             if config_name != "testing":

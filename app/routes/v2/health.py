@@ -144,6 +144,20 @@ async def health_check():
         "storage": check_storage()
     }
     
+    # Add degradation status
+    try:
+        from app.core.degradation import get_degradation_manager
+        degradation_manager = get_degradation_manager()
+        await degradation_manager.perform_health_checks()
+        degradation_status = degradation_manager.get_status()
+        checks["degradation"] = {
+            "status": "healthy" if degradation_status["level"] == "FULL" else "degraded",
+            "level": degradation_status["level"],
+            "features_disabled": degradation_status["features_disabled"]
+        }
+    except:
+        pass
+    
     # Determine overall status
     if all(check.get("status") == "healthy" for check in checks.values()):
         overall_status = HealthStatus.HEALTHY
@@ -252,6 +266,30 @@ async def get_metrics():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve metrics"
         )
+
+
+@router.get(
+    "/degradation",
+    summary="Degradation status",
+    description="Get current service degradation status"
+)
+async def get_degradation_status():
+    """
+    Get detailed degradation status.
+    
+    Shows which services are failing and what features are disabled.
+    """
+    try:
+        from app.core.degradation import get_degradation_manager
+        degradation_manager = get_degradation_manager()
+        await degradation_manager.perform_health_checks()
+        return degradation_manager.get_status()
+    except Exception as e:
+        return {
+            "error": str(e),
+            "level": "UNKNOWN",
+            "features_disabled": []
+        }
 
 
 @router.get(

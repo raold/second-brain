@@ -42,6 +42,9 @@
       "Bash(cd:*)",
       "Bash(cd:*)",
       "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(USE_SQLITE=true MEMORY_PERSIST_PATH=./data venv/bin/python -c \"\nimport asyncio\nfrom app.services.memory_service_v2 import MemoryServiceV2\n\nasync def test():\n    # Test with SQLite\n    service = MemoryServiceV2()\n    stats = await service.get_statistics()\n    print(f''💾 Storage backend: {stats[\"\"backend\"\"]}'')\n    print(f''📊 Total memories: {stats.get(\"\"total_memories\"\", 0)}'')\n    \n    # Create a test memory\n    memory = await service.create_memory(\n        content=''Testing SQLite persistence in v4.1'',\n        importance_score=0.9,\n        tags=[''sqlite'', ''persistence'', ''v4.1'']\n    )\n    print(f''✅ Created memory in SQLite: {memory[\"\"id\"\"][:8]}...'')\n    \n    # Search using FTS5\n    results = await service.search_memories(''SQLite'')\n    print(f''🔍 Full-text search found {len(results)} results'')\n    \n    # Get updated stats\n    stats = await service.get_statistics()\n    print(f''\\n📊 Database stats:'')\n    print(f''  - Total memories: {stats.get(\"\"total_memories\"\", 0)}'')\n    print(f''  - Database path: {stats.get(\"\"database_path\"\", \"\"N/A\"\")}'')\n    \n    print(''\\n🎉 SQLite backend working perfectly!'')\n\nasyncio.run(test())\n\")",
       "Bash(cd:*)"
     ],
     "deny": []
