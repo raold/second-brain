@@ -61,7 +61,9 @@
       "Bash(cd:*)",
       "Bash(cd:*)",
       "Bash(cd:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(docker system prune:*)",
+      "Bash(docker volume prune:*)"
     ],
     "deny": []
   }

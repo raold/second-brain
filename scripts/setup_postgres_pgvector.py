@@ -60,7 +60,7 @@ async def setup_database():
         
         # Create extensions
         print("\n📚 Installing extensions...")
-        extensions = ["uuid-ossp", "pgvector", "pg_trgm"]
+        extensions = ["uuid-ossp", "vector", "pg_trgm"]
         
         for ext in extensions:
             try:
@@ -68,7 +68,7 @@ async def setup_database():
                 print(f"  ✓ {ext} installed")
             except Exception as e:
                 print(f"  ⚠️ {ext}: {e}")
-                if ext == "pgvector":
+                if ext == "vector":
                     print("\n❌ pgvector extension is required!")
                     print("Install it with:")
                     print("  Ubuntu/Debian: sudo apt install postgresql-15-pgvector")
@@ -125,7 +125,7 @@ async def setup_database():
             
         # Check pgvector
         vector_check = await conn.fetchval("""
-            SELECT 1 FROM pg_extension WHERE extname = 'pgvector'
+            SELECT 1 FROM pg_extension WHERE extname = 'vector'
         """)
         
         if vector_check:

@@ -168,6 +168,7 @@ def create_app(config_name: str = "development") -> FastAPI:
         from app.routes.v2 import (
             memories_router,
             search_router,
+            search_advanced_router,
             health_router,
             websocket_router
         )
@@ -175,6 +176,7 @@ def create_app(config_name: str = "development") -> FastAPI:
         # Include routers with proper tags
         app.include_router(memories_router, prefix="/api/v2", tags=["Memories"])
         app.include_router(search_router, prefix="/api/v2", tags=["Search"])
+        app.include_router(search_advanced_router, prefix="/api/v2", tags=["Advanced Search"])
         app.include_router(health_router, prefix="/api/v2", tags=["System"])
         app.include_router(websocket_router, prefix="/api/v2", tags=["Real-time"])
         

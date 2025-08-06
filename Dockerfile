@@ -39,14 +39,11 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy requirements files
-COPY config/requirements.txt ./
-COPY config/requirements-*.txt ./config/
+COPY requirements.txt ./
 
-# Install Python dependencies (including dev tools)
+# Install Python dependencies
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir -r config/requirements-production.txt && \
-    pip install --no-cache-dir -r config/requirements-ci-cd.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
@@ -62,7 +59,7 @@ USER app
 EXPOSE 8000
 
 # Development command (with hot reload)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 # Build stage for production
 FROM python:3.11-slim AS builder
@@ -82,12 +79,12 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy requirements files
-COPY config/requirements.txt config/requirements-production.txt ./config/
+COPY requirements.txt ./
 
 # Install Python dependencies
 RUN pip install --upgrade pip && \
     pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels \
-    -r config/requirements-production.txt
+    -r requirements.txt
 
 # Runtime stage
 FROM python:3.11-slim
@@ -142,4 +139,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Default command
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
