@@ -1,5 +1,7 @@
 # SecondBrain v4.2.0 🧠 - **PostgreSQL + pgvector Unified Architecture**
 
+[![CI](https://github.com/raold/second-brain/actions/workflows/ci.yml/badge.svg)](https://github.com/raold/second-brain/actions/workflows/ci.yml)
+[![Deploy](https://github.com/raold/second-brain/actions/workflows/deploy.yml/badge.svg)](https://github.com/raold/second-brain/actions/workflows/deploy.yml)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://docker.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
 [![pgvector](https://img.shields.io/badge/pgvector-0.8.0-blue.svg)](https://github.com/pgvector/pgvector)
