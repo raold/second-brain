@@ -1,0 +1,23 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build Docker image
+      run: |
+        docker build -t second-brain:${{ github.sha }} .
+        echo "✅ Docker image built successfully"
+    
+    - name: Log build info
+      run: |
+        echo "🚀 Build completed"
+        echo "Commit: ${{ github.sha }}"
+        echo "Time: $(date)"

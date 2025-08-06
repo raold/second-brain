@@ -73,7 +73,10 @@
       "Bash(venv/bin/python -m pytest tests/integration/test_postgres_live.py -v)",
       "Bash(venv/bin/python -m pytest tests/integration/test_postgres_live.py::TestPostgreSQLLive::test_database_connection -v)",
       "Bash(venv/bin/python -m pytest tests/integration/test_postgres_live.py::TestPostgreSQLLive::test_database_connection -v -s)",
-      "Bash(venv/bin/python:*)"
+      "Bash(venv/bin/python:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(yamllint:*)"
     ],
     "deny": []
   }

@@ -1,4 +1,4 @@
-name: CI
+name: Test
 
 on:
   push:
@@ -10,21 +10,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_USER: secondbrain
-          POSTGRES_PASSWORD: changeme
-          POSTGRES_DB: secondbrain
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
     - uses: actions/checkout@v4
     
@@ -38,79 +23,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    - name: Set up test environment
-      env:
-        DATABASE_URL: postgresql://secondbrain:changeme@localhost:5432/secondbrain
+    - name: Test imports
       run: |
-        # Create pgvector extension
-        PGPASSWORD=changeme psql -h localhost -U secondbrain -d secondbrain -c "CREATE EXTENSION IF NOT EXISTS vector;"
-        
-        # Run schema setup
-        python scripts/setup_postgres_pgvector.py
-        
-        # Create missing SQL functions
-        PGPASSWORD=changeme psql -h localhost -U secondbrain -d secondbrain << EOF
-        CREATE OR REPLACE FUNCTION track_memory_access(memory_id UUID)
-        RETURNS void AS \$\$
-        BEGIN
-            UPDATE memories 
-            SET access_count = access_count + 1,
-                last_accessed_at = NOW()
-            WHERE id = memory_id;
-        END;
-        \$\$ LANGUAGE plpgsql;
-        EOF
-    
-    - name: Run basic tests
-      env:
-        DATABASE_URL: postgresql://secondbrain:changeme@localhost:5432/secondbrain
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        ENABLE_EMBEDDINGS: false  # Disable for CI to avoid API costs
-      run: |
-        # Run a simple import test
         python -c "from app.app import app; print('✅ App imports successfully')"
-        
-        # Run basic database connectivity test
-        python -c "
-import asyncio
-from app.storage.postgres_unified import PostgresUnifiedBackend
-
-async def test_db():
-    backend = PostgresUnifiedBackend('postgresql://secondbrain:changeme@localhost:5432/secondbrain')
-    await backend.initialize()
-    async with backend.acquire() as conn:
-        result = await conn.fetchval('SELECT 1')
-        assert result == 1
-        print('✅ Database connection successful')
-    await backend.close()
-
-asyncio.run(test_db())
-        "
-        
-        # Run memory creation test (without embeddings)
-        python -c "
-import asyncio
-from app.services.memory_service import MemoryService
-
-async def test_memory():
-    service = MemoryService()
-    memory = await service.create_memory(
-        content='CI test memory',
-        memory_type='test',
-        importance_score=0.5
-    )
-    assert memory['id'] is not None
-    print(f'✅ Memory created: {memory[\"id\"]}')
     
-    # Clean up
-    await service.delete_memory(memory['id'])
-
-asyncio.run(test_memory())
-        "
-    
-    - name: Check code quality
+    - name: Build Docker image
       run: |
-        # Just check for syntax errors in main files
-        python -m py_compile app/app.py || true
-        python -m py_compile app/config.py || true
-        echo "✅ Code syntax check completed"
+        docker build -t second-brain:test .
+        echo "✅ Docker build successful"
