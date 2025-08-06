@@ -22,9 +22,11 @@ class MemoryService:
     def __init__(self):
         """Initialize PostgreSQL memory service"""
         db_url = os.getenv("DATABASE_URL", "postgresql://secondbrain:changeme@localhost/secondbrain")
+        # Check if embeddings should be enabled (default: True for v4.2.0)
+        enable_embeddings = os.getenv("ENABLE_EMBEDDINGS", "true").lower() == "true"
         self.service = MemoryServicePostgres(
             connection_string=db_url,
-            enable_embeddings=False  # Disabled by default for performance
+            enable_embeddings=enable_embeddings  # Enabled by default for v4.2.0 vector search
         )
         self._initialized = False
     
@@ -41,7 +43,8 @@ class MemoryService:
         memory_type: str = "generic",
         importance_score: float = 0.5,
         tags: List[str] = None,
-        metadata: Dict[str, Any] = None
+        metadata: Dict[str, Any] = None,
+        generate_embedding: bool = True
     ) -> Dict[str, Any]:
         """Create a new memory"""
         await self.initialize()
@@ -51,7 +54,7 @@ class MemoryService:
             importance_score=importance_score,
             tags=tags,
             metadata=metadata,
-            generate_embedding=False
+            generate_embedding=generate_embedding
         )
     
     async def get_memory(self, memory_id: str) -> Optional[Dict[str, Any]]:
@@ -65,7 +68,8 @@ class MemoryService:
         content: Optional[str] = None,
         importance_score: Optional[float] = None,
         tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        regenerate_embedding: bool = False
     ) -> Optional[Dict[str, Any]]:
         """Update a memory"""
         await self.initialize()
@@ -74,7 +78,8 @@ class MemoryService:
             content=content,
             importance_score=importance_score,
             tags=tags,
-            metadata=metadata
+            metadata=metadata,
+            regenerate_embedding=regenerate_embedding
         )
     
     async def delete_memory(self, memory_id: str) -> bool:

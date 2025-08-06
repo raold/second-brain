@@ -126,7 +126,8 @@ class PostgresUnifiedBackend:
             embedding_generated_at = None
             
             if embedding:
-                embedding_vector = np.array(embedding).tolist()
+                # Convert embedding to PostgreSQL vector format
+                embedding_vector = self._format_vector(embedding)
                 embedding_model = memory.get("embedding_model", "text-embedding-ada-002")
                 embedding_generated_at = datetime.utcnow()
             
@@ -202,7 +203,9 @@ class PostgresUnifiedBackend:
         if new_embedding:
             param_count += 1
             set_clauses.append(f"embedding = ${param_count}::vector")
-            params.append(np.array(new_embedding).tolist())
+            # Convert embedding to PostgreSQL vector format
+            embedding_vector = self._format_vector(new_embedding)
+            params.append(embedding_vector)
             
             param_count += 1
             set_clauses.append(f"embedding_generated_at = ${param_count}")
@@ -322,7 +325,7 @@ class PostgresUnifiedBackend:
         async with self.acquire() as conn:
             rows = await conn.fetch(
                 query,
-                np.array(embedding).tolist(),
+                self._format_vector(embedding),
                 container_id,
                 min_similarity,
                 limit
@@ -390,7 +393,7 @@ class PostgresUnifiedBackend:
             rows = await conn.fetch(
                 query_sql,
                 query,
-                np.array(embedding).tolist(),
+                self._format_vector(embedding),
                 limit,
                 vector_weight,
                 min_score
@@ -620,7 +623,7 @@ class PostgresUnifiedBackend:
             await conn.execute(
                 query_sql,
                 query,
-                np.array(embedding).tolist() if embedding else None,
+                self._format_vector(embedding) if embedding else None,
                 results_count,
                 [uuid.UUID(sid) for sid in selected_ids],
                 search_type,
@@ -659,6 +662,10 @@ class PostgresUnifiedBackend:
             logger.info(f"Migrated {len(rows)} memories from SQLite")
             
     # ==================== Helper Methods ====================
+    
+    def _format_vector(self, embedding: List[float]) -> str:
+        """Convert embedding list to PostgreSQL vector format"""
+        return f"[{','.join(str(x) for x in embedding)}]"
     
     def _row_to_dict(self, row: asyncpg.Record) -> Dict[str, Any]:
         """Convert database row to dictionary"""

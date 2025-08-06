@@ -264,6 +264,7 @@ class MemoryServicePostgres:
                     query=query,
                     embedding=embedding,
                     limit=limit,
+                    vector_weight=0.5,  # Default weight
                     min_score=min_score
                 )
             
