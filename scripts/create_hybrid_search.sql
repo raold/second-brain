@@ -14,9 +14,9 @@ RETURNS TABLE (
     tags TEXT[],
     metadata JSONB,
     created_at TIMESTAMPTZ,
-    similarity_score FLOAT,
-    text_rank FLOAT,
-    combined_score FLOAT
+    similarity_score DOUBLE PRECISION,
+    text_rank DOUBLE PRECISION,
+    combined_score DOUBLE PRECISION
 ) AS $$
 BEGIN
     RETURN QUERY
@@ -61,10 +61,10 @@ BEGIN
             COALESCE(v.tags, t.tags) AS tags,
             COALESCE(v.metadata, t.metadata) AS metadata,
             COALESCE(v.created_at, t.created_at) AS created_at,
-            COALESCE(v.similarity_score, 0) AS similarity_score,
-            COALESCE(t.text_rank, 0) AS text_rank,
+            COALESCE(v.similarity_score, 0)::FLOAT8 AS similarity_score,
+            COALESCE(t.text_rank, 0)::FLOAT8 AS text_rank,
             (COALESCE(v.similarity_score, 0) * vector_weight + 
-             COALESCE(t.text_rank, 0) * (1 - vector_weight)) AS combined_score
+             COALESCE(t.text_rank, 0) * (1 - vector_weight))::FLOAT8 AS combined_score
         FROM vector_search v
         FULL OUTER JOIN text_search t ON v.id = t.id
     )

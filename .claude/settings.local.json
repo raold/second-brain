@@ -63,7 +63,17 @@
       "Bash(cd:*)",
       "Bash(cd:*)",
       "Bash(docker system prune:*)",
-      "Bash(docker volume prune:*)"
+      "Bash(docker volume prune:*)",
+      "Bash(venv/bin/python scripts/test_runner.py:*)",
+      "Bash(TEST_DATABASE_URL=\"postgresql://secondbrain:changeme@localhost/secondbrain\" venv/bin/python scripts/test_runner.py --integration)",
+      "Bash(venv/bin/pip install:*)",
+      "Bash(TEST_DATABASE_URL=\"postgresql://secondbrain:changeme@localhost/secondbrain\" venv/bin/python -m pytest tests/unit/test_postgres_backend.py -v)",
+      "Bash(TEST_DATABASE_URL=\"postgresql://secondbrain:changeme@localhost/secondbrain\" venv/bin/python -m pytest tests/unit/test_postgres_backend.py::test_create_memory -v -s)",
+      "Bash(TEST_DATABASE_URL=\"postgresql://secondbrain:changeme@localhost/secondbrain\" venv/bin/python -m pytest tests/unit/test_postgres_backend.py::test_create_memory -v)",
+      "Bash(venv/bin/python -m pytest tests/integration/test_postgres_live.py -v)",
+      "Bash(venv/bin/python -m pytest tests/integration/test_postgres_live.py::TestPostgreSQLLive::test_database_connection -v)",
+      "Bash(venv/bin/python -m pytest tests/integration/test_postgres_live.py::TestPostgreSQLLive::test_database_connection -v -s)",
+      "Bash(venv/bin/python:*)"
     ],
     "deny": []
   }

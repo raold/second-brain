@@ -4,6 +4,7 @@ Tests CRUD, search, relationships, and consolidation operations
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 import uuid
 import os
@@ -27,7 +28,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def postgres_backend():
     """Create a test PostgreSQL backend"""
     backend = PostgresUnifiedBackend(
@@ -48,7 +49,7 @@ async def postgres_backend():
     await backend.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def memory_service():
     """Create a test memory service"""
     service = MemoryServicePostgres(
