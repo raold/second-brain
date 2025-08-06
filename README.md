@@ -193,25 +193,6 @@ make status              # Environment health check
 make db-shell           # PostgreSQL shell
 ```
 
-## 🔧 **Configuration**
-
-### **Environment Variables (v4.2.0)**
-
-```bash
-# Database (PostgreSQL with pgvector) - REQUIRED
-DATABASE_URL=postgresql://secondbrain:changeme@localhost:5432/secondbrain
-
-# OpenAI (for embeddings) - OPTIONAL
-OPENAI_API_KEY=your-api-key
-
-# Application
-ENVIRONMENT=development
-DEBUG=true
-
-# Performance
-EMBEDDING_BATCH_SIZE=10
-CONNECTION_POOL_SIZE=20
-```
 
 ## 📚 **Documentation**
 
@@ -313,32 +294,25 @@ curl -X GET "http://localhost:8000/api/v2/export?format=json" \
   -o memories_backup.json
 ```
 
-## 🔄 **Migration to v4.2.0**
+## 🔧 **Configuration**
 
-### **From v4.0/v4.1 to v4.2.0**
+### **Environment Variables (v4.2.0)**
 
 ```bash
-# 1. Backup existing data
-python scripts/migrate_to_postgres.py --source /data
+# Database (PostgreSQL with pgvector) - REQUIRED
+DATABASE_URL=postgresql://secondbrain:changeme@localhost:5432/secondbrain
 
-# 2. Migrate from SQLite
-python scripts/migrate_to_postgres.py --sqlite /data/memories.db
+# OpenAI (for embeddings) - REQUIRED for vector search
+OPENAI_API_KEY=your-api-key
 
-# 3. Migrate from JSON
-python scripts/migrate_to_postgres.py --json /data/memories.json
+# Application
+ENVIRONMENT=development
+DEBUG=true
 
-# 4. Generate embeddings for existing memories
-python scripts/migrate_to_postgres.py --embeddings
-
-# 5. Verify migration
-python scripts/test_postgres_performance.py
+# Performance
+EMBEDDING_BATCH_SIZE=10
+CONNECTION_POOL_SIZE=20
 ```
-
-### **Key Changes**
-- Qdrant removed - all vector operations now in PostgreSQL
-- Redis removed - caching now in PostgreSQL
-- Single `DATABASE_URL` replaces multiple database configs
-- New search endpoints for advanced capabilities
 
 ## 📖 **Documentation**
 
@@ -494,20 +468,6 @@ kubectl apply -f k8s/
 - **GCP**: Cloud Run, Cloud SQL, Memorystore, Pub/Sub
 - **Azure**: Container Instances, Database for PostgreSQL, Cache for Redis
 
-## 🔄 **Migration to v4.0.0**
-
-### **Breaking Changes from v3.x**
-- API endpoints moved from `/api/v1/` to `/api/v2/`
-- Removed ingestion and insights modules
-- Simplified to single V2 API implementation
-- Memory service renamed to `memory_service_new.py`
-- Database module renamed to `database_new.py`
-
-### **Migration Steps**
-1. Update all API calls to use `/api/v2/` prefix
-2. Update imports to use new module names
-3. Remove dependencies on ingestion/insights features
-4. Test with new WebSocket endpoints
 
 ## 🤝 **Contributing**
 
