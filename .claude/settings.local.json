@@ -76,7 +76,11 @@
       "Bash(venv/bin/python:*)",
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
-      "Bash(yamllint:*)"
+      "Bash(yamllint:*)",
+      "Bash(gh release view:*)",
+      "Bash(gh release edit:*)",
+      "Bash(npm create:*)",
+      "Bash(npx sv create:*)"
     ],
     "deny": []
   }

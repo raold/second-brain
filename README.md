@@ -24,6 +24,12 @@
 
 Second Brain v4.2.0 is built on **simplicity-first principles** with a unified database architecture:
 
+### **🌐 Frontend (NEW)**
+- **Modern Web UI**: SvelteKit + TypeScript + Tailwind CSS
+- **Real-time Updates**: WebSocket integration for live changes
+- **Knowledge Graph**: Interactive visualization of memory connections
+- **Responsive Design**: Works seamlessly on desktop and mobile
+
 ### **🗄️ PostgreSQL-Only Architecture**
 - **Single Database**: PostgreSQL with pgvector handles everything
 - **No More Qdrant**: Removed external vector database dependency
@@ -103,6 +109,11 @@ second-brain/
 ├── scripts/                         # Utility scripts
 ├── docker/                          # Docker configuration
 ├── migrations/                      # Database migrations
+├── frontend/                        # SvelteKit web UI (NEW)
+│   ├── src/                        # Source code
+│   │   ├── lib/                   # Components and utilities
+│   │   └── routes/                # Page components
+│   └── package.json               # Frontend dependencies
 │
 ├── docker-compose.yml               # Docker services
 ├── Dockerfile                       # Container image
@@ -136,6 +147,9 @@ python scripts/setup_postgres_pgvector.py
 
 # Start development environment
 make dev
+
+# Start frontend (in new terminal)
+cd frontend && npm install && npm run dev
 
 # Run tests
 make test
