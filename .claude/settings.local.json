@@ -102,7 +102,11 @@
       "Bash(curl:*)",
       "Bash(.venv/bin/pip:*)",
       "Bash(.venv/bin/python:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(lsof:*)",
+      "Bash(pkill:*)",
+      "Bash(npm install)",
+      "Bash(node:*)"
     ],
     "deny": []
   }
