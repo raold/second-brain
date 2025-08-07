@@ -118,7 +118,8 @@
       "Bash(chmod:*)",
       "Bash(cmd.exe /c start http://localhost:8001/docs)",
       "Bash(pg_isready:*)",
-      "Bash(./start_postgres_only.sh:*)"
+      "Bash(./start_postgres_only.sh:*)",
+      "Bash(git config:*)"
     ],
     "deny": []
   }
