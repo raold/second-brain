@@ -106,7 +106,13 @@
       "Bash(lsof:*)",
       "Bash(pkill:*)",
       "Bash(npm install)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(psql:*)",
+      "Bash(sudo service:*)",
+      "Bash(docker.exe ps:*)",
+      "Bash(export DOCKER_HOST=tcp://localhost:2375)",
+      "Bash(wsl.exe:*)"
     ],
     "deny": []
   }
