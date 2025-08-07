@@ -4,9 +4,10 @@
 !.env.example
 !.env.*.template
 *.env
-.cache
-.github
-.nova
+# Cache directories
+.cache/
+# IDE/Editor specific
+.nova/
 
 # Security - Private keys and certificates
 *.pem
