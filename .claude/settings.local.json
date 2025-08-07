@@ -99,7 +99,9 @@
       "Bash(cat:*)",
       "Bash(sudo add-apt-repository:*)",
       "Bash(sudo apt:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(.venv/bin/pip:*)",
+      "Bash(.venv/bin/python:*)"
     ],
     "deny": []
   }
