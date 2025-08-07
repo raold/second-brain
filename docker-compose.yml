@@ -23,7 +23,7 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command: ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
   postgres:
     image: pgvector/pgvector:pg16
     container_name: secondbrain-postgres

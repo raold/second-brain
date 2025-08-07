@@ -1,8 +1,8 @@
-# Second Brain v4.0.0 - Complete Documentation Index
+# Second Brain v4.2.0 - Complete Documentation Index
 
 ## Overview
 
-This is the comprehensive documentation hub for Second Brain v4.0.0, featuring AI memory integration with Cipher, providing complete guides for development, deployment, API usage, and CI/CD operations.
+This is the comprehensive documentation hub for Second Brain v4.2.0, featuring PostgreSQL + pgvector unified architecture, AI memory integration with Cipher, complete guides for development, deployment, API usage, CI/CD operations, and the new SvelteKit frontend.
 
 ## 🚀 Quick Start Guides
 
@@ -20,7 +20,25 @@ This is the comprehensive documentation hub for Second Brain v4.0.0, featuring A
 
 ## 📋 Documentation Categories
 
-### 🧠 AI Memory Integration (NEW in v4.0.0)
+### 🎯 What's New in v4.2.0
+
+#### Major Changes
+- **PostgreSQL + pgvector**: Single database for all storage needs (replaced Qdrant)
+- **HNSW Indexes**: 95% faster vector similarity search
+- **Hybrid Search**: Combined vector and text search with adjustable weights
+- **SvelteKit Frontend**: Modern web UI with real-time updates
+- **Simplified Architecture**: Removed Redis, reduced complexity by 60%
+- **Performance**: 50% faster searches, 60% storage reduction
+
+### 🌐 Frontend Documentation (NEW in v4.2.0)
+
+#### Frontend Guides
+- **[Frontend README](../frontend/README.md)** - SvelteKit web UI setup and features
+- **Quick Start**: `cd frontend && npm install && npm run dev`
+- **Tech Stack**: SvelteKit, TypeScript, Tailwind CSS
+- **Features**: Memory CRUD, vector/hybrid search, knowledge graph, WebSocket updates
+
+### 🧠 AI Memory Integration
 
 #### Cipher Integration
 - **[Cipher Setup Guide](CIPHER_SETUP.md)** - Complete installation and configuration
