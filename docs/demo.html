@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Brain - Demo Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .demo-notice {
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .demo-notice h3 {
+            color: #f59e0b;
+            margin-bottom: 5px;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+        }
+        
+        .memory-item {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .memory-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .memory-type {
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .tags {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+        
+        .tag {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Second Brain - Demo Mode</h1>
+        
+        <div class="demo-notice">
+            <h3>📝 Demo Mode - Local Storage Only</h3>
+            <p>This is a demo version that stores data in your browser. To use the full system with PostgreSQL and AI embeddings, <a href="https://github.com/raold/second-brain">install locally</a>.</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="total-memories">0</div>
+                <div class="stat-label">Total Memories</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avg-importance">0.0</div>
+                <div class="stat-label">Avg Importance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="unique-tags">0</div>
+                <div class="stat-label">Unique Tags</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">Demo</div>
+                <div class="stat-label">Storage Mode</div>
+            </div>
+        </div>
+        
+        <div class="main-grid">
+            <div class="card">
+                <h2>Create Memory</h2>
+                <form id="create-form">
+                    <div class="form-group">
+                        <label for="content">Content</label>
+                        <textarea id="content" placeholder="Enter your memory..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="type">Type</label>
+                        <select id="type">
+                            <option value="generic">Generic</option>
+                            <option value="fact">Fact</option>
+                            <option value="concept">Concept</option>
+                            <option value="experience">Experience</option>
+                            <option value="idea">Idea</option>
+                            <option value="technical">Technical</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="importance">Importance</label>
+                        <input type="range" id="importance" min="0" max="1" step="0.1" value="0.5">
+                        <span id="importance-value">0.5</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tags">Tags (comma-separated)</label>
+                        <input type="text" id="tags" placeholder="e.g., work, ideas, important">
+                    </div>
+                    
+                    <button type="submit">Create Memory</button>
+                </form>
+                
+                <h2 style="margin-top: 30px;">Search</h2>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="search-input" placeholder="Search memories..." style="flex: 1;">
+                    <button onclick="searchMemories()">Search</button>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button onclick="exportData()" style="background: #10b981;">Export Data</button>
+                    <button onclick="importData()" style="background: #f59e0b;">Import Data</button>
+                    <button onclick="clearAll()" style="background: #ef4444;">Clear All</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Memories</h2>
+                <div id="memories-list">
+                    <p style="text-align: center; color: #999;">No memories yet. Create your first memory!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Demo mode - everything stored in localStorage
+        let memories = JSON.parse(localStorage.getItem('secondBrainDemo') || '[]');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMemories();
+            updateStats();
+            
+            // Add sample data if empty
+            if (memories.length === 0) {
+                addSampleData();
+            }
+        });
+        
+        // Update importance display
+        document.getElementById('importance').addEventListener('input', (e) => {
+            document.getElementById('importance-value').textContent = e.target.value;
+        });
+        
+        // Create memory
+        document.getElementById('create-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const memory = {
+                id: Date.now().toString(),
+                content: document.getElementById('content').value,
+                memory_type: document.getElementById('type').value,
+                importance_score: parseFloat(document.getElementById('importance').value),
+                tags: document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t),
+                created_at: new Date().toISOString()
+            };
+            
+            memories.unshift(memory);
+            saveMemories();
+            loadMemories();
+            updateStats();
+            
+            // Reset form
+            e.target.reset();
+            document.getElementById('importance-value').textContent = '0.5';
+        });
+        
+        function saveMemories() {
+            localStorage.setItem('secondBrainDemo', JSON.stringify(memories));
+        }
+        
+        function loadMemories() {
+            displayMemories(memories);
+        }
+        
+        function displayMemories(memoriesToShow) {
+            const container = document.getElementById('memories-list');
+            
+            if (memoriesToShow.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999;">No memories found.</p>';
+                return;
+            }
+            
+            container.innerHTML = memoriesToShow.map(memory => `
+                <div class="memory-item">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span class="memory-type">${memory.memory_type}</span>
+                        <button onclick="deleteMemory('${memory.id}')" style="background: #ef4444; padding: 5px 10px; font-size: 12px;">Delete</button>
+                    </div>
+                    <div style="color: #333; margin-bottom: 10px;">${memory.content}</div>
+                    <div style="background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
+                        <div style="background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; width: ${memory.importance_score * 100}%;"></div>
+                    </div>
+                    <div class="tags">
+                        ${memory.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function searchMemories() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            
+            if (!query) {
+                loadMemories();
+                return;
+            }
+            
+            const filtered = memories.filter(m => 
+                m.content.toLowerCase().includes(query) ||
+                m.tags.some(t => t.toLowerCase().includes(query))
+            );
+            
+            displayMemories(filtered);
+        }
+        
+        function deleteMemory(id) {
+            memories = memories.filter(m => m.id !== id);
+            saveMemories();
+            loadMemories();
+            updateStats();
+        }
+        
+        function updateStats() {
+            document.getElementById('total-memories').textContent = memories.length;
+            
+            if (memories.length > 0) {
+                const avgImportance = memories.reduce((sum, m) => sum + m.importance_score, 0) / memories.length;
+                document.getElementById('avg-importance').textContent = avgImportance.toFixed(2);
+                
+                const allTags = new Set();
+                memories.forEach(m => m.tags.forEach(tag => allTags.add(tag)));
+                document.getElementById('unique-tags').textContent = allTags.size;
+            } else {
+                document.getElementById('avg-importance').textContent = '0.0';
+                document.getElementById('unique-tags').textContent = '0';
+            }
+        }
+        
+        function addSampleData() {
+            memories = [
+                {
+                    id: '1',
+                    content: 'Second Brain is a knowledge management system built with PostgreSQL and pgvector for semantic search',
+                    memory_type: 'fact',
+                    importance_score: 0.9,
+                    tags: ['second-brain', 'postgresql', 'technology'],
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: '2',
+                    content: 'The system uses OpenAI embeddings to enable AI-powered semantic search across all memories',
+                    memory_type: 'technical',
+                    importance_score: 0.8,
+                    tags: ['ai', 'openai', 'embeddings'],
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: '3',
+                    content: 'FastAPI provides the high-performance backend API with automatic documentation',
+                    memory_type: 'technical',
+                    importance_score: 0.7,
+                    tags: ['fastapi', 'api', 'backend'],
+                    created_at: new Date().toISOString()
+                }
+            ];
+            saveMemories();
+            loadMemories();
+            updateStats();
+        }
+        
+        function exportData() {
+            const dataStr = JSON.stringify(memories, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'second-brain-export.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+        
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = event => {
+                    try {
+                        const imported = JSON.parse(event.target.result);
+                        memories = imported;
+                        saveMemories();
+                        loadMemories();
+                        updateStats();
+                        alert('Data imported successfully!');
+                    } catch (error) {
+                        alert('Error importing data: ' + error.message);
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+        
+        function clearAll() {
+            if (confirm('Are you sure you want to delete all memories?')) {
+                memories = [];
+                saveMemories();
+                loadMemories();
+                updateStats();
+            }
+        }
+    </script>
+</body>
+</html>
