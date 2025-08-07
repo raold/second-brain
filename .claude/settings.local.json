@@ -90,7 +90,16 @@
       "Bash(mv:*)",
       "Bash(git rm:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(.venv/bin/python -m pytest tests/unit/test_basic_functionality.py -v --tb=short)",
+      "Bash(.venv/bin/pip install:*)",
+      "Bash(apt list:*)",
+      "Bash(lsb_release:*)",
+      "Bash(cat:*)",
+      "Bash(sudo add-apt-repository:*)",
+      "Bash(sudo apt:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

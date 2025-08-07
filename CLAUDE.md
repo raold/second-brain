@@ -229,7 +229,7 @@ git add -A && git commit -m "message" && git push  # Auto executed
 ### Minor Issues
 - Module names still use `_new` suffix (technical debt)
 - Some synthesis services may still be stubs
-- Python 3.10 vs 3.11+ requirement mismatch (works but not optimal)
+- ⚠️ **Python 3.10 installed, 3.13 required** - See PYTHON_UPGRADE_NEEDED.md for instructions
 
 ### False Positives
 - Security scanner flags AWS example keys in docs (intentional)
