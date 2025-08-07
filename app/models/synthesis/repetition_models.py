@@ -43,6 +43,14 @@ class ForgettingCurve(BaseModel):
         return self.last_review + timedelta(days=self.interval_days)
 
 
+class BulkReviewRequest(BaseModel):
+    """Request for bulk review operations"""
+    memory_ids: List[str]
+    user_id: str
+    review_type: Optional[str] = "standard"
+    batch_size: Optional[int] = 10
+
+
 class ReviewSchedule(BaseModel):
     """Schedule for memory reviews"""
     schedule_id: str = Field(default_factory=lambda: f"rev_{datetime.now().timestamp()}")

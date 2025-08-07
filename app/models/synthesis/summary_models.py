@@ -15,6 +15,15 @@ class SummaryType(str, Enum):
     NARRATIVE = "narrative"
 
 
+class FormatType(str, Enum):
+    """Output format types"""
+    TEXT = "text"
+    MARKDOWN = "markdown"
+    HTML = "html"
+    JSON = "json"
+    PDF = "pdf"
+
+
 class SummaryRequest(BaseModel):
     """Request for memory summarization"""
     memory_ids: Optional[List[str]] = None

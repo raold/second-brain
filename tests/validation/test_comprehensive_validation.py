@@ -21,7 +21,7 @@ class TestEnvironmentValidation:
         """Test that required environment variables are set"""
         required_vars = [
             "ENVIRONMENT",
-            "            "API_TOKENS",
+            "API_TOKENS",
         ]
 
         for var in required_vars:
