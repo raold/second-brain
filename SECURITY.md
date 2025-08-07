@@ -1,7 +1,5 @@
 # 🔒 Second Brain Security Guide
 
-## 🚨 Immediate Actions for New Developers
-
 1. **Copy the template file for local development:**
    ```bash
    cp .env.local.template .env.local
