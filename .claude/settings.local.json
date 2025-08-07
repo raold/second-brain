@@ -112,7 +112,9 @@
       "Bash(sudo service:*)",
       "Bash(docker.exe ps:*)",
       "Bash(export DOCKER_HOST=tcp://localhost:2375)",
-      "Bash(wsl.exe:*)"
+      "Bash(wsl.exe:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }
