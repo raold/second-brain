@@ -20,13 +20,14 @@ class MemoryService:
     """
     
     def __init__(self):
-        """Initialize PostgreSQL memory service"""
-        db_url = os.getenv("DATABASE_URL", "postgresql://secondbrain:changeme@localhost/secondbrain")
-        # Check if embeddings should be enabled (default: True for v4.2.0)
-        enable_embeddings = os.getenv("ENABLE_EMBEDDINGS", "true").lower() == "true"
+        """Initialize PostgreSQL memory service - NO FALLBACKS"""
+        # PostgreSQL ONLY - no SQLite, no mocks, no bullshit
+        db_url = os.getenv("DATABASE_URL", "postgresql://secondbrain:changeme@localhost:5432/secondbrain")
+        
+        # Embeddings ALWAYS enabled for v4.2.0
         self.service = MemoryServicePostgres(
             connection_string=db_url,
-            enable_embeddings=enable_embeddings  # Enabled by default for v4.2.0 vector search
+            enable_embeddings=True  # Always true - we have OpenAI key
         )
         self._initialized = False
     

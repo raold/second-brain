@@ -114,7 +114,11 @@
       "Bash(export DOCKER_HOST=tcp://localhost:2375)",
       "Bash(wsl.exe:*)",
       "Bash(mkdir:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(chmod:*)",
+      "Bash(cmd.exe /c start http://localhost:8001/docs)",
+      "Bash(pg_isready:*)",
+      "Bash(./start_postgres_only.sh:*)"
     ],
     "deny": []
   }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Setup PostgreSQL with pgvector for Second Brain v4.2
-Creates database, extensions, and initial schema
+Setup PostgreSQL with pgvector for Second Brain v4.2.0
+Single user, best practices, WORKING system
 """
 
 import os
@@ -9,15 +9,19 @@ import sys
 import asyncio
 import asyncpg
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment
+load_dotenv()
 
 async def setup_database():
     """Setup PostgreSQL database with pgvector"""
     
-    # Connection parameters
+    # Connection parameters - match docker-compose.yml
     host = os.getenv("POSTGRES_HOST", "localhost")
     port = int(os.getenv("POSTGRES_PORT", "5432"))
-    user = os.getenv("POSTGRES_USER", "postgres")
-    password = os.getenv("POSTGRES_PASSWORD", "postgres")
+    user = os.getenv("POSTGRES_USER", "secondbrain")
+    password = os.getenv("POSTGRES_PASSWORD", "changeme")
     database = os.getenv("POSTGRES_DB", "second_brain")
     
     print("🚀 Setting up PostgreSQL with pgvector for Second Brain v4.2")

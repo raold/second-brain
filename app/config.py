@@ -58,8 +58,9 @@ class Config:
     CORS_ORIGINS: list = env.get_list("CORS_ORIGINS", ["http://localhost:3000", "http://localhost:8000"])
     
     # Feature Flags
-    USE_MOCK_DATABASE: bool = env.get_bool("USE_MOCK_DATABASE", False)
-    USE_MOCK_OPENAI: bool = env.get_bool("USE_MOCK_OPENAI", False)
+    # NO MOCKS - PostgreSQL ONLY
+    USE_MOCK_DATABASE: bool = False
+    USE_MOCK_OPENAI: bool = False
     FEATURE_SESSIONS_ENABLED: bool = env.get_bool("FEATURE_SESSIONS_ENABLED", True)
     FEATURE_ATTACHMENTS_ENABLED: bool = env.get_bool("FEATURE_ATTACHMENTS_ENABLED", True)
     ENABLE_TELEMETRY: bool = env.get_bool("ENABLE_TELEMETRY", False)
