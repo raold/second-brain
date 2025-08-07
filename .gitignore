@@ -4,6 +4,9 @@
 !.env.example
 !.env.*.template
 *.env
+.cache
+.github
+.nova
 
 # Security - Private keys and certificates
 *.pem
