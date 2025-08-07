@@ -1,7 +1,7 @@
 <div align="center">
   <img src="docs/logo.png" alt="Second Brain Logo" width="400">
   
-  # SecondBrain v4.2.0 🧠
+  SecondBrain v4.2.0 🧠
   
   **PostgreSQL + pgvector Unified Architecture**
   
