@@ -1,11 +1,5 @@
 # 🔒 Second Brain Security Guide
 
-## ⚠️ CRITICAL SECURITY NOTICE
-
-**NEVER commit API keys, passwords, or secrets to Git!**
-
-This project has security measures in place to prevent accidental exposure of sensitive information.
-
 ## 🚨 Immediate Actions for New Developers
 
 1. **Copy the template file for local development:**
