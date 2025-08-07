@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\ingestion\embedding_generator.py
-# hypothesis_version: 6.136.2
-
-[0.0, 0.5, 1.0, 255.0, 1000.0, 200, 384, 512, 1000, 1536, 'all-MiniLM-L12-v2', 'all-MiniLM-L6-v2', 'all-mpnet-base-v2', 'auto', 'average', 'cache_size', 'chunk_', 'chunk_count', 'dimensions', 'full', 'has_full_embedding', 'mock', 'openai', 'test', 'total_embeddings', 'types']

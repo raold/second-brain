@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\utils\logging_config.py
-# hypothesis_version: 6.136.2
-
-[1000, 1024, '%H:%M:%S', 'ENVIRONMENT', 'LOG_FORMAT', 'LogContext', 'Logging configured', 'PerformanceLogger', 'SecondBrainLogger', 'configure_logging', 'development', 'duration_ms', 'environment', 'exc_info', 'exception', 'extra', 'extra_data', 'function', 'get_logger', 'httpx', 'info', 'level', 'line', 'log_level', 'logger', 'memory_delta_mb', 'memory_mb', 'message', 'module', 'openai', 'operation', 'production', 'request_id', 'requests', 'structured', 'timestamp', 'traceback', 'type', 'urllib3', 'user_id', 'warning']

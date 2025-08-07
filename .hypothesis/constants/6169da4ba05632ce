@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\routes\github_routes.py
-# hypothesis_version: 6.136.2
-
-[500, '*', '.', '.css', '.git', '.git/HEAD', '.html', '.js', '.json', '.md', '.py', '.ts', '.venv', '.yaml', '.yml', '/github', '/info', '/tree', 'CSS', 'GitHub', 'HTML', 'JSON', 'JavaScript', 'Markdown', 'Python', 'TypeScript', 'YAML', '__pycache__', 'branch', 'children', 'extension', 'file', 'file_types', 'files', 'folder', 'git', 'htmlcov', 'language', 'main_directories', 'name', 'no_extension', 'node_modules', 'path', 'ref: refs/heads/', 'repository', 'size', 'statistics', 'stats', 'status', 'structure', 'success', 'top_languages', 'total_files', 'total_folders', 'tree', 'type', 'unknown']

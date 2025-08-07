@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\routes\graph_routes.py
-# hypothesis_version: 6.136.2
-
-[0.5, 100, 400, 404, 500, '/build', '/centrality', '/communities', '/export/{format}', '/graph', '/neighborhood', '/paths', 'Entity ID', 'Filter by tags', 'Maximum path length', 'Minimum confidence', 'Neighborhood depth', 'Not found', 'Source entity ID', 'Target entity ID', 'algorithm', 'centrality_metrics', 'communities', 'data', 'default_user', 'description', 'format', 'gexf', 'graph', 'graphml', 'json', 'layout', 'message', 'metadata', 'neighborhood', 'no_data', 'num_entities', 'num_memories', 'num_paths_found', 'num_relationships', 'paths', 'source', 'spectral', 'statistics', 'status', 'success', 'target', 'total_entities', 'total_relationships', 'user_id']

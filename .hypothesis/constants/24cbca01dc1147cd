@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\routes\session_routes.py
-# hypothesis_version: 6.136.2
-
-[500, '/', '/ingest', '/pause', '/resume', '/session', 'Additional context', 'Priority level', 'Reason for pausing', 'Session', 'Session ID to resume', 'Source of the idea', 'The idea to process', 'User requested', 'general', 'medium', 'message', 'mobile', 'resume_instructions', 'status', 'success']

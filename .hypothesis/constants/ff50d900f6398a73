@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\services\monitoring\__init__.py
-# hypothesis_version: 6.136.2
-
-['Alert', 'AlertLevel', 'LogAnalyticsService', 'MetricType', 'MetricsCollector', 'PerformanceMetrics', 'start_log_monitoring', 'stop_log_monitoring']

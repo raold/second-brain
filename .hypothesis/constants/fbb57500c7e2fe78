@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\src\domain\models\user.py
-# hypothesis_version: 6.136.2
-
-[1000, 5000, 10000, 50000, '@', 'Invalid email format', 'admin', 'api_rate_limit', 'avatar_url', 'bio', 'created_at', 'email', 'full_name', 'id', 'is_active', 'is_verified', 'last_login_at', 'memory_limit', 'preferences', 'premium', 'role', 'storage_limit_mb', 'updated_at', 'user', 'username']

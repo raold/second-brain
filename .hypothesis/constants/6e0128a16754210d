@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\connection_pool.py
-# hypothesis_version: 6.136.2
-
-[0.0, 0.05, 0.1, 0.3, 0.7, 0.8, 0.9, 1.0, 30.0, 60.0, 300.0, 1000, 50000, '3', '30', '600', 'DatabasePoolManager', 'Pool not initialized', 'SELECT 1', '__main__', 'active_connections', 'application_name', 'average_query_time', 'connected', 'connection_usage', 'critical', 'disconnected', 'error', 'error_rate', 'health', 'health_details', 'healthy', 'idle_connections', 'jit', 'off', 'pool_size', 'response_time', 'second-brain', 'stats', 'status', 'tcp_keepalives_count', 'tcp_keepalives_idle', 'warning']

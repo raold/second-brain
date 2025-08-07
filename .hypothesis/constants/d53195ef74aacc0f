@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\migration_engine.py
-# hypothesis_version: 6.136.2
-
-[1000, 'checkpoint', 'completed', 'dry_run', 'error', 'estimated_changes', 'estimated_items', 'migration_id', 'running', 'status']

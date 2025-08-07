@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\src\domain\models\tag.py
-# hypothesis_version: 6.136.2
-
-['#', 'Invalid color format', 'color', 'created_at', 'description', 'icon', 'id', 'last_used_at', 'name', 'parent_id', 'updated_at', 'usage_count', 'user_id']

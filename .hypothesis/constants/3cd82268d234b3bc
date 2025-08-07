@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\routes\google_drive_routes.py
-# hypothesis_version: 6.136.2
-
-[100, 300, 400, 401, 500, 3600, '/api/v1/google-drive', '/auth/callback', '/auth/status', '/auth/url', '/files', '/ingest', '/monitor/folder', '/search', 'Search query', 'auth_url', 'authenticated', 'auto_ingest', 'auto_ingested', 'check_interval', 'created_time', 'drive_metadata', 'error', 'file_count', 'file_id', 'file_name', 'files', 'folder_id', 'google-drive', 'google_drive', 'instructions', 'memories_created', 'message', 'mime_type', 'modified_time', 'next_page_token', 'original_name', 'source', 'source_id', 'success', 'total', 'user_id', 'web_view_link']

@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\src\domain\models\session.py
-# hypothesis_version: 6.136.2
-
-['assistant', 'content', 'context', 'created_at', 'description', 'id', 'is_active', 'last_activity_at', 'memory_ids', 'message_count', 'messages', 'metadata', 'role', 'tags', 'timestamp', 'title', 'updated_at', 'user', 'user_id']

@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\routes\analysis_routes.py
-# hypothesis_version: 6.136.2
-
-[0.3, 100, 200, 404, 500, '/analysis', '/analyze', '/batch', '/classify-domain', '/topics/trending', 'Content to analyze', 'Content to classify', 'Filter by tags', 'No memories found', 'Not found', 'Number of top topics', 'analysis', 'analyzed_memories', 'avg_confidence', 'classification', 'code_snippets', 'confidence', 'confidence_scores', 'count', 'default_user', 'description', 'domain', 'domain_distribution', 'domain_statistics', 'domains', 'extracted_topics', 'hierarchy', 'key_value_pairs', 'keywords', 'kv_pairs', 'lists', 'memories_analyzed', 'memory_id', 'message', 'metadata', 'name', 'no_data', 'occurrences', 'percentage', 'period_days', 'relevance', 'statistics', 'status', 'structured_data', 'structured_summary', 'success', 'tables', 'title', 'topic', 'topic_statistics', 'topics', 'total_memories', 'trend_score', 'trending_topics', 'unique_domains', 'user_id']

@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\database_mock.py
-# hypothesis_version: 6.136.2
-
-[0.0, 0.1, 0.15, 0.2, 0.25, 0.4, 0.5, 1.0, 10.0, 127.5, 100, 1000, 1536, 'FROM memories', 'Mock database closed', 'SELECT COUNT(*)', 'access_count', 'accessed_at', 'avg_content_length', 'category', 'consolidation_score', 'content', 'contextual_score', 'count', 'created_at', 'domain', 'embedding', 'episodic_metadata', 'hnsw_index_exists', 'id', 'importance', 'importance_score', 'index_ready', 'ivf_index_exists', 'last_accessed', 'last_week', 'memory_id', 'memory_type', 'metadata', 'operation', 'procedural_metadata', 'read', 'semantic', 'semantic_metadata', 'similarity', 'tags', 'test-user', 'total_memories', 'type', 'updated_at', 'user_id']

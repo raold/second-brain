@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\insights\models.py
-# hypothesis_version: 6.136.2
-
-[0.0, 0.5, 0.7, 1.0, 10.0, 'access_pattern', 'all_time', 'behavioral', 'coherence_score', 'confidence', 'content_gap', 'daily', 'dbscan', 'evolutionary', 'hierarchical', 'importance_shift', 'kmeans', 'knowledge_growth', 'learning_trend', 'memory_cluster', 'monthly', 'quarterly', 'semantic', 'severity', 'strength', 'structural', 'tag_evolution', 'temporal', 'temporal_pattern', 'usage_pattern', 'weekly', 'yearly']

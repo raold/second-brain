@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\services\synthesis\websocket_service.py
-# hypothesis_version: 6.136.2
-
-[100, 'ERROR', 'RATE_LIMIT_EXCEEDED', 'Rate limit exceeded', 'UNKNOWN_ACTION', 'all', 'batch_id', 'channel', 'client_version', 'connected', 'connection_id', 'content', 'count', 'delivered', 'error', 'event', 'failed', 'ip_address', 'memory', 'ping', 'pong', 'report', 'request', 'resource_ids', 'resource_types', 'response', 'status', 'subscribe', 'subscription_id', 'system', 'total_targets', 'unsubscribe', 'user_agent', 'users', 'version', 'window_start']

@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\config.py
-# hypothesis_version: 6.136.2
-
-[',', '0.0.0.0', '5432', '8000', 'API_TOKENS', 'DATABASE_URL', 'DEBUG', 'ENVIRONMENT', 'HOST', 'INFO', 'LOG_LEVEL', 'OPENAI_API_KEY', 'OPENAI_CHAT_MODEL', 'PORT', 'POSTGRES_DB', 'POSTGRES_HOST', 'POSTGRES_PASSWORD', 'POSTGRES_PORT', 'POSTGRES_USER', 'USE_MOCK_DATABASE', 'WARNING', 'brain', 'brain_password', 'ci', 'development', 'false', 'gpt-4', 'localhost', 'production', 'testing', 'true']

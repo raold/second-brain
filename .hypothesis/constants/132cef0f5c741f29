@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\services\synthesis\__init__.py
-# hypothesis_version: 6.136.2
-
-['ConnectionManager', 'EventBroadcaster', 'RepetitionScheduler', 'ReportGenerator', 'WebSocketService']

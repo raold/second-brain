@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\ingestion\engine.py
-# hypothesis_version: 6.136.2
-
-[0.0, 100, 1024, 4000, 4096, 'SUPPORTED_TYPES', 'chunk_index', 'content', 'encoding', 'extraction_result', 'file', 'file_metadata', 'filename', 'format', 'metadata', 'parsed_metadata', 'r', 'rb', 'text', 'text/markdown', 'text/plain', 'text/x-markdown', 'total_chunks', 'unknown', 'upload', 'utf-8', 'w', 'wb']

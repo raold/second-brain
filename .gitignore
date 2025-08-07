@@ -18,6 +18,19 @@ node_modules/
 __pycache__/
 *.pyc
 
+# Virtual environments
+.venv/
+venv/
+.venvLibsite-packages/
+env/
+ENV/
+
+# Testing
+.hypothesis/
+.pytest_cache/
+htmlcov/
+.coverage
+
 # Data directories
 data/
 logs/

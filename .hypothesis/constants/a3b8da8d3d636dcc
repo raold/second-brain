@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\routes\synthesis_routes.py
-# hypothesis_version: 6.136.2
-
-[b'Report content', 100, 404, 500, 1000, 4001, '/api/v1/synthesis', '/repetition/due', '/repetition/schedule', '/reports', '/reports/generate', '/reports/schedule', '/reports/schedules', '/reports/templates', '/reports/{report_id}', '/synthesis/status', '/websocket/metrics', '/websocket/subscribe', '/ws', '2.8.2', 'Content-Disposition', 'Invalid API key', 'Report not found', 'Schedule deleted', 'User-Agent', 'algorithms', 'all_time', 'anki', 'application/pdf', 'connections', 'difficulty', 'ease_factor', 'format', 'interval_change', 'ip_address', 'leitner', 'message', 'metrics', 'new_interval', 'next_review', 'operational', 'repetition_scheduler', 'report_generator', 'sm2', 'status', 'success', 'synthesis', 'title', 'user_agent', 'version', 'websocket_service']

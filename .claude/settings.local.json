@@ -80,7 +80,17 @@
       "Bash(gh release view:*)",
       "Bash(gh release edit:*)",
       "Bash(npm create:*)",
-      "Bash(npx sv create:*)"
+      "Bash(npx sv create:*)",
+      "Bash(find:*)",
+      "Bash(.venv/bin/python -m pytest tests/ --tb=no -q --co -q)",
+      "Bash(sqlite3:*)",
+      "Bash(python3:*)",
+      "Bash(.venv_new/bin/pip install:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

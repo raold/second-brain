@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\ingestion\google_drive_client.py
-# hypothesis_version: 6.136.2
-
-[100, 300, ' and ', "'root' in parents", '+00:00', '.docx', '.pdf', '.xlsx', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'Z', 'application/msword', 'application/pdf', 'auth_uri', 'client_id', 'client_secret', 'createdTime', 'drive', 'extension', 'files', 'http://localhost', 'id', 'image/bmp', 'image/gif', 'image/jpeg', 'image/png', 'installed', 'mimeType', 'mime_type', 'modifiedTime', 'name', 'nextPageToken', 'next_page_token', 'offline', 'parents', 'rb', 'redirect_uris', 'size', 'text/csv', 'text/html', 'text/markdown', 'text/plain', 'token_uri', 'trashed=false', 'true', 'v3', 'wb', 'webViewLink']

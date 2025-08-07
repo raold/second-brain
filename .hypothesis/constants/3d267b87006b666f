@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\bulk_memory_operations_advanced.py
-# hypothesis_version: 6.136.2
-
-[b'\x1f\x8b', 0.5, 1.0, 1000, 10000, ' AND ', '%Y%m%d_%H%M%S', ',', ', ', '1=1', '[', 'append', 'average_batch_time', 'compressed', 'compression_ratio', 'content', 'created_after', 'created_before', 'csv', 'deletions_per_second', 'embedding', 'episodic_metadata', 'export_path', 'exported_at', 'file_size_bytes', 'format', 'id', 'importance_score', 'importance_score_max', 'importance_score_min', 'include_embeddings', 'include_metadata', 'json', 'jsonl', 'memories', 'memory_type', 'metadata', 'min_importance', 'parquet', 'pickle', 'pool', 'procedural_metadata', 'replace', 'semantic', 'semantic_metadata', 'skip', 'total_items', 'update', 'updates_per_second', 'utf-8', 'validation_rate', 'xml', '{']

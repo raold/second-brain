@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\routes\dashboard_routes.py
-# hypothesis_version: 6.136.2
-
-[100, 400, 500, '/', '/dashboard', '/features/progress', '/git/branches', '/git/commit-activity', '/git/visualization', '/milestones/progress', '/milestones/upcoming', '/productivity', '/report/{period}', '/stats', '2.0', 'Dashboard', 'Feature description', 'Feature name', 'Feature priority', 'Milestone ID', 'Progress notes', 'Progress percentage', 'activity', 'api_version', 'branches', 'count', 'data', 'day', 'high', 'metrics', 'milestone', 'milestones', 'month', 'progress', 'report', 'repository', 'roadmap', 'statistics', 'status', 'success', 'visualization', 'week']

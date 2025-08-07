@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\src\domain\models\__init__.py
-# hypothesis_version: 6.136.2
-
-['Memory', 'MemoryId', 'MemoryStatus', 'MemoryType', 'Session', 'SessionId', 'Tag', 'TagId', 'User', 'UserId', 'UserRole']

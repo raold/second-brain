@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\migration_framework.py
-# hypothesis_version: 6.136.2
-
-[1000, 3600, 5000, 'can_apply', 'completed', 'database_data', 'database_schema', 'estimated_changes', 'estimated_items', 'failed', 'hybrid', 'memory_data', 'memory_structure', 'migration_id', 'pending', 'rolled_back', 'running', 'skipped', 'warnings']

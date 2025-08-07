@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\services\intelligence\predictive_insights.py
-# hypothesis_version: 6.136.2
-
-[0.0, 0.001, 0.01, 0.05, 0.3, 0.5, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 1.0, 3.0, 100.0, 100, 1000, 'avg_response_ms', 'avg_retention', 'breach_value', 'completion_rate', 'coverage_percentage', 'critical', 'current_density', 'growth_rate', 'health_score', 'immediate', 'moderate', 'next 14 days', 'next 3 days', 'next 48 hours', 'next 7 days', 'ongoing', 'peak_period', 'peak_usage', 'quality_trend', 'quiet_period', 'quiet_usage', 'recurring daily', 'severity', 'spike_factor', 'volatile_count', 'within 24 hours']

@@ -1,4 +1,0 @@
-# file: C:\Users\dro\second-brain\app\insights\insight_generator.py
-# hypothesis_version: 6.136.2
-
-[0.0, 0.3, 0.5, 0.7, 0.75, 0.8, 0.85, 0.9, 1.0, 2.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 100.0, 100, 365, 3650, '%Y-%m', '%Y-%m-%d', 'Concentrated Usage', 'Emerging Topics', 'Slowdown', 'accessed_at', 'accessed_memories', 'accessed_ratio', 'bias_factor', 'change', 'cluster_size', 'cluster_topic', 'count', 'created_at', 'decreased', 'decreasing', 'distribution', 'diversity_score', 'early_importance', 'first_period_avg', 'growth_rate', 'id', 'importance', 'increased', 'increasing', 'late_importance', 'memory_count', 'memory_id', 'new_memories', 'new_tags', 'other_clusters', 'overall_avg_age_days', 'peak_percentage', 'peak_time', 'second_period_avg', 'size', 'tag', 'tags', 'time_frame', 'timeline', 'top_topics', 'topic', 'total_memories', 'unique_topics']
