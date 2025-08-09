@@ -119,7 +119,15 @@
       "Bash(cmd.exe /c start http://localhost:8001/docs)",
       "Bash(pg_isready:*)",
       "Bash(./start_postgres_only.sh:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)"
     ],
     "deny": []
   }

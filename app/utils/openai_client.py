@@ -1,15 +1,18 @@
 import asyncio
+import json
 import os
 from typing import Optional
-from app.utils.logging_config import get_logger
+
 from openai import AsyncOpenAI
-import json
+
+from app.utils.logging_config import get_logger
 
 """
 OpenAI client utility for embeddings.
 """
 
 logger = get_logger(__name__)
+
 
 class OpenAIClient:
     """Singleton OpenAI client for embeddings and NLP features."""
@@ -205,12 +208,15 @@ class OpenAIClient:
             logger.error(f"Failed to classify content: {e}")
             return None
 
+
 # Global client instance
 _openai_client = OpenAIClient()
+
 
 def get_openai_client() -> OpenAIClient:
     """Get the global OpenAI client instance."""
     return _openai_client
+
 
 def get_openai_embedding(text: str) -> list[float] | None:
     """
@@ -238,6 +244,7 @@ def get_openai_embedding(text: str) -> list[float] | None:
     except Exception as e:
         logger.error(f"Error getting embedding: {e}")
         return None
+
 
 async def get_openai_embedding_async(text: str) -> list[float] | None:
     """Async version of get_openai_embedding."""

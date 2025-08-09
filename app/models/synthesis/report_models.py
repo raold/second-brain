@@ -3,11 +3,13 @@
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class ReportFormat(str, Enum):
     """Report output formats"""
+
     MARKDOWN = "markdown"
     HTML = "html"
     PDF = "pdf"
@@ -17,6 +19,7 @@ class ReportFormat(str, Enum):
 
 class ReportType(str, Enum):
     """Types of reports"""
+
     SUMMARY = "summary"
     ANALYTICAL = "analytical"
     PROGRESS = "progress"
@@ -26,6 +29,7 @@ class ReportType(str, Enum):
 
 class ReportSection(BaseModel):
     """A section of a report"""
+
     title: str
     content: str
     section_type: str = "text"
@@ -36,6 +40,7 @@ class ReportSection(BaseModel):
 
 class ReportSchedule(BaseModel):
     """Schedule for automated report generation"""
+
     schedule_id: str = Field(default_factory=lambda: f"sch_{datetime.now().timestamp()}")
     report_type: ReportType
     frequency: str  # daily, weekly, monthly
@@ -48,6 +53,7 @@ class ReportSchedule(BaseModel):
 
 class ReportRequest(BaseModel):
     """Request for report generation"""
+
     user_id: Optional[str] = None
     report_type: ReportType = ReportType.SUMMARY
     format: ReportFormat = ReportFormat.MARKDOWN
@@ -60,6 +66,7 @@ class ReportRequest(BaseModel):
 
 class ReportResponse(BaseModel):
     """Generated report response"""
+
     report_id: str = Field(default_factory=lambda: f"rep_{datetime.now().timestamp()}")
     report_type: ReportType
     format: ReportFormat

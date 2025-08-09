@@ -2,11 +2,13 @@
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class NodeMetrics(BaseModel):
     """Metrics for a single node in the knowledge graph"""
+
     node_id: str
     degree: int = 0
     in_degree: int = 0
@@ -19,6 +21,7 @@ class NodeMetrics(BaseModel):
 
 class KnowledgeCluster(BaseModel):
     """A cluster of related knowledge nodes"""
+
     cluster_id: str
     node_ids: List[str]
     size: int
@@ -30,6 +33,7 @@ class KnowledgeCluster(BaseModel):
 
 class ClusterMetrics(BaseModel):
     """Metrics for knowledge clusters"""
+
     total_clusters: int = 0
     average_cluster_size: float = 0.0
     largest_cluster_size: int = 0
@@ -39,6 +43,7 @@ class ClusterMetrics(BaseModel):
 
 class ConnectivityMetrics(BaseModel):
     """Graph connectivity metrics"""
+
     is_connected: bool = False
     number_of_components: int = 0
     largest_component_size: int = 0
@@ -49,6 +54,7 @@ class ConnectivityMetrics(BaseModel):
 
 class TemporalMetrics(BaseModel):
     """Temporal analysis metrics"""
+
     time_range_days: int = 0
     memories_per_day: float = 0.0
     peak_activity_date: Optional[datetime] = None
@@ -58,6 +64,7 @@ class TemporalMetrics(BaseModel):
 
 class GraphMetrics(BaseModel):
     """Complete graph metrics"""
+
     total_nodes: int = 0
     total_edges: int = 0
     average_degree: float = 0.0
@@ -71,6 +78,7 @@ class GraphMetrics(BaseModel):
 
 class MetricsRequest(BaseModel):
     """Request for graph metrics computation"""
+
     user_id: Optional[str] = None
     memory_ids: Optional[List[str]] = None
     include_node_metrics: bool = True

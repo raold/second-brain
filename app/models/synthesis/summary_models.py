@@ -3,11 +3,13 @@
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class SummaryType(str, Enum):
     """Types of summaries"""
+
     BRIEF = "brief"
     DETAILED = "detailed"
     EXECUTIVE = "executive"
@@ -17,6 +19,7 @@ class SummaryType(str, Enum):
 
 class FormatType(str, Enum):
     """Output format types"""
+
     TEXT = "text"
     MARKDOWN = "markdown"
     HTML = "html"
@@ -26,6 +29,7 @@ class FormatType(str, Enum):
 
 class SummaryRequest(BaseModel):
     """Request for memory summarization"""
+
     memory_ids: Optional[List[str]] = None
     user_id: Optional[str] = None
     summary_type: SummaryType = SummaryType.BRIEF
@@ -37,6 +41,7 @@ class SummaryRequest(BaseModel):
 
 class SummaryResponse(BaseModel):
     """Response from summarization"""
+
     summary_id: str = Field(default_factory=lambda: f"sum_{datetime.now().timestamp()}")
     summary_type: SummaryType
     content: str

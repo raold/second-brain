@@ -3,11 +3,12 @@ Memory models for Second Brain
 """
 
 from datetime import datetime
+from enum import Enum
 from typing import Any
 from uuid import uuid4
-from pydantic import BaseModel
-from enum import Enum
-from pydantic import ConfigDict
+
+from pydantic import BaseModel, ConfigDict
+
 
 class MemoryType(str, Enum):
     """Memory type enumeration"""
@@ -16,6 +17,7 @@ class MemoryType(str, Enum):
     PROCEDURAL = "procedural"
     EPISODIC = "episodic"
     SEMANTIC = "semantic"
+
 
 class Memory(BaseModel):
     """Memory model for Second Brain"""
@@ -46,6 +48,7 @@ class Memory(BaseModel):
             created_at=now,
             updated_at=now,
         )
+
 
 class MemoryMetrics(BaseModel):
     """Memory metrics and statistics"""

@@ -1,11 +1,13 @@
 import json
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from typing import Any
+
 import numpy as np
+
+from app.insights.models import InsightRequest, TimeFrame
 from app.models.synthesis.suggestion_models import SuggestionType
 from app.utils.logging_config import get_logger
-from collections import Counter, defaultdict
-from app.insights.models import InsightRequest, TimeFrame
 
 """Suggestion Engine for Smart Recommendations
 
@@ -25,6 +27,7 @@ from app.models.synthesis.suggestion_models import (
 
 logger = get_logger(__name__)
 
+
 class UserBehaviorProfile:
     """Tracks user behavior patterns for personalized suggestions"""
 
@@ -40,6 +43,7 @@ class UserBehaviorProfile:
         }
         self.learning_velocity: float = 0.0
         self.exploration_score: float = 0.0
+
 
 class SuggestionEngine:
     """Engine for generating intelligent suggestions and recommendations"""

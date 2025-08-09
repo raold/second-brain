@@ -1,11 +1,13 @@
 from typing import Any
+
 from fastapi import WebSocket
+
 from app.utils.logging_config import get_logger
-from app.events.domain_events import SystemHealthEvent
 
 """WebSocket service for real-time communication"""
 
 logger = get_logger(__name__)
+
 
 class ConnectionManager:
     """Manages WebSocket connections"""
@@ -48,6 +50,7 @@ class ConnectionManager:
             except Exception as e:
                 logger.error(f"Error broadcasting to {connection_id}: {e}")
 
+
 class EventBroadcaster:
     """Broadcasts events to WebSocket connections"""
 
@@ -58,6 +61,7 @@ class EventBroadcaster:
         """Broadcast an event to all connected clients"""
         message = {"type": event_type, "data": data}
         await self.connection_manager.broadcast(str(message))
+
 
 class WebSocketService:
     """Main WebSocket service for managing connections and events"""
@@ -98,8 +102,10 @@ class WebSocketService:
             "subscriptions": len(self.active_subscriptions),
         }
 
+
 # Singleton instance
 _websocket_service = None
+
 
 def get_websocket_service() -> WebSocketService:
     """Get singleton instance of WebSocket service"""

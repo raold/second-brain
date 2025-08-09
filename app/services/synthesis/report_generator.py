@@ -6,7 +6,6 @@ from app.utils.logging_config import get_logger
 """Report generator for memory synthesis"""
 
 
-
 logger = get_logger(__name__)
 
 

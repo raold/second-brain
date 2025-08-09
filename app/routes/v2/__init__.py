@@ -5,11 +5,11 @@ Organized by functionality with proper OpenAPI tags
 
 from fastapi import APIRouter
 
+from .health import router as health_router
 from .memories import router as memories_router
 from .search import router as search_router
-from .health import router as health_router
-from .websocket import router as websocket_router
 from .search_advanced import router as search_advanced_router
+from .websocket import router as websocket_router
 
 # Create main v2 router
 v2_router = APIRouter(prefix="/api/v2")
@@ -27,5 +27,5 @@ __all__ = [
     "search_router",
     "search_advanced_router",
     "health_router",
-    "websocket_router"
+    "websocket_router",
 ]

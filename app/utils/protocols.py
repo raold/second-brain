@@ -17,6 +17,7 @@ from typing import (
     Protocol,
     TypeVar,
     runtime_checkable,
+    get_type_hints,
 )
 
 logger = get_logger(__name__)

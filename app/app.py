@@ -5,14 +5,10 @@ A minimal, working FastAPI application that we can build upon.
 No circular imports, no bullshit, just clean code that works.
 """
 
-import os
 from contextlib import asynccontextmanager
-from datetime import datetime
-from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 
 # Version info
 __version__ = "4.0.0"
@@ -27,9 +23,9 @@ async def lifespan(app: FastAPI):
     """Handle application startup and shutdown."""
     # Startup
     print(f"🚀 Starting Second Brain v{__version__}")
-    
+
     yield
-    
+
     # Shutdown
     print("👋 Shutting down Second Brain")
 
@@ -65,12 +61,13 @@ def include_routers():
     try:
         # Setup dependencies first
         setup_dependencies()
-        
+
         # V2 API routes - the ONLY implementation we use
         from app.routes.v2_api import router
+
         app.include_router(router, prefix="")
         print("✅ V2 API routes included")
-        
+
     except Exception as e:
         print(f"⚠️ Error including routers: {e}")
         # Continue anyway - app will work with basic endpoints
@@ -88,7 +85,7 @@ async def root():
         "message": "Welcome to Second Brain API v2",
         "version": __version__,
         "docs": "/docs",
-        "health": "/api/v2/health"
+        "health": "/api/v2/health",
     }
 
 
@@ -96,14 +93,11 @@ async def root():
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
     """Handle all uncaught exceptions."""
-    return {
-        "error": "Internal server error",
-        "message": str(exc),
-        "type": type(exc).__name__
-    }
+    return {"error": "Internal server error", "message": str(exc), "type": type(exc).__name__}
 
 
 if __name__ == "__main__":
     # For testing only
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

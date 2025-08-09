@@ -8,20 +8,17 @@ This module provides:
 - Structured error responses
 """
 
+import traceback
 from datetime import datetime
+from enum import Enum
 from typing import Any
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.utils.logging_config import get_logger
-
-import traceback
-from enum import Enum
-
-from fastapi import Request, status
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
 
 logger = get_logger(__name__)
 

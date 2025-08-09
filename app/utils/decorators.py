@@ -1,12 +1,18 @@
 import asyncio
-import time
-from typing import Union
-from uuid import uuid4
-from app.utils.logging_config import get_logger
 import functools
 import inspect
+import time
 from collections import defaultdict
 from collections.abc import Callable
+from typing import Union, TypeVar, ParamSpec
+from uuid import uuid4
+
+from app.utils.logging_config import get_logger
+
+# Type variables for generic decorators
+T = TypeVar("T")
+P = ParamSpec("P")
+F = TypeVar("F", bound=Callable[..., any])
 
 """
 Elegant decorators for cross-cutting concerns in the Second Brain application.
@@ -21,6 +27,7 @@ logger = get_logger(__name__)
 # ============================================================================
 # Performance and Monitoring Decorators
 # ============================================================================
+
 
 def measure_performance(
     operation_name: str | None = None,
@@ -140,6 +147,7 @@ def measure_performance(
 
     return decorator
 
+
 class RateLimiter:
     """Thread-safe rate limiter for decorators."""
 
@@ -163,6 +171,7 @@ class RateLimiter:
                 return True
 
             return False
+
 
 def rate_limit(max_calls: int, time_window: float, per: str = "function"):
     """
@@ -202,9 +211,11 @@ def rate_limit(max_calls: int, time_window: float, per: str = "function"):
 
     return decorator
 
+
 # ============================================================================
 # Error Handling and Resilience Decorators
 # ============================================================================
+
 
 def retry(
     max_attempts: int = 3,
@@ -269,6 +280,7 @@ def retry(
         return wrapper
 
     return decorator
+
 
 def circuit_breaker(
     failure_threshold: int = 5,
@@ -340,9 +352,11 @@ def circuit_breaker(
 
     return decorator
 
+
 # ============================================================================
 # Caching and Memoization Decorators
 # ============================================================================
+
 
 def memoize(max_size: int | None = 128, ttl: float | None = None, typed: bool = False):
     """
@@ -412,9 +426,11 @@ def memoize(max_size: int | None = 128, ttl: float | None = None, typed: bool = 
 
     return decorator
 
+
 # ============================================================================
 # Validation and Type Checking Decorators
 # ============================================================================
+
 
 def validate_args(**validators):
     """
@@ -454,6 +470,7 @@ def validate_args(**validators):
 
     return decorator
 
+
 def ensure_authenticated(user_param: str = "user_id"):
     """
     Ensure user is authenticated before executing function.
@@ -482,9 +499,11 @@ def ensure_authenticated(user_param: str = "user_id"):
 
     return decorator
 
+
 # ============================================================================
 # Context and State Management Decorators
 # ============================================================================
+
 
 def with_context(**context_vars):
     """
@@ -520,6 +539,7 @@ def with_context(**context_vars):
 
     return decorator
 
+
 def singleton(cls):
     """
     Singleton decorator that maintains one instance per class.
@@ -550,9 +570,11 @@ def singleton(cls):
 
     return get_instance
 
+
 # ============================================================================
 # Utility Functions for Decorator Composition
 # ============================================================================
+
 
 def compose_decorators(*decorators):
     """
@@ -568,6 +590,7 @@ def compose_decorators(*decorators):
         return func
 
     return composed_decorator
+
 
 # Common decorator combinations
 def robust_api_endpoint(
@@ -587,6 +610,7 @@ def robust_api_endpoint(
         rate_limit(rate_limit_calls, 60.0),  # 60-second window
         memoize(ttl=cache_ttl) if cache_ttl else lambda x: x,
     )
+
 
 # ============================================================================
 # Example Usage and Testing

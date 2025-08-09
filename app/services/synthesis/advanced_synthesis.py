@@ -1,10 +1,10 @@
 import json
+from collections import OrderedDict, defaultdict
 from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
+
 from app.utils.logging_config import get_logger
-from collections import defaultdict
-from collections import OrderedDict
 
 """Advanced Synthesis Engine Service
 
@@ -19,6 +19,7 @@ from app.models.synthesis.advanced_models import (
 )
 
 logger = get_logger(__name__)
+
 
 class ThemeCluster:
     """Represents a thematic cluster of memories"""
@@ -51,6 +52,7 @@ class ThemeCluster:
     def add_sub_theme(self, sub_cluster: "ThemeCluster"):
         """Add a sub-theme cluster"""
         self.sub_themes.append(sub_cluster)
+
 
 class AdvancedSynthesisEngine:
     """Advanced synthesis engine for memory processing with real implementation"""

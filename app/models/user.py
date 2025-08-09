@@ -5,8 +5,6 @@ from pydantic import BaseModel, Field
 """User model for Second Brain"""
 
 
-
-
 class User(BaseModel):
     """User model"""
 

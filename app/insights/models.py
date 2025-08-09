@@ -3,11 +3,13 @@
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class TimeFrame(str, Enum):
     """Time frame for analysis"""
+
     DAY = "day"
     WEEK = "week"
     MONTH = "month"
@@ -18,6 +20,7 @@ class TimeFrame(str, Enum):
 
 class InsightType(str, Enum):
     """Types of insights"""
+
     TREND = "trend"
     PATTERN = "pattern"
     ANOMALY = "anomaly"
@@ -27,6 +30,7 @@ class InsightType(str, Enum):
 
 class InsightRequest(BaseModel):
     """Request for generating insights"""
+
     user_id: Optional[str] = None
     memory_ids: Optional[List[str]] = None
     time_frame: TimeFrame = TimeFrame.MONTH
@@ -37,6 +41,7 @@ class InsightRequest(BaseModel):
 
 class Insight(BaseModel):
     """An insight generated from memory analysis"""
+
     insight_id: str = Field(default_factory=lambda: f"ins_{datetime.now().timestamp()}")
     type: InsightType
     title: str
@@ -52,6 +57,7 @@ class Insight(BaseModel):
 
 class InsightResponse(BaseModel):
     """Response containing insights"""
+
     request_id: str = Field(default_factory=lambda: f"req_{datetime.now().timestamp()}")
     insights: List[Insight] = []
     time_frame: TimeFrame

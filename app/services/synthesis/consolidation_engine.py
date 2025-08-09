@@ -1,11 +1,13 @@
+from collections import defaultdict
 from datetime import datetime
-from typing import Any
+from typing import Any, Set
 from uuid import UUID
+
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
 from app.models.synthesis.consolidation_models import ConsolidationResult
 from app.utils.logging_config import get_logger
-from app.events.domain_events import MemoryConsolidatedEvent, ConsolidationEvent
-from collections import defaultdict
 
 """Consolidation Engine for Memory Deduplication and Merging
 
@@ -21,6 +23,7 @@ from app.models.synthesis.consolidation_models import (
 
 logger = get_logger(__name__)
 
+
 class MemorySimilarity:
     """Represents similarity between two memories"""
 
@@ -31,6 +34,7 @@ class MemorySimilarity:
         self.memory2_id = memory2_id
         self.similarity_score = similarity_score
         self.similarity_type = similarity_type  # 'exact', 'semantic', 'partial'
+
 
 class ConsolidationEngine:
     """Engine for detecting and consolidating duplicate or similar memories"""

@@ -6,7 +6,6 @@ Version information utility for Second Brain
 """
 
 
-
 def get_version_info() -> dict[str, Any]:
     """
     Get version information for the application

@@ -3,11 +3,13 @@
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class ReviewStatus(str, Enum):
     """Status of memory review"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -17,6 +19,7 @@ class ReviewStatus(str, Enum):
 
 class RepetitionSettings(BaseModel):
     """Settings for spaced repetition"""
+
     initial_interval_days: int = 1
     multiplier: float = 2.5
     minimum_interval_days: int = 1
@@ -28,6 +31,7 @@ class RepetitionSettings(BaseModel):
 
 class ForgettingCurve(BaseModel):
     """Model for forgetting curve calculations"""
+
     memory_id: str
     retention_strength: float = 1.0
     last_review: Optional[datetime] = None
@@ -35,7 +39,7 @@ class ForgettingCurve(BaseModel):
     ease_factor: float = 2.5
     interval_days: int = 1
     next_review: Optional[datetime] = None
-    
+
     def calculate_next_review(self) -> datetime:
         """Calculate next review date based on current parameters"""
         if self.last_review is None:
@@ -45,6 +49,7 @@ class ForgettingCurve(BaseModel):
 
 class BulkReviewRequest(BaseModel):
     """Request for bulk review operations"""
+
     memory_ids: List[str]
     user_id: str
     review_type: Optional[str] = "standard"
@@ -53,6 +58,7 @@ class BulkReviewRequest(BaseModel):
 
 class ReviewSchedule(BaseModel):
     """Schedule for memory reviews"""
+
     schedule_id: str = Field(default_factory=lambda: f"rev_{datetime.now().timestamp()}")
     memory_id: str
     user_id: str

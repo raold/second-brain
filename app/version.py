@@ -3,7 +3,6 @@
 import sys
 from typing import Dict
 
-
 VERSION = "4.2.0"
 BUILD_DATE = "2025-08-07"
 

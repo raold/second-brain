@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 from typing import Any
+
 from app.utils.logging_config import get_logger
 
 """Spaced repetition scheduler for memory review"""
 
 logger = get_logger(__name__)
+
 
 class SpacedRepetitionEngine:
     """Engine for spaced repetition algorithm"""
@@ -27,6 +29,7 @@ class SpacedRepetitionEngine:
         }.get(difficulty, 1.0)
 
         return int(previous_interval * multiplier)
+
 
 class RepetitionScheduler:
     """Scheduler for spaced repetition reviews"""
@@ -92,6 +95,7 @@ class RepetitionScheduler:
             "due_for_review": due_count,
             "completion_rate": (total_scheduled - due_count) / max(total_scheduled, 1),
         }
+
 
 class ReportGeneratorConfig:
     """Configuration for report generation"""

@@ -3,11 +3,13 @@
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class MergeStrategy(str, Enum):
     """Strategy for merging duplicate memories"""
+
     KEEP_NEWEST = "keep_newest"
     KEEP_OLDEST = "keep_oldest"
     KEEP_HIGHEST_IMPORTANCE = "keep_highest_importance"
@@ -17,6 +19,7 @@ class MergeStrategy(str, Enum):
 
 class DuplicateGroup(BaseModel):
     """Group of duplicate memories"""
+
     group_id: str = Field(default_factory=lambda: f"dup_{datetime.now().timestamp()}")
     memory_ids: List[str]
     similarity_score: float
@@ -26,6 +29,7 @@ class DuplicateGroup(BaseModel):
 
 class ConsolidationRequest(BaseModel):
     """Request for memory consolidation"""
+
     user_id: Optional[str] = None
     memory_ids: Optional[List[str]] = None
     strategy: MergeStrategy = MergeStrategy.KEEP_HIGHEST_IMPORTANCE
@@ -36,6 +40,7 @@ class ConsolidationRequest(BaseModel):
 
 class ConsolidationResult(BaseModel):
     """Result of memory consolidation"""
+
     consolidation_id: str = Field(default_factory=lambda: f"con_{datetime.now().timestamp()}")
     duplicates_found: int = 0
     memories_merged: int = 0

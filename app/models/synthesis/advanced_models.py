@@ -3,11 +3,13 @@
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class SynthesisStrategy(str, Enum):
     """Synthesis strategy types"""
+
     CHRONOLOGICAL = "chronological"
     THEMATIC = "thematic"
     IMPORTANCE_BASED = "importance_based"
@@ -17,6 +19,7 @@ class SynthesisStrategy(str, Enum):
 
 class SynthesisRequest(BaseModel):
     """Request for memory synthesis"""
+
     memory_ids: Optional[List[str]] = None
     user_id: Optional[str] = None
     strategy: SynthesisStrategy = SynthesisStrategy.HYBRID
@@ -27,6 +30,7 @@ class SynthesisRequest(BaseModel):
 
 class SynthesisResult(BaseModel):
     """Result of memory synthesis"""
+
     synthesis_id: str = Field(default_factory=lambda: f"syn_{datetime.now().timestamp()}")
     strategy_used: SynthesisStrategy
     memories_processed: int = 0
