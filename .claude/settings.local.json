@@ -127,7 +127,9 @@
       "Bash(cd:*)",
       "Bash(cd:*)",
       "Bash(cd:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(pip install:*)",
+      "Bash(flake8:*)"
     ],
     "deny": []
   }

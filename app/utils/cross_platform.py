@@ -129,7 +129,7 @@ class PlatformHelper:
             try:
                 # Try to encode and decode to fix issues
                 return text.encode("utf-8", errors="ignore").decode("utf-8", errors="ignore")
-            except:
+            except (UnicodeDecodeError, UnicodeEncodeError):
                 # Fallback to ASCII
                 return text.encode("ascii", errors="ignore").decode("ascii", errors="ignore")
         return text
