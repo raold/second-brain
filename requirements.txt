@@ -27,7 +27,7 @@ anthropic==0.60.0
 # Vector database support
 numpy==1.26.4  # Minor update for compatibility
 pandas==2.0.3
-scikit-learn==1.3.2
+scikit-learn==1.5.0
 networkx==3.2.1
 python-louvain==0.16
 
