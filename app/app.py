@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Version info
-__version__ = "4.0.0"
+__version__ = "4.2.2"
 
 
 # Minimal models for basic endpoints
