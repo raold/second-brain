@@ -129,7 +129,10 @@
       "Bash(cd:*)",
       "Bash(cd:*)",
       "Bash(pip install:*)",
-      "Bash(flake8:*)"
+      "Bash(flake8:*)",
+      "Bash(git tag:*)",
+      "Bash(echo:*)",
+      "Bash(git describe:*)"
     ],
     "deny": []
   }
