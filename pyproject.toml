@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "secondbrain"
-version = "3.1.0"
+version = "4.2.1"
 description = "A production-ready personal knowledge management system"
 readme = "README.md"
 license = {text = "MIT"}
