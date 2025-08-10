@@ -144,7 +144,11 @@
       "Bash(/mnt/c/tools/second-brain/ruff.toml)",
       "Bash(__NEW_LINE__ echo \"✅ Removed unnecessary config files\")",
       "Bash(# Check for __pycache__ directories\nfind /mnt/c/tools/second-brain -type d -name \"\"__pycache__\"\" 2>/dev/null | wc -l)",
-      "Bash(# Remove empty README\nrm -f /mnt/c/tools/second-brain/scripts/SCRIPTS_README.md\n\n# Check if development and setup folders are empty or unnecessary\nls /mnt/c/tools/second-brain/scripts/development/\nls /mnt/c/tools/second-brain/scripts/setup/)"
+      "Bash(# Remove empty README\nrm -f /mnt/c/tools/second-brain/scripts/SCRIPTS_README.md\n\n# Check if development and setup folders are empty or unnecessary\nls /mnt/c/tools/second-brain/scripts/development/\nls /mnt/c/tools/second-brain/scripts/setup/)",
+      "Bash(gh release create:*)",
+      "Bash(--title \"v4.2.3: Security Patches & Documentation Overhaul\" )",
+      "Bash(--notes-file RELEASE_NOTES_v4.2.3.md)",
+      "Bash(tree:*)"
     ],
     "deny": []
   }

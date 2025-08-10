@@ -163,7 +163,7 @@ async def health_check():
 
     return HealthCheck(
         status=overall_status,
-        version="4.2.0",
+        version="4.2.3",
         environment=os.getenv("ENVIRONMENT", "development"),
         uptime_seconds=get_uptime(),
         checks=checks,
