@@ -3,96 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Second Brain API Documentation</title>
+    <title>Second Brain API v4.2.3 - Interactive Documentation</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
+            padding: 30px 20px;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .header h1 {
-            margin: 0;
-            font-size: 2rem;
-        }
-        .header p {
-            margin: 10px 0 0 0;
-            opacity: 0.9;
-        }
+        .header h1 { margin: 0 0 10px 0; font-size: 2.5rem; }
+        .header p { margin: 0; opacity: 0.9; font-size: 1.1rem; }
         .nav-links {
-            margin-top: 15px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
         .nav-links a {
             color: white;
             text-decoration: none;
-            margin: 0 15px;
-            padding: 5px 10px;
+            padding: 8px 16px;
             border-radius: 5px;
-            background: rgba(255,255,255,0.1);
-            transition: background 0.3s;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s;
         }
         .nav-links a:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
         }
-        #swagger-ui {
-            margin: 20px auto;
+        #swagger-ui { margin: 20px auto; max-width: 1400px; }
+        .info-box {
             max-width: 1400px;
-        }
-        .info-banner {
+            margin: 20px auto;
+            padding: 20px;
             background: #f0f9ff;
             border-left: 4px solid #3b82f6;
-            padding: 15px;
-            margin: 20px;
             border-radius: 4px;
         }
-        .info-banner h3 {
-            margin-top: 0;
-            color: #1e40af;
+        .info-box h3 { margin-top: 0; color: #1e40af; }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #666;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🧠 Second Brain API v4.2.3</h1>
-        <p>AI-Powered Memory Management System with PostgreSQL + pgvector</p>
+        <h1>🧠 Second Brain API Documentation</h1>
+        <p>Version 4.2.3 - AI-Powered Memory Management System</p>
         <div class="nav-links">
             <a href="https://github.com/raold/second-brain">📦 GitHub</a>
             <a href="interface.html">🎨 Web Interface</a>
             <a href="README.html">📖 Documentation</a>
-            <a href="#" onclick="tryItOut()">🚀 Try It Live</a>
+            <a href="#" onclick="showQuickStart()">🚀 Quick Start</a>
         </div>
     </div>
 
-    <div class="info-banner">
-        <h3>🔧 Quick Start</h3>
-        <p>This is the interactive API documentation for Second Brain. You can explore and test all endpoints directly from this page.</p>
-        <p><strong>Base URL:</strong> <code id="base-url">https://api.yourdomain.com</code> (Update this to your deployment URL)</p>
+    <div class="info-box" id="info-box">
+        <h3>🔧 API Endpoints</h3>
+        <p>This is the complete API documentation for Second Brain. All endpoints are interactive - click "Try it out" to test them.</p>
+        <p><strong>Base URL:</strong> <code id="base-url">http://localhost:8001</code></p>
+        <p><strong>Status:</strong> <span id="api-status">Checking...</span></p>
     </div>
 
-    <div id="swagger-ui"></div>
+    <div id="swagger-ui">
+        <div class="loading">Loading API documentation...</div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
     <script>
+        // Check API status
+        async function checkAPIStatus() {
+            const statusEl = document.getElementById('api-status');
+            try {
+                const response = await fetch('http://localhost:8001/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    statusEl.innerHTML = `<span style="color: green;">✅ API Running (${data.environment})</span>`;
+                } else {
+                    statusEl.innerHTML = '<span style="color: orange;">⚠️ API not responding</span>';
+                }
+            } catch (e) {
+                statusEl.innerHTML = '<span style="color: red;">❌ API offline - Start with: uvicorn app.main:app --port 8001</span>';
+            }
+        }
+
+        // Show quick start guide
+        function showQuickStart() {
+            document.getElementById('info-box').innerHTML = `
+                <h3>🚀 Quick Start Guide</h3>
+                <ol>
+                    <li><strong>Start the API:</strong><br>
+                        <code>cd /mnt/c/tools/second-brain && USE_MOCK_DB=true uvicorn app.main:app --port 8001</code>
+                    </li>
+                    <li><strong>Create a memory:</strong><br>
+                        Click on POST /api/v2/memories → Try it out → Execute
+                    </li>
+                    <li><strong>Search memories:</strong><br>
+                        Use GET /api/v2/memories/search endpoint
+                    </li>
+                    <li><strong>Use the Web Interface:</strong><br>
+                        <a href="interface.html">Open the visual interface</a>
+                    </li>
+                </ol>
+                <button onclick="location.reload()">← Back to API Docs</button>
+            `;
+        }
+
         // Initialize Swagger UI
         window.onload = function() {
-            // Check if we're on localhost or GitHub Pages
-            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const baseUrl = isLocal ? 'http://localhost:8001' : 'https://api.yourdomain.com';
+            checkAPIStatus();
             
-            // Update base URL display
-            document.getElementById('base-url').textContent = baseUrl;
-            
-            // Initialize Swagger UI
             const ui = SwaggerUIBundle({
-                url: "openapi.json",  // This will load the local openapi.json file
+                url: "openapi.json",
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
@@ -107,42 +137,38 @@
                 defaultModelExpandDepth: 1,
                 docExpansion: "list",
                 filter: true,
-                showExtensions: true,
-                showCommonExtensions: true,
                 tryItOutEnabled: true,
                 supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
                 onComplete: function() {
-                    // Custom modifications after Swagger UI loads
-                    console.log("Swagger UI loaded successfully");
+                    console.log("✅ Swagger UI loaded successfully");
                     
-                    // Add custom styling
+                    // Custom styling
                     const style = document.createElement('style');
                     style.textContent = `
                         .swagger-ui .topbar { display: none; }
                         .swagger-ui .info .title { color: #667eea; }
-                        .swagger-ui .btn.authorize { background: #667eea; }
-                        .swagger-ui .btn.authorize:hover { background: #764ba2; }
-                        .swagger-ui .btn.execute { background: #667eea; }
-                        .swagger-ui .btn.execute:hover { background: #764ba2; }
+                        .swagger-ui .btn.authorize { background: #667eea; border-color: #667eea; }
+                        .swagger-ui .btn.authorize:hover { background: #764ba2; border-color: #764ba2; }
+                        .swagger-ui .btn.execute { background: #667eea; border-color: #667eea; }
+                        .swagger-ui .btn.execute:hover { background: #764ba2; border-color: #764ba2; }
+                        .swagger-ui select { padding: 5px; }
                     `;
                     document.head.appendChild(style);
                 },
                 requestInterceptor: (request) => {
-                    // Intercept requests to use the correct base URL
+                    // Always use localhost:8001 for local testing
                     if (request.url.startsWith('http://localhost:8000')) {
-                        request.url = request.url.replace('http://localhost:8000', baseUrl);
+                        request.url = request.url.replace('http://localhost:8000', 'http://localhost:8001');
                     }
                     return request;
                 }
             });
             
             window.ui = ui;
+            
+            // Refresh API status every 30 seconds
+            setInterval(checkAPIStatus, 30000);
         };
-        
-        // Function to demonstrate API
-        function tryItOut() {
-            alert('To try the API:\n\n1. Click on any endpoint below\n2. Click "Try it out"\n3. Fill in the parameters\n4. Click "Execute"\n\nNote: You need the API running locally or deployed to test real requests.');
-        }
     </script>
 </body>
 </html>
