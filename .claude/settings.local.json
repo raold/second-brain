@@ -150,7 +150,8 @@
       "Bash(--notes-file RELEASE_NOTES_v4.2.3.md)",
       "Bash(tree:*)",
       "Bash(kill:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(USE_MOCK_DB=true timeout 5 .venv/bin/uvicorn app.main:app --port 8001)"
     ],
     "deny": []
   }

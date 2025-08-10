@@ -43,6 +43,10 @@ class MockStorage:
         except Exception as e:
             print(f"⚠️ Could not save memories: {e}")
     
+    async def save_to_disk(self):
+        """Public async method for periodic persistence"""
+        self._save_to_disk()
+    
     async def create_memory(self, data: Dict) -> Dict:
         """Create a new memory"""
         memory_id = str(uuid.uuid4())
