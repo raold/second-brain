@@ -148,7 +148,8 @@
       "Bash(gh release create:*)",
       "Bash(--title \"v4.2.3: Security Patches & Documentation Overhaul\" )",
       "Bash(--notes-file RELEASE_NOTES_v4.2.3.md)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(kill:*)"
     ],
     "deny": []
   }
