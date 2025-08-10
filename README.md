@@ -334,31 +334,10 @@ CONNECTION_POOL_SIZE=20
 
 Second Brain v4.2.0 documentation is organized for different audiences:
 
-### **🚀 Quick Start Guides**
+### **🚀 Quick Start**
 
-| Guide | Purpose | Time | Audience |
-|-------|---------|------|----------|
-| **[📋 Documentation Index](docs/DOCUMENTATION_INDEX.md)** | Complete documentation hub | 5 min | Everyone |
-| **[🚀 CI/CD Quick Reference](docs/CI_CD_DEVELOPER_QUICK_REFERENCE.md)** | Daily CI/CD commands | 5 min | Developers |
-| **[🌐 API Documentation](docs/API_DOCUMENTATION_INDEX.md)** | API integration guide | 10 min | Frontend devs |
-| **[🔧 Development Guide](docs/development/DEVELOPMENT_GUIDE_v3.0.0.md)** | Local development setup | 15 min | New developers |
+See the **Quick Start** section above for setup instructions. All documentation is in `/docs/documentation/`.
 
-### **🎯 Documentation by Role**
-
-**👨‍💻 New Developers**:
-1. [Setup Guide](docs/SETUP.md) - Get environment running (20 min)
-2. [CI/CD Quick Reference](docs/CI_CD_DEVELOPER_QUICK_REFERENCE.md) - Essential commands (5 min)
-3. [Development Guide](docs/development/DEVELOPMENT_GUIDE_v3.0.0.md) - Learn workflow (15 min)
-
-**🔧 DevOps Engineers**:
-1. [CI/CD Comprehensive Guide](docs/CI_CD_COMPREHENSIVE_GUIDE.md) - Complete CI/CD system (30 min)
-2. [CI/CD Workflow Documentation](docs/CI_CD_WORKFLOW_DOCUMENTATION.md) - GitHub Actions (20 min)
-3. [Deployment Guide](docs/deployment/DEPLOYMENT_V3.md) - Production deployment (45 min)
-
-**🌐 Frontend Developers**:
-1. [API Documentation Index](docs/API_DOCUMENTATION_INDEX.md) - API overview (10 min)
-2. [API Usage Examples](docs/API_USAGE_EXAMPLES.md) - Integration examples (15 min)
-3. [WebSocket Events](docs/WEBSOCKET_EVENTS_SPECIFICATION.md) - Real-time features (20 min)
 
 ### **🤖 CI/CD System**
 
@@ -385,11 +364,9 @@ make ci-full          # Complete pipeline simulation
 
 Complete API documentation with real-time WebSocket support:
 
-**Key Resources**:
-- **[API Documentation Index](docs/API_DOCUMENTATION_INDEX.md)** - Complete API overview
-- **[API v2 Specification](docs/API_V2_UNIFIED_SPECIFICATION.md)** - Detailed API reference
-- **[API Usage Examples](docs/API_USAGE_EXAMPLES.md)** - Framework-specific examples
-- **[WebSocket Events](docs/WEBSOCKET_EVENTS_SPECIFICATION.md)** - Real-time communication
+**Available Documentation**:
+- API endpoints are documented at `/docs` when the server is running
+- Check `/docs/documentation/` folder for specifications
 
 **Quick Start**:
 ```javascript
