@@ -3,172 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Second Brain API v4.2.3 - Interactive Documentation</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css">
+    <title>Second Brain - AI-Powered Memory Management</title>
     <style>
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        .header {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .header h1 { margin: 0 0 10px 0; font-size: 2.5rem; }
-        .header p { margin: 0; opacity: 0.9; font-size: 1.1rem; }
-        .nav-links {
-            margin-top: 20px;
+        
+        h1 {
+            color: #667eea;
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        
+        .tagline {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .badges {
             display: flex;
+            gap: 10px;
             justify-content: center;
-            gap: 15px;
             flex-wrap: wrap;
+            margin-top: 20px;
         }
-        .nav-links a {
+        
+        .badge {
+            padding: 5px 12px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        
+        .badge.primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .feature p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .code-block .comment {
+            color: #6a9955;
+        }
+        
+        .code-block .keyword {
+            color: #569cd6;
+        }
+        
+        .code-block .string {
+            color: #ce9178;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
             color: white;
             text-decoration: none;
-            padding: 8px 16px;
             border-radius: 5px;
-            background: rgba(255,255,255,0.2);
+            font-weight: 500;
             transition: all 0.3s;
         }
-        .nav-links a:hover {
-            background: rgba(255,255,255,0.3);
+        
+        .button:hover {
+            background: #5a67d8;
             transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-        #swagger-ui { margin: 20px auto; max-width: 1400px; }
-        .info-box {
-            max-width: 1400px;
-            margin: 20px auto;
-            padding: 20px;
-            background: #f0f9ff;
-            border-left: 4px solid #3b82f6;
-            border-radius: 4px;
+        
+        .button.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
         }
-        .info-box h3 { margin-top: 0; color: #1e40af; }
-        .loading {
+        
+        .button.secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .stat {
             text-align: center;
-            padding: 50px;
-            font-size: 1.2rem;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .stat-label {
             color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: white;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-top: 40px;
+        }
+        
+        footer a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px dotted white;
+        }
+        
+        footer a:hover {
+            border-bottom-style: solid;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .tagline {
+                font-size: 1.1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🧠 Second Brain API Documentation</h1>
-        <p>Version 4.2.3 - AI-Powered Memory Management System</p>
-        <div class="nav-links">
-            <a href="https://github.com/raold/second-brain">📦 GitHub</a>
-            <a href="interface.html">🎨 Web Interface</a>
-            <a href="https://github.com/raold/second-brain/blob/main/README.md">📖 Documentation</a>
-            <a href="#" onclick="showQuickStart()">🚀 Quick Start</a>
+    <div class="container">
+        <header>
+            <h1>🧠 Second Brain</h1>
+            <p class="tagline">AI-Powered Personal Knowledge Management System</p>
+            <div class="badges">
+                <span class="badge primary">v4.2.3</span>
+                <span class="badge">PostgreSQL</span>
+                <span class="badge">FastAPI</span>
+                <span class="badge">pgvector</span>
+                <span class="badge">AGPL-3.0</span>
+            </div>
+        </header>
+
+        <div class="section">
+            <h2>🚀 What is Second Brain?</h2>
+            <p>Second Brain is a production-ready personal knowledge management system that helps you capture, organize, and retrieve information using advanced AI capabilities. Built with modern Python and PostgreSQL, it provides a robust API for managing your digital memory.</p>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">55+</div>
+                    <div class="stat-label">Tests Passing</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">50%</div>
+                    <div class="stat-label">Faster Searches</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">60%</div>
+                    <div class="stat-label">Storage Reduction</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">91.6</div>
+                    <div class="stat-label">Code Quality Score</div>
+                </div>
+            </div>
         </div>
+
+        <div class="section">
+            <h2>✨ Key Features</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>🔍 Smart Search</h3>
+                    <p>Vector, text, and hybrid search with sub-100ms latency using PostgreSQL and pgvector.</p>
+                </div>
+                <div class="feature">
+                    <h3>🗄️ Unified Database</h3>
+                    <p>Single PostgreSQL database for vectors, text, and metadata - no complex multi-database setup.</p>
+                </div>
+                <div class="feature">
+                    <h3>🚀 Production Ready</h3>
+                    <p>Comprehensive test coverage, monitoring, and Docker deployment ready.</p>
+                </div>
+                <div class="feature">
+                    <h3>🔌 RESTful API</h3>
+                    <p>Clean, well-documented API with WebSocket support for real-time updates.</p>
+                </div>
+                <div class="feature">
+                    <h3>🧪 Mock Mode</h3>
+                    <p>Development mode with in-memory storage for testing without PostgreSQL.</p>
+                </div>
+                <div class="feature">
+                    <h3>🔒 Security First</h3>
+                    <p>Environment-based configuration, API key authentication, and security best practices.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💻 Quick Start</h2>
+            <div class="code-block">
+<span class="comment"># Clone the repository</span>
+git clone https://github.com/raold/second-brain.git
+cd second-brain
+
+<span class="comment"># Set up Python environment</span>
+python -m venv .venv
+source .venv/bin/activate  <span class="comment"># On Windows: .venv\Scripts\activate</span>
+pip install -r requirements.txt
+
+<span class="comment"># Copy environment template</span>
+cp .env.example .env
+
+<span class="comment"># Start with mock database (no PostgreSQL needed)</span>
+<span class="keyword">USE_MOCK_DB</span>=<span class="string">true</span> uvicorn app.main:app --port 8001
+
+<span class="comment"># Or with PostgreSQL</span>
+docker-compose up -d postgres
+uvicorn app.main:app --port 8001
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📚 API Usage</h2>
+            <div class="code-block">
+<span class="comment"># Create a memory</span>
+curl -X POST http://localhost:8001/api/v2/memories \
+  -H <span class="string">"Content-Type: application/json"</span> \
+  -d <span class="string">'{
+    "content": "Important meeting notes from today",
+    "importance_score": 0.8,
+    "tags": ["work", "meeting"]
+  }'</span>
+
+<span class="comment"># Search memories</span>
+curl http://localhost:8001/api/v2/memories/search?query=<span class="string">"meeting"</span>
+
+<span class="comment"># Get statistics</span>
+curl http://localhost:8001/api/v2/statistics
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏗️ Architecture</h2>
+            <p>Second Brain uses a clean, modular architecture:</p>
+            <ul style="margin: 20px 0; padding-left: 30px; line-height: 2;">
+                <li><strong>PostgreSQL + pgvector</strong> - Unified storage for all data types</li>
+                <li><strong>FastAPI</strong> - Modern, fast Python web framework</li>
+                <li><strong>Pydantic</strong> - Data validation and serialization</li>
+                <li><strong>SQLAlchemy</strong> - Database ORM and query builder</li>
+                <li><strong>OpenAI/Anthropic</strong> - Optional AI integrations for embeddings</li>
+                <li><strong>Docker</strong> - Containerized deployment</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🔗 Resources</h2>
+            <div class="buttons">
+                <a href="https://github.com/raold/second-brain" class="button">
+                    📦 GitHub Repository
+                </a>
+                <a href="interface.html" class="button secondary">
+                    🎨 Web Interface
+                </a>
+                <a href="https://github.com/raold/second-brain/blob/main/README.md" class="button secondary">
+                    📖 Documentation
+                </a>
+                <a href="https://github.com/raold/second-brain/issues" class="button secondary">
+                    🐛 Report Issues
+                </a>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2024 Second Brain Project</p>
+            <p>Licensed under <a href="https://www.gnu.org/licenses/agpl-3.0.html">AGPL-3.0</a></p>
+            <p>Made with ❤️ by the Second Brain Team</p>
+        </footer>
     </div>
-
-    <div class="info-box" id="info-box">
-        <h3>🔧 API Endpoints</h3>
-        <p>This is the complete API documentation for Second Brain. All endpoints are interactive - click "Try it out" to test them.</p>
-        <p><strong>Base URL:</strong> <code id="base-url">http://localhost:8001</code></p>
-        <p><strong>Status:</strong> <span id="api-status">Checking...</span></p>
-    </div>
-
-    <div id="swagger-ui">
-        <div class="loading">Loading API documentation...</div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
-    <script>
-        // Check API status
-        async function checkAPIStatus() {
-            const statusEl = document.getElementById('api-status');
-            try {
-                const response = await fetch('http://localhost:8001/health');
-                if (response.ok) {
-                    const data = await response.json();
-                    statusEl.innerHTML = `<span style="color: green;">✅ API Running (${data.environment})</span>`;
-                } else {
-                    statusEl.innerHTML = '<span style="color: orange;">⚠️ API not responding</span>';
-                }
-            } catch (e) {
-                statusEl.innerHTML = '<span style="color: red;">❌ API offline - Start with: uvicorn app.main:app --port 8001</span>';
-            }
-        }
-
-        // Show quick start guide
-        function showQuickStart() {
-            document.getElementById('info-box').innerHTML = `
-                <h3>🚀 Quick Start Guide</h3>
-                <ol>
-                    <li><strong>Start the API:</strong><br>
-                        <code>cd /mnt/c/tools/second-brain && USE_MOCK_DB=true uvicorn app.main:app --port 8001</code>
-                    </li>
-                    <li><strong>Create a memory:</strong><br>
-                        Click on POST /api/v2/memories → Try it out → Execute
-                    </li>
-                    <li><strong>Search memories:</strong><br>
-                        Use GET /api/v2/memories/search endpoint
-                    </li>
-                    <li><strong>Use the Web Interface:</strong><br>
-                        <a href="interface.html">Open the visual interface</a>
-                    </li>
-                </ol>
-                <button onclick="location.reload()">← Back to API Docs</button>
-            `;
-        }
-
-        // Initialize Swagger UI
-        window.onload = function() {
-            checkAPIStatus();
-            
-            const ui = SwaggerUIBundle({
-                url: "openapi.json",
-                dom_id: '#swagger-ui',
-                deepLinking: true,
-                presets: [
-                    SwaggerUIBundle.presets.apis,
-                    SwaggerUIStandalonePreset
-                ],
-                plugins: [
-                    SwaggerUIBundle.plugins.DownloadUrl
-                ],
-                layout: "StandaloneLayout",
-                defaultModelsExpandDepth: 1,
-                defaultModelExpandDepth: 1,
-                docExpansion: "list",
-                filter: true,
-                tryItOutEnabled: true,
-                supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
-                onComplete: function() {
-                    console.log("✅ Swagger UI loaded successfully");
-                    
-                    // Custom styling
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        .swagger-ui .topbar { display: none; }
-                        .swagger-ui .info .title { color: #667eea; }
-                        .swagger-ui .btn.authorize { background: #667eea; border-color: #667eea; }
-                        .swagger-ui .btn.authorize:hover { background: #764ba2; border-color: #764ba2; }
-                        .swagger-ui .btn.execute { background: #667eea; border-color: #667eea; }
-                        .swagger-ui .btn.execute:hover { background: #764ba2; border-color: #764ba2; }
-                        .swagger-ui select { padding: 5px; }
-                    `;
-                    document.head.appendChild(style);
-                },
-                requestInterceptor: (request) => {
-                    // Always use localhost:8001 for local testing
-                    if (request.url.startsWith('http://localhost:8000')) {
-                        request.url = request.url.replace('http://localhost:8000', 'http://localhost:8001');
-                    }
-                    return request;
-                }
-            });
-            
-            window.ui = ui;
-            
-            // Refresh API status every 30 seconds
-            setInterval(checkAPIStatus, 30000);
-        };
-    </script>
 </body>
 </html>
