@@ -1,5 +1,7 @@
 theme: jekyll-theme-minimal
-title: Second Brain
-description: Your Personal Knowledge Management System with AI-Powered Search
+title: Second Brain API Documentation
+description: AI-Powered Personal Knowledge Management System - v4.2.3
 show_downloads: true
 google_analytics:
+baseurl: "/second-brain"
+url: "https://raold.github.io"

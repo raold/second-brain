@@ -50,12 +50,25 @@ def create_lifespan(config_name: str):
             app.state.degradation_manager = get_degradation_manager()
             await app.state.degradation_manager.perform_health_checks()
 
-            # Initialize memory service with PostgreSQL backend
-            from app.services.memory_service import MemoryService
-
-            # Use PostgreSQL for all environments
-            app.state.memory_service = MemoryService()
-            await app.state.memory_service.initialize()
+            # Try PostgreSQL first, fall back to mock if it fails
+            use_mock = os.getenv("USE_MOCK_DB", "false").lower() == "true"
+            
+            if use_mock:
+                logger.info("📦 Using mock storage (USE_MOCK_DB=true)")
+                from app.storage.mock_storage import MockStorage
+                app.state.memory_service = MockStorage()
+                await app.state.memory_service.initialize()
+            else:
+                try:
+                    # Initialize memory service with PostgreSQL backend
+                    from app.services.memory_service import MemoryService
+                    app.state.memory_service = MemoryService()
+                    await app.state.memory_service.initialize()
+                except Exception as e:
+                    logger.warning(f"⚠️ PostgreSQL failed: {e}, falling back to mock storage")
+                    from app.storage.mock_storage import MockStorage
+                    app.state.memory_service = MockStorage()
+                    await app.state.memory_service.initialize()
 
             # Load existing memories
             memories = await app.state.memory_service.list_memories()
@@ -64,9 +77,10 @@ def create_lifespan(config_name: str):
             # Log status
             stats = await app.state.memory_service.get_statistics()
             logger.info(
-                f"📚 Loaded {app.state.memory_count} memories using {stats['backend']} backend"
+                f"📚 Loaded {app.state.memory_count} memories using {stats.get('backend', 'unknown')} backend"
             )
-            logger.info(f"⚡ Degradation level: {stats['degradation_level']}")
+            if 'degradation_level' in stats:
+                logger.info(f"⚡ Degradation level: {stats['degradation_level']}")
 
             # Start background persistence task (if not testing)
             if config_name != "testing":

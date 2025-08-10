@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Brain v4.2.3 - Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: white;
+            color: #333;
+            font-size: 0.9rem;
+            margin: 5px;
+        }
+        
+        .status.connected {
+            background: #10b981;
+            color: white;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .memory-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .memory-item {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s;
+        }
+        
+        .memory-item:hover {
+            background: #f9fafb;
+        }
+        
+        .memory-item:last-child {
+            border-bottom: none;
+        }
+        
+        .memory-content {
+            font-size: 1rem;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .memory-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+        }
+        
+        .importance {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #fef3c7;
+            color: #92400e;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .error {
+            background: #fee;
+            color: #dc2626;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .success {
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Second Brain</h1>
+            <div>
+                <span id="status" class="status">Connecting...</span>
+                <span class="status">v4.2.3</span>
+            </div>
+        </header>
+
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('create')">Create Memory</button>
+                <button class="tab" onclick="switchTab('search')">Search</button>
+                <button class="tab" onclick="switchTab('list')">All Memories</button>
+            </div>
+
+            <!-- Create Memory Tab -->
+            <div id="create-tab" class="tab-content active">
+                <form id="create-form">
+                    <div class="input-group">
+                        <label for="content">Memory Content</label>
+                        <textarea id="content" placeholder="Enter your memory here..." required></textarea>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="importance">Importance Score</label>
+                        <input type="range" id="importance" min="0" max="1" step="0.1" value="0.5">
+                        <span id="importance-value">0.5</span>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="tags">Tags (comma-separated)</label>
+                        <input type="text" id="tags" placeholder="work, idea, personal">
+                    </div>
+                    
+                    <button type="submit">💾 Save Memory</button>
+                </form>
+                <div id="create-message"></div>
+            </div>
+
+            <!-- Search Tab -->
+            <div id="search-tab" class="tab-content">
+                <form id="search-form">
+                    <div class="input-group">
+                        <label for="query">Search Query</label>
+                        <input type="text" id="query" placeholder="Search your memories..." required>
+                    </div>
+                    <button type="submit">🔍 Search</button>
+                </form>
+                <div id="search-results" class="memory-list"></div>
+            </div>
+
+            <!-- List Tab -->
+            <div id="list-tab" class="tab-content">
+                <button onclick="loadMemories()">🔄 Refresh</button>
+                <div id="memory-list" class="memory-list"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>API Status</h3>
+            <div id="api-info"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8001';
+        
+        // Check API status
+        async function checkStatus() {
+            const statusEl = document.getElementById('status');
+            const apiInfoEl = document.getElementById('api-info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                statusEl.textContent = '✅ Connected';
+                statusEl.className = 'status connected';
+                
+                apiInfoEl.innerHTML = `
+                    <p>Status: ${data.status}</p>
+                    <p>Environment: ${data.environment}</p>
+                    <p>Memories Loaded: ${data.memories_loaded}</p>
+                    <p>API Docs: <a href="${API_BASE}/docs" target="_blank">${API_BASE}/docs</a></p>
+                `;
+            } catch (error) {
+                statusEl.textContent = '❌ Disconnected';
+                statusEl.className = 'status';
+                apiInfoEl.innerHTML = `<p class="error">Cannot connect to API at ${API_BASE}</p>`;
+            }
+        }
+        
+        // Switch tabs
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Load data if needed
+            if (tabName === 'list') {
+                loadMemories();
+            }
+        }
+        
+        // Create memory
+        document.getElementById('create-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const messageEl = document.getElementById('create-message');
+            messageEl.innerHTML = '<span class="loader"></span> Creating memory...';
+            
+            const data = {
+                content: document.getElementById('content').value,
+                importance_score: parseFloat(document.getElementById('importance').value),
+                tags: document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t)
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v2/memories`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    const memory = await response.json();
+                    messageEl.innerHTML = `<div class="success">✅ Memory created successfully! ID: ${memory.id.substring(0, 8)}...</div>`;
+                    document.getElementById('create-form').reset();
+                    document.getElementById('importance-value').textContent = '0.5';
+                } else {
+                    const error = await response.json();
+                    messageEl.innerHTML = `<div class="error">❌ Error: ${error.detail || 'Failed to create memory'}</div>`;
+                }
+            } catch (error) {
+                messageEl.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        });
+        
+        // Search memories
+        document.getElementById('search-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const resultsEl = document.getElementById('search-results');
+            resultsEl.innerHTML = '<span class="loader"></span> Searching...';
+            
+            const query = document.getElementById('query').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v2/memories/search?query=${encodeURIComponent(query)}`);
+                const results = await response.json();
+                
+                if (results.length === 0) {
+                    resultsEl.innerHTML = '<p>No memories found.</p>';
+                } else {
+                    resultsEl.innerHTML = results.map(memory => renderMemory(memory)).join('');
+                }
+            } catch (error) {
+                resultsEl.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        });
+        
+        // Load all memories
+        async function loadMemories() {
+            const listEl = document.getElementById('memory-list');
+            listEl.innerHTML = '<span class="loader"></span> Loading memories...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v2/memories`);
+                const memories = await response.json();
+                
+                if (memories.length === 0) {
+                    listEl.innerHTML = '<p>No memories yet. Create your first memory!</p>';
+                } else {
+                    listEl.innerHTML = memories.map(memory => renderMemory(memory)).join('');
+                }
+            } catch (error) {
+                listEl.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Render a memory item
+        function renderMemory(memory) {
+            const date = new Date(memory.created_at).toLocaleString();
+            const tags = memory.tags ? memory.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : '';
+            
+            return `
+                <div class="memory-item">
+                    <div class="memory-content">${memory.content}</div>
+                    <div class="memory-meta">
+                        <span class="importance">⭐ ${memory.importance_score}</span>
+                        ${tags}
+                        <span>📅 ${date}</span>
+                        <span>🆔 ${memory.id.substring(0, 8)}...</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Update importance value display
+        document.getElementById('importance').addEventListener('input', (e) => {
+            document.getElementById('importance-value').textContent = e.target.value;
+        });
+        
+        // Initial load
+        checkStatus();
+        setInterval(checkStatus, 30000); // Check every 30 seconds
+    </script>
+</body>
+</html>
