@@ -1,0 +1,16 @@
+# Example GitHub Pages Jekyll themes
+# Uncomment one theme and rename this file to _config.yml
+
+# theme: jekyll-theme-cayman      # Clean blue gradient
+# theme: jekyll-theme-minimal     # Simple sidebar
+# theme: jekyll-theme-slate       # Dark professional
+# theme: jekyll-theme-merlot      # Red/orange accent
+# theme: jekyll-theme-modernist   # Clean white/blue
+# theme: jekyll-theme-architect   # Blue/black header
+# theme: jekyll-theme-tactile     # Brown texture
+# theme: jekyll-theme-midnight    # Dark theme
+# theme: jekyll-theme-hacker      # Terminal green
+
+title: Second Brain
+description: AI-Powered Personal Knowledge Management System
+show_downloads: true
