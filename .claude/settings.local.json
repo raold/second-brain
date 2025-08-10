@@ -149,7 +149,8 @@
       "Bash(--title \"v4.2.3: Security Patches & Documentation Overhaul\" )",
       "Bash(--notes-file RELEASE_NOTES_v4.2.3.md)",
       "Bash(tree:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(bash:*)"
     ],
     "deny": []
   }

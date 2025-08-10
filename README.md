@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/logo.png" alt="Second Brain Logo" width="400">
+  <img src="logo.png" alt="Second Brain Logo" width="400">
   
   [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://docker.com/)
   [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
