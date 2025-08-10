@@ -84,47 +84,44 @@ Second Brain v4.2.0 completely replaces the multi-database approach (PostgreSQL 
 
 ```
 second-brain/
-├── app/                             # Main application
+├── app/                            # Main application
 │   ├── core/                       # Core infrastructure
-│   │   ├── dependencies.py        # Dependency injection
-│   │   ├── logging.py             # Logging configuration
-│   │   └── monitoring.py          # Metrics and monitoring
+│   │   ├── dependencies.py         # Dependency injection
+│   │   ├── logging.py              # Logging configuration
+│   │   └── monitoring.py           # Metrics and monitoring
 │   ├── models/                     # Data models
-│   │   ├── memory.py              # Memory models
-│   │   ├── user.py                # User models
-│   │   └── api_models.py          # API request/response models
+│   │   ├── memory.py               # Memory models
+│   │   ├── user.py                 # User models
+│   │   └── api_models.py           # API request/response models
 │   ├── routes/                     # API routes
-│   │   └── v2_api_new.py          # V2 API implementation
+│   │   └── v2_api_new.py           # V2 API implementation
 │   ├── services/                   # Business logic
-│   │   ├── memory_service_new.py  # Memory operations
-│   │   ├── service_factory.py     # Service instances
-│   │   └── synthesis/             # Advanced features
+│   │   ├── memory_service_new.py   # Memory operations
+│   │   ├── service_factory.py      # Service instances
+│   │   └── synthesis/              # Advanced features
 │   ├── static/                     # Web UI files
 │   ├── utils/                      # Utility functions
 │   ├── app.py                      # FastAPI application
 │   ├── config.py                   # Configuration
 │   └── database_new.py             # Database operations
-│
-├── tests/                           # Test suites
+├── tests/                          # Test suites
 │   ├── unit/                       # Unit tests
 │   ├── integration/                # Integration tests
 │   └── validation/                 # Validation tests
-│
-├── docs/                            # Documentation
-├── scripts/                         # Utility scripts
-├── docker/                          # Docker configuration
-├── migrations/                      # Database migrations
-├── frontend/                        # SvelteKit web UI (NEW)
+├── docs/                           # Documentation
+├── scripts/                        # Utility scripts
+├── docker/                         # Docker configuration
+├── migrations/                     # Database migrations
+├── frontend/                       # SvelteKit web UI (NEW)
 │   ├── src/                        # Source code
-│   │   ├── lib/                   # Components and utilities
-│   │   └── routes/                # Page components
-│   └── package.json               # Frontend dependencies
-│
-├── docker-compose.yml               # Docker services
-├── Dockerfile                       # Container image
-├── Makefile                         # Development commands
-├── requirements.txt                 # Python dependencies
-└── README.md
+│   │   ├── lib/                    # Components and utilities
+│   │   └── routes/                 # Page components
+│   └── package.json                # Frontend dependencies
+├── docker-compose.yml              # Docker services
+├── Dockerfile                      # Container image
+├── Makefile                        # Development commands
+├── requirements.txt                # Python dependencies
+└── README.md                       # Project documentation
 ```
 
 ### **Core Components**
