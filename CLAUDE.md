@@ -5,11 +5,12 @@
 2. **DEVELOPMENT_CONTEXT.md** - Session history, decisions, user prefs
 3. **This file (CLAUDE.md)** - Core principles, patterns, architecture
 
-## 🎯 CURRENT STATE (as of August 7, 2025 - Session 4)
-- **Version**: 4.2.0 - PostgreSQL + pgvector Unified Architecture
+## 🎯 CURRENT STATE (as of August 9, 2025 - Session 6)
+- **Version**: 4.2.3 - Production Ready with Security Patches
 - **Test Status**: 55+ tests passing, comprehensive PostgreSQL validation
 - **Architecture**: Single database (PostgreSQL) for vectors, text, and metadata
 - **Performance**: 50% faster searches, 60% storage reduction
+- **Documentation**: CLEANED - 17 focused docs (was 50+), removed 27K lines
 - **Frontend**: NEW SvelteKit UI with real-time WebSocket updates
 - **User Mode**: AUTONOMOUS - no confirmations needed
 - **Active Branch**: main
@@ -28,7 +29,7 @@
   - Project synced via Google Drive for seamless access
   - "Developer kindness" for platform differences
 
-## 🏗️ PROJECT ARCHITECTURE (v4.2.0)
+## 🏗️ PROJECT ARCHITECTURE (v4.2.3)
 
 ### PostgreSQL-First Architecture
 ```
@@ -42,14 +43,23 @@ second-brain/
 │   ├── insights/          # Analytics (stub)
 │   └── config.py          # Centralized configuration
 ├── tests/                 # Test suites
-├── scripts/               # Only 3 essential scripts
-│   ├── check_secrets.py  # Security scanner
-│   ├── setup_dev_environment.py
-│   └── test_runner.py
-├── docs/                  # Documentation
+├── scripts/               # Essential scripts + startup/
+├── docs/                  # CLEAN documentation (17 files)
+│   ├── releases/          # Version history
+│   ├── ui/                # HTML interfaces
+│   ├── api/               # OpenAPI specs
+│   └── *.md               # Core guides (simplified)
 ├── .env.example           # SINGLE env template
 └── SECURITY.md           # Security guidelines
 ```
+
+### Documentation Structure (Session 6 Cleanup)
+**Before**: 50+ docs with massive redundancy (27,000+ lines)
+**After**: 17 focused, developer-friendly guides
+- Consolidated CI/CD: 16 docs → 1 simple guide
+- Removed all v3 legacy documentation
+- Simplified massive docs (2000+ lines → concise)
+- Organized into proper subdirectories
 
 ### Key Technical Decisions
 - **Unified Database**: PostgreSQL + pgvector replaces Qdrant/Redis

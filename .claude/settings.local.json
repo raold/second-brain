@@ -127,7 +127,24 @@
       "Bash(cd:*)",
       "Bash(cd:*)",
       "Bash(cd:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(pip install:*)",
+      "Bash(flake8:*)",
+      "Bash(git tag:*)",
+      "Bash(echo:*)",
+      "Bash(git describe:*)",
+      "Bash(# Move HTML files to docs folder\nmv /mnt/c/tools/second-brain/dashboard.html /mnt/c/tools/second-brain/docs/ 2>/dev/null\nmv /mnt/c/tools/second-brain/simple_ui.html /mnt/c/tools/second-brain/docs/ 2>/dev/null\nmv /mnt/c/tools/second-brain/index.html /mnt/c/tools/second-brain/docs/ 2>/dev/null\n\n# Move release notes to docs/releases\nmkdir -p /mnt/c/tools/second-brain/docs/releases\nmv /mnt/c/tools/second-brain/RELEASE_NOTES*.md /mnt/c/tools/second-brain/docs/releases/ 2>/dev/null\nmv /mnt/c/tools/second-brain/V4.2_FINAL_STATUS.md /mnt/c/tools/second-brain/docs/releases/ 2>/dev/null\nmv /mnt/c/tools/second-brain/SECURITY_PATCH_4.2.3.md /mnt/c/tools/second-brain/docs/releases/ 2>/dev/null\n\n# Move development docs\nmv /mnt/c/tools/second-brain/QA_REPORT_v4.2.md /mnt/c/tools/second-brain/docs/ 2>/dev/null\nmv /mnt/c/tools/second-brain/CODE_ANALYSIS_REPORT.md /mnt/c/tools/second-brain/docs/ 2>/dev/null\nmv /mnt/c/tools/second-brain/GITHUB_RELEASE_INSTRUCTIONS.md /mnt/c/tools/second-brain/docs/ 2>/dev/null\nmv /mnt/c/tools/second-brain/PROJECT_STRUCTURE.md /mnt/c/tools/second-brain/docs/ 2>/dev/null\nmv /mnt/c/tools/second-brain/start_postgres.md /mnt/c/tools/second-brain/docs/ 2>/dev/null\nmv /mnt/c/tools/second-brain/RUN_THIS_FIRST.md /mnt/c/tools/second-brain/docs/ 2>/dev/null\n\n# Move scripts to scripts folder\nmkdir -p /mnt/c/tools/second-brain/scripts/startup\nmv /mnt/c/tools/second-brain/*.bat /mnt/c/tools/second-brain/scripts/startup/ 2>/dev/null\nmv /mnt/c/tools/second-brain/*.sh /mnt/c/tools/second-brain/scripts/startup/ 2>/dev/null\nmv /mnt/c/tools/second-brain/run_dev.py /mnt/c/tools/second-brain/scripts/ 2>/dev/null\n\necho \"\"✅ Files organized\"\")",
+      "Bash(/mnt/c/tools/second-brain/Dockerfile.multimodal )",
+      "Bash(/mnt/c/tools/second-brain/Dockerfile.performance )",
+      "Bash(/mnt/c/tools/second-brain/warp-mcp-config.json )",
+      "Bash(/mnt/c/tools/second-brain/warp-mcp-final.json )",
+      "Bash(/mnt/c/tools/second-brain/docker-compose.app.yml )",
+      "Bash(/mnt/c/tools/second-brain/.pre-commit-config.yaml )",
+      "Bash(/mnt/c/tools/second-brain/alembic.ini )",
+      "Bash(/mnt/c/tools/second-brain/ruff.toml)",
+      "Bash(__NEW_LINE__ echo \"✅ Removed unnecessary config files\")",
+      "Bash(# Check for __pycache__ directories\nfind /mnt/c/tools/second-brain -type d -name \"\"__pycache__\"\" 2>/dev/null | wc -l)",
+      "Bash(# Remove empty README\nrm -f /mnt/c/tools/second-brain/scripts/SCRIPTS_README.md\n\n# Check if development and setup folders are empty or unnecessary\nls /mnt/c/tools/second-brain/scripts/development/\nls /mnt/c/tools/second-brain/scripts/setup/)"
     ],
     "deny": []
   }

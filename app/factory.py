@@ -15,7 +15,7 @@ from app.utils.logging_config import get_logger
 logger = get_logger(__name__)
 
 # Version
-__version__ = "4.2.0"
+__version__ = "4.2.2"
 
 
 class AppState:
