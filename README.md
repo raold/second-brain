@@ -214,13 +214,12 @@ make db-shell           # PostgreSQL shell
 ## 📚 **Documentation**
 
 ### 🧠 AI Memory Integration
-- [Cipher Setup Guide](docs/CIPHER_SETUP.md) - Install and configure Cipher
-- [Cipher Usage Guide](docs/CIPHER_USAGE_GUIDE.md) - Practical examples and workflows
-- [Warp Terminal Integration](docs/WARP_CIPHER_CONFIG.md) - Configure Warp with MCP
+- Compatible with AI coding agents and LLMs
+- RESTful API for memory operations
+- Persistent context storage with PostgreSQL
 
-### 📖 Complete Documentation
-- [Documentation Index](docs/DOCUMENTATION_INDEX.md) - All documentation organized by topic
-- [Release Notes](RELEASE_NOTES.md) - v4.0.0 release details
+### 📖 Available Documentation
+Check the `/docs/documentation/` folder for all guides and specifications
 
 ## 📚 **API Documentation**
 
@@ -488,7 +487,7 @@ kubectl apply -f k8s/
 
 ## 🤝 **Contributing**
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! Please open an issue or submit a pull request on GitHub.
 
 ### **Development Process**
 1. Fork the repository

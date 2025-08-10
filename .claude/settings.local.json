@@ -151,7 +151,13 @@
       "Bash(tree:*)",
       "Bash(kill:*)",
       "Bash(bash:*)",
-      "Bash(USE_MOCK_DB=true timeout 5 .venv/bin/uvicorn app.main:app --port 8001)"
+      "Bash(USE_MOCK_DB=true timeout 5 .venv/bin/uvicorn app.main:app --port 8001)",
+      "Bash(for:*)",
+      "Bash(do if [ -f \"$file\" ])",
+      "Bash(then echo \"✅ EXISTS: $file\")",
+      "Bash(else echo \"❌ MISSING: $file\")",
+      "Bash(fi)",
+      "Bash(done)"
     ],
     "deny": []
   }
