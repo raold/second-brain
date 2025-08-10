@@ -67,3 +67,6 @@ ruff==0.12.4
 # Additional security dependencies
 certifi>=2024.7.4  # ADDED - SSL certificate validation
 urllib3>=2.2.2  # ADDED - HTTP library security
+
+# AI providers
+anthropic>=0.62.0  # Claude API client
