@@ -157,7 +157,14 @@
       "Bash(then echo \"✅ EXISTS: $file\")",
       "Bash(else echo \"❌ MISSING: $file\")",
       "Bash(fi)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)"
     ],
     "deny": []
   }

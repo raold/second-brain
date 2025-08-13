@@ -32,8 +32,12 @@ jobs:
         python -c "from app.main import app; print('✅ App imports successfully')"
     
     - name: Run tests
+      env:
+        USE_MOCK_DB: "true"
+        OPENAI_API_KEY: "test-key"
+        ANTHROPIC_API_KEY: "test-key"
       run: |
-        USE_MOCK_DB=true python -m pytest tests/unit/test_basic_functionality.py -v || true
+        python -m pytest tests/unit/test_basic_functionality.py tests/unit/test_basic_modules.py tests/unit/test_factory.py -v --tb=short
     
     - name: Build Docker image
       run: |
