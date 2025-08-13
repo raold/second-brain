@@ -184,10 +184,10 @@ source .venv/bin/activate                 # Unix/Mac
 pip install -r requirements.txt           # Install dependencies
 
 # Run application
-uvicorn app.app:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 
 # Access application
-open http://localhost:8000
+open http://localhost:8001
 ```
 
 ### **🎯 Development Commands**
@@ -224,9 +224,9 @@ Check the `/docs/documentation/` folder for all guides and specifications
 ## 📚 **API Documentation**
 
 Once running, access:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI Schema**: http://localhost:8000/openapi.json
+- **Swagger UI**: http://localhost:8001/docs
+- **Web Interface**: http://localhost:8001/interface.html
+- **OpenAPI Schema**: http://localhost:8001/openapi.json
 
 ### **🚀 V2 API Features (Enhanced in v4.2.0)**
 
@@ -285,7 +285,7 @@ GET    /                         # Welcome message with API info
 
 ```bash
 # Create a memory
-curl -X POST "http://localhost:8000/api/v2/memories" \
+curl -X POST "http://localhost:8001/api/v2/memories" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-api-key" \
   -d '{
@@ -295,7 +295,7 @@ curl -X POST "http://localhost:8000/api/v2/memories" \
   }'
 
 # Search memories
-curl -X POST "http://localhost:8000/api/v2/search" \
+curl -X GET "http://localhost:8001/api/v2/memories/search?query=meeting" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-api-key" \
   -d '{
@@ -305,7 +305,7 @@ curl -X POST "http://localhost:8000/api/v2/search" \
   }'
 
 # Export memories
-curl -X GET "http://localhost:8000/api/v2/export?format=json" \
+curl -X GET "http://localhost:8001/api/v2/statistics" \
   -H "X-API-Key: your-api-key" \
   -o memories_backup.json
 ```
@@ -438,14 +438,14 @@ python scripts/dev test --test-type validation  # Validation tests
 
 ```bash
 # Build image
-docker build -t second-brain:v4.0.0 .
+docker build -t second-brain:v4.2.3 .
 
 # Run container
 docker run -d \
   -p 8000:8000 \
   -e DATABASE_URL=postgresql://... \
   -e OPENAI_API_KEY=your-key \
-  second-brain:v4.0.0
+  second-brain:v4.2.3
 ```
 
 ### **Kubernetes**
