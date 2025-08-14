@@ -1,15 +1,26 @@
-# Environment files - NEVER commit these!
+# === DIRECTORY STRUCTURE ENFORCEMENT ===
+# See DIRECTORY_STRUCTURE.md for complete guide
+
+# === NEVER COMMIT THESE ===
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Environment & Secrets
 .env
 .env.*
 !.env.example
-!.env.*.template
+!.env.template
 *.env
-# Cache directories
-.cache/
-# IDE/Editor specific
-.nova/
-
-# Security - Private keys and certificates
+local_settings.py
+secrets.json
 *.pem
 *.key
 *.cert
@@ -17,134 +28,127 @@
 *.p12
 *.pfx
 
-# Dependencies
-node_modules/
-__pycache__/
-*.pyc
-
-# Virtual environments
-.venv/
+# Virtual Environments
 venv/
+.venv/
+.venv-*/
 .venvLibsite-packages/
 env/
 ENV/
+pythonenv*/
 
-# Testing
-.hypothesis/
-.pytest_cache/
-htmlcov/
-.coverage
-
-# Data directories
-data/
-logs/
-archive/
-
-# Logs
-*.log
-logs/
-tests/logs/
-
-# Test artifacts
-htmlcov/
-.coverage
-coverage.xml
-.pytest_cache/
-.ruff_cache/
-
-# Environment
-.env
-.env.local
-.env.*.local
-.venv
-.venvLibsite-packages
-.gitconfig.no-coauthor
-
-# IDE
+# IDE & Editor
 .vscode/
-.cursorignore
 .idea/
 *.swp
 *.swo
-
-# Claude AI
-#.claude/
-
-# OS
+*~
 .DS_Store
 Thumbs.db
+.nova/
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-venv/
-.venv/
-.venv-wsl/
-
-# Distribution
-dist/
-build/
-*.egg-info/
-
-# Qdrant data
-qdrant_data*/
-
-# PostgreSQL data
-pgdata/
-
-# Large files
-bfg.jar
-
-# Test outputs
-last-pytest*.log
-pip-list.log
-pytest-trace-config.log
-
-# Session and dashboard runtime data
+# Temporary Files
+*.tmp
+*.bak
+*.backup
+*.old
+*_backup*
+*_old*
+*.orig
+*.log
+*.pid
+logs/
 session_storage/
-dashboard_data/
 
-# Claude session context (local only)
-DEVELOPMENT_CONTEXT.md
-.claude/settings.local.json
+# Build & Distribution
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Cipher installation
-cipher/
+# Testing
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
 
+# Documentation Build
+docs/_build/
+docs/.doctrees/
+site/
 
-# CI/CD artifacts
-ci_reports/
-ci_simulation_report.json
-local_ci_report.json
-comprehensive_test_report.json
-test_summary.html
-performance_report.json
-security_report.json
-lint_report.json
-coverage_report/
-test_results/
-junit.xml
-test-results.xml
-coverage.json
+# Database
+*.db
+*.sqlite
+*.sqlite3
+instance/
+data/memories/
+data/embeddings/
+data/cache/
 
-# Load testing artifacts
-locust_reports/
-load_test_results/
+# Node.js (if frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
 
-# Performance profiling
-*.prof
-profiling_results/
-memory_profiles/
+# Archives & Backups
+archive/
+archives/
+backup/
+backups/
+*.zip
+*.tar
+*.tar.gz
+*.rar
 
-# Static analysis
-.semgrep/
-bandit_results/
-safety_results/
-mypy_results/
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
 
-# License scanning
-license_report.json
-license_check_results/
+# Docker
+.dockerignore.local
+
+# Kubernetes
+*.kubeconfig
+
+# Cache Directories
+.cache/
+cache/
+tmp/
+temp/
+
+# === KEEP THESE ===
+# !.gitignore
+# !.gitkeep
+# !requirements.txt
+# !pyproject.toml
+# !Makefile
+# !README.md
+# !LICENSE
+# !DIRECTORY_STRUCTURE.md

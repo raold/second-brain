@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "MultiEdit(*)",
+      "Grep(*)",
+      "Glob(*)",
+      "LS(*)",
+      "Task(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "NotebookRead(*)",
+      "NotebookEdit(*)",
+      "TodoWrite(*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(:(){ :|:& };:)"
+    ]
+  },
+  "env": {
+    "PYTHONPATH": "${workspaceRoot}",
+    "SECOND_BRAIN_ENV": "development",
+    "CLAUDE_CODE_AUTONOMOUS": "true"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Command completed'"
+          }
+        ]
+      }
+    ]
+  },
+  "cleanupPeriodDays": 30
+}
