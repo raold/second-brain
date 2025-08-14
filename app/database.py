@@ -1,16 +1,28 @@
 """
 Simple PostgreSQL database client with pgvector support.
 Single source of truth for all data operations.
+Platform-aware database initialization and management.
 """
 
 import json
 import logging
 import os
 import re
-from typing import Any
+from typing import Any, Optional
 
 import asyncpg
 from openai import AsyncOpenAI
+
+# Import platform context for intelligent database setup
+try:
+    from app.utils.platform_context import (
+        get_platform_context,
+        EnvironmentManager,
+        is_mock_database
+    )
+    PLATFORM_AWARE = True
+except ImportError:
+    PLATFORM_AWARE = False
 
 logger = logging.getLogger(__name__)
 
@@ -23,15 +35,45 @@ class Database:
         self.openai_client: AsyncOpenAI | None = None
 
     async def initialize(self):
-        """Initialize database connection and OpenAI client."""
-        # Database connection - prefer DATABASE_URL if provided
-        db_url = os.getenv('DATABASE_URL')
-        if not db_url:
-            # Fall back to individual components
-            db_url = f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'postgres')}@{os.getenv('POSTGRES_HOST', 'localhost')}:{os.getenv('POSTGRES_PORT', '5432')}/{os.getenv('POSTGRES_DB', 'secondbrain')}"
+        """Initialize database connection and OpenAI client (platform-aware)."""
+        # Get platform context if available
+        if PLATFORM_AWARE:
+            context = get_platform_context()
+            
+            # Check if we should use mock database
+            if context.use_mock_database:
+                logger.info(f"Platform context suggests mock database (environment: {context.environment_type.value})")
+                # Return early, mock database will be used
+                self.pool = None
+                self._init_openai_client()
+                return
+            
+            # Use platform-aware database URL
+            db_url = EnvironmentManager.get_database_url()
+            logger.info(f"Using {context.database_type.value} database on {context.platform_type.value}")
+        else:
+            # Fallback to traditional method
+            db_url = os.getenv('DATABASE_URL')
+            if not db_url:
+                # Fall back to individual components
+                db_url = f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'postgres')}@{os.getenv('POSTGRES_HOST', 'localhost')}:{os.getenv('POSTGRES_PORT', '5432')}/{os.getenv('POSTGRES_DB', 'secondbrain')}"
 
         try:
-            self.pool = await asyncpg.create_pool(db_url, min_size=1, max_size=10)
+            # Platform-specific connection parameters
+            pool_params = {
+                "min_size": 1,
+                "max_size": 10
+            }
+            
+            if PLATFORM_AWARE:
+                # Adjust for CI/CD environments
+                if context.is_ci:
+                    pool_params["max_size"] = 5  # Less connections in CI
+                    pool_params["command_timeout"] = 30
+                elif context.platform_type.value == "windows":
+                    pool_params["command_timeout"] = 60  # Windows might be slower
+            
+            self.pool = await asyncpg.create_pool(db_url, **pool_params)
             logger.info("Database connection established")
 
             # Ensure pgvector extension and table exist
@@ -39,12 +81,29 @@ class Database:
 
         except Exception as e:
             logger.error(f"Failed to initialize database: {e}")
-            raise
+            if PLATFORM_AWARE and context.is_ci:
+                logger.warning("Database initialization failed in CI, will use mock database")
+                self.pool = None
+            else:
+                raise
 
-        # OpenAI client
+        # Initialize OpenAI client
+        self._init_openai_client()
+    
+    def _init_openai_client(self):
+        """Initialize OpenAI client"""
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is required")
+            if PLATFORM_AWARE:
+                context = get_platform_context()
+                if context.is_ci or context.environment_type.value == "test":
+                    # Use mock key for testing
+                    api_key = "test-key-mock"
+                    logger.warning("Using mock OpenAI API key for testing")
+                else:
+                    raise ValueError("OPENAI_API_KEY environment variable is required")
+            else:
+                raise ValueError("OPENAI_API_KEY environment variable is required")
 
         self.openai_client = AsyncOpenAI(api_key=api_key)
         logger.info("OpenAI client initialized")

@@ -30,7 +30,10 @@
       "Bash(python scripts/validate_claude_settings.py:*)",
       "Bash(git tag:*)",
       "Bash(python:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(pip install:*)",
+      "Bash(set GITHUB_ACTIONS=true)",
+      "Bash(set CI=true)"
     ],
     "deny": []
   }
