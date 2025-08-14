@@ -5,6 +5,7 @@ Test configuration and fixtures for the Second Brain application.
 import os
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock, AsyncMock
 
 import pytest
 import pytest_asyncio
@@ -91,3 +92,11 @@ async def db():
     await mock_db.initialize()
     yield mock_db
     await mock_db.close()
+
+
+@pytest.fixture
+def mock_external_services(monkeypatch):
+    """Mock external services for testing."""
+    # Mock any external service calls if needed
+    # No Redis to mock anymore
+    pass

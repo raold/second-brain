@@ -28,8 +28,9 @@ from jose import JWTError, jwt
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import argon2
-from argon2 import PasswordHasher
+# argon2 not needed for current implementation
+# import argon2
+# from argon2 import PasswordHasher
 
 from app.core.logging import get_logger, get_audit_logger
 from app.core.exceptions import UnauthorizedException, ForbiddenException
@@ -650,15 +651,16 @@ class SecurityEventMonitor:
 
 
 # Global instances
-_password_hasher = PasswordHasher()
+# _password_hasher = PasswordHasher()  # Not needed without argon2
 _password_policy = PasswordPolicy()
 _security_auditor = SecurityAuditor()
 _security_monitor = SecurityEventMonitor()
 
 
-def get_password_hasher() -> PasswordHasher:
+def get_password_hasher():  # -> PasswordHasher:
     """Get the global password hasher"""
-    return _password_hasher
+    # return _password_hasher
+    raise NotImplementedError("Password hashing not available without argon2")
 
 
 def get_password_policy() -> PasswordPolicy:

@@ -278,6 +278,10 @@ app = FastAPI(
 # Setup OpenAPI documentation
 setup_openapi_documentation(app)
 
+# Apply comprehensive API documentation with examples
+from app.api_docs.api_examples import apply_documentation_to_app
+apply_documentation_to_app(app)
+
 
 # Register exception handlers from the new exception handling system
 from app.core.exceptions import register_exception_handlers
@@ -383,6 +387,46 @@ try:
 except Exception as e:
     logger.warning(f"Could not mount static files: {e}")
 
+
+# API Documentation page
+@app.get("/api-docs", response_class=HTMLResponse)
+async def api_documentation():
+    """Serve the comprehensive API documentation page"""
+    try:
+        with open("static/api-documentation.html", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(
+            content="""
+        <html>
+        <head><title>API Documentation - Second Brain</title></head>
+        <body>
+        <h1>🧠 Second Brain API Documentation</h1>
+        <p>Documentation is loading... Please visit <a href="/docs">/docs</a> for the interactive API.</p>
+        </body>
+        </html>
+        """
+        )
+
+# Google Drive UI page
+@app.get("/gdrive", response_class=HTMLResponse)
+async def google_drive_ui():
+    """Serve the Google Drive integration UI"""
+    try:
+        with open("static/gdrive-ui.html", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(
+            content="""
+        <html>
+        <head><title>Google Drive Integration - Second Brain</title></head>
+        <body>
+        <h1>🧠 Google Drive Integration</h1>
+        <p>UI is loading... Please refresh the page.</p>
+        </body>
+        </html>
+        """
+        )
 
 # Landing page
 @app.get("/", response_class=HTMLResponse)

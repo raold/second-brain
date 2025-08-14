@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="gruvbox-dark" data-density="comfortable">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,31 +8,17 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="apple-touch-icon" href="/static/favicon.svg">
-    <link rel="mask-icon" href="/static/favicon.svg" color="#8ec07c">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#ff6b9d">
+    
+    <!-- Design System -->
+    <link rel="stylesheet" href="/static/css/main.css">
+    
+    <!-- Settings Management -->
+    <script src="/static/js/settings.js"></script>
     
     <style>
-        /* Gruvbox Dark Theme Colors */
-        :root {
-            --gruvbox-bg0: #282828;
-            --gruvbox-bg0-hard: #1d2021;
-            --gruvbox-bg0-soft: #32302f;
-            --gruvbox-bg1: #3c3836;
-            --gruvbox-bg2: #504945;
-            --gruvbox-bg3: #665c54;
-            --gruvbox-bg4: #7c6f64;
-            --gruvbox-fg0: #fbf1c7;
-            --gruvbox-fg1: #ebdbb2;
-            --gruvbox-fg2: #d5c4a1;
-            --gruvbox-fg3: #bdae93;
-            --gruvbox-fg4: #a89984;
-            --gruvbox-red: #fb4934;
-            --gruvbox-green: #b8bb26;
-            --gruvbox-yellow: #fabd2f;
-            --gruvbox-blue: #83a598;
-            --gruvbox-purple: #d3869b;
-            --gruvbox-aqua: #8ec07c;
-            --gruvbox-orange: #fe8019;
-        }
+        /* Page-specific styles */
 
         * {
             margin: 0;
@@ -47,74 +33,28 @@
             line-height: 1.6;
         }
 
-        /* Navigation */
-        nav {
-            background-color: var(--gruvbox-bg0-hard);
-            padding: 1rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-
-        .nav-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--gruvbox-fg0);
-            text-decoration: none;
-        }
-
-        .logo span {
-            color: var(--gruvbox-aqua);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--gruvbox-fg2);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: var(--gruvbox-aqua);
-        }
+        /* Navigation styles in main.css */
 
         /* Main Container */
         .container {
-            max-width: 1400px;
+            max-width: var(--container-2xl);
             margin: 0 auto;
-            padding: 2rem;
+            padding: var(--space-8);
         }
 
         .page-header {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: var(--space-12);
         }
 
         .page-title {
-            font-size: 2.5rem;
+            font-size: var(--text-2xl);
             color: var(--gruvbox-fg0);
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-4);
         }
 
         .page-subtitle {
-            font-size: 1.2rem;
+            font-size: var(--text-lg);
             color: var(--gruvbox-fg3);
         }
 
@@ -122,16 +62,16 @@
         .insights-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
+            gap: var(--space-8);
+            margin-bottom: var(--space-12);
         }
 
         .insight-card {
             background: var(--gruvbox-bg1);
-            border-radius: 8px;
-            padding: 2rem;
+            border-radius: var(--radius-lg);
+            padding: var(--space-8);
             border: 1px solid var(--gruvbox-bg3);
-            transition: all 0.3s;
+            transition: all var(--duration-base);
         }
 
         .insight-card:hover {
@@ -141,95 +81,95 @@
         }
 
         .insight-type {
-            font-size: 0.875rem;
+            font-size: var(--text-sm);
             color: var(--gruvbox-aqua);
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--space-2);
         }
 
         .insight-title {
-            font-size: 1.5rem;
+            font-size: var(--text-xl);
             color: var(--gruvbox-fg0);
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-4);
         }
 
         .insight-content {
             color: var(--gruvbox-fg2);
-            margin-bottom: 1.5rem;
+            margin-bottom: var(--space-6);
             line-height: 1.8;
         }
 
         .insight-meta {
             display: flex;
             justify-content: space-between;
-            font-size: 0.875rem;
+            font-size: var(--text-sm);
             color: var(--gruvbox-fg4);
         }
 
         /* Coming Soon */
         .coming-soon {
             text-align: center;
-            padding: 6rem 2rem;
+            padding: var(--space-24) var(--space-8);
             background: var(--gruvbox-bg0-soft);
-            border-radius: 8px;
-            margin: 3rem 0;
+            border-radius: var(--radius-lg);
+            margin: var(--space-12) 0;
         }
 
         .coming-soon h2 {
-            font-size: 2rem;
+            font-size: var(--text-2xl);
             color: var(--gruvbox-fg0);
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-4);
         }
 
         .coming-soon p {
-            font-size: 1.1rem;
+            font-size: var(--text-base);
             color: var(--gruvbox-fg3);
             max-width: 600px;
-            margin: 0 auto 2rem;
+            margin: 0 auto var(--space-8);
         }
 
         .feature-list {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
+            gap: var(--space-6);
             max-width: 800px;
             margin: 0 auto;
         }
 
         .feature-item {
             background: var(--gruvbox-bg1);
-            padding: 1.5rem;
-            border-radius: 6px;
+            padding: var(--space-6);
+            border-radius: var(--radius-md);
             text-align: left;
         }
 
         .feature-item h3 {
             color: var(--gruvbox-yellow);
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--space-2);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: var(--space-2);
         }
 
         .feature-item p {
             color: var(--gruvbox-fg3);
-            font-size: 0.9rem;
+            font-size: var(--text-sm);
         }
 
         /* Back Button */
         .back-btn {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: var(--space-2);
             background: var(--gruvbox-bg1);
             color: var(--gruvbox-fg1);
             border: 1px solid var(--gruvbox-bg3);
-            padding: 0.75rem 1.5rem;
-            border-radius: 6px;
+            padding: var(--space-3) var(--space-6);
+            border-radius: var(--radius-md);
             text-decoration: none;
-            transition: all 0.3s;
-            margin-bottom: 2rem;
+            transition: all var(--duration-base);
+            margin-bottom: var(--space-8);
         }
 
         .back-btn:hover {
@@ -241,7 +181,7 @@
         /* Loading State */
         .loading {
             text-align: center;
-            padding: 4rem;
+            padding: var(--space-16);
             color: var(--gruvbox-fg3);
         }
 
@@ -271,6 +211,7 @@
                 <li><a href="/dashboard">Dashboard</a></li>
                 <li><a href="/api">API</a></li>
                 <li><a href="/documentation">Docs</a></li>
+                <li><a href="#" onclick="showSettings()">⚙️</a></li>
             </ul>
         </div>
     </nav>

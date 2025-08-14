@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="gruvbox-dark" data-density="comfortable">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Second Brain v3.0.0 - AI Memory System</title>
+    <title>Second Brain v3 - AI Memory System</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="shortcut icon" href="/favicon.ico">
@@ -11,97 +11,16 @@
     <link rel="manifest" href="/static/manifest.json">
     <meta name="theme-color" content="#ff6b9d">
     
+    <!-- Design System -->
+    <link rel="stylesheet" href="/static/css/main.css">
+    
+    <!-- Settings Management -->
+    <script src="/static/js/settings.js"></script>
+    
     <style>
-        /* Gruvbox Dark Theme Colors (Default) */
-        :root, [data-theme="gruvbox-dark"] {
-            --gruvbox-bg0: #282828;
-            --gruvbox-bg0-hard: #1d2021;
-            --gruvbox-bg0-soft: #32302f;
-            --gruvbox-bg1: #3c3836;
-            --gruvbox-bg2: #504945;
-            --gruvbox-bg3: #665c54;
-            --gruvbox-bg4: #7c6f64;
-            --gruvbox-fg0: #fbf1c7;
-            --gruvbox-fg1: #ebdbb2;
-            --gruvbox-fg2: #d5c4a1;
-            --gruvbox-fg3: #bdae93;
-            --gruvbox-fg4: #a89984;
-            --gruvbox-red: #fb4934;
-            --gruvbox-green: #b8bb26;
-            --gruvbox-yellow: #fabd2f;
-            --gruvbox-blue: #83a598;
-            --gruvbox-purple: #d3869b;
-            --gruvbox-aqua: #8ec07c;
-            --gruvbox-orange: #fe8019;
-            --gruvbox-red-dim: #cc241d;
-            --gruvbox-green-dim: #98971a;
-            --gruvbox-yellow-dim: #d79921;
-            --gruvbox-blue-dim: #458588;
-            --gruvbox-purple-dim: #b16286;
-            --gruvbox-aqua-dim: #689d6a;
-            --gruvbox-orange-dim: #d65d0e;
-        }
+        /* Page-specific styles */
 
-        /* Gruvbox Light Theme */
-        [data-theme="gruvbox-light"] {
-            --gruvbox-bg0: #fbf1c7;
-            --gruvbox-bg0-hard: #f9f5d7;
-            --gruvbox-bg0-soft: #f2e5bc;
-            --gruvbox-bg1: #ebdbb2;
-            --gruvbox-bg2: #d5c4a1;
-            --gruvbox-bg3: #bdae93;
-            --gruvbox-bg4: #a89984;
-            --gruvbox-fg0: #282828;
-            --gruvbox-fg1: #3c3836;
-            --gruvbox-fg2: #504945;
-            --gruvbox-fg3: #665c54;
-            --gruvbox-fg4: #7c6f64;
-            --gruvbox-red: #cc241d;
-            --gruvbox-green: #98971a;
-            --gruvbox-yellow: #d79921;
-            --gruvbox-blue: #458588;
-            --gruvbox-purple: #b16286;
-            --gruvbox-aqua: #689d6a;
-            --gruvbox-orange: #d65d0e;
-            --gruvbox-red-dim: #9d0006;
-            --gruvbox-green-dim: #79740e;
-            --gruvbox-yellow-dim: #b57614;
-            --gruvbox-blue-dim: #076678;
-            --gruvbox-purple-dim: #8f3f71;
-            --gruvbox-aqua-dim: #427b58;
-            --gruvbox-orange-dim: #af3a03;
-        }
-
-        /* Dracula Theme */
-        [data-theme="dracula"] {
-            --gruvbox-bg0: #282a36;
-            --gruvbox-bg0-hard: #191a21;
-            --gruvbox-bg0-soft: #343746;
-            --gruvbox-bg1: #44475a;
-            --gruvbox-bg2: #50586d;
-            --gruvbox-bg3: #6272a4;
-            --gruvbox-bg4: #727480;
-            --gruvbox-fg0: #f8f8f2;
-            --gruvbox-fg1: #f8f8f2;
-            --gruvbox-fg2: #e6e6e6;
-            --gruvbox-fg3: #d6d6d6;
-            --gruvbox-fg4: #c6c6c6;
-            --gruvbox-red: #ff5555;
-            --gruvbox-green: #50fa7b;
-            --gruvbox-yellow: #f1fa8c;
-            --gruvbox-blue: #8be9fd;
-            --gruvbox-purple: #bd93f9;
-            --gruvbox-aqua: #50fa7b;
-            --gruvbox-orange: #ffb86c;
-            --gruvbox-red-dim: #ff6e6e;
-            --gruvbox-green-dim: #69ff94;
-            --gruvbox-yellow-dim: #ffffa5;
-            --gruvbox-blue-dim: #a4ffff;
-            --gruvbox-purple-dim: #d6acff;
-            --gruvbox-aqua-dim: #69ff94;
-            --gruvbox-orange-dim: #ff9f78;
-        }
-
+        /* Base Styles */
         * {
             margin: 0;
             padding: 0;
@@ -112,406 +31,506 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--gruvbox-bg0);
             color: var(--gruvbox-fg1);
-            line-height: 1.6;
-            overflow-x: hidden;
+            line-height: 1.5;
+            font-size: var(--text-base);
         }
 
-        /* Navigation */
-        nav {
-            background-color: var(--gruvbox-bg0-hard);
-            padding: 1rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        /* Navigation styles in separate CSS file */
+
+        /* Hero Section - Compact */
+        .hero {
+            padding: var(--space-8) 0 var(--space-6);
+            background: linear-gradient(to bottom, var(--gruvbox-bg0), var(--gruvbox-bg0-soft));
         }
 
-        .nav-container {
-            max-width: 1400px;
-            margin: 0 auto;
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: var(--space-8);
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: var(--text-3xl);
+            color: var(--gruvbox-fg0);
+            line-height: 1.1;
+            margin-bottom: var(--space-3);
+        }
+
+        .hero-text p {
+            font-size: var(--text-lg);
+            color: var(--gruvbox-fg3);
+            margin-bottom: var(--space-4);
+            max-width: 60ch;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+        }
+
+        /* Live Stats Widget */
+        .stats-widget {
+            background: var(--gruvbox-bg1);
+            border: 1px solid var(--gruvbox-bg3);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            display: grid;
+            gap: var(--space-3);
+        }
+
+        .stat-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--gruvbox-fg0);
-            text-decoration: none;
-        }
-
-        .logo span {
-            color: var(--gruvbox-aqua);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--gruvbox-fg2);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: var(--gruvbox-aqua);
-        }
-
-        /* Hero Section */
-        .hero {
-            padding: 4rem 2rem;
-            text-align: center;
-            background: linear-gradient(to bottom, var(--gruvbox-bg0), var(--gruvbox-bg0-soft));
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            color: var(--gruvbox-fg0);
-            margin-bottom: 1rem;
-        }
-
-        .hero .subtitle {
-            font-size: 1.25rem;
+        .stat-label {
+            font-size: var(--text-sm);
             color: var(--gruvbox-fg3);
-            max-width: 600px;
-            margin: 0 auto 2rem;
-        }
-
-        .hero-stats {
-            display: flex;
-            justify-content: center;
-            gap: 3rem;
-            margin-top: 2rem;
-        }
-
-        .stat {
-            text-align: center;
         }
 
         .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
+            font-size: var(--text-xl);
+            font-weight: 700;
             color: var(--gruvbox-aqua);
         }
 
-        .stat-label {
-            color: var(--gruvbox-fg3);
-            font-size: 0.9rem;
-        }
 
-        /* Main Container */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        /* Action Cards */
-        .action-grid {
+        /* Main Content Grid */
+        .content-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 3rem 0;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--space-6);
+            padding: var(--space-6) 0;
         }
 
-        .action-card {
-            background: var(--gruvbox-bg1);
-            border-radius: 8px;
-            padding: 2rem;
-            transition: transform 0.3s, box-shadow 0.3s;
-            cursor: pointer;
-            border: 1px solid var(--gruvbox-bg3);
-        }
-
-        .action-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border-color: var(--gruvbox-aqua-dim);
-        }
-
-        .action-card h3 {
-            color: var(--gruvbox-fg0);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .action-card .icon {
-            font-size: 1.5rem;
-        }
-
-        .action-card p {
-            color: var(--gruvbox-fg3);
-            margin-bottom: 1.5rem;
-        }
-
-        .action-btn {
-            background: var(--gruvbox-aqua-dim);
-            color: var(--gruvbox-bg0);
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
-            display: inline-block;
-            text-decoration: none;
-        }
-
-        .action-btn:hover {
-            background: var(--gruvbox-aqua);
-        }
-
-        /* Memory Ingestion Section */
-        .ingestion-section {
+        /* Memory Input - Streamlined */
+        .memory-input-card {
             background: var(--gruvbox-bg0-soft);
-            border-radius: 8px;
-            padding: 3rem;
-            margin: 3rem 0;
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            border: 1px solid var(--gruvbox-bg2);
         }
 
-        .ingestion-tabs {
+        .memory-input-header {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            border-bottom: 2px solid var(--gruvbox-bg2);
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
         }
 
-        .tab-btn {
-            background: none;
+        .memory-input-title {
+            font-size: var(--text-xl);
+            font-weight: 600;
+            color: var(--gruvbox-fg0);
+        }
+
+        .input-mode-toggle {
+            display: flex;
+            gap: var(--space-1);
+            background: var(--gruvbox-bg1);
+            padding: var(--space-1);
+            border-radius: var(--radius-base);
+        }
+
+        .mode-btn {
+            padding: var(--space-1) var(--space-3);
+            font-size: var(--text-sm);
+            background: transparent;
             border: none;
             color: var(--gruvbox-fg3);
-            padding: 1rem 2rem;
             cursor: pointer;
-            transition: all 0.3s;
-            border-bottom: 2px solid transparent;
-            font-size: 1rem;
+            border-radius: var(--radius-sm);
+            transition: all var(--duration-fast);
         }
 
-        .tab-btn.active {
+        .mode-btn.active {
+            background: var(--gruvbox-bg0);
             color: var(--gruvbox-aqua);
-            border-bottom-color: var(--gruvbox-aqua);
         }
 
-        .tab-content {
-            display: none;
+        /* Inline Memory Form */
+        .memory-form-inline {
+            display: grid;
+            gap: var(--space-3);
         }
 
-        .tab-content.active {
-            display: block;
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-3);
         }
 
-        /* Forms */
-        .ingestion-form {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            color: var(--gruvbox-fg1);
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
+        .form-textarea {
             width: 100%;
-            background: var(--gruvbox-bg1);
+            min-height: 100px;
+            padding: var(--space-3);
+            background: var(--gruvbox-bg0);
             border: 1px solid var(--gruvbox-bg3);
+            border-radius: var(--radius-base);
             color: var(--gruvbox-fg1);
-            padding: 0.75rem;
-            border-radius: 4px;
             font-family: inherit;
-            transition: border-color 0.3s;
+            font-size: var(--text-sm);
+            resize: vertical;
         }
 
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
+        .form-textarea:focus {
             outline: none;
             border-color: var(--gruvbox-aqua);
+            box-shadow: 0 0 0 3px rgba(142, 192, 124, 0.1);
         }
 
-        textarea {
-            resize: vertical;
-            min-height: 120px;
+        /* Recent Activity Sidebar */
+        .activity-sidebar {
+            display: grid;
+            gap: var(--space-4);
         }
 
-        /* File Upload */
-        .file-drop-zone {
-            border: 2px dashed var(--gruvbox-bg3);
-            border-radius: 8px;
-            padding: 3rem;
-            text-align: center;
-            transition: all 0.3s;
-            cursor: pointer;
+        .activity-card {
+            background: var(--gruvbox-bg0-soft);
+            border: 1px solid var(--gruvbox-bg2);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
         }
 
-        .file-drop-zone:hover,
-        .file-drop-zone.active {
-            border-color: var(--gruvbox-aqua);
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+        }
+
+        .activity-title {
+            font-size: var(--text-base);
+            font-weight: 600;
+            color: var(--gruvbox-fg0);
+        }
+
+        .activity-list {
+            display: grid;
+            gap: var(--space-2);
+        }
+
+        .activity-item {
+            display: flex;
+            gap: var(--space-2);
+            padding: var(--space-2);
             background: var(--gruvbox-bg1);
+            border-radius: var(--radius-base);
+            font-size: var(--text-sm);
+            transition: background var(--duration-fast);
         }
 
-        .file-drop-zone input[type="file"] {
-            display: none;
+        .activity-item:hover {
+            background: var(--gruvbox-bg2);
         }
 
-        /* Architecture Section */
-        .architecture-section {
-            margin: 4rem 0;
+        .activity-time {
+            color: var(--gruvbox-fg4);
+            font-size: var(--text-xs);
         }
 
-        .architecture-grid {
+        .activity-content {
+            flex: 1;
+            color: var(--gruvbox-fg2);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Feature Grid - Compact */
+        .features-section {
+            padding: var(--space-8) 0;
+            background: var(--gruvbox-bg0-soft);
+        }
+
+        .features-header {
+            text-align: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
+            gap: var(--space-4);
         }
 
-        .arch-layer {
+        .feature-card {
+            padding: var(--space-4);
             background: var(--gruvbox-bg1);
-            padding: 1.5rem;
-            border-radius: 8px;
-            border-left: 4px solid var(--gruvbox-aqua-dim);
+            border: 1px solid var(--gruvbox-bg3);
+            border-radius: var(--radius-md);
+            transition: all var(--duration-fast);
         }
 
-        .arch-layer h4 {
+        .feature-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--gruvbox-aqua-dim);
+            box-shadow: var(--shadow-md);
+        }
+
+        .feature-icon {
+            font-size: var(--text-2xl);
+            margin-bottom: var(--space-2);
+        }
+
+        .feature-title {
+            font-size: var(--text-base);
+            font-weight: 600;
             color: var(--gruvbox-fg0);
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--space-1);
         }
 
-        .arch-layer ul {
-            list-style: none;
+        .feature-desc {
+            font-size: var(--text-sm);
             color: var(--gruvbox-fg3);
+            line-height: 1.4;
         }
 
-        .arch-layer li {
-            padding: 0.25rem 0;
-        }
-
-        /* Footer */
-        footer {
-            background: var(--gruvbox-bg0-hard);
-            padding: 2rem;
-            text-align: center;
-            margin-top: 4rem;
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .footer-links a {
-            color: var(--gruvbox-fg3);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .footer-links a:hover {
-            color: var(--gruvbox-aqua);
-        }
-
-        /* Modals */
-        .modal {
+        /* Command Palette */
+        .command-palette {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            background: var(--gruvbox-bg0);
+            border: 1px solid var(--gruvbox-bg3);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            z-index: var(--z-modal);
+        }
+
+        .command-input {
             width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 2000;
-            padding: 2rem;
+            padding: var(--space-4);
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--gruvbox-bg2);
+            color: var(--gruvbox-fg0);
+            font-size: var(--text-lg);
+        }
+
+        .command-results {
+            max-height: 400px;
             overflow-y: auto;
         }
 
-        .modal-content {
-            max-width: 800px;
-            margin: 2rem auto;
-            background: var(--gruvbox-bg0);
-            border-radius: 8px;
-            padding: 2rem;
-            position: relative;
+        .command-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            cursor: pointer;
+            transition: background var(--duration-fast);
         }
 
-        .close-modal {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
+        .command-item:hover,
+        .command-item.active {
+            background: var(--gruvbox-bg1);
+        }
+
+        .command-icon {
+            color: var(--gruvbox-fg3);
+        }
+
+        .command-text {
+            flex: 1;
+        }
+
+        .command-shortcut {
+            font-size: var(--text-sm);
+            color: var(--gruvbox-fg4);
+            font-family: monospace;
+        }
+
+        /* Modals - Improved */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: var(--z-modal-backdrop);
+            display: none;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            background: var(--gruvbox-bg0);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            z-index: var(--z-modal);
+            display: none;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--gruvbox-bg2);
+        }
+
+        .modal-title {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--gruvbox-fg0);
+        }
+
+        .modal-close {
             background: none;
             border: none;
             color: var(--gruvbox-fg3);
-            font-size: 1.5rem;
+            font-size: var(--text-xl);
             cursor: pointer;
-            transition: color 0.3s;
+            padding: var(--space-1);
+            line-height: 1;
         }
 
-        .close-modal:hover {
-            color: var(--gruvbox-red);
+        .modal-body {
+            padding: var(--space-4);
+            max-height: calc(90vh - 120px);
+            overflow-y: auto;
         }
 
-        /* Loading State */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid var(--gruvbox-bg3);
-            border-radius: 50%;
-            border-top-color: var(--gruvbox-aqua);
-            animation: spin 1s ease-in-out infinite;
+        /* Settings Modal - Tabbed */
+        .settings-tabs {
+            display: flex;
+            gap: var(--space-1);
+            padding: var(--space-3);
+            background: var(--gruvbox-bg0-soft);
+            border-bottom: 1px solid var(--gruvbox-bg2);
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .settings-tab {
+            padding: var(--space-2) var(--space-4);
+            background: transparent;
+            border: none;
+            color: var(--gruvbox-fg3);
+            font-size: var(--text-sm);
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: var(--radius-base);
+            transition: all var(--duration-fast);
+        }
+
+        .settings-tab.active {
+            background: var(--gruvbox-bg1);
+            color: var(--gruvbox-aqua);
+        }
+
+        .settings-content {
+            padding: var(--space-4);
+        }
+
+        .settings-section {
+            display: none;
+        }
+
+        .settings-section.active {
+            display: block;
+        }
+
+        .settings-group {
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-4);
+            border-bottom: 1px solid var(--gruvbox-bg2);
+        }
+
+        .settings-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        /* Density Control */
+        .density-control {
+            position: fixed;
+            bottom: var(--space-4);
+            right: var(--space-4);
+            background: var(--gruvbox-bg0);
+            border: 1px solid var(--gruvbox-bg3);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2);
+            box-shadow: var(--shadow-lg);
+            z-index: var(--z-fixed);
+        }
+
+        .density-btn {
+            padding: var(--space-2);
+            background: transparent;
+            border: none;
+            color: var(--gruvbox-fg3);
+            cursor: pointer;
+            border-radius: var(--radius-base);
+            transition: all var(--duration-fast);
+        }
+
+        .density-btn:hover {
+            background: var(--gruvbox-bg1);
+            color: var(--gruvbox-fg1);
+        }
+
+        .density-btn.active {
+            background: var(--gruvbox-bg1);
+            color: var(--gruvbox-aqua);
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .hero-stats {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .action-grid {
+            .hero-content {
                 grid-template-columns: 1fr;
             }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-menu {
+                gap: var(--space-2);
+            }
+            
+            .hide-mobile {
+                display: none;
+            }
+        }
+
+        /* Loading States */
+        .loading-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Keyboard Shortcuts Hint */
+        .kbd {
+            display: inline-block;
+            padding: 0 var(--space-1);
+            font-family: monospace;
+            font-size: var(--text-xs);
+            background: var(--gruvbox-bg1);
+            border: 1px solid var(--gruvbox-bg3);
+            border-radius: var(--radius-sm);
+            box-shadow: 0 1px 0 var(--gruvbox-bg3);
         }
     </style>
-    <script>
-        // Apply saved theme immediately to prevent flash
-        (function() {
-            const savedTheme = localStorage.getItem('secondBrainTheme');
-            if (savedTheme) {
-                document.documentElement.setAttribute('data-theme', savedTheme);
-            }
-        })();
-    </script>
 </head>
 <body>
     <!-- Navigation -->
@@ -525,419 +544,349 @@
                 <li><a href="/insights">Insights</a></li>
                 <li><a href="/api">API</a></li>
                 <li><a href="/documentation">Docs</a></li>
-                <li><a href="#" onclick="openModal('settings-modal')">⚙️</a></li>
+                <li><a href="#" onclick="showSettings()">⚙️</a></li>
             </ul>
         </div>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero">
-        <h1>Your AI-Powered Memory System</h1>
-        <p class="subtitle">
-            A production-ready, enterprise-grade knowledge management system built with 
-            Clean Architecture, event sourcing, and advanced AI capabilities.
-        </p>
-        <div class="hero-stats">
-            <div class="stat">
-                <div class="stat-value" id="memory-count">0</div>
-                <div class="stat-label">Memories Stored</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="insight-count">0</div>
-                <div class="stat-label">Insights Generated</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="connection-count">0</div>
-                <div class="stat-label">Connections Found</div>
+        <div class="container container-wide">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Your AI-Powered Second Brain</h1>
+                    <p>Capture, connect, and recall everything that matters. Built with enterprise-grade architecture and advanced AI.</p>
+                    <div class="hero-actions">
+                        <button class="btn btn-primary btn-lg" onclick="focusMemoryInput()">
+                            Start Capturing
+                        </button>
+                        <button class="btn btn-secondary btn-lg" onclick="openSearch()">
+                            <span>Search Memories</span>
+                            <kbd>⌘/</kbd>
+                        </button>
+                    </div>
+                </div>
+                <div class="stats-widget">
+                    <div class="stat-row">
+                        <span class="stat-label">Memories</span>
+                        <span class="stat-value" id="stat-memories">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Connections</span>
+                        <span class="stat-value" id="stat-connections">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Insights</span>
+                        <span class="stat-value" id="stat-insights">0</span>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <div class="container">
-        <!-- Action Cards -->
-        <div class="action-grid">
-            <div class="action-card" onclick="document.getElementById('ingestion').scrollIntoView({behavior: 'smooth'})">
-                <h3><span class="icon">📥</span> Ingest Knowledge</h3>
-                <p>Add memories from text, documents, audio, video, or connect your Google Drive.</p>
-                <button class="action-btn">Start Ingesting</button>
-            </div>
-            
-            <div class="action-card" onclick="openModal('graph-modal')">
-                <h3><span class="icon">🕸️</span> Knowledge Graph</h3>
-                <p>Visualize connections between your memories in an interactive 3D graph.</p>
-                <button class="action-btn">View Graph</button>
-            </div>
-            
-            <div class="action-card" onclick="window.location.href='/insights'">
-                <h3><span class="icon">💡</span> AI Insights</h3>
-                <p>Discover patterns, themes, and hidden connections in your knowledge base.</p>
-                <button class="action-btn">Explore Insights</button>
-            </div>
-            
-            <div class="action-card" onclick="openModal('search-modal')">
-                <h3><span class="icon">🔍</span> Semantic Search</h3>
-                <p>Find memories by meaning, not just keywords. Powered by advanced embeddings.</p>
-                <button class="action-btn">Search Memories</button>
-            </div>
-            
-            <div class="action-card" onclick="window.location.href='/dashboard'">
-                <h3><span class="icon">📊</span> Development Dashboard</h3>
-                <p>Track project metrics, TODOs, testing status, and development progress.</p>
-                <button class="action-btn">Open Dashboard</button>
-            </div>
-            
-            <div class="action-card" onclick="window.location.href='/documentation'">
-                <h3><span class="icon">📚</span> Documentation</h3>
-                <p>Comprehensive guides, API references, and architectural documentation.</p>
-                <button class="action-btn">View Docs</button>
-            </div>
-        </div>
 
-        <!-- Memory Ingestion Section -->
-        <section id="ingestion" class="ingestion-section">
-            <h2 style="text-align: center; margin-bottom: 2rem; color: var(--gruvbox-fg0);">
-                Add New Memories
-            </h2>
-            
-            <div class="ingestion-tabs">
-                <button class="tab-btn active" onclick="switchTab('text-tab')">Text</button>
-                <button class="tab-btn" onclick="switchTab('file-tab')">Files</button>
-                <button class="tab-btn" onclick="switchTab('drive-tab')">Google Drive</button>
-                <button class="tab-btn" onclick="switchTab('bulk-tab')">Bulk Import</button>
-            </div>
-
-            <!-- Text Input Tab -->
-            <div id="text-tab" class="tab-content active">
-                <form class="ingestion-form" onsubmit="return submitTextMemory(event)">
-                    <div class="form-group">
-                        <label for="memory-content">Memory Content</label>
-                        <textarea id="memory-content" placeholder="Enter your memory, thought, or knowledge..." required></textarea>
+    <!-- Main Content -->
+    <main class="container container-wide">
+        <div class="content-grid">
+            <!-- Memory Input Section -->
+            <div class="memory-input-card">
+                <div class="memory-input-header">
+                    <h2 class="memory-input-title">Capture Memory</h2>
+                    <div class="input-mode-toggle">
+                        <button class="mode-btn active" data-mode="text">Text</button>
+                        <button class="mode-btn" data-mode="voice">Voice</button>
+                        <button class="mode-btn" data-mode="file">File</button>
+                        <button class="mode-btn" data-mode="url">URL</button>
                     </div>
+                </div>
+                
+                <form class="memory-form-inline" id="memory-form">
+                    <textarea 
+                        class="form-textarea" 
+                        id="memory-content"
+                        placeholder="What's on your mind? Start typing or paste content..."
+                        autofocus
+                    ></textarea>
                     
-                    <div class="form-group">
-                        <label for="memory-tags">Tags (comma-separated)</label>
-                        <input type="text" id="memory-tags" placeholder="productivity, ideas, learning">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input 
+                                type="text" 
+                                class="form-input" 
+                                id="memory-tags"
+                                placeholder="Tags (comma separated)"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <select class="form-input" id="memory-importance">
+                                <option value="0.3">Low Priority</option>
+                                <option value="0.5" selected>Normal</option>
+                                <option value="0.7">Important</option>
+                                <option value="0.9">Critical</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                Save Memory
+                            </button>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="memory-importance">Importance</label>
-                        <select id="memory-importance">
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
-                            <option value="critical">Critical</option>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" class="action-btn" style="width: 100%;">
-                        <span id="submit-text">Add Memory</span>
-                        <span class="loading" style="display: none;"></span>
-                    </button>
                 </form>
             </div>
 
-            <!-- File Upload Tab -->
-            <div id="file-tab" class="tab-content">
-                <div class="file-drop-zone" onclick="document.getElementById('file-input').click()" 
-                     ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
-                    <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.txt,.md,.mp3,.mp4,.jpg,.png" onchange="handleFileSelect(event)">
-                    <p style="font-size: 1.5rem; margin-bottom: 1rem;">📁</p>
-                    <p>Drop files here or click to browse</p>
-                    <p style="font-size: 0.9rem; color: var(--gruvbox-fg4); margin-top: 0.5rem;">
-                        Supports: PDF, Word, Text, Markdown, Images, Audio, Video
-                    </p>
-                </div>
-                <div id="file-list" style="margin-top: 2rem;"></div>
-            </div>
-
-            <!-- Google Drive Tab -->
-            <div id="drive-tab" class="tab-content">
-                <div style="text-align: center; padding: 2rem;">
-                    <p style="font-size: 1.2rem; margin-bottom: 2rem;">Connect your Google Drive to import documents directly</p>
-                    <button class="action-btn" onclick="connectGoogleDrive()">
-                        <span>🔗 Connect Google Drive</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Bulk Import Tab -->
-            <div id="bulk-tab" class="tab-content">
-                <form class="ingestion-form" onsubmit="return submitBulkImport(event)">
-                    <div class="form-group">
-                        <label for="bulk-format">Import Format</label>
-                        <select id="bulk-format">
-                            <option value="csv">CSV</option>
-                            <option value="json">JSON</option>
-                            <option value="markdown">Markdown</option>
-                        </select>
+            <!-- Activity Sidebar -->
+            <aside class="activity-sidebar">
+                <!-- Recent Memories -->
+                <div class="activity-card">
+                    <div class="activity-header">
+                        <h3 class="activity-title">Recent Memories</h3>
+                        <a href="#" class="nav-link text-sm">View All</a>
                     </div>
-                    
-                    <div class="file-drop-zone" style="margin-bottom: 1.5rem;" onclick="document.getElementById('bulk-file').click()">
-                        <input type="file" id="bulk-file" accept=".csv,.json,.md">
-                        <p style="font-size: 1.5rem; margin-bottom: 1rem;">📤</p>
-                        <p>Select bulk import file</p>
+                    <div class="activity-list" id="recent-memories">
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text w-3/4"></div>
+                        <div class="skeleton skeleton-text w-1/2"></div>
                     </div>
-                    
-                    <button type="submit" class="action-btn" style="width: 100%;">
-                        Import Memories
-                    </button>
-                </form>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="activity-card">
+                    <div class="activity-header">
+                        <h3 class="activity-title">Today's Activity</h3>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="metric-card-compact">
+                            <div>
+                                <div class="metric-label">Memories</div>
+                                <div class="metric-value text-lg">12</div>
+                            </div>
+                        </div>
+                        <div class="metric-card-compact">
+                            <div>
+                                <div class="metric-label">Searches</div>
+                                <div class="metric-value text-lg">8</div>
+                            </div>
+                        </div>
+                        <div class="metric-card-compact">
+                            <div>
+                                <div class="metric-label">Time Saved</div>
+                                <div class="metric-value text-lg">2.5h</div>
+                            </div>
+                        </div>
+                        <div class="metric-card-compact">
+                            <div>
+                                <div class="metric-label">Insights</div>
+                                <div class="metric-value text-lg">3</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trending Tags -->
+                <div class="activity-card">
+                    <div class="activity-header">
+                        <h3 class="activity-title">Trending Tags</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="btn btn-ghost btn-sm">#productivity</span>
+                        <span class="btn btn-ghost btn-sm">#ideas</span>
+                        <span class="btn btn-ghost btn-sm">#learning</span>
+                        <span class="btn btn-ghost btn-sm">#projects</span>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container container-wide">
+            <div class="features-header">
+                <h2 class="text-2xl font-bold">Powerful Features</h2>
+                <p class="text-lg text-gray-600 mt-2">Everything you need to augment your intelligence</p>
             </div>
-        </section>
-
-        <!-- Architecture Section -->
-        <section class="architecture-section">
-            <h2 style="text-align: center; margin-bottom: 1rem; color: var(--gruvbox-fg0);">
-                Clean Architecture Design
-            </h2>
-            <p style="text-align: center; color: var(--gruvbox-fg3); max-width: 800px; margin: 0 auto;">
-                Second Brain v3.0.0 implements industry-standard patterns for scalability, maintainability, and testability.
-            </p>
             
-            <div class="architecture-grid">
-                <div class="arch-layer">
-                    <h4>🎯 Domain Layer</h4>
-                    <ul>
-                        <li>• Pure business logic</li>
-                        <li>• Domain events</li>
-                        <li>• Entity models</li>
-                        <li>• Value objects</li>
-                    </ul>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3 class="feature-title">Semantic Search</h3>
+                    <p class="feature-desc">Find memories by meaning, not just keywords</p>
                 </div>
-                
-                <div class="arch-layer">
-                    <h4>📱 Application Layer</h4>
-                    <ul>
-                        <li>• Use cases</li>
-                        <li>• Service interfaces</li>
-                        <li>• DTOs</li>
-                        <li>• CQRS handlers</li>
-                    </ul>
+                <div class="feature-card">
+                    <div class="feature-icon">🕸️</div>
+                    <h3 class="feature-title">Knowledge Graph</h3>
+                    <p class="feature-desc">Visualize connections between your ideas</p>
                 </div>
-                
-                <div class="arch-layer">
-                    <h4>🔧 Infrastructure Layer</h4>
-                    <ul>
-                        <li>• PostgreSQL + pgvector</li>
-                        <li>• Redis caching</li>
-                        <li>• RabbitMQ messaging</li>
-                        <li>• External APIs</li>
-                    </ul>
+                <div class="feature-card">
+                    <div class="feature-icon">💡</div>
+                    <h3 class="feature-title">AI Insights</h3>
+                    <p class="feature-desc">Discover patterns and generate new ideas</p>
                 </div>
-                
-                <div class="arch-layer">
-                    <h4>🌐 Presentation Layer</h4>
-                    <ul>
-                        <li>• REST API</li>
-                        <li>• WebSocket support</li>
-                        <li>• GraphQL (coming)</li>
-                        <li>• Web interface</li>
-                    </ul>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Analytics</h3>
+                    <p class="feature-desc">Track your knowledge growth over time</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3 class="feature-title">Privacy First</h3>
+                    <p class="feature-desc">Your data stays yours, always encrypted</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3 class="feature-title">Fast & Reliable</h3>
+                    <p class="feature-desc">Enterprise-grade performance at scale</p>
                 </div>
             </div>
-        </section>
-    </div>
+        </div>
+    </section>
 
-    <!-- Modals -->
-    <!-- Settings Modal -->
-    <div id="settings-modal" class="modal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeModal('settings-modal')">×</button>
-            <h2 style="margin-bottom: 2rem; color: var(--gruvbox-fg0);">Settings</h2>
-            
-            <form class="ingestion-form" onsubmit="saveSettings(); return false;">
-                <h3 style="margin-bottom: 1.5rem; color: var(--gruvbox-green);">OpenAI Configuration</h3>
-                
-                <div class="form-group">
-                    <label for="openai-api-key">OpenAI API Key</label>
-                    <input type="password" id="openai-api-key" placeholder="sk-...">
-                </div>
-                
-                <div class="form-group">
-                    <label for="openai-embedding-model">OpenAI Embedding Model</label>
-                    <select id="openai-embedding-model">
-                        <option value="text-embedding-3-small">text-embedding-3-small (default)</option>
-                        <option value="text-embedding-3-large">text-embedding-3-large</option>
-                        <option value="text-embedding-ada-002">text-embedding-ada-002</option>
-                    </select>
-                </div>
-
-                <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--gruvbox-bg2);">
-
-                <h3 style="margin-bottom: 1.5rem; color: var(--gruvbox-purple);">Anthropic Configuration</h3>
-                
-                <div class="form-group">
-                    <label for="anthropic-api-key">Anthropic API Key</label>
-                    <input type="password" id="anthropic-api-key" placeholder="sk-ant-...">
-                </div>
-                
-                <div class="form-group">
-                    <label for="anthropic-model">Anthropic Model</label>
-                    <select id="anthropic-model">
-                        <option value="claude-3-opus-20240229">Claude 3 Opus</option>
-                        <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
-                        <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
-                        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (latest)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="anthropic-embedding-provider">Embedding Provider for Anthropic</label>
-                    <select id="anthropic-embedding-provider">
-                        <option value="voyage">Voyage AI (recommended for Claude)</option>
-                        <option value="openai">Use OpenAI embeddings</option>
-                        <option value="cohere">Cohere embeddings</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="voyage-api-key-group" style="display: none;">
-                    <label for="voyage-api-key">Voyage AI API Key</label>
-                    <input type="password" id="voyage-api-key" placeholder="pa-...">
-                    <small style="color: var(--gruvbox-fg4); display: block; margin-top: 0.5rem;">
-                        Get your key at <a href="https://voyageai.com" target="_blank" style="color: var(--gruvbox-blue);">voyageai.com</a>
-                    </small>
-                </div>
-
-                <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--gruvbox-bg2);">
-
-                <h3 style="margin-bottom: 1.5rem; color: var(--gruvbox-yellow);">General Settings</h3>
-                
-                <div class="form-group">
-                    <label for="theme-selector">Theme</label>
-                    <select id="theme-selector" onchange="changeTheme(this.value)">
-                        <option value="gruvbox-dark">Gruvbox Dark</option>
-                        <option value="gruvbox-light">Gruvbox Light</option>
-                        <option value="dracula">Dracula</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="primary-provider">Primary AI Provider</label>
-                    <select id="primary-provider">
-                        <option value="openai">OpenAI</option>
-                        <option value="anthropic">Anthropic</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="memory-retention">Memory Retention Days</label>
-                    <input type="number" id="memory-retention" value="365" min="1">
-                </div>
-                
-                <div class="form-group">
-                    <label for="auto-categorize">
-                        <input type="checkbox" id="auto-categorize" checked>
-                        Enable automatic categorization
-                    </label>
-                </div>
-
-                <div class="form-group">
-                    <label for="hybrid-search">
-                        <input type="checkbox" id="hybrid-search">
-                        Enable hybrid search (combine multiple AI providers)
-                    </label>
-                </div>
-                
-                <button type="submit" class="action-btn" style="width: 100%;">Save Settings</button>
-            </form>
+    <!-- Command Palette -->
+    <div class="command-palette" id="command-palette">
+        <input 
+            type="text" 
+            class="command-input" 
+            placeholder="Type a command or search..."
+            id="command-input"
+        >
+        <div class="command-results" id="command-results">
+            <!-- Results populated dynamically -->
         </div>
     </div>
-
-    <!-- Search Modal -->
-    <div id="search-modal" class="modal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeModal('search-modal')">×</button>
-            <h2 style="margin-bottom: 2rem; color: var(--gruvbox-fg0);">Semantic Search</h2>
-            
-            <form class="ingestion-form" onsubmit="return performSearch(event)">
-                <div class="form-group">
-                    <input type="text" id="search-query" placeholder="Search by meaning..." required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="search-limit">Results limit</label>
-                    <input type="number" id="search-limit" value="10" min="1" max="100">
-                </div>
-                
-                <button type="submit" class="action-btn" style="width: 100%;">Search</button>
-            </form>
-            
-            <div id="search-results" style="margin-top: 2rem;"></div>
-        </div>
-    </div>
-
-    <!-- Knowledge Graph Modal -->
-    <div id="graph-modal" class="modal">
-        <div class="modal-content" style="max-width: 1200px; height: 80vh;">
-            <button class="close-modal" onclick="closeModal('graph-modal')">×</button>
-            <h2 style="margin-bottom: 2rem; color: var(--gruvbox-fg0);">Knowledge Graph</h2>
-            <iframe src="/static/knowledge-graph.html" style="width: 100%; height: calc(100% - 100px); border: none; border-radius: 8px;"></iframe>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer>
-        <div class="footer-links">
-            <a href="https://github.com/raold/second-brain" target="_blank">GitHub</a>
-            <a href="/api">API</a>
-            <a href="/dashboard">Dev Dashboard</a>
-            <a href="/documentation">Documentation Library</a>
-        </div>
-        <p style="color: var(--gruvbox-fg4);">
-            Second Brain v3.0.0 • Built with Clean Architecture & ❤️
-        </p>
-    </footer>
 
     <script>
-        // Initialize stats
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load stats
+            loadStats();
+            loadRecentMemories();
+            
+            // Set up keyboard shortcuts
+            setupKeyboardShortcuts();
+        });
+
+
+
+        // Input mode switching
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // Handle mode change
+                const mode = btn.dataset.mode;
+                console.log('Switched to mode:', mode);
+            });
+        });
+
+        // Command palette
+        function openCommandPalette() {
+            const palette = document.getElementById('command-palette');
+            palette.style.display = 'block';
+            document.getElementById('command-input').focus();
+        }
+
+        function closeCommandPalette() {
+            document.getElementById('command-palette').style.display = 'none';
+        }
+
+        // Keyboard shortcuts
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Command palette
+                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                    e.preventDefault();
+                    openCommandPalette();
+                }
+                
+                // Search
+                if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+                    e.preventDefault();
+                    openSearch();
+                }
+                
+                // New memory
+                if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+                    e.preventDefault();
+                    focusMemoryInput();
+                }
+                
+                // Escape to close modals
+                if (e.key === 'Escape') {
+                    closeCommandPalette();
+                    // Settings modal handled by settings.js
+                }
+            });
+        }
+
+        // Utility functions
+        function focusMemoryInput() {
+            document.getElementById('memory-content').focus();
+        }
+
+        function openSearch() {
+            openCommandPalette();
+        }
+
+        function setInputMode(mode) {
+            document.querySelector(`[data-mode="${mode}"]`).click();
+        }
+
+        // Load data
         async function loadStats() {
             try {
-                const response = await fetch('/api/v1/memories/stats');
-                const stats = await response.json();
-                document.getElementById('memory-count').textContent = stats.total_memories || 0;
-                document.getElementById('insight-count').textContent = stats.total_insights || 0;
-                document.getElementById('connection-count').textContent = stats.total_connections || 0;
+                const response = await fetch('/api/v1/memories/stats?api_key=test-token-for-development');
+                const data = await response.json();
+                
+                document.getElementById('stat-memories').textContent = data.total_memories || 0;
+                document.getElementById('stat-connections').textContent = data.total_connections || 0;
+                document.getElementById('stat-insights').textContent = data.total_insights || 0;
             } catch (error) {
                 console.error('Failed to load stats:', error);
             }
         }
 
-        // Tab switching
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        async function loadRecentMemories() {
+            try {
+                const response = await fetch('/api/v1/memories?limit=5&api_key=test-token-for-development');
+                const memories = await response.json();
+                
+                const container = document.getElementById('recent-memories');
+                if (memories.length > 0) {
+                    container.innerHTML = memories.map(memory => `
+                        <div class="activity-item">
+                            <div class="activity-content">${memory.content.substring(0, 100)}...</div>
+                            <div class="activity-time">${formatTime(memory.created_at)}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="text-sm text-gray-500">No memories yet. Start capturing!</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load memories:', error);
+            }
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
             
-            event.target.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            if (diff < 60000) return 'just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+            return date.toLocaleDateString();
         }
 
-        // Modal functions
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        // Text memory submission
-        async function submitTextMemory(event) {
-            event.preventDefault();
-            const submitBtn = event.target.querySelector('button[type="submit"]');
-            const submitText = submitBtn.querySelector('#submit-text');
-            const loading = submitBtn.querySelector('.loading');
-            
-            submitText.style.display = 'none';
-            loading.style.display = 'inline-block';
+        // Form submission
+        document.getElementById('memory-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
             const content = document.getElementById('memory-content').value;
             const tags = document.getElementById('memory-tags').value.split(',').map(t => t.trim()).filter(t => t);
-            const importance = document.getElementById('memory-importance').value;
+            const importance = parseFloat(document.getElementById('memory-importance').value);
             
             try {
-                const response = await fetch('/api/v1/memories', {
+                const response = await fetch('/api/v1/memories?api_key=test-token-for-development', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -945,251 +894,26 @@
                     body: JSON.stringify({
                         content,
                         tags,
-                        importance,
+                        importance_score: importance,
                         memory_type: 'semantic'
                     })
                 });
                 
                 if (response.ok) {
-                    // Reset form
-                    event.target.reset();
-                    alert('Memory added successfully!');
-                    loadStats(); // Refresh stats
-                } else {
-                    alert('Failed to add memory. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            } finally {
-                submitText.style.display = 'inline';
-                loading.style.display = 'none';
-            }
-        }
-
-        // File handling
-        function handleFileSelect(event) {
-            const files = event.target.files;
-            displayFiles(files);
-        }
-
-        function handleDrop(event) {
-            event.preventDefault();
-            event.currentTarget.classList.remove('active');
-            const files = event.dataTransfer.files;
-            displayFiles(files);
-        }
-
-        function handleDragOver(event) {
-            event.preventDefault();
-            event.currentTarget.classList.add('active');
-        }
-
-        function handleDragLeave(event) {
-            event.currentTarget.classList.remove('active');
-        }
-
-        function displayFiles(files) {
-            const fileList = document.getElementById('file-list');
-            fileList.innerHTML = '';
-            
-            Array.from(files).forEach(file => {
-                const fileItem = document.createElement('div');
-                fileItem.style.cssText = 'background: var(--gruvbox-bg1); padding: 1rem; margin-bottom: 0.5rem; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;';
-                fileItem.innerHTML = `
-                    <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                    <button class="action-btn" onclick="uploadFile('${file.name}')">Upload</button>
-                `;
-                fileList.appendChild(fileItem);
-            });
-        }
-
-        async function uploadFile(filename) {
-            // Implement file upload logic
-            alert(`Uploading ${filename}...`);
-        }
-
-        // Google Drive connection
-        function connectGoogleDrive() {
-            window.open('/api/v1/auth/google', '_blank');
-        }
-
-        // Search functionality
-        async function performSearch(event) {
-            event.preventDefault();
-            const query = document.getElementById('search-query').value;
-            const limit = document.getElementById('search-limit').value;
-            
-            try {
-                const response = await fetch('/api/v1/memories/search', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ query, limit: parseInt(limit) })
-                });
-                
-                const results = await response.json();
-                displaySearchResults(results);
-            } catch (error) {
-                console.error('Search error:', error);
-            }
-        }
-
-        function displaySearchResults(results) {
-            const resultsDiv = document.getElementById('search-results');
-            if (!results || results.length === 0) {
-                resultsDiv.innerHTML = '<p style="text-align: center; color: var(--gruvbox-fg3);">No results found</p>';
-                return;
-            }
-            
-            resultsDiv.innerHTML = results.map(result => `
-                <div style="background: var(--gruvbox-bg1); padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
-                    <p style="margin-bottom: 0.5rem;">${result.content}</p>
-                    <small style="color: var(--gruvbox-fg4);">Similarity: ${(result.similarity * 100).toFixed(1)}%</small>
-                </div>
-            `).join('');
-        }
-
-        // Bulk import
-        async function submitBulkImport(event) {
-            event.preventDefault();
-            const format = document.getElementById('bulk-format').value;
-            const file = document.getElementById('bulk-file').files[0];
-            
-            if (!file) {
-                alert('Please select a file');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('format', format);
-            
-            try {
-                const response = await fetch('/api/v1/bulk/import', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    alert('Bulk import started successfully!');
-                    loadStats();
-                } else {
-                    alert('Bulk import failed. Please try again.');
-                }
-            } catch (error) {
-                console.error('Bulk import error:', error);
-                alert('An error occurred during bulk import.');
-            }
-        }
-
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadStats();
-            // Refresh stats every 30 seconds
-            setInterval(loadStats, 30000);
-            
-            // Handle embedding provider change
-            document.getElementById('anthropic-embedding-provider').addEventListener('change', function(e) {
-                const voyageGroup = document.getElementById('voyage-api-key-group');
-                if (e.target.value === 'voyage') {
-                    voyageGroup.style.display = 'block';
-                } else {
-                    voyageGroup.style.display = 'none';
-                }
-            });
-            
-            // Load saved settings
-            loadSettings();
-        });
-        
-        // Theme management
-        function changeTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('secondBrainTheme', theme);
-        }
-
-        // Save and load settings
-        function saveSettings() {
-            const settings = {
-                openai: {
-                    apiKey: document.getElementById('openai-api-key').value,
-                    embeddingModel: document.getElementById('openai-embedding-model').value
-                },
-                anthropic: {
-                    apiKey: document.getElementById('anthropic-api-key').value,
-                    model: document.getElementById('anthropic-model').value,
-                    embeddingProvider: document.getElementById('anthropic-embedding-provider').value,
-                    voyageApiKey: document.getElementById('voyage-api-key').value
-                },
-                general: {
-                    theme: document.getElementById('theme-selector').value,
-                    primaryProvider: document.getElementById('primary-provider').value,
-                    memoryRetention: document.getElementById('memory-retention').value,
-                    autoCategorize: document.getElementById('auto-categorize').checked,
-                    hybridSearch: document.getElementById('hybrid-search').checked
-                }
-            };
-            
-            localStorage.setItem('secondBrainSettings', JSON.stringify(settings));
-            alert('Settings saved successfully!');
-        }
-        
-        function loadSettings() {
-            const saved = localStorage.getItem('secondBrainSettings');
-            if (saved) {
-                const settings = JSON.parse(saved);
-                
-                // OpenAI settings
-                if (settings.openai) {
-                    document.getElementById('openai-api-key').value = settings.openai.apiKey || '';
-                    document.getElementById('openai-embedding-model').value = settings.openai.embeddingModel || 'text-embedding-3-small';
-                }
-                
-                // Anthropic settings
-                if (settings.anthropic) {
-                    document.getElementById('anthropic-api-key').value = settings.anthropic.apiKey || '';
-                    document.getElementById('anthropic-model').value = settings.anthropic.model || 'claude-3-5-sonnet-20241022';
-                    document.getElementById('anthropic-embedding-provider').value = settings.anthropic.embeddingProvider || 'voyage';
-                    document.getElementById('voyage-api-key').value = settings.anthropic.voyageApiKey || '';
+                    // Clear form
+                    document.getElementById('memory-form').reset();
                     
-                    // Show/hide Voyage field
-                    if (settings.anthropic.embeddingProvider === 'voyage') {
-                        document.getElementById('voyage-api-key-group').style.display = 'block';
-                    }
+                    // Reload data
+                    loadStats();
+                    loadRecentMemories();
+                    
+                    // Show success (could be a toast)
+                    console.log('Memory saved successfully');
                 }
-                
-                // General settings
-                if (settings.general) {
-                    if (settings.general.theme) {
-                        document.getElementById('theme-selector').value = settings.general.theme;
-                        changeTheme(settings.general.theme);
-                    }
-                    document.getElementById('primary-provider').value = settings.general.primaryProvider || 'openai';
-                    document.getElementById('memory-retention').value = settings.general.memoryRetention || '365';
-                    document.getElementById('auto-categorize').checked = settings.general.autoCategorize !== false;
-                    document.getElementById('hybrid-search').checked = settings.general.hybridSearch || false;
-                }
-            }
-            
-            // Load theme from separate storage for immediate application
-            const savedTheme = localStorage.getItem('secondBrainTheme');
-            if (savedTheme) {
-                changeTheme(savedTheme);
-                document.getElementById('theme-selector').value = savedTheme;
-            }
-        }
-
-        // Close modals on escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.style.display = 'none';
-                });
-                document.body.style.overflow = 'auto';
+            } catch (error) {
+                console.error('Failed to save memory:', error);
             }
         });
     </script>
 </body>
-</html> 
+</html>

@@ -177,11 +177,49 @@ make dev
 python scripts/validate_environment.py
 ```
 
+## 🎨 Design System Maintenance Guidelines
+
+### Design System v3.0 (Nielsen Norman Group Compliant)
+- **✅ COMPLETED**: Comprehensive design language and architecture
+- **Documentation**: See `docs/DESIGN_LANGUAGE.md` and `docs/DESIGN_ARCHITECTURE.md`
+- **Implementation**: Started with `static/css/core/tokens.css` and component library
+
+### Maintenance Rules
+1. **NEVER use magic numbers** - All values must come from design tokens
+2. **Update ALL states** - Default, hover, active, focus, disabled, loading, error
+3. **Test at ALL breakpoints** - Mobile (320px), Tablet (640px), Desktop (1024px), Wide (1440px)
+4. **Maintain pixel perfection** - Use design tokens for spacing, sizing, colors
+5. **Follow BEM naming** - `.block__element--modifier` pattern
+
+### Before ANY UI Change
+- [ ] Review design tokens in `static/css/core/tokens.css`
+- [ ] Check component documentation in design files
+- [ ] Implement all component states
+- [ ] Test accessibility (4.5:1 contrast minimum)
+- [ ] Verify responsive behavior
+- [ ] Update visual regression tests
+- [ ] Document changes in component library
+
+### Quick Reference
+```css
+/* ALWAYS use tokens */
+padding: var(--space-4);        /* ✓ Correct */
+padding: 16px;                  /* ✗ Wrong */
+
+/* Component structure */
+.nav { }                        /* Block */
+.nav__links { }                 /* Element */
+.nav--mobile { }                /* Modifier */
+```
+
 ## 📝 Session Notes
 <!-- Add session-specific notes here before closing -->
 - User wants autonomous operation without confirmations
 - User expressed concern about enterprise readiness
 - Focus shifted to addressing production gaps systematically
+- **NEW**: Nielsen Norman Group standards compliance requested
+- **NEW**: Design system created for pixel-perfect consistency
+- **NEW**: Component architecture established for easy maintenance
 
 ---
 **Remember**: This file is your primary context source. Update it throughout your session!

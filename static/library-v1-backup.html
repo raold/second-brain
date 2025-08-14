@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation Library - Second Brain v3</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/static/favicon.svg">
+    <link rel="mask-icon" href="/static/favicon.svg" color="#8ec07c">
+    
+    <style>
+        /* Gruvbox Dark Theme Colors */
+        :root {
+            --gruvbox-bg0: #282828;
+            --gruvbox-bg0-hard: #1d2021;
+            --gruvbox-bg0-soft: #32302f;
+            --gruvbox-bg1: #3c3836;
+            --gruvbox-bg2: #504945;
+            --gruvbox-bg3: #665c54;
+            --gruvbox-bg4: #7c6f64;
+            --gruvbox-fg0: #fbf1c7;
+            --gruvbox-fg1: #ebdbb2;
+            --gruvbox-fg2: #d5c4a1;
+            --gruvbox-fg3: #bdae93;
+            --gruvbox-fg4: #a89984;
+            --gruvbox-red: #fb4934;
+            --gruvbox-green: #b8bb26;
+            --gruvbox-yellow: #fabd2f;
+            --gruvbox-blue: #83a598;
+            --gruvbox-purple: #d3869b;
+            --gruvbox-aqua: #8ec07c;
+            --gruvbox-orange: #fe8019;
+            --gruvbox-red-dim: #cc241d;
+            --gruvbox-green-dim: #98971a;
+            --gruvbox-yellow-dim: #d79921;
+            --gruvbox-blue-dim: #458588;
+            --gruvbox-purple-dim: #b16286;
+            --gruvbox-aqua-dim: #689d6a;
+            --gruvbox-orange-dim: #d65d0e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--gruvbox-bg0);
+            color: var(--gruvbox-fg1);
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Navigation Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--gruvbox-bg0-hard);
+            padding: 1rem 2rem;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gruvbox-fg0);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--gruvbox-aqua);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--gruvbox-fg2);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--gruvbox-aqua);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 4rem;
+            bottom: 0;
+            width: 280px;
+            background-color: var(--gruvbox-bg0-soft);
+            overflow-y: auto;
+            padding: 2rem 1rem;
+            border-right: 1px solid var(--gruvbox-bg2);
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gruvbox-fg3);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .sidebar-links {
+            list-style: none;
+        }
+
+        .sidebar-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-links a {
+            color: var(--gruvbox-fg2);
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .sidebar-links a:hover {
+            background-color: var(--gruvbox-bg1);
+            color: var(--gruvbox-aqua);
+            transform: translateX(4px);
+        }
+
+        .sidebar-links a.active {
+            background-color: var(--gruvbox-bg1);
+            color: var(--gruvbox-aqua);
+            border-left: 3px solid var(--gruvbox-aqua);
+        }
+
+        .sidebar-links .doc-icon {
+            margin-right: 0.5rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            margin-top: 4rem;
+            width: calc(100% - 280px);
+            padding: 3rem;
+        }
+
+        .content-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Document Viewer */
+        .doc-viewer {
+            background-color: var(--gruvbox-bg0-soft);
+            border-radius: 8px;
+            padding: 3rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .doc-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--gruvbox-bg2);
+        }
+
+        .doc-title {
+            font-size: 2.5rem;
+            color: var(--gruvbox-fg0);
+            margin-bottom: 0.5rem;
+        }
+
+        .doc-meta {
+            display: flex;
+            gap: 2rem;
+            color: var(--gruvbox-fg3);
+            font-size: 0.9rem;
+        }
+
+        .doc-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Markdown Content Styling */
+        .doc-content {
+            color: var(--gruvbox-fg1);
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .doc-content h1,
+        .doc-content h2,
+        .doc-content h3,
+        .doc-content h4,
+        .doc-content h5,
+        .doc-content h6 {
+            color: var(--gruvbox-fg0);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .doc-content h1 {
+            font-size: 2rem;
+            color: var(--gruvbox-aqua);
+        }
+
+        .doc-content h2 {
+            font-size: 1.75rem;
+            color: var(--gruvbox-green);
+        }
+
+        .doc-content h3 {
+            font-size: 1.5rem;
+            color: var(--gruvbox-yellow);
+        }
+
+        .doc-content p {
+            margin-bottom: 1rem;
+        }
+
+        .doc-content code {
+            background-color: var(--gruvbox-bg1);
+            color: var(--gruvbox-orange);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Fira Code', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+
+        .doc-content pre {
+            background-color: var(--gruvbox-bg0-hard);
+            border: 1px solid var(--gruvbox-bg2);
+            border-radius: 6px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .doc-content pre code {
+            background-color: transparent;
+            color: var(--gruvbox-fg1);
+            padding: 0;
+        }
+
+        .doc-content blockquote {
+            border-left: 4px solid var(--gruvbox-aqua);
+            margin: 1.5rem 0;
+            padding-left: 1.5rem;
+            color: var(--gruvbox-fg2);
+            font-style: italic;
+        }
+
+        .doc-content ul,
+        .doc-content ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+
+        .doc-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .doc-content a {
+            color: var(--gruvbox-blue);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--gruvbox-blue);
+            transition: all 0.3s;
+        }
+
+        .doc-content a:hover {
+            color: var(--gruvbox-aqua);
+            border-bottom-color: var(--gruvbox-aqua);
+        }
+
+        .doc-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .doc-content th,
+        .doc-content td {
+            border: 1px solid var(--gruvbox-bg2);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .doc-content th {
+            background-color: var(--gruvbox-bg1);
+            color: var(--gruvbox-fg0);
+            font-weight: 600;
+        }
+
+        .doc-content tr:nth-child(even) {
+            background-color: var(--gruvbox-bg0);
+        }
+
+        /* Home View */
+        .home-view {
+            display: none;
+        }
+
+        .home-view.active {
+            display: block;
+        }
+
+        .doc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .doc-card {
+            background-color: var(--gruvbox-bg1);
+            border-radius: 8px;
+            padding: 2rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid var(--gruvbox-bg3);
+        }
+
+        .doc-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-color: var(--gruvbox-aqua-dim);
+        }
+
+        .doc-card h3 {
+            color: var(--gruvbox-fg0);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .doc-card p {
+            color: var(--gruvbox-fg3);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Search Bar */
+        .search-container {
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--gruvbox-bg1);
+            border: 1px solid var(--gruvbox-bg3);
+            color: var(--gruvbox-fg1);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--gruvbox-aqua);
+            box-shadow: 0 0 0 3px rgba(142, 192, 124, 0.1);
+        }
+
+        /* Table of Contents */
+        /* Table of Contents - Removed per user request */
+        .toc {
+            display: none !important;
+        }
+
+        .toc-title {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gruvbox-fg3);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .toc-list a {
+            color: var(--gruvbox-fg3);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: block;
+            padding: 0.25rem 0;
+            transition: color 0.3s;
+        }
+
+        .toc-list a:hover {
+            color: var(--gruvbox-aqua);
+        }
+
+        .toc-list .toc-h2 {
+            padding-left: 1rem;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 2rem;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: var(--gruvbox-fg3);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--gruvbox-bg3);
+            border-radius: 50%;
+            border-top-color: var(--gruvbox-aqua);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .toc {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .doc-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Syntax Highlighting (basic) */
+        .hljs-keyword { color: var(--gruvbox-red); }
+        .hljs-string { color: var(--gruvbox-green); }
+        .hljs-number { color: var(--gruvbox-purple); }
+        .hljs-comment { color: var(--gruvbox-fg4); }
+        .hljs-function { color: var(--gruvbox-blue); }
+        .hljs-class { color: var(--gruvbox-yellow); }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                🧠 <span>Second Brain</span> v3
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/insights">Insights</a></li>
+                    <li><a href="/api">API</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Getting Started</h3>
+            <ul class="sidebar-links">
+                <li><a href="#" onclick="loadDoc('home')"><span class="doc-icon">🏠</span> Documentation Home</a></li>
+                <li><a href="#" onclick="loadDoc('readme')"><span class="doc-icon">📖</span> README</a></li>
+                <li><a href="#" onclick="loadDoc('setup')"><span class="doc-icon">🚀</span> Setup Guide</a></li>
+                <li><a href="#" onclick="loadDoc('usage')"><span class="doc-icon">💡</span> Usage Guide</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Architecture</h3>
+            <ul class="sidebar-links">
+                <li><a href="#" onclick="loadDoc('architecture')"><span class="doc-icon">🏛️</span> Architecture Overview</a></li>
+                <li><a href="#" onclick="loadDoc('api-spec')"><span class="doc-icon">🔌</span> API Specification</a></li>
+                <li><a href="#" onclick="loadDoc('migration')"><span class="doc-icon">🔄</span> Migration Guide</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Development</h3>
+            <ul class="sidebar-links">
+                <li><a href="#" onclick="loadDoc('dev-guide')"><span class="doc-icon">👩‍💻</span> Development Guide</a></li>
+                <li><a href="#" onclick="loadDoc('contributing')"><span class="doc-icon">🤝</span> Contributing</a></li>
+                <li><a href="#" onclick="loadDoc('testing')"><span class="doc-icon">🧪</span> Testing Strategy</a></li>
+                <li><a href="#" onclick="loadDoc('testing-guide')"><span class="doc-icon">✅</span> Testing Guide</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Deployment</h3>
+            <ul class="sidebar-links">
+                <li><a href="#" onclick="loadDoc('deployment')"><span class="doc-icon">🚢</span> Deployment Guide</a></li>
+                <li><a href="#" onclick="loadDoc('ci-cd')"><span class="doc-icon">⚙️</span> CI/CD Guide</a></li>
+                <li><a href="#" onclick="loadDoc('ci-caching')"><span class="doc-icon">💾</span> CI Caching</a></li>
+                <li><a href="#" onclick="loadDoc('env-vars')"><span class="doc-icon">🔐</span> Environment Variables</a></li>
+                <li><a href="#" onclick="loadDoc('secrets')"><span class="doc-icon">🔒</span> Secrets Management</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Testing</h3>
+            <ul class="sidebar-links">
+                <li><a href="#" onclick="loadDoc('testing-v3')"><span class="doc-icon">🔬</span> Testing Guide v3</a></li>
+                <li><a href="#" onclick="loadDoc('knowledge-graph-testing')"><span class="doc-icon">🕸️</span> Knowledge Graph Testing</a></li>
+                <li><a href="#" onclick="loadDoc('reasoning-testing')"><span class="doc-icon">🧠</span> Reasoning Engine Testing</a></li>
+                <li><a href="#" onclick="loadDoc('test-metrics')"><span class="doc-icon">📊</span> Test Metrics Guide</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Releases</h3>
+            <ul class="sidebar-links">
+                <li><a href="#" onclick="loadDoc('changelog')"><span class="doc-icon">📝</span> Changelog</a></li>
+                <li><a href="#" onclick="loadDoc('release-notes')"><span class="doc-icon">🎉</span> Release Notes v3.0.0</a></li>
+                <li><a href="#" onclick="loadDoc('version-mgmt')"><span class="doc-icon">🏷️</span> Version Management</a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="content-wrapper">
+            <!-- Search Bar -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search documentation..." id="searchInput" onkeyup="searchDocs(event)">
+            </div>
+
+            <!-- Home View -->
+            <div class="home-view active" id="home-view">
+                <h1 style="font-size: 2.5rem; color: var(--gruvbox-fg0); margin-bottom: 1rem;">
+                    📚 Second Brain Documentation
+                </h1>
+                <p style="font-size: 1.2rem; color: var(--gruvbox-fg2); margin-bottom: 2rem;">
+                    Welcome to the comprehensive documentation for Second Brain v3.0.0. 
+                    Everything you need to understand, develop, and deploy this enterprise-grade AI memory system.
+                </p>
+
+                <div class="doc-grid">
+                    <div class="doc-card" onclick="loadDocFromCard('readme')">
+                        <h3><span>📖</span> Getting Started</h3>
+                        <p>Quick introduction to Second Brain, installation instructions, and basic usage examples.</p>
+                    </div>
+
+                    <div class="doc-card" onclick="loadDocFromCard('architecture')">
+                        <h3><span>🏛️</span> Architecture</h3>
+                        <p>Deep dive into the Clean Architecture design, domain-driven patterns, and system components.</p>
+                    </div>
+
+                    <div class="doc-card" onclick="loadDocFromCard('api-spec')">
+                        <h3><span>🔌</span> API Reference</h3>
+                        <p>Complete API specification with endpoints, request/response formats, and examples.</p>
+                    </div>
+
+                    <div class="doc-card" onclick="loadDocFromCard('dev-guide')">
+                        <h3><span>👩‍💻</span> Development</h3>
+                        <p>Developer guide with setup instructions, coding standards, and best practices.</p>
+                    </div>
+
+                    <div class="doc-card" onclick="loadDocFromCard('deployment')">
+                        <h3><span>🚢</span> Deployment</h3>
+                        <p>Production deployment guide with Docker, Kubernetes, and cloud platform instructions.</p>
+                    </div>
+
+                    <div class="doc-card" onclick="loadDocFromCard('testing-v3')">
+                        <h3><span>🧪</span> Testing</h3>
+                        <p>Comprehensive testing guide covering unit, integration, and end-to-end testing strategies.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Viewer -->
+            <div class="doc-viewer" id="doc-viewer" style="display: none;">
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 1rem;">Loading documentation...</p>
+                </div>
+                
+                <div id="doc-content-wrapper" style="display: none;">
+                    <div class="doc-header">
+                        <h1 class="doc-title" id="doc-title"></h1>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">
+                                <span>📁</span>
+                                <span id="doc-path"></span>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span>📏</span>
+                                <span id="doc-size"></span>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span>⏱️</span>
+                                <span id="read-time"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="doc-content" id="doc-content"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Document mapping
+        const docMap = {
+            'readme': '/docs/README.md',
+            'setup': '/docs/docs/SETUP.md',
+            'usage': '/docs/docs/USAGE.md',
+            'architecture': '/docs/docs/ARCHITECTURE_V3.md',
+            'api-spec': '/docs/docs/API_SPECIFICATION_v3.0.0.md',
+            'migration': '/docs/docs/MIGRATION_GUIDE_V3.md',
+            'dev-guide': '/docs/docs/development/DEVELOPMENT_GUIDE_v3.0.0.md',
+            'contributing': '/docs/docs/development/CONTRIBUTING.md',
+            'testing': '/docs/docs/development/TESTING_STRATEGY.md',
+            'testing-guide': '/docs/docs/development/TESTING.md',
+            'deployment': '/docs/docs/deployment/DEPLOYMENT_V3.md',
+            'ci-cd': '/docs/docs/CI_CD_GUIDE_V3.md',
+            'ci-caching': '/docs/docs/deployment/CI_CACHING.md',
+            'env-vars': '/docs/docs/ENVIRONMENT_VARIABLES_V3.md',
+            'secrets': '/docs/docs/SECRETS_MANAGEMENT.md',
+            'testing-v3': '/docs/docs/testing/TESTING_GUIDE_V3.md',
+            'knowledge-graph-testing': '/docs/docs/testing/knowledge_graph_testing.md',
+            'reasoning-testing': '/docs/docs/testing/reasoning_engine_testing.md',
+            'test-metrics': '/docs/docs/testing/test_metrics_guide.md',
+            'changelog': '/docs/CHANGELOG.md',
+            'release-notes': '/docs/docs/releases/RELEASE_NOTES_v3.0.0.md',
+            'version-mgmt': '/docs/docs/releases/VERSION_MANAGEMENT.md'
+        };
+
+        let currentDoc = null;
+
+        async function loadDoc(docKey) {
+            if (docKey === 'home') {
+                showHome();
+                return;
+            }
+
+            const docPath = docMap[docKey];
+            if (!docPath) {
+                console.error('Document not found:', docKey);
+                return;
+            }
+
+            currentDoc = docKey;
+            
+            // Update UI
+            document.getElementById('home-view').classList.remove('active');
+            document.getElementById('doc-viewer').style.display = 'block';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('doc-content-wrapper').style.display = 'none';
+            // TOC removed per user request
+            
+            // Update active link
+            document.querySelectorAll('.sidebar-links a').forEach(link => {
+                link.classList.remove('active');
+            });
+            // Only update active link if event exists and has a target that's an anchor
+            if (event && event.target && event.target.closest) {
+                const anchor = event.target.closest('a');
+                if (anchor) {
+                    anchor.classList.add('active');
+                }
+            }
+
+            try {
+                const response = await fetch(docPath);
+                const text = await response.text();
+                
+                // Parse and render markdown (basic implementation)
+                const html = renderMarkdown(text);
+                
+                // Update content
+                document.getElementById('doc-content').innerHTML = html;
+                document.getElementById('doc-title').textContent = getTitleFromMarkdown(text) || docKey.replace(/-/g, ' ').toUpperCase();
+                document.getElementById('doc-path').textContent = docPath;
+                document.getElementById('doc-size').textContent = formatFileSize(text.length);
+                document.getElementById('read-time').textContent = calculateReadTime(text);
+                
+                // TOC generation removed per user request
+                
+                // Show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('doc-content-wrapper').style.display = 'block';
+                // TOC removed per user request
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+                
+                // Apply syntax highlighting if available
+                if (typeof hljs !== 'undefined') {
+                    document.querySelectorAll('pre code').forEach(block => {
+                        hljs.highlightBlock(block);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading document:', error);
+                document.getElementById('loading').innerHTML = `
+                    <p style="color: var(--gruvbox-red);">Failed to load document</p>
+                    <p style="color: var(--gruvbox-fg3); font-size: 0.9rem;">${error.message}</p>
+                `;
+            }
+        }
+
+        function showHome() {
+            currentDoc = null;
+            document.getElementById('home-view').classList.add('active');
+            document.getElementById('doc-viewer').style.display = 'none';
+            // TOC removed per user request
+            
+            // Update active link
+            document.querySelectorAll('.sidebar-links a').forEach(link => {
+                link.classList.remove('active');
+            });
+        }
+
+        function renderMarkdown(markdown) {
+            // Basic markdown rendering (you might want to use a proper markdown library)
+            let html = markdown;
+            
+            // Headers
+            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+            
+            // Bold
+            html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+            
+            // Italic
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+            
+            // Links
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+            
+            // Code blocks
+            html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+            
+            // Inline code
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Lists
+            html = html.replace(/^\* (.+)$/gim, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            
+            html = html.replace(/^\d+\. (.+)$/gim, '<li>$1</li>');
+            
+            // Blockquotes
+            html = html.replace(/^> (.+)$/gim, '<blockquote>$1</blockquote>');
+            
+            // Paragraphs
+            html = html.split('\n\n').map(para => {
+                if (!para.match(/^<[h|p|u|o|b|t]/)) {
+                    return `<p>${para}</p>`;
+                }
+                return para;
+            }).join('\n');
+            
+            return html;
+        }
+
+        function getTitleFromMarkdown(markdown) {
+            const match = markdown.match(/^# (.+)$/m);
+            return match ? match[1] : null;
+        }
+
+        function formatFileSize(bytes) {
+            const kb = bytes / 1024;
+            return kb < 1024 ? `${kb.toFixed(1)} KB` : `${(kb / 1024).toFixed(1)} MB`;
+        }
+
+        function calculateReadTime(text) {
+            const wordsPerMinute = 200;
+            const words = text.split(/\s+/).length;
+            const minutes = Math.ceil(words / wordsPerMinute);
+            return `${minutes} min read`;
+        }
+
+        // Table of contents generation removed per user request
+        
+        // Wrapper function for doc cards that don't have event parameter
+        function loadDocFromCard(docKey) {
+            // Find the corresponding sidebar link and simulate a click
+            const sidebarLinks = document.querySelectorAll('.sidebar-links a');
+            let matchingLink = null;
+            
+            sidebarLinks.forEach(link => {
+                if (link.onclick && link.onclick.toString().includes(`'${docKey}'`)) {
+                    matchingLink = link;
+                }
+            });
+            
+            // Create a proper event object
+            const fakeEvent = { 
+                target: matchingLink || document.createElement('a'),
+                preventDefault: () => {}
+            };
+            
+            // Call loadDoc with the fake event
+            window.event = fakeEvent;
+            loadDoc(docKey);
+        }
+
+        function searchDocs(event) {
+            const query = event.target.value.toLowerCase();
+            if (event.key === 'Enter' && query) {
+                // Implement search functionality
+                console.log('Searching for:', query);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load home by default
+            showHome();
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Brain API Documentation</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --border: #e2e8f0;
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 1rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab:hover {
+            color: var(--primary);
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .endpoint-card {
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .endpoint-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .method-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+        }
+
+        .method-get { background: #10b981; color: white; }
+        .method-post { background: #3b82f6; color: white; }
+        .method-put { background: #f59e0b; color: white; }
+        .method-delete { background: #ef4444; color: white; }
+
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--dark);
+        }
+
+        .endpoint-description {
+            color: var(--gray);
+            margin-bottom: 1rem;
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .copy-button:hover {
+            background: var(--primary-dark);
+        }
+
+        .example-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .example-tab {
+            padding: 0.5rem 1rem;
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .example-tab:hover {
+            background: white;
+            border-color: var(--primary);
+        }
+
+        .example-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .rate-limit-info {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .rate-limit-info h4 {
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-info {
+            background: #dbeafe;
+            border: 1px solid #60a5fa;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .auth-info h4 {
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .quick-link {
+            background: var(--light);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: var(--dark);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .quick-link:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-link h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .response-example {
+            margin-top: 1rem;
+        }
+
+        .response-example h4 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--light);
+            font-weight: 600;
+        }
+
+        .param-required {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .param-optional {
+            color: var(--gray);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Second Brain API Documentation</h1>
+            <p class="subtitle">Version 4.2.3 - Comprehensive API Reference with Examples</p>
+            
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('overview')">Overview</button>
+                <button class="nav-tab" onclick="showTab('authentication')">Authentication</button>
+                <button class="nav-tab" onclick="showTab('memories')">Memories</button>
+                <button class="nav-tab" onclick="showTab('search')">Search</button>
+                <button class="nav-tab" onclick="showTab('gdrive')">Google Drive</button>
+                <button class="nav-tab" onclick="showTab('bulk')">Bulk Operations</button>
+                <button class="nav-tab" onclick="showTab('analysis')">Analysis</button>
+                <button class="nav-tab" onclick="showTab('errors')">Error Handling</button>
+            </div>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="content-section">
+                <h2>Getting Started</h2>
+                <p>Second Brain is a cognitive architecture for intelligent memory management and knowledge synthesis. This API allows you to store, search, and analyze memories with advanced AI capabilities.</p>
+                
+                <div class="quick-links">
+                    <a href="/docs" class="quick-link">
+                        <h4>🚀 Interactive API</h4>
+                        <p>Try out the API with Swagger UI</p>
+                    </a>
+                    <a href="#authentication" class="quick-link" onclick="showTab('authentication')">
+                        <h4>🔐 Authentication</h4>
+                        <p>Learn how to authenticate requests</p>
+                    </a>
+                    <a href="#memories" class="quick-link" onclick="showTab('memories')">
+                        <h4>🧠 Memory Management</h4>
+                        <p>Store and retrieve memories</p>
+                    </a>
+                    <a href="#gdrive" class="quick-link" onclick="showTab('gdrive')">
+                        <h4>📁 Google Drive</h4>
+                        <p>Stream and process Drive files</p>
+                    </a>
+                </div>
+
+                <h3 style="margin-top: 2rem;">Base URL</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard('http://localhost:8001/api/v1')">Copy</button>
+                    <pre>http://localhost:8001/api/v1</pre>
+                </div>
+
+                <h3>Key Features</h3>
+                <ul style="list-style-position: inside; color: var(--gray); margin-top: 1rem;">
+                    <li>Three memory types: Semantic, Episodic, and Procedural</li>
+                    <li>Advanced semantic search with vector embeddings</li>
+                    <li>Google Drive integration for document processing</li>
+                    <li>Real-time synchronization with webhooks</li>
+                    <li>Pattern detection and knowledge gap analysis</li>
+                    <li>Enterprise-grade security with OAuth 2.0</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Authentication Tab -->
+        <div id="authentication" class="tab-content">
+            <div class="content-section">
+                <h2>Authentication</h2>
+                
+                <div class="auth-info">
+                    <h4>🔑 API Key Authentication</h4>
+                    <p>All API requests require an API key passed as a query parameter.</p>
+                </div>
+
+                <h3>Including Your API Key</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>GET http://localhost:8001/api/v1/memories?api_key=YOUR_API_KEY</pre>
+                </div>
+
+                <h3>Python Example</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>import os
+import requests
+
+API_KEY = os.environ.get('SECOND_BRAIN_API_KEY')
+BASE_URL = 'http://localhost:8001/api/v1'
+
+def make_request(endpoint, method='GET', **kwargs):
+    url = f"{BASE_URL}{endpoint}"
+    params = kwargs.get('params', {})
+    params['api_key'] = API_KEY
+    kwargs['params'] = params
+    
+    response = requests.request(method, url, **kwargs)
+    response.raise_for_status()
+    return response.json()
+
+# Example: Create a memory
+memory = make_request('/memories', method='POST', json={
+    'content': 'Python is a versatile programming language',
+    'memory_type': 'semantic',
+    'tags': ['programming', 'python']
+})</pre>
+                </div>
+
+                <h3>JavaScript Example</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>const API_KEY = process.env.SECOND_BRAIN_API_KEY;
+const BASE_URL = 'http://localhost:8001/api/v1';
+
+async function makeRequest(endpoint, options = {}) {
+    const url = new URL(`${BASE_URL}${endpoint}`);
+    url.searchParams.append('api_key', API_KEY);
+    
+    const response = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        },
+        ...options
+    });
+    
+    if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
+    }
+    
+    return response.json();
+}
+
+// Example: Search memories
+const results = await makeRequest('/memories/search', {
+    method: 'POST',
+    body: JSON.stringify({
+        query: 'machine learning',
+        limit: 10
+    })
+});</pre>
+                </div>
+
+                <h3>Security Best Practices</h3>
+                <ul style="list-style-position: inside; color: var(--gray); margin-top: 1rem;">
+                    <li>Never commit API keys to version control</li>
+                    <li>Use environment variables for key storage</li>
+                    <li>Rotate keys every 90 days</li>
+                    <li>Use separate keys for development and production</li>
+                    <li>Implement IP whitelisting for production keys</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Other tabs content remains the same... -->
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+        }
+
+        function showExample(exampleId, button) {
+            // Hide all examples in the same group
+            const card = button.closest('.endpoint-card');
+            card.querySelectorAll('.example-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Remove active class from all tabs in group
+            button.parentElement.querySelectorAll('.example-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected example
+            document.getElementById(exampleId).style.display = 'block';
+            button.classList.add('active');
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+/* Second Brain Design Tokens v3.0
+ * Single source of truth for all design values
+ * Nielsen Norman Group compliant
+ */
+
+:root {
+  /* ===== SPACING SCALE (4px base) ===== */
+  --space-0: 0;
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+
+  /* ===== TYPE SCALE (1.25 ratio) ===== */
+  --text-xs: 0.625rem;    /* 10px */
+  --text-sm: 0.8125rem;   /* 13px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.25rem;     /* 20px */
+  --text-xl: 1.5625rem;   /* 25px */
+  --text-2xl: 1.9375rem;  /* 31px */
+  --text-3xl: 2.4375rem;  /* 39px */
+
+  /* ===== FONT FAMILIES ===== */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  /* ===== FONT WEIGHTS ===== */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* ===== LINE HEIGHTS ===== */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* ===== LETTER SPACING ===== */
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+
+  /* ===== LAYOUT WIDTHS ===== */
+  --container-xs: 30rem;    /* 480px */
+  --container-sm: 40rem;    /* 640px */
+  --container-md: 48rem;    /* 768px */
+  --container-lg: 64rem;    /* 1024px */
+  --container-xl: 80rem;    /* 1280px */
+  --container-2xl: 90rem;   /* 1440px */
+
+  /* ===== BORDER RADIUS ===== */
+  --radius-none: 0;
+  --radius-sm: 0.25rem;   /* 4px */
+  --radius-base: 0.375rem; /* 6px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  --radius-full: 9999px;
+
+  /* ===== SHADOWS ===== */
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* ===== Z-INDEX SCALE ===== */
+  --z-auto: auto;
+  --z-0: 0;
+  --z-10: 10;
+  --z-20: 20;
+  --z-30: 30;
+  --z-40: 40;
+  --z-50: 50;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+
+  /* ===== TRANSITIONS ===== */
+  --duration-instant: 0ms;
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 500ms;
+  --duration-slower: 1000ms;
+
+  /* ===== TIMING FUNCTIONS ===== */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ===== COMPONENT SPECIFIC ===== */
+  /* Navigation */
+  --nav-height: 4rem; /* 64px */
+  --nav-padding-x: var(--space-8);
+  --nav-logo-size: var(--text-xl);
+  --nav-link-gap: var(--space-8);
+
+  /* Buttons */
+  --btn-height-sm: 2rem;    /* 32px */
+  --btn-height-md: 2.5rem;  /* 40px */
+  --btn-height-lg: 3rem;    /* 48px */
+  --btn-padding-sm: var(--space-3);
+  --btn-padding-md: var(--space-4);
+  --btn-padding-lg: var(--space-6);
+
+  /* Form Inputs */
+  --input-height: 2.5rem;   /* 40px */
+  --input-padding-x: var(--space-3);
+  --input-border-width: 1px;
+
+  /* Cards */
+  --card-padding-compact: var(--space-4);
+  --card-padding-normal: var(--space-6);
+  --card-padding-spacious: var(--space-8);
+
+  /* Tables */
+  --table-header-height: 3rem; /* 48px */
+  --table-row-height-compact: 3rem; /* 48px */
+  --table-row-height-normal: 3.5rem; /* 56px */
+  --table-cell-padding-x: var(--space-4);
+}
+
+/* ===== GRUVBOX DARK THEME ===== */
+[data-theme="gruvbox-dark"] {
+  /* Background hierarchy */
+  --color-bg-primary: #1d2021;
+  --color-bg-secondary: #282828;
+  --color-bg-tertiary: #32302f;
+  --color-bg-quaternary: #3c3836;
+
+  /* Surface colors */
+  --color-surface-1: #3c3836;
+  --color-surface-2: #504945;
+  --color-surface-3: #665c54;
+  --color-surface-4: #7c6f64;
+
+  /* Text hierarchy */
+  --color-text-primary: #fbf1c7;
+  --color-text-secondary: #ebdbb2;
+  --color-text-tertiary: #d5c4a1;
+  --color-text-quaternary: #bdae93;
+  --color-text-disabled: #a89984;
+
+  /* Semantic colors */
+  --color-primary: #8ec07c;
+  --color-primary-hover: #9fc884;
+  --color-primary-active: #7bb86f;
+  
+  --color-success: #b8bb26;
+  --color-success-hover: #c3c52e;
+  --color-success-active: #a7aa1e;
+  
+  --color-warning: #fabd2f;
+  --color-warning-hover: #fbc537;
+  --color-warning-active: #f9b527;
+  
+  --color-danger: #fb4934;
+  --color-danger-hover: #fc5a47;
+  --color-danger-active: #fa3821;
+  
+  --color-info: #83a598;
+  --color-info-hover: #8fb1a3;
+  --color-info-active: #77998d;
+
+  /* Border colors */
+  --color-border-subtle: #3c3836;
+  --color-border-default: #504945;
+  --color-border-strong: #665c54;
+  --color-border-focus: var(--color-primary);
+
+  /* Special colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+}
+
+/* ===== DENSITY MODES ===== */
+[data-density="compact"] {
+  --density-multiplier: 0.75;
+}
+
+[data-density="comfortable"] {
+  --density-multiplier: 1;
+}
+
+[data-density="spacious"] {
+  --density-multiplier: 1.25;
+}
+
+/* Apply density to spacing */
+[data-density="compact"] {
+  --space-1: calc(0.25rem * 0.75);
+  --space-2: calc(0.5rem * 0.75);
+  --space-3: calc(0.75rem * 0.75);
+  --space-4: calc(1rem * 0.75);
+  --space-5: calc(1.25rem * 0.75);
+  --space-6: calc(1.5rem * 0.75);
+  --space-8: calc(2rem * 0.75);
+}
+
+[data-density="spacious"] {
+  --space-1: calc(0.25rem * 1.25);
+  --space-2: calc(0.5rem * 1.25);
+  --space-3: calc(0.75rem * 1.25);
+  --space-4: calc(1rem * 1.25);
+  --space-5: calc(1.25rem * 1.25);
+  --space-6: calc(1.5rem * 1.25);
+  --space-8: calc(2rem * 1.25);
+}
+
+/* ===== GRUVBOX LIGHT THEME ===== */
+[data-theme="gruvbox-light"] {
+  /* Background hierarchy */
+  --color-bg-primary: #fbf1c7;
+  --color-bg-secondary: #f9f5d7;
+  --color-bg-tertiary: #f2e5bc;
+  --color-bg-quaternary: #ebdbb2;
+
+  /* Surface colors */
+  --color-surface-1: #ebdbb2;
+  --color-surface-2: #d5c4a1;
+  --color-surface-3: #bdae93;
+  --color-surface-4: #a89984;
+
+  /* Text hierarchy */
+  --color-text-primary: #282828;
+  --color-text-secondary: #3c3836;
+  --color-text-tertiary: #504945;
+  --color-text-quaternary: #665c54;
+  --color-text-disabled: #7c6f64;
+
+  /* Semantic colors */
+  --color-primary: #427b58;
+  --color-primary-hover: #4f8a65;
+  --color-primary-active: #366c4b;
+  
+  --color-success: #79740e;
+  --color-success-hover: #867e1b;
+  --color-success-active: #6c6a01;
+  
+  --color-warning: #b57614;
+  --color-warning-hover: #c28321;
+  --color-warning-active: #a86907;
+  
+  --color-danger: #9d0006;
+  --color-danger-hover: #aa0d13;
+  --color-danger-active: #900000;
+  
+  --color-info: #076678;
+  --color-info-hover: #147385;
+  --color-info-active: #00596b;
+
+  /* Border colors */
+  --color-border-subtle: #ebdbb2;
+  --color-border-default: #d5c4a1;
+  --color-border-strong: #bdae93;
+  --color-border-focus: var(--color-primary);
+}
+
+/* ===== NORD THEME ===== */
+[data-theme="nord"] {
+  /* Background hierarchy */
+  --color-bg-primary: #2e3440;
+  --color-bg-secondary: #3b4252;
+  --color-bg-tertiary: #434c5e;
+  --color-bg-quaternary: #4c566a;
+
+  /* Surface colors */
+  --color-surface-1: #434c5e;
+  --color-surface-2: #4c566a;
+  --color-surface-3: #616e88;
+  --color-surface-4: #6d7a96;
+
+  /* Text hierarchy */
+  --color-text-primary: #eceff4;
+  --color-text-secondary: #e5e9f0;
+  --color-text-tertiary: #d8dee9;
+  --color-text-quaternary: #c5ccd8;
+  --color-text-disabled: #9ca4b4;
+
+  /* Semantic colors */
+  --color-primary: #88c0d0;
+  --color-primary-hover: #95c9d8;
+  --color-primary-active: #7bb7c8;
+  
+  --color-success: #a3be8c;
+  --color-success-hover: #aec799;
+  --color-success-active: #98b57f;
+  
+  --color-warning: #ebcb8b;
+  --color-warning-hover: #efd398;
+  --color-warning-active: #e7c37e;
+  
+  --color-danger: #bf616a;
+  --color-danger-hover: #c86e77;
+  --color-danger-active: #b6545d;
+  
+  --color-info: #5e81ac;
+  --color-info-hover: #6b8eb9;
+  --color-info-active: #51749f;
+
+  /* Border colors */
+  --color-border-subtle: #434c5e;
+  --color-border-default: #4c566a;
+  --color-border-strong: #616e88;
+  --color-border-focus: var(--color-primary);
+}
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+@custom-media --mobile (max-width: 639px);
+@custom-media --tablet (min-width: 640px) and (max-width: 1023px);
+@custom-media --desktop (min-width: 1024px);
+@custom-media --wide (min-width: 1440px);

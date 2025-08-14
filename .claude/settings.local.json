@@ -15,7 +15,22 @@
       "Bash(timeout 5 docker logs secondbrain-app --tail 30 -f)",
       "Bash(curl:*)",
       "Bash(timeout 3 docker logs secondbrain-app --tail 20 -f)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(rm:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cp:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(mkdir:*)",
+      "Bash(sed:*)",
+      "Bash(git checkout:*)",
+      "Bash(python scripts/validate_claude_settings.py:*)",
+      "Bash(git tag:*)",
+      "Bash(python:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }

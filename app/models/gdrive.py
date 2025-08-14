@@ -10,10 +10,11 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 import uuid
 
-from app.database import Base
+# from app.database import Base
+# Note: Base not available in current database module
+# This model is for future SQLAlchemy ORM implementation
 
-
-class UserGoogleCredentials(Base):
+class UserGoogleCredentials:  # (Base) - uncomment when Base is available
     """User's encrypted Google OAuth credentials"""
     
     __tablename__ = "user_google_credentials"
@@ -29,7 +30,7 @@ class UserGoogleCredentials(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class GDriveFile(Base):
+class GDriveFile:  # (Base) - uncomment when Base is available
     """Google Drive file metadata and processing status"""
     
     __tablename__ = "gdrive_files"
@@ -55,7 +56,7 @@ class GDriveFile(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class GDriveFolder(Base):
+class GDriveFolder:  # (Base) - uncomment when Base is available
     """Google Drive folder hierarchy and sync preferences"""
     
     __tablename__ = "gdrive_folders"
@@ -69,7 +70,7 @@ class GDriveFolder(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class GDriveJob(Base):
+class GDriveJob:  # (Base) - uncomment when Base is available
     """Background processing jobs for Google Drive files"""
     
     __tablename__ = "gdrive_jobs"
@@ -90,7 +91,7 @@ class GDriveJob(Base):
     completed_at = Column(DateTime, nullable=True)
 
 
-class GDriveChangeNotification(Base):
+class GDriveChangeNotification:  # (Base) - uncomment when Base is available
     """Google Drive webhook change notifications"""
     
     __tablename__ = "gdrive_change_notifications"
@@ -105,7 +106,7 @@ class GDriveChangeNotification(Base):
     processed_at = Column(DateTime, nullable=True)
 
 
-class GDriveMetrics(Base):
+class GDriveMetrics:  # (Base) - uncomment when Base is available
     """Performance and usage metrics for Google Drive operations"""
     
     __tablename__ = "gdrive_metrics"

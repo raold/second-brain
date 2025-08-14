@@ -78,6 +78,42 @@ def convert_metadata_to_dict(metadata):
     response_model=MemoryResponse,
     summary="Store Memory",
     description="Store a new memory with optional metadata and cognitive type",
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "semantic": {
+                            "summary": "Store a fact or concept",
+                            "value": {
+                                "content": "Python is a high-level programming language",
+                                "memory_type": "semantic",
+                                "tags": ["programming", "python"],
+                                "importance": 0.8
+                            }
+                        },
+                        "episodic": {
+                            "summary": "Store a personal experience",
+                            "value": {
+                                "content": "Team meeting about AI features",
+                                "memory_type": "episodic",
+                                "tags": ["meeting", "ai"],
+                                "metadata": {"date": "2025-01-14"}
+                            }
+                        },
+                        "procedural": {
+                            "summary": "Store instructions",
+                            "value": {
+                                "content": "Deploy with: docker build -t app .",
+                                "memory_type": "procedural",
+                                "tags": ["docker", "deployment"]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 )
 async def store_memory(
     request: MemoryRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)
@@ -123,6 +159,32 @@ async def store_memory(
     response_model=list[MemoryResponse],
     summary="Search Memories",
     description="Semantic search across stored memories",
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "semantic_search": {
+                            "summary": "Find similar concepts",
+                            "value": {
+                                "query": "machine learning algorithms",
+                                "limit": 10,
+                                "threshold": 0.7
+                            }
+                        },
+                        "contextual_search": {
+                            "summary": "Search with context",
+                            "value": {
+                                "query": "team meetings",
+                                "context": "AI features discussion",
+                                "limit": 5
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 )
 async def search_memories(
     request: SearchRequest, request_obj: Request, db=Depends(get_database), _: str = Depends(verify_api_key)

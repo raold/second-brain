@@ -1,0 +1,125 @@
+/* Standardized Navigation for all pages - Second Brain v3.0 */
+/* Uses design tokens from static/css/core/tokens.css */
+
+nav {
+    background-color: var(--color-bg-primary);
+    padding: 0 var(--nav-padding-x);
+    height: var(--nav-height);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    box-shadow: var(--shadow-sm);
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.nav-container {
+    max-width: var(--container-2xl);
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--nav-logo-size);
+    font-weight: var(--font-bold);
+    color: var(--color-text-primary);
+    text-decoration: none;
+    transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.logo:hover {
+    opacity: 0.9;
+}
+
+.logo span {
+    color: var(--color-primary);
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--nav-link-gap);
+    height: 100%;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li {
+    margin: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.nav-links a {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 var(--space-2);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
+    position: relative;
+    transition: color var(--duration-fast) var(--ease-out);
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--color-primary);
+    transform: scaleX(0);
+    transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.nav-links a:hover {
+    color: var(--color-text-primary);
+}
+
+.nav-links a.active,
+.nav-links a[aria-current="page"] {
+    color: var(--color-primary);
+}
+
+.nav-links a.active::after,
+.nav-links a[aria-current="page"]::after {
+    transform: scaleX(1);
+}
+
+/* Settings icon specific style */
+.nav-links a[onclick*="Settings"] {
+    font-size: calc(var(--text-base) * 1.2);
+}
+
+/* Mobile Navigation */
+@media (max-width: 639px) {
+    .nav-links {
+        display: none;
+    }
+    
+    .nav-container {
+        padding: 0 var(--space-4);
+    }
+    
+    .logo {
+        font-size: var(--text-lg);
+    }
+}
+
+/* Focus styles for accessibility */
+.nav-links a:focus-visible,
+.logo:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}

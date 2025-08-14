@@ -1,0 +1,59 @@
+/* Second Brain Main CSS v3.0
+ * Import orchestration for design system
+ * Load order is critical for proper cascade
+ */
+
+/* 1. Core - Foundation layer */
+@import url('./core/tokens.css');     /* Design tokens - must be first */
+@import url('./core/reset.css');      /* Browser reset */
+
+/* 2. Existing system (to be migrated) */
+@import url('./design-system.css');   /* Current design system */
+
+/* 3. Components - Atomic design */
+/* Atoms */
+@import url('./components/atoms/button.css');
+
+/* Molecules */
+/* @import url('./components/molecules/form-group.css'); */
+/* @import url('./components/molecules/metric-card.css'); */
+
+/* Organisms */
+@import url('./navigation.css');      /* Navigation component */
+
+/* 4. Layouts */
+/* @import url('./layouts/dashboard-layout.css'); */
+/* @import url('./layouts/docs-layout.css'); */
+
+/* 5. Utilities - Last to override */
+/* @import url('./core/utilities.css'); */
+
+/* Temporary overrides during migration */
+/* Once all components use tokens, this section can be removed */
+:root {
+    /* Map old variables to new tokens */
+    --gruvbox-bg0: var(--color-bg-secondary);
+    --gruvbox-bg0-hard: var(--color-bg-primary);
+    --gruvbox-bg0-soft: var(--color-bg-tertiary);
+    --gruvbox-bg1: var(--color-surface-1);
+    --gruvbox-bg2: var(--color-surface-2);
+    --gruvbox-bg3: var(--color-surface-3);
+    --gruvbox-bg4: var(--color-surface-4);
+    
+    --gruvbox-fg0: var(--color-text-primary);
+    --gruvbox-fg1: var(--color-text-secondary);
+    --gruvbox-fg2: var(--color-text-tertiary);
+    --gruvbox-fg3: var(--color-text-quaternary);
+    --gruvbox-fg4: var(--color-text-disabled);
+    
+    --gruvbox-red: var(--color-danger);
+    --gruvbox-green: var(--color-success);
+    --gruvbox-yellow: var(--color-warning);
+    --gruvbox-blue: var(--color-info);
+    --gruvbox-aqua: var(--color-primary);
+    --gruvbox-aqua-dim: var(--color-primary-hover);
+    
+    /* Additional commonly used */
+    --gruvbox-purple: #d3869b;
+    --gruvbox-orange: #fe8019;
+}

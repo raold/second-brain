@@ -20,7 +20,7 @@ from googleapiclient.errors import HttpError
 from sqlalchemy import select, update, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_db_session
+from app.database import get_database
 from app.utils.encryption import get_token_encryption
 from app.utils.logging_config import get_logger
 from app.models.gdrive import UserGoogleCredentials

@@ -3,10 +3,10 @@ Google Drive integration specific exceptions.
 Following Second Brain's Clean Architecture exception patterns.
 """
 
-from app.core.exceptions import ServiceError
+from app.core.exceptions import SecondBrainException
 
 
-class GoogleDriveError(ServiceError):
+class GoogleDriveError(SecondBrainException):
     """Base exception for Google Drive integration errors"""
     pass
 
@@ -23,6 +23,11 @@ class GoogleTokenError(GoogleAuthError):
 
 class GoogleQuotaError(GoogleDriveError):
     """Google API quota and rate limiting errors"""
+    pass
+
+
+class GoogleQuotaExceededError(GoogleQuotaError):
+    """Alias for GoogleQuotaError for compatibility"""
     pass
 
 

@@ -4,7 +4,8 @@ Enterprise OAuth flow and Drive connectivity endpoints.
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
@@ -12,8 +13,11 @@ from pydantic import BaseModel, Field
 from app.core.dependencies import get_google_auth_service_dep
 from app.services.gdrive.auth_service import GoogleAuthService
 from app.services.gdrive.exceptions import GoogleAuthError, GoogleTokenError
-from app.core.security import get_api_key_user
+# Simple user ID for now - in production, get from auth
+def get_api_key_user():
+    return "default_user"
 from app.utils.logging_config import get_logger
+from app.services.task_queue import TaskQueue, TaskType, TaskPriority
 
 logger = get_logger(__name__)
 
@@ -52,6 +56,46 @@ class OAuthCallbackResponse(BaseModel):
     user_email: str = Field(description="Connected Google account email")
     drive_access: bool = Field(description="Whether Drive access was granted")
     redirect_url: str = Field(description="URL to redirect to")
+
+
+class FileSyncRequest(BaseModel):
+    """Request to sync a specific file"""
+    file_id: str = Field(description="Google Drive file ID")
+    processing_options: Optional[Dict[str, Any]] = Field(
+        default={},
+        description="Processing options (extract_text, generate_embeddings, etc.)"
+    )
+
+
+class FolderSyncRequest(BaseModel):
+    """Request to sync a folder"""
+    folder_id: str = Field(description="Google Drive folder ID")
+    recursive: bool = Field(default=False, description="Process subfolders recursively")
+    file_types: Optional[List[str]] = Field(
+        default=None,
+        description="MIME types to process (null for all supported types)"
+    )
+    processing_options: Optional[Dict[str, Any]] = Field(
+        default={},
+        description="Processing options for files"
+    )
+
+
+class SyncResponse(BaseModel):
+    """Response for sync operations"""
+    task_id: str = Field(description="Background task ID")
+    status: str = Field(description="Task status")
+    message: str = Field(description="Status message")
+
+
+class WebhookSubscribeRequest(BaseModel):
+    """Request to subscribe to Drive change notifications"""
+    resource_id: str = Field(description="Resource to watch (file or folder ID)")
+    notification_url: str = Field(description="HTTPS URL for notifications")
+    expiration_hours: int = Field(
+        default=168,  # 7 days
+        description="Hours until webhook expires (max 168)"
+    )
 
 
 @router.post("/connect", response_model=OAuthInitiateResponse)
@@ -276,6 +320,265 @@ async def disconnect_google_drive(
             status_code=500, 
             detail=f"Failed to disconnect Google Drive: {str(e)}"
         )
+
+
+# ========== File Sync Endpoints ==========
+
+@router.post("/sync/file", response_model=SyncResponse)
+async def sync_drive_file(
+    request: FileSyncRequest,
+    user_id: str = Depends(get_api_key_user)
+) -> SyncResponse:
+    """
+    Queue a Google Drive file for background processing.
+    
+    The file will be streamed, processed, and converted to memories
+    without storing the file locally.
+    """
+    try:
+        # Initialize task queue
+        task_queue = TaskQueue()
+        await task_queue.initialize()
+        
+        # Create dedupe key based on file ID and user
+        dedupe_key = f"file_sync:{user_id}:{request.file_id}"
+        
+        # Enqueue the task
+        task_id = await task_queue.enqueue(
+            task_type=TaskType.DRIVE_FILE_SYNC,
+            payload={
+                "file_id": request.file_id,
+                "processing_options": request.processing_options or {}
+            },
+            user_id=user_id,
+            priority=TaskPriority.NORMAL,
+            dedupe_key=dedupe_key
+        )
+        
+        logger.info("File sync task queued", extra={
+            "task_id": task_id,
+            "file_id": request.file_id,
+            "user_id": user_id
+        })
+        
+        return SyncResponse(
+            task_id=task_id,
+            status="queued",
+            message=f"File sync task queued for processing"
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to queue file sync: {e}", extra={
+            "file_id": request.file_id,
+            "user_id": user_id
+        })
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/sync/folder", response_model=SyncResponse)
+async def sync_drive_folder(
+    request: FolderSyncRequest,
+    user_id: str = Depends(get_api_key_user)
+) -> SyncResponse:
+    """
+    Queue a Google Drive folder for background processing.
+    
+    All supported files in the folder will be processed.
+    Use recursive=true to include subfolders.
+    """
+    try:
+        # Initialize task queue
+        task_queue = TaskQueue()
+        await task_queue.initialize()
+        
+        # Create dedupe key
+        dedupe_key = f"folder_sync:{user_id}:{request.folder_id}:{request.recursive}"
+        
+        # Enqueue the task
+        task_id = await task_queue.enqueue(
+            task_type=TaskType.DRIVE_FOLDER_SYNC,
+            payload={
+                "folder_id": request.folder_id,
+                "recursive": request.recursive,
+                "file_types": request.file_types,
+                "processing_options": request.processing_options or {}
+            },
+            user_id=user_id,
+            priority=TaskPriority.NORMAL,
+            dedupe_key=dedupe_key
+        )
+        
+        logger.info("Folder sync task queued", extra={
+            "task_id": task_id,
+            "folder_id": request.folder_id,
+            "recursive": request.recursive,
+            "user_id": user_id
+        })
+        
+        return SyncResponse(
+            task_id=task_id,
+            status="queued",
+            message=f"Folder sync task queued for processing"
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to queue folder sync: {e}", extra={
+            "folder_id": request.folder_id,
+            "user_id": user_id
+        })
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/sync/status/{task_id}")
+async def get_sync_status(
+    task_id: str,
+    user_id: str = Depends(get_api_key_user)
+) -> Dict[str, Any]:
+    """
+    Get the status of a sync task.
+    
+    Returns task status, progress, and results when complete.
+    """
+    try:
+        # Initialize task queue
+        task_queue = TaskQueue()
+        await task_queue.initialize()
+        
+        # Get task status
+        task_status = await task_queue.get_status(task_id)
+        
+        if not task_status:
+            raise HTTPException(status_code=404, detail="Task not found")
+        
+        # Verify task belongs to user
+        if task_status.get("user_id") != user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        return task_status
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get task status: {e}", extra={
+            "task_id": task_id,
+            "user_id": user_id
+        })
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ========== Webhook Endpoints ==========
+
+@router.post("/webhooks/subscribe", response_model=Dict[str, Any])
+async def subscribe_to_changes(
+    request: WebhookSubscribeRequest,
+    user_id: str = Depends(get_api_key_user),
+    google_auth: GoogleAuthService = Depends(get_google_auth_service_dep)
+) -> Dict[str, Any]:
+    """
+    Subscribe to real-time change notifications for a Drive resource.
+    
+    Google will send notifications to the specified URL when changes occur.
+    """
+    try:
+        from datetime import datetime, timedelta
+        from app.services.gdrive.streaming_service import GoogleDriveStreamingService
+        
+        # Get user credentials
+        credentials = await google_auth.get_user_credentials(user_id)
+        if not credentials:
+            raise HTTPException(status_code=401, detail="No Google Drive credentials found")
+        
+        # Initialize streaming service
+        streaming_service = GoogleDriveStreamingService()
+        await streaming_service.initialize(credentials)
+        
+        # Calculate expiration
+        expiration = datetime.utcnow() + timedelta(hours=request.expiration_hours)
+        
+        # Set up webhook
+        webhook_result = await streaming_service.setup_webhook(
+            resource_id=request.resource_id,
+            notification_url=request.notification_url,
+            expiration=expiration
+        )
+        
+        logger.info("Webhook subscription created", extra={
+            "user_id": user_id,
+            "resource_id": request.resource_id,
+            "webhook_id": webhook_result.get("id")
+        })
+        
+        return {
+            "success": True,
+            "webhook_id": webhook_result.get("id"),
+            "resource_id": request.resource_id,
+            "expiration": expiration.isoformat(),
+            "notification_url": request.notification_url
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to create webhook subscription: {e}", extra={
+            "user_id": user_id,
+            "resource_id": request.resource_id
+        })
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/webhooks/notify")
+async def handle_webhook_notification(
+    request: Request
+) -> Dict[str, Any]:
+    """
+    Handle incoming webhook notifications from Google Drive.
+    
+    This endpoint receives real-time notifications when subscribed
+    resources change.
+    """
+    try:
+        # Get notification headers
+        headers = dict(request.headers)
+        body = await request.body()
+        
+        # Extract key information
+        resource_id = headers.get("x-goog-resource-id")
+        resource_state = headers.get("x-goog-resource-state")
+        change_type = headers.get("x-goog-changed", "")
+        
+        logger.info("Webhook notification received", extra={
+            "resource_id": resource_id,
+            "resource_state": resource_state,
+            "changes": change_type
+        })
+        
+        # Initialize task queue
+        task_queue = TaskQueue()
+        await task_queue.initialize()
+        
+        # Queue webhook processing task
+        task_id = await task_queue.enqueue(
+            task_type=TaskType.DRIVE_WEBHOOK,
+            payload={
+                "resource_id": resource_id,
+                "resource_state": resource_state,
+                "changes": change_type.split(",") if change_type else [],
+                "headers": headers,
+                "timestamp": datetime.utcnow().isoformat()
+            },
+            priority=TaskPriority.HIGH
+        )
+        
+        logger.info("Webhook processing task queued", extra={
+            "task_id": task_id,
+            "resource_id": resource_id
+        })
+        
+        # Return 200 OK to acknowledge receipt
+        return {"status": "acknowledged", "task_id": task_id}
+        
+    except Exception as e:
+        logger.error(f"Failed to process webhook notification: {e}")
+        # Still return 200 to prevent Google from retrying
+        return {"status": "error", "error": str(e)}
 
 
 @router.get("/test-connection")

@@ -3,9 +3,11 @@ Memory Service - Handles all memory-related business logic.
 Separates concerns from route handlers, making the code more testable and maintainable.
 
 Enhanced with protocol-based interfaces and duck typing for maximum flexibility.
+Now supports streaming data processing for Google Drive integration.
 """
 
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, AsyncIterator, Dict, List
+import hashlib
 
 from app.database import Database, get_database
 from app.database_importance_schema import setup_importance_tracking_schema
@@ -595,7 +597,288 @@ class MemoryService:
                 "reason": "importance_engine_not_available"
             })
             return {"error": "Importance engine not available"}
-
+    
+    # ========== Google Drive Streaming Methods ==========
+    
+    async def create_memory_from_stream(
+        self,
+        stream: AsyncIterator[bytes],
+        metadata: Dict[str, Any],
+        chunk_processor: Optional[callable] = None
+    ) -> str:
+        """
+        Create a memory from streamed data (e.g., from Google Drive).
+        
+        Args:
+            stream: Async iterator yielding bytes chunks
+            metadata: Metadata including file info, source, etc.
+            chunk_processor: Optional function to process each chunk
+            
+        Returns:
+            Memory ID of created memory
+        """
+        await self.initialize()
+        
+        with PerformanceLogger("create_memory_from_stream", logger):
+            logger.info("Creating memory from stream", extra={
+                "operation": "create_memory_from_stream",
+                "file_name": metadata.get("file_name"),
+                "file_id": metadata.get("file_id"),
+                "mime_type": metadata.get("mime_type")
+            })
+            
+            try:
+                # Process chunks as they arrive
+                content_chunks = []
+                total_bytes = 0
+                chunk_count = 0
+                
+                async for chunk in stream:
+                    chunk_count += 1
+                    total_bytes += len(chunk)
+                    
+                    # Optional per-chunk processing
+                    if chunk_processor:
+                        chunk = await chunk_processor(chunk, chunk_count)
+                    
+                    content_chunks.append(chunk)
+                    
+                    # Log progress for large files
+                    if chunk_count % 10 == 0:
+                        logger.debug("Stream progress", extra={
+                            "chunks_processed": chunk_count,
+                            "bytes_processed": total_bytes
+                        })
+                
+                # Combine chunks and decode
+                full_content = b"".join(content_chunks)
+                
+                # Calculate MD5 checksum for deduplication
+                md5_hash = hashlib.md5(full_content).hexdigest()
+                
+                # Check if we've already processed this exact file
+                existing = await self._find_memory_by_checksum(md5_hash)
+                if existing:
+                    logger.info("File already processed, skipping", extra={
+                        "file_id": metadata.get("file_id"),
+                        "md5_checksum": md5_hash,
+                        "existing_memory_id": existing
+                    })
+                    return existing
+                
+                # Decode content
+                try:
+                    content_str = full_content.decode('utf-8')
+                except UnicodeDecodeError:
+                    # Fallback for binary files
+                    content_str = full_content.decode('utf-8', errors='ignore')
+                
+                # Prepare full metadata with streaming info
+                full_metadata = {
+                    **metadata,
+                    "md5_checksum": md5_hash,
+                    "bytes_processed": total_bytes,
+                    "chunks_processed": chunk_count,
+                    "processing_type": "streamed"
+                }
+                
+                # Create memory with the content
+                memory_id = await self.store_memory(
+                    content=content_str,
+                    memory_type=metadata.get("memory_type", "semantic"),
+                    metadata=full_metadata,
+                    tags=metadata.get("tags", []),
+                    importance_score=metadata.get("importance_score")
+                )
+                
+                logger.info("Memory created from stream", extra={
+                    "operation": "create_memory_from_stream",
+                    "memory_id": memory_id,
+                    "file_name": metadata.get("file_name"),
+                    "total_bytes": total_bytes,
+                    "chunks": chunk_count
+                })
+                
+                return memory_id
+                
+            except Exception as e:
+                logger.exception("Failed to create memory from stream", extra={
+                    "operation": "create_memory_from_stream",
+                    "file_name": metadata.get("file_name"),
+                    "error_type": type(e).__name__
+                })
+                raise
+    
+    async def create_memories_from_chunks(
+        self,
+        stream: AsyncIterator[bytes],
+        metadata: Dict[str, Any],
+        chunk_size: int = 1000
+    ) -> List[str]:
+        """
+        Create multiple memories from a streamed file, splitting into chunks.
+        
+        Args:
+            stream: Async iterator yielding bytes chunks
+            metadata: Metadata including file info
+            chunk_size: Size of content chunks for individual memories
+            
+        Returns:
+            List of created memory IDs
+        """
+        await self.initialize()
+        
+        logger.info("Creating chunked memories from stream", extra={
+            "operation": "create_memories_from_chunks",
+            "file_name": metadata.get("file_name"),
+            "chunk_size": chunk_size
+        })
+        
+        # First, collect the full content
+        content_chunks = []
+        async for chunk in stream:
+            content_chunks.append(chunk)
+        
+        full_content = b"".join(content_chunks)
+        
+        # Calculate checksum for the full file
+        md5_hash = hashlib.md5(full_content).hexdigest()
+        
+        # Check if already processed
+        existing = await self._find_memory_by_checksum(md5_hash)
+        if existing:
+            logger.info("File already processed", extra={
+                "md5_checksum": md5_hash,
+                "existing_memory_id": existing
+            })
+            return [existing]
+        
+        # Decode and split into logical chunks
+        try:
+            content_str = full_content.decode('utf-8')
+        except UnicodeDecodeError:
+            content_str = full_content.decode('utf-8', errors='ignore')
+        
+        # Split content into chunks
+        text_chunks = self._split_text_intelligently(content_str, chunk_size)
+        
+        memory_ids = []
+        for i, text_chunk in enumerate(text_chunks):
+            chunk_metadata = {
+                **metadata,
+                "chunk_index": i,
+                "total_chunks": len(text_chunks),
+                "parent_checksum": md5_hash,
+                "processing_type": "chunked_stream"
+            }
+            
+            memory_id = await self.store_memory(
+                content=text_chunk,
+                memory_type=metadata.get("memory_type", "semantic"),
+                metadata=chunk_metadata,
+                tags=metadata.get("tags", []),
+                importance_score=metadata.get("importance_score")
+            )
+            
+            memory_ids.append(memory_id)
+            
+            logger.debug("Created chunk memory", extra={
+                "memory_id": memory_id,
+                "chunk": f"{i+1}/{len(text_chunks)}"
+            })
+        
+        logger.info("Created memories from chunks", extra={
+            "operation": "create_memories_from_chunks",
+            "file_name": metadata.get("file_name"),
+            "memories_created": len(memory_ids)
+        })
+        
+        return memory_ids
+    
+    async def _find_memory_by_checksum(self, md5_checksum: str) -> Optional[str]:
+        """
+        Find a memory by its MD5 checksum to avoid duplicates.
+        
+        Args:
+            md5_checksum: MD5 hash of the content
+            
+        Returns:
+            Memory ID if found, None otherwise
+        """
+        if not self.database or not hasattr(self.database, "pool"):
+            return None
+        
+        try:
+            async with self.database.pool.acquire() as conn:
+                result = await conn.fetchone(
+                    """
+                    SELECT id FROM memories 
+                    WHERE metadata->>'md5_checksum' = $1
+                    LIMIT 1
+                    """,
+                    md5_checksum
+                )
+                
+                if result:
+                    return result["id"]
+                return None
+                
+        except Exception as e:
+            logger.warning("Failed to check for duplicate by checksum", extra={
+                "md5_checksum": md5_checksum,
+                "error": str(e)
+            })
+            return None
+    
+    def _split_text_intelligently(self, text: str, chunk_size: int) -> List[str]:
+        """
+        Split text into chunks intelligently, preserving sentence boundaries.
+        
+        Args:
+            text: Text to split
+            chunk_size: Target size for each chunk
+            
+        Returns:
+            List of text chunks
+        """
+        if len(text) <= chunk_size:
+            return [text]
+        
+        # Split by paragraphs first
+        paragraphs = text.split('\n\n')
+        
+        chunks = []
+        current_chunk = ""
+        
+        for paragraph in paragraphs:
+            # If paragraph is too long, split by sentences
+            if len(paragraph) > chunk_size:
+                sentences = paragraph.split('. ')
+                for sentence in sentences:
+                    if len(current_chunk) + len(sentence) < chunk_size:
+                        current_chunk += sentence + ". "
+                    else:
+                        if current_chunk:
+                            chunks.append(current_chunk.strip())
+                        current_chunk = sentence + ". "
+            else:
+                # Add paragraph to current chunk if it fits
+                if len(current_chunk) + len(paragraph) < chunk_size:
+                    current_chunk += paragraph + "\n\n"
+                else:
+                    if current_chunk:
+                        chunks.append(current_chunk.strip())
+                    current_chunk = paragraph + "\n\n"
+        
+        # Add remaining chunk
+        if current_chunk:
+            chunks.append(current_chunk.strip())
+        
+        return chunks
+    
+    async def get_importance_analytics_continued(self) -> dict[str, Any]:
+        """Continuation of get_importance_analytics"""
+        # This continues from the earlier method
         with PerformanceLogger("importance_analytics", logger):
             logger.info("Generating importance analytics", extra={
                 "operation": "get_importance_analytics"
