@@ -1,5 +1,4 @@
 <div align="center">
-
 <img src="logo.png" alt="Second Brain Logo" width="400">
 
 # 🧠 Second Brain
