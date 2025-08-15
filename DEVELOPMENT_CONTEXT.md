@@ -1,268 +1,172 @@
-# Development Context - Second Brain v4.0.0
+# Development Context - Second Brain v4.2.3
 
-## 🔄 Session History
+## Current State (August 15, 2025)
 
-### Session 2 - August 2, 2025 (Continued)
-**Duration**: ~2 hours  
-**Focus**: Test fixes, security audit, environment cleanup
+### ✅ What's Working
+- **PostgreSQL Backend**: Production-ready with pgvector for embeddings
+- **Google Drive Integration**: Full OAuth flow implemented and functional
+  - User can authenticate with Google account
+  - List and browse Google Drive files
+  - Sync files to PostgreSQL as memories
+  - Generate OpenAI embeddings (when API key configured)
+- **Code Quality**: 10/10 linting score, PEP8 compliant, properly formatted
+- **Tests**: All 28 tests passing locally and in CI
+- **UI**: Beautiful Google Drive interface at `/static/gdrive-ui.html`
 
-#### What Happened
-1. **Started with failing tests** (27/28 passing)
-   - WebSocket tests couldn't import synthesis models
-   - Created 13 model stub files to fix imports
-   - Tests improved to 55 passing
+### 🔧 Current Implementation Details
 
-2. **Security audit requested by user**
-   - Found exposed API keys in `.env.development`
-   - Removed keys immediately
-   - Created comprehensive security infrastructure
-   - Untracked sensitive files from git
+#### Google OAuth Flow (Accurate as of Session 7)
+1. **User Action**: Click "Connect Google Drive" in frontend
+2. **Backend Request**: Frontend calls `/api/v1/gdrive/connect` endpoint
+3. **Authorization URL Generation**: Backend constructs OAuth 2.0 URL with parameters
+4. **Redirect to Google**: Frontend redirects browser to authorization URL
+5. **User Consent**: User approves requested permissions (drive.readonly)
+6. **Redirect to Callback**: Google redirects to `http://localhost:8001/api/v1/gdrive/callback`
+7. **Code Exchange**: Callback exchanges authorization code for tokens
+8. **Token Storage**: Currently stored IN MEMORY (problem - lost on restart)
+9. **Confirmation**: User shown success page
 
-3. **Environment cleanup requested**
-   - User: "there are so many .envs example staging test development etc."
-   - Deleted all redundant env files
-   - Created unified `.env.example` template
-   - Implemented robust `env_manager.py`
+#### Key Files
+- `app/routes/gdrive_real.py`: FastAPI endpoints for OAuth flow
+- `app/services/google_drive_simple.py`: Google Drive API business logic
+- `docs/google-drive-integration.md`: User-facing setup guide
 
-#### Key Files Created
-```
-app/models/synthesis/           # Model stubs for tests
-├── websocket_models.py
-├── consolidation_models.py
-├── metrics_models.py
-├── summary_models.py
-├── suggestion_models.py
-├── report_models.py
-├── repetition_models.py
-└── advanced_models.py
+### ⚠️ Critical Issues
 
-app/events/                     # Event stubs
-├── __init__.py
-└── domain_events.py
+1. **Token Persistence**: Tokens stored in memory are lost on restart
+   - User must re-authenticate every time server restarts
+   - No refresh token logic implemented
+   - Not suitable for production use
 
-app/insights/                   # Insight stubs
-├── __init__.py
-└── models.py
+2. **Security Considerations**
+   - Tokens should be encrypted before storage
+   - Need secure local storage solution
+   - Must not commit tokens to git
 
-app/core/
-└── env_manager.py             # Centralized env management
+### 🎯 Next Steps (Priority Order)
 
-scripts/
-└── check_secrets.py           # Security scanner
+1. **Implement Token Persistence**
+   - Store tokens in `.gdrive_tokens.json` (local file)
+   - Encrypt tokens using Fernet encryption
+   - Add to `.gitignore` to prevent git commits
+   
+2. **Add Token Refresh Logic**
+   - Check if access token expired before API calls
+   - Use refresh token to get new access token
+   - Update stored tokens automatically
 
-docs/
-├── SECURITY_AUDIT_REPORT.md
-└── ENVIRONMENT_GUIDE.md
+3. **Improve User Experience**
+   - Auto-reconnect on server restart if tokens exist
+   - Show connection status in UI
+   - Handle token expiration gracefully
 
-SECURITY.md                    # Security guidelines
-```
+## User Preferences & Context
 
-#### Decisions Made
-- Use stub models for synthesis features (implement later as needed)
-- Single `.env.example` template (no more multiple env files)
-- Custom env_manager instead of python-dotenv
-- Security-first approach with automated scanning
+### Development Style
+- **Autonomous Mode**: No confirmations needed, execute immediately
+- **Cross-Platform**: Works on Windows, macOS, Linux
+- **No Co-Author Lines**: Don't add co-author lines to commits
+- **Production Focus**: Real implementation, not demos
 
----
+### Technical Constraints
+- **Single User**: Designed for personal use
+- **Docker Deployment**: Will run in Docker container
+- **PostgreSQL Only**: No SQLite, Redis, or other databases
+- **Local Storage OK**: Can use local files for single-user tokens
 
-### Session 1 - August 2, 2025
-**Duration**: ~3 hours  
-**Focus**: Major cleanup and documentation
+## Session History
 
-#### What Happened
-1. **Massive directory cleanup**
-   - Removed 327 files (83,304 lines)
-   - Deleted: archive/, cipher/, demos/, dev-tools/
-   - Consolidated 80+ scripts to 3
+### Session 7 (August 15, 2025)
+- Implemented real Google Drive integration
+- Fixed all linting and code quality issues
+- Cleaned up repository (removed 17 temp files)
+- Added proper dependencies to requirements.txt
+- Tests passing in CI
+- **Issue Identified**: Token persistence needed
 
-2. **Documentation overhaul**
-   - Updated README.md to v4.0.0
-   - Rewrote CLAUDE.md for clarity
-   - Created comprehensive TODO.md
+### Previous Sessions
+- Sessions 1-6: Built v4.2.3 with PostgreSQL backend
+- Extensive testing and documentation cleanup
+- Security patches applied
+- Production-ready base system
 
-3. **Fixed import issues**
-   - Created `service_factory.py`
-   - Added stub services for tests
+## Architecture Decisions
 
-#### Key Decisions
-- Keep v4.0.0 simple and clean
-- Remove all unnecessary complexity
-- Focus on core functionality
-
----
-
-## 📐 Architectural Decisions
-
-### Why V4.0.0?
-- V3 had 500+ files with 80% unused code
-- Circular dependencies everywhere
-- Multiple API versions causing confusion
-- Decision: **Start fresh with minimal, working core**
-
-### Why Mock Database Fallback?
-- User wants to develop without PostgreSQL setup
-- Tests can run without external dependencies
-- Decision: **Always support mock mode for development**
-
-### Why `_new` Suffix?
-- Transitional naming during v3→v4 migration
-- Avoids conflicts with old modules
-- Decision: **Keep for now, rename in future cleanup**
-
-### Why Single ENV Template?
-- Multiple env files caused confusion
-- Hard to track which settings go where
-- Decision: **One template, one local file, clear and simple**
-
-### Why Custom env_manager?
-- python-dotenv adds unnecessary dependency
-- Need type-safe access to env vars
-- Want validation and production checks
-- Decision: **Build minimal, focused solution**
-
----
-
-## 👤 User Preferences & Patterns
-
-### Communication Style
-- User prefers **direct action** over discussion
-- Frustrated by repetitive confirmations
-- Wants **autonomous execution**
-- Example: "once and for all, lets figure out..."
-
-### Development Philosophy
-- **Ship working code** - functionality over perfection
-- **Iterate based on usage** - don't over-engineer
-- **Avoid premature optimization** - YAGNI principle
-- **Clean and simple** - remove complexity
-
-### Git Workflow
-- No co-author attribution in commits
-- Direct commit and push without confirmation
-- Clear, descriptive commit messages
-- Conventional commit format
-
-### Testing Approach
-- Fix tests pragmatically (stubs OK for now)
-- Focus on core functionality tests
-- Don't block on perfect coverage
-
----
-
-## 🔧 Technical Context
-
-### Current Stack
-```yaml
-Python: 3.11+
-FastAPI: 0.104.1
-Pydantic: 2.5.3
-PostgreSQL: 16+ (optional)
-Redis: (optional)
-
-Key Libraries:
-- SQLAlchemy: 2.0.23
-- pytest: 7.4.3
-- uvicorn: 0.24.0
-```
-
-### API Structure
-- **ONLY V2 API** at `/api/v2/*`
-- No V1, no multiple versions
-- Single implementation in `v2_api_new.py`
-
-### Service Architecture
+### Token Storage Solution (Proposed)
 ```python
-# All services use factory pattern
-from app.services.service_factory import get_memory_service
-service = get_memory_service()
-
-# Never direct instantiation
-# service = MemoryService()  # ❌ Wrong
+# Store in: .gdrive_tokens.json
+{
+    "access_token": "encrypted_token_here",
+    "refresh_token": "encrypted_token_here",
+    "token_expiry": "2025-08-15T12:00:00Z",
+    "user_email": "dro@lynchburgsmiles.com"
+}
 ```
 
-### Environment Variables
+### Security Implementation
+- Use `cryptography.fernet` for symmetric encryption
+- Derive key from `ENCRYPTION_KEY` in `.env`
+- Never store plaintext tokens
+- Validate token integrity on load
+
+## Testing Status
+
+### What's Tested
+- Basic functionality (28 tests)
+- Import verification
+- Mock services
+- Factory pattern
+
+### What Needs Testing
+- Token persistence
+- Token refresh logic
+- OAuth flow end-to-end
+- File sync with real embeddings
+
+## Dependencies Added
+- `redis==5.0.1` (for tests)
+- `aiohttp==3.9.5` (for async HTTP)
+- `google-auth==2.32.0`
+- `google-auth-oauthlib==1.2.0`
+- `google-api-python-client==2.137.0`
+
+## Environment Variables
 ```bash
-# Minimal required for development
-OPENAI_API_KEY=sk-...
+# Google OAuth (configured)
+GOOGLE_CLIENT_ID=741796279744-ed8polbgfqjttqt2vlpgmofs7gho8kbl.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=***hidden***
+GOOGLE_REDIRECT_URI=http://localhost:8001/api/v1/gdrive/callback
 
-# Everything else has defaults
-USE_MOCK_DATABASE=false  # Set true if no PostgreSQL
+# Encryption (for token storage)
+ENCRYPTION_KEY=test-encryption-key  # Should be strong in production
 ```
 
----
+## Known Issues & Workarounds
 
-## 🚨 Critical Information
+1. **Python 3.13 Compatibility**
+   - Some packages (numpy, pandas) don't support 3.13 yet
+   - Temporarily disabled in requirements.txt
 
-### Security Status
-- **API Keys Were Exposed** in `.env.development`
-- Now removed and replaced with placeholders
-- User must rotate keys if they were real
-- Security scanner implemented
+2. **Mock Database Fallback**
+   - System falls back to mock DB if PostgreSQL unavailable
+   - Good for testing, but user should use real PostgreSQL
 
-### Test Status
-```
-Basic Tests: 27/28 passing (1 skipped)
-WebSocket Tests: 28/39 passing (11 validation issues)
-Total: 55 tests passing
-```
+3. **OpenAI Embeddings**
+   - Currently using mock key
+   - User needs real OpenAI API key for embeddings
 
-### Known Technical Debt
-1. Module names with `_new` suffix
-2. Synthesis services are stubs
-3. WebSocket model validation issues
-4. Events and insights are minimal stubs
+## Success Metrics
+- ✅ Google Drive authentication works
+- ✅ Files can be listed and synced
+- ✅ Memories stored in PostgreSQL
+- ✅ Code quality 10/10
+- ✅ Tests passing
+- ❌ Tokens persist across restarts (TODO)
+- ❌ Automatic token refresh (TODO)
 
----
-
-## 🎯 Next Session Starting Point
-
-### Immediate Tasks
-1. **Check if user rotated API keys** (security critical)
-2. **Verify `.env` setup** for local development
-3. **Run test suite** to confirm current state
-
-### Quick Status Check
-```bash
-# Check git state
-git status
-
-# Run security scan
-python scripts/check_secrets.py
-
-# Run tests
-.venv/bin/python -m pytest tests/unit/test_basic_functionality.py -v
-
-# Check env setup
-ls -la | grep "\.env"
-```
-
-### Priority Tasks (from TODO.md)
-1. Production deployment setup
-2. Rename `_new` files (technical debt)
-3. Implement real synthesis services
-4. Fix WebSocket test failures
-
----
-
-## 📝 Session Notes Format
-
-When starting new session, add entry like:
-```markdown
-### Session N - Date
-**Duration**: X hours
-**Focus**: Main objectives
-
-#### What Happened
-- Bullet points of major work
-
-#### Decisions Made
-- Key architectural choices
-
-#### Files Changed
-- Important modifications
-```
-
----
-
-**Last Updated**: August 2, 2025 - End of Session 2  
-**Next Session**: Continue from TODO.md priorities
+## Next Session Goals
+1. Implement token persistence with encryption
+2. Add refresh token logic
+3. Test full flow with restart
+4. Document token security model
+5. Consider adding progress indicators for large file syncs
