@@ -167,7 +167,8 @@
       "Bash(cd:*)",
       "Bash(cd:*)",
       "Bash(python test_gdrive_integration.py:*)",
-      "Bash(open http://localhost:8001/static/gdrive-ui.html)"
+      "Bash(open http://localhost:8001/static/gdrive-ui.html)",
+      "Bash(python test_full_gdrive_flow.py:*)"
     ],
     "deny": []
   }

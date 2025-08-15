@@ -47,7 +47,7 @@ class GoogleDriveUI {
     
     async checkConnectionStatus() {
         try {
-            const response = await fetch(`${this.apiBase}/status?api_key=${this.getApiKey()}`);
+            const response = await fetch(`${this.apiBase}/status`);
             const status = await response.json();
             
             if (status.connected) {
@@ -66,10 +66,9 @@ class GoogleDriveUI {
         this.connectBtn.textContent = 'Connecting...';
         
         try {
-            const response = await fetch(`${this.apiBase}/connect?api_key=${this.getApiKey()}`, {
+            const response = await fetch(`${this.apiBase}/connect`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ redirect_after_auth: window.location.href })
+                headers: { 'Content-Type': 'application/json' }
             });
             
             const data = await response.json();
@@ -99,9 +98,16 @@ class GoogleDriveUI {
     
     async loadDriveContents() {
         try {
-            // For demo, create mock folder structure
-            const mockFolders = this.createMockFolderStructure();
-            this.renderFolderTree(mockFolders);
+            // Load real files from Google Drive
+            const response = await fetch(`${this.apiBase}/files`);
+            if (response.ok) {
+                const data = await response.json();
+                this.renderFileList(data.files);
+            } else {
+                // Fallback to mock for demo
+                const mockFolders = this.createMockFolderStructure();
+                this.renderFolderTree(mockFolders);
+            }
         } catch (error) {
             this.showToast('Failed to load Drive contents', 'error');
         }
@@ -215,19 +221,14 @@ class GoogleDriveUI {
         
         let totalQueued = 0;
         
-        for (const folderId of this.selectedFolders) {
+        for (const fileId of this.selectedFolders) {
             try {
-                const response = await fetch(`${this.apiBase}/sync/folder?api_key=${this.getApiKey()}`, {
+                const response = await fetch(`${this.apiBase}/sync/file`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        folder_id: folderId,
-                        recursive: true,
-                        processing_options: {
-                            extract_text: true,
-                            generate_embeddings: true,
-                            create_memories: true
-                        }
+                        file_id: fileId,
+                        process: true
                     })
                 });
                 
@@ -372,16 +373,59 @@ class GoogleDriveUI {
         await this.connectGoogleDrive();
     }
     
-    getApiKey() {
-        // Get API key from localStorage or prompt user
-        let apiKey = localStorage.getItem('api_key');
-        if (!apiKey) {
-            apiKey = prompt('Please enter your API key:');
-            if (apiKey) {
-                localStorage.setItem('api_key', apiKey);
-            }
+    renderFileList(files) {
+        // Clear and render real files
+        this.folderTree.innerHTML = '';
+        
+        if (!files || files.length === 0) {
+            this.folderTree.innerHTML = '<div class="empty-state">No files found. Upload files to your Google Drive to get started.</div>';
+            return;
         }
-        return apiKey;
+        
+        files.forEach(file => {
+            const fileItem = this.createFileItem(file);
+            this.folderTree.appendChild(fileItem);
+        });
+    }
+    
+    createFileItem(file) {
+        const div = document.createElement('div');
+        div.className = 'tree-item';
+        div.dataset.id = file.id;
+        
+        const label = document.createElement('label');
+        label.className = 'tree-label';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'tree-checkbox';
+        checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                this.selectedFolders.add(file.id);
+            } else {
+                this.selectedFolders.delete(file.id);
+            }
+            this.updateSyncButton();
+        });
+        label.appendChild(checkbox);
+        
+        const icon = document.createElement('span');
+        icon.className = 'tree-icon';
+        icon.innerHTML = file.mimeType && file.mimeType.includes('folder') ? '📁' : '📄';
+        label.appendChild(icon);
+        
+        const name = document.createElement('span');
+        name.className = 'tree-name';
+        name.textContent = file.name;
+        label.appendChild(name);
+        
+        const size = document.createElement('span');
+        size.className = 'file-size';
+        size.textContent = file.size ? `(${(file.size / 1024).toFixed(1)} KB)` : '';
+        label.appendChild(size);
+        
+        div.appendChild(label);
+        return div;
     }
 }
 

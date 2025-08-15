@@ -454,6 +454,19 @@ body {
     opacity: 0.6;
 }
 
+.empty-state {
+    padding: 3rem;
+    text-align: center;
+    color: var(--gray-700);
+    font-size: 0.95rem;
+}
+
+.file-size {
+    margin-left: 0.5rem;
+    color: var(--gray-500);
+    font-size: 0.8rem;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .gdrive-container {
