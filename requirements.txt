@@ -51,7 +51,7 @@ structlog==24.4.0  # UPDATED - security fix
 
 
 # Google Drive Integration
-aiohttp==3.9.5
+aiohttp==3.12.14
 google-auth==2.32.0
 google-auth-oauthlib==1.2.0
 google-auth-httplib2==0.2.0
@@ -59,9 +59,9 @@ google-api-python-client==2.137.0
 
 # File handling - CRITICAL UPDATES
 python-magic==0.4.27
-pypdf==4.3.1  # UPDATED from PyPDF2 - HIGH SEVERITY
+pypdf==6.0.0  # UPDATED from PyPDF2 - HIGH SEVERITY
 python-docx==0.8.11
-jinja2==3.1.4  # UPDATED - HIGH SEVERITY FIX
+jinja2==3.1.6  # UPDATED - HIGH SEVERITY FIX
 MarkupSafe==2.1.5  # ADDED - required by Jinja2 security fix
 
 # Testing
