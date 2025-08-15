@@ -196,6 +196,17 @@ def create_app(config_name: str = "development") -> FastAPI:
         app.include_router(search_advanced_router, prefix="/api/v2", tags=["Advanced Search"])
         app.include_router(health_router, prefix="/api/v2", tags=["System"])
         app.include_router(websocket_router, prefix="/api/v2", tags=["Real-time"])
+        
+        # Google Drive Integration
+        try:
+            from app.routes.gdrive_real import router as gdrive_router
+            app.include_router(gdrive_router, prefix="/api/v1/gdrive", tags=["Google Drive"])
+            logger.info("✅ Google Drive routes loaded (real implementation)")
+        except ImportError:
+            # Fallback to mock routes
+            from app.routes.gdrive import router as gdrive_router
+            app.include_router(gdrive_router, prefix="/api/v1", tags=["Google Drive"])
+            logger.info("⚠️ Using mock Google Drive routes")
 
         logger.info("📍 Routes registered successfully with tags")
     except ImportError as e:

@@ -49,6 +49,14 @@ python-dotenv==1.0.0
 # Logging
 structlog==24.4.0  # UPDATED - security fix
 
+
+# Google Drive Integration
+aiohttp==3.9.5
+google-auth==2.32.0
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.137.0
+
 # File handling - CRITICAL UPDATES
 python-magic==0.4.27
 pypdf==4.3.1  # UPDATED from PyPDF2 - HIGH SEVERITY

@@ -123,29 +123,14 @@ async def mock_openai_client():
     yield mock_client
 
 
-@pytest_asyncio.fixture
-async def mock_redis():
-    """Mock Redis client for testing without Redis connection."""
-    mock_redis = AsyncMock()
-
-    # Mock Redis operations
-    mock_redis.get = AsyncMock(return_value=None)
-    mock_redis.set = AsyncMock(return_value=True)
-    mock_redis.delete = AsyncMock(return_value=1)
-    mock_redis.exists = AsyncMock(return_value=False)
-    mock_redis.expire = AsyncMock(return_value=True)
-    mock_redis.close = AsyncMock()
-
-    yield mock_redis
 
 
 @pytest_asyncio.fixture
-async def app_with_mocks(mock_database, mock_openai_client, mock_redis):
+async def app_with_mocks(mock_database, mock_openai_client):
     """FastAPI app with all external dependencies mocked."""
     with (
         patch("app.database.get_database", return_value=mock_database),
         patch("app.utils.openai_client.get_openai_client", return_value=mock_openai_client),
-        patch("app.core.redis_manager.get_redis_client", return_value=mock_redis),
     ):
 
         from app.app import app
@@ -217,7 +202,6 @@ def mock_external_services():
     with (
         patch("httpx.AsyncClient") as mock_client,
         patch("openai.AsyncOpenAI") as mock_openai,
-        patch("redis.asyncio.Redis") as mock_redis_client,
         patch("asyncpg.create_pool") as mock_pg_pool,
     ):
 
@@ -230,7 +214,6 @@ def mock_external_services():
         yield {
             "http_client": mock_client,
             "openai_client": mock_openai,
-            "redis_client": mock_redis_client,
             "pg_pool": mock_pg_pool,
         }
 
@@ -265,7 +248,6 @@ class MockDependencies:
     def __init__(self):
         self.database = AsyncMock()
         self.openai_client = AsyncMock()
-        self.redis_client = AsyncMock()
         self.setup_defaults()
 
     def setup_defaults(self):
@@ -279,9 +261,6 @@ class MockDependencies:
         embedding_response.data = [MagicMock(embedding=[0.1] * 1536)]
         self.openai_client.embeddings.create.return_value = embedding_response
 
-        # Redis defaults
-        self.redis_client.get.return_value = None
-        self.redis_client.set.return_value = True
 
 
 @pytest.fixture

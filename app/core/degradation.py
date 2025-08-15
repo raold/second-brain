@@ -15,7 +15,7 @@ class DegradationLevel(IntEnum):
     """Service degradation levels (lower is better)"""
 
     FULL = 0  # All features available
-    NO_VECTOR = 1  # Qdrant down, keyword search only
+    NO_VECTOR = 1  # Vector search unavailable, keyword search only
     NO_PERSISTENCE = 2  # Storage issues, memory-only mode
     READONLY = 3  # Critical issues, read-only mode
     MAINTENANCE = 4  # Maintenance mode, minimal functionality
@@ -65,7 +65,6 @@ class DegradationManager:
 
     def __init__(self):
         self.services: Dict[str, ServiceStatus] = {
-            "qdrant": ServiceStatus("qdrant"),
             "persistence": ServiceStatus("persistence"),
             "openai": ServiceStatus("openai"),
             "anthropic": ServiceStatus("anthropic"),
@@ -118,9 +117,6 @@ class DegradationManager:
             self.current_level = DegradationLevel.NO_PERSISTENCE
             self.features_disabled = ["persistence", "export", "import"]
 
-        elif not self.services["qdrant"].is_healthy:
-            self.current_level = DegradationLevel.NO_VECTOR
-            self.features_disabled = ["semantic_search", "embeddings"]
 
         elif not (self.services["openai"].is_healthy or self.services["anthropic"].is_healthy):
             self.current_level = DegradationLevel.READONLY
@@ -172,9 +168,6 @@ class DegradationManager:
         # Check persistence
         self.check_service("persistence", self._check_persistence)
 
-        # Check Qdrant (if configured)
-        if self._is_qdrant_configured():
-            self.check_service("qdrant", self._check_qdrant)
 
         # Check AI services
         self.check_service("openai", self._check_openai)
@@ -207,24 +200,6 @@ class DegradationManager:
             except:
                 return False
 
-    def _is_qdrant_configured(self) -> bool:
-        """Check if Qdrant is configured"""
-        import os
-
-        return bool(os.getenv("QDRANT_URL"))
-
-    def _check_qdrant(self) -> bool:
-        """Check if Qdrant is available"""
-        import os
-
-        import requests
-
-        qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
-        try:
-            response = requests.get(f"{qdrant_url}/collections", timeout=2)
-            return response.status_code == 200
-        except:
-            return False
 
     def _check_openai(self) -> bool:
         """Check if OpenAI API is available"""
