@@ -215,24 +215,6 @@ make status              # Environment health check
 make db-shell           # PostgreSQL shell
 ```
 
-
-## 📚 **Documentation**
-
-### 🧠 AI Memory Integration
-- Compatible with AI coding agents and LLMs
-- RESTful API for memory operations
-- Persistent context storage with PostgreSQL
-
-### 📖 Available Documentation
-Check the `/docs/documentation/` folder for all guides and specifications
-
-## 📚 **API Documentation**
-
-Once running, access:
-- **Swagger UI**: http://localhost:8001/docs
-- **Web Interface**: http://localhost:8001/interface.html
-- **OpenAPI Schema**: http://localhost:8001/openapi.json
-
 ### **🚀 V2 API Features (Enhanced in v4.2.0)**
 
 The V2 API provides a comprehensive set of features with new v4.2.0 capabilities:
@@ -315,35 +297,6 @@ curl -X GET "http://localhost:8001/api/v2/statistics" \
   -o memories_backup.json
 ```
 
-## 🔧 **Configuration**
-
-### **Environment Variables (v4.2.0)**
-
-```bash
-# Database (PostgreSQL with pgvector) - REQUIRED
-DATABASE_URL=postgresql://secondbrain:changeme@localhost:5432/secondbrain
-
-# OpenAI (for embeddings) - REQUIRED for vector search
-OPENAI_API_KEY=your-api-key
-
-# Application
-ENVIRONMENT=development
-DEBUG=true
-
-# Performance
-EMBEDDING_BATCH_SIZE=10
-CONNECTION_POOL_SIZE=20
-```
-
-## 📖 **Documentation**
-
-Second Brain v4.2.0 documentation is organized for different audiences:
-
-### **🚀 Quick Start**
-
-See the **Quick Start** section above for setup instructions. All documentation is in `/docs/documentation/`.
-
-
 ### **🤖 CI/CD System**
 
 Our tiered CI/CD pipeline ensures fast feedback and reliable deployments:
@@ -358,26 +311,6 @@ make test-smoke        # Quick validation (< 1 min)
 make test-fast         # Core functionality (< 5 min)
 make test-comprehensive # Full validation (< 15 min)
 make ci-full          # Complete pipeline simulation
-```
-
-**Documentation**:
-- **[CI/CD Developer Quick Reference](docs/CI_CD_DEVELOPER_QUICK_REFERENCE.md)** - Daily commands and troubleshooting
-- **[CI/CD Comprehensive Guide](docs/CI_CD_COMPREHENSIVE_GUIDE.md)** - Complete system documentation
-- **[CI/CD Troubleshooting Guide](docs/CI_CD_TROUBLESHOOTING_GUIDE.md)** - Problem diagnosis and solutions
-
-### **🌐 API Integration**
-
-Complete API documentation with real-time WebSocket support:
-
-**Available Documentation**:
-- API endpoints are documented at `/docs` when the server is running
-- Check `/docs/documentation/` folder for specifications
-
-**Quick Start**:
-```javascript
-const api = new SecondBrainAPI('your-api-key');
-const metrics = await api.getMetrics();
-const ws = api.connectWebSocket(handleUpdate);
 ```
 
 ### **📚 Complete Documentation Index**
