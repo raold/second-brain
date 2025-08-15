@@ -34,7 +34,7 @@
 
 Second Brain v4.2.3 is built on **simplicity-first principles** with a unified database architecture:
 
-### **🌐 Frontend (NEW)**
+### **🌐 Frontend**
 - **Modern Web UI**: SvelteKit + TypeScript + Tailwind CSS
 - **Real-time Updates**: WebSocket integration for live changes
 - **Knowledge Graph**: Interactive visualization of memory connections
@@ -99,25 +99,25 @@ second-brain/
 │   │   ├── user.py                 # User models
 │   │   └── api_models.py           # API request/response models
 │   ├── routes/                     # API routes
-│   │   └── v2_api_new.py           # V2 API implementation
+│   │   └── v2_api.py               # V2 API implementation
 │   ├── services/                   # Business logic
-│   │   ├── memory_service_new.py   # Memory operations
+│   │   ├── memory_service.py       # Memory operations
 │   │   ├── service_factory.py      # Service instances
 │   │   └── synthesis/              # Advanced features
 │   ├── static/                     # Web UI files
 │   ├── utils/                      # Utility functions
 │   ├── app.py                      # FastAPI application
 │   ├── config.py                   # Configuration
-│   └── database_new.py             # Database operations
+│   └── database.py                 # Database operations
 ├── tests/                          # Test suites
 │   ├── unit/                       # Unit tests
 │   ├── integration/                # Integration tests
 │   └── validation/                 # Validation tests
 ├── docs/                           # Documentation
 ├── scripts/                        # Utility scripts
-├── docker/                         # Docker configuration
-├── migrations/                     # Database migrations
-├── frontend/                       # SvelteKit web UI (NEW)
+├── k8s/                            # Kubernetes configuration
+├── examples/                       # Example configurations
+├── frontend/                       # SvelteKit web UI
 │   ├── src/                        # Source code
 │   │   ├── lib/                    # Components and utilities
 │   │   └── routes/                 # Page components
@@ -131,9 +131,9 @@ second-brain/
 
 ### **Core Components**
 
-1. **V2 API** (`routes/v2_api_new.py`): RESTful API with WebSocket support
-2. **Memory Service** (`services/memory_service_new.py`): Memory CRUD operations
-3. **Database** (`database_new.py`): PostgreSQL with mock fallback
+1. **V2 API** (`routes/v2_api.py`): RESTful API with WebSocket support
+2. **Memory Service** (`services/memory_service.py`): Memory CRUD operations
+3. **Database** (`database.py`): PostgreSQL with mock fallback
 4. **Models** (`models/`): Pydantic models for validation
 5. **Configuration** (`config.py`): Environment-based configuration
 
@@ -150,7 +150,7 @@ cd second-brain
 docker-compose up -d postgres
 
 # Setup database schema
-python scripts/setup_postgres_pgvector.py
+python scripts/setup/setup_postgres_pgvector.py
 
 # Start development environment
 make dev
@@ -162,7 +162,7 @@ cd frontend && npm install && npm run dev
 make test
 
 # Check performance (optional)
-python scripts/test_postgres_performance.py
+python scripts/testing/test_postgres_performance.py
 ```
 
 ### **📋 What Just Happened?**
@@ -180,7 +180,7 @@ The setup automatically:
 ```bash
 # Docker-first approach
 docker-compose up --build          # Full development stack
-docker-compose exec app python scripts/test_runner.py --all
+docker-compose exec app python scripts/testing/test_runner.py --all
 
 # Python virtual environment fallback
 python -m venv .venv                      # Create virtual environment
@@ -282,7 +282,7 @@ curl -X POST "http://localhost:8001/api/v2/memories" \
   }'
 
 # Search memories
-curl -X GET "http://localhost:8001/api/v2/memories/search?query=meeting" \
+curl -X POST "http://localhost:8001/api/v2/search" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-api-key" \
   -d '{
@@ -292,10 +292,42 @@ curl -X GET "http://localhost:8001/api/v2/memories/search?query=meeting" \
   }'
 
 # Export memories
-curl -X GET "http://localhost:8001/api/v2/statistics" \
+curl -X GET "http://localhost:8001/api/v2/export" \
   -H "X-API-Key: your-api-key" \
   -o memories_backup.json
 ```
+
+## 🔧 **Configuration**
+
+### **Environment Variables**
+
+```bash
+# Database (PostgreSQL with pgvector) - REQUIRED
+DATABASE_URL=postgresql://secondbrain:changeme@localhost:5432/secondbrain
+
+# OpenAI (for embeddings) - REQUIRED for vector search
+OPENAI_API_KEY=your-api-key
+
+# Application
+ENVIRONMENT=development
+DEBUG=true
+API_TOKENS=your-api-token
+
+# Performance
+EMBEDDING_BATCH_SIZE=10
+CONNECTION_POOL_SIZE=20
+
+# Cipher Integration (Optional)
+CIPHER_ENABLED=false
+CIPHER_URL=http://localhost:3000
+```
+
+### **API Documentation**
+
+Once running, access:
+- **Swagger UI**: http://localhost:8001/docs
+- **Web Interface**: http://localhost:8001
+- **OpenAPI Schema**: http://localhost:8001/openapi.json
 
 ### **🤖 CI/CD System**
 
@@ -339,8 +371,8 @@ python scripts/dev test --test-type integration # Integration tests
 python scripts/dev test --test-type validation  # Validation tests
 
 # Fallback .venv testing (when Docker unavailable)
-.venv/Scripts/python.exe scripts/test_runner.py --validation  # Windows
-.venv/bin/python scripts/test_runner.py --validation          # Unix
+.venv/Scripts/python.exe scripts/testing/test_runner.py --validation  # Windows
+.venv/bin/python scripts/testing/test_runner.py --validation          # Unix
 ```
 
 ### **🔍 Test Categories**
@@ -512,7 +544,7 @@ This project is licensed under the GNU Affero General Public License v3.0 (AGPL-
 
 ### Third-Party Integrations
 - **[Cipher](https://github.com/campfirein/cipher)** by [Byterover](https://github.com/byterover) - AI memory layer for coding agents
-- **[Qdrant](https://qdrant.tech/)** - Vector database for semantic search
+- **[PostgreSQL](https://www.postgresql.org/)** with **[pgvector](https://github.com/pgvector/pgvector)** - Vector database and search
 - **[OpenAI](https://openai.com/)** - Embeddings and AI capabilities
 - **[FastAPI](https://fastapi.tiangolo.com/)** - Modern Python web framework
 
