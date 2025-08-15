@@ -1,0 +1,348 @@
+/**
+ * Google Drive Integration Styles
+ * Consistent with Second Brain design system
+ */
+
+.gdrive-integration {
+    background: var(--color-bg-secondary, #282828);
+    border: 1px solid var(--color-border-subtle, #3c3836);
+    border-radius: 8px;
+    padding: var(--space-6, 24px);
+    margin: var(--space-4, 16px) 0;
+}
+
+.gdrive-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4, 16px);
+}
+
+.gdrive-header h3 {
+    margin: 0;
+    font-size: var(--text-lg, 20px);
+    font-weight: var(--font-semibold, 600);
+    color: var(--color-text-primary, #fbf1c7);
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    transition: all 150ms ease;
+}
+
+.status-indicator.connected {
+    background-color: var(--color-success, #b8bb26);
+    box-shadow: 0 0 8px rgba(184, 187, 38, 0.3);
+}
+
+.status-indicator.disconnected {
+    background-color: var(--color-danger, #fb4934);
+    box-shadow: 0 0 8px rgba(251, 73, 52, 0.3);
+}
+
+.status-indicator.connecting {
+    background-color: var(--color-warning, #fabd2f);
+    box-shadow: 0 0 8px rgba(250, 189, 47, 0.3);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-text {
+    color: var(--color-text-secondary, #ebdbb2);
+    font-size: var(--text-base, 16px);
+    margin-bottom: var(--space-4, 16px);
+    line-height: var(--leading-normal, 1.5);
+}
+
+.progress-container {
+    margin: var(--space-4, 16px) 0;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background-color: var(--color-bg-tertiary, #32302f);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: var(--space-2, 8px);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary, #8ec07c), var(--color-info, #83a598));
+    border-radius: 3px;
+    animation: progress-animation 2s infinite;
+}
+
+@keyframes progress-animation {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+
+.progress-text {
+    font-size: var(--text-sm, 13px);
+    color: var(--color-text-tertiary, #d5c4a1);
+    text-align: center;
+}
+
+.gdrive-actions {
+    display: flex;
+    gap: var(--space-3, 12px);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-4, 16px);
+}
+
+.gdrive-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2, 8px);
+    padding: var(--space-2, 8px) var(--space-4, 16px);
+    border: 1px solid var(--color-border-default, #504945);
+    border-radius: 6px;
+    background: var(--color-bg-secondary, #282828);
+    color: var(--color-text-primary, #fbf1c7);
+    font-size: var(--text-base, 16px);
+    font-weight: var(--font-medium, 500);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 150ms ease;
+    min-height: 40px;
+    min-width: 64px;
+}
+
+.gdrive-actions .btn:hover {
+    background: var(--color-bg-tertiary, #32302f);
+    border-color: var(--color-border-strong, #665c54);
+    transform: translateY(-1px);
+}
+
+.gdrive-actions .btn:active {
+    transform: translateY(0);
+}
+
+.gdrive-actions .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.gdrive-actions .btn-primary {
+    background: var(--color-primary, #8ec07c);
+    border-color: var(--color-primary, #8ec07c);
+    color: var(--color-bg-primary, #1d2021);
+}
+
+.gdrive-actions .btn-primary:hover {
+    background: #7fb069;
+    border-color: #7fb069;
+}
+
+.gdrive-actions .btn-secondary {
+    background: var(--color-bg-tertiary, #32302f);
+    border-color: var(--color-border-default, #504945);
+}
+
+.gdrive-actions .btn-icon {
+    font-size: var(--text-sm, 13px);
+}
+
+.gdrive-info {
+    background: var(--color-bg-primary, #1d2021);
+    border: 1px solid var(--color-border-subtle, #3c3836);
+    border-radius: 6px;
+    padding: var(--space-4, 16px);
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2, 8px) 0;
+    border-bottom: 1px solid var(--color-border-subtle, #3c3836);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-size: var(--text-sm, 13px);
+    font-weight: var(--font-medium, 500);
+    color: var(--color-text-tertiary, #d5c4a1);
+}
+
+.info-value {
+    font-size: var(--text-sm, 13px);
+    color: var(--color-text-secondary, #ebdbb2);
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+/* Notifications */
+.notification {
+    position: fixed;
+    top: var(--space-4, 16px);
+    right: var(--space-4, 16px);
+    max-width: 400px;
+    padding: var(--space-4, 16px);
+    border-radius: 8px;
+    font-size: var(--text-base, 16px);
+    font-weight: var(--font-medium, 500);
+    z-index: 1000;
+    animation: slideIn 300ms ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification-success {
+    background: var(--color-success, #b8bb26);
+    color: var(--color-bg-primary, #1d2021);
+    border: 1px solid #a6a022;
+}
+
+.notification-error {
+    background: var(--color-danger, #fb4934);
+    color: var(--color-text-primary, #fbf1c7);
+    border: 1px solid #e73c2e;
+}
+
+.notification-info {
+    background: var(--color-info, #83a598);
+    color: var(--color-bg-primary, #1d2021);
+    border: 1px solid #719489;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+    .gdrive-integration {
+        margin: var(--space-2, 8px) 0;
+        padding: var(--space-4, 16px);
+    }
+    
+    .gdrive-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-2, 8px);
+    }
+    
+    .gdrive-actions {
+        flex-direction: column;
+    }
+    
+    .gdrive-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-1, 4px);
+    }
+    
+    .notification {
+        right: var(--space-2, 8px);
+        left: var(--space-2, 8px);
+        max-width: none;
+    }
+}
+
+/* Dashboard integration */
+.dashboard-card.gdrive-card {
+    min-height: 280px;
+}
+
+.dashboard-card .gdrive-integration {
+    margin: 0;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.dashboard-card .gdrive-header h3 {
+    font-size: var(--text-base, 16px);
+    margin-bottom: var(--space-2, 8px);
+}
+
+/* Loading states */
+.btn.loading::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: var(--space-2, 8px);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Focus styles for accessibility */
+.gdrive-actions .btn:focus {
+    outline: 2px solid var(--color-primary, #8ec07c);
+    outline-offset: 2px;
+}
+
+/* Dark theme compatibility */
+@media (prefers-color-scheme: dark) {
+    .gdrive-integration {
+        background: var(--color-bg-secondary, #282828);
+        border-color: var(--color-border-subtle, #3c3836);
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .status-indicator.connected {
+        background-color: #00ff00;
+    }
+    
+    .status-indicator.disconnected {
+        background-color: #ff0000;
+    }
+    
+    .gdrive-actions .btn {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .status-indicator,
+    .gdrive-actions .btn,
+    .notification {
+        transition: none;
+    }
+    
+    .progress-fill,
+    .btn.loading::after {
+        animation: none;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+    }
+}

@@ -17,6 +17,11 @@ app = create_app(environment)
 
 # Mount static files (HTML interfaces)
 static_dir = Path(__file__).parent.parent  # Go up to project root
+
+# Mount the static directory for CSS, JS, and UI files
+if (static_dir / "static").exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir / "static")), name="static")
+
 if (static_dir / "interface.html").exists():
     # Serve individual HTML files
     @app.get("/interface.html")
