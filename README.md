@@ -56,7 +56,6 @@ Second Brain v4.2.3 is built on **simplicity-first principles** with a unified d
 
 ### **🛠️ Developer Experience**
 - **One Database URL**: Single `DATABASE_URL` configuration
-- **Automatic Migration**: Scripts to migrate from SQLite/JSON
 - **Performance Testing**: Built-in benchmarking tools
 - **Health Monitoring**: Comprehensive health checks and metrics
 
@@ -524,7 +523,6 @@ Your development context follows you across:
 
 For detailed configuration options and troubleshooting, see the [Cipher Integration Guide](docs/documentation/CIPHER_INTEGRATION_GUIDE.md).
 
-
 ## 🤝 **Contributing**
 
 We welcome contributions! Please open an issue or submit a pull request on GitHub.
@@ -536,16 +534,13 @@ We welcome contributions! Please open an issue or submit a pull request on GitHu
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
 
-## 📝 **License**
-
-This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) - see [LICENSE](LICENSE) file for details.
-
 ## 🙏 **Acknowledgments**
 
 ### Third-Party Integrations
 - **[Cipher](https://github.com/campfirein/cipher)** by [Byterover](https://github.com/byterover) - AI memory layer for coding agents
 - **[PostgreSQL](https://www.postgresql.org/)** with **[pgvector](https://github.com/pgvector/pgvector)** - Vector database and search
 - **[OpenAI](https://openai.com/)** - Embeddings and AI capabilities
+- **[Anthropic](https://anthropic.com/)** - Embeddings and AI capabilities
 - **[FastAPI](https://fastapi.tiangolo.com/)** - Modern Python web framework
 
 ### Architecture Inspiration
@@ -553,10 +548,6 @@ This project is licensed under the GNU Affero General Public License v3.0 (AGPL-
 - Domain-Driven Design by Eric Evans
 - Event Sourcing patterns by Martin Fowler
 - The amazing Python community
-
-### Special Thanks
-- The Cipher team at Byterover for creating an amazing open-source memory layer
-- The open-source community for continuous feedback and contributions
 
 **Note**: This project integrates with but is not affiliated with Cipher, Qdrant, or OpenAI. Each integration maintains its own license.
 
@@ -567,5 +558,3 @@ This project is licensed under the GNU Affero General Public License v3.0 (AGPL-
 - **Discussions**: [GitHub Discussions](https://github.com/raold/second-brain/discussions)
 
 ---
-
-Built with ❤️ by the SecondBrain team
