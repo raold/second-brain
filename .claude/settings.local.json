@@ -170,7 +170,10 @@
       "Bash(open http://localhost:8001/static/gdrive-ui.html)",
       "Bash(python test_full_gdrive_flow.py:*)",
       "Bash(true)",
-      "Bash(python -m pytest tests/unit/test_basic_functionality.py -v -x)"
+      "Bash(python -m pytest tests/unit/test_basic_functionality.py -v -x)",
+      "Bash(black:*)",
+      "Bash(isort:*)",
+      "Bash(pylint:*)"
     ],
     "deny": []
   }
