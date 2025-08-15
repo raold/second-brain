@@ -466,6 +466,99 @@ kubectl apply -f k8s/
 - **GCP**: Cloud Run, Cloud SQL, Memorystore, Pub/Sub
 - **Azure**: Container Instances, Database for PostgreSQL, Cache for Redis
 
+## 🔗 **Cipher Integration**
+
+Second Brain includes **optional** integration with [Cipher](https://github.com/campfirein/cipher), an AI memory layer for coding agents. This enables persistent context across IDE sessions and team knowledge sharing.
+
+### **How It Works**
+
+The Cipher integration provides a context preservation flow that connects your development environment with Second Brain's persistent storage:
+
+```
+Your Code → IDE → MCP Server → Second Brain API → PostgreSQL
+                                     ↓
+                             Permanent Storage
+                                     ↓
+                   Available in future sessions
+```
+
+- **Automatic Sync**: Memories sync between Second Brain and Cipher every 5 minutes
+- **MCP Protocol**: Real-time integration with VS Code, Cursor, Claude Desktop, and other IDEs
+- **Dual Memory System**: Supports both code concepts (System 1) and reasoning steps (System 2)
+- **Conflict Resolution**: Configurable strategies (newest wins, local wins, remote wins)
+
+### **Key Files**
+
+- **`.env`** - Cipher configuration settings
+- **`app/adapters/cipher_adapter.py`** - Cipher sync adapter implementation
+- **`scripts/mcp_server.py`** - MCP protocol server for IDE integration
+- **`scripts/setup_cipher_mcp.py`** - Automated setup script
+- **`.vscode/settings.json`** - VS Code/Cursor IDE configuration
+- **`~/.config/mcp/servers.json`** - Global MCP configuration
+
+### **To Start Using**
+
+1. **Enable Cipher in `.env`:**
+   ```bash
+   CIPHER_ENABLED=true
+   CIPHER_URL=http://localhost:3000
+   CIPHER_SYNC_INTERVAL=300
+   CIPHER_ENABLE_MCP=true
+   CIPHER_CONFLICT_RESOLUTION=newest
+   ```
+
+2. **Install Cipher (optional for IDE integration):**
+   ```bash
+   npm install -g @byterover/cipher
+   ```
+
+3. **Run setup script:**
+   ```bash
+   python scripts/setup_cipher_mcp.py
+   ```
+
+4. **Start Second Brain:**
+   ```bash
+   make dev
+   # or
+   docker-compose up
+   ```
+
+5. **Configure your IDE:**
+   - **VS Code/Cursor**: Already configured via `.vscode/settings.json`
+   - **Claude Desktop**: Point to `http://localhost:8001`
+   - **Other IDEs**: Use the API at `http://localhost:8001`
+
+### **Cross-Platform Compatibility**
+
+The Cipher integration works identically across all platforms:
+
+- ✅ **Windows** - Full support with HTTP API
+- ✅ **macOS** - Identical configuration and setup
+- ✅ **Linux** - Same API endpoints and protocol
+
+Since the integration uses platform-agnostic HTTP REST APIs and standard JSON protocols, the exact same configuration works regardless of your operating system. The MCP server communicates via stdin/stdout, which is supported on all platforms.
+
+### **How Context Is Preserved**
+
+Second Brain ensures your development context is never lost through multiple layers:
+
+1. **Immediate Persistence** - Every memory created via API is instantly saved to PostgreSQL
+2. **Vector Embeddings** - OpenAI embeddings enable semantic search across all memories
+3. **Session Tracking** - User sessions maintain context between interactions
+4. **Database Durability** - PostgreSQL with ACID compliance ensures data integrity
+5. **API Accessibility** - RESTful API allows any tool to read/write memories
+6. **Automatic Sync** - Background sync with Cipher ensures IDE memories are preserved
+7. **Conflict Resolution** - Configurable strategies prevent data loss during sync
+
+Your development context follows you across:
+- Different IDE sessions
+- Multiple devices
+- Team member workspaces (with workspace configuration)
+- System restarts and crashes
+
+For detailed configuration options and troubleshooting, see the [Cipher Integration Guide](docs/documentation/CIPHER_INTEGRATION_GUIDE.md).
+
 
 ## 🤝 **Contributing**
 
