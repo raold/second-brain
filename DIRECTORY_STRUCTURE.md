@@ -125,13 +125,26 @@ second-brain/
 
 #### Root Directory `/`
 - ✅ README.md
-- ✅ LICENSE
+- ✅ LICENSE (only one, not LICENSE.md)
 - ✅ .gitignore
-- ✅ requirements.txt / pyproject.toml
+- ✅ requirements.txt
+- ✅ pyproject.toml
+- ✅ pytest.ini
 - ✅ Makefile
-- ✅ Single main config files
+- ✅ Dockerfile
+- ✅ docker-compose.yml
+- ✅ logo.png (CRITICAL - used by README.md)
+- ✅ CHANGELOG.md (main changelog only)
+- ✅ TODO.md (project todo list)
+- ✅ SECURITY.md
+- ✅ VERSION
+- ❌ Python scripts (*.py) - move to scripts/
+- ❌ Release notes (RELEASE_*.md) - move to docs/releases/
+- ❌ Test files (*test*.py) - move to tests/
+- ❌ Temporary files (*.tmp, *.bak)
+- ❌ Shell scripts (*.sh) - move to scripts/
+- ❌ Batch files (*.bat) - move to scripts/
 - ❌ Multiple versions of same file
-- ❌ Temporary files
 - ❌ Cache directories
 
 ## 🚫 What NOT to Keep

@@ -1,1 +1,49 @@
-[]
+[
+  {
+    "id": "ef0f46bb-4c34-4803-b85c-c2359cfd19b4",
+    "content": "CRITICAL FILE PROTECTION: logo.png\n\nThe logo.png file in the root directory is ESSENTIAL and must NEVER be deleted during cleanup operations.\n\nKey details:\n- Location: /logo.png (root directory)\n- Referenced in: README.md with <img src=\"logo.png\" alt=\"Second Brain Logo\" width=\"400\">\n- Purpose: Displays the Second Brain logo at the top of the README\n- Impact if deleted: Breaks the README display, causes missing image in documentation\n\nThis file was accidentally deleted in the past, causing significant issues. It is critical to:\n1. NEVER include logo.png in cleanup scripts\n2. NEVER delete this file during refactoring\n3. Always preserve this file during repository operations\n4. Treat this as a protected system file\n\nThe user was very upset when this file was previously removed accidentally.\n",
+    "memory_type": "rule",
+    "importance_score": 0.95,
+    "tags": [
+      "critical",
+      "logo",
+      "readme",
+      "do-not-delete",
+      "file-protection",
+      "system"
+    ],
+    "metadata": {
+      "file_path": "logo.png",
+      "referenced_in": "README.md",
+      "protection_level": "critical",
+      "user_impact": "high",
+      "created_reason": "prevent_accidental_deletion"
+    },
+    "created_at": "2025-08-15T08:21:54.700781",
+    "updated_at": "2025-08-15T08:21:54.700781"
+  },
+  {
+    "id": "a7f8e9d2-1b3c-4567-8901-234567890abc",
+    "content": "ROOT DIRECTORY FILE PLACEMENT RULES\n\nCritical organizational rules for maintaining clean root directory structure in the Second Brain project.\n\n🚫 NEVER PLACE THESE FILES IN ROOT:\n- Python scripts (*.py) → belong in scripts/\n- Release notes (RELEASE_*.md) → belong in docs/releases/\n- Test files (*test*.py) → belong in tests/\n- Shell scripts (*.sh) → belong in scripts/\n- Batch files (*.bat) → belong in scripts/\n\n✅ ONLY THESE FILES BELONG IN ROOT:\n- README.md (project documentation)\n- LICENSE (project license)\n- .gitignore (Git ignore rules)\n- requirements.txt (Python dependencies)\n- pyproject.toml (Python project config)\n- pytest.ini (test configuration)\n- Makefile (build automation)\n- Dockerfile (container definition)\n- docker-compose.yml (multi-container setup)\n- logo.png (CRITICAL: used by README.md)\n- CHANGELOG.md (version history)\n- TODO.md (current tasks)\n- SECURITY.md (security policies)\n- VERSION (version tracking)\n\n🎯 PURPOSE:\n- Maintain clean, professional repository structure\n- Improve navigation and file discovery\n- Follow industry best practices\n- Prevent root directory clutter\n- Ensure consistent organization across all development phases\n\n⚠️ ENFORCEMENT:\n- All cleanup scripts must respect these rules\n- Code reviews should verify proper file placement\n- Automated checks should validate directory structure\n- New files must be placed in correct directories from creation",
+    "memory_type": "rule",
+    "importance_score": 0.92,
+    "tags": [
+      "directory-structure",
+      "root-folder", 
+      "organization",
+      "file-placement",
+      "best-practices",
+      "cleanup-rules",
+      "project-structure"
+    ],
+    "metadata": {
+      "scope": "project-wide",
+      "enforcement_level": "strict",
+      "category": "organizational_rules",
+      "applies_to": "all_file_operations",
+      "created_reason": "maintain_clean_structure"
+    },
+    "created_at": "2025-08-15T14:23:45.123456",
+    "updated_at": "2025-08-15T14:23:45.123456"
+  }
+]
