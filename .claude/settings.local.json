@@ -173,7 +173,9 @@
       "Bash(python -m pytest tests/unit/test_basic_functionality.py -v -x)",
       "Bash(black:*)",
       "Bash(isort:*)",
-      "Bash(pylint:*)"
+      "Bash(pylint:*)",
+      "Bash(git fsck:*)",
+      "Bash(git fetch:*)"
     ],
     "deny": []
   }

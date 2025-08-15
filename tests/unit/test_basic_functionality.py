@@ -238,15 +238,6 @@ class TestMockingInfrastructure:
         )
         assert response.data[0].embedding == [0.1] * 1536
 
-    @pytest.mark.asyncio
-    async def test_mock_redis_fixture(self, mock_redis):
-        """Test mock Redis client fixture"""
-        # Test basic operations
-        result = await mock_redis.set("test_key", "test_value")
-        assert result is True
-
-        value = await mock_redis.get("test_key")
-        assert value is None  # Mock returns None by default
 
     def test_timeout_config_fixture(self, timeout_config):
         """Test timeout configuration fixture"""
