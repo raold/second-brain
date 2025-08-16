@@ -34,7 +34,7 @@ class MemoryServicePostgres:
             connection_string: PostgreSQL connection string
             enable_embeddings: Whether to generate embeddings for new memories
             embedding_batch_size: Batch size for embedding generation
-            embedding_model: OpenAI embedding model to use
+            embedding_model: Local embedding model to use (Nomic/CLIP)
         """
         self.backend = PostgresUnifiedBackend(connection_string)
         self.degradation_manager = get_degradation_manager()
@@ -42,8 +42,8 @@ class MemoryServicePostgres:
         self.embedding_batch_size = embedding_batch_size
         self.embedding_model = embedding_model
 
-        # OpenAI client for embeddings (lazy loaded)
-        self._openai_client = None
+        # Local embedding client (lazy loaded)
+        self._local_client = None
         self._embedding_queue = []
 
         logger.info("Memory service initialized with PostgreSQL backend")
@@ -502,7 +502,7 @@ class MemoryServicePostgres:
     # ==================== Embedding Operations ====================
 
     async def _generate_embedding(self, text: str) -> Optional[List[float]]:
-        """Generate embedding for text using OpenAI"""
+        """Generate embedding for text using local models"""
 
         if not self.enable_embeddings:
             return None
@@ -513,14 +513,13 @@ class MemoryServicePostgres:
             logger.warning("OPENAI_API_KEY not set, skipping embedding generation")
             return None
 
-        # Initialize OpenAI client if needed
-        if not self._openai_client:
+        # Initialize local client if needed
+        if not self._local_client:
             try:
-                import openai
-
-                self._openai_client = openai.AsyncOpenAI(api_key=api_key)
+                from app.utils.local_embedding_client import get_local_client
+                self._local_client = get_local_client()
             except ImportError:
-                logger.error("OpenAI library not installed")
+                logger.error("Local embedding client not available")
                 return None
 
         try:
@@ -532,9 +531,9 @@ class MemoryServicePostgres:
                 return await self._process_embedding_queue()
 
             # For single embedding, process immediately
-            response = await self._openai_client.embeddings.create(
-                model=self.embedding_model, input=text
-            )
+            embedding = await self._local_client.get_embedding(text)
+            if embedding:
+                return embedding
 
             return response.data[0].embedding
 
@@ -550,9 +549,12 @@ class MemoryServicePostgres:
 
         try:
             # Batch generate embeddings
-            response = await self._openai_client.embeddings.create(
-                model=self.embedding_model, input=self._embedding_queue
-            )
+            # Generate embeddings for all texts in queue
+            embeddings = []
+            for txt in self._embedding_queue:
+                emb = await self._local_client.get_embedding(txt)
+                if emb:
+                    embeddings.append(emb)
 
             embeddings = [item.embedding for item in response.data]
 

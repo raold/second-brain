@@ -7,6 +7,10 @@ import asyncio
 import os
 import sys
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -179,7 +183,7 @@ async def test_google_drive_production():
 
 def main():
     """Main entry point"""
-    print("\n🔧 Google Drive Enhanced Integration Test")
+    print("\n[TEST] Google Drive Enhanced Integration Test")
     print("This will test the production Google Drive integration")
     print("including OAuth2, file listing, validation, and ingestion.\n")
     

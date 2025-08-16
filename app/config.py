@@ -33,13 +33,12 @@ class Config:
 
     # Redis removed - using PostgreSQL for everything
 
-    # OpenAI Configuration
-    OPENAI_API_KEY: str = env.get("OPENAI_API_KEY", "")
-    OPENAI_EMBEDDING_MODEL: str = env.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-    OPENAI_CHAT_MODEL: str = env.get("OPENAI_CHAT_MODEL", "gpt-4")
-
-    # Anthropic Configuration (Optional)
-    ANTHROPIC_API_KEY: str = env.get("ANTHROPIC_API_KEY", "")
+    # Local Model Configuration (NO API KEYS NEEDED!)
+    LM_STUDIO_URL: str = env.get("LM_STUDIO_URL", "http://127.0.0.1:1234/v1")
+    CLIP_SERVICE_URL: str = env.get("CLIP_SERVICE_URL", "http://127.0.0.1:8002")
+    LLAVA_SERVICE_URL: str = env.get("LLAVA_SERVICE_URL", "http://127.0.0.1:8003")
+    LOCAL_EMBEDDING_MODEL: str = env.get("LOCAL_EMBEDDING_MODEL", "text-embedding-nomic-embed-text-v1.5")
+    LOCAL_CHAT_MODEL: str = env.get("LOCAL_CHAT_MODEL", "llava-1.6-mistral-7b")
 
     # Container Security (Single User)
     CONTAINER_API_KEY: str = env.get("CONTAINER_API_KEY", "")
