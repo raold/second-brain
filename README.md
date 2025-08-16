@@ -304,8 +304,10 @@ curl -X GET "http://localhost:8001/api/v2/export" \
 # Database (PostgreSQL with pgvector) - REQUIRED
 DATABASE_URL=postgresql://secondbrain:changeme@localhost:5432/secondbrain
 
-# OpenAI (for embeddings) - REQUIRED for vector search
-OPENAI_API_KEY=your-api-key
+# Local Model Services - NO API KEYS REQUIRED!
+# LM Studio runs on port 1234 (text generation + embeddings)
+# CLIP runs on port 8002 (image embeddings)
+# LLaVA runs on port 8003 (vision understanding)
 
 # Application
 ENVIRONMENT=development
@@ -413,7 +415,7 @@ docker build -t second-brain:v4.2.3 .
 docker run -d \
   -p 8000:8000 \
   -e DATABASE_URL=postgresql://... \
-  -e OPENAI_API_KEY=your-key \
+  -e LM_STUDIO_URL=http://127.0.0.1:1234/v1 \
   second-brain:v4.2.3
 ```
 
@@ -447,7 +449,7 @@ Your Code → IDE → MCP Server → Second Brain API → PostgreSQL
 ```
 
 - **Automatic Sync**: Memories sync between Second Brain and Cipher every 5 minutes
-- **MCP Protocol**: Real-time integration with VS Code, Cursor, Claude Desktop, and other IDEs
+- **MCP Protocol**: Real-time integration with VS Code, Cursor, and other IDEs
 - **Dual Memory System**: Supports both code concepts (System 1) and reasoning steps (System 2)
 - **Conflict Resolution**: Configurable strategies (newest wins, local wins, remote wins)
 
@@ -490,7 +492,7 @@ Your Code → IDE → MCP Server → Second Brain API → PostgreSQL
 
 5. **Configure your IDE:**
    - **VS Code/Cursor**: Already configured via `.vscode/settings.json`
-   - **Claude Desktop**: Point to `http://localhost:8001`
+   - **MCP-compatible IDEs**: Point to `http://localhost:8001`
    - **Other IDEs**: Use the API at `http://localhost:8001`
 
 ### **Cross-Platform Compatibility**
@@ -508,7 +510,7 @@ Since the integration uses platform-agnostic HTTP REST APIs and standard JSON pr
 Second Brain ensures your development context is never lost through multiple layers:
 
 1. **Immediate Persistence** - Every memory created via API is instantly saved to PostgreSQL
-2. **Vector Embeddings** - OpenAI embeddings enable semantic search across all memories
+2. **Vector Embeddings** - Local embeddings (Nomic/CLIP) enable semantic search across all memories
 3. **Session Tracking** - User sessions maintain context between interactions
 4. **Database Durability** - PostgreSQL with ACID compliance ensures data integrity
 5. **API Accessibility** - RESTful API allows any tool to read/write memories
@@ -539,8 +541,8 @@ We welcome contributions! Please open an issue or submit a pull request on GitHu
 ### Third-Party Integrations
 - **[Cipher](https://github.com/campfirein/cipher)** by [Byterover](https://github.com/byterover) - AI memory layer for coding agents
 - **[PostgreSQL](https://www.postgresql.org/)** with **[pgvector](https://github.com/pgvector/pgvector)** - Vector database and search
-- **[OpenAI](https://openai.com/)** - Embeddings and AI capabilities
-- **[Anthropic](https://anthropic.com/)** - Embeddings and AI capabilities
+- **[LM Studio](https://lmstudio.ai/)** - Local LLM inference
+- **[Hugging Face](https://huggingface.co/)** - Model repository
 - **[FastAPI](https://fastapi.tiangolo.com/)** - Modern Python web framework
 
 ### Architecture Inspiration
@@ -549,7 +551,7 @@ We welcome contributions! Please open an issue or submit a pull request on GitHu
 - Event Sourcing patterns by Martin Fowler
 - The amazing Python community
 
-**Note**: This project integrates with but is not affiliated with Cipher, Qdrant, or OpenAI. Each integration maintains its own license.
+**Note**: This project runs entirely on local models. No API keys or cloud services required!
 
 ## 📞 **Support**
 

@@ -99,13 +99,17 @@ async def oauth_callback(code: str):
 
 
 @router.get("/files")
-async def list_files(folder_id: Optional[str] = None):
+async def list_files(folder_id: Optional[str] = Query(None)):
     """List files from Google Drive"""
     if not google_drive.is_connected():
         raise HTTPException(status_code=401, detail="Not connected to Google Drive")
 
-    files = await google_drive.list_files(folder_id)
-    return {"files": files, "count": len(files)}
+    try:
+        files = await google_drive.list_files(folder_id)
+        return {"files": files, "count": len(files)}
+    except Exception as e:
+        logger.error(f"Error listing files: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/sync/file")

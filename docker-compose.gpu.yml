@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # Redis for async job queue
+  redis:
+    image: redis:alpine
+    container_name: secondbrain-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # CLIP Service - Fast embeddings
+  clip-service:
+    build:
+      context: .
+      dockerfile: services/gpu/Dockerfile.clip
+    container_name: secondbrain-clip
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=0
+      - CUDA_VISIBLE_DEVICES=0
+      - MODEL_NAME=openai/clip-vit-large-patch14-336
+      - MODEL_CACHE=/models
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./models:/models
+      - ./services/gpu:/app
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/clip/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # LLaVA Service - Deep understanding
+  llava-service:
+    build:
+      context: .
+      dockerfile: services/gpu/Dockerfile.llava
+    container_name: secondbrain-llava
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=0
+      - CUDA_VISIBLE_DEVICES=0
+      - MODEL_NAME=liuhaotian/llava-v1.6-mistral-7b
+      - MODEL_CACHE=/models
+      - LOAD_IN_4BIT=true
+      - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./models:/models
+      - ./services/gpu:/app
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/llava/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+
+networks:
+  default:
+    name: secondbrain-gpu
+    driver: bridge

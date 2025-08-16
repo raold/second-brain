@@ -89,25 +89,40 @@ class GoogleDriveSimple:
         async with aiohttp.ClientSession() as session:
             headers = {"Authorization": f'Bearer {self.tokens["access_token"]}'}
 
-            # Build query
-            query = "mimeType != 'application/vnd.google-apps.folder'"
+            # Build query - start with no filter to see everything
+            query = ""
             if folder_id:
-                query = f"'{folder_id}' in parents and {query}"
+                query = f"'{folder_id}' in parents"
 
             params = {
-                "q": query,
-                "fields": "files(id,name,mimeType,size,modifiedTime,webViewLink)",
-                "pageSize": 100,
+                "fields": "files(id,name,mimeType,size,modifiedTime,webViewLink,parents,trashed)",
+                "pageSize": "100",
+                "includeItemsFromAllDrives": "true",
+                "supportsAllDrives": "true",
             }
+            
+            # Only add query if it's not empty
+            if query:
+                params["q"] = query
 
             async with session.get(
                 "https://www.googleapis.com/drive/v3/files", headers=headers, params=params
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    return data.get("files", [])
+                    files = data.get("files", [])
+                    
+                    # Add type field for frontend compatibility
+                    for file in files:
+                        if file.get('mimeType') == 'application/vnd.google-apps.folder':
+                            file['type'] = 'folder'
+                        else:
+                            file['type'] = 'file'
+                    
+                    return files
                 else:
-                    logger.error(f"Failed to list files: {resp.status}")
+                    error_text = await resp.text()
+                    logger.error(f"Failed to list files: {resp.status} - {error_text}")
                     return []
 
     async def get_file_content(self, file_id: str) -> Optional[str]:
