@@ -1,10 +1,9 @@
 """GPU Services Status Monitor"""
 
 import asyncio
-import aiohttp
-import time
 import subprocess
-import json
+
+import aiohttp
 
 
 async def check_clip_status():
@@ -35,7 +34,7 @@ async def check_gpu_stats():
     """Check GPU statistics."""
     try:
         result = subprocess.run(
-            ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw,name", 
+            ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw,name",
              "--format=csv,noheader,nounits"],
             capture_output=True, text=True, timeout=5
         )
@@ -58,7 +57,7 @@ def progress_bar(current, total, width=40):
     """Create a progress bar."""
     if total == 0:
         return "[" + "=" * width + "]"
-    
+
     filled = int((current / total) * width)
     bar = "=" * filled + "-" * (width - filled)
     return f"[{bar}]"
@@ -69,7 +68,7 @@ async def main():
     print("=" * 80)
     print("SECOND-BRAIN GPU SERVICES STATUS MONITOR")
     print("=" * 80)
-    
+
     # Check GPU
     gpu = await check_gpu_stats()
     if gpu:
@@ -77,7 +76,7 @@ async def main():
         util_bar = progress_bar(gpu['gpu_util'], 100, 30)
         mem_bar = progress_bar(gpu['mem_used'], gpu['mem_total'], 30)
         temp_bar = progress_bar(gpu['temp'], 100, 20)  # Assume 100C max for visualization
-        
+
         print(f"\\nGPU: {gpu['name']}")
         print(f"  Utilization: {util_bar} {gpu['gpu_util']}%")
         print(f"  VRAM Usage:  {mem_bar} {gpu['mem_used']} MB / {gpu['mem_total']} MB ({mem_percent:.1f}%)")
@@ -85,7 +84,7 @@ async def main():
         print(f"  Power Draw:  {gpu['power']:.1f}W / 450W")
     else:
         print("\\nGPU: ERROR - Cannot read GPU status")
-    
+
     # Check CLIP
     print("\\n" + "="*80)
     clip_status = await check_clip_status()
@@ -94,21 +93,21 @@ async def main():
         requests = clip_status.get('requests_processed', 0)
         vram = clip_status.get('vram_used_gb', 0)
         device = clip_status.get('device', 'unknown')
-        
-        print(f"CLIP SERVICE STATUS: ONLINE")
+
+        print("CLIP SERVICE STATUS: ONLINE")
         print(f"  Model: {clip_status.get('model_name', 'Unknown')} ({model_loaded})")
         print(f"  Device: {device.upper()}")
         print(f"  VRAM Usage: {vram:.2f} GB")
         print(f"  Requests Processed: {requests:,}")
         print(f"  Status: {'READY FOR PROCESSING' if model_loaded == 'LOADED' else 'LOADING...'}")
-        
+
         # Performance estimate
         if requests > 0:
-            print(f"  Performance: ~44 images/sec, ~650 texts/sec (from recent tests)")
+            print("  Performance: ~44 images/sec, ~650 texts/sec (from recent tests)")
     else:
         print("CLIP SERVICE STATUS: OFFLINE or ERROR")
         print("  Check: cd services/gpu && python clip/clip_api.py")
-    
+
     # Check LLaVA
     print("\\n" + "="*80)
     llava_status = await check_llava_status()
@@ -116,32 +115,32 @@ async def main():
         model_loaded = llava_status.get('model_loaded', False)
         model_name = llava_status.get('model_name', 'Unknown')
         async_enabled = llava_status.get('async_enabled', False)
-        
-        print(f"LLAVA SERVICE STATUS: ONLINE")
+
+        print("LLAVA SERVICE STATUS: ONLINE")
         print(f"  Model: {model_name}")
         print(f"  Model Loaded: {'YES' if model_loaded else 'LOADING...'}")
         print(f"  Async Queue: {'ENABLED' if async_enabled else 'DISABLED'}")
-        
+
         if model_loaded:
-            print(f"  Status: READY FOR DEEP ANALYSIS")
-            print(f"  Capabilities: Image analysis, OCR, Q&A, Embeddings")
-            print(f"  Performance: ~2-10 seconds per image analysis")
+            print("  Status: READY FOR DEEP ANALYSIS")
+            print("  Capabilities: Image analysis, OCR, Q&A, Embeddings")
+            print("  Performance: ~2-10 seconds per image analysis")
         else:
             # Try to estimate loading progress
-            print(f"  Status: LOADING 7B PARAMETER MODEL...")
-            print(f"  Progress: [" + "=" * 15 + ">" + "-" * 15 + "] Estimated")
-            print(f"  Note: Large model loading can take 5-10 minutes")
+            print("  Status: LOADING 7B PARAMETER MODEL...")
+            print("  Progress: [" + "=" * 15 + ">" + "-" * 15 + "] Estimated")
+            print("  Note: Large model loading can take 5-10 minutes")
     else:
         print("LLAVA SERVICE STATUS: OFFLINE or ERROR")
         print("  Check: Service may still be starting up")
-    
+
     # Overall system status
     print("\\n" + "="*80)
     print("OVERALL MULTIMODAL SYSTEM STATUS:")
-    
+
     clip_ready = clip_status and clip_status.get('model_loaded', False)
     llava_ready = llava_status and llava_status.get('model_loaded', False)
-    
+
     if clip_ready and llava_ready:
         print("  STATUS: FULLY OPERATIONAL")
         print("  CAPABILITIES: Fast embeddings + Deep analysis")
@@ -153,7 +152,7 @@ async def main():
     else:
         print("  STATUS: STARTING UP")
         print("  ACTION NEEDED: Wait for services to fully load")
-    
+
     # Next steps
     print("\\n" + "="*80)
     print("NEXT STEPS:")
@@ -170,7 +169,7 @@ async def main():
         print("  1. ⏳ Services starting up")
         print("  2. → Wait for CLIP and LLaVA to load")
         print("  3. → Monitor this status page")
-    
+
     print("\\n" + "="*80)
     print("REFRESH: Run this script again to update status")
     print("SERVICES:")

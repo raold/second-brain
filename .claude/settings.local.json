@@ -88,7 +88,9 @@
       "Bash(taskkill:*)",
       "Bash(timeout 30 python llava/llava_api.py)",
       "Bash(cmd.exe:*)",
-      "WebFetch(domain:huggingface.co)"
+      "WebFetch(domain:huggingface.co)",
+      "Bash(git mv:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }

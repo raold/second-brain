@@ -2,11 +2,10 @@
 """
 Debug Google Drive file listing
 """
-import os
 import asyncio
-from dotenv import load_dotenv
+
 import aiohttp
-import json
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -14,11 +13,11 @@ load_dotenv()
 async def test_files():
     """Test Google Drive file listing"""
     base_url = "http://127.0.0.1:8001"
-    
+
     print("=" * 60)
     print("GOOGLE DRIVE FILE LISTING TEST")
     print("=" * 60)
-    
+
     async with aiohttp.ClientSession() as session:
         # 1. Check connection status
         print("\n1. Connection Status:")
@@ -26,11 +25,11 @@ async def test_files():
             status = await resp.json()
             print(f"   Connected: {status.get('connected')}")
             print(f"   User: {status.get('user_email')}")
-        
+
         if not status.get('connected'):
             print("\n   ERROR: Not connected to Google Drive!")
             return
-        
+
         # 2. List files
         print("\n2. Listing files from Google Drive...")
         async with session.get(f"{base_url}/api/v1/gdrive/files") as resp:
@@ -38,9 +37,9 @@ async def test_files():
                 data = await resp.json()
                 files = data.get('files', [])
                 count = data.get('count', 0)
-                
+
                 print(f"   Found {count} files")
-                
+
                 if files:
                     print("\n   First 10 files:")
                     for i, file in enumerate(files[:10], 1):
@@ -50,7 +49,7 @@ async def test_files():
             else:
                 error = await resp.text()
                 print(f"   Error: {error}")
-        
+
         # 3. Try search endpoint
         print("\n3. Trying search endpoint...")
         async with session.get(f"{base_url}/api/v1/gdrive/search?query=*") as resp:
@@ -59,7 +58,7 @@ async def test_files():
                 print(f"   Search returned {len(results)} results")
             else:
                 print(f"   Search endpoint returned: {resp.status}")
-        
+
         # 4. Check raw Google API
         print("\n4. Testing direct Google Drive API call...")
         # Get access token from service
@@ -67,7 +66,7 @@ async def test_files():
             if resp.status == 200:
                 token_info = await resp.json()
                 access_token = token_info.get('access_token')
-                
+
                 if access_token:
                     # Direct Google API call
                     headers = {"Authorization": f"Bearer {access_token}"}

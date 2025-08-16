@@ -4,7 +4,7 @@ Development server runner with SQLite fallback
 """
 
 import os
-import sys
+
 import uvicorn
 
 # Force SQLite for development

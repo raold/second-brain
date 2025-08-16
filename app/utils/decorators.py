@@ -4,7 +4,7 @@ import inspect
 import time
 from collections import defaultdict
 from collections.abc import Callable
-from typing import Union, TypeVar, ParamSpec
+from typing import ParamSpec, TypeVar, Union
 from uuid import uuid4
 
 from app.utils.logging_config import get_logger

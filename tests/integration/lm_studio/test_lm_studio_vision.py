@@ -4,20 +4,21 @@ Debug LM Studio vision/multimodal capabilities
 Test different approaches to send images to JoyCaption
 """
 import asyncio
-import aiohttp
-import json
 import base64
-from PIL import Image, ImageDraw
 import io
+
+import aiohttp
+from PIL import Image, ImageDraw
+
 
 async def test_vision_approaches():
     """Test different ways to send images to LM Studio"""
     base_url = "http://127.0.0.1:1234/v1"
-    
+
     print("=" * 60)
     print("LM STUDIO VISION CAPABILITY TEST")
     print("=" * 60)
-    
+
     # Create a test image with clear visual elements
     img = Image.new('RGB', (512, 512), color='white')
     draw = ImageDraw.Draw(img)
@@ -25,12 +26,12 @@ async def test_vision_approaches():
     draw.ellipse([250, 50, 400, 200], fill='blue', outline='black', width=3)
     draw.text((100, 300), "TEST IMAGE", fill='black')
     draw.text((100, 350), "Red Rectangle + Blue Circle", fill='green')
-    
+
     # Convert to base64
     buffer = io.BytesIO()
     img.save(buffer, format='PNG')
     img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-    
+
     async with aiohttp.ClientSession() as session:
         # Check what the model thinks it can do
         print("\n1. Checking model capabilities...")
@@ -39,7 +40,7 @@ async def test_vision_approaches():
             print("Available models:")
             for model in data["data"]:
                 print(f"  - {model['id']}")
-        
+
         # Test 1: OpenAI Vision API format (most standard)
         print("\n2. Testing OpenAI Vision API format...")
         payload = {
@@ -64,7 +65,7 @@ async def test_vision_approaches():
             "max_tokens": 200,
             "temperature": 0.7
         }
-        
+
         try:
             async with session.post(
                 f"{base_url}/chat/completions",
@@ -79,7 +80,7 @@ async def test_vision_approaches():
                     print(f"  Response: {content[:300]}...")
         except Exception as e:
             print(f"  Failed: {e}")
-        
+
         # Test 2: Try with image first, then text (some models prefer this)
         print("\n3. Testing with image-first format...")
         payload = {
@@ -103,7 +104,7 @@ async def test_vision_approaches():
             ],
             "max_tokens": 200
         }
-        
+
         try:
             async with session.post(
                 f"{base_url}/chat/completions",
@@ -118,7 +119,7 @@ async def test_vision_approaches():
                     print(f"  Response: {content[:300]}...")
         except Exception as e:
             print(f"  Failed: {e}")
-        
+
         # Test 3: Simple string format (some implementations)
         print("\n4. Testing simple concatenated format...")
         payload = {
@@ -131,7 +132,7 @@ async def test_vision_approaches():
             ],
             "max_tokens": 200
         }
-        
+
         try:
             async with session.post(
                 f"{base_url}/chat/completions",
@@ -146,7 +147,7 @@ async def test_vision_approaches():
                     print(f"  Response: {content[:300]}...")
         except Exception as e:
             print(f"  Failed: {e}")
-        
+
         # Test 4: Check if there's a specific vision endpoint
         print("\n5. Checking for vision-specific endpoints...")
         endpoints = [
@@ -155,7 +156,7 @@ async def test_vision_approaches():
             "/v1/images/generations",
             "/v1/images/edits"
         ]
-        
+
         for endpoint in endpoints:
             try:
                 async with session.get(f"http://127.0.0.1:1234{endpoint}") as resp:
@@ -163,7 +164,7 @@ async def test_vision_approaches():
                         print(f"  Found endpoint: {endpoint} (status: {resp.status})")
             except:
                 pass
-        
+
         # Test 5: Try the model without image to see its behavior
         print("\n6. Testing model's default behavior...")
         payload = {
@@ -180,7 +181,7 @@ async def test_vision_approaches():
             ],
             "max_tokens": 200
         }
-        
+
         try:
             async with session.post(
                 f"{base_url}/chat/completions",

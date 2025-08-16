@@ -100,7 +100,7 @@ class GoogleDriveSimple:
                 "includeItemsFromAllDrives": "true",
                 "supportsAllDrives": "true",
             }
-            
+
             # Only add query if it's not empty
             if query:
                 params["q"] = query
@@ -111,14 +111,14 @@ class GoogleDriveSimple:
                 if resp.status == 200:
                     data = await resp.json()
                     files = data.get("files", [])
-                    
+
                     # Add type field for frontend compatibility
                     for file in files:
                         if file.get('mimeType') == 'application/vnd.google-apps.folder':
                             file['type'] = 'folder'
                         else:
                             file['type'] = 'file'
-                    
+
                     return files
                 else:
                     error_text = await resp.text()

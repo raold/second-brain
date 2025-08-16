@@ -16,8 +16,8 @@ from collections.abc import AsyncIterable, Awaitable, Callable
 from typing import (
     Protocol,
     TypeVar,
-    runtime_checkable,
     get_type_hints,
+    runtime_checkable,
 )
 
 logger = get_logger(__name__)

@@ -4,13 +4,12 @@ CI Test Runner - Optimized for GitHub Actions
 Runs tests with proper timeout, retry, and resource management.
 """
 
-import os
-import sys
-import subprocess
-import time
 import json
+import os
+import subprocess
+import sys
+import time
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 class CITestRunner:
@@ -30,7 +29,7 @@ class CITestRunner:
         self.timeout_multiplier = 2.0 if self.is_ci else 1.0
         self.max_test_time = int(300 * self.timeout_multiplier)  # 5-10 minutes
 
-        print(f"CI Test Runner starting...")
+        print("CI Test Runner starting...")
         print(f"CI Environment: {self.is_ci}")
         print(f"GitHub Actions: {self.is_github_actions}")
         print(f"Timeout Multiplier: {self.timeout_multiplier}")
@@ -286,7 +285,7 @@ class CITestRunner:
         try:
             total_time = time.time() - self.start_time
 
-            print(f"\n=== Test Report ===")
+            print("\n=== Test Report ===")
             print(f"Total Time: {total_time:.2f}s")
             print(f"Overall Result: {'✓ PASSED' if success else '✗ FAILED'}")
 

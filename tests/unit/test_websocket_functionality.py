@@ -4,15 +4,14 @@ Tests WebSocket connection handling, message broadcasting, and real-time updates
 """
 
 import asyncio
-import json
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 pytestmark = pytest.mark.unit
 
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocketDisconnect
 
 from app.models.synthesis.websocket_models import (
     BroadcastMessage,

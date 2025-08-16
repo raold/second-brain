@@ -9,7 +9,8 @@ while maintaining architectural independence.
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Dict, Any, Protocol
+from typing import Any, Dict, List, Optional, Protocol
+
 from pydantic import BaseModel
 
 
@@ -53,7 +54,7 @@ class SyncFilter(BaseModel):
     exclude_types: Optional[List[str]] = None
     date_from: Optional[datetime] = None
     date_to: Optional[datetime] = None
-    
+
     def matches(self, memory: Dict[str, Any]) -> bool:
         """Check if a memory matches this filter"""
         # Tag filtering
@@ -62,14 +63,14 @@ class SyncFilter(BaseModel):
             return False
         if self.exclude_tags and memory_tags.intersection(self.exclude_tags):
             return False
-            
+
         # Type filtering
         memory_type = memory.get("type")
         if self.include_types and memory_type not in self.include_types:
             return False
         if self.exclude_types and memory_type in self.exclude_types:
             return False
-            
+
         # Date filtering
         created_at = memory.get("created_at")
         if created_at and isinstance(created_at, (str, datetime)):
@@ -79,7 +80,7 @@ class SyncFilter(BaseModel):
                 return False
             if self.date_to and created_at > self.date_to:
                 return False
-                
+
         return True
 
 
@@ -115,27 +116,27 @@ class ISyncProvider(ABC):
     Implementations of this interface enable Second Brain to sync
     with external memory systems like Cipher, Mem0, or custom solutions.
     """
-    
+
     def __init__(self, config: SyncProviderConfig):
         self.config = config
         self._connected = False
-    
+
     @property
     @abstractmethod
     def name(self) -> str:
         """Unique name of this sync provider"""
         pass
-    
+
     @property
     def is_enabled(self) -> bool:
         """Check if this provider is enabled"""
         return self.config.enabled
-    
+
     @property
     def is_connected(self) -> bool:
         """Check if provider is currently connected"""
         return self._connected
-    
+
     @abstractmethod
     async def connect(self) -> None:
         """
@@ -145,12 +146,12 @@ class ISyncProvider(ABC):
             ConnectionError: If connection cannot be established
         """
         pass
-    
+
     @abstractmethod
     async def disconnect(self) -> None:
         """Gracefully disconnect from the external system"""
         pass
-    
+
     @abstractmethod
     async def push_memory(self, memory: Dict[str, Any]) -> bool:
         """
@@ -163,7 +164,7 @@ class ISyncProvider(ABC):
             True if successful, False otherwise
         """
         pass
-    
+
     @abstractmethod
     async def push_batch(self, memories: List[Dict[str, Any]]) -> SyncResult:
         """
@@ -176,7 +177,7 @@ class ISyncProvider(ABC):
             SyncResult with operation details
         """
         pass
-    
+
     @abstractmethod
     async def pull_changes(self, since: Optional[datetime] = None) -> List[Dict[str, Any]]:
         """
@@ -189,11 +190,11 @@ class ISyncProvider(ABC):
             List of updated memories
         """
         pass
-    
+
     @abstractmethod
     async def resolve_conflict(
-        self, 
-        local: Dict[str, Any], 
+        self,
+        local: Dict[str, Any],
         remote: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
@@ -207,7 +208,7 @@ class ISyncProvider(ABC):
             Resolved memory object
         """
         pass
-    
+
     @abstractmethod
     async def health_check(self) -> HealthStatus:
         """
@@ -217,7 +218,7 @@ class ISyncProvider(ABC):
             HealthStatus object with provider health details
         """
         pass
-    
+
     async def sync(self) -> SyncResult:
         """
         Perform a full synchronization cycle.
@@ -230,7 +231,7 @@ class ISyncProvider(ABC):
                 status=SyncStatus.FAILED,
                 errors=["Provider is not enabled"]
             )
-            
+
         if not self.is_connected:
             try:
                 await self.connect()
@@ -239,38 +240,38 @@ class ISyncProvider(ABC):
                     status=SyncStatus.FAILED,
                     errors=[f"Connection failed: {str(e)}"]
                 )
-        
+
         # Implementation would handle full sync logic
         # This is a template that specific providers would override
         return SyncResult(status=SyncStatus.PENDING)
-    
+
     def should_sync(self, memory: Dict[str, Any]) -> bool:
         """Check if a memory should be synced based on filters"""
         if not self.config.filters:
             return True
-            
+
         return any(f.matches(memory) for f in self.config.filters)
 
 
 class ISyncManager(Protocol):
     """Protocol for the sync manager that coordinates multiple providers"""
-    
+
     async def register_provider(self, provider: ISyncProvider) -> None:
         """Register a new sync provider"""
         ...
-    
+
     async def unregister_provider(self, name: str) -> None:
         """Unregister a sync provider"""
         ...
-    
+
     async def sync_all(self) -> Dict[str, SyncResult]:
         """Run sync for all enabled providers"""
         ...
-    
+
     async def sync_provider(self, name: str) -> SyncResult:
         """Run sync for a specific provider"""
         ...
-    
+
     async def get_provider_status(self, name: str) -> HealthStatus:
         """Get status of a specific provider"""
         ...

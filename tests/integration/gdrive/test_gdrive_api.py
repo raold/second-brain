@@ -3,17 +3,18 @@
 Test Google Drive through the API to debug empty file list
 """
 import asyncio
+
 import aiohttp
-import json
+
 
 async def test_api():
     """Test via API endpoints"""
     base_url = "http://127.0.0.1:8001"
-    
+
     print("=" * 60)
     print("GOOGLE DRIVE API TEST")
     print("=" * 60)
-    
+
     async with aiohttp.ClientSession() as session:
         # 1. Check status
         print("\n1. Checking status...")
@@ -21,18 +22,18 @@ async def test_api():
             status = await resp.json()
             print(f"   Connected: {status.get('connected')}")
             print(f"   User: {status.get('user_email')}")
-            
+
         if not status.get('connected'):
             print("   Not connected!")
             return
-            
+
         # 2. Try different endpoints
         endpoints = [
             ("/api/v1/gdrive/files", "List files"),
             ("/api/v1/gdrive/files?page_size=5", "List files (limit 5)"),
             ("/api/v1/gdrive/folders", "List folders"),
         ]
-        
+
         for endpoint, description in endpoints:
             print(f"\n2. Testing: {description}")
             print(f"   Endpoint: {endpoint}")
@@ -45,10 +46,10 @@ async def test_api():
                     else:
                         files = data
                         count = len(files)
-                    
+
                     print(f"   Status: {resp.status}")
                     print(f"   Files found: {count}")
-                    
+
                     if files and count > 0:
                         print("   First file:")
                         file = files[0] if isinstance(files, list) else list(files.values())[0]
@@ -59,7 +60,7 @@ async def test_api():
                     print(f"   Error: {resp.status}")
                     error_text = await resp.text()
                     print(f"   Details: {error_text[:200]}")
-        
+
         # 3. Check the actual tokens
         print("\n3. Debug information:")
         async with session.get(f"{base_url}/api/v1/gdrive/debug") as resp:

@@ -1,26 +1,21 @@
 """FastAPI server for CLIP embedding service."""
 
-import io
-import time
 import logging
-from typing import List, Optional, Union
+import sys
+import time
 from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import List, Optional, Union
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Body
+import numpy as np
+from fastapi import Body, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import numpy as np
 
-import sys
-from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from clip.clip_service import CLIPService
-from shared.base_model import (
-    EmbeddingRequest, 
-    EmbeddingResponse, 
-    ModelStatus
-)
+from shared.base_model import EmbeddingResponse, ModelStatus
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -47,15 +42,15 @@ class SimilarityResponse(BaseModel):
 async def lifespan(app: FastAPI):
     """Manage model lifecycle."""
     global clip_service
-    
+
     # Startup
     logger.info("Starting CLIP service...")
     clip_service = CLIPService()
     await clip_service.load_model()
     logger.info("CLIP service ready!")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down CLIP service...")
     if clip_service:
@@ -95,7 +90,7 @@ async def get_status():
     """Get service status."""
     if not clip_service:
         raise HTTPException(status_code=503, detail="Service not initialized")
-    
+
     return clip_service.get_status()
 
 
@@ -104,7 +99,7 @@ async def get_model_info():
     """Get model information."""
     if not clip_service:
         raise HTTPException(status_code=503, detail="Service not initialized")
-    
+
     return {
         "model_name": clip_service.model_name,
         "embedding_dimensions": clip_service.embedding_dim,
@@ -118,9 +113,9 @@ async def embed_text(request: TextEmbeddingRequest):
     """Generate text embedding(s)."""
     if not clip_service:
         raise HTTPException(status_code=503, detail="Service not initialized")
-    
+
     start_time = time.time()
-    
+
     try:
         if isinstance(request.text, str):
             # Single text
@@ -130,16 +125,16 @@ async def embed_text(request: TextEmbeddingRequest):
             # Multiple texts
             embeddings_np = await clip_service.generate_batch_embeddings(request.text)
             embeddings = [emb.tolist() for emb in embeddings_np]
-        
+
         processing_time = (time.time() - start_time) * 1000
-        
+
         return EmbeddingResponse(
             embeddings=embeddings,
             model=clip_service.model_name,
             dimensions=clip_service.embedding_dim,
             processing_time_ms=processing_time
         )
-        
+
     except Exception as e:
         logger.error(f"Error embedding text: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -150,25 +145,25 @@ async def embed_image(file: UploadFile = File(...)):
     """Generate image embedding."""
     if not clip_service:
         raise HTTPException(status_code=503, detail="Service not initialized")
-    
+
     start_time = time.time()
-    
+
     try:
         # Read image bytes
         image_bytes = await file.read()
-        
+
         # Generate embedding
         embedding = await clip_service.generate_embedding(image_bytes)
-        
+
         processing_time = (time.time() - start_time) * 1000
-        
+
         return EmbeddingResponse(
             embeddings=[embedding.tolist()],
             model=clip_service.model_name,
             dimensions=clip_service.embedding_dim,
             processing_time_ms=processing_time
         )
-        
+
     except Exception as e:
         logger.error(f"Error embedding image: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -182,38 +177,38 @@ async def embed_batch(
     """Generate embeddings for multiple images and/or texts."""
     if not clip_service:
         raise HTTPException(status_code=503, detail="Service not initialized")
-    
+
     if not files and not texts:
         raise HTTPException(status_code=400, detail="No content provided")
-    
+
     start_time = time.time()
-    
+
     try:
         contents = []
-        
+
         # Add texts
         if texts:
             contents.extend(texts)
-        
+
         # Add images
         if files:
             for file in files:
                 image_bytes = await file.read()
                 contents.append(image_bytes)
-        
+
         # Generate embeddings
         embeddings_np = await clip_service.generate_batch_embeddings(contents)
         embeddings = [emb.tolist() for emb in embeddings_np]
-        
+
         processing_time = (time.time() - start_time) * 1000
-        
+
         return EmbeddingResponse(
             embeddings=embeddings,
             model=clip_service.model_name,
             dimensions=clip_service.embedding_dim,
             processing_time_ms=processing_time
         )
-        
+
     except Exception as e:
         logger.error(f"Error batch embedding: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -224,15 +219,15 @@ async def compute_similarity(request: SimilarityRequest):
     """Compute cosine similarity between two embeddings."""
     if not clip_service:
         raise HTTPException(status_code=503, detail="Service not initialized")
-    
+
     try:
         emb1 = np.array(request.embedding1)
         emb2 = np.array(request.embedding2)
-        
+
         similarity = await clip_service.compute_similarity(emb1, emb2)
-        
+
         return SimilarityResponse(similarity=similarity)
-        
+
     except Exception as e:
         logger.error(f"Error computing similarity: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -243,7 +238,7 @@ async def clear_cache():
     """Clear GPU cache."""
     if not clip_service:
         raise HTTPException(status_code=503, detail="Service not initialized")
-    
+
     clip_service.clear_cache()
     return {"status": "cache cleared"}
 

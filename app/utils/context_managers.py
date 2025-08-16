@@ -1,18 +1,19 @@
 import asyncio
-import time
-from dataclasses import dataclass, field
-from typing import Any, Union, TypeVar, AsyncGenerator, Generator
-from abc import ABC, abstractmethod
-from typing import Generic
-from fastapi import Path
-from app.utils.logging_config import get_logger
 import contextlib
-from enum import Enum
-import uuid
 import shutil
 import tempfile
-import psutil
+import time
+import uuid
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
+from typing import Any, AsyncGenerator, Generator, Generic, TypeVar, Union
+
+import psutil
+from fastapi import Path
+
+from app.utils.logging_config import get_logger
 
 """
 Sophisticated context managers for resource management in the Second Brain application.
@@ -61,13 +62,13 @@ class Observable:
     """Base class for observable resources."""
     def __init__(self):
         self._observers = []
-    
+
     def attach(self, observer):
         self._observers.append(observer)
-    
+
     def detach(self, observer):
         self._observers.remove(observer)
-    
+
     def notify(self, notification: ChangeNotification):
         for observer in self._observers:
             observer(notification)

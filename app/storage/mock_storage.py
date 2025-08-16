@@ -2,27 +2,28 @@
 import json
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Any
 from pathlib import Path
+from typing import Dict, List, Optional
+
 
 class MockStorage:
     """In-memory storage with JSON persistence for development"""
-    
+
     def __init__(self, persist_path: str = "data/mock_memories.json"):
         self.memories: Dict[str, Dict] = {}
         self.persist_path = Path(persist_path)
         self.persist_path.parent.mkdir(parents=True, exist_ok=True)
         self._load_from_disk()
-    
+
     async def initialize(self):
         """Initialize mock storage"""
         print("✅ Mock storage initialized (development mode)")
         return self
-    
+
     async def close(self):
         """Close mock storage"""
         self._save_to_disk()
-    
+
     def _load_from_disk(self):
         """Load memories from JSON file if exists"""
         if self.persist_path.exists():
@@ -33,7 +34,7 @@ class MockStorage:
                 print(f"📂 Loaded {len(self.memories)} memories from {self.persist_path}")
             except Exception as e:
                 print(f"⚠️ Could not load memories: {e}")
-    
+
     def _save_to_disk(self):
         """Save memories to JSON file"""
         try:
@@ -42,11 +43,11 @@ class MockStorage:
             print(f"💾 Saved {len(self.memories)} memories to {self.persist_path}")
         except Exception as e:
             print(f"⚠️ Could not save memories: {e}")
-    
+
     async def save_to_disk(self):
         """Public async method for periodic persistence"""
         self._save_to_disk()
-    
+
     async def create_memory(self, data: Dict) -> Dict:
         """Create a new memory"""
         memory_id = str(uuid.uuid4())
@@ -62,11 +63,11 @@ class MockStorage:
         self.memories[memory_id] = memory
         self._save_to_disk()
         return memory
-    
+
     async def get_memory(self, memory_id: str) -> Optional[Dict]:
         """Get a memory by ID"""
         return self.memories.get(memory_id)
-    
+
     async def update_memory(self, memory_id: str, data: Dict) -> Optional[Dict]:
         """Update a memory"""
         if memory_id in self.memories:
@@ -77,7 +78,7 @@ class MockStorage:
             self._save_to_disk()
             return memory
         return None
-    
+
     async def delete_memory(self, memory_id: str) -> bool:
         """Delete a memory"""
         if memory_id in self.memories:
@@ -85,27 +86,27 @@ class MockStorage:
             self._save_to_disk()
             return True
         return False
-    
+
     async def list_memories(self, limit: int = 100, offset: int = 0) -> List[Dict]:
         """List all memories"""
         memories = list(self.memories.values())
         memories.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         return memories[offset:offset + limit]
-    
+
     async def search_memories(self, query: str, limit: int = 10) -> List[Dict]:
         """Simple text search in memories"""
         results = []
         query_lower = query.lower()
-        
+
         for memory in self.memories.values():
             content_lower = memory.get("content", "").lower()
             if query_lower in content_lower:
                 results.append(memory)
-        
+
         # Sort by relevance (simple: how many times query appears)
         results.sort(key=lambda x: x.get("content", "").lower().count(query_lower), reverse=True)
         return results[:limit]
-    
+
     async def get_statistics(self) -> Dict:
         """Get storage statistics"""
         return {

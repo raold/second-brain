@@ -76,7 +76,7 @@ class Config:
     OTEL_EXPORTER_OTLP_ENDPOINT: str = env.get("OTEL_EXPORTER_OTLP_ENDPOINT", "")
     OTEL_SERVICE_NAME: str = env.get("OTEL_SERVICE_NAME", "second-brain")
     SENTRY_DSN: str = env.get("SENTRY_DSN", "")
-    
+
     # Cipher Integration Settings (Optional)
     CIPHER_ENABLED: bool = env.get_bool("CIPHER_ENABLED", False)
     CIPHER_URL: str = env.get("CIPHER_URL", "http://localhost:3000")
@@ -85,7 +85,7 @@ class Config:
     CIPHER_SYNC_INTERVAL: int = env.get_int("CIPHER_SYNC_INTERVAL", 300)  # 5 minutes
     CIPHER_ENABLE_MCP: bool = env.get_bool("CIPHER_ENABLE_MCP", True)
     CIPHER_CONFLICT_RESOLUTION: str = env.get(
-        "CIPHER_CONFLICT_RESOLUTION", 
+        "CIPHER_CONFLICT_RESOLUTION",
         "newest"  # Options: local, remote, newest
     )
 

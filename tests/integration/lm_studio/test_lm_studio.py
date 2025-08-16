@@ -3,17 +3,18 @@
 Test LM Studio models - Text generation and embeddings
 """
 import asyncio
+
 import aiohttp
-import json
+
 
 async def test_models():
     """Test available LM Studio models"""
     base_url = "http://127.0.0.1:1234/v1"
-    
+
     print("=" * 60)
     print("LM STUDIO MODEL TEST")
     print("=" * 60)
-    
+
     # 1. List models
     async with aiohttp.ClientSession() as session:
         async with session.get(f"{base_url}/models") as resp:
@@ -22,7 +23,7 @@ async def test_models():
             print("\nAvailable models:")
             for model in models:
                 print(f"  - {model['id']}")
-    
+
         # 2. Test text generation with GPT-OSS
         print("\n1. Testing GPT-OSS 120B text generation...")
         payload = {
@@ -33,7 +34,7 @@ async def test_models():
             "max_tokens": 200,
             "temperature": 0.7
         }
-        
+
         try:
             async with session.post(
                 f"{base_url}/chat/completions",
@@ -49,14 +50,14 @@ async def test_models():
                     print(f"Error: {error}")
         except Exception as e:
             print(f"Failed: {e}")
-        
+
         # 3. Test embeddings with Nomic
         print("\n2. Testing Nomic Embed Text v1.5...")
         payload = {
             "model": "text-embedding-nomic-embed-text-v1.5",
             "input": "Second Brain multimodal document processing system",
         }
-        
+
         try:
             async with session.post(
                 f"{base_url}/embeddings",
@@ -73,7 +74,7 @@ async def test_models():
                     print(f"Error: {error}")
         except Exception as e:
             print(f"Failed: {e}")
-        
+
         # 4. Test document summarization
         print("\n3. Testing document summarization...")
         document = """
@@ -84,7 +85,7 @@ async def test_models():
         capabilities. The system runs entirely locally for privacy and can process thousands of 
         documents without API costs.
         """
-        
+
         payload = {
             "model": "openai/gpt-oss-120b",
             "messages": [
@@ -94,7 +95,7 @@ async def test_models():
             "max_tokens": 100,
             "temperature": 0.5
         }
-        
+
         try:
             async with session.post(
                 f"{base_url}/chat/completions",
