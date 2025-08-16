@@ -10,7 +10,7 @@ pytest-timeout==2.2.0
 
 # === Code Quality ===
 ruff==0.12.4
-black==23.12.1
+black==24.3.0
 isort==5.13.2
 mypy==1.8.0
 pylint==3.0.3
