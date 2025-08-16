@@ -3,9 +3,10 @@ Main application entry point using factory pattern
 """
 
 import os
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from pathlib import Path
+
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.factory import create_app
 
@@ -27,11 +28,11 @@ if (static_dir / "interface.html").exists():
     @app.get("/interface.html")
     async def serve_interface():
         return FileResponse(static_dir / "interface.html")
-    
+
     @app.get("/interface_production.html")
     async def serve_interface_production():
         return FileResponse(static_dir / "interface_production.html")
-    
+
     # Also serve docs folder for GitHub Pages locally
     if (static_dir / "docs").exists():
         app.mount("/docs-static", StaticFiles(directory=str(static_dir / "docs")), name="docs")
