@@ -1,562 +1,268 @@
 <div align="center">
 <img src="logo.png" alt="Second Brain Logo" width="400">
 
-# 🧠 Second Brain
+# 🧠 Second Brain v5.0
 
-### AI-Powered Memory & Knowledge Management System
+### 100% Local AI-Powered Knowledge Management System
 
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://docker.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![CI](https://github.com/raold/second-brain/actions/workflows/ci.yml/badge.svg)](https://github.com/raold/second-brain/actions/workflows/ci.yml)
-[![Deploy](https://github.com/raold/second-brain/actions/workflows/deploy.yml/badge.svg)](https://github.com/raold/second-brain/actions/workflows/deploy.yml)
-
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
 [![pgvector](https://img.shields.io/badge/pgvector-0.8.0-blue.svg)](https://github.com/pgvector/pgvector)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
 </div>
 
-> **🚀 Unified Database Architecture**: v4.2.3 with PostgreSQL + pgvector - Production-ready with security patches, clean docs & optional Cipher integration!
+> **🚀 v5.0: NO API KEYS REQUIRED!** Run entirely on local models with CLIP, LLaVA, and LM Studio. Complete privacy, zero monthly costs, unlimited usage.
 
-## 📊 **Current Status - v4.2.3**
+## 🎯 **What is Second Brain?**
 
-- ✅ **PostgreSQL + pgvector**: Single database for vectors, text, and metadata
-- ✅ **Advanced Search**: Vector, text, and hybrid search with sub-100ms latency
-- ✅ **V2 API Enhanced**: New endpoints for knowledge graphs and consolidation
-- ✅ **Tests Passing**: 55+ tests, comprehensive PostgreSQL backend validation
-- ✅ **Production Ready**: Tested, optimized, and deployed
-- ⚡ **Performance**: 50% faster searches, 60% storage reduction
-- 🐳 **Docker Ready**: PostgreSQL with pgvector pre-configured
-- 🎯 **Code Quality**: A- rating (91.6/100), security patches applied
-- 📚 **Clean Docs**: Reduced from 50+ to 17 focused, developer-friendly guides
+Second Brain is your personal AI-powered knowledge management system that runs **100% locally** on your machine. Store, search, and synthesize all your documents, images, and ideas using state-of-the-art AI models - without sending a single byte to the cloud.
 
-## 🎯 **Design Philosophy**
+## ✨ **Key Features**
 
-Second Brain v4.2.3 is built on **simplicity-first principles** with a unified database architecture:
+### 🧠 **Fully Local AI Stack**
+- **LM Studio** (port 1234): Text generation with LLaVA 1.6 Mistral 7B
+- **CLIP Service** (port 8002): Image embeddings and similarity search
+- **LLaVA Service** (port 8003): Advanced vision understanding and OCR
+- **Nomic Embeddings**: Fast text embeddings (768 dimensions)
 
-### **🌐 Frontend**
-- **Modern Web UI**: SvelteKit + TypeScript + Tailwind CSS
-- **Real-time Updates**: WebSocket integration for live changes
-- **Knowledge Graph**: Interactive visualization of memory connections
-- **Responsive Design**: Works seamlessly on desktop and mobile
+### 🔍 **Multimodal Search**
+- Search by text, image, or both simultaneously
+- Semantic understanding of documents and images
+- Sub-100ms query performance
+- Hybrid search combining vectors and full-text
 
-### **🗄️ PostgreSQL-Only Architecture**
-- **Single Database**: PostgreSQL with pgvector handles everything
-- **No More Qdrant**: Removed external vector database dependency
-- **No More Redis**: Caching integrated into PostgreSQL
-- **Unified Backups**: Single database to backup and restore
-- **ACID Compliance**: Full transactional consistency
+### 📁 **Google Drive Integration**
+- OAuth 2.0 authentication
+- Automatic document synchronization
+- Process Google Docs, Sheets, PDFs, and images
+- Maintain folder structure and metadata
 
-### **🚀 Performance Optimizations**
-- **HNSW Indexes**: 95% faster vector similarity search
-- **Full-Text Search**: PostgreSQL tsvector with GIN indexes
-- **Hybrid Search**: Weighted combination of vector and text
-- **Connection Pooling**: Efficient resource management with asyncpg
-- **Batch Operations**: Optimized embedding generation
+### 🔗 **Knowledge Graph**
+- Automatic relationship discovery
+- Interactive visualization
+- Topic clustering and analysis
+- Memory consolidation and deduplication
 
-### **🛠️ Developer Experience**
-- **One Database URL**: Single `DATABASE_URL` configuration
-- **Performance Testing**: Built-in benchmarking tools
-- **Health Monitoring**: Comprehensive health checks and metrics
-
-## 🚀 **What's New in v4.2.0**
-
-### **🎯 Major Architecture Change**
-Second Brain v4.2.0 completely replaces the multi-database approach (PostgreSQL + Redis + Qdrant) with a **single, unified PostgreSQL database** using the pgvector extension.
-
-### **✨ New Features in v4.2.0**
-
-- **🗄️ PostgreSQL + pgvector**: Single database for vectors, text, and metadata
-- **🔍 Advanced Search**: Vector, text, and hybrid search with HNSW indexes
-- **🔗 Knowledge Graphs**: Build relationship graphs around any memory
-- **🔄 Memory Consolidation**: Automatic deduplication and merging
-- **📊 Search Analytics**: Track patterns and improve results over time
-- **⚡ 50% Faster**: Optimized queries and indexes
-- **💰 60% Cheaper**: Reduced infrastructure and storage costs
-- **🔧 Migration Tools**: Automated migration from SQLite/JSON
-
-### **✨ Core Features (from v4.0+)**
-
-- **🧠 AI Memory Integration**: Compatible with [Cipher](https://github.com/campfirein/cipher)
-- **🚀 V2 API**: Clean, RESTful API with WebSocket support
-- **📦 Bulk Operations**: Import/export, batch updates
-- **🔍 Smart Search**: Multiple search strategies
-- **🐳 Docker-First**: Containerized development
-- **🧪 Well-Tested**: 55+ tests with comprehensive coverage
-
-## 🏗️ **Project Structure**
-
-```
-second-brain/
-├── app/                            # Main application
-│   ├── core/                       # Core infrastructure
-│   │   ├── dependencies.py         # Dependency injection
-│   │   ├── logging.py              # Logging configuration
-│   │   └── monitoring.py           # Metrics and monitoring
-│   ├── models/                     # Data models
-│   │   ├── memory.py               # Memory models
-│   │   ├── user.py                 # User models
-│   │   └── api_models.py           # API request/response models
-│   ├── routes/                     # API routes
-│   │   └── v2_api.py               # V2 API implementation
-│   ├── services/                   # Business logic
-│   │   ├── memory_service.py       # Memory operations
-│   │   ├── service_factory.py      # Service instances
-│   │   └── synthesis/              # Advanced features
-│   ├── static/                     # Web UI files
-│   ├── utils/                      # Utility functions
-│   ├── app.py                      # FastAPI application
-│   ├── config.py                   # Configuration
-│   └── database.py                 # Database operations
-├── tests/                          # Test suites
-│   ├── unit/                       # Unit tests
-│   ├── integration/                # Integration tests
-│   └── validation/                 # Validation tests
-├── docs/                           # Documentation
-├── scripts/                        # Utility scripts
-├── k8s/                            # Kubernetes configuration
-├── examples/                       # Example configurations
-├── frontend/                       # SvelteKit web UI
-│   ├── src/                        # Source code
-│   │   ├── lib/                    # Components and utilities
-│   │   └── routes/                 # Page components
-│   └── package.json                # Frontend dependencies
-├── docker-compose.yml              # Docker services
-├── Dockerfile                      # Container image
-├── Makefile                        # Development commands
-├── requirements.txt                # Python dependencies
-└── README.md                       # Project documentation
-```
-
-### **Core Components**
-
-1. **V2 API** (`routes/v2_api.py`): RESTful API with WebSocket support
-2. **Memory Service** (`services/memory_service.py`): Memory CRUD operations
-3. **Database** (`database.py`): PostgreSQL with mock fallback
-4. **Models** (`models/`): Pydantic models for validation
-5. **Configuration** (`config.py`): Environment-based configuration
+### 🔐 **Complete Privacy**
+- **No API keys** - ever
+- **No cloud dependencies**
+- **No tracking or telemetry**
+- **Works fully offline**
+- **Your data stays yours**
 
 ## 🚀 **Quick Start**
 
-### **⚡ Instant Setup with PostgreSQL + pgvector**
+### Prerequisites
+- Python 3.11+
+- PostgreSQL 16+ with pgvector
+- NVIDIA GPU with CUDA (for optimal performance)
+- 16GB+ RAM recommended
+- 20GB+ free disk space
 
+### 1. Clone and Setup
 ```bash
-# Clone repository
 git clone https://github.com/raold/second-brain.git
 cd second-brain
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-# Start PostgreSQL with pgvector (Docker)
+### 2. Configure Environment
+```bash
+cp .env.example .env
+# Edit .env - no API keys needed!
+```
+
+### 3. Start PostgreSQL
+```bash
 docker-compose up -d postgres
-
-# Setup database schema
-python scripts/setup/setup_postgres_pgvector.py
-
-# Start development environment
-make dev
-
-# Start frontend (in new terminal)
-cd frontend && npm install && npm run dev
-
-# Run tests
-make test
-
-# Check performance (optional)
-python scripts/testing/test_postgres_performance.py
 ```
 
-### **📋 What Just Happened?**
+### 4. Install and Configure LM Studio
+1. Download [LM Studio](https://lmstudio.ai/)
+2. Load these models:
+   - `llava-1.6-mistral-7b` Q6_K (6.57GB)
+   - `text-embedding-nomic-embed-text-v1.5` (137MB)
+3. Start server on port 1234
 
-The setup automatically:
-- ✅ Starts PostgreSQL 16 with pgvector extension
-- ✅ Creates all required tables and indexes
-- ✅ Sets up HNSW indexes for vector search
-- ✅ Configures full-text search with GIN indexes
-- ✅ Validates database connectivity
-- ✅ Ready for production use
-
-### **🔧 Manual Setup (if needed)**
-
+### 5. Start GPU Services
 ```bash
-# Docker-first approach
-docker-compose up --build          # Full development stack
-docker-compose exec app python scripts/testing/test_runner.py --all
+# Terminal 1: CLIP Service
+python services/gpu/clip/clip_api.py
 
-# Python virtual environment fallback
-python -m venv .venv                      # Create virtual environment
-.venv/Scripts/activate                    # Windows
-source .venv/bin/activate                 # Unix/Mac
-pip install -r requirements.txt           # Install dependencies
-
-# Run application
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
-
-# Access application
-open http://localhost:8001
+# Terminal 2: LLaVA Service  
+python services/gpu/llava/llava_api.py
 ```
 
-### **🎯 Development Commands**
-
+### 6. Run Main Application
 ```bash
-# Core workflow
-make dev           # Start development environment
-make test          # Run all tests
-make shell         # Open development shell
-make dev-logs      # Show application logs
-make dev-stop      # Stop development environment
-
-# Testing options
-make test-unit           # Unit tests only
-make test-integration    # Integration tests only
-make test-validation     # Environment validation
-
-# Status and health
-make status              # Environment health check
-make db-shell           # PostgreSQL shell
+uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-### **🚀 V2 API Features (Enhanced in v4.2.0)**
+Visit http://localhost:8001/docs for the API documentation.
 
-The V2 API provides a comprehensive set of features with new v4.2.0 capabilities:
+## 📊 **Architecture**
 
-- **Memory Management**: Full CRUD operations with relationships
-- **Vector Search**: Semantic similarity with pgvector HNSW indexes
-- **Hybrid Search**: Weighted combination of vector and text search
-- **Knowledge Graphs**: Build relationship graphs around memories
-- **Memory Consolidation**: Automatic deduplication and merging
-- **Bulk Operations**: Batch updates, deletions, and tagging
-- **Import/Export**: Support for JSON, CSV, and Markdown formats
-- **Real-time Updates**: WebSocket support for live notifications
-- **Search Analytics**: Track patterns and improve results
-- **Performance**: Sub-100ms search latency with PostgreSQL
-
-### **Core Endpoints (V2 API)**
-
-```bash
-# Memories
-POST   /api/v2/memories          # Create memory
-GET    /api/v2/memories          # List memories with pagination
-GET    /api/v2/memories/{id}     # Get specific memory
-PATCH  /api/v2/memories/{id}     # Update memory (partial)
-DELETE /api/v2/memories/{id}     # Delete memory
-
-# Search (NEW in v4.2.0)
-POST   /api/v2/search            # Advanced search (keyword/semantic/hybrid)
-POST   /api/v2/search/vector     # Pure vector similarity search
-POST   /api/v2/search/hybrid     # Weighted vector + text search
-POST   /api/v2/search/related    # Find related memories
-GET    /api/v2/search/knowledge-graph/{id}  # Build knowledge graph
-GET    /api/v2/search/duplicates # Find duplicate memories
-POST   /api/v2/search/consolidate-duplicates # Auto-consolidate
-POST   /api/v2/search/reindex    # Regenerate embeddings
-
-# Bulk Operations
-POST   /api/v2/bulk              # Bulk operations (update/delete/tag)
-GET    /api/v2/export            # Export memories (JSON/CSV/Markdown)
-POST   /api/v2/import            # Import memories from file
-
-# Analytics
-POST   /api/v2/analytics         # Get analytics and insights
-
-# WebSocket
-WS     /api/v2/ws                # Real-time updates and notifications
-
-# Health & Status
-GET    /api/v2/health            # Health check with feature status
-GET    /api/v2/health/live       # Kubernetes liveness probe
-GET    /api/v2/health/ready      # Kubernetes readiness probe
-GET    /                         # Welcome message with API info
-```
-
-### **🎯 Example API Usage**
-
-```bash
-# Create a memory
-curl -X POST "http://localhost:8001/api/v2/memories" \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
-  -d '{
-    "content": "Important meeting notes",
-    "importance_score": 0.8,
-    "tags": ["work", "meeting"]
-  }'
-
-# Search memories
-curl -X POST "http://localhost:8001/api/v2/search" \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
-  -d '{
-    "query": "meeting notes",
-    "search_type": "hybrid",
-    "limit": 10
-  }'
-
-# Export memories
-curl -X GET "http://localhost:8001/api/v2/export" \
-  -H "X-API-Key: your-api-key" \
-  -o memories_backup.json
+```mermaid
+graph TB
+    subgraph "Local Services"
+        LM[LM Studio<br/>:1234]
+        CLIP[CLIP Service<br/>:8002]
+        LLAVA[LLaVA Service<br/>:8003]
+    end
+    
+    subgraph "Core"
+        API[FastAPI<br/>:8001]
+        PG[(PostgreSQL<br/>+ pgvector<br/>:5432)]
+    end
+    
+    subgraph "Data Sources"
+        GD[Google Drive]
+        LOCAL[Local Files]
+    end
+    
+    API --> LM
+    API --> CLIP
+    API --> LLAVA
+    API --> PG
+    GD --> API
+    LOCAL --> API
 ```
 
 ## 🔧 **Configuration**
 
-### **Environment Variables**
+### Essential Environment Variables
+```env
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/secondbrain
 
+# Local Model Services (no API keys!)
+LM_STUDIO_URL=http://127.0.0.1:1234/v1
+CLIP_SERVICE_URL=http://127.0.0.1:8002
+LLAVA_SERVICE_URL=http://127.0.0.1:8003
+
+# Google Drive (optional)
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+GOOGLE_REDIRECT_URI=http://127.0.0.1:8001/api/v1/gdrive/callback
+```
+
+## 📈 **Performance**
+
+Tested on RTX 4090:
+
+| Operation | Performance |
+|-----------|------------|
+| Text Embedding | ~100ms/document |
+| Image Embedding | ~300ms/image |
+| Vision Analysis | 2-5s/image |
+| Vector Search | <50ms |
+| Hybrid Search | <100ms |
+| Document Processing | 200 docs/minute |
+
+## 🔄 **API Endpoints**
+
+### Core Memory Operations
+- `POST /api/v1/memories` - Create memory
+- `GET /api/v1/memories` - List memories
+- `GET /api/v1/memories/{id}` - Get memory
+- `PUT /api/v1/memories/{id}` - Update memory
+- `DELETE /api/v1/memories/{id}` - Delete memory
+
+### Search & Analysis
+- `POST /api/v1/search` - Semantic search
+- `POST /api/v1/search/hybrid` - Hybrid search
+- `POST /api/v1/search/image` - Image similarity search
+- `GET /api/v1/knowledge-graph` - Get knowledge graph
+
+### Google Drive
+- `GET /api/v1/gdrive/auth` - Initiate OAuth
+- `GET /api/v1/gdrive/files` - List files
+- `POST /api/v1/gdrive/sync` - Sync folder
+
+### GPU Services
+- `POST /clip/embed-text` - Text embeddings
+- `POST /clip/embed-image` - Image embeddings
+- `POST /llava/analyze` - Vision analysis
+- `POST /llava/extract-text` - OCR
+
+## 🎯 **Use Cases**
+
+- **Personal Knowledge Base**: Store and search all your notes, documents, and ideas
+- **Research Assistant**: Analyze papers, extract insights, build connections
+- **Document Management**: OCR, categorization, and intelligent search
+- **Learning System**: Track learning progress, discover patterns
+- **Creative Projects**: Manage inspiration, references, and iterations
+- **Code Documentation**: Understand codebases with multimodal analysis
+
+## 🛠️ **Development**
+
+### Running Tests
 ```bash
-# Database (PostgreSQL with pgvector) - REQUIRED
-DATABASE_URL=postgresql://secondbrain:changeme@localhost:5432/secondbrain
-
-# Local Model Services - NO API KEYS REQUIRED!
-# LM Studio runs on port 1234 (text generation + embeddings)
-# CLIP runs on port 8002 (image embeddings)
-# LLaVA runs on port 8003 (vision understanding)
-
-# Application
-ENVIRONMENT=development
-DEBUG=true
-API_TOKENS=your-api-token
-
-# Performance
-EMBEDDING_BATCH_SIZE=10
-CONNECTION_POOL_SIZE=20
-
-# Cipher Integration (Optional)
-CIPHER_ENABLED=false
-CIPHER_URL=http://localhost:3000
+pytest tests/ -v
 ```
 
-### **API Documentation**
-
-Once running, access:
-- **Swagger UI**: http://localhost:8001/docs
-- **Web Interface**: http://localhost:8001
-- **OpenAPI Schema**: http://localhost:8001/openapi.json
-
-### **🤖 CI/CD System**
-
-Our tiered CI/CD pipeline ensures fast feedback and reliable deployments:
-
-```
-🔥 Smoke Tests (30-60s) → ⚡ Fast Feedback (2-5min) → 🔍 Comprehensive (10-15min) → 📊 Performance (5-20min) → 🚀 Deploy
-```
-
-**Essential Commands**:
+### Code Quality
 ```bash
-make test-smoke        # Quick validation (< 1 min)
-make test-fast         # Core functionality (< 5 min)
-make test-comprehensive # Full validation (< 15 min)
-make ci-full          # Complete pipeline simulation
+# Format code
+black app/ tests/
+
+# Lint
+ruff check app/
+
+# Type checking
+mypy app/
 ```
 
-### **📚 Complete Documentation Index**
-
-All documentation is organized in [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md):
-
-- **🔧 Development**: Setup, architecture, contributing guidelines
-- **🤖 CI/CD**: Automated testing, deployment, troubleshooting
-- **🌐 API**: Integration guides, specifications, examples
-- **🧪 Testing**: Testing strategies, performance benchmarks
-- **🚢 Deployment**: Production deployment, monitoring, operations
-
-## 🧪 **Testing**
-
+### Docker Development
 ```bash
-# Docker-first testing (recommended)
-make test                    # All tests in containers
-make test-unit              # Unit tests only
-make test-integration       # Integration tests only
-make test-validation        # Environment validation
-
-# Direct script access (cross-platform)
-python scripts/dev test --test-type all         # All tests
-python scripts/dev test --test-type unit        # Unit tests
-python scripts/dev test --test-type integration # Integration tests
-python scripts/dev test --test-type validation  # Validation tests
-
-# Fallback .venv testing (when Docker unavailable)
-.venv/Scripts/python.exe scripts/testing/test_runner.py --validation  # Windows
-.venv/bin/python scripts/testing/test_runner.py --validation          # Unix
+docker-compose up --build
 ```
 
-### **🔍 Test Categories**
+## 📚 **Documentation**
 
-- **Validation**: Environment health, dependency checks, basic imports
-- **Unit**: Fast isolated tests, no external dependencies
-- **Integration**: Database, API, service integration tests
-- **Comprehensive**: Full end-to-end testing (slower)
-
-## 📊 **Monitoring & Observability**
-
-### **Metrics (Prometheus)**
-- Request latency histograms
-- Memory operation counters
-- Cache hit/miss rates
-- Message queue metrics
-
-### **Tracing (OpenTelemetry)**
-- Distributed request tracing
-- Database query performance
-- External service calls
-- Async task execution
-
-### **Logging**
-- Structured JSON logging
-- Correlation IDs
-- Error tracking
-- Performance metrics
-
-## 🚢 **Deployment**
-
-### **Docker**
-
-```bash
-# Build image
-docker build -t second-brain:v4.2.3 .
-
-# Run container
-docker run -d \
-  -p 8000:8000 \
-  -e DATABASE_URL=postgresql://... \
-  -e LM_STUDIO_URL=http://127.0.0.1:1234/v1 \
-  second-brain:v4.2.3
-```
-
-### **Kubernetes**
-
-```yaml
-# See /k8s directory for manifests
-kubectl apply -f k8s/
-```
-
-### **Cloud Platforms**
-
-- **AWS**: ECS/Fargate, RDS PostgreSQL, ElastiCache, SQS
-- **GCP**: Cloud Run, Cloud SQL, Memorystore, Pub/Sub
-- **Azure**: Container Instances, Database for PostgreSQL, Cache for Redis
-
-## 🔗 **Cipher Integration**
-
-Second Brain includes **optional** integration with [Cipher](https://github.com/campfirein/cipher), an AI memory layer for coding agents. This enables persistent context across IDE sessions and team knowledge sharing.
-
-### **How It Works**
-
-The Cipher integration provides a context preservation flow that connects your development environment with Second Brain's persistent storage:
-
-```
-Your Code → IDE → MCP Server → Second Brain API → PostgreSQL
-                                     ↓
-                             Permanent Storage
-                                     ↓
-                   Available in future sessions
-```
-
-- **Automatic Sync**: Memories sync between Second Brain and Cipher every 5 minutes
-- **MCP Protocol**: Real-time integration with VS Code, Cursor, and other IDEs
-- **Dual Memory System**: Supports both code concepts (System 1) and reasoning steps (System 2)
-- **Conflict Resolution**: Configurable strategies (newest wins, local wins, remote wins)
-
-### **Key Files**
-
-- **`.env`** - Cipher configuration settings
-- **`app/adapters/cipher_adapter.py`** - Cipher sync adapter implementation
-- **`scripts/mcp_server.py`** - MCP protocol server for IDE integration
-- **`scripts/setup_cipher_mcp.py`** - Automated setup script
-- **`.vscode/settings.json`** - VS Code/Cursor IDE configuration
-- **`~/.config/mcp/servers.json`** - Global MCP configuration
-
-### **To Start Using**
-
-1. **Enable Cipher in `.env`:**
-   ```bash
-   CIPHER_ENABLED=true
-   CIPHER_URL=http://localhost:3000
-   CIPHER_SYNC_INTERVAL=300
-   CIPHER_ENABLE_MCP=true
-   CIPHER_CONFLICT_RESOLUTION=newest
-   ```
-
-2. **Install Cipher (optional for IDE integration):**
-   ```bash
-   npm install -g @byterover/cipher
-   ```
-
-3. **Run setup script:**
-   ```bash
-   python scripts/setup_cipher_mcp.py
-   ```
-
-4. **Start Second Brain:**
-   ```bash
-   make dev
-   # or
-   docker-compose up
-   ```
-
-5. **Configure your IDE:**
-   - **VS Code/Cursor**: Already configured via `.vscode/settings.json`
-   - **MCP-compatible IDEs**: Point to `http://localhost:8001`
-   - **Other IDEs**: Use the API at `http://localhost:8001`
-
-### **Cross-Platform Compatibility**
-
-The Cipher integration works identically across all platforms:
-
-- ✅ **Windows** - Full support with HTTP API
-- ✅ **macOS** - Identical configuration and setup
-- ✅ **Linux** - Same API endpoints and protocol
-
-Since the integration uses platform-agnostic HTTP REST APIs and standard JSON protocols, the exact same configuration works regardless of your operating system. The MCP server communicates via stdin/stdout, which is supported on all platforms.
-
-### **How Context Is Preserved**
-
-Second Brain ensures your development context is never lost through multiple layers:
-
-1. **Immediate Persistence** - Every memory created via API is instantly saved to PostgreSQL
-2. **Vector Embeddings** - Local embeddings (Nomic/CLIP) enable semantic search across all memories
-3. **Session Tracking** - User sessions maintain context between interactions
-4. **Database Durability** - PostgreSQL with ACID compliance ensures data integrity
-5. **API Accessibility** - RESTful API allows any tool to read/write memories
-6. **Automatic Sync** - Background sync with Cipher ensures IDE memories are preserved
-7. **Conflict Resolution** - Configurable strategies prevent data loss during sync
-
-Your development context follows you across:
-- Different IDE sessions
-- Multiple devices
-- Team member workspaces (with workspace configuration)
-- System restarts and crashes
-
-For detailed configuration options and troubleshooting, see the [Cipher Integration Guide](docs/documentation/CIPHER_INTEGRATION_GUIDE.md).
+- [API Documentation](http://localhost:8001/docs)
+- [Architecture Guide](docs/ARCHITECTURE.md)
+- [Setup Guide](docs/SETUP.md)
+- [Contributing](CONTRIBUTING.md)
 
 ## 🤝 **Contributing**
 
-We welcome contributions! Please open an issue or submit a pull request on GitHub.
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### **Development Process**
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+## 📄 **License**
+
+MIT License - see [LICENSE](LICENSE) file.
 
 ## 🙏 **Acknowledgments**
 
-### Third-Party Integrations
-- **[Cipher](https://github.com/campfirein/cipher)** by [Byterover](https://github.com/byterover) - AI memory layer for coding agents
-- **[PostgreSQL](https://www.postgresql.org/)** with **[pgvector](https://github.com/pgvector/pgvector)** - Vector database and search
-- **[LM Studio](https://lmstudio.ai/)** - Local LLM inference
-- **[Hugging Face](https://huggingface.co/)** - Model repository
-- **[FastAPI](https://fastapi.tiangolo.com/)** - Modern Python web framework
+- **LM Studio** - Excellent local LLM inference
+- **Hugging Face** - Model repository and tools
+- **PostgreSQL & pgvector** - Robust vector database
+- **FastAPI** - Modern Python web framework
+- The open-source AI community
 
-### Architecture Inspiration
-- Clean Architecture principles by Robert C. Martin
-- Domain-Driven Design by Eric Evans
-- Event Sourcing patterns by Martin Fowler
-- The amazing Python community
+## 🔮 **Roadmap**
 
-**Note**: This project runs entirely on local models. No API keys or cloud services required!
-
-## 📞 **Support**
-
-- **Documentation**: [/docs](./docs)
-- **Issues**: [GitHub Issues](https://github.com/raold/second-brain/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/raold/second-brain/discussions)
+- [ ] Ollama integration
+- [ ] Web UI improvements
+- [ ] Mobile apps
+- [ ] Voice input/output
+- [ ] Automated model optimization
+- [ ] Multi-user support
+- [ ] Federated learning
 
 ---
+
+<div align="center">
+
+**Built with ❤️ for privacy and self-sovereignty**
+
+No cloud. No tracking. No API keys. Just you and your second brain.
+
+[Report Bug](https://github.com/raold/second-brain/issues) · [Request Feature](https://github.com/raold/second-brain/issues)
+
+</div>
