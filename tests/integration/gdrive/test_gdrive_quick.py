@@ -2,11 +2,11 @@
 """
 Quick test of Google Drive integration
 """
-import os
 import asyncio
-from dotenv import load_dotenv
+import os
+
 import aiohttp
-import json
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -14,7 +14,7 @@ load_dotenv()
 async def test_gdrive():
     """Test Google Drive endpoints"""
     base_url = "http://localhost:8001"
-    
+
     async with aiohttp.ClientSession() as session:
         # Check status
         print("1. Checking Google Drive status...")
@@ -22,7 +22,7 @@ async def test_gdrive():
             status = await resp.json()
             print(f"   Connected: {status.get('connected', False)}")
             print(f"   Configured: {status.get('credentials_configured', False)}")
-        
+
         # If not connected, get auth URL
         if not status.get('connected'):
             print("\n2. Getting authentication URL...")
@@ -44,7 +44,7 @@ async def test_gdrive():
                         print(f"   - {file.get('name', 'Unknown')}")
                 else:
                     print(f"   Error: {resp.status}")
-        
+
         print("\n3. Google OAuth Configuration:")
         print(f"   CLIENT_ID: {'SET' if os.getenv('GOOGLE_CLIENT_ID') else 'NOT SET'}")
         print(f"   CLIENT_SECRET: {'SET' if os.getenv('GOOGLE_CLIENT_SECRET') else 'NOT SET'}")

@@ -3,14 +3,13 @@ Google Drive Integration Routes for v4.2.3
 Connects Google Drive to PostgreSQL backend for real production use
 """
 
-import json
 import os
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from app.services.memory_service_postgres import MemoryServicePostgres
@@ -74,7 +73,7 @@ async def get_connection_status(
     try:
         # Check if credentials are configured
         credentials_configured = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
-        
+
         # Check if we have stored Google credentials in database
         # For now, return mock status
         return DriveConnectionStatus(
@@ -100,13 +99,13 @@ async def initiate_oauth():
     try:
         if not GOOGLE_CLIENT_ID:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail="Google OAuth not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in environment."
             )
-        
+
         # Generate state for CSRF protection
         state = str(uuid.uuid4())
-        
+
         # Build OAuth URL
         auth_url = (
             "https://accounts.google.com/o/oauth2/v2/auth?"
@@ -118,7 +117,7 @@ async def initiate_oauth():
             "access_type=offline&"
             "prompt=consent"
         )
-        
+
         return OAuthInitiateResponse(
             auth_url=auth_url,
             state=state,
@@ -140,7 +139,7 @@ async def oauth_callback(
         # 2. Exchange code for tokens
         # 3. Store tokens securely
         # 4. Get user info
-        
+
         # For now, return success page
         html = """
         <html>
@@ -201,7 +200,7 @@ async def sync_file(
     try:
         # Create a memory from the Google Drive file
         # In production, this would actually fetch the file content from Google Drive API
-        
+
         # For now, create a placeholder memory
         memory_data = {
             "content": f"Google Drive File: {request.file_name}\nFile ID: {request.file_id}\nMIME Type: {request.mime_type}",
@@ -215,10 +214,10 @@ async def sync_file(
                 "synced_at": datetime.utcnow().isoformat()
             }
         }
-        
+
         # Create memory in PostgreSQL
         memory = await memory_service.create_memory(**memory_data)
-        
+
         return FileSyncResponse(
             task_id=str(uuid.uuid4()),
             status="completed",

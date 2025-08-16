@@ -3,8 +3,9 @@ Comprehensive Error Handling Tests - CI Ready
 Tests all error scenarios and edge cases across the application with mocked dependencies
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
 import asyncio
+from unittest.mock import MagicMock
+
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -138,7 +139,7 @@ class TestInputValidationErrors:
 
     def test_pydantic_validation_errors(self):
         """Test Pydantic validation error handling"""
-        from pydantic import BaseModel, ValidationError, Field
+        from pydantic import BaseModel, Field, ValidationError
 
         class TestModel(BaseModel):
             name: str = Field(..., min_length=1)  # Require non-empty string

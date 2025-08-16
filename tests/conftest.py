@@ -3,12 +3,11 @@ Test configuration and fixtures for the Second Brain application.
 Provides comprehensive mocking and CI-ready test infrastructure.
 """
 
+import asyncio
 import os
 import sys
-import asyncio
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import AsyncGenerator, Dict, Any
 
 import pytest
 import pytest_asyncio

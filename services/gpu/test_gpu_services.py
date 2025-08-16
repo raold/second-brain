@@ -1,17 +1,14 @@
 """Test script for GPU services."""
 
 import asyncio
+
 import aiohttp
-import base64
-from pathlib import Path
-import json
-import time
 
 
 async def test_clip_service():
     """Test CLIP service endpoints."""
     print("\n🧪 Testing CLIP Service...")
-    
+
     async with aiohttp.ClientSession() as session:
         # Test status
         try:
@@ -24,7 +21,7 @@ async def test_clip_service():
         except Exception as e:
             print(f"❌ CLIP Service not available: {e}")
             return False
-        
+
         # Test text embedding
         try:
             payload = {"text": "A beautiful sunset over the ocean"}
@@ -40,22 +37,23 @@ async def test_clip_service():
                     print(f"❌ Text embedding failed: {resp.status}")
         except Exception as e:
             print(f"❌ Text embedding error: {e}")
-        
+
         # Test with sample image (create a test image)
         try:
-            from PIL import Image
             import io
-            
+
+            from PIL import Image
+
             # Create a simple test image
             img = Image.new('RGB', (224, 224), color='red')
             img_bytes = io.BytesIO()
             img.save(img_bytes, format='PNG')
             img_bytes.seek(0)
-            
+
             data = aiohttp.FormData()
-            data.add_field('file', img_bytes, filename='test.png', 
+            data.add_field('file', img_bytes, filename='test.png',
                           content_type='image/png')
-            
+
             async with session.post(
                 "http://localhost:8002/clip/embed/image",
                 data=data
@@ -68,14 +66,14 @@ async def test_clip_service():
                     print(f"❌ Image embedding failed: {resp.status}")
         except Exception as e:
             print(f"❌ Image embedding error: {e}")
-    
+
     return True
 
 
 async def test_llava_service():
     """Test LLaVA service endpoints."""
     print("\n🧪 Testing LLaVA Service...")
-    
+
     async with aiohttp.ClientSession() as session:
         # Test status
         try:
@@ -88,7 +86,7 @@ async def test_llava_service():
         except Exception as e:
             print(f"❌ LLaVA Service not available: {e}")
             return False
-        
+
         # Test text embedding
         try:
             async with session.post(
@@ -103,29 +101,30 @@ async def test_llava_service():
                     print(f"❌ Text embedding failed: {resp.status}")
         except Exception as e:
             print(f"⚠️  Text embedding error (model may be loading): {e}")
-        
+
         # Test image analysis
         try:
-            from PIL import Image, ImageDraw
             import io
-            
+
+            from PIL import Image, ImageDraw
+
             # Create a test image with text
             img = Image.new('RGB', (512, 512), color='white')
             draw = ImageDraw.Draw(img)
             draw.text((50, 50), "TEST IMAGE", fill='black')
             draw.rectangle([100, 100, 400, 400], outline='blue', width=3)
-            
+
             img_bytes = io.BytesIO()
             img.save(img_bytes, format='PNG')
             img_bytes.seek(0)
-            
+
             data = aiohttp.FormData()
             data.add_field('file', img_bytes, filename='test.png',
                           content_type='image/png')
             data.add_field('instruction', 'Describe this test image')
-            
+
             print("⏳ Analyzing image (this may take 30-60 seconds on first run)...")
-            
+
             async with session.post(
                 "http://localhost:8003/llava/analyze/image",
                 data=data,
@@ -133,7 +132,7 @@ async def test_llava_service():
             ) as resp:
                 if resp.status == 200:
                     result = await resp.json()
-                    print(f"✅ Image analysis complete:")
+                    print("✅ Image analysis complete:")
                     print(f"   Description: {result['description'][:100]}...")
                     print(f"   Embedding dims: {result['dimensions']}")
                     print(f"   Processing time: {result['processing_time_ms']:.2f}ms")
@@ -145,7 +144,7 @@ async def test_llava_service():
             print("⚠️  Image analysis timed out (model may still be loading)")
         except Exception as e:
             print(f"⚠️  Image analysis error: {e}")
-        
+
         # Test async queue
         try:
             async with session.get("http://localhost:8003/") as resp:
@@ -157,7 +156,7 @@ async def test_llava_service():
                         print("⚠️  Async queue not available (Redis not connected)")
         except Exception as e:
             print(f"❌ Service info error: {e}")
-    
+
     return True
 
 
@@ -166,18 +165,18 @@ async def main():
     print("=" * 60)
     print("🚀 Second-Brain GPU Services Test Suite")
     print("=" * 60)
-    
+
     # Test CLIP
     clip_ok = await test_clip_service()
-    
+
     # Test LLaVA
     llava_ok = await test_llava_service()
-    
+
     print("\n" + "=" * 60)
     print("📊 Test Summary:")
     print(f"  CLIP Service: {'✅ Passed' if clip_ok else '❌ Failed'}")
     print(f"  LLaVA Service: {'✅ Passed' if llava_ok else '❌ Failed'}")
-    
+
     if clip_ok and llava_ok:
         print("\n🎉 All GPU services are working correctly!")
         print("\n💡 Next steps:")
@@ -187,7 +186,7 @@ async def main():
     else:
         print("\n⚠️  Some services need attention.")
         print("  Run: docker-compose -f docker-compose.gpu.yml logs")
-    
+
     print("=" * 60)
 
 

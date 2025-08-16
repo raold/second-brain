@@ -52,7 +52,7 @@ def create_lifespan(config_name: str):
 
             # Try PostgreSQL first, fall back to mock if it fails
             use_mock = os.getenv("USE_MOCK_DB", "false").lower() == "true"
-            
+
             if use_mock:
                 logger.info("📦 Using mock storage (USE_MOCK_DB=true)")
                 from app.storage.mock_storage import MockStorage
@@ -131,7 +131,7 @@ async def periodic_persistence(memory_service, interval: int = 30):
         try:
             await asyncio.sleep(interval)
             await memory_service.save_to_disk()
-            logger.debug(f"💾 Periodic persistence checkpoint")
+            logger.debug("💾 Periodic persistence checkpoint")
         except asyncio.CancelledError:
             # Final save before exit
             await memory_service.save_to_disk()
@@ -196,13 +196,19 @@ def create_app(config_name: str = "development") -> FastAPI:
         app.include_router(search_advanced_router, prefix="/api/v2", tags=["Advanced Search"])
         app.include_router(health_router, prefix="/api/v2", tags=["System"])
         app.include_router(websocket_router, prefix="/api/v2", tags=["Real-time"])
-        
+
         # Google Drive Integration
         try:
             from app.routes.gdrive_real import router as gdrive_router
             app.include_router(gdrive_router, prefix="/api/v1/gdrive", tags=["Google Drive"])
             logger.info("✅ Google Drive routes loaded (real implementation)")
-        except ImportError:
+
+            # Add the Google Drive pipeline for processing files
+            from app.routes.gdrive_pipeline import router as gdrive_pipeline_router
+            app.include_router(gdrive_pipeline_router, tags=["Google Drive Pipeline"])
+            logger.info("✅ Google Drive Pipeline loaded - Ready to feed the beast!")
+        except ImportError as e:
+            logger.error(f"Import error: {e}")
             # Fallback to mock routes
             from app.routes.gdrive import router as gdrive_router
             app.include_router(gdrive_router, prefix="/api/v1", tags=["Google Drive"])
@@ -222,7 +228,7 @@ def create_app(config_name: str = "development") -> FastAPI:
             "version": __version__,
             "environment": config_name,
             "ready": getattr(app.state, "ready", False),
-            "docs": f"/docs" if config_name != "production" else None,
+            "docs": "/docs" if config_name != "production" else None,
         }
 
     # Add basic health check

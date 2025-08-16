@@ -21,7 +21,7 @@ options = {
         ],
         "verdict": "USE THIS - It's working now!"
     },
-    
+
     "2. CLIP (Port 8002) - Already Working": {
         "pros": [
             "✅ Fast (300ms per image)",
@@ -35,7 +35,7 @@ options = {
         ],
         "verdict": "Keep for fast embeddings"
     },
-    
+
     "3. JoyCaption in LM Studio": {
         "pros": [
             "✅ Specialized for captioning",
@@ -47,7 +47,7 @@ options = {
         ],
         "verdict": "Wait for LM Studio update"
     },
-    
+
     "4. Ollama with LLaVA": {
         "pros": [
             "✅ Excellent API support",

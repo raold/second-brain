@@ -1,12 +1,12 @@
 """Deep debug of LLaVA initialization to fix image processing"""
 
-import torch
-from transformers import AutoTokenizer, BitsAndBytesConfig
-from llava.model import LlavaMistralForCausalLM
-from llava.mm_utils import get_model_name_from_path, tokenizer_image_token, process_images
-from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
-from llava.conversation import conv_templates
 import sys
+
+import torch
+from llava.conversation import conv_templates
+from llava.mm_utils import process_images
+from llava.model import LlavaMistralForCausalLM
+from transformers import BitsAndBytesConfig
 
 print("=" * 80)
 print("LLAVA DEEP DEBUG - FIXING IMAGE PROCESSING")
@@ -53,27 +53,27 @@ print(f"   Vision tower (initial): {vision_tower}")
 
 if vision_tower is None:
     print("   Vision tower is None, trying to initialize...")
-    
+
     # Check what the model expects
     if hasattr(model, 'get_model'):
         inner_model = model.get_model()
         print(f"   Inner model type: {type(inner_model)}")
         print(f"   Has vision_tower attr: {hasattr(inner_model, 'vision_tower')}")
         print(f"   Has initialize_vision_modules: {hasattr(inner_model, 'initialize_vision_modules')}")
-        
+
         # Check config
         if hasattr(model, 'config'):
-            print(f"\n5. Model config:")
+            print("\n5. Model config:")
             config = model.config
             print(f"   mm_vision_tower: {getattr(config, 'mm_vision_tower', 'NOT SET')}")
             print(f"   mm_hidden_size: {getattr(config, 'mm_hidden_size', 'NOT SET')}")
             print(f"   mm_vision_select_layer: {getattr(config, 'mm_vision_select_layer', 'NOT SET')}")
             print(f"   mm_vision_select_feature: {getattr(config, 'mm_vision_select_feature', 'NOT SET')}")
-            
+
             # Try manual initialization with config values
             if hasattr(inner_model, 'initialize_vision_modules'):
                 print("\n6. Attempting manual vision tower initialization...")
-                
+
                 class ModelArgs:
                     def __init__(self):
                         self.vision_tower = getattr(config, 'mm_vision_tower', 'openai/clip-vit-large-patch14-336')
@@ -85,21 +85,21 @@ if vision_tower is None:
                         self.mm_projector_type = getattr(config, 'mm_projector_type', 'linear')
                         self.mm_use_im_start_end = getattr(config, 'mm_use_im_start_end', False)
                         self.mm_use_im_patch_token = getattr(config, 'mm_use_im_patch_token', True)
-                
+
                 model_args = ModelArgs()
                 print(f"   Vision tower path: {model_args.vision_tower}")
-                
+
                 try:
                     inner_model.initialize_vision_modules(
                         model_args=model_args,
                         fsdp=None
                     )
                     print("   [OK] Vision modules initialized")
-                    
+
                     # Check again
                     vision_tower = model.get_vision_tower()
                     print(f"   Vision tower (after init): {vision_tower}")
-                    
+
                 except Exception as e:
                     print(f"   [FAIL] Initialize error: {e}")
                     import traceback
@@ -110,19 +110,19 @@ print("\n7. Vision tower capabilities:")
 if vision_tower is not None:
     print(f"   Type: {type(vision_tower)}")
     print(f"   Has image_processor: {hasattr(vision_tower, 'image_processor')}")
-    
+
     if hasattr(vision_tower, 'image_processor'):
         processor = vision_tower.image_processor
         print(f"   Processor type: {type(processor)}")
         print(f"   Processor config: {processor}")
     else:
         print("   No image_processor attribute!")
-        
+
         # Try to access it differently
         if hasattr(vision_tower, 'vision_tower'):
             inner_tower = vision_tower.vision_tower
             print(f"   Inner tower type: {type(inner_tower)}")
-            
+
         # Check for config
         if hasattr(vision_tower, 'config'):
             print(f"   Vision config: {vision_tower.config}")
@@ -133,14 +133,14 @@ else:
 print("\n8. Alternative: Direct CLIP processor loading")
 try:
     from transformers import CLIPImageProcessor
-    
+
     # Try different CLIP models
     clip_models = [
         "openai/clip-vit-large-patch14-336",
         "openai/clip-vit-large-patch14",
         model_name  # Try from the LLaVA model itself
     ]
-    
+
     for clip_model in clip_models:
         try:
             print(f"   Trying: {clip_model}")
@@ -150,14 +150,14 @@ try:
             break
         except Exception as e:
             print(f"   [FAIL] {e}")
-            
+
 except Exception as e:
     print(f"   [FAIL] Could not load CLIP processor: {e}")
 
 # Test the process_images function
 print("\n9. Testing process_images function:")
+
 from PIL import Image
-import io
 
 # Create test image
 test_img = Image.new('RGB', (336, 336), color='blue')
@@ -166,7 +166,7 @@ if 'image_processor' in locals():
     try:
         # Test process_images
         from llava.mm_utils import process_images
-        
+
         processed = process_images([test_img], image_processor, model.config)
         print(f"   [OK] Processed shape: {processed.shape}")
         print(f"   Device: {processed.device}")

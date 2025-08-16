@@ -1,10 +1,11 @@
 """Base model service for GPU inference."""
 
-import torch
 import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Union
+
 import numpy as np
+import torch
 from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO)
@@ -37,29 +38,29 @@ class ModelStatus(BaseModel):
 
 class BaseModelService(ABC):
     """Base class for model services."""
-    
+
     def __init__(self, model_name: str, device: str = "cuda"):
         self.model_name = model_name
         self.device = device
         self.model = None
         self.processor = None
         self.requests_processed = 0
-        
+
     @abstractmethod
     async def load_model(self):
         """Load the model into memory."""
         pass
-    
+
     @abstractmethod
     async def generate_embedding(self, content: Union[str, bytes]) -> np.ndarray:
         """Generate embedding for content."""
         pass
-    
+
     def get_device_info(self) -> Dict[str, Any]:
         """Get GPU device information."""
         if not torch.cuda.is_available():
             return {"device": "cpu", "cuda_available": False}
-        
+
         return {
             "device": self.device,
             "cuda_available": True,
@@ -68,11 +69,11 @@ class BaseModelService(ABC):
             "allocated_vram_gb": torch.cuda.memory_allocated(0) / 1e9,
             "cached_vram_gb": torch.cuda.memory_reserved(0) / 1e9,
         }
-    
+
     def get_status(self) -> ModelStatus:
         """Get current model status."""
         device_info = self.get_device_info()
-        
+
         return ModelStatus(
             model_name=self.model_name,
             model_loaded=self.model is not None,
@@ -81,7 +82,7 @@ class BaseModelService(ABC):
             total_vram_gb=device_info.get("total_vram_gb"),
             requests_processed=self.requests_processed
         )
-    
+
     def clear_cache(self):
         """Clear GPU cache."""
         if torch.cuda.is_available():

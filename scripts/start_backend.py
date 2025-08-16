@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Simple backend starter with mock database fallback"""
 import os
-import sys
+
 import uvicorn
 
 # Force mock database for now since PostgreSQL isn't running

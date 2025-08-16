@@ -4,17 +4,16 @@ Google OAuth Setup Helper for Second Brain v4.2.3
 This script helps you quickly set up Google OAuth credentials
 """
 
-import os
-import json
 import webbrowser
 from pathlib import Path
+
 
 def setup_google_oauth():
     print("=" * 60)
     print("🔐 Google OAuth Setup for Second Brain")
     print("=" * 60)
     print()
-    
+
     # Check if .env exists
     env_path = Path(".env")
     if not env_path.exists():
@@ -43,32 +42,32 @@ ENCRYPTION_KEY=test-encryption-key
 """
         env_path.write_text(env_content)
         print("✅ Created .env file")
-    
+
     # Read current .env
     env_content = env_path.read_text()
-    
+
     print("📋 Current Google OAuth Configuration:")
     print("-" * 40)
-    
+
     # Check current values
     has_client_id = False
     has_client_secret = False
-    
+
     for line in env_content.split('\n'):
         if line.startswith('GOOGLE_CLIENT_ID=') and len(line) > 17:
             has_client_id = True
             print(f"✅ Client ID: {line[17:37]}...")
         elif line.startswith('GOOGLE_CLIENT_SECRET=') and len(line) > 21:
             has_client_secret = True
-            print(f"✅ Client Secret: ****")
-    
+            print("✅ Client Secret: ****")
+
     if not has_client_id:
         print("❌ Client ID: Not configured")
     if not has_client_secret:
         print("❌ Client Secret: Not configured")
-    
+
     print()
-    
+
     if has_client_id and has_client_secret:
         print("✅ Google OAuth is already configured!")
         print()
@@ -77,14 +76,14 @@ ENCRYPTION_KEY=test-encryption-key
         print("2. Open http://localhost:8001/static/gdrive-ui.html")
         print("3. Click 'Connect Google Drive'")
         return
-    
+
     print("📝 To set up Google OAuth, you need to:")
     print()
     print("1. Go to Google Cloud Console")
     print("2. Create OAuth 2.0 credentials")
     print("3. Add the credentials to your .env file")
     print()
-    
+
     choice = input("Would you like to open Google Cloud Console now? (y/n): ")
     if choice.lower() == 'y':
         print()
@@ -100,14 +99,14 @@ ENCRYPTION_KEY=test-encryption-key
         print("   http://localhost:8001/api/v1/gdrive/callback")
         print("5. Copy the Client ID and Client Secret")
         print()
-    
+
     print("📝 Enter your Google OAuth credentials:")
     print("(Leave blank to skip)")
     print()
-    
+
     client_id = input("Client ID: ").strip()
     client_secret = input("Client Secret: ").strip()
-    
+
     if client_id and client_secret:
         # Update .env file
         lines = env_content.split('\n')
@@ -116,7 +115,7 @@ ENCRYPTION_KEY=test-encryption-key
                 lines[i] = f'GOOGLE_CLIENT_ID={client_id}'
             elif line.startswith('GOOGLE_CLIENT_SECRET='):
                 lines[i] = f'GOOGLE_CLIENT_SECRET={client_secret}'
-        
+
         env_path.write_text('\n'.join(lines))
         print()
         print("✅ Credentials saved to .env file!")
@@ -130,8 +129,8 @@ ENCRYPTION_KEY=test-encryption-key
         print("⚠️  No credentials entered. You can add them manually to .env file")
         print()
         print("Add these lines to your .env file:")
-        print(f"GOOGLE_CLIENT_ID=your-client-id")
-        print(f"GOOGLE_CLIENT_SECRET=your-client-secret")
+        print("GOOGLE_CLIENT_ID=your-client-id")
+        print("GOOGLE_CLIENT_SECRET=your-client-secret")
 
 if __name__ == "__main__":
     setup_google_oauth()

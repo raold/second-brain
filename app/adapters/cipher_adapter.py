@@ -8,23 +8,20 @@ Second Brain users to sync their memories with Cipher for IDE integration.
 Note: This is an OPTIONAL component. Second Brain works perfectly without Cipher.
 """
 
-import asyncio
-import json
 from datetime import datetime
-from typing import List, Dict, Any, Optional
-import httpx
-from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from app.interfaces.sync_provider import (
-    ISyncProvider, 
-    SyncProviderConfig, 
-    SyncResult, 
-    SyncStatus,
-    HealthStatus,
-    ConflictResolution
-)
+import httpx
+
 from app.core.logging import get_logger
-from app.models.memory import Memory
+from app.interfaces.sync_provider import (
+    ConflictResolution,
+    HealthStatus,
+    ISyncProvider,
+    SyncProviderConfig,
+    SyncResult,
+    SyncStatus,
+)
 
 logger = get_logger(__name__)
 
@@ -41,25 +38,25 @@ class CipherAdapter(ISyncProvider):
     
     This adapter enables bi-directional sync between Second Brain and Cipher.
     """
-    
+
     def __init__(self, config: SyncProviderConfig):
         super().__init__(config)
         self.client: Optional[httpx.AsyncClient] = None
         self.mcp_socket: Optional[Any] = None  # MCP WebSocket connection
-        
+
         # Cipher-specific settings
         self.cipher_url = config.custom_settings.get(
-            "cipher_url", 
+            "cipher_url",
             "http://localhost:3000"  # Default Cipher server
         )
         self.api_key = config.custom_settings.get("api_key")
         self.workspace_id = config.custom_settings.get("workspace_id")
         self.enable_mcp = config.custom_settings.get("enable_mcp", True)
-    
+
     @property
     def name(self) -> str:
         return "cipher"
-    
+
     async def connect(self) -> None:
         """Connect to Cipher server"""
         try:
@@ -67,104 +64,104 @@ class CipherAdapter(ISyncProvider):
             headers = {}
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
-                
+
             self.client = httpx.AsyncClient(
                 base_url=self.cipher_url,
                 headers=headers,
                 timeout=self.config.timeout
             )
-            
+
             # Test connection
             response = await self.client.get("/health")
             response.raise_for_status()
-            
+
             # Connect to MCP WebSocket if enabled
             if self.enable_mcp:
                 await self._connect_mcp()
-            
+
             self._connected = True
             logger.info(f"Connected to Cipher at {self.cipher_url}")
-            
+
         except Exception as e:
             logger.error(f"Failed to connect to Cipher: {e}")
             raise ConnectionError(f"Cannot connect to Cipher: {e}")
-    
+
     async def _connect_mcp(self) -> None:
         """Connect to Cipher's MCP WebSocket for real-time sync"""
         # MCP connection implementation would go here
         # This is a placeholder for the actual MCP protocol implementation
         logger.info("MCP connection initialized (placeholder)")
-    
+
     async def disconnect(self) -> None:
         """Disconnect from Cipher"""
         if self.client:
             await self.client.aclose()
             self.client = None
-            
+
         if self.mcp_socket:
             # Close MCP WebSocket
             pass
-            
+
         self._connected = False
         logger.info("Disconnected from Cipher")
-    
+
     async def push_memory(self, memory: Dict[str, Any]) -> bool:
         """Push a single memory to Cipher"""
         if not self.should_sync(memory):
             return True
-            
+
         try:
             # Transform to Cipher format
             cipher_memory = self._to_cipher_format(memory)
-            
+
             # Determine which system (1 or 2) based on memory type
             endpoint = "/api/memories"
             if memory.get("type") == "reasoning":
                 endpoint = "/api/reasoning"
-            
+
             response = await self.client.post(
                 endpoint,
                 json=cipher_memory
             )
             response.raise_for_status()
-            
+
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to push memory to Cipher: {e}")
             return False
-    
+
     async def push_batch(self, memories: List[Dict[str, Any]]) -> SyncResult:
         """Push multiple memories to Cipher"""
         result = SyncResult(status=SyncStatus.SUCCESS)
-        
+
         # Filter memories
         memories_to_sync = [m for m in memories if self.should_sync(m)]
-        
+
         # Split into batches
         for i in range(0, len(memories_to_sync), self.config.batch_size):
             batch = memories_to_sync[i:i + self.config.batch_size]
-            
+
             try:
                 # Transform batch
                 cipher_batch = [self._to_cipher_format(m) for m in batch]
-                
+
                 # Bulk upload
                 response = await self.client.post(
                     "/api/memories/bulk",
                     json={"memories": cipher_batch}
                 )
                 response.raise_for_status()
-                
+
                 result.pushed += len(batch)
-                
+
             except Exception as e:
                 logger.error(f"Failed to push batch to Cipher: {e}")
                 result.errors.append(str(e))
                 result.status = SyncStatus.PARTIAL
-        
+
         return result
-    
+
     async def pull_changes(self, since: Optional[datetime] = None) -> List[Dict[str, Any]]:
         """Pull changes from Cipher"""
         try:
@@ -173,30 +170,30 @@ class CipherAdapter(ISyncProvider):
                 params["since"] = since.isoformat()
             if self.workspace_id:
                 params["workspace_id"] = self.workspace_id
-            
+
             response = await self.client.get(
                 "/api/memories/changes",
                 params=params
             )
             response.raise_for_status()
-            
+
             cipher_memories = response.json().get("memories", [])
-            
+
             # Transform from Cipher format
             return [self._from_cipher_format(m) for m in cipher_memories]
-            
+
         except Exception as e:
             logger.error(f"Failed to pull changes from Cipher: {e}")
             return []
-    
+
     async def resolve_conflict(
-        self, 
-        local: Dict[str, Any], 
+        self,
+        local: Dict[str, Any],
         remote: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Resolve conflicts between local and remote memories"""
         strategy = self.config.conflict_resolution
-        
+
         if strategy == ConflictResolution.LOCAL_WINS:
             return local
         elif strategy == ConflictResolution.REMOTE_WINS:
@@ -211,9 +208,9 @@ class CipherAdapter(ISyncProvider):
             return local if local_updated >= remote_updated else remote
         else:
             # Manual resolution - for now, default to local
-            logger.warning(f"Manual conflict resolution not implemented, using local")
+            logger.warning("Manual conflict resolution not implemented, using local")
             return local
-    
+
     async def health_check(self) -> HealthStatus:
         """Check Cipher connection health"""
         if not self._connected:
@@ -221,12 +218,12 @@ class CipherAdapter(ISyncProvider):
                 healthy=False,
                 error_message="Not connected"
             )
-        
+
         try:
             start = datetime.now()
             response = await self.client.get("/health")
             latency_ms = (datetime.now() - start).total_seconds() * 1000
-            
+
             if response.status_code == 200:
                 data = response.json()
                 return HealthStatus(
@@ -240,13 +237,13 @@ class CipherAdapter(ISyncProvider):
                     healthy=False,
                     error_message=f"Health check failed: {response.status_code}"
                 )
-                
+
         except Exception as e:
             return HealthStatus(
                 healthy=False,
                 error_message=f"Health check error: {str(e)}"
             )
-    
+
     def _to_cipher_format(self, memory: Dict[str, Any]) -> Dict[str, Any]:
         """Convert Second Brain memory to Cipher format"""
         # Map our format to Cipher's expected format
@@ -262,22 +259,22 @@ class CipherAdapter(ISyncProvider):
                 "updated_at": memory.get("updated_at"),
             }
         }
-        
+
         # Add embedding if available
         if "embedding" in memory:
             cipher_memory["embedding"] = memory["embedding"]
-        
+
         # Add workspace ID if configured
         if self.workspace_id:
             cipher_memory["workspace_id"] = self.workspace_id
-        
+
         # Map specific fields based on memory type
         if memory.get("type") == "code":
             cipher_memory["language"] = memory.get("metadata", {}).get("language", "unknown")
             cipher_memory["file_path"] = memory.get("metadata", {}).get("file_path")
-        
+
         return cipher_memory
-    
+
     def _from_cipher_format(self, cipher_memory: Dict[str, Any]) -> Dict[str, Any]:
         """Convert Cipher memory to Second Brain format"""
         # Map Cipher format to our format
@@ -291,17 +288,17 @@ class CipherAdapter(ISyncProvider):
                 "synced_at": datetime.now().isoformat(),
             }
         }
-        
+
         # Preserve timestamps if available
         if "created_at" in cipher_memory:
             memory["created_at"] = cipher_memory["created_at"]
         if "updated_at" in cipher_memory:
             memory["updated_at"] = cipher_memory["updated_at"]
-        
+
         # Add embedding if available
         if "embedding" in cipher_memory:
             memory["embedding"] = cipher_memory["embedding"]
-        
+
         return memory
 
 
