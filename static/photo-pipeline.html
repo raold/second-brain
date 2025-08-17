@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Photo Processing Pipeline 📸</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 20px;
+        }
+        .status-idle { background: #e0e0e0; color: #666; }
+        .status-running { background: #4caf50; color: white; }
+        .status-paused { background: #ff9800; color: white; }
+        .status-completed { background: #2196f3; color: white; }
+        .status-error { background: #f44336; color: white; }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-start { background: #4caf50; color: white; }
+        .btn-pause { background: #ff9800; color: white; }
+        .btn-stop { background: #f44336; color: white; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .metric:last-child { border-bottom: none; }
+        .metric-label { color: #666; }
+        .metric-value { 
+            font-weight: bold; 
+            color: #333;
+        }
+        .metric-value.highlight { color: #667eea; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .current-file {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        .error-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #fff3e0;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .error-item {
+            color: #e65100;
+            padding: 5px;
+            border-bottom: 1px solid #ffe0b2;
+            font-size: 12px;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .processing { animation: pulse 2s infinite; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                📸 Google Photos Processing Pipeline
+                <span id="status" class="status-badge status-idle">IDLE</span>
+            </h1>
+            <div class="controls">
+                <button id="btnStart" class="btn-start" onclick="startProcessing()">▶️ Start</button>
+                <button id="btnPause" class="btn-pause" onclick="pauseProcessing()" disabled>⏸️ Pause</button>
+                <button id="btnStop" class="btn-stop" onclick="stopProcessing()" disabled>⏹️ Stop</button>
+            </div>
+            <div class="progress-bar">
+                <div id="progressBar" class="progress-fill" style="width: 0%">0%</div>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <h3>📊 Overall Progress</h3>
+                <div class="metric">
+                    <span class="metric-label">Total Files:</span>
+                    <span id="totalFiles" class="metric-value">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Processed:</span>
+                    <span id="processedFiles" class="metric-value highlight">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Failed:</span>
+                    <span id="failedFiles" class="metric-value" style="color: #f44336;">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Skipped:</span>
+                    <span id="skippedFiles" class="metric-value" style="color: #ff9800;">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Zip Progress:</span>
+                    <span id="zipProgress" class="metric-value">0/0</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>⚡ Performance</h3>
+                <div class="metric">
+                    <span class="metric-label">Processing Rate:</span>
+                    <span id="processingRate" class="metric-value highlight">0 img/s</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Avg Time/Image:</span>
+                    <span id="avgTime" class="metric-value">0s</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Est. Time Remaining:</span>
+                    <span id="timeRemaining" class="metric-value">--</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">HEIC Converted:</span>
+                    <span id="heicConverted" class="metric-value">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">AI Analyzed:</span>
+                    <span id="llavaAnalyzed" class="metric-value">0</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📁 Current Activity</h3>
+                <div class="metric">
+                    <span class="metric-label">Current Zip:</span>
+                </div>
+                <div class="current-file" id="currentZip">Waiting to start...</div>
+                <div class="metric">
+                    <span class="metric-label">Current File:</span>
+                </div>
+                <div class="current-file processing" id="currentFile">-</div>
+            </div>
+
+            <div class="card">
+                <h3>⚠️ Recent Errors</h3>
+                <div id="errorList" class="error-list">
+                    <div style="color: #666; text-align: center;">No errors</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let currentStatus = 'idle';
+        const wsUrl = window.location.protocol === 'https:' ? 
+            `wss://${window.location.host}/photo-pipeline/ws` : 
+            `ws://${window.location.host}/photo-pipeline/ws`;
+
+        function connectWebSocket() {
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                console.log('Connected to pipeline');
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                updateDashboard(data);
+            };
+            
+            ws.onclose = () => {
+                console.log('Disconnected from pipeline');
+                setTimeout(connectWebSocket, 2000);
+            };
+        }
+
+        function updateDashboard(data) {
+            if (data.status) {
+                currentStatus = data.status;
+                updateStatus(data.status);
+            }
+            
+            if (data.metrics) {
+                const m = data.metrics;
+                
+                // Update progress
+                document.getElementById('totalFiles').textContent = m.total_files;
+                document.getElementById('processedFiles').textContent = m.processed_files;
+                document.getElementById('failedFiles').textContent = m.failed_files;
+                document.getElementById('skippedFiles').textContent = m.skipped_files;
+                document.getElementById('zipProgress').textContent = `${m.processed_zips}/${m.total_zip_files}`;
+                
+                // Update performance
+                document.getElementById('processingRate').textContent = 
+                    `${m.processing_rate.toFixed(2)} img/s`;
+                document.getElementById('avgTime').textContent = 
+                    `${m.avg_time_per_image.toFixed(2)}s`;
+                document.getElementById('timeRemaining').textContent = 
+                    formatTime(m.estimated_time_remaining);
+                document.getElementById('heicConverted').textContent = m.heic_converted;
+                document.getElementById('llavaAnalyzed').textContent = m.llava_analyzed;
+                
+                // Update current activity
+                document.getElementById('currentZip').textContent = m.current_zip || 'None';
+                document.getElementById('currentFile').textContent = m.current_file || '-';
+                
+                // Update progress bar
+                if (m.total_files > 0) {
+                    const progress = (m.processed_files / m.total_files * 100).toFixed(1);
+                    document.getElementById('progressBar').style.width = `${progress}%`;
+                    document.getElementById('progressBar').textContent = `${progress}%`;
+                }
+                
+                // Update errors
+                if (m.errors && m.errors.length > 0) {
+                    const errorHtml = m.errors.map(e => 
+                        `<div class="error-item">${e}</div>`
+                    ).join('');
+                    document.getElementById('errorList').innerHTML = errorHtml;
+                }
+            }
+        }
+
+        function updateStatus(status) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status-badge status-${status}`;
+            statusEl.textContent = status.toUpperCase();
+            
+            // Update button states
+            const btnStart = document.getElementById('btnStart');
+            const btnPause = document.getElementById('btnPause');
+            const btnStop = document.getElementById('btnStop');
+            
+            switch(status) {
+                case 'idle':
+                    btnStart.disabled = false;
+                    btnStart.textContent = '▶️ Start';
+                    btnPause.disabled = true;
+                    btnStop.disabled = true;
+                    break;
+                case 'running':
+                    btnStart.disabled = true;
+                    btnPause.disabled = false;
+                    btnStop.disabled = false;
+                    break;
+                case 'paused':
+                    btnStart.disabled = false;
+                    btnStart.textContent = '▶️ Resume';
+                    btnPause.disabled = true;
+                    btnStop.disabled = false;
+                    break;
+                case 'completed':
+                    btnStart.disabled = false;
+                    btnStart.textContent = '▶️ Restart';
+                    btnPause.disabled = true;
+                    btnStop.disabled = true;
+                    break;
+            }
+        }
+
+        function formatTime(seconds) {
+            if (!seconds || seconds < 0) return '--';
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else if (minutes > 0) {
+                return `${minutes}m ${secs}s`;
+            } else {
+                return `${secs}s`;
+            }
+        }
+
+        async function startProcessing() {
+            await fetch('/photo-pipeline/start', { method: 'POST' });
+        }
+
+        async function pauseProcessing() {
+            await fetch('/photo-pipeline/pause', { method: 'POST' });
+        }
+
+        async function stopProcessing() {
+            await fetch('/photo-pipeline/stop', { method: 'POST' });
+        }
+
+        // Connect on load
+        connectWebSocket();
+    </script>
+</body>
+</html>

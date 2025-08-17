@@ -90,7 +90,25 @@
       "Bash(cmd.exe:*)",
       "WebFetch(domain:huggingface.co)",
       "Bash(git mv:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(.venvScriptsactivate)",
+      "Bash(python:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker-compose:*)",
+      "Bash(.venvScriptspython scriptsrun_dev.py)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebSearch",
+      "Bash(powershell:*)",
+      "Bash(.venv\\Scripts\\pip.exe install:*)",
+      "Bash(wsl docker-compose:*)",
+      "Bash(wsl service docker:*)",
+      "Bash(dir:*)",
+      "Bash(.venvScriptspython.exe clip_api.py)",
+      "Bash(.venv\\Scripts\\python.exe services\\gpu\\clip\\clip_api.py:*)",
+      "Bash(wsl python3:*)",
+      "Bash(wsl ip route:*)",
+      "Bash(wsl ls:*)",
+      "Bash(docker exec:*)"
     ],
     "deny": []
   }
