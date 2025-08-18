@@ -34,8 +34,8 @@ jobs:
     - name: Run tests
       env:
         USE_MOCK_DB: "true"
-        OPENAI_API_KEY: "test-key"
-        ANTHROPIC_API_KEY: "test-key"
+        LM_STUDIO_URL: "http://localhost:1234"
+        CLIP_SERVICE_URL: "http://localhost:8002"
       run: |
         python -m pytest tests/unit/test_basic_functionality.py tests/unit/test_basic_modules.py tests/unit/test_factory.py -v --tb=short
     

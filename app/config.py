@@ -61,7 +61,6 @@ class Config:
     # Feature Flags
     # NO MOCKS - PostgreSQL ONLY
     USE_MOCK_DATABASE: bool = False
-    USE_MOCK_OPENAI: bool = False
     FEATURE_SESSIONS_ENABLED: bool = env.get_bool("FEATURE_SESSIONS_ENABLED", True)
     FEATURE_ATTACHMENTS_ENABLED: bool = env.get_bool("FEATURE_ATTACHMENTS_ENABLED", True)
     ENABLE_TELEMETRY: bool = env.get_bool("ENABLE_TELEMETRY", False)
@@ -115,8 +114,9 @@ class Config:
 
     @classmethod
     def is_ai_enabled(cls) -> bool:
-        """Check if AI features are enabled."""
-        return bool(cls.OPENAI_API_KEY) or cls.USE_MOCK_OPENAI
+        """Check if AI features are enabled (local models)."""
+        # AI is always enabled with local models - no API keys needed!
+        return bool(cls.LM_STUDIO_URL or cls.CLIP_SERVICE_URL or cls.LLAVA_SERVICE_URL)
 
     @classmethod
     def is_database_configured(cls) -> bool:

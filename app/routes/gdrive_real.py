@@ -13,13 +13,9 @@ from app.services.google_drive_simple import google_drive
 from app.services.memory_service_postgres import MemoryServicePostgres
 from app.utils.logging_config import get_logger
 
-# Import OpenAI for embeddings
-try:
-    import openai
-
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
+# Local model configuration
+LM_STUDIO_AVAILABLE = bool(os.getenv("LM_STUDIO_URL"))
+CLIP_SERVICE_AVAILABLE = bool(os.getenv("CLIP_SERVICE_URL"))
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -131,22 +127,26 @@ async def sync_file(
         if not file_info:
             raise HTTPException(status_code=404, detail="File not found")
 
-        # Generate embeddings if OpenAI is available
+        # Generate embeddings using local models
         embeddings = None
-        if (
-            OPENAI_AVAILABLE
-            and os.getenv("OPENAI_API_KEY")
-            and os.getenv("OPENAI_API_KEY") != "sk-mock-key-for-testing-only"
-        ):
+        if LM_STUDIO_AVAILABLE:
             try:
-                openai.api_key = os.getenv("OPENAI_API_KEY")
-                response = await openai.Embedding.acreate(
-                    model="text-embedding-ada-002",
-                    input=content[:8000],  # Limit to 8000 chars for embedding
-                )
-                embeddings = response["data"][0]["embedding"]
+                # Use LM Studio for text embeddings (Nomic)
+                import aiohttp
+                async with aiohttp.ClientSession() as session:
+                    payload = {
+                        "model": "text-embedding-nomic-embed-text-v1.5",
+                        "input": content[:8000],  # Limit to 8000 chars for embedding
+                    }
+                    async with session.post(
+                        f"{os.getenv('LM_STUDIO_URL')}/embeddings",
+                        json=payload,
+                    ) as response:
+                        if response.status == 200:
+                            result = await response.json()
+                            embeddings = result["data"][0]["embedding"]
             except Exception as e:
-                logger.warning(f"Could not generate embeddings: {e}")
+                logger.warning(f"Could not generate embeddings with LM Studio: {e}")
 
         # Create memory in PostgreSQL
         memory_data = {

@@ -37,8 +37,6 @@ class EnvManager:
 
     # Sensitive keys that should be masked in logs
     SENSITIVE_KEYS = {
-        "OPENAI_API_KEY",
-        "ANTHROPIC_API_KEY",
         "JWT_SECRET_KEY",
         "DATABASE_URL",
         "POSTGRES_PASSWORD",
@@ -47,6 +45,8 @@ class EnvManager:
         "SENTRY_DSN",
         "AWS_SECRET_KEY",
         "AWS_ACCESS_KEY_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "CIPHER_API_KEY",
     }
 
     def __init__(self, env_file: Path | None = None) -> None:
@@ -123,9 +123,9 @@ class EnvManager:
             if self.get("JWT_SECRET_KEY", "").endswith("change-in-production"):
                 raise ValueError("JWT_SECRET_KEY must be changed for production")
 
-        # Check OpenAI key if not using mocks
-        if not self.get_bool("USE_MOCK_OPENAI") and not self.get("OPENAI_API_KEY"):
-            logger.warning("OPENAI_API_KEY not set, AI features will be limited")
+        # Check local model services
+        if not self.get("LM_STUDIO_URL") and not self.get("CLIP_SERVICE_URL"):
+            logger.warning("Local model services not configured, AI features may be limited")
 
         # Validate required variables
         missing = [var for var in required if not os.getenv(var)]
@@ -307,7 +307,7 @@ class EnvManager:
         return {
             "environment": self.environment.value,
             "database_configured": bool(self.get("DATABASE_URL") or self.get("POSTGRES_DB")),
-            "openai_configured": bool(self.get("OPENAI_API_KEY")),
+            "local_models_configured": bool(self.get("LM_STUDIO_URL") or self.get("CLIP_SERVICE_URL")),
             "redis_configured": bool(self.get("REDIS_URL")),
             "debug_mode": self.get_bool("DEBUG"),
             "host": self.get("HOST", "127.0.0.1"),
@@ -315,7 +315,6 @@ class EnvManager:
             "log_level": self.get("LOG_LEVEL", "INFO"),
             "features": {
                 "mock_database": self.get_bool("USE_MOCK_DATABASE"),
-                "mock_openai": self.get_bool("USE_MOCK_OPENAI"),
                 "sessions": self.get_bool("FEATURE_SESSIONS_ENABLED", True),
                 "attachments": self.get_bool("FEATURE_ATTACHMENTS_ENABLED", True),
             },
@@ -344,8 +343,8 @@ class EnvManager:
         if self.get("HOST") == "0.0.0.0":
             issues.append("HOST is set to 0.0.0.0 (security risk)")
 
-        if not self.get("OPENAI_API_KEY") and not self.get_bool("USE_MOCK_OPENAI"):
-            issues.append("No OpenAI API key configured")
+        if not self.get("LM_STUDIO_URL") and not self.get("CLIP_SERVICE_URL"):
+            issues.append("No local model services configured")
 
         if self.get_bool("USE_MOCK_DATABASE"):
             issues.append("Mock database is enabled")
