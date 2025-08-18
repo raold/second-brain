@@ -1,7 +1,7 @@
 """Domain events for the application"""
 
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -12,14 +12,14 @@ class DomainEvent(BaseModel):
     event_id: str = Field(default_factory=lambda: f"evt_{datetime.now().timestamp()}")
     event_type: str
     timestamp: datetime = Field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
 
 
 class MemoryEvent(DomainEvent):
     """Base memory event"""
 
     memory_id: str
-    user_id: Optional[str] = None
+    user_id: str | None = None
 
 
 class MemoryCreatedEvent(MemoryEvent):
@@ -32,7 +32,7 @@ class MemoryUpdatedEvent(MemoryEvent):
     """Event when memory is updated"""
 
     event_type: str = "memory.updated"
-    changes: Dict[str, Any] = {}
+    changes: dict[str, Any] = {}
 
 
 class MemoryDeletedEvent(MemoryEvent):
@@ -46,7 +46,7 @@ class MemoryConsolidatedEvent(DomainEvent):
 
     event_type: str = "memory.consolidated"
     memory_ids: list[str] = []
-    result_id: Optional[str] = None
+    result_id: str | None = None
 
 
 class ConsolidationEvent(DomainEvent):
@@ -55,7 +55,7 @@ class ConsolidationEvent(DomainEvent):
     event_type: str = "consolidation"
     consolidation_id: str
     status: str = "started"
-    details: Dict[str, Any] = {}
+    details: dict[str, Any] = {}
 
 
 class SystemHealthEvent(DomainEvent):
@@ -63,4 +63,4 @@ class SystemHealthEvent(DomainEvent):
 
     event_type: str = "system.health"
     status: str = "healthy"
-    metrics: Dict[str, Any] = {}
+    metrics: dict[str, Any] = {}

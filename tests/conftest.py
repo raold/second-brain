@@ -108,7 +108,7 @@ async def mock_openai_client():
     # Mock embeddings
     mock_embeddings = AsyncMock()
     mock_embeddings.create = AsyncMock(
-        return_value=MagicMock(data=[MagicMock(embedding=[0.1] * 1536)])
+        return_value=MagicMock(data=[MagicMock(embedding=[0.1] * 1536)]),
     )
     mock_client.embeddings = mock_embeddings
 
@@ -238,7 +238,7 @@ def performance_metrics():
 
     start_time = time.time()
 
-    yield {"start_time": start_time, "get_elapsed": lambda: time.time() - start_time}
+    return {"start_time": start_time, "get_elapsed": lambda: time.time() - start_time}
 
 
 class MockDependencies:
@@ -274,5 +274,5 @@ pytest.mark.integration = pytest.mark.integration
 pytest.mark.validation = pytest.mark.validation
 pytest.mark.slow = pytest.mark.slow
 pytest.mark.ci_skip = pytest.mark.skipif(
-    os.getenv("CI", "").lower() in ("true", "1", "yes"), reason="Skipped in CI environment"
+    os.getenv("CI", "").lower() in ("true", "1", "yes"), reason="Skipped in CI environment",
 )

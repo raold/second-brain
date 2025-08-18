@@ -22,10 +22,10 @@ v2_router.include_router(health_router)
 v2_router.include_router(websocket_router)
 
 __all__ = [
-    "v2_router",
-    "memories_router",
-    "search_router",
-    "search_advanced_router",
     "health_router",
+    "memories_router",
+    "search_advanced_router",
+    "search_router",
+    "v2_router",
     "websocket_router",
 ]

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -40,46 +40,46 @@ class Suggestion(BaseModel):
     description: str
     priority: float = 0.5
     confidence: float = 0.0
-    reason: Optional[str] = None
-    metadata: Dict[str, Any] = {}
+    reason: str | None = None
+    metadata: dict[str, Any] = {}
 
 
 class ContentSuggestion(Suggestion):
     """Suggestion for content creation or modification"""
 
     type: SuggestionType = SuggestionType.CONTENT
-    related_memories: List[str] = []
-    suggested_content: Optional[str] = None
-    suggested_tags: List[str] = []
-    knowledge_gaps: List[str] = []
+    related_memories: list[str] = []
+    suggested_content: str | None = None
+    suggested_tags: list[str] = []
+    knowledge_gaps: list[str] = []
 
 
 class OrganizationSuggestion(Suggestion):
     """Suggestion for memory organization"""
 
     type: SuggestionType = SuggestionType.ORGANIZATION
-    affected_memories: List[str] = []
-    suggested_structure: Optional[Dict[str, Any]] = None
-    current_issues: List[str] = []
+    affected_memories: list[str] = []
+    suggested_structure: dict[str, Any] | None = None
+    current_issues: list[str] = []
 
 
 class LearningPathSuggestion(Suggestion):
     """Suggestion for learning paths"""
 
     type: SuggestionType = SuggestionType.LEARNING_PATH
-    topics: List[str] = []
-    recommended_order: List[str] = []
+    topics: list[str] = []
+    recommended_order: list[str] = []
     estimated_time_hours: float = 0.0
-    prerequisites: List[str] = []
-    learning_objectives: List[str] = []
+    prerequisites: list[str] = []
+    learning_objectives: list[str] = []
 
 
 class SuggestionRequest(BaseModel):
     """Request for suggestions"""
 
-    user_id: Optional[str] = None
-    memory_ids: Optional[List[str]] = None
-    suggestion_types: List[SuggestionType] = []
+    user_id: str | None = None
+    memory_ids: list[str] | None = None
+    suggestion_types: list[SuggestionType] = []
     max_suggestions: int = 10
     min_confidence: float = 0.5
     include_reasons: bool = True
@@ -89,8 +89,8 @@ class SuggestionResponse(BaseModel):
     """Response with suggestions"""
 
     request_id: str = Field(default_factory=lambda: f"req_{datetime.now().timestamp()}")
-    suggestions: List[Suggestion] = []
+    suggestions: list[Suggestion] = []
     total_analyzed: int = 0
     processing_time_ms: float = 0.0
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
     created_at: datetime = Field(default_factory=datetime.now)

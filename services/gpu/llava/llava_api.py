@@ -8,7 +8,7 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import redis.asyncio as redis
 from fastapi import BackgroundTasks, Body, FastAPI, File, HTTPException, UploadFile
@@ -24,22 +24,22 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Global instances
-llava_service: Optional[LLaVAService] = None
-redis_client: Optional[redis.Redis] = None
+llava_service: LLaVAService | None = None
+redis_client: redis.Redis | None = None
 
 
 class AnalyzeRequest(BaseModel):
     instruction: str = "Describe this image in detail, including any text you can see."
-    webhook_url: Optional[str] = None
+    webhook_url: str | None = None
 
 
 class OCRRequest(BaseModel):
-    webhook_url: Optional[str] = None
+    webhook_url: str | None = None
 
 
 class QuestionRequest(BaseModel):
     question: str
-    webhook_url: Optional[str] = None
+    webhook_url: str | None = None
 
 
 class JobStatus(BaseModel):
@@ -47,15 +47,15 @@ class JobStatus(BaseModel):
     status: str  # pending, processing, completed, failed
     created_at: str
     updated_at: str
-    result: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
+    result: dict[str, Any] | None = None
+    error: str | None = None
 
 
 class AnalyzeResponse(BaseModel):
     description: str
     embedding: list
     dimensions: int
-    ocr_text: Optional[str] = None
+    ocr_text: str | None = None
     processing_time_ms: float
 
 
@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI):
         redis_client = await redis.from_url(
             "redis://localhost:6379",
             encoding="utf-8",
-            decode_responses=True
+            decode_responses=True,
         )
         await redis_client.ping()
         logger.info("Redis connected")
@@ -107,7 +107,7 @@ app = FastAPI(
     title="LLaVA Deep Understanding Service",
     description="Deep multimodal analysis with LLaVA",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS for development
@@ -127,7 +127,7 @@ async def root():
         "service": "LLaVA Deep Understanding Service",
         "model": llava_service.model_name if llava_service else None,
         "status": "ready" if llava_service and llava_service.model else "not loaded",
-        "async_enabled": redis_client is not None
+        "async_enabled": redis_client is not None,
     }
 
 
@@ -151,7 +151,7 @@ async def get_model_info():
         "embedding_dimensions": llava_service.embedding_dim,
         "quantization": "4-bit" if llava_service.load_in_4bit else "none",
         "device": llava_service.device,
-        "device_info": llava_service.get_device_info() if llava_service.model else "Model not loaded"
+        "device_info": llava_service.get_device_info() if llava_service.model else "Model not loaded",
     }
 
 
@@ -170,18 +170,18 @@ async def embed_text(text: str = Body(...)):
         return {
             "embedding": embedding.tolist(),
             "dimensions": len(embedding),
-            "processing_time_ms": processing_time
+            "processing_time_ms": processing_time,
         }
 
     except Exception as e:
-        logger.error(f"Error embedding text: {e}")
+        logger.exception(f"Error embedding text: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/llava/embed/image")
 async def embed_image(
     file: UploadFile = File(...),
-    instruction: str = Body(default="Describe this image in detail.")
+    instruction: str = Body(default="Describe this image in detail."),
 ):
     """Generate image embedding."""
     if not llava_service:
@@ -197,18 +197,18 @@ async def embed_image(
         return {
             "embedding": embedding.tolist(),
             "dimensions": len(embedding),
-            "processing_time_ms": processing_time
+            "processing_time_ms": processing_time,
         }
 
     except Exception as e:
-        logger.error(f"Error embedding image: {e}")
+        logger.exception(f"Error embedding image: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/llava/analyze/image", response_model=AnalyzeResponse)
 async def analyze_image(
     file: UploadFile = File(...),
-    instruction: str = Body(default="Describe this image in detail, including any text you can see.")
+    instruction: str = Body(default="Describe this image in detail, including any text you can see."),
 ):
     """Analyze image synchronously."""
     if not llava_service:
@@ -232,11 +232,11 @@ async def analyze_image(
             embedding=result["embedding"],
             dimensions=result["dimensions"],
             ocr_text=ocr_text if ocr_text != "No text found" else None,
-            processing_time_ms=processing_time
+            processing_time_ms=processing_time,
         )
 
     except Exception as e:
-        logger.error(f"Error analyzing image: {e}")
+        logger.exception(f"Error analyzing image: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -255,18 +255,18 @@ async def extract_text_from_image(file: UploadFile = File(...)):
 
         return {
             "text": text,
-            "processing_time_ms": processing_time
+            "processing_time_ms": processing_time,
         }
 
     except Exception as e:
-        logger.error(f"Error extracting text: {e}")
+        logger.exception(f"Error extracting text: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/llava/question/image")
 async def answer_question_about_image(
     question: str = Body(...),
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
 ):
     """Answer a question about an image."""
     if not llava_service:
@@ -282,11 +282,11 @@ async def answer_question_about_image(
         return {
             "question": question,
             "answer": answer,
-            "processing_time_ms": processing_time
+            "processing_time_ms": processing_time,
         }
 
     except Exception as e:
-        logger.error(f"Error answering question: {e}")
+        logger.exception(f"Error answering question: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -296,13 +296,13 @@ async def queue_analyze_image(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     instruction: str = Body(default="Describe this image in detail."),
-    webhook_url: Optional[str] = Body(default=None)
+    webhook_url: str | None = Body(default=None),
 ):
     """Queue image for async analysis."""
     if not redis_client:
         raise HTTPException(
             status_code=503,
-            detail="Async processing not available. Use synchronous endpoint."
+            detail="Async processing not available. Use synchronous endpoint.",
         )
 
     try:
@@ -319,7 +319,7 @@ async def queue_analyze_image(
             "created_at": datetime.utcnow().isoformat(),
             "updated_at": datetime.utcnow().isoformat(),
             "instruction": instruction,
-            "webhook_url": webhook_url
+            "webhook_url": webhook_url,
         }
 
         # Store job in Redis
@@ -335,15 +335,15 @@ async def queue_analyze_image(
         return {
             "job_id": job_id,
             "status": "queued",
-            "status_url": f"/llava/queue/status/{job_id}"
+            "status_url": f"/llava/queue/status/{job_id}",
         }
 
     except Exception as e:
-        logger.error(f"Error queueing job: {e}")
+        logger.exception(f"Error queueing job: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-async def process_job(job_id: str):
+async def process_job(job_id: str) -> None:
     """Process a queued job."""
     try:
         # Update status
@@ -360,7 +360,7 @@ async def process_job(job_id: str):
         # Process with LLaVA
         result = await llava_service.analyze_image(
             image_bytes,
-            job_data.get("instruction", "Describe this image.")
+            job_data.get("instruction", "Describe this image."),
         )
 
         # Extract text
@@ -374,8 +374,8 @@ async def process_job(job_id: str):
                 "description": result["description"],
                 "embedding": result["embedding"],
                 "dimensions": result["dimensions"],
-                "ocr_text": ocr_text if ocr_text != "No text found" else None
-            })
+                "ocr_text": ocr_text if ocr_text != "No text found" else None,
+            }),
         }
 
         await redis_client.hset(f"job:{job_id}", mapping=result_data)
@@ -386,11 +386,11 @@ async def process_job(job_id: str):
             pass
 
     except Exception as e:
-        logger.error(f"Error processing job {job_id}: {e}")
+        logger.exception(f"Error processing job {job_id}: {e}")
         await redis_client.hset(f"job:{job_id}", mapping={
             "status": "failed",
             "error": str(e),
-            "updated_at": datetime.utcnow().isoformat()
+            "updated_at": datetime.utcnow().isoformat(),
         })
 
 
@@ -416,7 +416,7 @@ async def get_job_status(job_id: str):
         created_at=job_data.get("created_at", ""),
         updated_at=job_data.get("updated_at", ""),
         result=result,
-        error=job_data.get("error")
+        error=job_data.get("error"),
     )
 
 

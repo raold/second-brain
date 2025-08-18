@@ -18,7 +18,7 @@ class TestFileMetadata:
     def test_file_metadata_creation(self):
         """Test creating FileMetadata instance"""
         metadata = FileMetadata(
-            filename="test.pdf", file_type="application/pdf", size=1024, hash="abc123"
+            filename="test.pdf", file_type="application/pdf", size=1024, hash="abc123",
         )
 
         assert metadata.filename == "test.pdf"
@@ -51,7 +51,7 @@ class TestIngestionResult:
     def test_successful_ingestion_result(self):
         """Test successful ingestion result"""
         file_metadata = FileMetadata(
-            filename="test.txt", file_type="text/plain", size=100, hash="xyz789"
+            filename="test.txt", file_type="text/plain", size=100, hash="xyz789",
         )
 
         result = IngestionResult(
@@ -72,7 +72,7 @@ class TestIngestionResult:
     def test_failed_ingestion_result(self):
         """Test failed ingestion result"""
         file_metadata = FileMetadata(
-            filename="test.pdf", file_type="application/pdf", size=0, hash=""
+            filename="test.pdf", file_type="application/pdf", size=0, hash="",
         )
 
         result = IngestionResult(
@@ -199,7 +199,7 @@ class TestIngestionEngine:
         large_content = "x" * 100
 
         result = await engine.ingest_file(
-            file=large_content, filename="large.txt", user_id="user123"
+            file=large_content, filename="large.txt", user_id="user123",
         )
 
         assert result.success is False
@@ -298,7 +298,7 @@ class TestIngestionEngine:
         engine.memory_repository.create.side_effect = Exception("Database error")
 
         result = await engine.ingest_file(
-            file=test_file, filename="error_test.txt", user_id="user123"
+            file=test_file, filename="error_test.txt", user_id="user123",
         )
 
         assert result.success is False
@@ -331,7 +331,7 @@ class TestIngestionEngineWithParsers:
 
         # Create engine without loading parsers
         engine = IngestionEngine(
-            memory_repository=repo, extraction_pipeline=pipeline, temp_dir=tmp_path / "ingestion"
+            memory_repository=repo, extraction_pipeline=pipeline, temp_dir=tmp_path / "ingestion",
         )
 
         # Clear existing parsers and add mocked ones
@@ -341,7 +341,7 @@ class TestIngestionEngineWithParsers:
         pdf_parser = AsyncMock()
         pdf_parser.supports = Mock(side_effect=lambda mt: mt == "application/pdf")
         pdf_parser.parse = AsyncMock(
-            return_value={"content": "PDF content", "metadata": {"pages": 5}}
+            return_value={"content": "PDF content", "metadata": {"pages": 5}},
         )
 
         docx_parser = AsyncMock()
@@ -350,10 +350,10 @@ class TestIngestionEngineWithParsers:
             in [
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "application/docx",
-            ]
+            ],
         )
         docx_parser.parse = AsyncMock(
-            return_value={"content": "DOCX content", "metadata": {"paragraphs": 10}}
+            return_value={"content": "DOCX content", "metadata": {"paragraphs": 10}},
         )
 
         # Add parsers for testing
@@ -374,7 +374,7 @@ class TestIngestionEngineWithParsers:
         engine_with_parsers.memory_repository.create.return_value = mock_memory
 
         result = await engine_with_parsers.ingest_file(
-            file=pdf_file, filename="test.pdf", user_id="user123"
+            file=pdf_file, filename="test.pdf", user_id="user123",
         )
 
         assert result.success is True

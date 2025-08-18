@@ -6,7 +6,7 @@ Handles service failures and provides fallback functionality
 import logging
 from datetime import datetime, timedelta
 from enum import IntEnum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +24,15 @@ class DegradationLevel(IntEnum):
 class ServiceStatus:
     """Track individual service status"""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.name = name
         self.is_healthy = True
         self.last_check = datetime.now()
         self.consecutive_failures = 0
-        self.error_message: Optional[str] = None
-        self.retry_after: Optional[datetime] = None
+        self.error_message: str | None = None
+        self.retry_after: datetime | None = None
 
-    def mark_healthy(self):
+    def mark_healthy(self) -> None:
         """Mark service as healthy"""
         self.is_healthy = True
         self.consecutive_failures = 0
@@ -40,7 +40,7 @@ class ServiceStatus:
         self.retry_after = None
         self.last_check = datetime.now()
 
-    def mark_unhealthy(self, error: str):
+    def mark_unhealthy(self, error: str) -> None:
         """Mark service as unhealthy with exponential backoff"""
         self.is_healthy = False
         self.consecutive_failures += 1
@@ -55,22 +55,20 @@ class ServiceStatus:
         """Check if we should retry this service"""
         if self.is_healthy:
             return False
-        if self.retry_after and datetime.now() < self.retry_after:
-            return False
-        return True
+        return not (self.retry_after and datetime.now() < self.retry_after)
 
 
 class DegradationManager:
     """Manages graceful degradation of services"""
 
-    def __init__(self):
-        self.services: Dict[str, ServiceStatus] = {
+    def __init__(self) -> None:
+        self.services: dict[str, ServiceStatus] = {
             "persistence": ServiceStatus("persistence"),
             "openai": ServiceStatus("openai"),
             "anthropic": ServiceStatus("anthropic"),
         }
         self.current_level = DegradationLevel.FULL
-        self.features_disabled: List[str] = []
+        self.features_disabled: list[str] = []
 
     def check_service(self, name: str, check_func) -> bool:
         """
@@ -99,16 +97,15 @@ class DegradationManager:
                 service.mark_healthy()
                 logger.info(f"Service {name} is healthy")
                 return True
-            else:
-                raise Exception("Health check returned False")
+            raise Exception("Health check returned False")
         except Exception as e:
             service.mark_unhealthy(str(e))
             logger.warning(
-                f"Service {name} unhealthy (attempt {service.consecutive_failures}): {e}"
+                f"Service {name} unhealthy (attempt {service.consecutive_failures}): {e}",
             )
             return False
 
-    def update_degradation_level(self):
+    def update_degradation_level(self) -> None:
         """Update the current degradation level based on service status"""
         old_level = self.current_level
 
@@ -130,18 +127,18 @@ class DegradationManager:
         if old_level != self.current_level:
             if self.current_level > old_level:
                 logger.warning(
-                    f"Degradation level increased: {old_level.name} -> {self.current_level.name}"
+                    f"Degradation level increased: {old_level.name} -> {self.current_level.name}",
                 )
             else:
                 logger.info(
-                    f"Degradation level improved: {old_level.name} -> {self.current_level.name}"
+                    f"Degradation level improved: {old_level.name} -> {self.current_level.name}",
                 )
 
     def is_feature_available(self, feature: str) -> bool:
         """Check if a feature is available at current degradation level"""
         return feature not in self.features_disabled
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current degradation status"""
         return {
             "level": self.current_level.name,
@@ -163,7 +160,7 @@ class DegradationManager:
             "can_vector_search": self.current_level == DegradationLevel.FULL,
         }
 
-    async def perform_health_checks(self):
+    async def perform_health_checks(self) -> None:
         """Perform health checks on all services"""
         # Check persistence
         self.check_service("persistence", self._check_persistence)
@@ -215,7 +212,7 @@ class DegradationManager:
 
 
 # Global degradation manager instance
-_degradation_manager: Optional[DegradationManager] = None
+_degradation_manager: DegradationManager | None = None
 
 
 def get_degradation_manager() -> DegradationManager:

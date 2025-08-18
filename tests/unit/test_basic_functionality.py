@@ -234,7 +234,7 @@ class TestMockingInfrastructure:
         """Test mock OpenAI client fixture"""
         # Test embeddings
         response = await mock_openai_client.embeddings.create(
-            model="text-embedding-ada-002", input="test text"
+            model="text-embedding-ada-002", input="test text",
         )
         assert response.data[0].embedding == [0.1] * 1536
 

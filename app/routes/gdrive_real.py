@@ -4,7 +4,6 @@ Actually works with Google Drive API
 """
 
 import os
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -33,7 +32,7 @@ class SyncFileRequest(BaseModel):
 
 
 class BatchSyncRequest(BaseModel):
-    file_ids: List[str]
+    file_ids: list[str]
     generate_embeddings: bool = True
 
 
@@ -74,32 +73,31 @@ async def oauth_callback(code: str):
     if result.get("success"):
         # Redirect to UI with success
         return RedirectResponse(url="/static/gdrive-ui.html?connected=true", status_code=302)
-    else:
-        # Show error
-        html = (
-            "<html><head><title>Connection Failed</title>"
-            "<style>"
-            "body{font-family:system-ui;display:flex;justify-content:center;"
-            "align-items:center;height:100vh;background:#f3f4f6}"
-            ".error{background:white;padding:2rem;border-radius:8px;"
-            "box-shadow:0 2px 10px rgba(0,0,0,0.1);max-width:500px}"
-            "h1{color:#ef4444}"
-            "pre{background:#f9fafb;padding:1rem;border-radius:4px}"
-            "a{display:inline-block;margin-top:1rem;padding:0.5rem 1rem;"
-            "background:#3b82f6;color:white;text-decoration:none;border-radius:4px}"
-            "</style></head><body>"
-            '<div class="error">'
-            "<h1>❌ Connection Failed</h1>"
-            "<p>Could not connect to Google Drive:</p>"
-            f"<pre>{result.get('error', 'Unknown error')}</pre>"
-            '<a href="/static/gdrive-ui.html">Try Again</a>'
-            "</div></body></html>"
-        )
-        return HTMLResponse(content=html)
+    # Show error
+    html = (
+        "<html><head><title>Connection Failed</title>"
+        "<style>"
+        "body{font-family:system-ui;display:flex;justify-content:center;"
+        "align-items:center;height:100vh;background:#f3f4f6}"
+        ".error{background:white;padding:2rem;border-radius:8px;"
+        "box-shadow:0 2px 10px rgba(0,0,0,0.1);max-width:500px}"
+        "h1{color:#ef4444}"
+        "pre{background:#f9fafb;padding:1rem;border-radius:4px}"
+        "a{display:inline-block;margin-top:1rem;padding:0.5rem 1rem;"
+        "background:#3b82f6;color:white;text-decoration:none;border-radius:4px}"
+        "</style></head><body>"
+        '<div class="error">'
+        "<h1>❌ Connection Failed</h1>"
+        "<p>Could not connect to Google Drive:</p>"
+        f"<pre>{result.get('error', 'Unknown error')}</pre>"
+        '<a href="/static/gdrive-ui.html">Try Again</a>'
+        "</div></body></html>"
+    )
+    return HTMLResponse(content=html)
 
 
 @router.get("/files")
-async def list_files(folder_id: Optional[str] = Query(None)):
+async def list_files(folder_id: str | None = Query(None)):
     """List files from Google Drive"""
     if not google_drive.is_connected():
         raise HTTPException(status_code=401, detail="Not connected to Google Drive")
@@ -108,13 +106,13 @@ async def list_files(folder_id: Optional[str] = Query(None)):
         files = await google_drive.list_files(folder_id)
         return {"files": files, "count": len(files)}
     except Exception as e:
-        logger.error(f"Error listing files: {e}")
+        logger.exception(f"Error listing files: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/sync/file")
 async def sync_file(
-    request: SyncFileRequest, memory_service: MemoryServicePostgres = Depends(get_memory_service)
+    request: SyncFileRequest, memory_service: MemoryServicePostgres = Depends(get_memory_service),
 ):
     """Sync a single file to Second Brain"""
     if not google_drive.is_connected():
@@ -183,13 +181,13 @@ async def sync_file(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error syncing file: {e}")
+        logger.exception(f"Error syncing file: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/sync/batch")
 async def sync_batch(
-    request: BatchSyncRequest, memory_service: MemoryServicePostgres = Depends(get_memory_service)
+    request: BatchSyncRequest, memory_service: MemoryServicePostgres = Depends(get_memory_service),
 ):
     """Sync multiple files in batch"""
     if not google_drive.is_connected():
@@ -203,7 +201,7 @@ async def sync_batch(
                 memory_service,
             )
             results.append(
-                {"file_id": file_id, "status": "success", "memory_id": result.get("memory_id")}
+                {"file_id": file_id, "status": "success", "memory_id": result.get("memory_id")},
             )
         except Exception as e:
             results.append({"file_id": file_id, "status": "failed", "error": str(e)})

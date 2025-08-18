@@ -186,11 +186,11 @@ class TestAdvancedMemoryAging:
                 success_rate=0.9,
                 retrieval_time_ms=150,
                 context_similarity=0.8,
-            )
+            ),
         ]
 
         result = self.aging.calculate_memory_aging(
-            memory_id="test1", creation_date=creation_date, access_history=access_history
+            memory_id="test1", creation_date=creation_date, access_history=access_history,
         )
 
         assert isinstance(result, AgingResult)
@@ -208,7 +208,7 @@ class TestAdvancedMemoryAging:
                 access_type="review",
                 success_rate=0.95,
                 retrieval_time_ms=120,
-            )
+            ),
         ]
 
         result = self.aging.calculate_memory_aging(
@@ -225,8 +225,8 @@ class TestAdvancedMemoryAging:
         creation_date = now - timedelta(days=5)
         access_history = [
             MemoryAccess(
-                timestamp=now - timedelta(days=2), access_type="retrieval", success_rate=0.8
-            )
+                timestamp=now - timedelta(days=2), access_type="retrieval", success_rate=0.8,
+            ),
         ]
 
         result = self.aging.calculate_memory_aging(
@@ -243,7 +243,7 @@ class TestAdvancedMemoryAging:
         creation_date = now - timedelta(days=15)
 
         result = self.aging.calculate_memory_aging(
-            memory_id="test4", creation_date=creation_date, access_history=[]
+            memory_id="test4", creation_date=creation_date, access_history=[],
         )
 
         assert isinstance(result, AgingResult)
@@ -267,7 +267,7 @@ class TestAdvancedMemoryAging:
         now = datetime.now()
         creation_date = now - timedelta(days=12)
         access_history = [
-            MemoryAccess(timestamp=now - timedelta(days=6), access_type="study", success_rate=0.7)
+            MemoryAccess(timestamp=now - timedelta(days=6), access_type="study", success_rate=0.7),
         ]
 
         result = self.aging.calculate_memory_aging(
@@ -289,7 +289,7 @@ class TestAdvancedMemoryAging:
         access_history = []
         for i in range(15):
             access_history.append(
-                MemoryAccess(timestamp=now - timedelta(days=i), access_type="practice")
+                MemoryAccess(timestamp=now - timedelta(days=i), access_type="practice"),
             )
 
         result = self.aging.calculate_memory_aging(
@@ -327,7 +327,7 @@ class TestAdvancedMemoryAging:
         access_history = []
         for i in range(8):
             access_history.append(
-                MemoryAccess(timestamp=now - timedelta(days=i * 2), access_type="recall")
+                MemoryAccess(timestamp=now - timedelta(days=i * 2), access_type="recall"),
             )
 
         result = self.aging.calculate_memory_aging(
@@ -377,7 +377,7 @@ class TestAdvancedMemoryAging:
         now = datetime.now()
         creation_date = now - timedelta(days=10)
         access_history = [
-            MemoryAccess(timestamp=now - timedelta(days=5), access_type="review", success_rate=0.8)
+            MemoryAccess(timestamp=now - timedelta(days=5), access_type="review", success_rate=0.8),
         ]
 
         for model in AgingModel:
@@ -411,11 +411,11 @@ class TestAdvancedMemoryAging:
         now = datetime.now()
         creation_date = now - timedelta(days=365)  # 1 year old
         access_history = [
-            MemoryAccess(timestamp=creation_date + timedelta(days=30), access_type="initial_review")
+            MemoryAccess(timestamp=creation_date + timedelta(days=30), access_type="initial_review"),
         ]
 
         result = self.aging.calculate_memory_aging(
-            memory_id="old_memory", creation_date=creation_date, access_history=access_history
+            memory_id="old_memory", creation_date=creation_date, access_history=access_history,
         )
 
         assert isinstance(result, AgingResult)
@@ -427,7 +427,7 @@ class TestAdvancedMemoryAging:
         creation_date = now - timedelta(hours=1)  # 1 hour old
 
         result = self.aging.calculate_memory_aging(
-            memory_id="new_memory", creation_date=creation_date, access_history=[]
+            memory_id="new_memory", creation_date=creation_date, access_history=[],
         )
 
         assert isinstance(result, AgingResult)
@@ -446,11 +446,11 @@ class TestAdvancedMemoryAging:
                     timestamp=now - timedelta(hours=i * 12),  # Every 12 hours
                     access_type="frequent_review",
                     success_rate=0.95,
-                )
+                ),
             )
 
         result = self.aging.calculate_memory_aging(
-            memory_id="frequent_memory", creation_date=creation_date, access_history=access_history
+            memory_id="frequent_memory", creation_date=creation_date, access_history=access_history,
         )
 
         assert isinstance(result, AgingResult)

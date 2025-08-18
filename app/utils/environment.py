@@ -4,14 +4,13 @@ Environment utilities for configuration and setup.
 
 import os
 from pathlib import Path
-from typing import Optional
 
 from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 
-def get_env_var(key: str, default: Optional[str] = None, required: bool = False) -> Optional[str]:
+def get_env_var(key: str, default: str | None = None, required: bool = False) -> str | None:
     """
     Get environment variable with optional default and validation.
 
@@ -90,7 +89,7 @@ def get_project_root() -> Path:
     return Path(__file__).resolve().parent.parent.parent
 
 
-def load_env_file(env_file: Optional[Path] = None) -> None:
+def load_env_file(env_file: Path | None = None) -> None:
     """
     Load environment variables from a .env file.
 
@@ -105,7 +104,7 @@ def load_env_file(env_file: Optional[Path] = None) -> None:
         return
 
     try:
-        with open(env_file, "r") as f:
+        with open(env_file) as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
@@ -119,4 +118,4 @@ def load_env_file(env_file: Optional[Path] = None) -> None:
                         logger.debug(f"Loaded {key} from {env_file}")
 
     except Exception as e:
-        logger.error(f"Error loading environment file {env_file}: {e}")
+        logger.exception(f"Error loading environment file {env_file}: {e}")

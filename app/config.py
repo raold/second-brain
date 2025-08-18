@@ -55,7 +55,7 @@ class Config:
 
     # CORS Configuration
     CORS_ORIGINS: list = env.get_list(
-        "CORS_ORIGINS", ["http://localhost:3000", "http://localhost:8000"]
+        "CORS_ORIGINS", ["http://localhost:3000", "http://localhost:8000"],
     )
 
     # Feature Flags
@@ -86,7 +86,7 @@ class Config:
     CIPHER_ENABLE_MCP: bool = env.get_bool("CIPHER_ENABLE_MCP", True)
     CIPHER_CONFLICT_RESOLUTION: str = env.get(
         "CIPHER_CONFLICT_RESOLUTION",
-        "newest"  # Options: local, remote, newest
+        "newest",  # Options: local, remote, newest
     )
 
     # Development Configuration

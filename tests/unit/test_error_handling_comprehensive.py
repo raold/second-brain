@@ -181,7 +181,7 @@ class TestMemoryServiceErrorHandling:
 
         with pytest.raises(ValidationException):
             await self.memory_service.store_memory(
-                content="test", metadata={"importance": 2.0}  # Invalid score > 1.0
+                content="test", metadata={"importance": 2.0},  # Invalid score > 1.0
             )
 
     @pytest.mark.asyncio
@@ -283,7 +283,7 @@ class TestAPIErrorHandling:
 
         for payload in incomplete_payloads:
             response = await client.post(
-                "/memories/semantic", json=payload, params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key},
             )
 
             # Should return validation error
@@ -372,7 +372,7 @@ class TestAPIErrorHandling:
 
         for search_params in extreme_searches:
             response = await client.post(
-                "/memories/search", json=search_params, params={"api_key": api_key}
+                "/memories/search", json=search_params, params={"api_key": api_key},
             )
 
             # Should handle gracefully
@@ -393,11 +393,10 @@ class TestAPIErrorHandling:
             if random.choice([True, False]):
                 # Valid request
                 return await client.get("/health", params={"api_key": api_key})
-            else:
-                # Invalid request
-                return await client.post(
-                    "/memories/semantic", json={"invalid": "data"}, params={"api_key": api_key}
-                )
+            # Invalid request
+            return await client.post(
+                "/memories/semantic", json={"invalid": "data"}, params={"api_key": api_key},
+            )
 
         # Make concurrent requests
         tasks = [make_request_with_error() for _ in range(20)]
@@ -429,7 +428,7 @@ class TestAPIErrorHandling:
             payload = {"content": content, "importance_score": 0.5}
 
             response = await client.post(
-                "/memories/semantic", json=payload, params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key},
             )
 
             # Should handle encoding issues gracefully
@@ -476,7 +475,7 @@ class TestAPIErrorHandling:
 
         for search_params in invalid_searches:
             response = await client.post(
-                "/memories/search/contextual", json=search_params, params={"api_key": api_key}
+                "/memories/search/contextual", json=search_params, params={"api_key": api_key},
             )
 
             # Should validate parameters and return appropriate error

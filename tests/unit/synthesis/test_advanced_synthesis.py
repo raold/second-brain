@@ -164,7 +164,7 @@ class TestAdvancedSynthesisEngine:
 
         # Mock synthesis
         engine.openai_client.generate = AsyncMock(
-            return_value="This is a comprehensive summary of Python programming concepts."
+            return_value="This is a comprehensive summary of Python programming concepts.",
         )
 
         # Execute
@@ -219,7 +219,7 @@ class TestAdvancedSynthesisEngine:
 
         # Mock LLM response
         engine.openai_client.generate = AsyncMock(
-            return_value='["Machine Learning", "Artificial Intelligence"]'
+            return_value='["Machine Learning", "Artificial Intelligence"]',
         )
 
         clusters = await engine._extract_implicit_themes(untagged_memories)
@@ -244,7 +244,7 @@ class TestAdvancedSynthesisEngine:
 
         engine._fetch_memories = AsyncMock(return_value=sample_memories)
         engine.openai_client.generate = AsyncMock(
-            return_value="Timeline narrative of knowledge evolution"
+            return_value="Timeline narrative of knowledge evolution",
         )
 
         mock_clusters = [ThemeCluster("Python", sample_memories)]
@@ -347,7 +347,7 @@ class TestAdvancedSynthesisEngine:
             if memory_id == str(sample_request.memory_ids[0]):
                 raise Exception("Memory not found")
             return MagicMock(
-                content="Test content", importance_score=5, created_at=datetime.utcnow()
+                content="Test content", importance_score=5, created_at=datetime.utcnow(),
             )
 
         engine.memory_service.get_memory = mock_get_memory

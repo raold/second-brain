@@ -54,7 +54,7 @@ class LogConfig(BaseModel):
 class StructuredLogger:
     """Structured logger with context support"""
 
-    def __init__(self, name: str, config: LogConfig):
+    def __init__(self, name: str, config: LogConfig) -> None:
         self.name = name
         self.config = config
         self.logger = self._setup_logger()
@@ -75,7 +75,7 @@ class StructuredLogger:
                 )
             else:
                 formatter = logging.Formatter(
-                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
                 )
             console_handler.setFormatter(formatter)
             logger.addHandler(console_handler)
@@ -101,7 +101,7 @@ class StructuredLogger:
                 )
             else:
                 formatter = logging.Formatter(
-                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
                 )
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
@@ -118,22 +118,22 @@ class StructuredLogger:
         context.update(extra)
         return context
 
-    def debug(self, message: str, **kwargs):
+    def debug(self, message: str, **kwargs) -> None:
         """Log debug message with context"""
         extra = self._add_context(kwargs)
         self.logger.debug(message, extra={"structured": extra})
 
-    def info(self, message: str, **kwargs):
+    def info(self, message: str, **kwargs) -> None:
         """Log info message with context"""
         extra = self._add_context(kwargs)
         self.logger.info(message, extra={"structured": extra})
 
-    def warning(self, message: str, **kwargs):
+    def warning(self, message: str, **kwargs) -> None:
         """Log warning message with context"""
         extra = self._add_context(kwargs)
         self.logger.warning(message, extra={"structured": extra})
 
-    def error(self, message: str, exception: Exception | None = None, **kwargs):
+    def error(self, message: str, exception: Exception | None = None, **kwargs) -> None:
         """Log error message with context and exception details"""
         extra = self._add_context(kwargs)
         if exception:
@@ -142,7 +142,7 @@ class StructuredLogger:
             extra["traceback"] = traceback.format_exc()
         self.logger.error(message, extra={"structured": extra})
 
-    def critical(self, message: str, **kwargs):
+    def critical(self, message: str, **kwargs) -> None:
         """Log critical message with context"""
         extra = self._add_context(kwargs)
         self.logger.critical(message, extra={"structured": extra})
@@ -151,7 +151,7 @@ class StructuredLogger:
 class PerformanceLogger:
     """Context manager for performance logging"""
 
-    def __init__(self, operation: str, logger: StructuredLogger, **kwargs):
+    def __init__(self, operation: str, logger: StructuredLogger, **kwargs) -> None:
         self.operation = operation
         self.logger = logger
         self.extra = kwargs
@@ -186,7 +186,7 @@ class PerformanceLogger:
 class AuditLogger:
     """Logger for audit events"""
 
-    def __init__(self, logger: StructuredLogger):
+    def __init__(self, logger: StructuredLogger) -> None:
         self.logger = logger
 
     def log_event(
@@ -197,7 +197,7 @@ class AuditLogger:
         result: str,
         user_id: str | None = None,
         details: dict[str, Any] | None = None,
-    ):
+    ) -> None:
         """Log an audit event"""
         self.logger.info(
             "Audit event",
@@ -257,7 +257,7 @@ class LoggingRoute(APIRoute):
             except Exception as e:
                 # Log error
                 duration = time.time() - start_time
-                logger.error(
+                logger.exception(
                     "Request failed",
                     exception=e,
                     method=request.method,
@@ -274,7 +274,7 @@ _loggers: dict[str, StructuredLogger] = {}
 _config: LogConfig = LogConfig()
 
 
-def configure_logging(config: LogConfig):
+def configure_logging(config: LogConfig) -> None:
     """Configure global logging settings"""
     global _config
     _config = config
@@ -309,12 +309,11 @@ def log_function_call(func):
 
     if asyncio.iscoroutinefunction(func):
         return async_wrapper
-    else:
-        return sync_wrapper
+    return sync_wrapper
 
 
 # Structured logging with structlog
-def setup_structlog():
+def setup_structlog() -> None:
     """Configure structlog for structured logging"""
     structlog.configure(
         processors=[

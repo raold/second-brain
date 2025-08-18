@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -20,10 +20,10 @@ class SynthesisStrategy(str, Enum):
 class SynthesisRequest(BaseModel):
     """Request for memory synthesis"""
 
-    memory_ids: Optional[List[str]] = None
-    user_id: Optional[str] = None
+    memory_ids: list[str] | None = None
+    user_id: str | None = None
     strategy: SynthesisStrategy = SynthesisStrategy.HYBRID
-    filters: Dict[str, Any] = {}
+    filters: dict[str, Any] = {}
     max_results: int = 10
     include_metadata: bool = True
 
@@ -34,9 +34,9 @@ class SynthesisResult(BaseModel):
     synthesis_id: str = Field(default_factory=lambda: f"syn_{datetime.now().timestamp()}")
     strategy_used: SynthesisStrategy
     memories_processed: int = 0
-    themes_identified: List[str] = []
-    summary: Optional[str] = None
-    insights: List[Dict[str, Any]] = []
+    themes_identified: list[str] = []
+    summary: str | None = None
+    insights: list[dict[str, Any]] = []
     confidence_score: float = 0.0
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
     created_at: datetime = Field(default_factory=datetime.now)

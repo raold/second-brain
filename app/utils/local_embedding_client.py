@@ -24,7 +24,7 @@ class LocalEmbeddingClient:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         # LM Studio for text embeddings (Nomic Embed Text v1.5)
         self.lm_studio_url = os.getenv("LM_STUDIO_URL", "http://127.0.0.1:1234/v1")
         self.text_embedding_model = "text-embedding-nomic-embed-text-v1.5"
@@ -94,10 +94,10 @@ class LocalEmbeddingClient:
     async def generate_text(
         self,
         prompt: str,
-        system_prompt: str = None,
+        system_prompt: str | None = None,
         max_tokens: int = 1000,
         temperature: float = 0.7,
-        model: str = None,
+        model: str | None = None,
     ) -> str | None:
         """Generate text using LM Studio's LLaVA model."""
         try:
@@ -131,7 +131,7 @@ class LocalEmbeddingClient:
             return None
 
     async def analyze_content(
-        self, content: str, analysis_type: str = "summary"
+        self, content: str, analysis_type: str = "summary",
     ) -> dict[str, Any] | None:
         """Analyze content using local LLM for various NLP tasks."""
 
@@ -168,7 +168,7 @@ class LocalEmbeddingClient:
             return None
 
     async def analyze_image(
-        self, image_bytes: bytes, prompt: str = "Describe this image"
+        self, image_bytes: bytes, prompt: str = "Describe this image",
     ) -> str | None:
         """Analyze image using LLaVA service."""
         try:

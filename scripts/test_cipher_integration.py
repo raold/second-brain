@@ -13,7 +13,7 @@ from pathlib import Path
 
 # Fix Windows console encoding for emojis
 if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -30,7 +30,7 @@ from app.interfaces.sync_provider import SyncStatus
 logger = get_logger(__name__)
 
 
-async def test_cipher_connection():
+async def test_cipher_connection() -> None:
     """Test basic connection to Cipher"""
     print("\n🔧 Testing Cipher Integration\n")
     print("=" * 50)
@@ -39,7 +39,7 @@ async def test_cipher_connection():
     config = create_cipher_config(
         enabled=True,
         cipher_url="http://localhost:3000",
-        sync_interval=60  # 1 minute for testing
+        sync_interval=60,  # 1 minute for testing
     )
 
     # Create adapter
@@ -72,8 +72,8 @@ async def test_cipher_connection():
             "created_at": datetime.now().isoformat(),
             "metadata": {
                 "source": "second-brain-test",
-                "test_run": True
-            }
+                "test_run": True,
+            },
         }
 
         success = await adapter.push_memory(test_memory)
@@ -95,7 +95,7 @@ async def test_cipher_connection():
                 "content": f"Batch test memory {i}",
                 "type": "code" if i % 2 == 0 else "reasoning",
                 "tags": ["batch-test"],
-                "created_at": datetime.now().isoformat()
+                "created_at": datetime.now().isoformat(),
             }
             for i in range(3)
         ]

@@ -4,7 +4,7 @@ Handles semantic, keyword, and hybrid search operations
 """
 
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -34,9 +34,9 @@ class SearchRequest(BaseModel):
 
     query: str = Field(..., min_length=1, max_length=1000, description="Search query")
     search_type: str = Field(
-        "hybrid", pattern="^(keyword|semantic|hybrid)$", description="Type of search"
+        "hybrid", pattern="^(keyword|semantic|hybrid)$", description="Type of search",
     )
-    filters: Dict[str, Any] = Field(default_factory=dict, description="Additional filters")
+    filters: dict[str, Any] = Field(default_factory=dict, description="Additional filters")
     limit: int = Field(10, ge=1, le=100, description="Maximum results to return")
     offset: int = Field(0, ge=0, description="Offset for pagination")
     include_similar: bool = Field(True, description="Include similar memories")
@@ -49,14 +49,14 @@ class SearchResult(BaseModel):
     memory: Memory
     score: float = Field(..., description="Relevance score")
     match_type: str = Field(..., description="Type of match (exact, semantic, keyword)")
-    highlights: List[str] = Field(default_factory=list, description="Highlighted snippets")
+    highlights: list[str] = Field(default_factory=list, description="Highlighted snippets")
 
 
 class SearchResponse(BaseModel):
     """Search response with results and metadata"""
 
     success: bool
-    results: List[SearchResult]
+    results: list[SearchResult]
     total: int
     query: str
     search_type: str
@@ -81,7 +81,7 @@ async def get_memory_service() -> MemoryService:
     description="Perform advanced search across all memories",
 )
 async def search_memories(
-    search: SearchRequest, memory_service: MemoryService = Depends(get_memory_service)
+    search: SearchRequest, memory_service: MemoryService = Depends(get_memory_service),
 ):
     """
     Search memories using various strategies:
@@ -119,7 +119,7 @@ async def search_memories(
             score = 0.9
 
         search_results.append(
-            SearchResult(memory=memory, score=score, match_type="keyword", highlights=[])
+            SearchResult(memory=memory, score=score, match_type="keyword", highlights=[]),
         )
 
     processing_time = (time.time() - start_time) * 1000
@@ -153,7 +153,7 @@ async def semantic_search(
     Results are sorted by cosine similarity.
     """
     search_request = SearchRequest(
-        query=query, search_type="semantic", limit=limit, similarity_threshold=threshold
+        query=query, search_type="semantic", limit=limit, similarity_threshold=threshold,
     )
 
     return await search_memories(search_request, memory_service)
@@ -166,7 +166,7 @@ async def semantic_search(
     description="Traditional keyword-based search",
 )
 async def keyword_search(
-    query: str, limit: int = 10, memory_service: MemoryService = Depends(get_memory_service)
+    query: str, limit: int = 10, memory_service: MemoryService = Depends(get_memory_service),
 ):
     """
     Perform traditional keyword search.
@@ -184,7 +184,7 @@ async def keyword_search(
     description="Get search suggestions based on existing memories",
 )
 async def get_search_suggestions(
-    prefix: str, limit: int = 5, memory_service: MemoryService = Depends(get_memory_service)
+    prefix: str, limit: int = 5, memory_service: MemoryService = Depends(get_memory_service),
 ):
     """
     Get search suggestions based on memory content and tags.
@@ -208,4 +208,4 @@ async def get_search_suggestions(
             if word.lower().startswith(prefix.lower()) and len(word) > 3:
                 suggestions.add(word.lower())
 
-    return {"success": True, "suggestions": sorted(list(suggestions))[:limit], "prefix": prefix}
+    return {"success": True, "suggestions": sorted(suggestions)[:limit], "prefix": prefix}

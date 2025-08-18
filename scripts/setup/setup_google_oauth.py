@@ -8,7 +8,7 @@ import webbrowser
 from pathlib import Path
 
 
-def setup_google_oauth():
+def setup_google_oauth() -> None:
     print("=" * 60)
     print("🔐 Google OAuth Setup for Second Brain")
     print("=" * 60)
@@ -53,11 +53,11 @@ ENCRYPTION_KEY=test-encryption-key
     has_client_id = False
     has_client_secret = False
 
-    for line in env_content.split('\n'):
-        if line.startswith('GOOGLE_CLIENT_ID=') and len(line) > 17:
+    for line in env_content.split("\n"):
+        if line.startswith("GOOGLE_CLIENT_ID=") and len(line) > 17:
             has_client_id = True
             print(f"✅ Client ID: {line[17:37]}...")
-        elif line.startswith('GOOGLE_CLIENT_SECRET=') and len(line) > 21:
+        elif line.startswith("GOOGLE_CLIENT_SECRET=") and len(line) > 21:
             has_client_secret = True
             print("✅ Client Secret: ****")
 
@@ -85,7 +85,7 @@ ENCRYPTION_KEY=test-encryption-key
     print()
 
     choice = input("Would you like to open Google Cloud Console now? (y/n): ")
-    if choice.lower() == 'y':
+    if choice.lower() == "y":
         print()
         print("Opening Google Cloud Console...")
         webbrowser.open("https://console.cloud.google.com/apis/credentials")
@@ -109,14 +109,14 @@ ENCRYPTION_KEY=test-encryption-key
 
     if client_id and client_secret:
         # Update .env file
-        lines = env_content.split('\n')
+        lines = env_content.split("\n")
         for i, line in enumerate(lines):
-            if line.startswith('GOOGLE_CLIENT_ID='):
-                lines[i] = f'GOOGLE_CLIENT_ID={client_id}'
-            elif line.startswith('GOOGLE_CLIENT_SECRET='):
-                lines[i] = f'GOOGLE_CLIENT_SECRET={client_secret}'
+            if line.startswith("GOOGLE_CLIENT_ID="):
+                lines[i] = f"GOOGLE_CLIENT_ID={client_id}"
+            elif line.startswith("GOOGLE_CLIENT_SECRET="):
+                lines[i] = f"GOOGLE_CLIENT_SECRET={client_secret}"
 
-        env_path.write_text('\n'.join(lines))
+        env_path.write_text("\n".join(lines))
         print()
         print("✅ Credentials saved to .env file!")
         print()

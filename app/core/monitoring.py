@@ -70,7 +70,7 @@ class MetricsCollector:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, app_name: str = "second_brain"):
+    def __init__(self, app_name: str = "second_brain") -> None:
         if not self._initialized:
             self.app_name = app_name
             self.metrics: dict[str, Any] = {}
@@ -78,7 +78,7 @@ class MetricsCollector:
             self._setup_default_metrics()
             self.__class__._initialized = True
 
-    def _setup_default_metrics(self):
+    def _setup_default_metrics(self) -> None:
         """Set up default metrics"""
         # Request metrics
         self.request_count = Counter(
@@ -96,7 +96,7 @@ class MetricsCollector:
 
         # Memory metrics
         self.memory_count = Gauge(
-            f"{self.app_name}_memories_total", "Total number of memories", ["type"]
+            f"{self.app_name}_memories_total", "Total number of memories", ["type"],
         )
 
         self.memory_operations = Counter(
@@ -107,7 +107,7 @@ class MetricsCollector:
 
         # Database metrics
         self.db_connections = Gauge(
-            f"{self.app_name}_database_connections", "Number of database connections", ["state"]
+            f"{self.app_name}_database_connections", "Number of database connections", ["state"],
         )
 
         self.db_query_duration = Histogram(
@@ -124,7 +124,7 @@ class MetricsCollector:
 
         # Error metrics
         self.error_count = Counter(
-            f"{self.app_name}_errors_total", "Total number of errors", ["error_type", "endpoint"]
+            f"{self.app_name}_errors_total", "Total number of errors", ["error_type", "endpoint"],
         )
 
         # Custom metrics registry
@@ -134,11 +134,11 @@ class MetricsCollector:
         """Register a custom metric"""
         if definition.type == MetricType.COUNTER:
             metric = Counter(
-                f"{self.app_name}_{definition.name}", definition.description, definition.labels
+                f"{self.app_name}_{definition.name}", definition.description, definition.labels,
             )
         elif definition.type == MetricType.GAUGE:
             metric = Gauge(
-                f"{self.app_name}_{definition.name}", definition.description, definition.labels
+                f"{self.app_name}_{definition.name}", definition.description, definition.labels,
             )
         elif definition.type == MetricType.HISTOGRAM:
             metric = Histogram(
@@ -149,7 +149,7 @@ class MetricsCollector:
             )
         elif definition.type == MetricType.SUMMARY:
             metric = Summary(
-                f"{self.app_name}_{definition.name}", definition.description, definition.labels
+                f"{self.app_name}_{definition.name}", definition.description, definition.labels,
             )
         else:
             raise ValueError(f"Unknown metric type: {definition.type}")
@@ -157,29 +157,29 @@ class MetricsCollector:
         self.custom_metrics[definition.name] = metric
         return metric
 
-    def increment_counter(self, name: str, value: float = 1, **labels):
+    def increment_counter(self, name: str, value: float = 1, **labels) -> None:
         """Increment a counter metric"""
         if name in self.custom_metrics:
             self.custom_metrics[name].labels(**labels).inc(value)
 
-    def set_gauge(self, name: str, value: float, **labels):
+    def set_gauge(self, name: str, value: float, **labels) -> None:
         """Set a gauge metric"""
         if name in self.custom_metrics:
             self.custom_metrics[name].labels(**labels).set(value)
 
-    def observe_histogram(self, name: str, value: float, **labels):
+    def observe_histogram(self, name: str, value: float, **labels) -> None:
         """Observe a histogram metric"""
         if name in self.custom_metrics:
             self.custom_metrics[name].labels(**labels).observe(value)
 
-    def record_timeseries(self, name: str, value: float, **labels):
+    def record_timeseries(self, name: str, value: float, **labels) -> None:
         """Record a timeseries data point"""
         key = f"{name}:{json.dumps(labels, sort_keys=True)}"
         self._timeseries_data[key].append(
-            MetricPoint(timestamp=time.time(), value=value, labels=labels)
+            MetricPoint(timestamp=time.time(), value=value, labels=labels),
         )
 
-    async def collect_system_metrics(self):
+    async def collect_system_metrics(self) -> None:
         """Collect system metrics"""
         # CPU usage
         cpu_percent = psutil.cpu_percent(interval=0.1)
@@ -205,7 +205,7 @@ class MetricsCollector:
                 "disk_usage_percent": psutil.disk_usage("/").percent,
             },
             "application": {
-                "uptime_seconds": time.time() - getattr(self, "_start_time", time.time())
+                "uptime_seconds": time.time() - getattr(self, "_start_time", time.time()),
             },
             "timeseries": {},
         }
@@ -224,11 +224,11 @@ class MetricsCollector:
 class HealthChecker:
     """Performs health checks on various components"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.checks: dict[str, Callable] = {}
         self.check_results: dict[str, dict[str, Any]] = {}
 
-    def register_check(self, name: str, check_func: Callable):
+    def register_check(self, name: str, check_func: Callable) -> None:
         """Register a health check function"""
         self.checks[name] = check_func
 
@@ -324,7 +324,7 @@ class HealthChecker:
 class RequestTracker:
     """Tracks request metrics and performance"""
 
-    def __init__(self, metrics_collector: MetricsCollector):
+    def __init__(self, metrics_collector: MetricsCollector) -> None:
         self.metrics = metrics_collector
         self.active_requests = 0
         self.request_history = deque(maxlen=1000)
@@ -351,7 +351,7 @@ class RequestTracker:
 
             # Update metrics
             self.metrics.request_count.labels(
-                method=method, endpoint=path, status=str(status)
+                method=method, endpoint=path, status=str(status),
             ).inc()
 
             self.metrics.request_duration.labels(method=method, endpoint=path).observe(duration)
@@ -364,7 +364,7 @@ class RequestTracker:
                     "path": path,
                     "status": status,
                     "duration_ms": duration * 1000,
-                }
+                },
             )
 
             # Add metrics headers
@@ -435,7 +435,7 @@ def monitor_performance(operation: str):
 
                 # Record success
                 metrics.observe_histogram(
-                    "operation_duration", duration, operation=operation, status="success"
+                    "operation_duration", duration, operation=operation, status="success",
                 )
 
                 return result
@@ -445,11 +445,11 @@ def monitor_performance(operation: str):
 
                 # Record failure
                 metrics.observe_histogram(
-                    "operation_duration", duration, operation=operation, status="failure"
+                    "operation_duration", duration, operation=operation, status="failure",
                 )
 
                 metrics.increment_counter(
-                    "operation_errors", operation=operation, error_type=type(e).__name__
+                    "operation_errors", operation=operation, error_type=type(e).__name__,
                 )
 
                 raise
@@ -464,7 +464,7 @@ def monitor_performance(operation: str):
 
                 # Record success
                 metrics.observe_histogram(
-                    "operation_duration", duration, operation=operation, status="success"
+                    "operation_duration", duration, operation=operation, status="success",
                 )
 
                 return result
@@ -474,18 +474,17 @@ def monitor_performance(operation: str):
 
                 # Record failure
                 metrics.observe_histogram(
-                    "operation_duration", duration, operation=operation, status="failure"
+                    "operation_duration", duration, operation=operation, status="failure",
                 )
 
                 metrics.increment_counter(
-                    "operation_errors", operation=operation, error_type=type(e).__name__
+                    "operation_errors", operation=operation, error_type=type(e).__name__,
                 )
 
                 raise
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
-        else:
-            return sync_wrapper
+        return sync_wrapper
 
     return decorator

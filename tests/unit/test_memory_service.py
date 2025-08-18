@@ -41,7 +41,7 @@ class TestMemoryService:
         self.mock_db.store_memory.return_value = "memory-123"
 
         memory_id = await self.memory_service.store_memory(
-            content="Test memory content", metadata={"type": "note", "importance": 0.8}
+            content="Test memory content", metadata={"type": "note", "importance": 0.8},
         )
 
         assert memory_id == "memory-123"
@@ -114,7 +114,7 @@ class TestMemoryService:
         self.mock_db.get_memory.return_value = expected_memory
 
         result = await self.memory_service.click_search_result(
-            memory_id="memory-123", query="test query"
+            memory_id="memory-123", query="test query",
         )
 
         assert result == expected_memory
@@ -144,7 +144,7 @@ class TestMemoryService:
         }
 
         with patch.object(
-            self.memory_service, "get_importance_analytics", return_value=mock_analytics
+            self.memory_service, "get_importance_analytics", return_value=mock_analytics,
         ):
             analytics = await self.memory_service.get_importance_analytics()
             assert analytics == mock_analytics
@@ -158,7 +158,7 @@ class TestMemoryService:
         ]
 
         with patch.object(
-            self.memory_service, "get_high_importance_memories", return_value=mock_memories
+            self.memory_service, "get_high_importance_memories", return_value=mock_memories,
         ):
             memories = await self.memory_service.get_high_importance_memories(limit=10)
             assert memories == mock_memories
@@ -188,7 +188,7 @@ class TestMemoryService:
         mock_result = {"processed": 50, "updated": 25, "errors": 0}
 
         with patch.object(
-            self.memory_service, "recalculate_importance_scores", return_value=mock_result
+            self.memory_service, "recalculate_importance_scores", return_value=mock_result,
         ):
             result = await self.memory_service.recalculate_importance_scores(limit=50)
             assert result == mock_result

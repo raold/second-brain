@@ -64,7 +64,7 @@ class PasswordPolicy:
         require_special: bool = True,
         max_length: int = 128,
         banned_passwords_file: str | None = None,
-    ):
+    ) -> None:
         self.min_length = min_length
         self.max_length = max_length
         self.require_uppercase = require_uppercase
@@ -142,7 +142,7 @@ class PasswordPolicy:
 class SecureTokenManager:
     """Secure token generation and validation"""
 
-    def __init__(self, secret_key: str, algorithm: str = "HS256", token_expiry_minutes: int = 30):
+    def __init__(self, secret_key: str, algorithm: str = "HS256", token_expiry_minutes: int = 30) -> None:
         self.secret_key = secret_key
         self.algorithm = algorithm
         self.token_expiry_minutes = token_expiry_minutes
@@ -150,7 +150,7 @@ class SecureTokenManager:
         self.audit_logger = get_audit_logger()
 
     def create_access_token(
-        self, data: dict[str, Any], expires_delta: timedelta | None = None
+        self, data: dict[str, Any], expires_delta: timedelta | None = None,
     ) -> str:
         """Create a JWT access token"""
         to_encode = data.copy()
@@ -165,7 +165,7 @@ class SecureTokenManager:
                 "exp": expire,
                 "iat": datetime.utcnow(),
                 "jti": secrets.token_urlsafe(16),  # Unique token ID
-            }
+            },
         )
 
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
@@ -210,7 +210,7 @@ class SecureTokenManager:
         # For now, return the token
         return token_data["token_id"]
 
-    def revoke_token(self, token_id: str):
+    def revoke_token(self, token_id: str) -> None:
         """Revoke a token"""
         # Implement token revocation by storing in a blacklist
         self.audit_logger.log_event(
@@ -225,7 +225,7 @@ class SecureTokenManager:
 class DataEncryption:
     """Data encryption utilities"""
 
-    def __init__(self, master_key: str | None = None):
+    def __init__(self, master_key: str | None = None) -> None:
         if master_key:
             self.master_key = master_key.encode()
         else:
@@ -285,7 +285,7 @@ class SecurityHeadersManager:
     """Manage security headers for responses"""
 
     @staticmethod
-    def apply_security_headers(response: Response):
+    def apply_security_headers(response: Response) -> None:
         """Apply security headers to response"""
         headers = {
             # Prevent XSS attacks
@@ -329,7 +329,7 @@ class SecurityHeadersManager:
 class SecurityAuditor:
     """Perform security audits on the application"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.logger = get_logger(__name__)
         self.checks = []
 
@@ -369,7 +369,7 @@ class SecurityAuditor:
                 severity="HIGH",
                 message="Password policy enforces strong passwords",
                 recommendation="Ensure minimum 12 characters with complexity requirements",
-            )
+            ),
         )
 
         # Check for multi-factor authentication
@@ -380,7 +380,7 @@ class SecurityAuditor:
                 severity="MEDIUM",
                 message="Multi-factor authentication not enabled",
                 recommendation="Implement TOTP-based 2FA for enhanced security",
-            )
+            ),
         )
 
         # Check for account lockout
@@ -391,7 +391,7 @@ class SecurityAuditor:
                 severity="MEDIUM",
                 message="Account lockout after failed attempts implemented",
                 details={"max_attempts": 5, "lockout_duration": "15 minutes"},
-            )
+            ),
         )
 
         return results
@@ -408,7 +408,7 @@ class SecurityAuditor:
                 severity="HIGH",
                 message="RBAC implemented with proper permission checks",
                 details={"roles": ["admin", "user", "guest"]},
-            )
+            ),
         )
 
         # Check for API key rotation
@@ -419,7 +419,7 @@ class SecurityAuditor:
                 severity="MEDIUM",
                 message="API keys do not have automatic rotation",
                 recommendation="Implement API key rotation every 90 days",
-            )
+            ),
         )
 
         return results
@@ -436,7 +436,7 @@ class SecurityAuditor:
                 severity="CRITICAL",
                 message="Parameterized queries used throughout application",
                 details={"orm": "SQLAlchemy", "prepared_statements": True},
-            )
+            ),
         )
 
         # Check for XSS protection
@@ -446,7 +446,7 @@ class SecurityAuditor:
                 passed=True,
                 severity="HIGH",
                 message="Input sanitization and output encoding implemented",
-            )
+            ),
         )
 
         return results
@@ -463,7 +463,7 @@ class SecurityAuditor:
                 severity="HIGH",
                 message="Sensitive data encrypted at rest",
                 details={"algorithm": "AES-256", "key_management": "secure"},
-            )
+            ),
         )
 
         # Check for data in transit encryption
@@ -474,7 +474,7 @@ class SecurityAuditor:
                 severity="HIGH",
                 message="All API communications use HTTPS",
                 details={"tls_version": "1.3", "cipher_suites": "strong"},
-            )
+            ),
         )
 
         return results
@@ -490,7 +490,7 @@ class SecurityAuditor:
                 passed=True,
                 severity="CRITICAL",
                 message="Access control properly implemented",
-            )
+            ),
         )
 
         # A02:2021 - Cryptographic Failures
@@ -500,7 +500,7 @@ class SecurityAuditor:
                 passed=True,
                 severity="CRITICAL",
                 message="Strong cryptography used throughout",
-            )
+            ),
         )
 
         # A03:2021 - Injection
@@ -510,7 +510,7 @@ class SecurityAuditor:
                 passed=True,
                 severity="CRITICAL",
                 message="Protected against injection attacks",
-            )
+            ),
         )
 
         # Continue with other OWASP checks...
@@ -528,7 +528,7 @@ class SecurityAuditor:
                 passed=True,
                 severity="MEDIUM",
                 message="Application uses secure default configurations",
-            )
+            ),
         )
 
         # Check for exposed debug endpoints
@@ -538,7 +538,7 @@ class SecurityAuditor:
                 passed=True,
                 severity="HIGH",
                 message="No debug endpoints exposed in production",
-            )
+            ),
         )
 
         # Check for proper error handling
@@ -548,7 +548,7 @@ class SecurityAuditor:
                 passed=True,
                 severity="MEDIUM",
                 message="Error messages do not expose sensitive information",
-            )
+            ),
         )
 
         return results
@@ -597,7 +597,7 @@ class SecurityAuditor:
 class SecurityEventMonitor:
     """Monitor and log security events"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.logger = get_logger(__name__)
         self.audit_logger = get_audit_logger()
         self.suspicious_patterns = {
@@ -614,7 +614,7 @@ class SecurityEventMonitor:
         source_ip: str,
         user_id: str | None = None,
         details: dict[str, Any] | None = None,
-    ):
+    ) -> None:
         """Log a security event"""
         event = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -639,7 +639,7 @@ class SecurityEventMonitor:
         if severity == "CRITICAL":
             await self._handle_critical_event(event)
 
-    async def _handle_critical_event(self, event: dict[str, Any]):
+    async def _handle_critical_event(self, event: dict[str, Any]) -> None:
         """Handle critical security events"""
         # Implement notifications, automatic responses, etc.
         self.logger.error(

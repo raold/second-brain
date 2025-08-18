@@ -77,9 +77,9 @@ class StructuredFormatter(logging.Formatter):
 class DevelopmentFormatter(logging.Formatter):
     """Human-readable formatter for development."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
-            fmt="%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s", datefmt="%H:%M:%S"
+            fmt="%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s", datefmt="%H:%M:%S",
         )
 
     def format(self, record: logging.LogRecord) -> str:
@@ -101,7 +101,7 @@ class DevelopmentFormatter(logging.Formatter):
 class SecondBrainLogger:
     """Enhanced logger with context and structured logging support."""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.logger = logging.getLogger(name)
         self._context: dict[str, Any] = {}
 
@@ -111,7 +111,7 @@ class SecondBrainLogger:
         new_logger._context = {**self._context, **kwargs}
         return new_logger
 
-    def _log(self, level: int, message: str, *args, **kwargs):
+    def _log(self, level: int, message: str, *args, **kwargs) -> None:
         """Enhanced logging with context and metrics."""
         extra_data = {**self._context}
 
@@ -138,22 +138,22 @@ class SecondBrainLogger:
 
         self.logger.handle(record)
 
-    def debug(self, message: str, *args, **kwargs):
+    def debug(self, message: str, *args, **kwargs) -> None:
         self._log(logging.DEBUG, message, *args, **kwargs)
 
-    def info(self, message: str, *args, **kwargs):
+    def info(self, message: str, *args, **kwargs) -> None:
         self._log(logging.INFO, message, *args, **kwargs)
 
-    def warning(self, message: str, *args, **kwargs):
+    def warning(self, message: str, *args, **kwargs) -> None:
         self._log(logging.WARNING, message, *args, **kwargs)
 
-    def error(self, message: str, *args, **kwargs):
+    def error(self, message: str, *args, **kwargs) -> None:
         self._log(logging.ERROR, message, *args, **kwargs)
 
-    def critical(self, message: str, *args, **kwargs):
+    def critical(self, message: str, *args, **kwargs) -> None:
         self._log(logging.CRITICAL, message, *args, **kwargs)
 
-    def exception(self, message: str, *args, **kwargs):
+    def exception(self, message: str, *args, **kwargs) -> None:
         # Get current exception info properly
 
         exc_info = sys.exc_info()
@@ -189,10 +189,7 @@ def configure_logging() -> None:
     console_handler.setLevel(log_level)
 
     # Choose formatter based on environment
-    if use_structured or is_production:
-        formatter = StructuredFormatter()
-    else:
-        formatter = DevelopmentFormatter()
+    formatter = StructuredFormatter() if use_structured or is_production else DevelopmentFormatter()
 
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
@@ -200,7 +197,7 @@ def configure_logging() -> None:
     # Add file handler for production
     if is_production:
         file_handler = logging.handlers.RotatingFileHandler(
-            filename="logs/second-brain.log", maxBytes=10 * 1024 * 1024, backupCount=5  # 10MB
+            filename="logs/second-brain.log", maxBytes=10 * 1024 * 1024, backupCount=5,  # 10MB
         )
         file_handler.setLevel(logging.WARNING)
         file_handler.setFormatter(StructuredFormatter())
@@ -232,7 +229,7 @@ def get_logger(name: str) -> SecondBrainLogger:
 class LogContext:
     """Context manager for request/operation logging context."""
 
-    def __init__(self, operation: str = None, user_id: str = None, request_id: str = None):
+    def __init__(self, operation: str | None = None, user_id: str | None = None, request_id: str | None = None) -> None:
         self.operation = operation
         self.user_id = user_id
         self.request_id = request_id or str(uuid.uuid4())[:8]
@@ -255,7 +252,7 @@ class LogContext:
 class PerformanceLogger:
     """Context manager for performance logging."""
 
-    def __init__(self, operation: str, logger: SecondBrainLogger = None):
+    def __init__(self, operation: str, logger: SecondBrainLogger = None) -> None:
         self.operation = operation
         self.logger = logger or get_logger(__name__)
         self.start_time = None
@@ -301,4 +298,4 @@ class PerformanceLogger:
 
 
 # Export commonly used functions
-__all__ = ["configure_logging", "get_logger", "LogContext", "PerformanceLogger"]
+__all__ = ["LogContext", "PerformanceLogger", "configure_logging", "get_logger"]

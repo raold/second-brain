@@ -74,7 +74,7 @@ class TestSynthesisIntegration:
 
         # 2. List reports
         response = await async_client.get(
-            "/api/v1/synthesis/reports", headers={"X-API-Key": "test_key"}
+            "/api/v1/synthesis/reports", headers={"X-API-Key": "test_key"},
         )
 
         assert response.status_code == 200
@@ -98,7 +98,7 @@ class TestSynthesisIntegration:
 
         # 2. Bulk schedule multiple memories
         bulk_request = BulkReviewRequest(
-            memory_ids=["mem_1", "mem_2", "mem_3"], algorithm=RepetitionAlgorithm.ANKI
+            memory_ids=["mem_1", "mem_2", "mem_3"], algorithm=RepetitionAlgorithm.ANKI,
         )
 
         response = await async_client.post(
@@ -124,7 +124,7 @@ class TestSynthesisIntegration:
 
         # 4. Start a review session
         response = await async_client.post(
-            "/api/v1/synthesis/repetition/sessions/start", headers={"X-API-Key": "test_key"}
+            "/api/v1/synthesis/repetition/sessions/start", headers={"X-API-Key": "test_key"},
         )
 
         assert response.status_code == 200
@@ -179,7 +179,7 @@ class TestSynthesisIntegration:
 
         # 1. Test WebSocket connection endpoint exists
         response = test_client.get(
-            "/api/v1/synthesis/websocket/metrics", headers={"X-API-Key": "test_key"}
+            "/api/v1/synthesis/websocket/metrics", headers={"X-API-Key": "test_key"},
         )
 
         assert response.status_code == 200
@@ -190,7 +190,7 @@ class TestSynthesisIntegration:
     async def test_synthesis_status_endpoint(self, async_client):
         """Test synthesis status endpoint."""
         response = await async_client.get(
-            "/api/v1/synthesis/synthesis/status", headers={"X-API-Key": "test_key"}
+            "/api/v1/synthesis/synthesis/status", headers={"X-API-Key": "test_key"},
         )
 
         assert response.status_code == 200
@@ -237,7 +237,7 @@ class TestSynthesisIntegration:
 
         # List schedules
         response = await async_client.get(
-            "/api/v1/synthesis/reports/schedules", headers={"X-API-Key": "test_key"}
+            "/api/v1/synthesis/reports/schedules", headers={"X-API-Key": "test_key"},
         )
 
         assert response.status_code == 200
@@ -257,7 +257,7 @@ class TestSynthesisIntegration:
         }
 
         response = await async_client.post(
-            "/api/v1/synthesis/reports/templates", json=template, headers={"X-API-Key": "test_key"}
+            "/api/v1/synthesis/reports/templates", json=template, headers={"X-API-Key": "test_key"},
         )
 
         assert response.status_code == 200
@@ -267,7 +267,7 @@ class TestSynthesisIntegration:
 
         # List templates
         response = await async_client.get(
-            "/api/v1/synthesis/reports/templates", headers={"X-API-Key": "test_key"}
+            "/api/v1/synthesis/reports/templates", headers={"X-API-Key": "test_key"},
         )
 
         assert response.status_code == 200
@@ -293,7 +293,7 @@ class TestSynthesisIntegration:
 
         # Test non-existent report
         response = await async_client.get(
-            "/api/v1/synthesis/reports/non_existent_id", headers={"X-API-Key": "test_key"}
+            "/api/v1/synthesis/reports/non_existent_id", headers={"X-API-Key": "test_key"},
         )
 
         assert response.status_code == 404

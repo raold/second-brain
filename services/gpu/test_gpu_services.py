@@ -5,7 +5,7 @@ import asyncio
 import aiohttp
 
 
-async def test_clip_service():
+async def test_clip_service() -> bool:
     """Test CLIP service endpoints."""
     print("\n🧪 Testing CLIP Service...")
 
@@ -27,7 +27,7 @@ async def test_clip_service():
             payload = {"text": "A beautiful sunset over the ocean"}
             async with session.post(
                 "http://localhost:8002/clip/embed/text",
-                json=payload
+                json=payload,
             ) as resp:
                 if resp.status == 200:
                     result = await resp.json()
@@ -45,18 +45,18 @@ async def test_clip_service():
             from PIL import Image
 
             # Create a simple test image
-            img = Image.new('RGB', (224, 224), color='red')
+            img = Image.new("RGB", (224, 224), color="red")
             img_bytes = io.BytesIO()
-            img.save(img_bytes, format='PNG')
+            img.save(img_bytes, format="PNG")
             img_bytes.seek(0)
 
             data = aiohttp.FormData()
-            data.add_field('file', img_bytes, filename='test.png',
-                          content_type='image/png')
+            data.add_field("file", img_bytes, filename="test.png",
+                          content_type="image/png")
 
             async with session.post(
                 "http://localhost:8002/clip/embed/image",
-                data=data
+                data=data,
             ) as resp:
                 if resp.status == 200:
                     result = await resp.json()
@@ -70,7 +70,7 @@ async def test_clip_service():
     return True
 
 
-async def test_llava_service():
+async def test_llava_service() -> bool:
     """Test LLaVA service endpoints."""
     print("\n🧪 Testing LLaVA Service...")
 
@@ -91,7 +91,7 @@ async def test_llava_service():
         try:
             async with session.post(
                 "http://localhost:8003/llava/embed/text",
-                json="Describe the meaning of life"
+                json="Describe the meaning of life",
             ) as resp:
                 if resp.status == 200:
                     result = await resp.json()
@@ -109,26 +109,26 @@ async def test_llava_service():
             from PIL import Image, ImageDraw
 
             # Create a test image with text
-            img = Image.new('RGB', (512, 512), color='white')
+            img = Image.new("RGB", (512, 512), color="white")
             draw = ImageDraw.Draw(img)
-            draw.text((50, 50), "TEST IMAGE", fill='black')
-            draw.rectangle([100, 100, 400, 400], outline='blue', width=3)
+            draw.text((50, 50), "TEST IMAGE", fill="black")
+            draw.rectangle([100, 100, 400, 400], outline="blue", width=3)
 
             img_bytes = io.BytesIO()
-            img.save(img_bytes, format='PNG')
+            img.save(img_bytes, format="PNG")
             img_bytes.seek(0)
 
             data = aiohttp.FormData()
-            data.add_field('file', img_bytes, filename='test.png',
-                          content_type='image/png')
-            data.add_field('instruction', 'Describe this test image')
+            data.add_field("file", img_bytes, filename="test.png",
+                          content_type="image/png")
+            data.add_field("instruction", "Describe this test image")
 
             print("⏳ Analyzing image (this may take 30-60 seconds on first run)...")
 
             async with session.post(
                 "http://localhost:8003/llava/analyze/image",
                 data=data,
-                timeout=aiohttp.ClientTimeout(total=120)
+                timeout=aiohttp.ClientTimeout(total=120),
             ) as resp:
                 if resp.status == 200:
                     result = await resp.json()
@@ -136,11 +136,11 @@ async def test_llava_service():
                     print(f"   Description: {result['description'][:100]}...")
                     print(f"   Embedding dims: {result['dimensions']}")
                     print(f"   Processing time: {result['processing_time_ms']:.2f}ms")
-                    if result.get('ocr_text'):
+                    if result.get("ocr_text"):
                         print(f"   OCR text: {result['ocr_text']}")
                 else:
                     print(f"❌ Image analysis failed: {resp.status}")
-        except asyncio.TimeoutError:
+        except TimeoutError:
             print("⚠️  Image analysis timed out (model may still be loading)")
         except Exception as e:
             print(f"⚠️  Image analysis error: {e}")
@@ -150,7 +150,7 @@ async def test_llava_service():
             async with session.get("http://localhost:8003/") as resp:
                 if resp.status == 200:
                     info = await resp.json()
-                    if info.get('async_enabled'):
+                    if info.get("async_enabled"):
                         print("✅ Async queue (Redis) is enabled")
                     else:
                         print("⚠️  Async queue not available (Redis not connected)")
@@ -160,7 +160,7 @@ async def test_llava_service():
     return True
 
 
-async def main():
+async def main() -> None:
     """Run all tests."""
     print("=" * 60)
     print("🚀 Second-Brain GPU Services Test Suite")

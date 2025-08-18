@@ -116,11 +116,15 @@
       "Bash(wsl find . -name \"*.py\")",
       "Bash(wsl find . -name '*.py')",
       "Bash(.venv\\Scripts\\pip.exe install:*)",
-      "Bash(ruff check:*)"
+      "Bash(ruff check:*)",
+      "Bash(.venv\\Scripts\\python.exe scripts\\run_dev.py:*)",
+      "Bash(C:Usersdrosecond-brain.venvScriptspython.exe scripts/run_dev.py)",
+      "Bash(wsl .venv/Scripts/pip.exe install -r requirements.txt)",
+      "Bash(wsl:*)",
+      "Bash(.venv/Scripts/python.exe -m uvicorn:*)",
+      "Bash(.venv\\Scripts\\python.exe -m uvicorn:*)"
     ],
     "deny": [],
-    "additionalDirectories": [
-      "C:\\Users\\dro\\Library"
-    ]
+    "additionalDirectories": []
   }
 }

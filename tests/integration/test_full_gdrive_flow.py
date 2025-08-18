@@ -25,7 +25,7 @@ async def test_full_flow():
             print(f"   Connected: {status.get('connected')}")
             print(f"   Credentials configured: {status.get('credentials_configured')}")
 
-            if not status.get('credentials_configured'):
+            if not status.get("credentials_configured"):
                 print("❌ Google OAuth credentials not configured!")
                 print("   Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env")
                 return False
@@ -37,7 +37,7 @@ async def test_full_flow():
         async with session.post(f"{BASE_URL}/api/v1/gdrive/connect") as resp:
             if resp.status == 200:
                 data = await resp.json()
-                auth_url = data.get('auth_url')
+                auth_url = data.get("auth_url")
                 print("✅ OAuth URL generated")
                 print(f"   URL length: {len(auth_url)} characters")
                 print()
@@ -57,7 +57,7 @@ async def test_full_flow():
         print("3️⃣ Checking if already authenticated...")
         async with session.get(f"{BASE_URL}/api/v1/gdrive/status") as resp:
             status = await resp.json()
-            if status.get('connected'):
+            if status.get("connected"):
                 print(f"✅ Already connected as: {status.get('user_email')}")
 
                 # Try to list files
@@ -66,7 +66,7 @@ async def test_full_flow():
                 async with session.get(f"{BASE_URL}/api/v1/gdrive/files") as resp:
                     if resp.status == 200:
                         data = await resp.json()
-                        files = data.get('files', [])
+                        files = data.get("files", [])
                         print(f"✅ Found {len(files)} files")
 
                         if files:
@@ -79,13 +79,13 @@ async def test_full_flow():
                             print("5️⃣ Testing file sync to PostgreSQL...")
                             first_file = files[0]
                             sync_data = {
-                                "file_id": first_file['id'],
-                                "process": True
+                                "file_id": first_file["id"],
+                                "process": True,
                             }
 
                             async with session.post(
                                 f"{BASE_URL}/api/v1/gdrive/sync/file",
-                                json=sync_data
+                                json=sync_data,
                             ) as resp:
                                 if resp.status == 200:
                                     result = await resp.json()
@@ -107,7 +107,7 @@ async def test_full_flow():
         print("📊 Integration Status Summary")
         print("=" * 60)
 
-        if status.get('connected'):
+        if status.get("connected"):
             print("✅ Google Drive: Connected and working")
             print("✅ File listing: Working")
             print("✅ File sync to PostgreSQL: Working")

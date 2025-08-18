@@ -40,7 +40,7 @@ class TestPostgreSQLLive:
         """Create memory service with embeddings enabled"""
         service = MemoryServicePostgres(
             connection_string="postgresql://secondbrain:changeme@localhost/secondbrain",
-            enable_embeddings=True
+            enable_embeddings=True,
         )
         await service.initialize()
         yield service
@@ -54,7 +54,7 @@ class TestPostgreSQLLive:
 
             # Check pgvector extension
             vector_check = await conn.fetchval(
-                "SELECT 1 FROM pg_extension WHERE extname = 'vector'"
+                "SELECT 1 FROM pg_extension WHERE extname = 'vector'",
             )
             assert vector_check == 1
 
@@ -70,7 +70,7 @@ class TestPostgreSQLLive:
             "importance_score": 0.8,
             "tags": ["test", "pgvector"],
             "metadata": {"test": True},
-            "container_id": "pytest"
+            "container_id": "pytest",
         }
 
         created = await backend.create_memory(memory_data, embedding)
@@ -87,7 +87,7 @@ class TestPostgreSQLLive:
         embeddings = [
             np.random.rand(1536).tolist(),
             np.random.rand(1536).tolist(),
-            np.random.rand(1536).tolist()
+            np.random.rand(1536).tolist(),
         ]
 
         memories = []
@@ -95,7 +95,7 @@ class TestPostgreSQLLive:
             memory = await backend.create_memory({
                 "content": f"Test memory {i} for vector search",
                 "container_id": "pytest",
-                "importance_score": 0.5 + i * 0.1
+                "importance_score": 0.5 + i * 0.1,
             }, embedding)
             memories.append(memory)
 
@@ -104,7 +104,7 @@ class TestPostgreSQLLive:
             embedding=embeddings[0],
             limit=3,
             min_similarity=0.0,
-            container_id="pytest"
+            container_id="pytest",
         )
 
         assert len(results) == 3
@@ -120,12 +120,12 @@ class TestPostgreSQLLive:
 
         await backend.create_memory({
             "content": "PostgreSQL database with vector extensions",
-            "container_id": "pytest"
+            "container_id": "pytest",
         }, embedding1)
 
         await backend.create_memory({
             "content": "Machine learning embeddings for semantic search",
-            "container_id": "pytest"
+            "container_id": "pytest",
         }, embedding2)
 
         # Test hybrid search
@@ -134,7 +134,7 @@ class TestPostgreSQLLive:
             embedding=embedding1,
             limit=2,
             vector_weight=0.5,
-            container_id="pytest"
+            container_id="pytest",
         )
 
         assert len(results) > 0
@@ -153,7 +153,7 @@ class TestPostgreSQLLive:
             memory_type="test",
             importance_score=0.9,
             tags=["openai", "embedding", "test"],
-            generate_embedding=True
+            generate_embedding=True,
         )
 
         assert created["id"] is not None
@@ -162,7 +162,7 @@ class TestPostgreSQLLive:
         results = await service.semantic_search(
             query="OpenAI embeddings",
             limit=5,
-            min_similarity=0.5
+            min_similarity=0.5,
         )
 
         # Should find our memory
@@ -175,18 +175,18 @@ class TestPostgreSQLLive:
         async with backend.acquire() as conn:
             # Check index exists
             index_exists = await conn.fetchval("""
-                SELECT 1 FROM pg_indexes 
+                SELECT 1 FROM pg_indexes
                 WHERE indexname = 'idx_memories_embedding'
             """)
             assert index_exists == 1
 
             # Check index definition includes HNSW
             index_def = await conn.fetchval("""
-                SELECT indexdef FROM pg_indexes 
+                SELECT indexdef FROM pg_indexes
                 WHERE indexname = 'idx_memories_embedding'
             """)
-            assert 'hnsw' in index_def.lower()
-            assert 'vector_cosine_ops' in index_def
+            assert "hnsw" in index_def.lower()
+            assert "vector_cosine_ops" in index_def
 
     @pytest.mark.asyncio
     async def test_full_text_search(self, backend):
@@ -194,19 +194,19 @@ class TestPostgreSQLLive:
         # Create test memories
         await backend.create_memory({
             "content": "Python programming language tutorial",
-            "container_id": "pytest"
+            "container_id": "pytest",
         })
 
         await backend.create_memory({
             "content": "JavaScript web development guide",
-            "container_id": "pytest"
+            "container_id": "pytest",
         })
 
         # Search for Python
         results = await backend.text_search(
             query="Python programming",
             limit=10,
-            container_id="pytest"
+            container_id="pytest",
         )
 
         assert len(results) > 0
@@ -221,7 +221,7 @@ class TestPostgreSQLLive:
             await backend.create_memory({
                 "content": f"Test memory {i}",
                 "container_id": "pytest",
-                "memory_type": "test" if i < 2 else "other"
+                "memory_type": "test" if i < 2 else "other",
             })
 
         stats = await backend.get_statistics("pytest")

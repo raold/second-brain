@@ -6,7 +6,6 @@ Port 8004 - Local LLM processing
 import logging
 import time
 from contextlib import asynccontextmanager
-from typing import Optional
 
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,19 +16,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Global service instance
-lm_studio: Optional[LMStudioService] = None
+lm_studio: LMStudioService | None = None
 
 
 class TextRequest(BaseModel):
     text: str
     max_tokens: int = 500
     temperature: float = 0.7
-    model: Optional[str] = None
+    model: str | None = None
 
 
 class EmbeddingRequest(BaseModel):
     text: str
-    model: Optional[str] = None
+    model: str | None = None
 
 
 class SummarizeRequest(BaseModel):
@@ -70,7 +69,7 @@ app = FastAPI(
     title="LM Studio Local LLM Service",
     description="Local text generation and embeddings via LM Studio",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS
@@ -95,8 +94,8 @@ async def root():
             "Document summarization",
             "Keyword extraction",
             "Question answering",
-            "Embeddings (if model available)"
-        ]
+            "Embeddings (if model available)",
+        ],
     }
 
 
@@ -110,7 +109,7 @@ async def get_status():
         "running": healthy,
         "base_url": lm_studio.base_url,
         "models": models,
-        "model_count": len(models)
+        "model_count": len(models),
     }
 
 
@@ -127,7 +126,7 @@ async def generate_text(request: TextRequest):
             request.text,
             max_tokens=request.max_tokens,
             temperature=request.temperature,
-            model=request.model
+            model=request.model,
         )
 
         processing_time = (time.time() - start_time) * 1000
@@ -135,11 +134,11 @@ async def generate_text(request: TextRequest):
         return {
             "response": response,
             "processing_time_ms": processing_time,
-            "model": request.model or "default"
+            "model": request.model or "default",
         }
 
     except Exception as e:
-        logger.error(f"Generation error: {e}")
+        logger.exception(f"Generation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -158,11 +157,11 @@ async def generate_embedding(request: EmbeddingRequest):
         return {
             "embedding": embedding.tolist(),
             "dimensions": len(embedding),
-            "processing_time_ms": processing_time
+            "processing_time_ms": processing_time,
         }
 
     except Exception as e:
-        logger.error(f"Embedding error: {e}")
+        logger.exception(f"Embedding error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -177,7 +176,7 @@ async def summarize_document(request: SummarizeRequest):
     try:
         summary = await lm_studio.summarize_document(
             request.content,
-            request.max_length
+            request.max_length,
         )
 
         processing_time = (time.time() - start_time) * 1000
@@ -186,11 +185,11 @@ async def summarize_document(request: SummarizeRequest):
             "summary": summary,
             "processing_time_ms": processing_time,
             "original_length": len(request.content),
-            "summary_length": len(summary)
+            "summary_length": len(summary),
         }
 
     except Exception as e:
-        logger.error(f"Summarization error: {e}")
+        logger.exception(f"Summarization error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -209,11 +208,11 @@ async def extract_keywords(content: str = Body(...)):
         return {
             "keywords": keywords,
             "count": len(keywords),
-            "processing_time_ms": processing_time
+            "processing_time_ms": processing_time,
         }
 
     except Exception as e:
-        logger.error(f"Keyword extraction error: {e}")
+        logger.exception(f"Keyword extraction error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -228,7 +227,7 @@ async def answer_question(request: QuestionRequest):
     try:
         answer = await lm_studio.answer_question(
             request.context,
-            request.question
+            request.question,
         )
 
         processing_time = (time.time() - start_time) * 1000
@@ -236,11 +235,11 @@ async def answer_question(request: QuestionRequest):
         return {
             "question": request.question,
             "answer": answer,
-            "processing_time_ms": processing_time
+            "processing_time_ms": processing_time,
         }
 
     except Exception as e:
-        logger.error(f"QA error: {e}")
+        logger.exception(f"QA error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

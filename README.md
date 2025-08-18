@@ -10,7 +10,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
 [![pgvector](https://img.shields.io/badge/pgvector-0.8.0-blue.svg)](https://github.com/pgvector/pgvector)
-[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Docker Required](https://img.shields.io/badge/Docker-Required-orange.svg)](https://www.docker.com/)
 
 </div>
 
@@ -56,54 +56,46 @@ Second Brain is your personal AI-powered knowledge management system that runs *
 ## 🚀 **Quick Start**
 
 ### Prerequisites
-- Python 3.11+
-- PostgreSQL 16+ with pgvector
-- NVIDIA GPU with CUDA (for optimal performance)
+- **Docker Desktop** (required) - [Download](https://www.docker.com/products/docker-desktop/)
 - 16GB+ RAM recommended
 - 20GB+ free disk space
 
-### 1. Clone and Setup
+### 1. Clone Repository
 ```bash
 git clone https://github.com/raold/second-brain.git
 cd second-brain
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
 ```
 
-### 2. Configure Environment
+### 2. Start Everything with Docker
 ```bash
+# Copy environment file
 cp .env.example .env
-# Edit .env - no API keys needed!
+
+# Start all services
+docker-compose up -d
+
+# Or use the convenience script:
+./dev.bat start     # Windows
+./dev.sh start      # Mac/Linux
 ```
 
-### 3. Start PostgreSQL
+### 3. Access the Application
+- **Main App**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+- **Photo Pipeline**: http://localhost:8000/static/photo-pipeline.html
+- **Database Admin**: http://localhost:8080
+
+### Optional: Local AI Models
+For GPU-accelerated vision features:
 ```bash
-docker-compose up -d postgres
+# Start GPU services with Docker
+docker-compose -f docker-compose.gpu.yml up -d
 ```
 
-### 4. Install and Configure LM Studio
+Or configure LM Studio:
 1. Download [LM Studio](https://lmstudio.ai/)
-2. Load these models:
-   - `llava-1.6-mistral-7b` Q6_K (6.57GB)
-   - `text-embedding-nomic-embed-text-v1.5` (137MB)
+2. Load model: `llava-1.6-mistral-7b` Q6_K
 3. Start server on port 1234
-
-### 5. Start GPU Services
-```bash
-# Terminal 1: CLIP Service
-python services/gpu/clip/clip_api.py
-
-# Terminal 2: LLaVA Service  
-python services/gpu/llava/llava_api.py
-```
-
-### 6. Run Main Application
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
-```
-
-Visit http://localhost:8001/docs for the API documentation.
 
 ## 📊 **Architecture**
 
@@ -116,7 +108,7 @@ graph TB
     end
     
     subgraph "Core"
-        API[FastAPI<br/>:8001]
+        API[FastAPI<br/>:8000]
         PG[(PostgreSQL<br/>+ pgvector<br/>:5432)]
     end
     

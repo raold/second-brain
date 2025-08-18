@@ -129,7 +129,7 @@ class TestIntegrationSuite:
         assert len(page1) == 10
 
         response = await client.get(
-            "/memories", params={"api_key": api_key, "limit": 10, "offset": 10}
+            "/memories", params={"api_key": api_key, "limit": 10, "offset": 10},
         )
         assert response.status_code == 200
         page2 = response.json()
@@ -139,7 +139,7 @@ class TestIntegrationSuite:
 
         # Test search with limit
         search_response = await client.post(
-            "/memories/search", json={"query": "batch", "limit": 3}, params={"api_key": api_key}
+            "/memories/search", json={"query": "batch", "limit": 3}, params={"api_key": api_key},
         )
         assert search_response.status_code == 200
         search_results = search_response.json()
@@ -167,7 +167,7 @@ class TestIntegrationSuite:
 
         # Test invalid search query
         response = await client.post(
-            "/memories/search", json={"limit": -1}, params={"api_key": api_key}
+            "/memories/search", json={"limit": -1}, params={"api_key": api_key},
         )
         assert response.status_code == 422
 
@@ -188,7 +188,7 @@ class TestIntegrationSuite:
 
         # Test valid API key from list
         response = await client.get(
-            "/memories", params={"api_key": "test-token-32-chars-long-for-auth-0987654321fedcba"}
+            "/memories", params={"api_key": "test-token-32-chars-long-for-auth-0987654321fedcba"},
         )
         assert response.status_code == 200
 
@@ -201,7 +201,7 @@ class TestIntegrationSuite:
 
         # Test with custom headers
         response = await client.get(
-            "/memories", params={"api_key": api_key}, headers={"X-Test-Header": "test-value"}
+            "/memories", params={"api_key": api_key}, headers={"X-Test-Header": "test-value"},
         )
         assert response.status_code == 200
 

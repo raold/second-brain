@@ -13,13 +13,13 @@ options = {
             "✅ Already integrated and working",
             "✅ 4-bit quantization implemented",
             "✅ Can do OCR and image analysis",
-            "✅ Generates 4096-dim embeddings"
+            "✅ Generates 4096-dim embeddings",
         ],
         "cons": [
             "❌ Uses more VRAM than needed",
-            "❌ Slower than specialized models"
+            "❌ Slower than specialized models",
         ],
-        "verdict": "USE THIS - It's working now!"
+        "verdict": "USE THIS - It's working now!",
     },
 
     "2. CLIP (Port 8002) - Already Working": {
@@ -27,39 +27,39 @@ options = {
             "✅ Fast (300ms per image)",
             "✅ Great for image search",
             "✅ 768-dim embeddings",
-            "✅ Low VRAM usage"
+            "✅ Low VRAM usage",
         ],
         "cons": [
             "❌ No text extraction",
-            "❌ Basic captions only"
+            "❌ Basic captions only",
         ],
-        "verdict": "Keep for fast embeddings"
+        "verdict": "Keep for fast embeddings",
     },
 
     "3. JoyCaption in LM Studio": {
         "pros": [
             "✅ Specialized for captioning",
-            "✅ Better descriptions than LLaVA"
+            "✅ Better descriptions than LLaVA",
         ],
         "cons": [
             "❌ API doesn't support images yet",
-            "❌ Would need workaround"
+            "❌ Would need workaround",
         ],
-        "verdict": "Wait for LM Studio update"
+        "verdict": "Wait for LM Studio update",
     },
 
     "4. Ollama with LLaVA": {
         "pros": [
             "✅ Excellent API support",
             "✅ Easy to use",
-            "✅ Multiple vision models"
+            "✅ Multiple vision models",
         ],
         "cons": [
             "❌ Another service to run",
-            "❌ Different API format"
+            "❌ Different API format",
         ],
-        "verdict": "Good alternative if needed"
-    }
+        "verdict": "Good alternative if needed",
+    },
 }
 
 print("\nANALYSIS:")

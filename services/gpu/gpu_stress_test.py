@@ -16,24 +16,24 @@ IMAGE_SIZE = (512, 512)  # Image dimensions
 
 async def generate_random_image(idx: int) -> bytes:
     """Generate a random test image."""
-    img = Image.new('RGB', IMAGE_SIZE, color=(
+    img = Image.new("RGB", IMAGE_SIZE, color=(
         random.randint(0, 255),
         random.randint(0, 255),
-        random.randint(0, 255)
+        random.randint(0, 255),
     ))
     draw = ImageDraw.Draw(img)
 
     # Draw random shapes
     for _ in range(10):
-        shape_type = random.choice(['rectangle', 'ellipse', 'line'])
+        shape_type = random.choice(["rectangle", "ellipse", "line"])
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
-        if shape_type == 'rectangle':
+        if shape_type == "rectangle":
             x_coords = sorted([random.randint(0, 512) for _ in range(2)])
             y_coords = sorted([random.randint(0, 512) for _ in range(2)])
             coords = [x_coords[0], y_coords[0], x_coords[1], y_coords[1]]
             draw.rectangle(coords, fill=color, outline=(255, 255, 255))
-        elif shape_type == 'ellipse':
+        elif shape_type == "ellipse":
             x_coords = sorted([random.randint(0, 512) for _ in range(2)])
             y_coords = sorted([random.randint(0, 512) for _ in range(2)])
             coords = [x_coords[0], y_coords[0], x_coords[1], y_coords[1]]
@@ -47,12 +47,12 @@ async def generate_random_image(idx: int) -> bytes:
 
     # Convert to bytes
     img_bytes = io.BytesIO()
-    img.save(img_bytes, format='PNG')
+    img.save(img_bytes, format="PNG")
     img_bytes.seek(0)
     return img_bytes.getvalue()
 
 
-async def stress_test_clip(session: aiohttp.ClientSession, round_num: int):
+async def stress_test_clip(session: aiohttp.ClientSession, round_num: int) -> None:
     """Stress test CLIP service."""
     print(f"\n[ROUND {round_num}] CLIP STRESS TEST - {BATCH_SIZE} images")
     print("-" * 60)
@@ -70,7 +70,7 @@ async def stress_test_clip(session: aiohttp.ClientSession, round_num: int):
     tasks = []
     for img_data in images:
         data = aiohttp.FormData()
-        data.add_field('file', img_data, filename='test.png', content_type='image/png')
+        data.add_field("file", img_data, filename="test.png", content_type="image/png")
 
         task = session.post("http://localhost:8002/clip/embed/image", data=data)
         tasks.append(task)
@@ -95,7 +95,7 @@ async def stress_test_clip(session: aiohttp.ClientSession, round_num: int):
     payload = {"text": texts}
     async with session.post("http://localhost:8002/clip/embed/text", json=payload) as resp:
         if resp.status == 200:
-            result = await resp.json()
+            await resp.json()
             elapsed = time.time() - start_time
             print(f"\n  Text batch embedding: {BATCH_SIZE} texts in {elapsed:.2f}s")
             print(f"  Text throughput: {BATCH_SIZE/elapsed:.2f} texts/second")
@@ -106,16 +106,16 @@ async def check_gpu_memory():
     import subprocess
     result = subprocess.run(
         ["nvidia-smi", "--query-gpu=memory.used,memory.total", "--format=csv,noheader,nounits"],
-        capture_output=True,
-        text=True
+        check=False, capture_output=True,
+        text=True,
     )
     if result.returncode == 0:
-        used, total = map(int, result.stdout.strip().split(', '))
+        used, total = map(int, result.stdout.strip().split(", "))
         return used, total
     return None, None
 
 
-async def main():
+async def main() -> None:
     """Run the GPU stress test."""
     print("=" * 60)
     print("RTX 4090 STRESS TEST - MULTIMODAL EMBEDDINGS")

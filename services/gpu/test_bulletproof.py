@@ -13,7 +13,7 @@ LLAVA_URL = "http://localhost:8003"
 
 def create_test_image(text: str = "TEST IMAGE") -> bytes:
     """Create a test image with text."""
-    img = Image.new('RGB', (512, 512), color=(73, 109, 137))
+    img = Image.new("RGB", (512, 512), color=(73, 109, 137))
     d = ImageDraw.Draw(img)
 
     # Draw shapes
@@ -27,19 +27,19 @@ def create_test_image(text: str = "TEST IMAGE") -> bytes:
 
     # Convert to bytes
     img_bytes = io.BytesIO()
-    img.save(img_bytes, format='PNG')
+    img.save(img_bytes, format="PNG")
     img_bytes.seek(0)
     return img_bytes.getvalue()
 
 
-async def test_clip_text(session: aiohttp.ClientSession):
+async def test_clip_text(session: aiohttp.ClientSession) -> None:
     """Test CLIP text embedding."""
     print("\n[CLIP] Testing text embedding...")
 
     texts = [
         "A beautiful sunset over the mountains",
         "Technical documentation for API endpoints",
-        "Machine learning model optimization techniques"
+        "Machine learning model optimization techniques",
     ]
 
     for text in texts:
@@ -55,14 +55,14 @@ async def test_clip_text(session: aiohttp.ClientSession):
             print(f"  [FAIL] Error: {str(e)[:50]}")
 
 
-async def test_clip_image(session: aiohttp.ClientSession):
+async def test_clip_image(session: aiohttp.ClientSession) -> None:
     """Test CLIP image embedding."""
     print("\n[CLIP] Testing image embedding...")
 
     try:
         img_data = create_test_image("CLIP TEST")
         data = aiohttp.FormData()
-        data.add_field('file', img_data, filename='test.png', content_type='image/png')
+        data.add_field("file", img_data, filename="test.png", content_type="image/png")
 
         async with session.post(f"{CLIP_URL}/clip/embed/image", data=data) as resp:
             if resp.status == 200:
@@ -74,7 +74,7 @@ async def test_clip_image(session: aiohttp.ClientSession):
         print(f"  [FAIL] Error: {str(e)[:50]}")
 
 
-async def test_clip_batch(session: aiohttp.ClientSession):
+async def test_clip_batch(session: aiohttp.ClientSession) -> None:
     """Test CLIP batch processing."""
     print("\n[CLIP] Testing batch processing...")
 
@@ -93,14 +93,14 @@ async def test_clip_batch(session: aiohttp.ClientSession):
         print(f"  [FAIL] Error: {str(e)[:50]}")
 
 
-async def test_llava_text(session: aiohttp.ClientSession):
+async def test_llava_text(session: aiohttp.ClientSession) -> None:
     """Test LLaVA text embedding."""
     print("\n[LLaVA] Testing text embedding...")
 
     texts = [
         "Advanced neural network architectures",
         "Quantum computing fundamentals",
-        "Data pipeline optimization strategies"
+        "Data pipeline optimization strategies",
     ]
 
     for text in texts:
@@ -109,7 +109,7 @@ async def test_llava_text(session: aiohttp.ClientSession):
             async with session.post(
                 f"{LLAVA_URL}/llava/embed/text",
                 json=text,
-                headers={'Content-Type': 'application/json'}
+                headers={"Content-Type": "application/json"},
             ) as resp:
                 if resp.status == 200:
                     result = await resp.json()
@@ -121,20 +121,20 @@ async def test_llava_text(session: aiohttp.ClientSession):
             print(f"  [FAIL] Error: {str(e)[:50]}")
 
 
-async def test_llava_image_analysis(session: aiohttp.ClientSession):
+async def test_llava_image_analysis(session: aiohttp.ClientSession) -> None:
     """Test LLaVA image analysis."""
     print("\n[LLaVA] Testing image analysis...")
 
     try:
         img_data = create_test_image("LLAVA ANALYSIS")
         data = aiohttp.FormData()
-        data.add_field('file', img_data, filename='llava_test.png', content_type='image/png')
-        data.add_field('instruction', 'Describe this image in detail. What shapes and text do you see?')
+        data.add_field("file", img_data, filename="llava_test.png", content_type="image/png")
+        data.add_field("instruction", "Describe this image in detail. What shapes and text do you see?")
 
         async with session.post(
             f"{LLAVA_URL}/llava/analyze/image",
             data=data,
-            timeout=aiohttp.ClientTimeout(total=30)
+            timeout=aiohttp.ClientTimeout(total=30),
         ) as resp:
             if resp.status == 200:
                 result = await resp.json()
@@ -148,19 +148,19 @@ async def test_llava_image_analysis(session: aiohttp.ClientSession):
         print(f"  [FAIL] Error: {str(e)[:100]}")
 
 
-async def test_llava_image_embedding(session: aiohttp.ClientSession):
+async def test_llava_image_embedding(session: aiohttp.ClientSession) -> None:
     """Test LLaVA image embedding."""
     print("\n[LLaVA] Testing image embedding...")
 
     try:
         img_data = create_test_image("EMBEDDING TEST")
         data = aiohttp.FormData()
-        data.add_field('file', img_data, filename='embed_test.png', content_type='image/png')
+        data.add_field("file", img_data, filename="embed_test.png", content_type="image/png")
 
         async with session.post(
             f"{LLAVA_URL}/llava/embed/image",
             data=data,
-            timeout=aiohttp.ClientTimeout(total=30)
+            timeout=aiohttp.ClientTimeout(total=30),
         ) as resp:
             if resp.status == 200:
                 result = await resp.json()
@@ -172,29 +172,29 @@ async def test_llava_image_embedding(session: aiohttp.ClientSession):
         print(f"  [FAIL] Error: {str(e)[:100]}")
 
 
-async def test_llava_ocr(session: aiohttp.ClientSession):
+async def test_llava_ocr(session: aiohttp.ClientSession) -> None:
     """Test LLaVA OCR capability."""
     print("\n[LLaVA] Testing OCR...")
 
     try:
         # Create image with clear text
-        img = Image.new('RGB', (800, 200), color='white')
+        img = Image.new("RGB", (800, 200), color="white")
         d = ImageDraw.Draw(img)
-        d.text((50, 50), "EXTRACT THIS TEXT", fill='black')
-        d.text((50, 100), "Multiple lines of text", fill='blue')
-        d.text((50, 150), "OCR TEST SUCCESS", fill='red')
+        d.text((50, 50), "EXTRACT THIS TEXT", fill="black")
+        d.text((50, 100), "Multiple lines of text", fill="blue")
+        d.text((50, 150), "OCR TEST SUCCESS", fill="red")
 
         img_bytes = io.BytesIO()
-        img.save(img_bytes, format='PNG')
+        img.save(img_bytes, format="PNG")
         img_data = img_bytes.getvalue()
 
         data = aiohttp.FormData()
-        data.add_field('file', img_data, filename='ocr_test.png', content_type='image/png')
+        data.add_field("file", img_data, filename="ocr_test.png", content_type="image/png")
 
         async with session.post(
             f"{LLAVA_URL}/llava/extract_text",
             data=data,
-            timeout=aiohttp.ClientTimeout(total=30)
+            timeout=aiohttp.ClientTimeout(total=30),
         ) as resp:
             if resp.status == 200:
                 result = await resp.json()
@@ -207,7 +207,7 @@ async def test_llava_ocr(session: aiohttp.ClientSession):
         print(f"  [FAIL] Error: {str(e)[:100]}")
 
 
-async def test_gpu_stats(session: aiohttp.ClientSession):
+async def test_gpu_stats(session: aiohttp.ClientSession) -> None:
     """Check GPU utilization."""
     print("\n[GPU] Checking status...")
 
@@ -216,10 +216,10 @@ async def test_gpu_stats(session: aiohttp.ClientSession):
         result = subprocess.run(
             ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu",
              "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=5
+            check=False, capture_output=True, text=True, timeout=5,
         )
         if result.returncode == 0:
-            parts = result.stdout.strip().split(', ')
+            parts = result.stdout.strip().split(", ")
             gpu_util = int(parts[0])
             mem_used = int(parts[1])
             mem_total = int(parts[2])
@@ -232,7 +232,7 @@ async def test_gpu_stats(session: aiohttp.ClientSession):
         print(f"  Could not read GPU stats: {e}")
 
 
-async def main():
+async def main() -> None:
     """Run all bulletproof tests."""
     print("=" * 80)
     print("BULLETPROOF MULTIMODAL TEST SUITE")

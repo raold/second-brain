@@ -12,9 +12,9 @@ from pathlib import Path
 
 # Fix Windows console encoding
 if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
-def setup_cipher_mcp():
+def setup_cipher_mcp() -> bool:
     """
     Setup MCP configuration for IDE integration with Second Brain
     Since standard Cipher might have issues, we'll use Second Brain directly
@@ -34,19 +34,19 @@ def setup_cipher_mcp():
                 "description": "Second Brain memory persistence",
                 "command": "python",
                 "args": [
-                    str(Path(__file__).parent / "mcp_server.py")
+                    str(Path(__file__).parent / "mcp_server.py"),
                 ],
                 "env": {
                     "SECOND_BRAIN_URL": "http://localhost:8001",
                     "API_KEY": os.getenv("API_KEY", ""),
-                }
-            }
-        }
+                },
+            },
+        },
     }
 
     # Save MCP config
     config_file = mcp_config_dir / "servers.json"
-    with open(config_file, 'w') as f:
+    with open(config_file, "w") as f:
         json.dump(mcp_config, f, indent=2)
 
     print(f"✅ Created MCP config at: {config_file}")
@@ -59,9 +59,9 @@ def setup_cipher_mcp():
         "mcp.servers": {
             "second-brain": {
                 "enabled": True,
-                "url": "http://localhost:8001"
-            }
-        }
+                "url": "http://localhost:8001",
+            },
+        },
     }
 
     # Save VS Code workspace settings
@@ -72,12 +72,12 @@ def setup_cipher_mcp():
     existing_settings = {}
 
     if settings_file.exists():
-        with open(settings_file, 'r') as f:
+        with open(settings_file) as f:
             existing_settings = json.load(f)
 
     existing_settings.update(vscode_settings)
 
-    with open(settings_file, 'w') as f:
+    with open(settings_file, "w") as f:
         json.dump(existing_settings, f, indent=2)
 
     print(f"✅ Created VS Code settings at: {settings_file}")

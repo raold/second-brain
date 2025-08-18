@@ -20,7 +20,7 @@ class TestReportModels:
     def test_report_request_creation(self):
         """Test creating a report request"""
         request = ReportRequest(
-            report_type=ReportType.DAILY_SUMMARY, format=ReportFormat.MARKDOWN, user_id="user-123"
+            report_type=ReportType.DAILY_SUMMARY, format=ReportFormat.MARKDOWN, user_id="user-123",
         )
 
         assert request.report_type == ReportType.DAILY_SUMMARY
@@ -31,7 +31,7 @@ class TestReportModels:
         """Test creating a report response"""
         sections = [
             ReportSection(
-                title="Executive Summary", content="This is the summary content", order=1
+                title="Executive Summary", content="This is the summary content", order=1,
             ),
             ReportSection(title="Details", content="Detailed analysis here", order=2),
         ]

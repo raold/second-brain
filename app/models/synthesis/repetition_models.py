@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -34,11 +34,11 @@ class ForgettingCurve(BaseModel):
 
     memory_id: str
     retention_strength: float = 1.0
-    last_review: Optional[datetime] = None
+    last_review: datetime | None = None
     review_count: int = 0
     ease_factor: float = 2.5
     interval_days: int = 1
-    next_review: Optional[datetime] = None
+    next_review: datetime | None = None
 
     def calculate_next_review(self) -> datetime:
         """Calculate next review date based on current parameters"""
@@ -50,10 +50,10 @@ class ForgettingCurve(BaseModel):
 class BulkReviewRequest(BaseModel):
     """Request for bulk review operations"""
 
-    memory_ids: List[str]
+    memory_ids: list[str]
     user_id: str
-    review_type: Optional[str] = "standard"
-    batch_size: Optional[int] = 10
+    review_type: str | None = "standard"
+    batch_size: int | None = 10
 
 
 class ReviewSchedule(BaseModel):
@@ -64,10 +64,10 @@ class ReviewSchedule(BaseModel):
     user_id: str
     scheduled_date: datetime
     status: ReviewStatus = ReviewStatus.PENDING
-    difficulty_rating: Optional[float] = None
-    time_spent_seconds: Optional[float] = None
-    notes: Optional[str] = None
-    forgetting_curve: Optional[ForgettingCurve] = None
-    metadata: Dict[str, Any] = {}
+    difficulty_rating: float | None = None
+    time_spent_seconds: float | None = None
+    notes: str | None = None
+    forgetting_curve: ForgettingCurve | None = None
+    metadata: dict[str, Any] = {}
     created_at: datetime = Field(default_factory=datetime.now)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None

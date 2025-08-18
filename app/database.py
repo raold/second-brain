@@ -4,7 +4,6 @@ Database connection and management - Clean implementation
 
 import os
 from contextlib import asynccontextmanager
-from typing import Optional
 
 import asyncpg
 
@@ -12,11 +11,11 @@ import asyncpg
 class Database:
     """Database connection manager."""
 
-    def __init__(self):
-        self.pool: Optional[asyncpg.Pool] = None
+    def __init__(self) -> None:
+        self.pool: asyncpg.Pool | None = None
         self.is_connected = False
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Connect to the database."""
         if self.is_connected:
             return
@@ -27,7 +26,7 @@ class Database:
 
             # Create connection pool
             self.pool = await asyncpg.create_pool(
-                database_url, min_size=1, max_size=10, command_timeout=60
+                database_url, min_size=1, max_size=10, command_timeout=60,
             )
             self.is_connected = True
             print("✅ Database connected")
@@ -36,7 +35,7 @@ class Database:
             # Don't fail - app can work without database for now
             self.is_connected = False
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """Disconnect from the database."""
         if self.pool:
             await self.pool.close()
@@ -69,7 +68,7 @@ class Database:
 
 
 # Global database instance
-_database: Optional[Database] = None
+_database: Database | None = None
 
 
 async def get_database() -> Database:

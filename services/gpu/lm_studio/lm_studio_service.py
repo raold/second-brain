@@ -5,7 +5,6 @@ Provides text generation and embeddings without API costs
 
 import asyncio
 import logging
-from typing import List, Optional
 
 import aiohttp
 import numpy as np
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 class LMStudioService:
     """Interface to LM Studio's OpenAI-compatible API"""
 
-    def __init__(self, base_url: str = "http://localhost:1234"):
+    def __init__(self, base_url: str = "http://localhost:1234") -> None:
         self.base_url = base_url
         self.api_base = f"{base_url}/v1"
         self.headers = {"Content-Type": "application/json"}
@@ -30,7 +29,7 @@ class LMStudioService:
         except:
             return False
 
-    async def get_models(self) -> List[str]:
+    async def get_models(self) -> list[str]:
         """Get available models in LM Studio"""
         try:
             async with aiohttp.ClientSession() as session:
@@ -39,34 +38,33 @@ class LMStudioService:
                         data = await resp.json()
                         return [m["id"] for m in data.get("data", [])]
         except Exception as e:
-            logger.error(f"Failed to get models: {e}")
+            logger.exception(f"Failed to get models: {e}")
         return []
 
-    async def generate_embedding(self, text: str, model: Optional[str] = None) -> np.ndarray:
+    async def generate_embedding(self, text: str, model: str | None = None) -> np.ndarray:
         """Generate embedding using LM Studio"""
         try:
             async with aiohttp.ClientSession() as session:
                 payload = {
                     "input": text,
-                    "model": model or "nomic-embed-text"  # Or any embedding model you have
+                    "model": model or "nomic-embed-text",  # Or any embedding model you have
                 }
 
                 async with session.post(
                     f"{self.api_base}/embeddings",
                     json=payload,
-                    headers=self.headers
+                    headers=self.headers,
                 ) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         embedding = data["data"][0]["embedding"]
                         return np.array(embedding, dtype=np.float32)
-                    else:
-                        error = await resp.text()
-                        logger.error(f"Embedding failed: {error}")
-                        raise Exception(f"Embedding generation failed: {error}")
+                    error = await resp.text()
+                    logger.error(f"Embedding failed: {error}")
+                    raise Exception(f"Embedding generation failed: {error}")
 
         except Exception as e:
-            logger.error(f"LM Studio embedding error: {e}")
+            logger.exception(f"LM Studio embedding error: {e}")
             raise
 
     async def generate_text(
@@ -74,7 +72,7 @@ class LMStudioService:
         prompt: str,
         max_tokens: int = 500,
         temperature: float = 0.7,
-        model: Optional[str] = None
+        model: str | None = None,
     ) -> str:
         """Generate text using LM Studio"""
         try:
@@ -82,28 +80,27 @@ class LMStudioService:
                 payload = {
                     "model": model or "default",  # Will use currently loaded model
                     "messages": [
-                        {"role": "user", "content": prompt}
+                        {"role": "user", "content": prompt},
                     ],
                     "max_tokens": max_tokens,
                     "temperature": temperature,
-                    "stream": False
+                    "stream": False,
                 }
 
                 async with session.post(
                     f"{self.api_base}/chat/completions",
                     json=payload,
-                    headers=self.headers
+                    headers=self.headers,
                 ) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         return data["choices"][0]["message"]["content"]
-                    else:
-                        error = await resp.text()
-                        logger.error(f"Generation failed: {error}")
-                        raise Exception(f"Text generation failed: {error}")
+                    error = await resp.text()
+                    logger.error(f"Generation failed: {error}")
+                    raise Exception(f"Text generation failed: {error}")
 
         except Exception as e:
-            logger.error(f"LM Studio generation error: {e}")
+            logger.exception(f"LM Studio generation error: {e}")
             raise
 
     async def summarize_document(self, content: str, max_length: int = 500) -> str:
@@ -116,7 +113,7 @@ Summary:"""
 
         return await self.generate_text(prompt, max_tokens=max_length)
 
-    async def extract_keywords(self, content: str) -> List[str]:
+    async def extract_keywords(self, content: str) -> list[str]:
         """Extract keywords from content"""
         prompt = f"""Extract the 10 most important keywords from this text. Return only the keywords as a comma-separated list:
 
@@ -143,7 +140,7 @@ Answer:"""
 
 
 # Example usage
-async def test_lm_studio():
+async def test_lm_studio() -> None:
     """Test LM Studio integration"""
     service = LMStudioService()
 
@@ -161,7 +158,7 @@ async def test_lm_studio():
     # Test text generation
     response = await service.generate_text(
         "What are the benefits of using local LLMs?",
-        max_tokens=200
+        max_tokens=200,
     )
     print(f"\nGenerated text:\n{response}")
 

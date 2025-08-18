@@ -4,7 +4,6 @@ import io
 import logging
 import sys
 from pathlib import Path
-from typing import List, Union
 
 import numpy as np
 import torch
@@ -24,12 +23,12 @@ class CLIPService(BaseModelService):
     def __init__(
         self,
         model_name: str = "openai/clip-vit-large-patch14",
-        device: str = "cuda" if torch.cuda.is_available() else "cpu"
-    ):
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
+    ) -> None:
         super().__init__(model_name, device)
         self.embedding_dim = 768  # ViT-L/14 dimension
 
-    async def load_model(self):
+    async def load_model(self) -> None:
         """Load CLIP model and processor."""
         try:
             logger.info(f"Loading CLIP model: {self.model_name}")
@@ -37,7 +36,7 @@ class CLIPService(BaseModelService):
             # Load with automatic device mapping
             self.model = CLIPModel.from_pretrained(
                 self.model_name,
-                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
+                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
             ).to(self.device)
 
             self.processor = CLIPProcessor.from_pretrained(self.model_name)
@@ -49,12 +48,12 @@ class CLIPService(BaseModelService):
             logger.info(f"Model info: {self.get_device_info()}")
 
         except Exception as e:
-            logger.error(f"Failed to load CLIP model: {e}")
+            logger.exception(f"Failed to load CLIP model: {e}")
             raise
 
     async def generate_embedding(
         self,
-        content: Union[str, bytes, Image.Image]
+        content: str | bytes | Image.Image,
     ) -> np.ndarray:
         """Generate CLIP embedding for text or image."""
 
@@ -70,12 +69,12 @@ class CLIPService(BaseModelService):
                         return_tensors="pt",
                         padding=True,
                         truncation=True,
-                        max_length=77
+                        max_length=77,
                     ).to(self.device)
 
                     embeddings = self.model.get_text_features(**inputs)
 
-                elif isinstance(content, (bytes, Image.Image)):
+                elif isinstance(content, bytes | Image.Image):
                     # Image embedding
                     if isinstance(content, bytes):
                         image = Image.open(io.BytesIO(content)).convert("RGB")
@@ -84,7 +83,7 @@ class CLIPService(BaseModelService):
 
                     inputs = self.processor(
                         images=image,
-                        return_tensors="pt"
+                        return_tensors="pt",
                     ).to(self.device)
 
                     embeddings = self.model.get_image_features(**inputs)
@@ -103,14 +102,14 @@ class CLIPService(BaseModelService):
                 return embeddings_np[0]  # Return first item for single input
 
         except Exception as e:
-            logger.error(f"Error generating CLIP embedding: {e}")
+            logger.exception(f"Error generating CLIP embedding: {e}")
             raise
 
     async def generate_batch_embeddings(
         self,
-        contents: List[Union[str, bytes, Image.Image]],
-        batch_size: int = 8
-    ) -> List[np.ndarray]:
+        contents: list[str | bytes | Image.Image],
+        batch_size: int = 8,
+    ) -> list[np.ndarray]:
         """Generate embeddings for multiple inputs."""
 
         if self.model is None:
@@ -136,7 +135,7 @@ class CLIPService(BaseModelService):
                         return_tensors="pt",
                         padding=True,
                         truncation=True,
-                        max_length=77
+                        max_length=77,
                     ).to(self.device)
 
                     text_embeddings = self.model.get_text_features(**inputs)
@@ -154,7 +153,7 @@ class CLIPService(BaseModelService):
 
                     inputs = self.processor(
                         images=pil_images,
-                        return_tensors="pt"
+                        return_tensors="pt",
                     ).to(self.device)
 
                     image_embeddings = self.model.get_image_features(**inputs)
@@ -170,12 +169,12 @@ class CLIPService(BaseModelService):
     async def compute_similarity(
         self,
         embedding1: np.ndarray,
-        embedding2: np.ndarray
+        embedding2: np.ndarray,
     ) -> float:
         """Compute cosine similarity between embeddings."""
         return float(np.dot(embedding1, embedding2))
 
-    def unload_model(self):
+    def unload_model(self) -> None:
         """Unload model from memory."""
         if self.model:
             del self.model

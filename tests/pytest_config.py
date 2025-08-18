@@ -15,9 +15,9 @@ sys.path.insert(0, str(project_root))
 
 # Set test environment variables
 os.environ.update({
-    'TESTING': 'true',
-    'PYTHONIOENCODING': 'utf-8',
-    'PYTHONPATH': str(project_root),
+    "TESTING": "true",
+    "PYTHONIOENCODING": "utf-8",
+    "PYTHONPATH": str(project_root),
 })
 
 @pytest.fixture(scope="session")
@@ -36,10 +36,10 @@ def project_root_path() -> Path:
 def mock_env_vars(monkeypatch):
     """Mock environment variables for testing."""
     test_vars = {
-        'OPENAI_API_KEY': 'test-key',
-        'DATABASE_URL': 'sqlite:///:memory:',
-        'REDIS_URL': 'redis://localhost:6379/1',
-        'JWT_SECRET_KEY': 'test-secret-key',
+        "OPENAI_API_KEY": "test-key",
+        "DATABASE_URL": "sqlite:///:memory:",
+        "REDIS_URL": "redis://localhost:6379/1",
+        "JWT_SECRET_KEY": "test-secret-key",
     }
 
     for key, value in test_vars.items():
@@ -58,16 +58,16 @@ pytest_plugins = ["pytest_asyncio"]
 def pytest_configure(config):
     """Configure pytest with custom markers."""
     config.addinivalue_line(
-        "markers", "unit: Unit tests that don't require external dependencies"
+        "markers", "unit: Unit tests that don't require external dependencies",
     )
     config.addinivalue_line(
-        "markers", "integration: Integration tests that require external services"
+        "markers", "integration: Integration tests that require external services",
     )
     config.addinivalue_line(
-        "markers", "e2e: End-to-end tests"
+        "markers", "e2e: End-to-end tests",
     )
     config.addinivalue_line(
-        "markers", "slow: Tests that take longer to run"
+        "markers", "slow: Tests that take longer to run",
     )
 
 def pytest_collection_modifyitems(config, items):

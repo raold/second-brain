@@ -20,17 +20,17 @@ async def test_vision_approaches():
     print("=" * 60)
 
     # Create a test image with clear visual elements
-    img = Image.new('RGB', (512, 512), color='white')
+    img = Image.new("RGB", (512, 512), color="white")
     draw = ImageDraw.Draw(img)
-    draw.rectangle([50, 50, 200, 200], fill='red', outline='black', width=3)
-    draw.ellipse([250, 50, 400, 200], fill='blue', outline='black', width=3)
-    draw.text((100, 300), "TEST IMAGE", fill='black')
-    draw.text((100, 350), "Red Rectangle + Blue Circle", fill='green')
+    draw.rectangle([50, 50, 200, 200], fill="red", outline="black", width=3)
+    draw.ellipse([250, 50, 400, 200], fill="blue", outline="black", width=3)
+    draw.text((100, 300), "TEST IMAGE", fill="black")
+    draw.text((100, 350), "Red Rectangle + Blue Circle", fill="green")
 
     # Convert to base64
     buffer = io.BytesIO()
-    img.save(buffer, format='PNG')
-    img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    img.save(buffer, format="PNG")
+    img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
     async with aiohttp.ClientSession() as session:
         # Check what the model thinks it can do
@@ -51,26 +51,26 @@ async def test_vision_approaches():
                     "content": [
                         {
                             "type": "text",
-                            "text": "What do you see in this image? Describe the shapes and colors."
+                            "text": "What do you see in this image? Describe the shapes and colors.",
                         },
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/png;base64,{img_base64}"
-                            }
-                        }
-                    ]
-                }
+                                "url": f"data:image/png;base64,{img_base64}",
+                            },
+                        },
+                    ],
+                },
             ],
             "max_tokens": 200,
-            "temperature": 0.7
+            "temperature": 0.7,
         }
 
         try:
             async with session.post(
                 f"{base_url}/chat/completions",
                 json=payload,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
             ) as resp:
                 result = await resp.json()
                 if "error" in result:
@@ -92,24 +92,24 @@ async def test_vision_approaches():
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/png;base64,{img_base64}"
-                            }
+                                "url": f"data:image/png;base64,{img_base64}",
+                            },
                         },
                         {
                             "type": "text",
-                            "text": "Describe this image."
-                        }
-                    ]
-                }
+                            "text": "Describe this image.",
+                        },
+                    ],
+                },
             ],
-            "max_tokens": 200
+            "max_tokens": 200,
         }
 
         try:
             async with session.post(
                 f"{base_url}/chat/completions",
                 json=payload,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
             ) as resp:
                 result = await resp.json()
                 if "error" in result:
@@ -127,17 +127,17 @@ async def test_vision_approaches():
             "messages": [
                 {
                     "role": "user",
-                    "content": f"[IMAGE]{img_base64}[/IMAGE]\nDescribe this image."
-                }
+                    "content": f"[IMAGE]{img_base64}[/IMAGE]\nDescribe this image.",
+                },
             ],
-            "max_tokens": 200
+            "max_tokens": 200,
         }
 
         try:
             async with session.post(
                 f"{base_url}/chat/completions",
                 json=payload,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
             ) as resp:
                 result = await resp.json()
                 if "error" in result:
@@ -154,7 +154,7 @@ async def test_vision_approaches():
             "/vision/completions",
             "/v1/vision",
             "/v1/images/generations",
-            "/v1/images/edits"
+            "/v1/images/edits",
         ]
 
         for endpoint in endpoints:
@@ -172,21 +172,21 @@ async def test_vision_approaches():
             "messages": [
                 {
                     "role": "system",
-                    "content": "You are an image captioning model. Describe images in detail."
+                    "content": "You are an image captioning model. Describe images in detail.",
                 },
                 {
                     "role": "user",
-                    "content": "Can you process images? If yes, how should I send them to you?"
-                }
+                    "content": "Can you process images? If yes, how should I send them to you?",
+                },
             ],
-            "max_tokens": 200
+            "max_tokens": 200,
         }
 
         try:
             async with session.post(
                 f"{base_url}/chat/completions",
                 json=payload,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
             ) as resp:
                 result = await resp.json()
                 if "error" not in result:

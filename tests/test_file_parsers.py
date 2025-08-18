@@ -107,7 +107,7 @@ class TestDocxParser:
     def test_supports_docx_types(self, parser):
         """Test DOCX mime type support"""
         assert parser.supports(
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
         assert parser.supports("application/msword")
         assert not parser.supports("application/pdf")

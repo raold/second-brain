@@ -82,7 +82,7 @@ async def process_folder_task(processor: GDriveProcessor, folder_id: str, recurs
 
 async def store_processing_results(processor: GDriveProcessor) -> None:
     """Store processed data in PostgreSQL"""
-    memory_service = MemoryServicePostgres()
+    MemoryServicePostgres()
 
     # This would store all the processed files
     # For now, just log the stats
@@ -117,7 +117,7 @@ async def process_archive(
         raise HTTPException(status_code=404, detail="File not found")
 
     file_name = file_metadata.get("name", "archive")
-    mime_type = file_metadata.get("mimeType", "")
+    file_metadata.get("mimeType", "")
 
     # Check if it's an archive
     archive_extensions = [".zip", ".tar", ".tar.gz", ".tgz", ".tar.bz2", ".rar", ".7z"]
@@ -146,7 +146,7 @@ async def process_archive_task(
     processor: GDriveProcessor,
     file_id: str,
     file_metadata: dict[str, Any],
-):
+) -> None:
     """Extract and process archive contents"""
     file_name = file_metadata.get("name", "archive")
 
@@ -176,14 +176,14 @@ async def process_archive_task(
                 # Process based on type
                 if file_info["name"].lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".bmp")):
                     # Process as image
-                    result = await process_extracted_image(
+                    await process_extracted_image(
                         processor,
                         file_info["content"],
                         fake_metadata,
                     )
                 elif file_info["name"].lower().endswith((".txt", ".md", ".log", ".csv")):
                     # Process as text
-                    result = await process_extracted_text(
+                    await process_extracted_text(
                         processor,
                         file_info["content"],
                         fake_metadata,
@@ -226,7 +226,7 @@ async def extract_archive(content: bytes, file_name: str) -> list[dict[str, Any]
                                 "name": info.filename,
                                 "content": zf.read(info.filename),
                                 "mime_type": guess_mime_type(info.filename),
-                            }
+                            },
                         )
 
         elif file_name.lower().endswith((".tar", ".tar.gz", ".tgz", ".tar.bz2")):
@@ -246,7 +246,7 @@ async def extract_archive(content: bytes, file_name: str) -> list[dict[str, Any]
                                     "name": member.name,
                                     "content": f.read(),
                                     "mime_type": guess_mime_type(member.name),
-                                }
+                                },
                             )
 
         elif file_name.lower().endswith(".7z"):
@@ -258,7 +258,7 @@ async def extract_archive(content: bytes, file_name: str) -> list[dict[str, Any]
                             "name": fname,
                             "content": bio.read(),
                             "mime_type": guess_mime_type(fname),
-                        }
+                        },
                     )
 
         elif file_name.lower().endswith(".rar"):
@@ -271,7 +271,7 @@ async def extract_archive(content: bytes, file_name: str) -> list[dict[str, Any]
                                 "name": info.filename,
                                 "content": rf.read(info.filename),
                                 "mime_type": guess_mime_type(info.filename),
-                            }
+                            },
                         )
 
     finally:

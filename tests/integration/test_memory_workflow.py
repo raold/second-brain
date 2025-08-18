@@ -86,7 +86,7 @@ class TestMemoryWorkflow:
         update_data = {"content": "Updated content", "memory_type": "semantic"}
 
         update_response = await client.put(
-            f"/memories/{memory_id}", json=update_data, headers=headers
+            f"/memories/{memory_id}", json=update_data, headers=headers,
         )
 
         # Skip if update not implemented
@@ -115,7 +115,7 @@ class TestBulkOperations:
 
         # Try bulk creation endpoint
         response = await client.post(
-            "/memories/bulk", json={"memories": memories_data}, headers=headers
+            "/memories/bulk", json={"memories": memories_data}, headers=headers,
         )
 
         # Skip if bulk creation not implemented

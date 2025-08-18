@@ -7,13 +7,12 @@ import os
 import platform
 import sys
 from pathlib import Path
-from typing import Optional, Union
 
 
 class PlatformHelper:
     """Helper for cross-platform development with Google Drive sync."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.system = platform.system().lower()
         self.is_windows = self.system == "windows"
         self.is_mac = self.system == "darwin"
@@ -29,7 +28,7 @@ class PlatformHelper:
             Path("G:\\My Drive\\projects\\second-brain"),
             # macOS
             Path(
-                "/Users/dro/Library/CloudStorage/GoogleDrive-dro@lynchburgsmiles.com/My Drive/projects/second-brain"
+                "/Users/dro/Library/CloudStorage/GoogleDrive-dro@lynchburgsmiles.com/My Drive/projects/second-brain",
             ),
             # Linux (common Google Drive mount points)
             Path.home() / "GoogleDrive/My Drive/projects/second-brain",
@@ -57,13 +56,12 @@ class PlatformHelper:
                 return str(python_exe)
             # Fallback for Windows
             return "python"
-        else:
-            # macOS and Linux
-            python_exe = venv_path / "bin" / "python"
-            if python_exe.exists():
-                return str(python_exe)
-            # Fallback
-            return "python3"
+        # macOS and Linux
+        python_exe = venv_path / "bin" / "python"
+        if python_exe.exists():
+            return str(python_exe)
+        # Fallback
+        return "python3"
 
     def get_venv_pip(self) -> str:
         """Get the correct pip executable path for the virtual environment."""
@@ -74,13 +72,12 @@ class PlatformHelper:
             if pip_exe.exists():
                 return str(pip_exe)
             return "pip"
-        else:
-            pip_exe = venv_path / "bin" / "pip"
-            if pip_exe.exists():
-                return str(pip_exe)
-            return "pip3"
+        pip_exe = venv_path / "bin" / "pip"
+        if pip_exe.exists():
+            return str(pip_exe)
+        return "pip3"
 
-    def normalize_path(self, path: Union[str, Path]) -> Path:
+    def normalize_path(self, path: str | Path) -> Path:
         """Normalize path for current platform."""
         path = Path(path)
 
@@ -91,10 +88,9 @@ class PlatformHelper:
                 relative = str(path).replace("G:\\My Drive", "").replace("G:/My Drive", "")
                 if self.is_mac:
                     return Path(
-                        "/Users/dro/Library/CloudStorage/GoogleDrive-dro@lynchburgsmiles.com/My Drive"
+                        "/Users/dro/Library/CloudStorage/GoogleDrive-dro@lynchburgsmiles.com/My Drive",
                     ) / relative.lstrip("/\\")
-                else:
-                    return Path.home() / "GoogleDrive/My Drive" / relative.lstrip("/\\")
+                return Path.home() / "GoogleDrive/My Drive" / relative.lstrip("/\\")
 
         elif "/GoogleDrive" in str(path) or "/CloudStorage" in str(path):
             if self.is_windows:
@@ -142,7 +138,7 @@ class PlatformHelper:
         """Get platform-specific path separator."""
         return "\\" if self.is_windows else "/"
 
-    def make_executable(self, script_path: Union[str, Path]) -> None:
+    def make_executable(self, script_path: str | Path) -> None:
         """Make a script executable (Unix-like systems only)."""
         if not self.is_windows:
             import stat
@@ -177,7 +173,7 @@ class PlatformHelper:
         python = self.get_venv_python()
         return f'"{python}" -m uvicorn app.app:app --reload --host 0.0.0.0 --port 8000'
 
-    def print_platform_banner(self):
+    def print_platform_banner(self) -> None:
         """Print a nice platform-specific banner."""
         info = self.get_platform_info()
 
@@ -199,12 +195,12 @@ class PlatformHelper:
 ║  Python:   {info['python_version'].split()[0]:<47} ║
 ║  Encoding: {info['encoding']:<47} ║
 ╚════════════════════════════════════════════════════════════╝
-        """
+        """,
         )
 
 
 # Global instance
-_platform_helper: Optional[PlatformHelper] = None
+_platform_helper: PlatformHelper | None = None
 
 
 def get_platform_helper() -> PlatformHelper:
@@ -241,12 +237,12 @@ def get_venv_python() -> str:
     return get_platform_helper().get_venv_python()
 
 
-def normalize_path(path: Union[str, Path]) -> Path:
+def normalize_path(path: str | Path) -> Path:
     """Normalize path for current platform."""
     return get_platform_helper().normalize_path(path)
 
 
-def setup_utf8_encoding():
+def setup_utf8_encoding() -> None:
     """Set up UTF-8 encoding for all platforms (especially Windows)."""
     if platform.system() == "Windows":
         # Fix Windows console encoding

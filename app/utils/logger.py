@@ -53,5 +53,5 @@ except ImportError:
     LogContext = None
     PerformanceLogger = None
 
-    def configure_logging():
+    def configure_logging() -> None:
         return None

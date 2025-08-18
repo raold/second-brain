@@ -19,23 +19,23 @@ TEXT_BATCH_SIZE = 256     # HUGE TEXT BATCHES
 
 async def generate_massive_image(idx: int) -> bytes:
     """Generate a massive, complex image."""
-    img = Image.new('RGB', IMAGE_SIZE, color=(0, 0, 0))
+    img = Image.new("RGB", IMAGE_SIZE, color=(0, 0, 0))
     draw = ImageDraw.Draw(img)
 
     # Fill with complex patterns
     for _ in range(50):  # MORE SHAPES
-        shape_type = random.choice(['rectangle', 'ellipse', 'polygon', 'arc'])
+        shape_type = random.choice(["rectangle", "ellipse", "polygon", "arc"])
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
-        if shape_type == 'rectangle':
+        if shape_type == "rectangle":
             x1, x2 = sorted([random.randint(0, IMAGE_SIZE[0]) for _ in range(2)])
             y1, y2 = sorted([random.randint(0, IMAGE_SIZE[1]) for _ in range(2)])
             draw.rectangle([x1, y1, x2, y2], fill=color, outline=(255, 255, 255), width=5)
-        elif shape_type == 'ellipse':
+        elif shape_type == "ellipse":
             x1, x2 = sorted([random.randint(0, IMAGE_SIZE[0]) for _ in range(2)])
             y1, y2 = sorted([random.randint(0, IMAGE_SIZE[1]) for _ in range(2)])
             draw.ellipse([x1, y1, x2, y2], fill=color, outline=(255, 255, 255), width=5)
-        elif shape_type == 'polygon':
+        elif shape_type == "polygon":
             points = [(random.randint(0, IMAGE_SIZE[0]), random.randint(0, IMAGE_SIZE[1])) for _ in range(8)]
             draw.polygon(points, fill=color, outline=(255, 255, 255))
         else:  # arc
@@ -54,17 +54,17 @@ async def generate_massive_image(idx: int) -> bytes:
         f"IMAGE {idx} PROCESSING",
         "CLIP + LLAVA SIMULTANEOUSLY",
         "VRAM UTILIZATION EXTREME",
-        f"CONCURRENT STREAM {idx % CONCURRENT_STREAMS}"
+        f"CONCURRENT STREAM {idx % CONCURRENT_STREAMS}",
     ]
 
-    for i, text in enumerate(texts):
+    for _i, text in enumerate(texts):
         x = random.randint(0, IMAGE_SIZE[0] - 400)
         y = random.randint(0, IMAGE_SIZE[1] - 100)
         draw.text((x, y), text, fill=(255, 255, 255))
 
     # Convert to high-quality bytes
     img_bytes = io.BytesIO()
-    img.save(img_bytes, format='PNG', optimize=False, compress_level=1)  # Fast compression
+    img.save(img_bytes, format="PNG", optimize=False, compress_level=1)  # Fast compression
     img_bytes.seek(0)
     return img_bytes.getvalue()
 
@@ -86,7 +86,7 @@ async def assault_clip_batch(session: aiohttp.ClientSession, batch_images: list,
         tasks = []
         for img_data in chunk:
             data = aiohttp.FormData()
-            data.add_field('file', img_data, filename=f'assault_{batch_id}_{chunk_idx}.png', content_type='image/png')
+            data.add_field("file", img_data, filename=f"assault_{batch_id}_{chunk_idx}.png", content_type="image/png")
             task = session.post("http://localhost:8002/clip/embed/image", data=data)
             tasks.append(task)
 
@@ -98,7 +98,7 @@ async def assault_clip_batch(session: aiohttp.ClientSession, batch_images: list,
 
     for chunk_result in chunk_results:
         for response in chunk_result:
-            if not isinstance(response, Exception) and hasattr(response, 'status') and response.status == 200:
+            if not isinstance(response, Exception) and hasattr(response, "status") and response.status == 200:
                 total_processed += 1
 
     elapsed = time.time() - start_time
@@ -139,7 +139,7 @@ async def assault_llava_samples(session: aiohttp.ClientSession, images: list, ro
             if resp.status != 200:
                 return 0, 0
             status = await resp.json()
-            if not status.get('model_loaded', False):
+            if not status.get("model_loaded", False):
                 return 0, 0
     except:
         return 0, 0
@@ -156,17 +156,17 @@ async def assault_llava_samples(session: aiohttp.ClientSession, images: list, ro
         async with semaphore:
             try:
                 data = aiohttp.FormData()
-                data.add_field('file', img_data, filename=f'llava_test_{img_idx}.png', content_type='image/png')
-                data.add_field('instruction', f'Analyze this complex image {img_idx} in detail. Extract any text and describe all visual elements.')
+                data.add_field("file", img_data, filename=f"llava_test_{img_idx}.png", content_type="image/png")
+                data.add_field("instruction", f"Analyze this complex image {img_idx} in detail. Extract any text and describe all visual elements.")
 
                 async with session.post(
                     "http://localhost:8003/llava/analyze/image",
                     data=data,
-                    timeout=aiohttp.ClientTimeout(total=45)
+                    timeout=aiohttp.ClientTimeout(total=45),
                 ) as resp:
                     if resp.status == 200:
                         result = await resp.json()
-                        return 1, result.get('processing_time_ms', 0)
+                        return 1, result.get("processing_time_ms", 0)
             except Exception as e:
                 print(f"      LLaVA image {img_idx}: {str(e)[:30]}")
             return 0, 0
@@ -191,23 +191,23 @@ async def monitor_gpu_devastation():
         result = subprocess.run(
             ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw",
              "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=5
+            check=False, capture_output=True, text=True, timeout=5,
         )
         if result.returncode == 0:
-            parts = result.stdout.strip().split(', ')
+            parts = result.stdout.strip().split(", ")
             return {
-                'gpu_util': int(parts[0]),
-                'mem_used': int(parts[1]),
-                'mem_total': int(parts[2]),
-                'temp': int(parts[3]),
-                'power': float(parts[4]) if len(parts) > 4 else 0
+                "gpu_util": int(parts[0]),
+                "mem_used": int(parts[1]),
+                "mem_total": int(parts[2]),
+                "temp": int(parts[3]),
+                "power": float(parts[4]) if len(parts) > 4 else 0,
             }
     except:
         pass
     return None
 
 
-async def main():
+async def main() -> None:
     """LAUNCH THE MAXIMUM GPU ASSAULT!"""
     print("=" * 100)
     print("MAXIMUM RTX 4090 ASSAULT - PREPARE FOR GPU DEVASTATION")
@@ -224,7 +224,7 @@ async def main():
 
     async with aiohttp.ClientSession(
         timeout=aiohttp.ClientTimeout(total=60),
-        connector=aiohttp.TCPConnector(limit=200, limit_per_host=100)
+        connector=aiohttp.TCPConnector(limit=200, limit_per_host=100),
     ) as session:
 
         # Verify CLIP is ready
@@ -245,7 +245,7 @@ async def main():
             async with session.get("http://localhost:8003/llava/status") as resp:
                 if resp.status == 200:
                     status = await resp.json()
-                    llava_ready = status.get('model_loaded', False)
+                    llava_ready = status.get("model_loaded", False)
                     print(f"\n{'✅' if llava_ready else '⏳'} LLaVA STATUS:")
                     print(f"   Model loaded: {llava_ready}")
         except:
@@ -325,10 +325,10 @@ async def main():
             # Check GPU devastation
             gpu_status = await monitor_gpu_devastation()
             if gpu_status:
-                peak_gpu_util = max(peak_gpu_util, gpu_status['gpu_util'])
-                peak_memory = max(peak_memory, gpu_status['mem_used'])
-                peak_temp = max(peak_temp, gpu_status['temp'])
-                peak_power = max(peak_power, gpu_status['power'])
+                peak_gpu_util = max(peak_gpu_util, gpu_status["gpu_util"])
+                peak_memory = max(peak_memory, gpu_status["mem_used"])
+                peak_temp = max(peak_temp, gpu_status["temp"])
+                peak_power = max(peak_power, gpu_status["power"])
 
                 print("\n  📊 GPU DEVASTATION METRICS:")
                 print(f"     GPU Utilization: {gpu_status['gpu_util']}% (Peak: {peak_gpu_util}%)")

@@ -34,7 +34,7 @@ class TestInsightsAPI:
         }
 
         response = await client.post(
-            "/insights/generate", json=insight_request, params={"api_key": api_key}
+            "/insights/generate", json=insight_request, params={"api_key": api_key},
         )
 
         assert response.status_code == 200
@@ -76,7 +76,7 @@ class TestInsightsAPI:
         }
 
         response = await client.post(
-            "/insights/patterns", json=pattern_request, params={"api_key": api_key}
+            "/insights/patterns", json=pattern_request, params={"api_key": api_key},
         )
 
         assert response.status_code == 200
@@ -102,7 +102,7 @@ class TestInsightsAPI:
                     "importance_score": 0.7,
                 }
                 response = await client.post(
-                    "/memories", json=memory_data, params={"api_key": api_key}
+                    "/memories", json=memory_data, params={"api_key": api_key},
                 )
                 assert response.status_code == 200
 
@@ -115,7 +115,7 @@ class TestInsightsAPI:
         }
 
         response = await client.post(
-            "/insights/clusters", json=cluster_request, params={"api_key": api_key}
+            "/insights/clusters", json=cluster_request, params={"api_key": api_key},
         )
 
         # The endpoint might fail if embeddings aren't available
@@ -150,7 +150,7 @@ class TestInsightsAPI:
         }
 
         response = await client.post(
-            "/insights/gaps", json=gap_request, params={"api_key": api_key}
+            "/insights/gaps", json=gap_request, params={"api_key": api_key},
         )
 
         assert response.status_code == 200
@@ -183,7 +183,7 @@ class TestInsightsAPI:
 
         # Get learning progress
         response = await client.get(
-            "/insights/progress", params={"api_key": api_key, "time_frame": "all_time"}
+            "/insights/progress", params={"api_key": api_key, "time_frame": "all_time"},
         )
 
         assert response.status_code == 200
@@ -208,7 +208,7 @@ class TestInsightsAPI:
         """Test comprehensive analytics endpoint"""
         # Get all analytics
         response = await client.get(
-            "/insights/analytics", params={"api_key": api_key, "time_frame": "all_time"}
+            "/insights/analytics", params={"api_key": api_key, "time_frame": "all_time"},
         )
 
         assert response.status_code == 200
@@ -325,6 +325,6 @@ class TestInsightsAPI:
 
         # Invalid clustering algorithm
         response = await client.post(
-            "/insights/clusters", json={"algorithm": "invalid_algo"}, params={"api_key": api_key}
+            "/insights/clusters", json={"algorithm": "invalid_algo"}, params={"api_key": api_key},
         )
         assert response.status_code == 422

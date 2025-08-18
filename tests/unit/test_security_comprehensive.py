@@ -29,7 +29,7 @@ class TestSecurityConfig:
     """Test security configuration."""
 
     @pytest.mark.parametrize(
-        "max_requests,max_hour,max_content,valid",
+        ("max_requests", "max_hour", "max_content", "valid"),
         [
             (60, 1000, 10000, True),  # Default values
             (1, 10, 100, True),  # Minimal values
@@ -74,7 +74,7 @@ class TestRateLimiter:
         return request
 
     @pytest.mark.parametrize(
-        "ip_header,header_value,expected_ip",
+        ("ip_header", "header_value", "expected_ip"),
         [
             ("X-Forwarded-For", "192.168.1.1, 10.0.0.1", "192.168.1.1"),
             ("X-Real-IP", "192.168.1.1", "192.168.1.1"),
@@ -156,7 +156,7 @@ class TestInputValidator:
         return InputValidator(config)
 
     @pytest.mark.parametrize(
-        "content,should_pass",
+        ("content", "should_pass"),
         [
             ("Valid content", True),
             ("", False),  # Empty content
@@ -180,7 +180,7 @@ class TestInputValidator:
                 validator.validate_memory_content(content)
 
     @pytest.mark.parametrize(
-        "metadata,should_pass",
+        ("metadata", "should_pass"),
         [
             ({"key": "value"}, True),
             ({"key1": "value1", "key2": 42}, True),
@@ -206,7 +206,7 @@ class TestInputValidator:
                 validator.validate_metadata(metadata)
 
     @pytest.mark.parametrize(
-        "query,should_pass",
+        ("query", "should_pass"),
         [
             ("search query", True),
             ("", False),  # Empty query
@@ -228,7 +228,7 @@ class TestInputValidator:
                 validator.validate_search_query(query)
 
     @pytest.mark.parametrize(
-        "limit,should_pass",
+        ("limit", "should_pass"),
         [
             (10, True),
             (1, True),
@@ -248,7 +248,7 @@ class TestInputValidator:
                 validator.validate_search_limit(limit)
 
     @pytest.mark.parametrize(
-        "token,is_valid",
+        ("token", "is_valid"),
         [
             ("valid_token_123456", True),
             ("short", False),  # Too short
@@ -264,7 +264,7 @@ class TestInputValidator:
         assert result == is_valid
 
     @pytest.mark.parametrize(
-        "input_text,expected",
+        ("input_text", "expected"),
         [
             ("normal text", "normal text"),
             ("  extra  spaces  ", "extra spaces"),
@@ -457,7 +457,7 @@ class TestSecurityIntegration:
         assert isinstance(manager1, SecurityManager)
 
     @pytest.mark.parametrize(
-        "attack_vector,content",
+        ("attack_vector", "content"),
         [
             ("sql_injection", "'; DROP TABLE users; --"),
             ("xss", "<script>alert('xss')</script>"),

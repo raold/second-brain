@@ -118,7 +118,7 @@ class TestMonitoring:
                 type=MetricType.COUNTER,
                 description="Test operations",
                 labels=["operation"],
-            )
+            ),
         )
 
         collector.register_custom_metric(
@@ -127,7 +127,7 @@ class TestMonitoring:
                 type=MetricType.GAUGE,
                 description="Test gauge",
                 labels=["component"],
-            )
+            ),
         )
 
         collector.register_custom_metric(
@@ -136,7 +136,7 @@ class TestMonitoring:
                 type=MetricType.HISTOGRAM,
                 description="Test histogram",
                 labels=["endpoint"],
-            )
+            ),
         )
 
         # Test operations
@@ -292,7 +292,7 @@ class TestMonitoringDecorator:
                 type=MetricType.HISTOGRAM,
                 description="Operation duration",
                 labels=["operation", "status"],
-            )
+            ),
         )
 
         @monitor_performance("test_async_op")
@@ -317,7 +317,7 @@ class TestMonitoringDecorator:
                     type=MetricType.HISTOGRAM,
                     description="Operation duration",
                     labels=["operation", "status"],
-                )
+                ),
             )
 
         if "operation_errors" not in collector.custom_metrics:
@@ -327,7 +327,7 @@ class TestMonitoringDecorator:
                     type=MetricType.COUNTER,
                     description="Operation errors",
                     labels=["operation", "error_type"],
-                )
+                ),
             )
 
         @monitor_performance("test_sync_op")

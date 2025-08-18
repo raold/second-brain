@@ -129,8 +129,8 @@ class TestSuggestionEngine:
                     description="Deepen your Python knowledge",
                     action=ActionType.CREATE,
                     priority=0.8,
-                )
-            ]
+                ),
+            ],
         )
 
         engine._generate_connection_suggestions = AsyncMock(
@@ -142,8 +142,8 @@ class TestSuggestionEngine:
                     description="Bridge your interests",
                     action=ActionType.LINK,
                     priority=0.7,
-                )
-            ]
+                ),
+            ],
         )
 
         engine._generate_learning_paths = AsyncMock(return_value=[])
@@ -180,7 +180,7 @@ class TestSuggestionEngine:
             side_effect=[
                 sample_access_logs,  # Access logs
                 sample_recent_memories,  # Recent memories
-            ]
+            ],
         )
 
         # Mock memory service
@@ -226,7 +226,7 @@ class TestSuggestionEngine:
                     data={},
                     created_at=datetime.utcnow(),
                     time_frame=TimeFrame.WEEKLY,
-                )
+                ),
             ],
             total=1,
             time_frame=TimeFrame.WEEKLY,
@@ -253,7 +253,7 @@ class TestSuggestionEngine:
 
         mock_gaps = MagicMock()
         mock_gaps.gaps = [
-            MagicMock(area="Deep Learning", suggested_topics=["Neural Networks", "CNNs"])
+            MagicMock(area="Deep Learning", suggested_topics=["Neural Networks", "CNNs"]),
         ]
         mock_gaps.coverage_score = 0.75
 
@@ -268,7 +268,7 @@ class TestSuggestionEngine:
                 "unique_tags": 25,
                 "avg_importance": 7.5,
                 "last_activity": datetime.utcnow(),
-            }
+            },
         )
 
         # Execute
@@ -291,8 +291,8 @@ class TestSuggestionEngine:
 
         knowledge_state = {
             "knowledge_gaps": [
-                MagicMock(area="Cloud Computing", suggested_topics=["AWS", "Docker"])
-            ]
+                MagicMock(area="Cloud Computing", suggested_topics=["AWS", "Docker"]),
+            ],
         }
 
         # Mock LLM response
@@ -303,9 +303,9 @@ class TestSuggestionEngine:
                         "topic": "Kubernetes",
                         "reason": "Natural progression from Docker",
                         "starting_point": "Container orchestration basics",
-                    }
-                ]
-            )
+                    },
+                ],
+            ),
         )
 
         suggestions = await engine._generate_exploration_suggestions(profile, knowledge_state)
@@ -334,13 +334,13 @@ class TestSuggestionEngine:
                     "content": "Important isolated knowledge",
                     "tags": ["Isolated"],
                     "importance": 8,
-                }
-            ]
+                },
+            ],
         )
 
         # Mock LLM for connection suggestions
         engine.openai_client.generate = AsyncMock(
-            return_value="Connect through web development patterns"
+            return_value="Connect through web development patterns",
         )
 
         suggestions = await engine._generate_connection_suggestions(profile, knowledge_state)
@@ -366,11 +366,11 @@ class TestSuggestionEngine:
                         "importance": 8,
                         "created_at": datetime.utcnow() - timedelta(days=30),
                         "last_accessed": old_access,
-                    }
+                    },
                 ],
                 # Topics with many memories
                 [{"tags": "Python", "memory_count": 25, "avg_importance": 7.5}],
-            ]
+            ],
         )
 
         knowledge_state = {}
@@ -387,7 +387,7 @@ class TestSuggestionEngine:
         """Test organization suggestion generation"""
         profile = UserBehaviorProfile("test_user")
         profile.creation_patterns["preferred_tags"] = Counter(
-            {"Python": 20, "ML": 15, "Web": 10, "Data": 8}
+            {"Python": 20, "ML": 15, "Web": 10, "Data": 8},
         )
 
         # Mock untagged memories
@@ -396,7 +396,7 @@ class TestSuggestionEngine:
                 {"id": uuid4(), "content": "Untagged memory 1", "importance": 7},
                 {"id": uuid4(), "content": "Untagged memory 2", "importance": 6},
                 {"id": uuid4(), "content": "Untagged memory 3", "importance": 8},
-            ]
+            ],
         )
 
         knowledge_state = {"total_memories": 100}
@@ -417,9 +417,9 @@ class TestSuggestionEngine:
         knowledge_state = {
             "knowledge_gaps": [
                 MagicMock(
-                    area="Deep Learning", suggested_topics=["Neural Networks", "CNNs", "RNNs"]
-                )
-            ]
+                    area="Deep Learning", suggested_topics=["Neural Networks", "CNNs", "RNNs"],
+                ),
+            ],
         }
 
         request = SuggestionRequest(user_id="test_user")
@@ -454,7 +454,7 @@ class TestSuggestionEngine:
         """Test organization tips generation"""
         profile = UserBehaviorProfile("test_user")
         profile.creation_patterns["preferred_tags"] = Counter(
-            {f"tag_{i}": i for i in range(25)}  # Many different tags
+            {f"tag_{i}": i for i in range(25)},  # Many different tags
         )
 
         knowledge_state = {"total_memories": 75}
@@ -548,7 +548,7 @@ class TestSuggestionEngine:
                 description="Not important",
                 action=ActionType.REVIEW,
                 priority=0.3,
-            )
+            ),
         ]
 
         low_confidence = engine._calculate_suggestion_confidence(low_priority_suggestions)

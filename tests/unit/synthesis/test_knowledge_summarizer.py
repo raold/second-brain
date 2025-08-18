@@ -96,7 +96,7 @@ class TestKnowledgeSummarizer:
 
         # Mock memory fetching
         with patch.object(
-            self.summarizer, "_fetch_memories_for_summary", return_value=sample_memories
+            self.summarizer, "_fetch_memories_for_summary", return_value=sample_memories,
         ):
             # Mock domain organization
             with patch.object(self.summarizer, "_organize_knowledge_domains", return_value={}):
@@ -104,7 +104,7 @@ class TestKnowledgeSummarizer:
                 with patch.object(self.summarizer, "_extract_key_insights", return_value=[]):
                     # Mock template formatting
                     with patch.object(
-                        self.summarizer, "_create_executive_summary", return_value=[]
+                        self.summarizer, "_create_executive_summary", return_value=[],
                     ):
 
                         request = SummaryRequest(
@@ -125,7 +125,7 @@ class TestKnowledgeSummarizer:
     async def test_create_summary_no_memories(self):
         """Test summary creation with no memories"""
         request = SummaryRequest(
-            summary_type=SummaryType.EXECUTIVE, memory_ids=[], format_type=FormatType.STRUCTURED
+            summary_type=SummaryType.EXECUTIVE, memory_ids=[], format_type=FormatType.STRUCTURED,
         )
 
         response = await self.summarizer.create_summary(request)
@@ -362,7 +362,7 @@ class TestKnowledgeSummarizer:
     def test_empty_summary_response(self):
         """Test empty summary response creation"""
         request = SummaryRequest(
-            summary_type=SummaryType.EXECUTIVE, memory_ids=[], format_type=FormatType.STRUCTURED
+            summary_type=SummaryType.EXECUTIVE, memory_ids=[], format_type=FormatType.STRUCTURED,
         )
 
         response = self.summarizer._empty_summary_response(request)
@@ -410,7 +410,7 @@ class TestKnowledgeSummarizerIntegration:
                 "content": "Comprehensive study of machine learning algorithms",
                 "created_at": datetime.now().isoformat(),
                 "metadata": {"type": "research", "importance": 0.9},
-            }
+            },
         ]
 
         # Mock all dependencies
@@ -450,7 +450,7 @@ class TestKnowledgeSummarizerIntegration:
 
         # Mock memory service to raise exception
         with patch.object(
-            self.summarizer, "_fetch_memories_for_summary", side_effect=Exception("Database error")
+            self.summarizer, "_fetch_memories_for_summary", side_effect=Exception("Database error"),
         ):
             response = await self.summarizer.create_summary(request)
 

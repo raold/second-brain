@@ -6,7 +6,7 @@ Provides unified memory management with vector search, full-text search, and rel
 import os
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from app.core.degradation import DegradationLevel, get_degradation_manager
 from app.storage.postgres_unified import PostgresUnifiedBackend
@@ -22,11 +22,11 @@ class MemoryServicePostgres:
 
     def __init__(
         self,
-        connection_string: Optional[str] = None,
+        connection_string: str | None = None,
         enable_embeddings: bool = True,
         embedding_batch_size: int = 10,
         embedding_model: str = "text-embedding-ada-002",
-    ):
+    ) -> None:
         """
         Initialize memory service with PostgreSQL backend
 
@@ -48,12 +48,12 @@ class MemoryServicePostgres:
 
         logger.info("Memory service initialized with PostgreSQL backend")
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize the backend connection"""
         await self.backend.initialize()
         logger.info("PostgreSQL backend initialized")
 
-    async def close(self):
+    async def close(self) -> None:
         """Close backend connections"""
         # Process any pending embeddings
         if self._embedding_queue:
@@ -69,10 +69,10 @@ class MemoryServicePostgres:
         content: str,
         memory_type: str = "generic",
         importance_score: float = 0.5,
-        tags: List[str] = None,
-        metadata: Dict[str, Any] = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
         generate_embedding: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a new memory with optional embedding generation
 
@@ -124,30 +124,30 @@ class MemoryServicePostgres:
             return created_memory
 
         except Exception as e:
-            logger.error(f"Failed to create memory: {e}")
+            logger.exception(f"Failed to create memory: {e}")
             if self.degradation_manager.current_level < DegradationLevel.NO_PERSISTENCE:
                 # Try to degrade gracefully
                 # Report failure to degradation manager
                 pass  # degradation_manager.report_failure not implemented yet
             raise
 
-    async def get_memory(self, memory_id: str) -> Optional[Dict[str, Any]]:
+    async def get_memory(self, memory_id: str) -> dict[str, Any] | None:
         """Get a memory by ID"""
         try:
             return await self.backend.get_memory(memory_id)
         except Exception as e:
-            logger.error(f"Failed to get memory {memory_id}: {e}")
+            logger.exception(f"Failed to get memory {memory_id}: {e}")
             return None
 
     async def update_memory(
         self,
         memory_id: str,
-        content: Optional[str] = None,
-        importance_score: Optional[float] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        content: str | None = None,
+        importance_score: float | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
         regenerate_embedding: bool = False,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Update a memory with optional embedding regeneration"""
 
         # Check degradation level
@@ -174,7 +174,7 @@ class MemoryServicePostgres:
         try:
             return await self.backend.update_memory(memory_id, updates, new_embedding)
         except Exception as e:
-            logger.error(f"Failed to update memory {memory_id}: {e}")
+            logger.exception(f"Failed to update memory {memory_id}: {e}")
             return None
 
     async def delete_memory(self, memory_id: str, soft: bool = True) -> bool:
@@ -188,17 +188,17 @@ class MemoryServicePostgres:
         try:
             return await self.backend.delete_memory(memory_id, soft)
         except Exception as e:
-            logger.error(f"Failed to delete memory {memory_id}: {e}")
+            logger.exception(f"Failed to delete memory {memory_id}: {e}")
             return False
 
     async def list_memories(
         self,
         limit: int = 20,
         offset: int = 0,
-        memory_type: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        min_importance: Optional[float] = None,
-    ) -> List[Dict[str, Any]]:
+        memory_type: str | None = None,
+        tags: list[str] | None = None,
+        min_importance: float | None = None,
+    ) -> list[dict[str, Any]]:
         """List memories with filtering"""
         try:
             return await self.backend.list_memories(
@@ -209,7 +209,7 @@ class MemoryServicePostgres:
                 min_importance=min_importance,
             )
         except Exception as e:
-            logger.error(f"Failed to list memories: {e}")
+            logger.exception(f"Failed to list memories: {e}")
             return []
 
     # ==================== Search Operations ====================
@@ -220,8 +220,8 @@ class MemoryServicePostgres:
         limit: int = 10,
         search_type: str = "hybrid",
         min_score: float = 0.0,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[Dict[str, Any]]:
+        filters: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Search memories using various strategies
 
@@ -252,7 +252,7 @@ class MemoryServicePostgres:
             # Perform search based on type
             if search_type == "vector" and embedding:
                 results = await self.backend.vector_search(
-                    embedding=embedding, limit=limit, min_similarity=min_score
+                    embedding=embedding, limit=limit, min_similarity=min_score,
                 )
             elif search_type == "text":
                 results = await self.backend.text_search(query=query, limit=limit)
@@ -280,19 +280,19 @@ class MemoryServicePostgres:
             return results
 
         except Exception as e:
-            logger.error(f"Search failed: {e}")
+            logger.exception(f"Search failed: {e}")
             # Fallback to simple search
             return await self._fallback_search(query, limit)
 
     async def semantic_search(
-        self, query: str, limit: int = 10, min_similarity: float = 0.7
-    ) -> List[Dict[str, Any]]:
+        self, query: str, limit: int = 10, min_similarity: float = 0.7,
+    ) -> list[dict[str, Any]]:
         """Pure semantic search using vector similarity"""
         return await self.search_memories(
-            query=query, limit=limit, search_type="vector", min_score=min_similarity
+            query=query, limit=limit, search_type="vector", min_score=min_similarity,
         )
 
-    async def keyword_search(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
+    async def keyword_search(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         """Pure keyword search using full-text search"""
         return await self.search_memories(query=query, limit=limit, search_type="text")
 
@@ -304,8 +304,8 @@ class MemoryServicePostgres:
         target_id: str,
         relationship_type: str,
         strength: float = 0.5,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Create a relationship between memories"""
         try:
             return await self.backend.create_relationship(
@@ -316,29 +316,29 @@ class MemoryServicePostgres:
                 metadata=metadata,
             )
         except Exception as e:
-            logger.error(f"Failed to create relationship: {e}")
+            logger.exception(f"Failed to create relationship: {e}")
             raise
 
     async def get_related_memories(
         self,
         memory_id: str,
-        relationship_type: Optional[str] = None,
+        relationship_type: str | None = None,
         min_strength: float = 0.0,
         limit: int = 10,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get memories related to a given memory"""
         try:
             related = await self.backend.get_related_memories(
-                memory_id=memory_id, relationship_type=relationship_type, min_strength=min_strength
+                memory_id=memory_id, relationship_type=relationship_type, min_strength=min_strength,
             )
             return related[:limit]
         except Exception as e:
-            logger.error(f"Failed to get related memories: {e}")
+            logger.exception(f"Failed to get related memories: {e}")
             return []
 
     async def build_knowledge_graph(
-        self, center_memory_id: str, depth: int = 2, min_strength: float = 0.5
-    ) -> Dict[str, Any]:
+        self, center_memory_id: str, depth: int = 2, min_strength: float = 0.5,
+    ) -> dict[str, Any]:
         """Build a knowledge graph around a memory"""
         graph = {"nodes": [], "edges": [], "center": center_memory_id}
 
@@ -362,12 +362,12 @@ class MemoryServicePostgres:
                         "content": memory["content"][:100],  # Truncate for graph
                         "type": memory["memory_type"],
                         "depth": current_depth,
-                    }
+                    },
                 )
 
                 # Get related memories
                 related = await self.get_related_memories(
-                    memory_id=memory_id, min_strength=min_strength
+                    memory_id=memory_id, min_strength=min_strength,
                 )
 
                 for rel_memory in related:
@@ -377,7 +377,7 @@ class MemoryServicePostgres:
                             "target": rel_memory["id"],
                             "type": rel_memory["relationship_type"],
                             "strength": rel_memory["relationship_strength"],
-                        }
+                        },
                     )
 
                     if current_depth < depth:
@@ -389,10 +389,10 @@ class MemoryServicePostgres:
 
     async def consolidate_memories(
         self,
-        source_ids: List[str],
+        source_ids: list[str],
         consolidation_type: str = "merge",
-        summary: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        summary: str | None = None,
+    ) -> dict[str, Any]:
         """Consolidate multiple memories into one"""
 
         if len(source_ids) < 2:
@@ -430,22 +430,22 @@ class MemoryServicePostgres:
                 metadata=metadata,
             )
         except Exception as e:
-            logger.error(f"Failed to consolidate memories: {e}")
+            logger.exception(f"Failed to consolidate memories: {e}")
             raise
 
     async def find_duplicate_memories(
-        self, similarity_threshold: float = 0.95
-    ) -> List[Tuple[str, str, float]]:
+        self, similarity_threshold: float = 0.95,
+    ) -> list[tuple[str, str, float]]:
         """Find potential duplicate memories"""
         try:
             return await self.backend.find_duplicates(similarity_threshold)
         except Exception as e:
-            logger.error(f"Failed to find duplicates: {e}")
+            logger.exception(f"Failed to find duplicates: {e}")
             return []
 
     async def auto_consolidate_duplicates(
-        self, similarity_threshold: float = 0.95, dry_run: bool = True
-    ) -> Dict[str, Any]:
+        self, similarity_threshold: float = 0.95, dry_run: bool = True,
+    ) -> dict[str, Any]:
         """Automatically consolidate duplicate memories"""
 
         duplicates = await self.find_duplicate_memories(similarity_threshold)
@@ -453,21 +453,21 @@ class MemoryServicePostgres:
         results = {"found": len(duplicates), "consolidated": 0, "errors": 0, "dry_run": dry_run}
 
         if not dry_run:
-            for memory1_id, memory2_id, similarity in duplicates:
+            for memory1_id, memory2_id, _similarity in duplicates:
                 try:
                     await self.consolidate_memories(
-                        source_ids=[memory1_id, memory2_id], consolidation_type="merge"
+                        source_ids=[memory1_id, memory2_id], consolidation_type="merge",
                     )
                     results["consolidated"] += 1
                 except Exception as e:
-                    logger.error(f"Failed to consolidate {memory1_id} and {memory2_id}: {e}")
+                    logger.exception(f"Failed to consolidate {memory1_id} and {memory2_id}: {e}")
                     results["errors"] += 1
 
         return results
 
     # ==================== Analytics Operations ====================
 
-    async def get_statistics(self) -> Dict[str, Any]:
+    async def get_statistics(self) -> dict[str, Any]:
         """Get memory service statistics"""
         try:
             stats = await self.backend.get_statistics()
@@ -476,10 +476,10 @@ class MemoryServicePostgres:
             stats["embedding_model"] = self.embedding_model
             return stats
         except Exception as e:
-            logger.error(f"Failed to get statistics: {e}")
+            logger.exception(f"Failed to get statistics: {e}")
             return {"error": str(e)}
 
-    async def get_memory_insights(self) -> Dict[str, Any]:
+    async def get_memory_insights(self) -> dict[str, Any]:
         """Get insights about memory patterns"""
         stats = await self.get_statistics()
 
@@ -501,7 +501,7 @@ class MemoryServicePostgres:
 
     # ==================== Embedding Operations ====================
 
-    async def _generate_embedding(self, text: str) -> Optional[List[float]]:
+    async def _generate_embedding(self, text: str) -> list[float] | None:
         """Generate embedding for text using local models"""
 
         if not self.enable_embeddings:
@@ -519,7 +519,7 @@ class MemoryServicePostgres:
                 from app.utils.local_embedding_client import get_local_client
                 self._local_client = get_local_client()
             except ImportError:
-                logger.error("Local embedding client not available")
+                logger.exception("Local embedding client not available")
                 return None
 
         try:
@@ -531,14 +531,13 @@ class MemoryServicePostgres:
                 return await self._process_embedding_queue()
 
             # For single embedding, process immediately
-            embedding = await self._local_client.get_embedding(text)
-            return embedding  # Will be None if generation failed
+            return await self._local_client.get_embedding(text)
 
         except Exception as e:
-            logger.error(f"Failed to generate embedding: {e}")
+            logger.exception(f"Failed to generate embedding: {e}")
             return None
 
-    async def _process_embedding_queue(self) -> Optional[List[float]]:
+    async def _process_embedding_queue(self) -> list[float] | None:
         """Process queued texts for embedding generation"""
 
         if not self._embedding_queue:
@@ -558,13 +557,13 @@ class MemoryServicePostgres:
             return embeddings[-1] if embeddings else None
 
         except Exception as e:
-            logger.error(f"Failed to process embedding queue: {e}")
+            logger.exception(f"Failed to process embedding queue: {e}")
             self._embedding_queue.clear()
             return None
 
     async def generate_embeddings_for_all(
-        self, batch_size: int = 20, max_memories: int = 1000
-    ) -> Dict[str, Any]:
+        self, batch_size: int = 20, max_memories: int = 1000,
+    ) -> dict[str, Any]:
         """Generate embeddings for all memories without them"""
 
         results = {"processed": 0, "success": 0, "errors": 0, "skipped": 0}
@@ -597,12 +596,12 @@ class MemoryServicePostgres:
 
     # ==================== Helper Methods ====================
 
-    async def _check_for_duplicates(self, memory_id: str, embedding: List[float]):
+    async def _check_for_duplicates(self, memory_id: str, embedding: list[float]) -> None:
         """Check if a new memory is duplicate of existing ones"""
 
         # Search for similar memories
         similar = await self.backend.vector_search(
-            embedding=embedding, limit=5, min_similarity=0.95
+            embedding=embedding, limit=5, min_similarity=0.95,
         )
 
         # Filter out self
@@ -610,7 +609,7 @@ class MemoryServicePostgres:
 
         if similar:
             logger.warning(
-                f"Found {len(similar)} potential duplicates for memory {memory_id[:8]}..."
+                f"Found {len(similar)} potential duplicates for memory {memory_id[:8]}...",
             )
 
             # Create relationships to mark as similar
@@ -622,7 +621,7 @@ class MemoryServicePostgres:
                     strength=sim_memory["similarity"],
                 )
 
-    async def _generate_consolidation_summary(self, memories: List[Dict[str, Any]]) -> str:
+    async def _generate_consolidation_summary(self, memories: list[dict[str, Any]]) -> str:
         """Generate a summary for consolidating memories"""
 
         # Simple concatenation for now
@@ -636,7 +635,7 @@ class MemoryServicePostgres:
 
         return summary
 
-    async def _fallback_search(self, query: str, limit: int) -> List[Dict[str, Any]]:
+    async def _fallback_search(self, query: str, limit: int) -> list[dict[str, Any]]:
         """Simple fallback search when advanced search fails"""
 
         try:
@@ -655,5 +654,5 @@ class MemoryServicePostgres:
             return results
 
         except Exception as e:
-            logger.error(f"Fallback search also failed: {e}")
+            logger.exception(f"Fallback search also failed: {e}")
             return []

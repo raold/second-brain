@@ -23,8 +23,7 @@ class TestReasoningEngine:
     @pytest.fixture
     def mock_db(self):
         """Create a mock database"""
-        db = AsyncMock()
-        return db
+        return AsyncMock()
 
     @pytest.fixture
     def reasoning_engine(self, mock_db):
@@ -52,7 +51,7 @@ class TestReasoningEngine:
         assert result2.include_temporal
 
     @pytest.mark.parametrize(
-        "query,expected_type",
+        ("query", "expected_type"),
         [
             ("What caused this?", ReasoningType.CAUSAL),
             ("Why did this happen?", ReasoningType.CAUSAL),
@@ -173,7 +172,7 @@ class TestReasoningEngine:
         )
 
         query = ReasoningQuery(
-            text="How did machine learning evolve?", reasoning_type=ReasoningType.EVOLUTIONARY
+            text="How did machine learning evolve?", reasoning_type=ReasoningType.EVOLUTIONARY,
         )
 
         # Test with evolutionary content
@@ -200,7 +199,7 @@ class TestReasoningEngine:
                         hop_number=0,
                         relationship_type="test",
                         metadata={},
-                    )
+                    ),
                 ],
                 total_score=0.5 + i * 0.1,
                 reasoning_type=ReasoningType.SEMANTIC,
@@ -286,7 +285,7 @@ class TestReasoningEngine:
                     "memory_type": "episodic",
                     "importance_score": 0.7,
                     "created_at": "2024-01-01",
-                }
+                },
             ],
             # Second call - semantic neighbors for hop 1
             [
@@ -296,7 +295,7 @@ class TestReasoningEngine:
                     "similarity": 0.8,
                     "memory_type": "semantic",
                     "importance_score": 0.6,
-                }
+                },
             ],
             # Third call - temporal neighbors (empty)
             [],
@@ -308,7 +307,7 @@ class TestReasoningEngine:
                     "similarity": 0.7,
                     "memory_type": "episodic",
                     "importance_score": 0.9,
-                }
+                },
             ],
             # Fifth call - temporal neighbors (empty)
             [],
@@ -363,11 +362,11 @@ class TestReasoningEngine:
                 "content": "Economic recession led to budget cuts",
                 "similarity": 0.8,
                 "memory_type": "semantic",
-            }
+            },
         ]
 
         paths = await reasoning_engine.find_causal_chains(
-            "event1", direction="backward", max_depth=2
+            "event1", direction="backward", max_depth=2,
         )
 
         assert isinstance(paths, list)
@@ -433,7 +432,7 @@ class TestReasoningEngine:
                     "content": f"Memory {i}",
                     "similarity": 0.9 - (i * 0.04),  # Decreasing scores
                     "memory_type": "semantic",
-                }
+                },
             )
 
         mock_db.contextual_search.return_value = candidates

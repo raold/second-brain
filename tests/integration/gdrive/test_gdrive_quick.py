@@ -24,7 +24,7 @@ async def test_gdrive():
             print(f"   Configured: {status.get('credentials_configured', False)}")
 
         # If not connected, get auth URL
-        if not status.get('connected'):
+        if not status.get("connected"):
             print("\n2. Getting authentication URL...")
             async with session.post(f"{base_url}/api/v1/gdrive/connect") as resp:
                 if resp.status == 200:

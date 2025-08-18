@@ -22,12 +22,12 @@ class SecondBrainMCP:
     MCP Server that connects IDEs to Second Brain
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.base_url = os.getenv("SECOND_BRAIN_URL", "http://localhost:8001")
         self.api_key = os.getenv("API_KEY", "")
         self.client = None
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Connect to Second Brain API"""
         headers = {}
         if self.api_key:
@@ -36,7 +36,7 @@ class SecondBrainMCP:
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             headers=headers,
-            timeout=30.0
+            timeout=30.0,
         )
 
     async def store_context(self, content: str, context_type: str = "code"):
@@ -50,8 +50,8 @@ class SecondBrainMCP:
             "tags": ["mcp", "ide-context"],
             "metadata": {
                 "source": "mcp-server",
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         }
 
         response = await self.client.post("/api/v2/memories", json=memory)
@@ -64,7 +64,7 @@ class SecondBrainMCP:
 
         response = await self.client.post(
             "/api/v2/search",
-            json={"query": query, "limit": 10}
+            json={"query": query, "limit": 10},
         )
         return response.json()
 
@@ -76,16 +76,15 @@ class SecondBrainMCP:
         if method == "store":
             return await self.store_context(
                 params.get("content"),
-                params.get("type", "code")
+                params.get("type", "code"),
             )
-        elif method == "retrieve":
+        if method == "retrieve":
             return await self.retrieve_context(params.get("query"))
-        elif method == "health":
+        if method == "health":
             return {"status": "healthy", "service": "second-brain-mcp"}
-        else:
-            return {"error": f"Unknown method: {method}"}
+        return {"error": f"Unknown method: {method}"}
 
-    async def run_server(self):
+    async def run_server(self) -> None:
         """Run the MCP server"""
         print("🚀 Second Brain MCP Server starting...")
         print(f"   Connecting to: {self.base_url}")
@@ -98,7 +97,7 @@ class SecondBrainMCP:
             try:
                 # Read request from stdin
                 line = await asyncio.get_event_loop().run_in_executor(
-                    None, sys.stdin.readline
+                    None, sys.stdin.readline,
                 )
 
                 if not line:

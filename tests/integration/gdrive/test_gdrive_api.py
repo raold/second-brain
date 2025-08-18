@@ -23,7 +23,7 @@ async def test_api():
             print(f"   Connected: {status.get('connected')}")
             print(f"   User: {status.get('user_email')}")
 
-        if not status.get('connected'):
+        if not status.get("connected"):
             print("   Not connected!")
             return
 
@@ -41,8 +41,8 @@ async def test_api():
                 if resp.status == 200:
                     data = await resp.json()
                     if isinstance(data, dict):
-                        files = data.get('files', [])
-                        count = data.get('count', len(files))
+                        files = data.get("files", [])
+                        count = data.get("count", len(files))
                     else:
                         files = data
                         count = len(files)
@@ -52,7 +52,7 @@ async def test_api():
 
                     if files and count > 0:
                         print("   First file:")
-                        file = files[0] if isinstance(files, list) else list(files.values())[0]
+                        file = files[0] if isinstance(files, list) else next(iter(files.values()))
                         print(f"     Name: {file.get('name', 'Unknown')}")
                         print(f"     Type: {file.get('mimeType', 'Unknown')}")
                         print(f"     ID: {file.get('id', 'Unknown')}")

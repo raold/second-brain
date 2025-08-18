@@ -59,7 +59,7 @@ class TestMemoryModel:
     def test_memory_create_classmethod(self):
         """Test Memory.create class method"""
         memory = Memory.create(
-            content="Created memory", memory_type=MemoryType.EPISODIC, user_id="user-456"
+            content="Created memory", memory_type=MemoryType.EPISODIC, user_id="user-456",
         )
 
         assert memory.content == "Created memory"

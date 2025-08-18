@@ -2,6 +2,7 @@
 Unit tests for Google Drive integration
 """
 
+import contextlib
 import io
 import pickle
 from datetime import datetime
@@ -67,7 +68,7 @@ class TestGoogleDriveClient:
         assert client.credentials_path.parent.exists()
 
     @patch.dict(
-        "os.environ", {"GOOGLE_CLIENT_ID": "test_id", "GOOGLE_CLIENT_SECRET": "test_secret"}
+        "os.environ", {"GOOGLE_CLIENT_ID": "test_id", "GOOGLE_CLIENT_SECRET": "test_secret"},
     )
     def test_get_auth_url(self, client):
         """Test getting OAuth authorization URL"""
@@ -137,7 +138,7 @@ class TestGoogleDriveClient:
 
     @pytest.mark.asyncio
     @patch.dict(
-        "os.environ", {"GOOGLE_CLIENT_ID": "test_id", "GOOGLE_CLIENT_SECRET": "test_secret"}
+        "os.environ", {"GOOGLE_CLIENT_ID": "test_id", "GOOGLE_CLIENT_SECRET": "test_secret"},
     )
     async def test_authenticate_with_auth_code(self, client):
         """Test authentication with authorization code"""
@@ -237,7 +238,7 @@ class TestGoogleDriveClient:
 
         # Mock file metadata
         client.service.files().get.return_value.execute.return_value = {
-            "mimeType": "application/pdf"
+            "mimeType": "application/pdf",
         }
 
         # Mock file download
@@ -265,7 +266,7 @@ class TestGoogleDriveClient:
 
         # Mock file metadata - Google Docs
         client.service.files().get.return_value.execute.return_value = {
-            "mimeType": "application/vnd.google-apps.document"
+            "mimeType": "application/vnd.google-apps.document",
         }
 
         # Mock file export
@@ -325,8 +326,8 @@ class TestGoogleDriveClient:
                     "createdTime": "2024-01-24T10:00:00.000Z",
                     "modifiedTime": "2024-01-24T11:00:00.000Z",
                     "webViewLink": "https://drive.google.com/file/1",
-                }
-            ]
+                },
+            ],
         }
 
         client.service.files().list.return_value.execute.return_value = mock_response
@@ -403,18 +404,15 @@ class TestGoogleDriveClient:
             call_count += 1
             if call_count > 1:
                 # Stop monitoring after 2 checks
-                raise KeyboardInterrupt()
+                raise KeyboardInterrupt
             return result
 
         client.list_files = mock_list_files
 
-        with patch("asyncio.sleep"):
-            try:
-                await client.monitor_folder(
-                    folder_id="folder123", callback=callback, check_interval=1
-                )
-            except KeyboardInterrupt:
-                pass
+        with patch("asyncio.sleep"), contextlib.suppress(KeyboardInterrupt):
+            await client.monitor_folder(
+                folder_id="folder123", callback=callback, check_interval=1,
+            )
 
         # Check callback was called with new/modified files
         assert callback.call_count == 1
@@ -431,19 +429,19 @@ class TestGoogleDriveClient:
 
         # Google Docs - add .docx
         file = DriveFile(
-            id="doc1", name="My Document", mime_type="application/vnd.google-apps.document"
+            id="doc1", name="My Document", mime_type="application/vnd.google-apps.document",
         )
         assert client.get_export_filename(file) == "My Document.docx"
 
         # Google Sheets - add .xlsx
         file = DriveFile(
-            id="sheet1", name="My Spreadsheet", mime_type="application/vnd.google-apps.spreadsheet"
+            id="sheet1", name="My Spreadsheet", mime_type="application/vnd.google-apps.spreadsheet",
         )
         assert client.get_export_filename(file) == "My Spreadsheet.xlsx"
 
         # Google Slides - add .pdf
         file = DriveFile(
-            id="pres1", name="My Presentation", mime_type="application/vnd.google-apps.presentation"
+            id="pres1", name="My Presentation", mime_type="application/vnd.google-apps.presentation",
         )
         assert client.get_export_filename(file) == "My Presentation.pdf"
 
@@ -454,7 +452,7 @@ class TestGoogleDriveClient:
 
         # Mock file metadata
         client.service.files().get.return_value.execute.return_value = {
-            "mimeType": "application/pdf"
+            "mimeType": "application/pdf",
         }
 
         # Mock file download to return a file-like object
@@ -474,7 +472,7 @@ class TestGoogleDriveClient:
             with patch("app.routes.google_drive_routes.IngestionEngine") as MockIngestionEngine:
                 mock_ingestion_engine = AsyncMock()
                 mock_ingestion_engine.ingest_file.return_value = MagicMock(
-                    success=True, memories_created=1
+                    success=True, memories_created=1,
                 )
                 MockIngestionEngine.return_value = mock_ingestion_engine
 

@@ -14,6 +14,7 @@ without sacrificing type safety.
 
 from collections.abc import AsyncIterable, Awaitable, Callable
 from typing import (
+    Never,
     Protocol,
     TypeVar,
     get_type_hints,
@@ -287,7 +288,7 @@ class Filterable(Protocol[T]):
         ...
 
     async def filter_async(
-        self, items: AsyncIterable[T], predicate: Callable[[T], Awaitable[bool]]
+        self, items: AsyncIterable[T], predicate: Callable[[T], Awaitable[bool]],
     ) -> list[T]:
         """Filter items using async predicate."""
         ...
@@ -298,7 +299,7 @@ class Sortable(Protocol[T]):
     """Protocol for objects that can sort collections."""
 
     def sort(
-        self, items: list[T], key: Callable[[T], Any] | None = None, reverse: bool = False
+        self, items: list[T], key: Callable[[T], Any] | None = None, reverse: bool = False,
     ) -> list[T]:
         """Sort items using optional key function."""
         ...
@@ -507,12 +508,11 @@ class ProtocolChecker:
                 obj_attr = getattr(obj, attr_name)
 
                 # Check if it's a method/property with correct signature
-                if callable(obj_attr):
-                    if hasattr(protocol, attr_name):
-                        protocol_method = getattr(protocol, attr_name)
-                        if hasattr(protocol_method, "__annotations__"):
-                            # Could add more sophisticated signature checking here
-                            pass
+                if callable(obj_attr) and hasattr(protocol, attr_name):
+                    protocol_method = getattr(protocol, attr_name)
+                    if hasattr(protocol_method, "__annotations__"):
+                        # Could add more sophisticated signature checking here
+                        pass
 
             return True
 
@@ -531,7 +531,7 @@ class ProtocolChecker:
                 if not hasattr(obj, attr_name):
                     missing.append(attr_name)
                 elif not callable(getattr(obj, attr_name)) and not isinstance(
-                    getattr(obj, attr_name), property
+                    getattr(obj, attr_name), property,
                 ):
                     # Check if it should be callable based on protocol
                     if hasattr(protocol, attr_name):
@@ -542,7 +542,7 @@ class ProtocolChecker:
             return missing
 
         except Exception as e:
-            logger.error(f"Error checking protocol compliance: {e}")
+            logger.exception(f"Error checking protocol compliance: {e}")
             return [f"Error checking protocol: {e}"]
 
     @staticmethod
@@ -566,12 +566,12 @@ class ProtocolChecker:
 class ProtocolAdapter:
     """Adapter for making objects conform to protocols."""
 
-    def __init__(self, target: Any):
+    def __init__(self, target: Any) -> None:
         self.target = target
         self._adapters: dict[type, dict[str, Callable]] = {}
 
     def add_adapter(
-        self, protocol: type, method_name: str, implementation: Callable
+        self, protocol: type, method_name: str, implementation: Callable,
     ) -> "ProtocolAdapter":
         """Add method implementation for protocol compliance."""
         if protocol not in self._adapters:
@@ -593,11 +593,7 @@ class ProtocolAdapter:
         missing = ProtocolChecker.get_missing_methods(self.target, protocol)
         protocol_adapters = self._adapters.get(protocol, {})
 
-        for missing_method in missing:
-            if missing_method not in protocol_adapters:
-                return False
-
-        return True
+        return all(missing_method in protocol_adapters for missing_method in missing)
 
     def __getattr__(self, name: str) -> Any:
         """Delegate attribute access to target or adapters."""
@@ -616,7 +612,7 @@ class ProtocolAdapter:
 
 
 def duck_type_check(
-    obj: Any, required_methods: list[str], required_properties: list[str] | None = None
+    obj: Any, required_methods: list[str], required_properties: list[str] | None = None,
 ) -> bool:
     """Check if object has required methods and properties (duck typing)."""
     required_properties = required_properties or []
@@ -629,24 +625,20 @@ def duck_type_check(
             return False
 
     # Check properties
-    for prop_name in required_properties:
-        if not hasattr(obj, prop_name):
-            return False
-
-    return True
+    return all(hasattr(obj, prop_name) for prop_name in required_properties)
 
 
 def make_duck_compatible(obj: Any, target_interface: type) -> Any:
     """Create duck-type compatible wrapper for object."""
 
     class DuckWrapper:
-        def __init__(self, wrapped_obj):
+        def __init__(self, wrapped_obj) -> None:
             self._wrapped = wrapped_obj
 
         def __getattr__(self, name):
             return getattr(self._wrapped, name)
 
-        def __repr__(self):
+        def __repr__(self) -> str:
             return f"DuckWrapper({self._wrapped})"
 
     wrapper = DuckWrapper(obj)
@@ -658,9 +650,9 @@ def make_duck_compatible(obj: Any, target_interface: type) -> Any:
         for method_name in annotations:
             if not hasattr(obj, method_name):
                 # Create placeholder method
-                def placeholder_method(*args, **kwargs):
+                def placeholder_method(*args, **kwargs) -> Never:
                     raise NotImplementedError(
-                        f"Method {method_name} not implemented in wrapped object"
+                        f"Method {method_name} not implemented in wrapped object",
                     )
 
                 setattr(wrapper, method_name, placeholder_method)
@@ -675,8 +667,7 @@ async def call_if_callable(obj: Any, method_name: str, *args, **kwargs) -> Any:
         if callable(method):
             if asyncio.iscoroutinefunction(method):
                 return await method(*args, **kwargs)
-            else:
-                return method(*args, **kwargs)
+            return method(*args, **kwargs)
     return None
 
 
@@ -792,7 +783,7 @@ class UniversalMemory:
 class ProcessingService:
     """Example service implementing multiple service protocols."""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.name = name
         self._running = False
         self._start_time = None
@@ -849,7 +840,7 @@ class ProcessingService:
 # ============================================================================
 
 
-def test_protocol_implementations():
+def test_protocol_implementations() -> None:
     """Test protocol implementations with examples."""
 
     # Test UniversalMemory
@@ -896,10 +887,10 @@ def test_protocol_implementations():
 
     # Test duck typing
     class SimpleDuck:
-        def quack(self):
+        def quack(self) -> str:
             return "Quack!"
 
-        def swim(self):
+        def swim(self) -> str:
             return "Swimming..."
 
     duck = SimpleDuck()

@@ -28,7 +28,7 @@ class TestDatabaseErrorHandling:
     @pytest.mark.asyncio
     async def test_connection_timeout(self, mock_database):
         """Test handling of connection timeouts"""
-        mock_database.create_memory.side_effect = asyncio.TimeoutError("Connection timeout")
+        mock_database.create_memory.side_effect = TimeoutError("Connection timeout")
 
         with pytest.raises(asyncio.TimeoutError):
             await mock_database.create_memory({"title": "test"})
@@ -73,7 +73,7 @@ class TestAPIErrorHandling:
 
         with pytest.raises(Exception) as exc_info:
             await mock_openai_client.embeddings.create(
-                model="text-embedding-ada-002", input="test text"
+                model="text-embedding-ada-002", input="test text",
             )
 
         assert "Rate limit exceeded" in str(exc_info.value)
@@ -81,11 +81,11 @@ class TestAPIErrorHandling:
     @pytest.mark.asyncio
     async def test_openai_api_timeout(self, mock_openai_client):
         """Test handling of API timeouts"""
-        mock_openai_client.embeddings.create.side_effect = asyncio.TimeoutError("API timeout")
+        mock_openai_client.embeddings.create.side_effect = TimeoutError("API timeout")
 
         with pytest.raises(asyncio.TimeoutError):
             await mock_openai_client.embeddings.create(
-                model="text-embedding-ada-002", input="test text"
+                model="text-embedding-ada-002", input="test text",
             )
 
     @pytest.mark.asyncio
@@ -96,7 +96,7 @@ class TestAPIErrorHandling:
         mock_openai_client.embeddings.create.return_value = mock_response
 
         response = await mock_openai_client.embeddings.create(
-            model="text-embedding-ada-002", input="test text"
+            model="text-embedding-ada-002", input="test text",
         )
 
         assert response.data is None
@@ -127,7 +127,7 @@ class TestRedisErrorHandling:
     @pytest.mark.asyncio
     async def test_redis_timeout(self, mock_redis):
         """Test handling of Redis operation timeouts"""
-        mock_redis.get.side_effect = asyncio.TimeoutError("Redis timeout")
+        mock_redis.get.side_effect = TimeoutError("Redis timeout")
 
         with pytest.raises(asyncio.TimeoutError):
             await mock_redis.get("test_key")
@@ -155,7 +155,7 @@ class TestInputValidationErrors:
         """Test custom validation logic"""
 
         def validate_importance_score(score):
-            if not isinstance(score, (int, float)):
+            if not isinstance(score, int | float):
                 raise TypeError("Importance score must be a number")
             if not 0.0 <= score <= 1.0:
                 raise ValueError("Importance score must be between 0.0 and 1.0")

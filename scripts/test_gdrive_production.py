@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.services.google_drive_enhanced import GoogleDriveEnhanced
 
 
-async def test_google_drive_production():
+async def test_google_drive_production() -> None:
     """Test Google Drive integration with production data"""
 
     print("=" * 60)
@@ -48,7 +48,7 @@ async def test_google_drive_production():
     print(f"   Max file size: {status.get('max_file_size_mb', 0)} MB")
     print(f"   Supported types: {len(status.get('supported_types', []))} types")
 
-    if not status['connected']:
+    if not status["connected"]:
         print("\n🔗 Not connected. Please authenticate:")
         auth_url = service.get_auth_url()
         print("\n1. Visit this URL to authenticate:")
@@ -62,7 +62,7 @@ async def test_google_drive_production():
             print("\n🔄 Exchanging code for tokens...")
             result = await service.exchange_code(auth_code)
 
-            if result.get('success'):
+            if result.get("success"):
                 print(f"✅ Successfully authenticated as: {result.get('email')}")
             else:
                 print(f"❌ Authentication failed: {result.get('error')}")
@@ -81,17 +81,17 @@ async def test_google_drive_production():
     # Categorize files
     categories = {}
     for file in files[:20]:  # Show first 20
-        is_supported, category = service._validate_content_type(file.get('mimeType', ''))
+        is_supported, category = service._validate_content_type(file.get("mimeType", ""))
         if is_supported:
             if category not in categories:
                 categories[category] = []
             categories[category].append(file)
 
-        ingested_marker = "✓" if file.get('already_ingested') else " "
+        ingested_marker = "✓" if file.get("already_ingested") else " "
         support_marker = "✓" if is_supported else "✗"
         size_str = ""
-        if file.get('size'):
-            size_mb = int(file['size']) / (1024 * 1024)
+        if file.get("size"):
+            size_mb = int(file["size"]) / (1024 * 1024)
             size_str = f" ({size_mb:.1f} MB)"
 
         print(f"   [{ingested_marker}] [{support_marker}] {file['name'][:50]}{size_str}")
@@ -106,14 +106,14 @@ async def test_google_drive_production():
     test_files = []
 
     for category, cat_files in categories.items():
-        if cat_files and not cat_files[0].get('already_ingested'):
+        if cat_files and not cat_files[0].get("already_ingested"):
             test_files.append((category, cat_files[0]))
             if len(test_files) >= 3:
                 break
 
     if test_files:
         for category, file in test_files:
-            file_id = file['id']
+            file_id = file["id"]
             print(f"\n   Validating {category} file: {file['name'][:40]}")
 
             # Check duplicate
@@ -122,12 +122,12 @@ async def test_google_drive_production():
 
             # Check size
             size_ok = True
-            if file.get('size'):
-                size_ok = int(file['size']) <= 250 * 1024 * 1024
+            if file.get("size"):
+                size_ok = int(file["size"]) <= 250 * 1024 * 1024
             print(f"     Size check: {'OK' if size_ok else 'Too large'}")
 
             # Check type
-            is_supported, _ = service._validate_content_type(file.get('mimeType', ''))
+            is_supported, _ = service._validate_content_type(file.get("mimeType", ""))
             print(f"     Type check: {'Supported' if is_supported else 'Unsupported'}")
 
             can_ingest = not is_dup and size_ok and is_supported
@@ -137,13 +137,13 @@ async def test_google_drive_production():
     print("\n" + "=" * 60)
     response = input("\n🚀 Would you like to test file ingestion? (y/n): ").strip().lower()
 
-    if response == 'y':
+    if response == "y":
         # Find a small text file to test
         test_file = None
         for file in files:
-            mime_type = file.get('mimeType', '')
-            if mime_type.startswith('text/') and not file.get('already_ingested'):
-                if file.get('size') and int(file['size']) < 1024 * 1024:  # < 1MB
+            mime_type = file.get("mimeType", "")
+            if mime_type.startswith("text/") and not file.get("already_ingested"):
+                if file.get("size") and int(file["size"]) < 1024 * 1024:  # < 1MB
                     test_file = file
                     break
 
@@ -152,10 +152,10 @@ async def test_google_drive_production():
             print(f"   File ID: {test_file['id']}")
             print(f"   Type: {test_file['mimeType']}")
 
-            result = await service.ingest_file(test_file['id'])
+            result = await service.ingest_file(test_file["id"])
 
             if result:
-                if result.get('status') == 'skipped':
+                if result.get("status") == "skipped":
                     print(f"   ⏭️ Skipped: {result.get('reason')}")
                 else:
                     print(f"   ✅ Success! Memory ID: {result.get('id')}")
@@ -181,7 +181,7 @@ async def test_google_drive_production():
     print("\n✅ Production test completed!")
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     print("\n[TEST] Google Drive Enhanced Integration Test")
     print("This will test the production Google Drive integration")

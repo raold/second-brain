@@ -13,28 +13,27 @@ from pathlib import Path
 
 # Fix Windows console encoding
 if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 def extract_imports(file_path):
     """Extract all imports from a Python file"""
     imports = set()
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding="utf-8") as f:
             tree = ast.parse(f.read())
 
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     # Get base module name
-                    base_module = alias.name.split('.')[0]
+                    base_module = alias.name.split(".")[0]
                     imports.add(base_module)
-            elif isinstance(node, ast.ImportFrom):
-                if node.module:
-                    # Get base module name
-                    base_module = node.module.split('.')[0]
-                    # Skip relative imports (starting with app)
-                    if not base_module.startswith('app'):
-                        imports.add(base_module)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                # Get base module name
+                base_module = node.module.split(".")[0]
+                # Skip relative imports (starting with app)
+                if not base_module.startswith("app"):
+                    imports.add(base_module)
     except Exception as e:
         print(f"Error parsing {file_path}: {e}")
 
@@ -45,14 +44,14 @@ def get_all_imports(root_dir):
     all_imports = defaultdict(set)
 
     # Skip these directories
-    skip_dirs = {'.venv', 'venv', '.git', '__pycache__', 'build', 'dist', '.egg-info'}
+    skip_dirs = {".venv", "venv", ".git", "__pycache__", "build", "dist", ".egg-info"}
 
     for root, dirs, files in os.walk(root_dir):
         # Remove skip directories from search
         dirs[:] = [d for d in dirs if d not in skip_dirs]
 
         for file in files:
-            if file.endswith('.py'):
+            if file.endswith(".py"):
                 file_path = Path(root) / file
                 imports = extract_imports(file_path)
                 for imp in imports:
@@ -63,19 +62,19 @@ def get_all_imports(root_dir):
 def load_requirements():
     """Load requirements.txt"""
     requirements = {}
-    req_file = Path('requirements.txt')
+    req_file = Path("requirements.txt")
 
     if req_file.exists():
-        with open(req_file, 'r') as f:
+        with open(req_file) as f:
             for line in f:
                 line = line.strip()
-                if line and not line.startswith('#'):
+                if line and not line.startswith("#"):
                     # Parse requirement line
-                    match = re.match(r'^([a-zA-Z0-9\-_]+)', line)
+                    match = re.match(r"^([a-zA-Z0-9\-_]+)", line)
                     if match:
                         package_name = match.group(1).lower()
                         # Handle package name variations
-                        package_name = package_name.replace('-', '_')
+                        package_name = package_name.replace("-", "_")
                         requirements[package_name] = line
 
     return requirements
@@ -84,17 +83,17 @@ def map_import_to_package(import_name):
     """Map import name to package name"""
     # Common mappings
     mappings = {
-        'jose': 'python-jose',
-        'dotenv': 'python-dotenv',
-        'sklearn': 'scikit-learn',
-        'PIL': 'Pillow',
-        'cv2': 'opencv-python',
-        'yaml': 'pyyaml',
-        'magicpdf': 'pypdf',
-        'PyPDF2': 'pypdf',
-        'community': 'python-louvain',
-        'redis': 'redis',  # Note: This might be imported but not in requirements
-        'qdrant_client': 'qdrant-client',  # Old dependency
+        "jose": "python-jose",
+        "dotenv": "python-dotenv",
+        "sklearn": "scikit-learn",
+        "PIL": "Pillow",
+        "cv2": "opencv-python",
+        "yaml": "pyyaml",
+        "magicpdf": "pypdf",
+        "PyPDF2": "pypdf",
+        "community": "python-louvain",
+        "redis": "redis",  # Note: This might be imported but not in requirements
+        "qdrant_client": "qdrant-client",  # Old dependency
     }
 
     # Check direct mapping
@@ -102,9 +101,9 @@ def map_import_to_package(import_name):
         return mappings[import_name]
 
     # Return as-is
-    return import_name.replace('_', '-')
+    return import_name.replace("_", "-")
 
-def analyze():
+def analyze() -> None:
     """Main analysis function"""
     print("=" * 60)
     print("DEPENDENCY ANALYSIS FOR SECOND BRAIN")
@@ -124,16 +123,16 @@ def analyze():
 
     # Standard library modules to ignore
     stdlib_modules = {
-        'os', 'sys', 'json', 'datetime', 'time', 'pathlib', 'typing', 'enum',
-        'collections', 'itertools', 'functools', 'asyncio', 're', 'math',
-        'random', 'string', 'hashlib', 'base64', 'uuid', 'logging', 'warnings',
-        'traceback', 'copy', 'io', 'csv', 'sqlite3', 'urllib', 'http', 'socket',
-        'subprocess', 'tempfile', 'shutil', 'zipfile', 'configparser', 'argparse',
-        'unittest', 'contextlib', 'abc', 'dataclasses', 'inspect', 'importlib',
-        'types', 'weakref', 'pickle', 'shelve', 'multiprocessing', 'threading',
-        'queue', 'secrets', 'hmac', 'email', 'mimetypes', 'webbrowser', 'platform',
-        'getpass', 'pwd', 'grp', 'struct', 'binascii', 'codecs', 'locale',
-        'textwrap', 'pprint', 'statistics', 'decimal', 'fractions', 'numbers'
+        "os", "sys", "json", "datetime", "time", "pathlib", "typing", "enum",
+        "collections", "itertools", "functools", "asyncio", "re", "math",
+        "random", "string", "hashlib", "base64", "uuid", "logging", "warnings",
+        "traceback", "copy", "io", "csv", "sqlite3", "urllib", "http", "socket",
+        "subprocess", "tempfile", "shutil", "zipfile", "configparser", "argparse",
+        "unittest", "contextlib", "abc", "dataclasses", "inspect", "importlib",
+        "types", "weakref", "pickle", "shelve", "multiprocessing", "threading",
+        "queue", "secrets", "hmac", "email", "mimetypes", "webbrowser", "platform",
+        "getpass", "pwd", "grp", "struct", "binascii", "codecs", "locale",
+        "textwrap", "pprint", "statistics", "decimal", "fractions", "numbers",
     }
 
     print("\n📦 IMPORTED MODULES:")
@@ -143,7 +142,7 @@ def analyze():
         if import_name in stdlib_modules:
             continue
 
-        package_name = map_import_to_package(import_name).replace('-', '_')
+        package_name = map_import_to_package(import_name).replace("-", "_")
         files = all_imports[import_name]
 
         print(f"\n• {import_name}")
@@ -169,13 +168,13 @@ def analyze():
                     found = True
                     break
 
-            if not found and import_name not in {'app'}:
+            if not found and import_name not in {"app"}:
                 missing_packages.add(import_name)
 
     print("\n\n❌ UNUSED DEPENDENCIES IN REQUIREMENTS.TXT:")
     print("-" * 40)
     for pkg in sorted(unused_requirements):
-        if not pkg.startswith('certifi') and not pkg.startswith('urllib3'):  # These are indirect deps
+        if not pkg.startswith("certifi") and not pkg.startswith("urllib3"):  # These are indirect deps
             print(f"• {pkg}: {requirements[pkg]}")
 
     print("\n\n⚠️  IMPORTS WITHOUT REQUIREMENTS:")

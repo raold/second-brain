@@ -72,7 +72,7 @@ class ErrorResponse(BaseModel):
     timestamp: str = None
     request_id: str | None = None
 
-    def __init__(self, **data):
+    def __init__(self, **data) -> None:
         if not data.get("timestamp"):
             data["timestamp"] = datetime.utcnow().isoformat()
         super().__init__(**data)
@@ -87,7 +87,7 @@ class SecondBrainException(Exception):
         error_code: ErrorCode = ErrorCode.INTERNAL_ERROR,
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
         details: dict[str, Any] | None = None,
-    ):
+    ) -> None:
         self.message = message
         self.error_code = error_code
         self.status_code = status_code
@@ -108,8 +108,8 @@ class UnauthorizedException(SecondBrainException):
     """Raised when authentication is required but not provided"""
 
     def __init__(
-        self, message: str = "Authentication required", details: dict[str, Any] | None = None
-    ):
+        self, message: str = "Authentication required", details: dict[str, Any] | None = None,
+    ) -> None:
         super().__init__(
             message=message,
             error_code=ErrorCode.UNAUTHORIZED,
@@ -121,7 +121,7 @@ class UnauthorizedException(SecondBrainException):
 class ForbiddenException(SecondBrainException):
     """Raised when user lacks permission for requested resource"""
 
-    def __init__(self, message: str = "Access forbidden", details: dict[str, Any] | None = None):
+    def __init__(self, message: str = "Access forbidden", details: dict[str, Any] | None = None) -> None:
         super().__init__(
             message=message,
             error_code=ErrorCode.FORBIDDEN,
@@ -133,7 +133,7 @@ class ForbiddenException(SecondBrainException):
 class InvalidTokenException(SecondBrainException):
     """Raised when provided token is invalid"""
 
-    def __init__(self, message: str = "Invalid token", details: dict[str, Any] | None = None):
+    def __init__(self, message: str = "Invalid token", details: dict[str, Any] | None = None) -> None:
         super().__init__(
             message=message,
             error_code=ErrorCode.INVALID_TOKEN,
@@ -146,7 +146,7 @@ class InvalidTokenException(SecondBrainException):
 class NotFoundException(SecondBrainException):
     """Raised when requested resource is not found"""
 
-    def __init__(self, resource: str, identifier: Any = None):
+    def __init__(self, resource: str, identifier: Any = None) -> None:
         message = f"{resource} not found"
         if identifier:
             message = f"{resource} with id '{identifier}' not found"
@@ -162,7 +162,7 @@ class NotFoundException(SecondBrainException):
 class AlreadyExistsException(SecondBrainException):
     """Raised when attempting to create a resource that already exists"""
 
-    def __init__(self, resource: str, identifier: Any = None):
+    def __init__(self, resource: str, identifier: Any = None) -> None:
         message = f"{resource} already exists"
         if identifier:
             message = f"{resource} with identifier '{identifier}' already exists"
@@ -178,7 +178,7 @@ class AlreadyExistsException(SecondBrainException):
 class ConflictException(SecondBrainException):
     """Raised when operation would cause a conflict"""
 
-    def __init__(self, message: str, details: dict[str, Any] | None = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None) -> None:
         super().__init__(
             message=message,
             error_code=ErrorCode.CONFLICT,
@@ -192,8 +192,8 @@ class ValidationException(SecondBrainException):
     """Raised when input validation fails"""
 
     def __init__(
-        self, message: str, field: str | None = None, details: dict[str, Any] | None = None
-    ):
+        self, message: str, field: str | None = None, details: dict[str, Any] | None = None,
+    ) -> None:
         if not details:
             details = {}
         if field:
@@ -211,7 +211,7 @@ class ValidationException(SecondBrainException):
 class DatabaseException(SecondBrainException):
     """Base exception for database-related errors"""
 
-    def __init__(self, message: str, details: dict[str, Any] | None = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None) -> None:
         super().__init__(
             message=message,
             error_code=ErrorCode.DATABASE_ERROR,
@@ -224,8 +224,8 @@ class DatabaseConnectionException(DatabaseException):
     """Raised when database connection fails"""
 
     def __init__(
-        self, message: str = "Database connection failed", details: dict[str, Any] | None = None
-    ):
+        self, message: str = "Database connection failed", details: dict[str, Any] | None = None,
+    ) -> None:
         super().__init__(message=message, details=details)
         self.error_code = ErrorCode.CONNECTION_ERROR
 
@@ -234,7 +234,7 @@ class DatabaseConnectionException(DatabaseException):
 class ServiceUnavailableException(SecondBrainException):
     """Raised when a service is temporarily unavailable"""
 
-    def __init__(self, service: str, message: str | None = None):
+    def __init__(self, service: str, message: str | None = None) -> None:
         if not message:
             message = f"{service} service is temporarily unavailable"
 
@@ -249,7 +249,7 @@ class ServiceUnavailableException(SecondBrainException):
 class ExternalServiceException(SecondBrainException):
     """Raised when external service call fails"""
 
-    def __init__(self, service: str, message: str, details: dict[str, Any] | None = None):
+    def __init__(self, service: str, message: str, details: dict[str, Any] | None = None) -> None:
         if not details:
             details = {}
         details["service"] = service
@@ -265,7 +265,7 @@ class ExternalServiceException(SecondBrainException):
 class TimeoutException(SecondBrainException):
     """Raised when operation times out"""
 
-    def __init__(self, operation: str, timeout_seconds: float | None = None):
+    def __init__(self, operation: str, timeout_seconds: float | None = None) -> None:
         message = f"Operation '{operation}' timed out"
         details = {"operation": operation}
 
@@ -286,8 +286,8 @@ class BusinessRuleViolationException(SecondBrainException):
     """Raised when business rule is violated"""
 
     def __init__(
-        self, rule: str, message: str | None = None, details: dict[str, Any] | None = None
-    ):
+        self, rule: str, message: str | None = None, details: dict[str, Any] | None = None,
+    ) -> None:
         if not message:
             message = f"Business rule violation: {rule}"
 
@@ -306,7 +306,7 @@ class BusinessRuleViolationException(SecondBrainException):
 class RateLimitExceededException(SecondBrainException):
     """Raised when rate limit is exceeded"""
 
-    def __init__(self, limit: int, window: str, retry_after: int | None = None):
+    def __init__(self, limit: int, window: str, retry_after: int | None = None) -> None:
         message = f"Rate limit exceeded: {limit} requests per {window}"
         details = {"limit": limit, "window": window}
 
@@ -323,7 +323,7 @@ class RateLimitExceededException(SecondBrainException):
 
 # Exception Handlers for FastAPI
 async def second_brain_exception_handler(
-    request: Request, exc: SecondBrainException
+    request: Request, exc: SecondBrainException,
 ) -> JSONResponse:
     """Handle SecondBrainException and return structured error response"""
 
@@ -361,7 +361,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
 
     # Log the full exception with traceback
     logger.exception(
-        f"Unhandled exception: {type(exc).__name__}: {str(exc)}",
+        f"Unhandled exception: {type(exc).__name__}: {exc!s}",
         extra={
             "request_id": request_id,
             "path": request.url.path,
@@ -402,7 +402,7 @@ async def validation_exception_handler(request: Request, exc: Exception) -> JSON
                     "field": " -> ".join(str(loc) for loc in error.get("loc", [])),
                     "message": error.get("msg", "Validation error"),
                     "type": error.get("type", "validation_error"),
-                }
+                },
             )
 
     error_response = ErrorResponse(
@@ -419,7 +419,7 @@ async def validation_exception_handler(request: Request, exc: Exception) -> JSON
     )
 
 
-def register_exception_handlers(app):
+def register_exception_handlers(app) -> None:
     """Register all exception handlers with the FastAPI app"""
 
     app.add_exception_handler(SecondBrainException, second_brain_exception_handler)
@@ -448,7 +448,7 @@ def register_exception_handlers(app):
         error_code = status_to_error_code.get(exc.status_code, ErrorCode.UNKNOWN_ERROR)
 
         error_response = ErrorResponse(
-            error_code=error_code, message=exc.detail, request_id=request_id
+            error_code=error_code, message=exc.detail, request_id=request_id,
         )
 
         return JSONResponse(

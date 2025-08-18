@@ -29,17 +29,17 @@ async def test_models():
         payload = {
             "model": "openai/gpt-oss-120b",
             "messages": [
-                {"role": "user", "content": "What are the benefits of using local LLMs for document processing?"}
+                {"role": "user", "content": "What are the benefits of using local LLMs for document processing?"},
             ],
             "max_tokens": 200,
-            "temperature": 0.7
+            "temperature": 0.7,
         }
 
         try:
             async with session.post(
                 f"{base_url}/chat/completions",
                 json=payload,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
@@ -62,7 +62,7 @@ async def test_models():
             async with session.post(
                 f"{base_url}/embeddings",
                 json=payload,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
@@ -78,11 +78,11 @@ async def test_models():
         # 4. Test document summarization
         print("\n3. Testing document summarization...")
         document = """
-        The Second Brain system is a comprehensive knowledge management platform that integrates 
-        multiple AI services for processing documents. It includes Google Drive integration for 
-        file synchronization, CLIP for image embeddings, LLaVA for deep image analysis, and now 
-        LM Studio for local text processing. All data is stored in PostgreSQL with vector search 
-        capabilities. The system runs entirely locally for privacy and can process thousands of 
+        The Second Brain system is a comprehensive knowledge management platform that integrates
+        multiple AI services for processing documents. It includes Google Drive integration for
+        file synchronization, CLIP for image embeddings, LLaVA for deep image analysis, and now
+        LM Studio for local text processing. All data is stored in PostgreSQL with vector search
+        capabilities. The system runs entirely locally for privacy and can process thousands of
         documents without API costs.
         """
 
@@ -90,17 +90,17 @@ async def test_models():
             "model": "openai/gpt-oss-120b",
             "messages": [
                 {"role": "system", "content": "You are a helpful assistant that summarizes documents concisely."},
-                {"role": "user", "content": f"Summarize this in 2 sentences: {document}"}
+                {"role": "user", "content": f"Summarize this in 2 sentences: {document}"},
             ],
             "max_tokens": 100,
-            "temperature": 0.5
+            "temperature": 0.5,
         }
 
         try:
             async with session.post(
                 f"{base_url}/chat/completions",
                 json=payload,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()

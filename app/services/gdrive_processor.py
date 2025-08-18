@@ -29,7 +29,7 @@ class GDriveProcessor:
         clip_url: str = "http://127.0.0.1:8002",
         llava_url: str = "http://127.0.0.1:8003",
         batch_size: int = 10,
-    ):
+    ) -> None:
         self.gdrive = gdrive_service
         self.lm_studio_url = lm_studio_url
         self.clip_url = clip_url
@@ -48,7 +48,7 @@ class GDriveProcessor:
         }
 
     async def process_folder(
-        self, folder_id: str = "root", recursive: bool = True
+        self, folder_id: str = "root", recursive: bool = True,
     ) -> dict[str, Any]:
         """
         Process an entire Google Drive folder
@@ -67,7 +67,7 @@ class GDriveProcessor:
         for i in range(0, len(files), self.batch_size):
             batch = files[i : i + self.batch_size]
             logger.info(
-                f"Processing batch {i//self.batch_size + 1}/{(len(files)-1)//self.batch_size + 1}"
+                f"Processing batch {i//self.batch_size + 1}/{(len(files)-1)//self.batch_size + 1}",
             )
 
             # Process batch concurrently
@@ -107,7 +107,7 @@ class GDriveProcessor:
         Skipped: {self.processing_stats['skipped']}
         Duration: {duration:.2f} seconds
         Rate: {self.processing_stats['processed']/duration:.2f} files/sec
-        """
+        """,
         )
 
         return self.processing_stats
@@ -299,7 +299,7 @@ class GDriveProcessor:
                             "image_url": {"url": f"data:image/png;base64,{img_base64}"},
                         },
                     ],
-                }
+                },
             ],
             "max_tokens": 300,
             "temperature": 0.5,
@@ -319,7 +319,7 @@ class GDriveProcessor:
             return "Error analyzing image"
 
     async def generate_clip_embedding(
-        self, session: aiohttp.ClientSession, image_bytes: bytes
+        self, session: aiohttp.ClientSession, image_bytes: bytes,
     ) -> list[float]:
         """Generate CLIP embedding for image search"""
         try:
@@ -355,7 +355,7 @@ class GDriveProcessor:
                             "image_url": {"url": f"data:image/png;base64,{img_base64}"},
                         },
                     ],
-                }
+                },
             ],
             "max_tokens": 500,
             "temperature": 0.3,
@@ -375,7 +375,7 @@ class GDriveProcessor:
             return ""
 
     async def generate_text_embedding(
-        self, session: aiohttp.ClientSession, text: str
+        self, session: aiohttp.ClientSession, text: str,
     ) -> list[float]:
         """Generate text embedding using Nomic"""
         payload = {

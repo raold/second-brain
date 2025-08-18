@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -30,13 +30,13 @@ class FormatType(str, Enum):
 class SummaryRequest(BaseModel):
     """Request for memory summarization"""
 
-    memory_ids: Optional[List[str]] = None
-    user_id: Optional[str] = None
+    memory_ids: list[str] | None = None
+    user_id: str | None = None
     summary_type: SummaryType = SummaryType.BRIEF
-    max_length: Optional[int] = None
+    max_length: int | None = None
     include_insights: bool = True
     include_themes: bool = True
-    time_range_days: Optional[int] = None
+    time_range_days: int | None = None
 
 
 class SummaryResponse(BaseModel):
@@ -46,10 +46,10 @@ class SummaryResponse(BaseModel):
     summary_type: SummaryType
     content: str
     memories_processed: int = 0
-    key_insights: List[str] = []
-    main_themes: List[str] = []
-    important_dates: List[datetime] = []
+    key_insights: list[str] = []
+    main_themes: list[str] = []
+    important_dates: list[datetime] = []
     word_count: int = 0
     confidence_score: float = 0.0
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
     created_at: datetime = Field(default_factory=datetime.now)

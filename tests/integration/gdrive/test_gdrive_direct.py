@@ -27,7 +27,7 @@ async def test_direct():
     print(f"   Connected: {status['connected']}")
     print(f"   User: {status.get('user_email', 'Unknown')}")
 
-    if not status['connected']:
+    if not status["connected"]:
         print("\n   ERROR: Not connected!")
         return
 
@@ -70,11 +70,11 @@ async def test_direct():
             async with session.get(
                 "https://www.googleapis.com/drive/v3/files",
                 headers=headers,
-                params=params
+                params=params,
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    files = data.get('files', [])
+                    files = data.get("files", [])
                     print(f"   Found {len(files)} files")
 
                     if files:

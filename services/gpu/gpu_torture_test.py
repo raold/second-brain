@@ -17,24 +17,24 @@ CONCURRENT_REQUESTS = 16  # PARALLEL REQUESTS
 
 async def generate_complex_image(idx: int) -> bytes:
     """Generate a complex test image with text."""
-    img = Image.new('RGB', IMAGE_SIZE, color=(
+    img = Image.new("RGB", IMAGE_SIZE, color=(
         random.randint(0, 255),
         random.randint(0, 255),
-        random.randint(0, 255)
+        random.randint(0, 255),
     ))
     draw = ImageDraw.Draw(img)
 
     # Draw MORE random shapes
     for _ in range(20):
-        shape_type = random.choice(['rectangle', 'ellipse', 'polygon'])
+        shape_type = random.choice(["rectangle", "ellipse", "polygon"])
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
-        if shape_type == 'rectangle':
+        if shape_type == "rectangle":
             x_coords = sorted([random.randint(0, IMAGE_SIZE[0]) for _ in range(2)])
             y_coords = sorted([random.randint(0, IMAGE_SIZE[1]) for _ in range(2)])
             coords = [x_coords[0], y_coords[0], x_coords[1], y_coords[1]]
             draw.rectangle(coords, fill=color, outline=(255, 255, 255), width=3)
-        elif shape_type == 'ellipse':
+        elif shape_type == "ellipse":
             x_coords = sorted([random.randint(0, IMAGE_SIZE[0]) for _ in range(2)])
             y_coords = sorted([random.randint(0, IMAGE_SIZE[1]) for _ in range(2)])
             coords = [x_coords[0], y_coords[0], x_coords[1], y_coords[1]]
@@ -49,12 +49,12 @@ async def generate_complex_image(idx: int) -> bytes:
         draw.text(
             (random.randint(0, IMAGE_SIZE[0]-200), random.randint(0, IMAGE_SIZE[1]-50)),
             f"TORTURE TEST {idx}-{i}\nGPU STRESS\nRTX 4090",
-            fill=(255, 255, 255)
+            fill=(255, 255, 255),
         )
 
     # Convert to bytes
     img_bytes = io.BytesIO()
-    img.save(img_bytes, format='PNG', optimize=False)  # No optimization for speed
+    img.save(img_bytes, format="PNG", optimize=False)  # No optimization for speed
     img_bytes.seek(0)
     return img_bytes.getvalue()
 
@@ -83,7 +83,7 @@ async def torture_clip(session: aiohttp.ClientSession, round_num: int):
         tasks = []
         for img_data in chunk:
             data = aiohttp.FormData()
-            data.add_field('file', img_data, filename='test.png', content_type='image/png')
+            data.add_field("file", img_data, filename="test.png", content_type="image/png")
             task = session.post("http://localhost:8002/clip/embed/image", data=data)
             tasks.append(task)
 
@@ -118,19 +118,19 @@ async def torture_llava(session: aiohttp.ClientSession, round_num: int):
             status = await resp.json()
             print(f"  LLaVA Status: Model loaded = {status['model_loaded']}")
 
-            if not status['model_loaded']:
+            if not status["model_loaded"]:
                 # Try to trigger model loading with a single request
                 print("  Triggering LLaVA model load...")
                 img_data = await generate_complex_image(999)
                 data = aiohttp.FormData()
-                data.add_field('file', img_data, filename='test.png', content_type='image/png')
-                data.add_field('instruction', 'Describe this image')
+                data.add_field("file", img_data, filename="test.png", content_type="image/png")
+                data.add_field("instruction", "Describe this image")
 
                 try:
                     async with session.post(
                         "http://localhost:8003/llava/analyze/image",
                         data=data,
-                        timeout=aiohttp.ClientTimeout(total=60)
+                        timeout=aiohttp.ClientTimeout(total=60),
                     ) as resp:
                         if resp.status == 200:
                             print("  LLaVA model loaded successfully!")
@@ -148,19 +148,19 @@ async def torture_llava(session: aiohttp.ClientSession, round_num: int):
     for i in range(num_llava_tests):
         img_data = await generate_complex_image(round_num * 1000 + i)
         data = aiohttp.FormData()
-        data.add_field('file', img_data, filename='test.png', content_type='image/png')
-        data.add_field('instruction', f'Describe image {i} and extract any text')
+        data.add_field("file", img_data, filename="test.png", content_type="image/png")
+        data.add_field("instruction", f"Describe image {i} and extract any text")
 
         try:
             async with session.post(
                 "http://localhost:8003/llava/analyze/image",
                 data=data,
-                timeout=aiohttp.ClientTimeout(total=30)
+                timeout=aiohttp.ClientTimeout(total=30),
             ) as resp:
                 if resp.status == 200:
                     result = await resp.json()
                     print(f"    Image {i+1}: Analyzed in {result['processing_time_ms']:.0f}ms")
-        except asyncio.TimeoutError:
+        except TimeoutError:
             print(f"    Image {i+1}: Timeout")
         except Exception as e:
             print(f"    Image {i+1}: Error - {str(e)[:50]}")
@@ -179,21 +179,21 @@ async def check_gpu_status():
     result = subprocess.run(
         ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu",
          "--format=csv,noheader,nounits"],
-        capture_output=True,
-        text=True
+        check=False, capture_output=True,
+        text=True,
     )
     if result.returncode == 0:
-        parts = result.stdout.strip().split(', ')
+        parts = result.stdout.strip().split(", ")
         return {
-            'gpu_util': int(parts[0]),
-            'mem_used': int(parts[1]),
-            'mem_total': int(parts[2]),
-            'temp': int(parts[3])
+            "gpu_util": int(parts[0]),
+            "mem_used": int(parts[1]),
+            "mem_total": int(parts[2]),
+            "temp": int(parts[3]),
         }
     return None
 
 
-async def main():
+async def main() -> None:
     """Run the EXTREME GPU torture test."""
     print("=" * 80)
     print("RTX 4090 EXTREME TORTURE TEST")
@@ -243,9 +243,9 @@ async def main():
             # Check GPU status after each round
             gpu_status = await check_gpu_status()
             if gpu_status:
-                max_gpu_util = max(max_gpu_util, gpu_status['gpu_util'])
-                max_mem_used = max(max_mem_used, gpu_status['mem_used'])
-                max_temp = max(max_temp, gpu_status['temp'])
+                max_gpu_util = max(max_gpu_util, gpu_status["gpu_util"])
+                max_mem_used = max(max_mem_used, gpu_status["mem_used"])
+                max_temp = max(max_temp, gpu_status["temp"])
 
                 print(f"\n  GPU Status After Round {round_num}:")
                 print(f"    GPU Utilization: {gpu_status['gpu_util']}% (Peak: {max_gpu_util}%)")
@@ -282,7 +282,7 @@ async def main():
                     status = await resp.json()
                     print("\nLLaVA Final Stats:")
                     print(f"  Model loaded: {status['model_loaded']}")
-                    if status.get('vram_used_gb'):
+                    if status.get("vram_used_gb"):
                         print(f"  VRAM usage: {status['vram_used_gb']:.2f} GB")
         except:
             pass

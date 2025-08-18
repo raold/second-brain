@@ -201,7 +201,7 @@ class TestMonitoringEndpoints:
                     access_endpoint("/metrics", use_auth=True),
                     access_endpoint("/security/status", use_auth=True),
                     access_endpoint("/status", use_auth=True),
-                ]
+                ],
             )
 
         results = await asyncio.gather(*tasks)

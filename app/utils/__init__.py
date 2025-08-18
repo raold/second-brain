@@ -12,9 +12,9 @@ from .local_embedding_client import (
 from .logger import logger
 
 __all__ = [
-    "logger",
     "get_local_client",
+    "get_openai_client",  # For backward compatibility
     "get_openai_embedding",  # For backward compatibility
     "get_openai_embedding_async",  # For backward compatibility
-    "get_openai_client",  # For backward compatibility
+    "logger",
 ]

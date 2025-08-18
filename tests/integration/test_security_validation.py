@@ -80,7 +80,7 @@ class TestSecurityValidation:
             payload = {"content": malicious_input, "importance_score": 0.5}
 
             response = await client.post(
-                "/memories/semantic", json=payload, params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key},
             )
 
             # Should either sanitize and succeed, or reject with validation error
@@ -112,7 +112,7 @@ class TestSecurityValidation:
         payload = {"content": huge_content, "importance_score": 0.5}
 
         response = await client.post(
-            "/memories/semantic", json=payload, params={"api_key": api_key}
+            "/memories/semantic", json=payload, params={"api_key": api_key},
         )
 
         # Should reject oversized requests
@@ -137,7 +137,8 @@ class TestSecurityValidation:
         success = sum(1 for status in responses if status == 200)
 
         # Either all succeed (rate limiting disabled) or some are rate limited
-        assert rate_limited >= 0 and success >= 5
+        assert rate_limited >= 0
+        assert success >= 5
 
     @pytest.mark.asyncio
     async def test_cors_headers_present(self, client: AsyncClient):
@@ -176,7 +177,7 @@ class TestSecurityValidation:
         }
 
         # Count present security headers
-        present_count = sum(1 for header in security_headers.keys() if header in headers)
+        present_count = sum(1 for header in security_headers if header in headers)
         assert present_count >= 1  # At least some security headers should be present
 
     @pytest.mark.asyncio
@@ -194,7 +195,7 @@ class TestSecurityValidation:
             search_payload = {"query": payload, "limit": 10}
 
             response = await client.post(
-                "/memories/search", json=search_payload, params={"api_key": api_key}
+                "/memories/search", json=search_payload, params={"api_key": api_key},
             )
 
             # Should either sanitize and return results, or return validation error
@@ -241,7 +242,7 @@ class TestSecurityValidation:
         for payload in edge_case_payloads:
             try:
                 response = await client.post(
-                    "/memories/semantic", json=payload, params={"api_key": api_key}
+                    "/memories/semantic", json=payload, params={"api_key": api_key},
                 )
 
                 # Should handle gracefully
@@ -289,7 +290,7 @@ class TestSecurityValidation:
         }
 
         response = await client.post(
-            "/memories/semantic", json=malicious_metadata, params={"api_key": api_key}
+            "/memories/semantic", json=malicious_metadata, params={"api_key": api_key},
         )
 
         # Should either sanitize or reject
@@ -312,7 +313,7 @@ class TestSecurityValidation:
             payload = {"query": query, "limit": 5}
 
             response = await client.post(
-                "/memories/search", json=payload, params={"api_key": api_key}
+                "/memories/search", json=payload, params={"api_key": api_key},
             )
 
             # Should handle gracefully
@@ -363,7 +364,7 @@ class TestSecurityValidation:
             mock_sleep.return_value = None
 
             response = await client.get(
-                "/health", params={"api_key": api_key}, timeout=1.0  # Short timeout
+                "/health", params={"api_key": api_key}, timeout=1.0,  # Short timeout
             )
 
             # Should complete within timeout or handle gracefully
@@ -376,7 +377,7 @@ class TestSecurityValidation:
         payload = {"content": "Private memory content", "importance_score": 0.5}
 
         response = await client.post(
-            "/memories/semantic", json=payload, params={"api_key": api_key}
+            "/memories/semantic", json=payload, params={"api_key": api_key},
         )
 
         assert response.status_code == 200

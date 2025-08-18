@@ -3,7 +3,6 @@ Unit tests for WebSocket functionality
 Tests WebSocket connection handling, message broadcasting, and real-time updates
 """
 
-import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
@@ -40,7 +39,7 @@ class TestWebSocketModels:
     def test_broadcast_message_model(self):
         """Test BroadcastMessage model"""
         message = BroadcastMessage(
-            event_type="test.event", payload={"key": "value"}, priority=EventPriority.HIGH
+            event_type="test.event", payload={"key": "value"}, priority=EventPriority.HIGH,
         )
 
         assert message.event_type == "test.event"
@@ -105,7 +104,7 @@ class TestWebSocketModels:
         """Test SubscriptionRequest validation"""
         with pytest.raises(ValueError):
             SubscriptionRequest(
-                event_types=["test.event"], action="invalid_action"  # Should fail validation
+                event_types=["test.event"], action="invalid_action",  # Should fail validation
             )
 
     def test_event_subscription_model(self):
@@ -481,7 +480,7 @@ class TestWebSocketEdgeCases:
         mock_websocket = AsyncMock()
 
         # Mock timeout exception
-        mock_websocket.receive_text.side_effect = asyncio.TimeoutError()
+        mock_websocket.receive_text.side_effect = TimeoutError()
 
         # Should handle timeout gracefully
         await service.handle_connection(mock_websocket, "conn-123")

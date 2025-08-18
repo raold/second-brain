@@ -7,7 +7,7 @@ import json
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from app.utils.logging_config import get_logger
 
@@ -49,14 +49,14 @@ class EnvManager:
         "AWS_ACCESS_KEY_ID",
     }
 
-    def __init__(self, env_file: Optional[Path] = None):
+    def __init__(self, env_file: Path | None = None) -> None:
         """
         Initialize environment manager.
 
         Args:
             env_file: Optional path to .env file
         """
-        self._cache: Dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}
         self._loaded = False
 
         # Load .env file if it exists
@@ -77,7 +77,7 @@ class EnvManager:
     def _load_env_file(self, env_file: Path) -> None:
         """Load environment variables from a .env file."""
         try:
-            with open(env_file, "r") as f:
+            with open(env_file) as f:
                 for line in f:
                     line = line.strip()
                     # Skip comments and empty lines
@@ -91,9 +91,7 @@ class EnvManager:
                         value = value.strip()
 
                         # Remove quotes if present
-                        if value.startswith('"') and value.endswith('"'):
-                            value = value[1:-1]
-                        elif value.startswith("'") and value.endswith("'"):
+                        if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
                             value = value[1:-1]
 
                         # Only set if not already in environment
@@ -126,16 +124,15 @@ class EnvManager:
                 raise ValueError("JWT_SECRET_KEY must be changed for production")
 
         # Check OpenAI key if not using mocks
-        if not self.get_bool("USE_MOCK_OPENAI"):
-            if not self.get("OPENAI_API_KEY"):
-                logger.warning("OPENAI_API_KEY not set, AI features will be limited")
+        if not self.get_bool("USE_MOCK_OPENAI") and not self.get("OPENAI_API_KEY"):
+            logger.warning("OPENAI_API_KEY not set, AI features will be limited")
 
         # Validate required variables
         missing = [var for var in required if not os.getenv(var)]
         if missing:
             raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
 
-    def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
+    def get(self, key: str, default: str | None = None) -> str | None:
         """
         Get environment variable with optional default.
 
@@ -203,7 +200,7 @@ class EnvManager:
             logger.warning(f"Invalid float value for {key}: {value}, using default {default}")
             return default
 
-    def get_list(self, key: str, default: Optional[List[str]] = None) -> List[str]:
+    def get_list(self, key: str, default: list[str] | None = None) -> list[str]:
         """
         Get list environment variable (comma-separated or JSON array).
 
@@ -228,7 +225,7 @@ class EnvManager:
         # Fall back to comma-separated
         return [item.strip() for item in value.split(",") if item.strip()]
 
-    def get_dict(self, key: str, default: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def get_dict(self, key: str, default: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Get dictionary environment variable (JSON format).
 
@@ -297,18 +294,17 @@ class EnvManager:
             # Show first 4 and last 4 characters
             if len(value) > 8:
                 return f"{value[:4]}...{value[-4:]}"
-            else:
-                return "***"
+            return "***"
         return value
 
-    def get_config_summary(self) -> Dict[str, Any]:
+    def get_config_summary(self) -> dict[str, Any]:
         """
         Get configuration summary for logging (with sensitive values masked).
 
         Returns:
             Dictionary of configuration values
         """
-        summary = {
+        return {
             "environment": self.environment.value,
             "database_configured": bool(self.get("DATABASE_URL") or self.get("POSTGRES_DB")),
             "openai_configured": bool(self.get("OPENAI_API_KEY")),
@@ -325,9 +321,8 @@ class EnvManager:
             },
         }
 
-        return summary
 
-    def validate_production_ready(self) -> List[str]:
+    def validate_production_ready(self) -> list[str]:
         """
         Validate if configuration is production-ready.
 
@@ -359,7 +354,7 @@ class EnvManager:
 
 
 # Global instance
-_env_manager: Optional[EnvManager] = None
+_env_manager: EnvManager | None = None
 
 
 def get_env_manager() -> EnvManager:
@@ -376,7 +371,7 @@ def get_env_manager() -> EnvManager:
 
 
 # Convenience functions
-def get_env(key: str, default: Optional[str] = None) -> Optional[str]:
+def get_env(key: str, default: str | None = None) -> str | None:
     """Get environment variable."""
     return get_env_manager().get(key, default)
 

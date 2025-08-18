@@ -6,7 +6,7 @@ Direct integration without complex enterprise patterns
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urlencode
 
 import aiohttp
@@ -17,11 +17,11 @@ logger = logging.getLogger(__name__)
 class GoogleDriveSimple:
     """Simple Google Drive integration that actually works"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.client_id = os.getenv("GOOGLE_CLIENT_ID")
         self.client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
         self.redirect_uri = os.getenv(
-            "GOOGLE_REDIRECT_URI", "http://localhost:8001/api/v1/gdrive/callback"
+            "GOOGLE_REDIRECT_URI", "http://localhost:8001/api/v1/gdrive/callback",
         )
 
         # Store tokens in memory for single user
@@ -40,7 +40,7 @@ class GoogleDriveSimple:
         }
         return f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
 
-    async def exchange_code(self, code: str) -> Dict[str, Any]:
+    async def exchange_code(self, code: str) -> dict[str, Any]:
         """Exchange authorization code for tokens"""
         async with aiohttp.ClientSession() as session:
             data = {
@@ -64,24 +64,23 @@ class GoogleDriveSimple:
                         "email": self.user_info.get("email"),
                         "tokens_stored": True,
                     }
-                else:
-                    error = await resp.text()
-                    logger.error(f"Token exchange failed: {error}")
-                    return {"success": False, "error": error}
+                error = await resp.text()
+                logger.error(f"Token exchange failed: {error}")
+                return {"success": False, "error": error}
 
-    async def get_user_info(self, access_token: str) -> Dict[str, Any]:
+    async def get_user_info(self, access_token: str) -> dict[str, Any]:
         """Get user info from Google"""
         async with aiohttp.ClientSession() as session:
             headers = {"Authorization": f"Bearer {access_token}"}
             async with session.get(
-                "https://www.googleapis.com/oauth2/v2/userinfo", headers=headers
+                "https://www.googleapis.com/oauth2/v2/userinfo", headers=headers,
             ) as resp:
                 if resp.status == 200:
                     self.user_info = await resp.json()
                     return self.user_info
                 return {}
 
-    async def list_files(self, folder_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def list_files(self, folder_id: str | None = None) -> list[dict[str, Any]]:
         """List files from Google Drive"""
         if not self.tokens.get("access_token"):
             return []
@@ -106,7 +105,7 @@ class GoogleDriveSimple:
                 params["q"] = query
 
             async with session.get(
-                "https://www.googleapis.com/drive/v3/files", headers=headers, params=params
+                "https://www.googleapis.com/drive/v3/files", headers=headers, params=params,
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
@@ -114,18 +113,17 @@ class GoogleDriveSimple:
 
                     # Add type field for frontend compatibility
                     for file in files:
-                        if file.get('mimeType') == 'application/vnd.google-apps.folder':
-                            file['type'] = 'folder'
+                        if file.get("mimeType") == "application/vnd.google-apps.folder":
+                            file["type"] = "folder"
                         else:
-                            file['type'] = 'file'
+                            file["type"] = "file"
 
                     return files
-                else:
-                    error_text = await resp.text()
-                    logger.error(f"Failed to list files: {resp.status} - {error_text}")
-                    return []
+                error_text = await resp.text()
+                logger.error(f"Failed to list files: {resp.status} - {error_text}")
+                return []
 
-    async def get_file_content(self, file_id: str) -> Optional[str]:
+    async def get_file_content(self, file_id: str) -> str | None:
         """Get file content from Google Drive"""
         if not self.tokens.get("access_token"):
             return None
@@ -155,17 +153,15 @@ class GoogleDriveSimple:
 
             async with session.get(url, headers=headers, params=params) as resp:
                 if resp.status == 200:
-                    content = await resp.text()
-                    return content
-                else:
-                    logger.error(f"Failed to get file content: {resp.status}")
-                    return None
+                    return await resp.text()
+                logger.error(f"Failed to get file content: {resp.status}")
+                return None
 
     def is_connected(self) -> bool:
         """Check if we have valid tokens"""
         return bool(self.tokens.get("access_token"))
 
-    def get_connection_status(self) -> Dict[str, Any]:
+    def get_connection_status(self) -> dict[str, Any]:
         """Get current connection status"""
         if self.is_connected():
             return {
@@ -174,8 +170,7 @@ class GoogleDriveSimple:
                 "user_name": self.user_info.get("name"),
                 "last_checked": datetime.utcnow().isoformat(),
             }
-        else:
-            return {"connected": False, "error": "Not authenticated", "requires_auth": True}
+        return {"connected": False, "error": "Not authenticated", "requires_auth": True}
 
 
 # Global instance for single user

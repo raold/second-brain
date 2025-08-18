@@ -5,7 +5,6 @@ import sys
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import List, Optional, Union
 
 import numpy as np
 from fastapi import Body, FastAPI, File, HTTPException, UploadFile
@@ -21,17 +20,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Global service instance
-clip_service: Optional[CLIPService] = None
+clip_service: CLIPService | None = None
 
 
 class TextEmbeddingRequest(BaseModel):
-    text: Union[str, List[str]]
+    text: str | list[str]
     normalize: bool = True
 
 
 class SimilarityRequest(BaseModel):
-    embedding1: List[float]
-    embedding2: List[float]
+    embedding1: list[float]
+    embedding2: list[float]
 
 
 class SimilarityResponse(BaseModel):
@@ -62,7 +61,7 @@ app = FastAPI(
     title="CLIP Embedding Service",
     description="Fast multimodal embeddings with CLIP",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS for development
@@ -81,7 +80,7 @@ async def root():
     return {
         "service": "CLIP Embedding Service",
         "model": clip_service.model_name if clip_service else None,
-        "status": "ready" if clip_service and clip_service.model else "loading"
+        "status": "ready" if clip_service and clip_service.model else "loading",
     }
 
 
@@ -104,7 +103,7 @@ async def get_model_info():
         "model_name": clip_service.model_name,
         "embedding_dimensions": clip_service.embedding_dim,
         "device": clip_service.device,
-        "device_info": clip_service.get_device_info()
+        "device_info": clip_service.get_device_info(),
     }
 
 
@@ -132,11 +131,11 @@ async def embed_text(request: TextEmbeddingRequest):
             embeddings=embeddings,
             model=clip_service.model_name,
             dimensions=clip_service.embedding_dim,
-            processing_time_ms=processing_time
+            processing_time_ms=processing_time,
         )
 
     except Exception as e:
-        logger.error(f"Error embedding text: {e}")
+        logger.exception(f"Error embedding text: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -161,18 +160,18 @@ async def embed_image(file: UploadFile = File(...)):
             embeddings=[embedding.tolist()],
             model=clip_service.model_name,
             dimensions=clip_service.embedding_dim,
-            processing_time_ms=processing_time
+            processing_time_ms=processing_time,
         )
 
     except Exception as e:
-        logger.error(f"Error embedding image: {e}")
+        logger.exception(f"Error embedding image: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/clip/embed/batch", response_model=EmbeddingResponse)
 async def embed_batch(
-    files: List[UploadFile] = File(None),
-    texts: List[str] = Body(None)
+    files: list[UploadFile] = File(None),
+    texts: list[str] = Body(None),
 ):
     """Generate embeddings for multiple images and/or texts."""
     if not clip_service:
@@ -206,11 +205,11 @@ async def embed_batch(
             embeddings=embeddings,
             model=clip_service.model_name,
             dimensions=clip_service.embedding_dim,
-            processing_time_ms=processing_time
+            processing_time_ms=processing_time,
         )
 
     except Exception as e:
-        logger.error(f"Error batch embedding: {e}")
+        logger.exception(f"Error batch embedding: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -229,7 +228,7 @@ async def compute_similarity(request: SimilarityRequest):
         return SimilarityResponse(similarity=similarity)
 
     except Exception as e:
-        logger.error(f"Error computing similarity: {e}")
+        logger.exception(f"Error computing similarity: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

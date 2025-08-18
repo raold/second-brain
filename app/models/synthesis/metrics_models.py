@@ -1,7 +1,7 @@
 """Metrics models for graph and knowledge analysis"""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -23,12 +23,12 @@ class KnowledgeCluster(BaseModel):
     """A cluster of related knowledge nodes"""
 
     cluster_id: str
-    node_ids: List[str]
+    node_ids: list[str]
     size: int
     density: float = 0.0
     coherence_score: float = 0.0
-    central_theme: Optional[str] = None
-    keywords: List[str] = []
+    central_theme: str | None = None
+    keywords: list[str] = []
 
 
 class ClusterMetrics(BaseModel):
@@ -37,7 +37,7 @@ class ClusterMetrics(BaseModel):
     total_clusters: int = 0
     average_cluster_size: float = 0.0
     largest_cluster_size: int = 0
-    clusters: List[KnowledgeCluster] = []
+    clusters: list[KnowledgeCluster] = []
     modularity_score: float = 0.0
 
 
@@ -57,9 +57,9 @@ class TemporalMetrics(BaseModel):
 
     time_range_days: int = 0
     memories_per_day: float = 0.0
-    peak_activity_date: Optional[datetime] = None
+    peak_activity_date: datetime | None = None
     growth_rate: float = 0.0
-    activity_patterns: Dict[str, Any] = {}
+    activity_patterns: dict[str, Any] = {}
 
 
 class GraphMetrics(BaseModel):
@@ -68,20 +68,20 @@ class GraphMetrics(BaseModel):
     total_nodes: int = 0
     total_edges: int = 0
     average_degree: float = 0.0
-    node_metrics: List[NodeMetrics] = []
+    node_metrics: list[NodeMetrics] = []
     cluster_metrics: ClusterMetrics = Field(default_factory=ClusterMetrics)
     connectivity_metrics: ConnectivityMetrics = Field(default_factory=ConnectivityMetrics)
     temporal_metrics: TemporalMetrics = Field(default_factory=TemporalMetrics)
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
     computed_at: datetime = Field(default_factory=datetime.now)
 
 
 class MetricsRequest(BaseModel):
     """Request for graph metrics computation"""
 
-    user_id: Optional[str] = None
-    memory_ids: Optional[List[str]] = None
+    user_id: str | None = None
+    memory_ids: list[str] | None = None
     include_node_metrics: bool = True
     include_clusters: bool = True
     include_temporal: bool = True
-    time_range_days: Optional[int] = None
+    time_range_days: int | None = None

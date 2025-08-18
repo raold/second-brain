@@ -26,7 +26,7 @@ async def test_files():
             print(f"   Connected: {status.get('connected')}")
             print(f"   User: {status.get('user_email')}")
 
-        if not status.get('connected'):
+        if not status.get("connected"):
             print("\n   ERROR: Not connected to Google Drive!")
             return
 
@@ -35,8 +35,8 @@ async def test_files():
         async with session.get(f"{base_url}/api/v1/gdrive/files") as resp:
             if resp.status == 200:
                 data = await resp.json()
-                files = data.get('files', [])
-                count = data.get('count', 0)
+                files = data.get("files", [])
+                count = data.get("count", 0)
 
                 print(f"   Found {count} files")
 
@@ -65,21 +65,21 @@ async def test_files():
         async with session.get(f"{base_url}/api/v1/gdrive/debug/token") as resp:
             if resp.status == 200:
                 token_info = await resp.json()
-                access_token = token_info.get('access_token')
+                access_token = token_info.get("access_token")
 
                 if access_token:
                     # Direct Google API call
                     headers = {"Authorization": f"Bearer {access_token}"}
                     async with session.get(
                         "https://www.googleapis.com/drive/v3/files?pageSize=10",
-                        headers=headers
+                        headers=headers,
                     ) as google_resp:
                         if google_resp.status == 200:
                             google_data = await google_resp.json()
-                            files = google_data.get('files', [])
+                            files = google_data.get("files", [])
                             print(f"   Direct API returned {len(files)} files")
                             if files:
-                                print("   First file:", files[0].get('name'))
+                                print("   First file:", files[0].get("name"))
                         else:
                             print(f"   Direct API error: {google_resp.status}")
             else:

@@ -29,7 +29,7 @@ class TestMemoryAPIEndpoints:
         }
 
         response = await client.post(
-            "/memories/semantic", json=payload, params={"api_key": api_key}
+            "/memories/semantic", json=payload, params={"api_key": api_key},
         )
 
         assert response.status_code == 200
@@ -54,7 +54,7 @@ class TestMemoryAPIEndpoints:
         }
 
         response = await client.post(
-            "/memories/episodic", json=payload, params={"api_key": api_key}
+            "/memories/episodic", json=payload, params={"api_key": api_key},
         )
 
         assert response.status_code == 200
@@ -79,7 +79,7 @@ class TestMemoryAPIEndpoints:
         }
 
         response = await client.post(
-            "/memories/procedural", json=payload, params={"api_key": api_key}
+            "/memories/procedural", json=payload, params={"api_key": api_key},
         )
 
         assert response.status_code == 200
@@ -114,7 +114,7 @@ class TestMemoryAPIEndpoints:
         # Store test memories
         for memory in memories:
             await client.post(
-                memory["endpoint"], json=memory["payload"], params={"api_key": api_key}
+                memory["endpoint"], json=memory["payload"], params={"api_key": api_key},
             )
 
         # Test contextual search
@@ -127,7 +127,7 @@ class TestMemoryAPIEndpoints:
         }
 
         response = await client.post(
-            "/memories/search/contextual", json=search_payload, params={"api_key": api_key}
+            "/memories/search/contextual", json=search_payload, params={"api_key": api_key},
         )
 
         assert response.status_code == 200
@@ -163,7 +163,7 @@ class TestMemoryAPIEndpoints:
         create_payload = {"content": "Test memory for CRUD operations", "importance_score": 0.7}
 
         create_response = await client.post(
-            "/memories/semantic", json=create_payload, params={"api_key": api_key}
+            "/memories/semantic", json=create_payload, params={"api_key": api_key},
         )
 
         assert create_response.status_code == 200
@@ -198,7 +198,7 @@ class TestMemoryAPIEndpoints:
 
         # Test pagination
         response = await client.get(
-            "/memories", params={"api_key": api_key, "limit": 3, "offset": 0}
+            "/memories", params={"api_key": api_key, "limit": 3, "offset": 0},
         )
 
         assert response.status_code == 200
@@ -208,7 +208,7 @@ class TestMemoryAPIEndpoints:
 
         # Test second page
         response = await client.get(
-            "/memories", params={"api_key": api_key, "limit": 3, "offset": 3}
+            "/memories", params={"api_key": api_key, "limit": 3, "offset": 3},
         )
 
         assert response.status_code == 200
@@ -228,7 +228,7 @@ class TestMemoryAPIEndpoints:
         search_payload = {"query": "artificial intelligence technology", "limit": 10}
 
         response = await client.post(
-            "/memories/search", json=search_payload, params={"api_key": api_key}
+            "/memories/search", json=search_payload, params={"api_key": api_key},
         )
 
         assert response.status_code == 200
@@ -264,7 +264,7 @@ class TestMemoryAPIEndpoints:
 
         # Store memory
         response = await client.post(
-            "/memories/semantic", json=payload, params={"api_key": api_key}
+            "/memories/semantic", json=payload, params={"api_key": api_key},
         )
 
         assert response.status_code == 200
@@ -305,7 +305,7 @@ class TestMemoryAPIEndpoints:
             payload = {"content": "Test memory that should fail", "importance_score": 0.5}
 
             response = await client.post(
-                "/memories/semantic", json=payload, params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key},
             )
 
             # Should return server error
@@ -326,7 +326,7 @@ class TestMemoryAPIEndpoints:
             payload = {"content": content, "importance_score": 0.5}
 
             response = await client.post(
-                "/memories/semantic", json=payload, params={"api_key": api_key}
+                "/memories/semantic", json=payload, params={"api_key": api_key},
             )
 
             # Should either succeed (sanitized) or fail with validation error

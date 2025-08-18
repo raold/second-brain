@@ -36,17 +36,17 @@ async def check_gpu_stats():
         result = subprocess.run(
             ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw,name",
              "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=5
+            check=False, capture_output=True, text=True, timeout=5,
         )
         if result.returncode == 0:
-            parts = result.stdout.strip().split(', ')
+            parts = result.stdout.strip().split(", ")
             return {
-                'gpu_util': int(parts[0]),
-                'mem_used': int(parts[1]),
-                'mem_total': int(parts[2]),
-                'temp': int(parts[3]),
-                'power': float(parts[4]) if len(parts) > 4 else 0,
-                'name': parts[5] if len(parts) > 5 else 'Unknown'
+                "gpu_util": int(parts[0]),
+                "mem_used": int(parts[1]),
+                "mem_total": int(parts[2]),
+                "temp": int(parts[3]),
+                "power": float(parts[4]) if len(parts) > 4 else 0,
+                "name": parts[5] if len(parts) > 5 else "Unknown",
             }
     except:
         pass
@@ -63,7 +63,7 @@ def progress_bar(current, total, width=40):
     return f"[{bar}]"
 
 
-async def main():
+async def main() -> None:
     """Show comprehensive status."""
     print("=" * 80)
     print("SECOND-BRAIN GPU SERVICES STATUS MONITOR")
@@ -72,10 +72,10 @@ async def main():
     # Check GPU
     gpu = await check_gpu_stats()
     if gpu:
-        mem_percent = (gpu['mem_used'] / gpu['mem_total']) * 100
-        util_bar = progress_bar(gpu['gpu_util'], 100, 30)
-        mem_bar = progress_bar(gpu['mem_used'], gpu['mem_total'], 30)
-        temp_bar = progress_bar(gpu['temp'], 100, 20)  # Assume 100C max for visualization
+        mem_percent = (gpu["mem_used"] / gpu["mem_total"]) * 100
+        util_bar = progress_bar(gpu["gpu_util"], 100, 30)
+        mem_bar = progress_bar(gpu["mem_used"], gpu["mem_total"], 30)
+        temp_bar = progress_bar(gpu["temp"], 100, 20)  # Assume 100C max for visualization
 
         print(f"\\nGPU: {gpu['name']}")
         print(f"  Utilization: {util_bar} {gpu['gpu_util']}%")
@@ -89,10 +89,10 @@ async def main():
     print("\\n" + "="*80)
     clip_status = await check_clip_status()
     if clip_status:
-        model_loaded = "LOADED" if clip_status.get('model_loaded', False) else "NOT LOADED"
-        requests = clip_status.get('requests_processed', 0)
-        vram = clip_status.get('vram_used_gb', 0)
-        device = clip_status.get('device', 'unknown')
+        model_loaded = "LOADED" if clip_status.get("model_loaded", False) else "NOT LOADED"
+        requests = clip_status.get("requests_processed", 0)
+        vram = clip_status.get("vram_used_gb", 0)
+        device = clip_status.get("device", "unknown")
 
         print("CLIP SERVICE STATUS: ONLINE")
         print(f"  Model: {clip_status.get('model_name', 'Unknown')} ({model_loaded})")
@@ -112,9 +112,9 @@ async def main():
     print("\\n" + "="*80)
     llava_status = await check_llava_status()
     if llava_status:
-        model_loaded = llava_status.get('model_loaded', False)
-        model_name = llava_status.get('model_name', 'Unknown')
-        async_enabled = llava_status.get('async_enabled', False)
+        model_loaded = llava_status.get("model_loaded", False)
+        model_name = llava_status.get("model_name", "Unknown")
+        async_enabled = llava_status.get("async_enabled", False)
 
         print("LLAVA SERVICE STATUS: ONLINE")
         print(f"  Model: {model_name}")
@@ -138,8 +138,8 @@ async def main():
     print("\\n" + "="*80)
     print("OVERALL MULTIMODAL SYSTEM STATUS:")
 
-    clip_ready = clip_status and clip_status.get('model_loaded', False)
-    llava_ready = llava_status and llava_status.get('model_loaded', False)
+    clip_ready = clip_status and clip_status.get("model_loaded", False)
+    llava_ready = llava_status and llava_status.get("model_loaded", False)
 
     if clip_ready and llava_ready:
         print("  STATUS: FULLY OPERATIONAL")

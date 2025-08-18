@@ -60,7 +60,7 @@ class CITestRunner:
             # Check pytest availability
             result = subprocess.run(
                 [sys.executable, "-m", "pytest", "--version"],
-                capture_output=True,
+                check=False, capture_output=True,
                 text=True,
                 timeout=30,
             )
@@ -97,7 +97,7 @@ class CITestRunner:
 
             result = subprocess.run(
                 cmd,
-                cwd=self.project_root,
+                check=False, cwd=self.project_root,
                 timeout=120,  # 2 minutes max for validation
                 capture_output=True,
                 text=True,
@@ -112,11 +112,10 @@ class CITestRunner:
             if result.returncode == 0:
                 print("✓ Validation tests passed")
                 return True
-            else:
-                print(f"✗ Validation tests failed: {result.returncode}")
-                print("STDOUT:", result.stdout[-500:])  # Last 500 chars
-                print("STDERR:", result.stderr[-500:])
-                return False
+            print(f"✗ Validation tests failed: {result.returncode}")
+            print("STDOUT:", result.stdout[-500:])  # Last 500 chars
+            print("STDERR:", result.stderr[-500:])
+            return False
 
         except subprocess.TimeoutExpired:
             print("✗ Validation tests timed out")
@@ -151,7 +150,7 @@ class CITestRunner:
 
             result = subprocess.run(
                 cmd,
-                cwd=self.project_root,
+                check=False, cwd=self.project_root,
                 timeout=self.max_test_time,
                 capture_output=True,
                 text=True,
@@ -166,11 +165,10 @@ class CITestRunner:
             if result.returncode == 0:
                 print("✓ Unit tests passed")
                 return True
-            else:
-                print(f"✗ Unit tests failed: {result.returncode}")
-                print("STDOUT:", result.stdout[-1000:])  # Last 1000 chars
-                print("STDERR:", result.stderr[-1000:])
-                return False
+            print(f"✗ Unit tests failed: {result.returncode}")
+            print("STDOUT:", result.stdout[-1000:])  # Last 1000 chars
+            print("STDERR:", result.stderr[-1000:])
+            return False
 
         except subprocess.TimeoutExpired:
             print(f"✗ Unit tests timed out after {self.max_test_time}s")
@@ -186,7 +184,7 @@ class CITestRunner:
             if self.is_ci and not os.getenv("RUN_INTEGRATION_TESTS"):
                 print("\n=== Integration Tests ===")
                 print(
-                    "⚠ Integration tests skipped in CI (set RUN_INTEGRATION_TESTS=true to enable)"
+                    "⚠ Integration tests skipped in CI (set RUN_INTEGRATION_TESTS=true to enable)",
                 )
                 return True
 
@@ -209,7 +207,7 @@ class CITestRunner:
 
             result = subprocess.run(
                 cmd,
-                cwd=self.project_root,
+                check=False, cwd=self.project_root,
                 timeout=self.max_test_time,
                 capture_output=True,
                 text=True,
@@ -224,11 +222,10 @@ class CITestRunner:
             if result.returncode == 0:
                 print("✓ Integration tests passed")
                 return True
-            else:
-                print(f"✗ Integration tests failed: {result.returncode}")
-                print("STDOUT:", result.stdout[-1000:])
-                print("STDERR:", result.stderr[-1000:])
-                return False
+            print(f"✗ Integration tests failed: {result.returncode}")
+            print("STDOUT:", result.stdout[-1000:])
+            print("STDERR:", result.stderr[-1000:])
+            return False
 
         except subprocess.TimeoutExpired:
             print(f"✗ Integration tests timed out after {self.max_test_time}s")
@@ -256,7 +253,7 @@ class CITestRunner:
 
             result = subprocess.run(
                 cmd,
-                cwd=self.project_root,
+                check=False, cwd=self.project_root,
                 timeout=180,  # 3 minutes max
                 capture_output=True,
                 text=True,
@@ -271,10 +268,9 @@ class CITestRunner:
             if result.returncode == 0:
                 print("✓ Example tests passed")
                 return True
-            else:
-                print(f"⚠ Example tests failed: {result.returncode}")
-                # Examples failing shouldn't break CI
-                return True
+            print(f"⚠ Example tests failed: {result.returncode}")
+            # Examples failing shouldn't break CI
+            return True
 
         except Exception as e:
             print(f"⚠ Example tests error: {e}")

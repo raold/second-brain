@@ -5,8 +5,9 @@ Provides reusable components for robust CI testing.
 
 import asyncio
 import time
+from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -40,7 +41,7 @@ class MockResponseBuilder:
         self.response_data["created_at"] = datetime.utcnow().isoformat()
         return self
 
-    def build(self) -> Dict[str, Any]:
+    def build(self) -> dict[str, Any]:
         """Build the response dictionary."""
         return self.response_data.copy()
 
@@ -57,7 +58,7 @@ class AsyncTestHelper:
 
     @staticmethod
     async def wait_for_condition(
-        condition: Callable[[], bool], timeout: float = 5.0, interval: float = 0.1
+        condition: Callable[[], bool], timeout: float = 5.0, interval: float = 0.1,
     ) -> bool:
         """Wait for a condition to become true."""
         start_time = time.time()
@@ -79,7 +80,7 @@ class AsyncTestHelper:
         try:
             async with asyncio.timeout(timeout):
                 yield
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pytest.fail(f"Operation timed out after {timeout}s")
 
 
@@ -88,8 +89,8 @@ class RetryTestHelper:
 
     @staticmethod
     async def flaky_operation(
-        success_after_attempts: int = 3, error_message: str = "Simulated failure"
-    ) -> Callable[[], Awaitable[Dict[str, Any]]]:
+        success_after_attempts: int = 3, error_message: str = "Simulated failure",
+    ) -> Callable[[], Awaitable[dict[str, Any]]]:
         """Create a flaky operation that succeeds after N attempts."""
         attempt_count = 0
 
@@ -113,10 +114,11 @@ class RetryTestHelper:
         for attempt in range(max_retries):
             try:
                 return await operation()
-            except exceptions as e:
+            except exceptions:
                 if attempt == max_retries - 1:
-                    raise e
+                    raise
                 await asyncio.sleep(backoff_factor * (2**attempt))
+        return None
 
 
 class DatabaseTestHelper:
@@ -149,8 +151,8 @@ class DatabaseTestHelper:
 
     @staticmethod
     def create_sample_memory(
-        memory_id: str = "test-memory-id", title: str = "Test Memory", content: str = "Test content"
-    ) -> Dict[str, Any]:
+        memory_id: str = "test-memory-id", title: str = "Test Memory", content: str = "Test content",
+    ) -> dict[str, Any]:
         """Create sample memory data."""
         return {
             "id": memory_id,
@@ -168,7 +170,7 @@ class APITestHelper:
     """Helper for API testing patterns."""
 
     @staticmethod
-    def create_test_headers(api_key: Optional[str] = None) -> Dict[str, str]:
+    def create_test_headers(api_key: str | None = None) -> dict[str, str]:
         """Create standard test headers."""
         headers = {"Content-Type": "application/json"}
         if api_key:
@@ -177,9 +179,9 @@ class APITestHelper:
 
     @staticmethod
     def assert_api_response(
-        response: Dict[str, Any],
+        response: dict[str, Any],
         expected_status: str = "success",
-        required_fields: Optional[List[str]] = None,
+        required_fields: list[str] | None = None,
     ) -> None:
         """Assert API response structure."""
         assert "status" in response
@@ -191,7 +193,7 @@ class APITestHelper:
 
     @staticmethod
     def create_mock_http_response(
-        status_code: int = 200, json_data: Optional[Dict[str, Any]] = None
+        status_code: int = 200, json_data: dict[str, Any] | None = None,
     ) -> MagicMock:
         """Create mock HTTP response."""
         mock_response = MagicMock()
@@ -212,7 +214,7 @@ class PerformanceTestHelper:
 
     @staticmethod
     def assert_performance(
-        elapsed_time: float, max_time: float, operation_name: str = "Operation"
+        elapsed_time: float, max_time: float, operation_name: str = "Operation",
     ) -> None:
         """Assert operation completed within time limit."""
         assert (
@@ -221,8 +223,8 @@ class PerformanceTestHelper:
 
     @staticmethod
     async def concurrent_operations(
-        operation: Callable[[], Awaitable[Any]], count: int = 10
-    ) -> List[Any]:
+        operation: Callable[[], Awaitable[Any]], count: int = 10,
+    ) -> list[Any]:
         """Run multiple operations concurrently."""
         tasks = [operation() for _ in range(count)]
         return await asyncio.gather(*tasks)
@@ -232,7 +234,7 @@ class ValidationTestHelper:
     """Helper for validation testing."""
 
     @staticmethod
-    def validate_environment_vars(required_vars: List[str]) -> None:
+    def validate_environment_vars(required_vars: list[str]) -> None:
         """Validate required environment variables exist."""
         import os
 
@@ -245,7 +247,7 @@ class ValidationTestHelper:
             pytest.fail(f"Missing environment variables: {missing_vars}")
 
     @staticmethod
-    def validate_imports(modules: List[str]) -> None:
+    def validate_imports(modules: list[str]) -> None:
         """Validate required modules can be imported."""
         failed_imports = []
         for module in modules:
@@ -259,7 +261,7 @@ class ValidationTestHelper:
 
     @staticmethod
     def validate_test_data(
-        data: Dict[str, Any], required_fields: List[str], data_name: str = "test data"
+        data: dict[str, Any], required_fields: list[str], data_name: str = "test data",
     ) -> None:
         """Validate test data structure."""
         missing_fields = []
@@ -309,7 +311,7 @@ class MockServiceFactory:
         # Mock embeddings
         mock_embeddings = AsyncMock()
         mock_embeddings.create = AsyncMock(
-            return_value=MagicMock(data=[MagicMock(embedding=[0.1] * 1536)])
+            return_value=MagicMock(data=[MagicMock(embedding=[0.1] * 1536)]),
         )
         mock_client.embeddings = mock_embeddings
 
@@ -353,18 +355,18 @@ class MockServiceFactory:
 
 # Convenience functions for common patterns
 async def assert_async_operation_succeeds(
-    operation: Callable[[], Awaitable[Any]], timeout: float = 5.0
+    operation: Callable[[], Awaitable[Any]], timeout: float = 5.0,
 ) -> Any:
     """Assert async operation succeeds within timeout."""
     try:
         return await asyncio.wait_for(operation(), timeout=timeout)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pytest.fail(f"Operation timed out after {timeout}s")
 
 
 def create_test_scenario(
-    name: str, setup_data: Dict[str, Any], expected_result: Dict[str, Any]
-) -> Dict[str, Any]:
+    name: str, setup_data: dict[str, Any], expected_result: dict[str, Any],
+) -> dict[str, Any]:
     """Create a test scenario dictionary."""
     return {
         "name": name,

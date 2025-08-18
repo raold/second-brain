@@ -8,7 +8,7 @@ import os
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import asyncpg
 
@@ -24,10 +24,10 @@ class PostgresUnifiedBackend:
 
     def __init__(
         self,
-        connection_string: Optional[str] = None,
+        connection_string: str | None = None,
         pool_size: int = 20,
         max_inactive_connection_lifetime: float = 300.0,
-    ):
+    ) -> None:
         """
         Initialize PostgreSQL backend with connection pooling
 
@@ -37,13 +37,13 @@ class PostgresUnifiedBackend:
             max_inactive_connection_lifetime: Max idle time for connections
         """
         self.connection_string = connection_string or os.getenv(
-            "DATABASE_URL", "postgresql://localhost/second_brain"
+            "DATABASE_URL", "postgresql://localhost/second_brain",
         )
         self.pool_size = pool_size
         self.max_inactive_lifetime = max_inactive_connection_lifetime
-        self.pool: Optional[asyncpg.Pool] = None
+        self.pool: asyncpg.Pool | None = None
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize connection pool and ensure schema exists"""
         try:
             self.pool = await asyncpg.create_pool(
@@ -59,7 +59,7 @@ class PostgresUnifiedBackend:
                 # Check if extensions exist first
                 for ext in ["uuid-ossp", "vector", "pg_trgm"]:
                     exists = await conn.fetchval(
-                        "SELECT 1 FROM pg_extension WHERE extname = $1", ext
+                        "SELECT 1 FROM pg_extension WHERE extname = $1", ext,
                     )
                     if not exists:
                         # Use 'vector' not 'pgvector' as extension name
@@ -72,10 +72,10 @@ class PostgresUnifiedBackend:
             logger.info("PostgreSQL unified backend initialized successfully")
 
         except Exception as e:
-            logger.error(f"Failed to initialize PostgreSQL backend: {e}")
+            logger.exception(f"Failed to initialize PostgreSQL backend: {e}")
             raise
 
-    async def close(self):
+    async def close(self) -> None:
         """Close connection pool"""
         if self.pool:
             await self.pool.close()
@@ -90,8 +90,8 @@ class PostgresUnifiedBackend:
     # ==================== Memory CRUD Operations ====================
 
     async def create_memory(
-        self, memory: Dict[str, Any], embedding: Optional[List[float]] = None
-    ) -> Dict[str, Any]:
+        self, memory: dict[str, Any], embedding: list[float] | None = None,
+    ) -> dict[str, Any]:
         """
         Create a new memory with optional embedding
 
@@ -143,10 +143,10 @@ class PostgresUnifiedBackend:
 
             return self._row_to_dict(row)
 
-    async def get_memory(self, memory_id: str) -> Optional[Dict[str, Any]]:
+    async def get_memory(self, memory_id: str) -> dict[str, Any] | None:
         """Get a memory by ID"""
         query = """
-            SELECT * FROM memories 
+            SELECT * FROM memories
             WHERE id = $1 AND deleted_at IS NULL
         """
 
@@ -161,8 +161,8 @@ class PostgresUnifiedBackend:
             return None
 
     async def update_memory(
-        self, memory_id: str, updates: Dict[str, Any], new_embedding: Optional[List[float]] = None
-    ) -> Optional[Dict[str, Any]]:
+        self, memory_id: str, updates: dict[str, Any], new_embedding: list[float] | None = None,
+    ) -> dict[str, Any] | None:
         """Update a memory with optional new embedding"""
 
         # Build dynamic update query
@@ -208,7 +208,7 @@ class PostgresUnifiedBackend:
         set_clauses.append("version = version + 1")
 
         query = f"""
-            UPDATE memories 
+            UPDATE memories
             SET {', '.join(set_clauses)}
             WHERE id = $1 AND deleted_at IS NULL
             RETURNING *
@@ -223,14 +223,14 @@ class PostgresUnifiedBackend:
 
         if soft:
             query = """
-                UPDATE memories 
+                UPDATE memories
                 SET deleted_at = NOW()
                 WHERE id = $1 AND deleted_at IS NULL
                 RETURNING id
             """
         else:
             query = """
-                DELETE FROM memories 
+                DELETE FROM memories
                 WHERE id = $1
                 RETURNING id
             """
@@ -243,11 +243,11 @@ class PostgresUnifiedBackend:
         self,
         limit: int = 20,
         offset: int = 0,
-        memory_type: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        min_importance: Optional[float] = None,
+        memory_type: str | None = None,
+        tags: list[str] | None = None,
+        min_importance: float | None = None,
         container_id: str = "default",
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """List memories with filtering"""
 
         where_clauses = ["deleted_at IS NULL", "container_id = $1"]
@@ -292,15 +292,15 @@ class PostgresUnifiedBackend:
 
     async def vector_search(
         self,
-        embedding: List[float],
+        embedding: list[float],
         limit: int = 10,
         min_similarity: float = 0.0,
         container_id: str = "default",
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Pure vector similarity search"""
 
         query = """
-            SELECT 
+            SELECT
                 *,
                 1 - (embedding <=> $1::vector) AS similarity
             FROM memories
@@ -314,7 +314,7 @@ class PostgresUnifiedBackend:
 
         async with self.acquire() as conn:
             rows = await conn.fetch(
-                query, self._format_vector(embedding), container_id, min_similarity, limit
+                query, self._format_vector(embedding), container_id, min_similarity, limit,
             )
 
             results = []
@@ -326,12 +326,12 @@ class PostgresUnifiedBackend:
             return results
 
     async def text_search(
-        self, query: str, limit: int = 10, container_id: str = "default"
-    ) -> List[Dict[str, Any]]:
+        self, query: str, limit: int = 10, container_id: str = "default",
+    ) -> list[dict[str, Any]]:
         """Full-text search using PostgreSQL FTS"""
 
         query_sql = """
-            SELECT 
+            SELECT
                 *,
                 ts_rank(content_tsvector, plainto_tsquery('english', $1)) AS rank
             FROM memories
@@ -356,12 +356,12 @@ class PostgresUnifiedBackend:
     async def hybrid_search(
         self,
         query: str,
-        embedding: Optional[List[float]] = None,
+        embedding: list[float] | None = None,
         limit: int = 10,
         vector_weight: float = 0.5,
         min_score: float = 0.0,
         container_id: str = "default",
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Hybrid search combining vector and text search"""
 
         if not embedding:
@@ -374,7 +374,7 @@ class PostgresUnifiedBackend:
 
         async with self.acquire() as conn:
             rows = await conn.fetch(
-                query_sql, query, self._format_vector(embedding), limit, vector_weight, min_score
+                query_sql, query, self._format_vector(embedding), limit, vector_weight, min_score,
             )
 
             results = []
@@ -403,17 +403,17 @@ class PostgresUnifiedBackend:
         target_id: str,
         relationship_type: str,
         strength: float = 0.5,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Create a relationship between memories"""
 
         query = """
             INSERT INTO memory_relationships (
-                source_memory_id, target_memory_id, 
+                source_memory_id, target_memory_id,
                 relationship_type, strength, metadata
             ) VALUES ($1, $2, $3, $4, $5::jsonb)
             ON CONFLICT (source_memory_id, target_memory_id, relationship_type)
-            DO UPDATE SET 
+            DO UPDATE SET
                 strength = EXCLUDED.strength,
                 metadata = EXCLUDED.metadata
             RETURNING *
@@ -440,8 +440,8 @@ class PostgresUnifiedBackend:
             }
 
     async def get_related_memories(
-        self, memory_id: str, relationship_type: Optional[str] = None, min_strength: float = 0.0
-    ) -> List[Dict[str, Any]]:
+        self, memory_id: str, relationship_type: str | None = None, min_strength: float = 0.0,
+    ) -> list[dict[str, Any]]:
         """Get memories related to a given memory"""
 
         where_clauses = ["r.strength >= $2"]
@@ -454,7 +454,7 @@ class PostgresUnifiedBackend:
             params.append(relationship_type)
 
         query = f"""
-            SELECT 
+            SELECT
                 m.*,
                 r.relationship_type,
                 r.strength as relationship_strength
@@ -485,53 +485,52 @@ class PostgresUnifiedBackend:
 
     async def consolidate_memories(
         self,
-        source_ids: List[str],
+        source_ids: list[str],
         consolidated_content: str,
         consolidation_type: str = "merge",
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Consolidate multiple memories into one"""
 
-        async with self.acquire() as conn:
-            async with conn.transaction():
-                # Create the consolidated memory
-                consolidated_memory = await self.create_memory(
-                    {
-                        "content": consolidated_content,
-                        "memory_type": "consolidated",
-                        "importance_score": 0.8,
-                        "metadata": {
-                            "consolidation_type": consolidation_type,
-                            "source_count": len(source_ids),
-                            **(metadata or {}),
-                        },
-                    }
-                )
+        async with self.acquire() as conn, conn.transaction():
+            # Create the consolidated memory
+            consolidated_memory = await self.create_memory(
+                {
+                    "content": consolidated_content,
+                    "memory_type": "consolidated",
+                    "importance_score": 0.8,
+                    "metadata": {
+                        "consolidation_type": consolidation_type,
+                        "source_count": len(source_ids),
+                        **(metadata or {}),
+                    },
+                },
+            )
 
-                # Record consolidation
-                await conn.execute(
-                    """
+            # Record consolidation
+            await conn.execute(
+                """
                     INSERT INTO memory_consolidations (
                         consolidated_memory_id, source_memory_ids,
                         consolidation_type, metadata
                     ) VALUES ($1, $2, $3, $4::jsonb)
                 """,
-                    uuid.UUID(consolidated_memory["id"]),
-                    [uuid.UUID(sid) for sid in source_ids],
-                    consolidation_type,
-                    json.dumps(metadata or {}),
-                )
+                uuid.UUID(consolidated_memory["id"]),
+                [uuid.UUID(sid) for sid in source_ids],
+                consolidation_type,
+                json.dumps(metadata or {}),
+            )
 
-                # Soft delete source memories if merging
-                if consolidation_type == "merge":
-                    for source_id in source_ids:
-                        await self.delete_memory(source_id, soft=True)
+            # Soft delete source memories if merging
+            if consolidation_type == "merge":
+                for source_id in source_ids:
+                    await self.delete_memory(source_id, soft=True)
 
-                return consolidated_memory
+            return consolidated_memory
 
     async def find_duplicates(
-        self, similarity_threshold: float = 0.95
-    ) -> List[Tuple[str, str, float]]:
+        self, similarity_threshold: float = 0.95,
+    ) -> list[tuple[str, str, float]]:
         """Find duplicate memories based on embedding similarity"""
 
         query = """
@@ -548,7 +547,7 @@ class PostgresUnifiedBackend:
 
     # ==================== Analytics Operations ====================
 
-    async def get_statistics(self) -> Dict[str, Any]:
+    async def get_statistics(self) -> dict[str, Any]:
         """Get database statistics"""
 
         query = """
@@ -581,13 +580,13 @@ class PostgresUnifiedBackend:
     async def record_search(
         self,
         query: str,
-        embedding: Optional[List[float]],
+        embedding: list[float] | None,
         results_count: int,
-        selected_ids: List[str],
+        selected_ids: list[str],
         search_type: str = "hybrid",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
         container_id: str = "default",
-    ):
+    ) -> None:
         """Record search history for learning patterns"""
 
         query_sql = """
@@ -611,7 +610,7 @@ class PostgresUnifiedBackend:
 
     # ==================== Migration Operations ====================
 
-    async def migrate_from_sqlite(self, sqlite_path: str):
+    async def migrate_from_sqlite(self, sqlite_path: str) -> None:
         """Migrate data from SQLite to PostgreSQL"""
         import aiosqlite
 
@@ -619,7 +618,7 @@ class PostgresUnifiedBackend:
             cursor = await sqlite_conn.execute(
                 """
                 SELECT * FROM memories ORDER BY created_at
-            """
+            """,
             )
 
             rows = await cursor.fetchall()
@@ -643,11 +642,11 @@ class PostgresUnifiedBackend:
 
     # ==================== Helper Methods ====================
 
-    def _format_vector(self, embedding: List[float]) -> str:
+    def _format_vector(self, embedding: list[float]) -> str:
         """Convert embedding list to PostgreSQL vector format"""
         return f"[{','.join(str(x) for x in embedding)}]"
 
-    def _row_to_dict(self, row: asyncpg.Record) -> Dict[str, Any]:
+    def _row_to_dict(self, row: asyncpg.Record) -> dict[str, Any]:
         """Convert database row to dictionary"""
         if not row:
             return None

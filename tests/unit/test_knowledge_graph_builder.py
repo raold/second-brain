@@ -122,7 +122,7 @@ class TestKnowledgeGraphBuilder:
             side_effect=[
                 None,  # First check - entity doesn't exist
                 {"id": "new-id"},  # Insert returns new ID
-            ]
+            ],
         )
         mock_db.pool.acquire.return_value.__aenter__.return_value = mock_conn
 
@@ -226,7 +226,7 @@ class TestKnowledgeGraphBuilder:
                 "metadata": {},
                 "importance_score": 0.8,
                 "occurrence_count": 5,
-            }
+            },
         )
 
         # Mock empty relationships (simplest case)
@@ -278,7 +278,7 @@ class TestKnowledgeGraphBuilder:
         entity2 = Entity(id="e2", name="programming", entity_type=EntityType.CONCEPT)
 
         relationships = await graph_builder._extract_entity_relationships(
-            "Python is used for programming", entity1, entity2
+            "Python is used for programming", entity1, entity2,
         )
 
         assert isinstance(relationships, list)

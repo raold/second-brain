@@ -190,7 +190,7 @@ class TestGraphMetricsService:
                     "created_at": datetime.utcnow(),
                     "tags": ["Python"],
                     "metadata": {},
-                }
+                },
             )
 
         all_memories = cluster1_memories + cluster2_memories
@@ -205,7 +205,7 @@ class TestGraphMetricsService:
                     "relationship_type": "related_to",
                     "strength": 0.8,
                     "created_at": datetime.utcnow(),
-                }
+                },
             )
 
         service._fetch_graph_memories = AsyncMock(return_value=all_memories)
@@ -268,7 +268,7 @@ class TestGraphMetricsService:
 
     @pytest.mark.asyncio
     async def test_calculate_connectivity_metrics(
-        self, service, sample_memories, sample_relationships
+        self, service, sample_memories, sample_relationships,
     ):
         """Test connectivity metrics calculation"""
         # Create a connected graph
@@ -373,7 +373,7 @@ class TestGraphMetricsService:
         )
 
         health_score = service._calculate_graph_health(
-            node_metrics, cluster_metrics, connectivity_metrics
+            node_metrics, cluster_metrics, connectivity_metrics,
         )
 
         assert 0 <= health_score <= 1

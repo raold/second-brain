@@ -1,13 +1,12 @@
 """Version information for the Second Brain application."""
 
 import sys
-from typing import Dict
 
 VERSION = "4.2.3"
 BUILD_DATE = "2025-08-13"
 
 
-def get_version_info() -> Dict[str, str]:
+def get_version_info() -> dict[str, str]:
     """Get version information for the application."""
     return {
         "version": VERSION,

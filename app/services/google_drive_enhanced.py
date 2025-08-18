@@ -8,7 +8,7 @@ import io
 import logging
 import os
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlencode
 
 import aiohttp
@@ -25,57 +25,57 @@ MAX_FILE_SIZE = 250 * 1024 * 1024  # 250 MiB in bytes
 # Supported content types for ingestion
 SUPPORTED_MIME_TYPES = {
     # Text documents
-    'text/plain': 'text',
-    'text/html': 'text',
-    'text/csv': 'text',
-    'text/markdown': 'text',
-    'application/json': 'text',
-    'application/xml': 'text',
+    "text/plain": "text",
+    "text/html": "text",
+    "text/csv": "text",
+    "text/markdown": "text",
+    "application/json": "text",
+    "application/xml": "text",
 
     # Code files (treated as text)
-    'text/x-python': 'code',
-    'text/x-java': 'code',
-    'text/javascript': 'code',
-    'text/x-c': 'code',
-    'text/x-c++': 'code',
-    'text/x-csharp': 'code',
-    'text/x-ruby': 'code',
-    'text/x-go': 'code',
-    'text/x-rust': 'code',
-    'text/x-typescript': 'code',
+    "text/x-python": "code",
+    "text/x-java": "code",
+    "text/javascript": "code",
+    "text/x-c": "code",
+    "text/x-c++": "code",
+    "text/x-csharp": "code",
+    "text/x-ruby": "code",
+    "text/x-go": "code",
+    "text/x-rust": "code",
+    "text/x-typescript": "code",
 
     # Documents
-    'application/pdf': 'document',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'document',  # .docx
-    'application/msword': 'document',  # .doc
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'spreadsheet',  # .xlsx
-    'application/vnd.ms-excel': 'spreadsheet',  # .xls
-    'application/epub+zip': 'ebook',
+    "application/pdf": "document",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "document",  # .docx
+    "application/msword": "document",  # .doc
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "spreadsheet",  # .xlsx
+    "application/vnd.ms-excel": "spreadsheet",  # .xls
+    "application/epub+zip": "ebook",
 
     # Google Docs formats
-    'application/vnd.google-apps.document': 'gdoc',
-    'application/vnd.google-apps.spreadsheet': 'gsheet',
-    'application/vnd.google-apps.presentation': 'gslide',
+    "application/vnd.google-apps.document": "gdoc",
+    "application/vnd.google-apps.spreadsheet": "gsheet",
+    "application/vnd.google-apps.presentation": "gslide",
 
     # Images
-    'image/jpeg': 'image',
-    'image/png': 'image',
-    'image/gif': 'image',
-    'image/webp': 'image',
-    'image/svg+xml': 'image',
-    'image/bmp': 'image',
-    'image/tiff': 'image',
+    "image/jpeg": "image",
+    "image/png": "image",
+    "image/gif": "image",
+    "image/webp": "image",
+    "image/svg+xml": "image",
+    "image/bmp": "image",
+    "image/tiff": "image",
 }
 
 
 class GoogleDriveEnhanced:
     """Enhanced Google Drive integration with multimodal support"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.client_id = os.getenv("GOOGLE_CLIENT_ID")
         self.client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
         self.redirect_uri = os.getenv(
-            "GOOGLE_REDIRECT_URI", "http://localhost:8001/api/v1/gdrive/callback"
+            "GOOGLE_REDIRECT_URI", "http://localhost:8001/api/v1/gdrive/callback",
         )
         self.memory_service = MemoryService()
 
@@ -122,24 +122,23 @@ class GoogleDriveEnhanced:
                         "email": self.user_info.get("email"),
                         "tokens_stored": True,
                     }
-                else:
-                    error = await resp.text()
-                    logger.error(f"Token exchange failed: {error}")
-                    return {"success": False, "error": error}
+                error = await resp.text()
+                logger.error(f"Token exchange failed: {error}")
+                return {"success": False, "error": error}
 
     async def get_user_info(self, access_token: str) -> dict[str, Any]:
         """Get user info from Google"""
         async with aiohttp.ClientSession() as session:
             headers = {"Authorization": f"Bearer {access_token}"}
             async with session.get(
-                "https://www.googleapis.com/oauth2/v2/userinfo", headers=headers
+                "https://www.googleapis.com/oauth2/v2/userinfo", headers=headers,
             ) as resp:
                 if resp.status == 200:
                     self.user_info = await resp.json()
                     return self.user_info
                 return {}
 
-    async def list_files(self, folder_id: Optional[str] = None) -> list[dict[str, Any]]:
+    async def list_files(self, folder_id: str | None = None) -> list[dict[str, Any]]:
         """List files from Google Drive"""
         if not self.tokens.get("access_token"):
             return []
@@ -159,18 +158,17 @@ class GoogleDriveEnhanced:
             }
 
             async with session.get(
-                "https://www.googleapis.com/drive/v3/files", headers=headers, params=params
+                "https://www.googleapis.com/drive/v3/files", headers=headers, params=params,
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     files = data.get("files", [])
                     # Mark files that have already been ingested
                     for file in files:
-                        file['already_ingested'] = file['id'] in self._ingested_files
+                        file["already_ingested"] = file["id"] in self._ingested_files
                     return files
-                else:
-                    logger.error(f"Failed to list files: {resp.status}")
-                    return []
+                logger.error(f"Failed to list files: {resp.status}")
+                return []
 
     async def check_duplicate(self, file_id: str) -> bool:
         """
@@ -185,7 +183,7 @@ class GoogleDriveEnhanced:
             # Search for memories with this gdrive_id in metadata
             existing = await self.memory_service.search_memories(
                 query=f"gdrive_id:{file_id}",
-                limit=1
+                limit=1,
             )
             if existing:
                 self._ingested_files.add(file_id)
@@ -205,14 +203,14 @@ class GoogleDriveEnhanced:
             return True, SUPPORTED_MIME_TYPES[mime_type]
 
         # Check for general categories
-        if mime_type.startswith('text/'):
-            return True, 'text'
-        if mime_type.startswith('image/'):
-            return True, 'image'
-        if mime_type.startswith('application/') and 'json' in mime_type:
-            return True, 'text'
+        if mime_type.startswith("text/"):
+            return True, "text"
+        if mime_type.startswith("image/"):
+            return True, "image"
+        if mime_type.startswith("application/") and "json" in mime_type:
+            return True, "text"
 
-        return False, 'unsupported'
+        return False, "unsupported"
 
     async def _process_image_content(self, content_bytes: bytes, metadata: dict[str, Any]) -> str:
         """
@@ -226,7 +224,7 @@ class GoogleDriveEnhanced:
                 "format": image.format,
                 "mode": image.mode,
                 "size": f"{image.width}x{image.height}",
-                "filename": metadata.get('name', 'unknown')
+                "filename": metadata.get("name", "unknown"),
             }
 
             # Try OCR if pytesseract is available
@@ -250,7 +248,7 @@ class GoogleDriveEnhanced:
             return text_content
 
         except Exception as e:
-            logger.error(f"Failed to process image: {e}")
+            logger.exception(f"Failed to process image: {e}")
             return f"[Image processing failed: {e}]"
 
     async def _process_pdf_content(self, content_bytes: bytes, metadata: dict[str, Any]) -> str:
@@ -280,7 +278,7 @@ class GoogleDriveEnhanced:
             return text_content
 
         except Exception as e:
-            logger.error(f"Failed to process PDF: {e}")
+            logger.exception(f"Failed to process PDF: {e}")
             return f"[PDF processing failed: {e}]"
 
     async def _process_docx_content(self, content_bytes: bytes, metadata: dict[str, Any]) -> str:
@@ -312,10 +310,10 @@ class GoogleDriveEnhanced:
             return text_content
 
         except Exception as e:
-            logger.error(f"Failed to process DOCX: {e}")
+            logger.exception(f"Failed to process DOCX: {e}")
             return f"[DOCX processing failed: {e}]"
 
-    async def _fetch_file_metadata(self, session: aiohttp.ClientSession, file_id: str, headers: dict) -> Optional[dict]:
+    async def _fetch_file_metadata(self, session: aiohttp.ClientSession, file_id: str, headers: dict) -> dict | None:
         """Fetch file metadata from Google Drive."""
         metadata_url = f"https://www.googleapis.com/drive/v3/files/{file_id}"
         params = {"fields": "id,name,mimeType,modifiedTime,webViewLink,size"}
@@ -326,16 +324,14 @@ class GoogleDriveEnhanced:
             return await resp.json()
 
     async def _download_file_content(self, session: aiohttp.ClientSession, file_id: str,
-                                    mime_type: str, headers: dict) -> Optional[bytes]:
+                                    mime_type: str, headers: dict) -> bytes | None:
         """Download file content from Google Drive."""
         # Handle Google Docs, Sheets, Slides by exporting them
         if "google-apps" in mime_type:
             export_mime = "text/plain"
             if "spreadsheet" in mime_type:
                 export_mime = "text/csv"
-            elif "presentation" in mime_type:
-                export_mime = "text/plain"
-            elif "document" in mime_type:
+            elif "presentation" in mime_type or "document" in mime_type:
                 export_mime = "text/plain"
 
             url = f"https://www.googleapis.com/drive/v3/files/{file_id}/export"
@@ -348,34 +344,32 @@ class GoogleDriveEnhanced:
         async with session.get(url, headers=headers, params=params) as resp:
             if resp.status == 200:
                 return await resp.read()
-            else:
-                logger.error(f"Failed to download file content: {resp.status}")
-                return None
+            logger.error(f"Failed to download file content: {resp.status}")
+            return None
 
     async def _process_file_content(self, content_bytes: bytes, mime_type: str,
-                                   content_category: str, metadata: dict) -> Optional[str]:
+                                   content_category: str, metadata: dict) -> str | None:
         """Process file content based on type."""
-        if content_category == 'image':
+        if content_category == "image":
             return await self._process_image_content(content_bytes, metadata)
-        elif mime_type == 'application/pdf':
+        if mime_type == "application/pdf":
             return await self._process_pdf_content(content_bytes, metadata)
-        elif mime_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                          'application/msword']:
+        if mime_type in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                          "application/msword"]:
             return await self._process_docx_content(content_bytes, metadata)
-        else:
-            # Text-based content - detect encoding
-            detected = chardet.detect(content_bytes)
-            encoding = detected.get('encoding', 'utf-8') if detected else 'utf-8'
+        # Text-based content - detect encoding
+        detected = chardet.detect(content_bytes)
+        encoding = detected.get("encoding", "utf-8") if detected else "utf-8"
 
-            try:
-                return content_bytes.decode(encoding)
-            except UnicodeDecodeError:
-                # Fallback to utf-8 with errors ignored
-                logger.warning("Had to ignore encoding errors for file")
-                return content_bytes.decode('utf-8', errors='ignore')
+        try:
+            return content_bytes.decode(encoding)
+        except UnicodeDecodeError:
+            # Fallback to utf-8 with errors ignored
+            logger.warning("Had to ignore encoding errors for file")
+            return content_bytes.decode("utf-8", errors="ignore")
 
     async def _create_memory_from_file(self, content: str, metadata: dict, content_category: str,
-                                      content_bytes: Optional[bytes], file_size: Optional[str]) -> Optional[dict]:
+                                      content_bytes: bytes | None, file_size: str | None) -> dict | None:
         """Create memory from processed file content."""
         # Prepare metadata for the memory
         memory_metadata = {
@@ -390,46 +384,45 @@ class GoogleDriveEnhanced:
         }
 
         # Add image data if we have it
-        if content_bytes and content_category == 'image':
+        if content_bytes and content_category == "image":
             # Store base64 encoded thumbnail for later reference
             try:
                 img = Image.open(io.BytesIO(content_bytes))
                 # Create thumbnail (max 256x256)
                 img.thumbnail((256, 256), Image.Resampling.LANCZOS)
                 thumb_io = io.BytesIO()
-                img.save(thumb_io, format='PNG')
-                thumb_b64 = base64.b64encode(thumb_io.getvalue()).decode('utf-8')
-                memory_metadata['thumbnail'] = f"data:image/png;base64,{thumb_b64}"
+                img.save(thumb_io, format="PNG")
+                thumb_b64 = base64.b64encode(thumb_io.getvalue()).decode("utf-8")
+                memory_metadata["thumbnail"] = f"data:image/png;base64,{thumb_b64}"
             except Exception as e:
                 logger.warning(f"Could not create thumbnail: {e}")
 
         try:
             # Adjust importance based on content type
             importance_scores = {
-                'code': 0.8,
-                'document': 0.75,
-                'gdoc': 0.75,
-                'gsheet': 0.7,
-                'image': 0.6,
-                'text': 0.7,
-                'ebook': 0.65,
-                'spreadsheet': 0.7,
+                "code": 0.8,
+                "document": 0.75,
+                "gdoc": 0.75,
+                "gsheet": 0.7,
+                "image": 0.6,
+                "text": 0.7,
+                "ebook": 0.65,
+                "spreadsheet": 0.7,
             }
             importance = importance_scores.get(content_category, 0.7)
 
-            created_memory = await self.memory_service.create_memory(
+            return await self.memory_service.create_memory(
                 content=content,
                 metadata=memory_metadata,
                 tags=["gdrive", content_category, metadata.get("mimeType")],
-                importance_score=importance
+                importance_score=importance,
             )
 
-            return created_memory
         except Exception as e:
-            logger.error(f"Failed to create memory: {e}")
+            logger.exception(f"Failed to create memory: {e}")
             return None
 
-    async def ingest_file(self, file_id: str, force: bool = False) -> Optional[dict[str, Any]]:
+    async def ingest_file(self, file_id: str, force: bool = False) -> dict[str, Any] | None:
         """
         Reads a file from Google Drive, sends it for embedding, and stores it as a memory.
 
@@ -464,10 +457,10 @@ class GoogleDriveEnhanced:
             if not is_supported:
                 logger.warning(f"Unsupported file type: {mime_type} for file {metadata.get('name')}")
                 return {"status": "skipped", "reason": "unsupported_type",
-                        "mime_type": mime_type, "file_name": metadata.get('name')}
+                        "mime_type": mime_type, "file_name": metadata.get("name")}
 
             # 3. Check file size (if available)
-            file_size = metadata.get('size')
+            file_size = metadata.get("size")
             if file_size:
                 file_size_int = int(file_size)
                 if file_size_int > MAX_FILE_SIZE:
@@ -497,8 +490,8 @@ class GoogleDriveEnhanced:
 
             created_memory = await self._create_memory_from_file(
                 content, metadata, content_category,
-                content_bytes if content_category == 'image' else None,
-                file_size
+                content_bytes if content_category == "image" else None,
+                file_size,
             )
 
             if created_memory:
@@ -523,10 +516,9 @@ class GoogleDriveEnhanced:
                 "last_checked": datetime.utcnow().isoformat(),
                 "ingested_files_count": len(self._ingested_files),
                 "max_file_size_mb": MAX_FILE_SIZE / (1024 * 1024),
-                "supported_types": list(SUPPORTED_MIME_TYPES.keys())[:10]  # Sample
+                "supported_types": list(SUPPORTED_MIME_TYPES.keys())[:10],  # Sample
             }
-        else:
-            return {"connected": False, "error": "Not authenticated", "requires_auth": True}
+        return {"connected": False, "error": "Not authenticated", "requires_auth": True}
 
     async def batch_ingest(self, file_ids: list[str], progress_callback=None) -> dict[str, Any]:
         """
@@ -544,7 +536,7 @@ class GoogleDriveEnhanced:
             "successful": 0,
             "skipped": 0,
             "failed": 0,
-            "details": []
+            "details": [],
         }
 
         for i, file_id in enumerate(file_ids, 1):
@@ -557,20 +549,20 @@ class GoogleDriveEnhanced:
                         results["details"].append({
                             "file_id": file_id,
                             "status": "skipped",
-                            "reason": result.get("reason")
+                            "reason": result.get("reason"),
                         })
                     else:
                         results["successful"] += 1
                         results["details"].append({
                             "file_id": file_id,
                             "status": "success",
-                            "memory_id": result.get("id")
+                            "memory_id": result.get("id"),
                         })
                 else:
                     results["failed"] += 1
                     results["details"].append({
                         "file_id": file_id,
-                        "status": "failed"
+                        "status": "failed",
                     })
 
                 # Progress callback
@@ -579,16 +571,16 @@ class GoogleDriveEnhanced:
                         "current": i,
                         "total": len(file_ids),
                         "percentage": (i / len(file_ids)) * 100,
-                        "file_id": file_id
+                        "file_id": file_id,
                     })
 
             except Exception as e:
-                logger.error(f"Error ingesting file {file_id}: {e}")
+                logger.exception(f"Error ingesting file {file_id}: {e}")
                 results["failed"] += 1
                 results["details"].append({
                     "file_id": file_id,
                     "status": "error",
-                    "error": str(e)
+                    "error": str(e),
                 })
 
         return results

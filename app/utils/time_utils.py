@@ -23,13 +23,13 @@ def parse_relative_timeframe(timeframe: str) -> tuple[datetime, datetime]:
     if timeframe == "last_24_hours":
         return now - timedelta(hours=24), now
 
-    elif timeframe == "last_7_days":
+    if timeframe == "last_7_days":
         return today - timedelta(days=7), now
 
-    elif timeframe == "last_30_days":
+    if timeframe == "last_30_days":
         return today - timedelta(days=30), now
 
-    elif timeframe == "last_month":
+    if timeframe == "last_month":
         # First day of last month
         if today.month == 1:
             start = today.replace(year=today.year - 1, month=12, day=1)
@@ -42,7 +42,7 @@ def parse_relative_timeframe(timeframe: str) -> tuple[datetime, datetime]:
 
         return start, end
 
-    elif timeframe == "last_quarter":
+    if timeframe == "last_quarter":
         # Determine current quarter
         quarter = (today.month - 1) // 3
 
@@ -65,33 +65,32 @@ def parse_relative_timeframe(timeframe: str) -> tuple[datetime, datetime]:
         end = end.replace(hour=23, minute=59, second=59)
         return start, end
 
-    elif timeframe == "last_year":
+    if timeframe == "last_year":
         start = today.replace(year=today.year - 1, month=1, day=1)
         end = today.replace(year=today.year - 1, month=12, day=31, hour=23, minute=59, second=59)
         return start, end
 
-    elif timeframe == "this_week":
+    if timeframe == "this_week":
         # Start of week (Monday)
         start = today - timedelta(days=today.weekday())
         return start, now
 
-    elif timeframe == "this_month":
+    if timeframe == "this_month":
         start = today.replace(day=1)
         return start, now
 
-    elif timeframe == "this_quarter":
+    if timeframe == "this_quarter":
         quarter = (today.month - 1) // 3
         start_month = quarter * 3 + 1
         start = today.replace(month=start_month, day=1)
         return start, now
 
-    elif timeframe == "this_year":
+    if timeframe == "this_year":
         start = today.replace(month=1, day=1)
         return start, now
 
-    else:
-        # Default to last 30 days
-        return today - timedelta(days=30), now
+    # Default to last 30 days
+    return today - timedelta(days=30), now
 
 
 def format_duration(seconds: int) -> str:

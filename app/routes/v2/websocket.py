@@ -4,8 +4,8 @@ Handles live connections and event broadcasting
 """
 
 import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List
+from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
@@ -27,7 +27,7 @@ class WebSocketMessage(BaseModel):
 
     type: str = Field(..., pattern="^(subscribe|unsubscribe|ping|message)$")
     channel: str | None = None
-    data: Dict[str, Any] | None = None
+    data: dict[str, Any] | None = None
 
 
 class WebSocketResponse(BaseModel):
@@ -36,7 +36,7 @@ class WebSocketResponse(BaseModel):
     type: str
     channel: str | None = None
     data: Any
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     correlation_id: str | None = None
 
 
@@ -46,19 +46,19 @@ class WebSocketResponse(BaseModel):
 class ConnectionManager:
     """Manages WebSocket connections for single-user container"""
 
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
-        self.connection_metadata: Dict[WebSocket, Dict[str, Any]] = {}
-        self.subscriptions: Dict[str, List[WebSocket]] = {}
+    def __init__(self) -> None:
+        self.active_connections: list[WebSocket] = []
+        self.connection_metadata: dict[WebSocket, dict[str, Any]] = {}
+        self.subscriptions: dict[str, list[WebSocket]] = {}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket) -> None:
         """Accept and register a new connection"""
         await websocket.accept()
         self.active_connections.append(websocket)
 
         # Store metadata
         self.connection_metadata[websocket] = {
-            "connected_at": datetime.now(timezone.utc),
+            "connected_at": datetime.now(UTC),
             "subscriptions": set(),
         }
 
@@ -71,12 +71,12 @@ class ConnectionManager:
                 "data": {
                     "status": "connected",
                     "message": "Welcome to Second Brain real-time updates",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
-            }
+            },
         )
 
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket) -> None:
         """Remove a connection and clean up"""
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
@@ -90,7 +90,7 @@ class ConnectionManager:
 
         logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
 
-    async def subscribe(self, websocket: WebSocket, channel: str):
+    async def subscribe(self, websocket: WebSocket, channel: str) -> None:
         """Subscribe a connection to a channel"""
         if channel not in self.subscriptions:
             self.subscriptions[channel] = []
@@ -104,10 +104,10 @@ class ConnectionManager:
                     "type": "subscribed",
                     "channel": channel,
                     "data": {"message": f"Subscribed to {channel}"},
-                }
+                },
             )
 
-    async def unsubscribe(self, websocket: WebSocket, channel: str):
+    async def unsubscribe(self, websocket: WebSocket, channel: str) -> None:
         """Unsubscribe a connection from a channel"""
         if channel in self.subscriptions and websocket in self.subscriptions[channel]:
             self.subscriptions[channel].remove(websocket)
@@ -118,10 +118,10 @@ class ConnectionManager:
                     "type": "unsubscribed",
                     "channel": channel,
                     "data": {"message": f"Unsubscribed from {channel}"},
-                }
+                },
             )
 
-    async def broadcast(self, message: Dict[str, Any], channel: str | None = None):
+    async def broadcast(self, message: dict[str, Any], channel: str | None = None) -> None:
         """Broadcast message to all connections or specific channel"""
         disconnected = []
 
@@ -140,7 +140,7 @@ class ConnectionManager:
         for conn in disconnected:
             self.disconnect(conn)
 
-    async def send_to_connection(self, websocket: WebSocket, message: Dict[str, Any]):
+    async def send_to_connection(self, websocket: WebSocket, message: dict[str, Any]) -> None:
         """Send message to specific connection"""
         try:
             await websocket.send_json(message)
@@ -156,7 +156,7 @@ manager = ConnectionManager()
 
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket) -> None:
     """
     WebSocket endpoint for real-time updates.
 
@@ -193,9 +193,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     await websocket.send_json(
                         {
                             "type": "pong",
-                            "data": {"timestamp": datetime.now(timezone.utc).isoformat()},
+                            "data": {"timestamp": datetime.now(UTC).isoformat()},
                             "correlation_id": msg_data.get("id"),
-                        }
+                        },
                     )
 
                 elif msg_type == "subscribe" and channel:
@@ -211,79 +211,79 @@ async def websocket_endpoint(websocket: WebSocket):
                             "type": "message",
                             "channel": channel,
                             "data": msg_data,
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "timestamp": datetime.now(UTC).isoformat(),
                         },
                         channel,
                     )
 
                 else:
                     await websocket.send_json(
-                        {"type": "error", "data": {"message": f"Unknown message type: {msg_type}"}}
+                        {"type": "error", "data": {"message": f"Unknown message type: {msg_type}"}},
                     )
 
             except json.JSONDecodeError:
                 await websocket.send_json({"type": "error", "data": {"message": "Invalid JSON"}})
             except Exception as e:
-                logger.error(f"Error handling WebSocket message: {e}")
+                logger.exception(f"Error handling WebSocket message: {e}")
                 await websocket.send_json({"type": "error", "data": {"message": str(e)}})
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:
-        logger.error(f"WebSocket error: {e}")
+        logger.exception(f"WebSocket error: {e}")
         manager.disconnect(websocket)
 
 
 # ==================== Event Broadcasting Functions ====================
 
 
-async def broadcast_memory_created(memory_id: str, memory_data: Dict[str, Any]):
+async def broadcast_memory_created(memory_id: str, memory_data: dict[str, Any]) -> None:
     """Broadcast memory creation event"""
     await manager.broadcast(
         {
             "type": "memory_created",
             "channel": "memories",
             "data": {"memory_id": memory_id, "memory": memory_data},
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         },
         "memories",
     )
 
 
-async def broadcast_memory_updated(memory_id: str, memory_data: Dict[str, Any]):
+async def broadcast_memory_updated(memory_id: str, memory_data: dict[str, Any]) -> None:
     """Broadcast memory update event"""
     await manager.broadcast(
         {
             "type": "memory_updated",
             "channel": "memories",
             "data": {"memory_id": memory_id, "memory": memory_data},
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         },
         "memories",
     )
 
 
-async def broadcast_memory_deleted(memory_id: str):
+async def broadcast_memory_deleted(memory_id: str) -> None:
     """Broadcast memory deletion event"""
     await manager.broadcast(
         {
             "type": "memory_deleted",
             "channel": "memories",
             "data": {"memory_id": memory_id},
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         },
         "memories",
     )
 
 
-async def broadcast_system_event(event_type: str, data: Dict[str, Any]):
+async def broadcast_system_event(event_type: str, data: dict[str, Any]) -> None:
     """Broadcast system event"""
     await manager.broadcast(
         {
             "type": event_type,
             "channel": "system",
             "data": data,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         },
         "system",
     )

@@ -4,9 +4,9 @@ Provides health checks, readiness probes, and system metrics
 """
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
 import psutil
 from fastapi import APIRouter, HTTPException, status
@@ -36,19 +36,19 @@ class HealthCheck(BaseModel):
     """Health check response"""
 
     status: HealthStatus
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     version: str
     environment: str
     uptime_seconds: float
-    checks: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    checks: dict[str, dict[str, Any]] = Field(default_factory=dict)
 
 
 class ReadinessCheck(BaseModel):
     """Readiness check response"""
 
     ready: bool
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    services: Dict[str, bool]
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    services: dict[str, bool]
     message: str
 
 
@@ -78,12 +78,12 @@ def get_uptime() -> float:
         return 0.0
 
 
-def check_memory_service() -> Dict[str, Any]:
+def check_memory_service() -> dict[str, Any]:
     """Check memory service health"""
     try:
         from app.services.memory_service import MemoryService
 
-        service = MemoryService()
+        MemoryService()
         # Basic check - service can be instantiated
         return {
             "status": "healthy",
@@ -94,7 +94,7 @@ def check_memory_service() -> Dict[str, Any]:
         return {"status": "unhealthy", "error": str(e)}
 
 
-def check_storage() -> Dict[str, Any]:
+def check_storage() -> dict[str, Any]:
     """Check storage health"""
     try:
         persist_path = os.getenv("MEMORY_PERSIST_PATH", "/data")
@@ -110,12 +110,11 @@ def check_storage() -> Dict[str, Any]:
                 "total_gb": round(total_gb, 2),
                 "used_percent": round(used_percent, 2),
             }
-        else:
-            return {
-                "status": "healthy",
-                "type": "memory-only",
-                "message": "No persistent storage configured",
-            }
+        return {
+            "status": "healthy",
+            "type": "memory-only",
+            "message": "No persistent storage configured",
+        }
     except Exception as e:
         return {"status": "unhealthy", "error": str(e)}
 
@@ -171,7 +170,7 @@ async def health_check():
 
 
 @router.get(
-    "/health/live", summary="Liveness probe", description="Simple liveness check for Kubernetes"
+    "/health/live", summary="Liveness probe", description="Simple liveness check for Kubernetes",
 )
 async def liveness_probe():
     """
@@ -179,7 +178,7 @@ async def liveness_probe():
 
     Returns 200 if the process is alive and responding.
     """
-    return {"status": "alive", "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "alive", "timestamp": datetime.now(UTC).isoformat()}
 
 
 @router.get(
@@ -204,7 +203,7 @@ async def readiness_probe():
 
     if not is_ready:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service not ready"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service not ready",
         )
 
     return ReadinessCheck(ready=is_ready, services=services, message="All services operational")
@@ -249,9 +248,9 @@ async def get_metrics():
             container_id=container_id,
         )
     except Exception as e:
-        logger.error(f"Failed to get metrics: {e}")
+        logger.exception(f"Failed to get metrics: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve metrics"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve metrics",
         )
 
 

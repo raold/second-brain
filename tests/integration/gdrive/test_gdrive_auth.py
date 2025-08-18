@@ -32,7 +32,7 @@ async def test_auth():
         async with session.post(f"{base_url}/api/v1/gdrive/connect") as resp:
             if resp.status == 200:
                 data = await resp.json()
-                auth_url = data.get('auth_url', '')
+                auth_url = data.get("auth_url", "")
                 print("   Success! Auth URL generated")
                 print("\n3. Authentication URL:")
                 print("   " + "="*50)

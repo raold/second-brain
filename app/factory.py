@@ -5,7 +5,7 @@ Creates configured FastAPI instances for different environments
 
 import asyncio
 import os
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 class AppState:
     """Application state container"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.ready = False
         self.memory_service = None
         self.qdrant_client = None
@@ -75,15 +75,15 @@ def create_lifespan(config_name: str):
             # Log status
             stats = await app.state.memory_service.get_statistics()
             logger.info(
-                f"📚 Loaded {app.state.memory_count} memories using {stats.get('backend', 'unknown')} backend"
+                f"📚 Loaded {app.state.memory_count} memories using {stats.get('backend', 'unknown')} backend",
             )
-            if 'degradation_level' in stats:
+            if "degradation_level" in stats:
                 logger.info(f"⚡ Degradation level: {stats['degradation_level']}")
 
             # Start background persistence task (if not testing)
             if config_name != "testing":
                 app.state.persistence_task = asyncio.create_task(
-                    periodic_persistence(app.state.memory_service)
+                    periodic_persistence(app.state.memory_service),
                 )
 
             # Mark as ready
@@ -91,7 +91,7 @@ def create_lifespan(config_name: str):
             logger.info("✅ Application ready to serve requests")
 
         except Exception as e:
-            logger.error(f"❌ Startup failed: {e}")
+            logger.exception(f"❌ Startup failed: {e}")
             raise
 
         yield
@@ -105,10 +105,8 @@ def create_lifespan(config_name: str):
         # Cancel background tasks
         if app.state.persistence_task:
             app.state.persistence_task.cancel()
-            try:
+            with suppress(asyncio.CancelledError):
                 await app.state.persistence_task
-            except asyncio.CancelledError:
-                pass
 
         # Final persistence
         if app.state.memory_service and config_name != "testing":
@@ -116,14 +114,14 @@ def create_lifespan(config_name: str):
                 await app.state.memory_service.save_to_disk()
                 logger.info("💾 Final memory persistence complete")
             except Exception as e:
-                logger.error(f"Failed to persist memories on shutdown: {e}")
+                logger.exception(f"Failed to persist memories on shutdown: {e}")
 
         logger.info("✅ Shutdown complete")
 
     return lifespan
 
 
-async def periodic_persistence(memory_service, interval: int = 30):
+async def periodic_persistence(memory_service, interval: int = 30) -> None:
     """Periodically persist memories to disk"""
     while True:
         try:
@@ -135,7 +133,7 @@ async def periodic_persistence(memory_service, interval: int = 30):
             await memory_service.save_to_disk()
             raise
         except Exception as e:
-            logger.error(f"Persistence error: {e}")
+            logger.exception(f"Persistence error: {e}")
 
 
 def create_app(config_name: str = "development") -> FastAPI:
@@ -204,26 +202,26 @@ def create_app(config_name: str = "development") -> FastAPI:
         from app.routes.gdrive_pipeline import router as gdrive_pipeline_router
         app.include_router(gdrive_pipeline_router, tags=["Google Drive Pipeline"])
         logger.info("✅ Google Drive Pipeline loaded")
-        
+
         # Photo Pipeline Routes
         try:
             from app.routes.photo_pipeline import router as photo_pipeline_router
             app.include_router(photo_pipeline_router, prefix="/api", tags=["Photo Pipeline"])
             logger.info("📸 Photo Pipeline routes loaded - Ready to process your images!")
         except ImportError as e:
-            logger.error(f"Failed to import photo pipeline routes: {e}")
-        
+            logger.exception(f"Failed to import photo pipeline routes: {e}")
+
         # Metrics Routes
         try:
             from app.routes.metrics import router as metrics_router
             app.include_router(metrics_router, prefix="/api/v2", tags=["Metrics"])
             logger.info("📊 Metrics routes loaded - Performance monitoring active!")
         except ImportError as e:
-            logger.error(f"Failed to import metrics routes: {e}")
+            logger.exception(f"Failed to import metrics routes: {e}")
 
         logger.info("📍 Routes registered successfully with tags")
     except ImportError as e:
-        logger.error(f"Failed to import routes: {e}")
+        logger.exception(f"Failed to import routes: {e}")
         # Continue anyway for testing
 
     # Add root endpoint

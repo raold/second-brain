@@ -64,7 +64,7 @@ class TestIngestionRoutes:
     @patch("app.routes.ingestion_routes.get_current_user")
     @patch("app.routes.ingestion_routes.process_file_ingestion")
     def test_upload_single_file(
-        self, mock_process, mock_user, client, auth_headers, mock_current_user
+        self, mock_process, mock_user, client, auth_headers, mock_current_user,
     ):
         """Test single file upload"""
         mock_user.return_value = mock_current_user
@@ -75,7 +75,7 @@ class TestIngestionRoutes:
         data = {"tags": "test,upload", "metadata": json.dumps({"source": "test"})}
 
         response = client.post(
-            "/api/v1/ingest/upload", files=files, data=data, headers=auth_headers
+            "/api/v1/ingest/upload", files=files, data=data, headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -94,7 +94,7 @@ class TestIngestionRoutes:
     @patch("app.routes.ingestion_routes.get_current_user")
     @patch("app.routes.ingestion_routes.process_batch_ingestion")
     def test_upload_batch_files(
-        self, mock_process, mock_user, client, auth_headers, mock_current_user
+        self, mock_process, mock_user, client, auth_headers, mock_current_user,
     ):
         """Test batch file upload"""
         mock_user.return_value = mock_current_user
@@ -116,7 +116,7 @@ class TestIngestionRoutes:
         data = {"request": json.dumps({"tags": ["batch", "test"], "metadata": {"batch": True}})}
 
         response = client.post(
-            "/api/v1/ingest/upload/batch", files=files, data=data, headers=auth_headers
+            "/api/v1/ingest/upload/batch", files=files, data=data, headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -243,7 +243,7 @@ class TestIngestionProcessing:
         mock_result = IngestionResult(
             success=True,
             file_metadata=FileMetadata(
-                filename="test.pdf", file_type="application/pdf", size=1024, hash="abc123"
+                filename="test.pdf", file_type="application/pdf", size=1024, hash="abc123",
             ),
             memories_created=[Mock(), Mock()],
             chunks_processed=2,
@@ -337,9 +337,9 @@ class TestIngestionProcessing:
         results = []
         for i in range(3):
             result = IngestionResult(
-                success=True if i < 2 else False,
+                success=i < 2,
                 file_metadata=FileMetadata(
-                    filename=f"file{i}.txt", file_type="text/plain", size=100, hash=f"hash{i}"
+                    filename=f"file{i}.txt", file_type="text/plain", size=100, hash=f"hash{i}",
                 ),
                 memories_created=[Mock()] if i < 2 else [],
                 chunks_processed=1 if i < 2 else 0,

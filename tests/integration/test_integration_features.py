@@ -141,7 +141,7 @@ def test_integrated_features():
                 for i, entity in enumerate(reasoning_output["entities"])
             ],
             "edges": [
-                {"source": "entity_0", "target": "entity_1", "type": "used_in", "weight": 0.85}
+                {"source": "entity_0", "target": "entity_1", "type": "used_in", "weight": 0.85},
             ],
         }
 

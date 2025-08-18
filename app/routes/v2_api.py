@@ -4,8 +4,8 @@ A modern, powerful, and elegant API for single-user memory management
 """
 
 import json
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import UUID
 
 from fastapi import (
@@ -37,15 +37,15 @@ class MemoryBase(BaseModel):
     content: str = Field(..., min_length=1, max_length=50000, description="Memory content")
     memory_type: str = Field("generic", description="Type of memory")
     importance_score: float = Field(0.5, ge=0, le=1, description="Importance score")
-    tags: List[str] = Field(default_factory=list, max_items=20)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    tags: list[str] = Field(default_factory=list, max_items=20)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class MemoryCreate(MemoryBase):
     """Memory creation request"""
 
-    embedding_model: Optional[str] = Field(
-        "text-embedding-ada-002", description="Embedding model to use"
+    embedding_model: str | None = Field(
+        "text-embedding-ada-002", description="Embedding model to use",
     )
     auto_tag: bool = Field(True, description="Automatically generate tags")
     auto_importance: bool = Field(True, description="Automatically calculate importance")
@@ -54,11 +54,11 @@ class MemoryCreate(MemoryBase):
 class MemoryUpdate(BaseModel):
     """Memory update request - all fields optional"""
 
-    content: Optional[str] = None
-    memory_type: Optional[str] = None
-    importance_score: Optional[float] = Field(None, ge=0, le=1)
-    tags: Optional[List[str]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    content: str | None = None
+    memory_type: str | None = None
+    importance_score: float | None = Field(None, ge=0, le=1)
+    tags: list[str] | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class Memory(MemoryBase):
@@ -68,8 +68,8 @@ class Memory(MemoryBase):
     created_at: datetime
     updated_at: datetime
     access_count: int = 0
-    last_accessed: Optional[datetime] = None
-    embedding: Optional[List[float]] = Field(None, exclude=True)
+    last_accessed: datetime | None = None
+    embedding: list[float] | None = Field(None, exclude=True)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -79,14 +79,14 @@ class MemoryResponse(BaseModel):
 
     success: bool
     memory: Memory
-    message: Optional[str] = None
+    message: str | None = None
 
 
 class MemoriesResponse(BaseModel):
     """Multiple memories response with pagination"""
 
     success: bool
-    memories: List[Memory]
+    memories: list[Memory]
     total: int
     page: int
     page_size: int
@@ -99,7 +99,7 @@ class SearchRequest(BaseModel):
 
     query: str = Field(..., min_length=1, max_length=1000)
     search_type: str = Field("hybrid", pattern="^(keyword|semantic|hybrid)$")
-    filters: Dict[str, Any] = Field(default_factory=dict)
+    filters: dict[str, Any] = Field(default_factory=dict)
     limit: int = Field(10, ge=1, le=100)
     offset: int = Field(0, ge=0)
     include_similar: bool = True
@@ -110,8 +110,8 @@ class BulkOperation(BaseModel):
     """Bulk operation request"""
 
     operation: str = Field(..., pattern="^(update|delete|tag|export)$")
-    memory_ids: List[UUID]
-    data: Optional[Dict[str, Any]] = None
+    memory_ids: list[UUID]
+    data: dict[str, Any] | None = None
 
 
 class AnalyticsQuery(BaseModel):
@@ -119,26 +119,26 @@ class AnalyticsQuery(BaseModel):
 
     metric: str = Field(..., pattern="^(usage|trends|insights|relationships)$")
     time_range: str = Field("7d", pattern="^(1d|7d|30d|90d|1y|all)$")
-    group_by: Optional[str] = Field(None, pattern="^(day|week|month|tag|type)$")
-    filters: Dict[str, Any] = Field(default_factory=dict)
+    group_by: str | None = Field(None, pattern="^(day|week|month|tag|type)$")
+    filters: dict[str, Any] = Field(default_factory=dict)
 
 
 class WebSocketMessage(BaseModel):
     """WebSocket message format"""
 
     type: str = Field(..., pattern="^(subscribe|unsubscribe|ping|message)$")
-    channel: Optional[str] = None
-    data: Optional[Dict[str, Any]] = None
+    channel: str | None = None
+    data: dict[str, Any] | None = None
 
 
 class WebSocketResponse(BaseModel):
     """WebSocket response format"""
 
     type: str
-    channel: Optional[str] = None
+    channel: str | None = None
     data: Any
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    correlation_id: Optional[str] = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    correlation_id: str | None = None
 
 
 # ========================= DEPENDENCIES =========================
@@ -152,7 +152,7 @@ async def get_memory_service() -> MemoryService:
 async def validate_pagination(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-) -> Dict[str, int]:
+) -> dict[str, int]:
     """Validate pagination parameters"""
     return {
         "page": page,
@@ -168,26 +168,26 @@ async def validate_pagination(
 class ConnectionManager:
     """Simple WebSocket connection manager for single user"""
 
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
-        self.connection_metadata: Dict[WebSocket, Dict[str, Any]] = {}
+    def __init__(self) -> None:
+        self.active_connections: list[WebSocket] = []
+        self.connection_metadata: dict[WebSocket, dict[str, Any]] = {}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket) -> None:
         """Connect a WebSocket"""
         await websocket.accept()
         self.active_connections.append(websocket)
 
         # Store metadata
-        self.connection_metadata[websocket] = {"connected_at": datetime.now(timezone.utc)}
+        self.connection_metadata[websocket] = {"connected_at": datetime.now(UTC)}
 
         logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
 
         # Send welcome message
         await websocket.send_json(
-            WebSocketResponse(type="connected", data={"status": "connected"}).dict()
+            WebSocketResponse(type="connected", data={"status": "connected"}).dict(),
         )
 
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket) -> None:
         """Disconnect a WebSocket"""
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
@@ -198,7 +198,7 @@ class ConnectionManager:
 
         logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
 
-    async def broadcast(self, message: WebSocketResponse):
+    async def broadcast(self, message: WebSocketResponse) -> None:
         """Broadcast message to all connected clients"""
         disconnected = []
         for connection in self.active_connections:
@@ -266,11 +266,11 @@ async def create_memory(
         background_tasks.add_task(broadcast_memory_created, memory_obj)
 
         return MemoryResponse(
-            success=True, memory=memory_obj, message="Memory created successfully"
+            success=True, memory=memory_obj, message="Memory created successfully",
         )
 
     except Exception as e:
-        logger.error(f"Error creating memory: {e}")
+        logger.exception(f"Error creating memory: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
@@ -299,16 +299,16 @@ async def get_memory(memory_id: UUID, memory_service: MemoryService = Depends(ge
 
 @router.get("/memories", response_model=MemoriesResponse)
 async def list_memories(
-    pagination: Dict[str, int] = Depends(validate_pagination),
-    memory_type: Optional[str] = Query(None, description="Filter by memory type"),
-    tags: Optional[List[str]] = Query(None, description="Filter by tags"),
-    importance_min: Optional[float] = Query(None, ge=0, le=1),
+    pagination: dict[str, int] = Depends(validate_pagination),
+    memory_type: str | None = Query(None, description="Filter by memory type"),
+    tags: list[str] | None = Query(None, description="Filter by tags"),
+    importance_min: float | None = Query(None, ge=0, le=1),
     memory_service: MemoryService = Depends(get_memory_service),
 ):
     """List memories with advanced filtering and pagination"""
     # Get memories (no user_id filtering)
     memories_data = await memory_service.list_memories(
-        limit=pagination["limit"], offset=pagination["offset"]
+        limit=pagination["limit"], offset=pagination["offset"],
     )
 
     # Convert to Memory objects
@@ -333,7 +333,7 @@ async def list_memories(
                 created_at=datetime.fromisoformat(mem_data["created_at"]),
                 updated_at=datetime.fromisoformat(mem_data["updated_at"]),
                 access_count=mem_data.get("access_count", 0),
-            )
+            ),
         )
 
     # Calculate total (simplified)
@@ -373,7 +373,7 @@ async def update_memory(
 
     if not updated_data:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update memory"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update memory",
         )
 
     memory = Memory(
@@ -410,7 +410,7 @@ async def delete_memory(
     success = await memory_service.delete_memory(str(memory_id))
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete memory"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete memory",
         )
 
     # Background task
@@ -424,7 +424,7 @@ async def delete_memory(
 
 @router.post("/search")
 async def search_memories(
-    search: SearchRequest, memory_service: MemoryService = Depends(get_memory_service)
+    search: SearchRequest, memory_service: MemoryService = Depends(get_memory_service),
 ):
     """Advanced search with multiple strategies"""
     results = await memory_service.search_memories(query=search.query, limit=search.limit)
@@ -443,7 +443,7 @@ async def search_memories(
                 created_at=datetime.fromisoformat(mem_data["created_at"]),
                 updated_at=datetime.fromisoformat(mem_data["updated_at"]),
                 access_count=mem_data.get("access_count", 0),
-            )
+            ),
         )
 
     return {
@@ -509,13 +509,13 @@ async def bulk_operation(
 
 @router.post("/analytics")
 async def get_analytics(
-    query: AnalyticsQuery, memory_service: MemoryService = Depends(get_memory_service)
+    query: AnalyticsQuery, memory_service: MemoryService = Depends(get_memory_service),
 ):
     """Get advanced analytics and insights"""
     # This is a placeholder - in real implementation would query analytics service
 
     # Parse time range
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     time_ranges = {
         "1d": timedelta(days=1),
         "7d": timedelta(days=7),
@@ -658,7 +658,7 @@ async def import_memories(
     """Import memories from file"""
     if not file.filename.endswith((".json", ".csv")):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Only JSON and CSV files are supported"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Only JSON and CSV files are supported",
         )
 
     content = await file.read()
@@ -669,7 +669,7 @@ async def import_memories(
         else:
             # CSV parsing would go here
             raise HTTPException(
-                status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="CSV import not yet implemented"
+                status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="CSV import not yet implemented",
             )
 
         # Import memories
@@ -706,7 +706,7 @@ async def import_memories(
 
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket) -> None:
     """WebSocket endpoint for real-time updates"""
     try:
         await manager.connect(websocket)
@@ -720,8 +720,8 @@ async def websocket_endpoint(websocket: WebSocket):
             if message.type == "ping":
                 await websocket.send_json(
                     WebSocketResponse(
-                        type="pong", correlation_id=message.data.get("id") if message.data else None
-                    ).dict()
+                        type="pong", correlation_id=message.data.get("id") if message.data else None,
+                    ).dict(),
                 )
 
             elif message.type == "message":
@@ -731,41 +731,41 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:
-        logger.error(f"WebSocket error: {e}")
+        logger.exception(f"WebSocket error: {e}")
         manager.disconnect(websocket)
 
 
 # ========================= BACKGROUND TASKS =========================
 
 
-async def broadcast_memory_created(memory: Memory):
+async def broadcast_memory_created(memory: Memory) -> None:
     """Broadcast memory creation event"""
     await manager.broadcast(WebSocketResponse(type="memory_created", data=memory.dict()))
 
 
-async def broadcast_memory_updated(memory: Memory):
+async def broadcast_memory_updated(memory: Memory) -> None:
     """Broadcast memory update event"""
     await manager.broadcast(WebSocketResponse(type="memory_updated", data=memory.dict()))
 
 
-async def broadcast_memory_deleted(memory_id: str):
+async def broadcast_memory_deleted(memory_id: str) -> None:
     """Broadcast memory deletion event"""
     await manager.broadcast(WebSocketResponse(type="memory_deleted", data={"memory_id": memory_id}))
 
 
-async def broadcast_bulk_operation(operation: str, results: Dict):
+async def broadcast_bulk_operation(operation: str, results: dict) -> None:
     """Broadcast bulk operation results"""
     await manager.broadcast(
         WebSocketResponse(
-            type="bulk_operation_complete", data={"operation": operation, "results": results}
-        )
+            type="bulk_operation_complete", data={"operation": operation, "results": results},
+        ),
     )
 
 
-async def broadcast_import_complete(imported: int, failed: int):
+async def broadcast_import_complete(imported: int, failed: int) -> None:
     """Broadcast import completion"""
     await manager.broadcast(
-        WebSocketResponse(type="import_complete", data={"imported": imported, "failed": failed})
+        WebSocketResponse(type="import_complete", data={"imported": imported, "failed": failed}),
     )
 
 
@@ -778,7 +778,7 @@ async def health_check():
     return {
         "status": "healthy",
         "version": "2.0.0",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "features": {
             "websocket": True,
             "bulk_operations": True,

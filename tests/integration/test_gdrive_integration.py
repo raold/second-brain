@@ -25,9 +25,9 @@ async def test_gdrive_integration():
             if status.get("connected"):
                 print("✅ Connected to Google Drive")
                 print(f"   User: {status.get('user_email')}")
-                quota = status.get('storage_quota', {})
-                used_gb = quota.get('usage', 0) / (1024**3)
-                total_gb = quota.get('limit', 0) / (1024**3)
+                quota = status.get("storage_quota", {})
+                used_gb = quota.get("usage", 0) / (1024**3)
+                total_gb = quota.get("limit", 0) / (1024**3)
                 print(f"   Storage: {used_gb:.2f} GB / {total_gb:.2f} GB")
             else:
                 print("❌ Not connected to Google Drive")
@@ -61,13 +61,13 @@ async def test_gdrive_integration():
             "tags": ["test", "google-drive", "integration"],
             "metadata": {
                 "source": "test_script",
-                "test_time": datetime.now().isoformat()
-            }
+                "test_time": datetime.now().isoformat(),
+            },
         }
 
         async with session.post(
             f"{BASE_URL}/api/v2/memories",
-            json=test_memory
+            json=test_memory,
         ) as resp:
             if resp.status in [200, 201]:
                 memory = await resp.json()
@@ -84,7 +84,7 @@ async def test_gdrive_integration():
         static_files = [
             "/static/gdrive-ui.html",
             "/static/css/gdrive-ui.css",
-            "/static/js/gdrive-ui.js"
+            "/static/js/gdrive-ui.js",
         ]
 
         all_good = True

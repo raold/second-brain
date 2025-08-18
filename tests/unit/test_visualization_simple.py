@@ -146,9 +146,8 @@ def main():
         if success1 and success2 and success3:
             print("\n✅ All Visualization Feature Tests: PASSED")
             return True
-        else:
-            print("\n❌ Some Visualization Feature Tests: FAILED")
-            return False
+        print("\n❌ Some Visualization Feature Tests: FAILED")
+        return False
 
     except Exception as e:
         print(f"\n❌ Visualization Feature Tests: FAILED - {e}")

@@ -31,7 +31,7 @@ async def test_reasoning_basic():
                     "memory_type": "episodic",
                     "importance_score": 0.8,
                     "created_at": "2024-01-01",
-                }
+                },
             ]
 
     db = MockDB()
@@ -45,7 +45,7 @@ async def test_reasoning_basic():
 
     # Test query parsing
     query = await engine._parse_query(
-        "What caused me to learn Python?", max_hops=3, reasoning_type=None
+        "What caused me to learn Python?", max_hops=3, reasoning_type=None,
     )
     assert query.reasoning_type == ReasoningType.CAUSAL
     assert query.max_hops == 3

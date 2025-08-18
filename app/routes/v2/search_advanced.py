@@ -3,7 +3,7 @@ Advanced search router with PostgreSQL pgvector capabilities
 Provides vector search, hybrid search, and relationship exploration
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -41,17 +41,17 @@ class HybridSearchRequest(BaseModel):
     query: str = Field(..., description="Search query")
     limit: int = Field(10, ge=1, le=100, description="Maximum results")
     vector_weight: float = Field(
-        0.5, ge=0.0, le=1.0, description="Weight for vector search (0=text only, 1=vector only)"
+        0.5, ge=0.0, le=1.0, description="Weight for vector search (0=text only, 1=vector only)",
     )
     min_score: float = Field(0.0, ge=0.0, le=1.0, description="Minimum combined score")
-    filters: Optional[Dict[str, Any]] = Field(None, description="Additional filters")
+    filters: dict[str, Any] | None = Field(None, description="Additional filters")
 
 
 class RelationshipSearchRequest(BaseModel):
     """Search for related memories"""
 
     memory_id: str = Field(..., description="Source memory ID")
-    relationship_type: Optional[str] = Field(None, description="Filter by relationship type")
+    relationship_type: str | None = Field(None, description="Filter by relationship type")
     min_strength: float = Field(0.0, ge=0.0, le=1.0, description="Minimum relationship strength")
     depth: int = Field(1, ge=1, le=3, description="Depth for graph traversal")
     limit: int = Field(10, ge=1, le=50, description="Maximum results per level")
@@ -60,7 +60,7 @@ class RelationshipSearchRequest(BaseModel):
 class SearchResponse(BaseModel):
     """Search result response"""
 
-    results: List[Dict[str, Any]]
+    results: list[dict[str, Any]]
     total: int
     search_type: str
     execution_time_ms: float
@@ -69,8 +69,8 @@ class SearchResponse(BaseModel):
 class KnowledgeGraphResponse(BaseModel):
     """Knowledge graph response"""
 
-    nodes: List[Dict[str, Any]]
-    edges: List[Dict[str, Any]]
+    nodes: list[dict[str, Any]]
+    edges: list[dict[str, Any]]
     center: str
     depth: int
 
@@ -78,7 +78,7 @@ class KnowledgeGraphResponse(BaseModel):
 class DuplicateCheckResponse(BaseModel):
     """Duplicate check response"""
 
-    duplicates: List[Dict[str, Any]]
+    duplicates: list[dict[str, Any]]
     total_found: int
     similarity_threshold: float
 
@@ -103,7 +103,7 @@ async def get_memory_service() -> MemoryServicePostgres:
     description="Search using vector embeddings for semantic similarity",
 )
 async def vector_search(
-    request: VectorSearchRequest, service: MemoryServicePostgres = Depends(get_memory_service)
+    request: VectorSearchRequest, service: MemoryServicePostgres = Depends(get_memory_service),
 ):
     """
     Perform vector similarity search using embeddings.
@@ -116,7 +116,7 @@ async def vector_search(
 
     try:
         results = await service.semantic_search(
-            query=request.query, limit=request.limit, min_similarity=request.min_similarity
+            query=request.query, limit=request.limit, min_similarity=request.min_similarity,
         )
 
         execution_time = (time.time() - start) * 1000
@@ -128,7 +128,7 @@ async def vector_search(
             execution_time_ms=execution_time,
         )
     except Exception as e:
-        logger.error(f"Vector search failed: {e}")
+        logger.exception(f"Vector search failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Vector search temporarily unavailable",
@@ -142,7 +142,7 @@ async def vector_search(
     description="Combine vector and text search for best results",
 )
 async def hybrid_search(
-    request: HybridSearchRequest, service: MemoryServicePostgres = Depends(get_memory_service)
+    request: HybridSearchRequest, service: MemoryServicePostgres = Depends(get_memory_service),
 ):
     """
     Perform hybrid search combining vector similarity and full-text search.
@@ -171,7 +171,7 @@ async def hybrid_search(
             execution_time_ms=execution_time,
         )
     except Exception as e:
-        logger.error(f"Hybrid search failed: {e}")
+        logger.exception(f"Hybrid search failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Hybrid search temporarily unavailable",
@@ -185,7 +185,7 @@ async def hybrid_search(
     description="Find memories related through explicit relationships",
 )
 async def find_related(
-    request: RelationshipSearchRequest, service: MemoryServicePostgres = Depends(get_memory_service)
+    request: RelationshipSearchRequest, service: MemoryServicePostgres = Depends(get_memory_service),
 ):
     """
     Find memories related to a given memory through relationships.
@@ -211,10 +211,10 @@ async def find_related(
             execution_time_ms=execution_time,
         )
     except Exception as e:
-        logger.error(f"Relationship search failed: {e}")
+        logger.exception(f"Relationship search failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to find related memories: {str(e)}",
+            detail=f"Failed to find related memories: {e!s}",
         )
 
 
@@ -237,17 +237,17 @@ async def build_knowledge_graph(
     """
     try:
         graph = await service.build_knowledge_graph(
-            center_memory_id=memory_id, depth=depth, min_strength=min_strength
+            center_memory_id=memory_id, depth=depth, min_strength=min_strength,
         )
 
         return KnowledgeGraphResponse(
-            nodes=graph["nodes"], edges=graph["edges"], center=graph["center"], depth=depth
+            nodes=graph["nodes"], edges=graph["edges"], center=graph["center"], depth=depth,
         )
     except Exception as e:
-        logger.error(f"Knowledge graph generation failed: {e}")
+        logger.exception(f"Knowledge graph generation failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to build knowledge graph: {str(e)}",
+            detail=f"Failed to build knowledge graph: {e!s}",
         )
 
 
@@ -272,7 +272,7 @@ async def find_duplicates(
         formatted_duplicates = []
         for memory1_id, memory2_id, similarity in duplicates[:limit]:
             formatted_duplicates.append(
-                {"memory1_id": memory1_id, "memory2_id": memory2_id, "similarity": similarity}
+                {"memory1_id": memory1_id, "memory2_id": memory2_id, "similarity": similarity},
             )
 
         return DuplicateCheckResponse(
@@ -281,10 +281,10 @@ async def find_duplicates(
             similarity_threshold=similarity_threshold,
         )
     except Exception as e:
-        logger.error(f"Duplicate detection failed: {e}")
+        logger.exception(f"Duplicate detection failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to find duplicates: {str(e)}",
+            detail=f"Failed to find duplicates: {e!s}",
         )
 
 
@@ -305,7 +305,7 @@ async def consolidate_duplicates(
     """
     try:
         results = await service.auto_consolidate_duplicates(
-            similarity_threshold=similarity_threshold, dry_run=dry_run
+            similarity_threshold=similarity_threshold, dry_run=dry_run,
         )
 
         return {
@@ -316,10 +316,10 @@ async def consolidate_duplicates(
             "message": "Dry run completed" if dry_run else "Consolidation completed",
         }
     except Exception as e:
-        logger.error(f"Consolidation failed: {e}")
+        logger.exception(f"Consolidation failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to consolidate duplicates: {str(e)}",
+            detail=f"Failed to consolidate duplicates: {e!s}",
         )
 
 
@@ -351,12 +351,12 @@ async def get_search_suggestions(
 
         return {"suggestions": suggestions, "prefix": prefix}
     except Exception as e:
-        logger.error(f"Suggestions failed: {e}")
+        logger.exception(f"Suggestions failed: {e}")
         return {"suggestions": [], "prefix": prefix}
 
 
 @router.post(
-    "/reindex", summary="Reindex memories", description="Regenerate embeddings and search indexes"
+    "/reindex", summary="Reindex memories", description="Regenerate embeddings and search indexes",
 )
 async def reindex_memories(
     batch_size: int = Query(20, ge=1, le=100, description="Batch size for processing"),
@@ -370,7 +370,7 @@ async def reindex_memories(
     """
     try:
         results = await service.generate_embeddings_for_all(
-            batch_size=batch_size, max_memories=max_memories
+            batch_size=batch_size, max_memories=max_memories,
         )
 
         return {
@@ -381,8 +381,8 @@ async def reindex_memories(
             "message": f"Reindexing completed: {results['success']}/{results['processed']} successful",
         }
     except Exception as e:
-        logger.error(f"Reindexing failed: {e}")
+        logger.exception(f"Reindexing failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to reindex memories: {str(e)}",
+            detail=f"Failed to reindex memories: {e!s}",
         )

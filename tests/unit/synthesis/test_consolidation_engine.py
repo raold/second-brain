@@ -91,14 +91,14 @@ class TestConsolidationEngine:
     def consolidation_request(self):
         """Create sample consolidation request"""
         return ConsolidationRequest(
-            memory_ids=[uuid4(), uuid4()], similarity_threshold=0.85, auto_merge=True
+            memory_ids=[uuid4(), uuid4()], similarity_threshold=0.85, auto_merge=True,
         )
 
     @pytest.mark.asyncio
     async def test_analyze_duplicates_success(self, engine, sample_memories_with_embeddings):
         """Test successful duplicate analysis"""
         engine._fetch_memories_with_embeddings = AsyncMock(
-            return_value=sample_memories_with_embeddings
+            return_value=sample_memories_with_embeddings,
         )
         engine.openai_client.generate = AsyncMock(return_value="Merge these memories")
 
@@ -184,7 +184,7 @@ class TestConsolidationEngine:
                     "content": "Much longer content with lots more detail" * 10,
                     "importance": 5,
                 },
-            ]
+            ],
         )
 
         near_group = DuplicateGroup(
@@ -221,7 +221,7 @@ class TestConsolidationEngine:
         engine._fetch_full_memories = AsyncMock(return_value=memories)
 
         group = DuplicateGroup(
-            memory_ids=[m["id"] for m in memories], similarity_score=0.95, duplicate_type="exact"
+            memory_ids=[m["id"] for m in memories], similarity_score=0.95, duplicate_type="exact",
         )
 
         result = await engine.consolidate_memories(group, MergeStrategy.KEEP_NEWEST)
@@ -253,7 +253,7 @@ class TestConsolidationEngine:
 
         engine._fetch_full_memories = AsyncMock(return_value=memories)
         engine.openai_client.generate = AsyncMock(
-            return_value="Python basics: Complete guide covering variables, functions, loops, and conditionals"
+            return_value="Python basics: Complete guide covering variables, functions, loops, and conditionals",
         )
 
         group = DuplicateGroup(
@@ -285,11 +285,11 @@ class TestConsolidationEngine:
 
         engine._fetch_full_memories = AsyncMock(return_value=memories)
         engine.openai_client.generate = AsyncMock(
-            return_value="Summary: This collection covers various aspects of the topic"
+            return_value="Summary: This collection covers various aspects of the topic",
         )
 
         group = DuplicateGroup(
-            memory_ids=[m["id"] for m in memories], similarity_score=0.75, duplicate_type="similar"
+            memory_ids=[m["id"] for m in memories], similarity_score=0.75, duplicate_type="similar",
         )
 
         result = await engine.consolidate_memories(group, MergeStrategy.CREATE_SUMMARY)
@@ -305,7 +305,7 @@ class TestConsolidationEngine:
     async def test_bulk_consolidate(self, engine, sample_memories_with_embeddings):
         """Test bulk consolidation"""
         engine._fetch_memories_with_embeddings = AsyncMock(
-            return_value=sample_memories_with_embeddings
+            return_value=sample_memories_with_embeddings,
         )
         engine.openai_client.generate = AsyncMock(return_value="Consolidated content")
 
@@ -319,8 +319,8 @@ class TestConsolidationEngine:
                     ],
                     similarity_score=0.95,
                     duplicate_type="exact",
-                )
-            ]
+                ),
+            ],
         )
 
         engine._fetch_full_memories = AsyncMock(return_value=sample_memories_with_embeddings[:2])
@@ -355,7 +355,7 @@ class TestConsolidationEngine:
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow(),
                 "tags": ["test"],
-            }
+            },
         ]
 
         engine.db.fetch_all = AsyncMock(return_value=mock_memories)

@@ -4,7 +4,7 @@ import inspect
 import time
 from collections import defaultdict
 from collections.abc import Callable
-from typing import ParamSpec, TypeVar, Union
+from typing import ParamSpec, TypeVar
 from uuid import uuid4
 
 from app.utils.logging_config import get_logger
@@ -83,7 +83,7 @@ def measure_performance(
 
                 except Exception as e:
                     duration_ms = (time.perf_counter() - start_time) * 1000
-                    logger.error(
+                    logger.exception(
                         f"Failed {op_name}: {e}",
                         extra={
                             "operation_id": operation_id,
@@ -96,54 +96,53 @@ def measure_performance(
                     raise
 
             return async_wrapper
-        else:
 
-            @functools.wraps(func)
-            def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-                start_time = time.perf_counter()
-                operation_id = str(uuid4())[:8]
+        @functools.wraps(func)
+        def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            start_time = time.perf_counter()
+            operation_id = str(uuid4())[:8]
 
-                logger.debug(
-                    f"Starting {op_name}",
-                    extra={"operation_id": operation_id, "operation_name": op_name},
-                )
+            logger.debug(
+                f"Starting {op_name}",
+                extra={"operation_id": operation_id, "operation_name": op_name},
+            )
 
-                try:
-                    result = func(*args, **kwargs)
-                    duration_ms = (time.perf_counter() - start_time) * 1000
+            try:
+                result = func(*args, **kwargs)
+                duration_ms = (time.perf_counter() - start_time) * 1000
 
-                    log_data = {
+                log_data = {
+                    "operation_id": operation_id,
+                    "operation_name": op_name,
+                    "duration_ms": round(duration_ms, 2),
+                    "status": "success",
+                }
+
+                if include_args and args:
+                    log_data["args"] = str(args)[:200]
+
+                if log_slow_queries and duration_ms > slow_threshold_ms:
+                    logger.warning(f"Slow operation: {op_name}", extra=log_data)
+                else:
+                    logger.debug(f"Completed {op_name}", extra=log_data)
+
+                return result
+
+            except Exception as e:
+                duration_ms = (time.perf_counter() - start_time) * 1000
+                logger.exception(
+                    f"Failed {op_name}: {e}",
+                    extra={
                         "operation_id": operation_id,
                         "operation_name": op_name,
                         "duration_ms": round(duration_ms, 2),
-                        "status": "success",
-                    }
+                        "status": "error",
+                        "error_type": type(e).__name__,
+                    },
+                )
+                raise
 
-                    if include_args and args:
-                        log_data["args"] = str(args)[:200]
-
-                    if log_slow_queries and duration_ms > slow_threshold_ms:
-                        logger.warning(f"Slow operation: {op_name}", extra=log_data)
-                    else:
-                        logger.debug(f"Completed {op_name}", extra=log_data)
-
-                    return result
-
-                except Exception as e:
-                    duration_ms = (time.perf_counter() - start_time) * 1000
-                    logger.error(
-                        f"Failed {op_name}: {e}",
-                        extra={
-                            "operation_id": operation_id,
-                            "operation_name": op_name,
-                            "duration_ms": round(duration_ms, 2),
-                            "status": "error",
-                            "error_type": type(e).__name__,
-                        },
-                    )
-                    raise
-
-            return sync_wrapper
+        return sync_wrapper
 
     return decorator
 
@@ -151,7 +150,7 @@ def measure_performance(
 class RateLimiter:
     """Thread-safe rate limiter for decorators."""
 
-    def __init__(self, max_calls: int, time_window: float):
+    def __init__(self, max_calls: int, time_window: float) -> None:
         self.max_calls = max_calls
         self.time_window = time_window
         self.calls = defaultdict(list)
@@ -204,8 +203,7 @@ def rate_limit(max_calls: int, time_window: float, per: str = "function"):
 
             if asyncio.iscoroutinefunction(func):
                 return await func(*args, **kwargs)
-            else:
-                return func(*args, **kwargs)
+            return func(*args, **kwargs)
 
         return wrapper
 
@@ -221,7 +219,7 @@ def retry(
     max_attempts: int = 3,
     delay: float = 1.0,
     backoff: float = 2.0,
-    exceptions: Union[type[Exception], tuple] = Exception,
+    exceptions: type[Exception] | tuple = Exception,
     on_retry: Callable | None = None,
 ):
     """
@@ -245,21 +243,20 @@ def retry(
                 try:
                     if asyncio.iscoroutinefunction(func):
                         return await func(*args, **kwargs)
-                    else:
-                        return func(*args, **kwargs)
+                    return func(*args, **kwargs)
 
                 except exceptions as e:
                     last_exception = e
 
                     if attempt == max_attempts - 1:
                         # Last attempt, don't retry
-                        logger.error(
-                            f"Function {func.__qualname__} failed after {max_attempts} attempts: {e}"
+                        logger.exception(
+                            f"Function {func.__qualname__} failed after {max_attempts} attempts: {e}",
                         )
                         raise
 
                     logger.warning(
-                        f"Attempt {attempt + 1} failed for {func.__qualname__}: {e}, retrying in {current_delay}s"
+                        f"Attempt {attempt + 1} failed for {func.__qualname__}: {e}, retrying in {current_delay}s",
                     )
 
                     if on_retry:
@@ -269,7 +266,7 @@ def retry(
                             else:
                                 on_retry(attempt, e, *args, **kwargs)
                         except Exception as callback_error:
-                            logger.error(f"Retry callback failed: {callback_error}")
+                            logger.exception(f"Retry callback failed: {callback_error}")
 
                     await asyncio.sleep(current_delay)
                     current_delay *= backoff
@@ -297,7 +294,7 @@ def circuit_breaker(
     """
 
     class CircuitBreakerState:
-        def __init__(self):
+        def __init__(self) -> None:
             self.failure_count = 0
             self.last_failure_time = None
             self.state = "closed"  # closed, open, half-open
@@ -343,7 +340,7 @@ def circuit_breaker(
                 if state.failure_count >= failure_threshold:
                     state.state = "open"
                     logger.warning(
-                        f"Circuit breaker for {func.__qualname__} opened after {state.failure_count} failures"
+                        f"Circuit breaker for {func.__qualname__} opened after {state.failure_count} failures",
                     )
 
                 raise
@@ -394,9 +391,8 @@ def memoize(max_size: int | None = 128, ttl: float | None = None, typed: bool = 
                 if not is_expired(timestamp):
                     cache_info["hits"] += 1
                     return result
-                else:
-                    # Remove expired entry
-                    del cache[key]
+                # Remove expired entry
+                del cache[key]
 
             # Cache miss - compute result
             cache_info["misses"] += 1
@@ -456,15 +452,14 @@ def validate_args(**validators):
                     try:
                         if not validator(value):
                             raise ValueError(
-                                f"Validation failed for parameter '{param_name}': {value}"
+                                f"Validation failed for parameter '{param_name}': {value}",
                             )
                     except Exception as e:
                         raise ValueError(f"Validation error for parameter '{param_name}': {e}")
 
             if asyncio.iscoroutinefunction(func):
                 return await func(*args, **kwargs)
-            else:
-                return func(*args, **kwargs)
+            return func(*args, **kwargs)
 
         return wrapper
 
@@ -492,8 +487,7 @@ def ensure_authenticated(user_param: str = "user_id"):
 
             if asyncio.iscoroutinefunction(func):
                 return await func(*args, **kwargs)
-            else:
-                return func(*args, **kwargs)
+            return func(*args, **kwargs)
 
         return wrapper
 
@@ -526,8 +520,7 @@ def with_context(**context_vars):
             try:
                 if asyncio.iscoroutinefunction(func):
                     return await func(*args, **kwargs)
-                else:
-                    return func(*args, **kwargs)
+                return func(*args, **kwargs)
             finally:
                 # Restore original context
                 wrapper._context = original_context
@@ -638,10 +631,10 @@ if __name__ == "__main__":
     class ConfigManager:
         """Example singleton class."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             self.config = {"initialized": True}
 
-    async def test_decorators():
+    async def test_decorators() -> None:
         """Test the decorator functionality."""
         # Test async function with decorators
         result1 = await example_async_function(5, 3)

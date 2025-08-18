@@ -25,7 +25,7 @@ bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
     bnb_4bit_quant_type="nf4",
     bnb_4bit_compute_dtype=torch.float16,
-    bnb_4bit_use_double_quant=True
+    bnb_4bit_use_double_quant=True,
 )
 
 try:
@@ -55,14 +55,14 @@ if vision_tower is None:
     print("   Vision tower is None, trying to initialize...")
 
     # Check what the model expects
-    if hasattr(model, 'get_model'):
+    if hasattr(model, "get_model"):
         inner_model = model.get_model()
         print(f"   Inner model type: {type(inner_model)}")
         print(f"   Has vision_tower attr: {hasattr(inner_model, 'vision_tower')}")
         print(f"   Has initialize_vision_modules: {hasattr(inner_model, 'initialize_vision_modules')}")
 
         # Check config
-        if hasattr(model, 'config'):
+        if hasattr(model, "config"):
             print("\n5. Model config:")
             config = model.config
             print(f"   mm_vision_tower: {getattr(config, 'mm_vision_tower', 'NOT SET')}")
@@ -71,20 +71,20 @@ if vision_tower is None:
             print(f"   mm_vision_select_feature: {getattr(config, 'mm_vision_select_feature', 'NOT SET')}")
 
             # Try manual initialization with config values
-            if hasattr(inner_model, 'initialize_vision_modules'):
+            if hasattr(inner_model, "initialize_vision_modules"):
                 print("\n6. Attempting manual vision tower initialization...")
 
                 class ModelArgs:
-                    def __init__(self):
-                        self.vision_tower = getattr(config, 'mm_vision_tower', 'openai/clip-vit-large-patch14-336')
-                        self.mm_vision_select_layer = getattr(config, 'mm_vision_select_layer', -2)
-                        self.mm_vision_select_feature = getattr(config, 'mm_vision_select_feature', 'patch')
-                        self.pretrain_mm_mlp_adapter = getattr(config, 'mm_projector', None)
+                    def __init__(self) -> None:
+                        self.vision_tower = getattr(config, "mm_vision_tower", "openai/clip-vit-large-patch14-336")
+                        self.mm_vision_select_layer = getattr(config, "mm_vision_select_layer", -2)
+                        self.mm_vision_select_feature = getattr(config, "mm_vision_select_feature", "patch")
+                        self.pretrain_mm_mlp_adapter = getattr(config, "mm_projector", None)
                         self.tune_mm_mlp_adapter = False
                         self.freeze_mm_mlp_adapter = False
-                        self.mm_projector_type = getattr(config, 'mm_projector_type', 'linear')
-                        self.mm_use_im_start_end = getattr(config, 'mm_use_im_start_end', False)
-                        self.mm_use_im_patch_token = getattr(config, 'mm_use_im_patch_token', True)
+                        self.mm_projector_type = getattr(config, "mm_projector_type", "linear")
+                        self.mm_use_im_start_end = getattr(config, "mm_use_im_start_end", False)
+                        self.mm_use_im_patch_token = getattr(config, "mm_use_im_patch_token", True)
 
                 model_args = ModelArgs()
                 print(f"   Vision tower path: {model_args.vision_tower}")
@@ -92,7 +92,7 @@ if vision_tower is None:
                 try:
                     inner_model.initialize_vision_modules(
                         model_args=model_args,
-                        fsdp=None
+                        fsdp=None,
                     )
                     print("   [OK] Vision modules initialized")
 
@@ -111,7 +111,7 @@ if vision_tower is not None:
     print(f"   Type: {type(vision_tower)}")
     print(f"   Has image_processor: {hasattr(vision_tower, 'image_processor')}")
 
-    if hasattr(vision_tower, 'image_processor'):
+    if hasattr(vision_tower, "image_processor"):
         processor = vision_tower.image_processor
         print(f"   Processor type: {type(processor)}")
         print(f"   Processor config: {processor}")
@@ -119,12 +119,12 @@ if vision_tower is not None:
         print("   No image_processor attribute!")
 
         # Try to access it differently
-        if hasattr(vision_tower, 'vision_tower'):
+        if hasattr(vision_tower, "vision_tower"):
             inner_tower = vision_tower.vision_tower
             print(f"   Inner tower type: {type(inner_tower)}")
 
         # Check for config
-        if hasattr(vision_tower, 'config'):
+        if hasattr(vision_tower, "config"):
             print(f"   Vision config: {vision_tower.config}")
 else:
     print("   Vision tower is still None!")
@@ -138,7 +138,7 @@ try:
     clip_models = [
         "openai/clip-vit-large-patch14-336",
         "openai/clip-vit-large-patch14",
-        model_name  # Try from the LLaVA model itself
+        model_name,  # Try from the LLaVA model itself
     ]
 
     for clip_model in clip_models:
@@ -160,9 +160,9 @@ print("\n9. Testing process_images function:")
 from PIL import Image
 
 # Create test image
-test_img = Image.new('RGB', (336, 336), color='blue')
+test_img = Image.new("RGB", (336, 336), color="blue")
 
-if 'image_processor' in locals():
+if "image_processor" in locals():
     try:
         # Test process_images
         from llava.mm_utils import process_images

@@ -6,28 +6,25 @@ Second Brain v5.0 - A **100% local AI-powered** knowledge management system with
 ## Development Environment
 
 ### Quick Setup
-1. **Virtual Environment**: Project uses `.venv` - Claude will activate it automatically
-2. **Default Port**: 8001 for development server (8000 for Docker)
-3. **Database**: SQLite/mock for quick dev, PostgreSQL for full stack
+1. **Docker Required**: All development uses Docker - no Python installation needed
+2. **Default Port**: 8000 for all services
+3. **Database**: PostgreSQL with pgvector (managed by Docker)
 
 ### Key Commands
 ```bash
-# Start development server (port 8001)
-python scripts/run_dev.py           # Uses SQLite/mock mode
-
-# Docker operations (when needed)
-docker-compose up -d                # Full stack with PostgreSQL
+# Start all services (port 8000)
+docker-compose up -d                # Start full stack
 docker-compose logs -f app          # View logs
 docker-compose down                 # Stop services
+docker-compose restart app          # Restart after code changes
 
-# Testing
-pytest tests/unit/ -v               # Unit tests
-make test-smoke                     # Quick smoke tests (<60s)
-make test-fast                      # Core tests (<5min)
+# Run commands inside container
+docker exec -it secondbrain-app python -m pytest tests/unit/ -v
+docker exec -it secondbrain-app ruff check .
+docker exec -it secondbrain-app black .
 
-# Code quality
-make format                         # Auto-format code
-make lint                          # Run linters
+# Database access
+docker exec -it secondbrain-postgres psql -U secondbrain
 ```
 
 ### Platform Optimizations
@@ -81,37 +78,32 @@ wsl docker-compose logs -f app
 
 ## Platform-Specific Quick Reference
 
-### Windows 11 + WSL2 (Recommended Workflow)
+### Windows 11 (Docker Desktop Required)
 ```bash
-# Docker/Container operations - ALWAYS use WSL2
-wsl docker-compose up -d
-wsl docker ps
-wsl docker-compose logs -f app
-wsl docker exec -it secondbrain-postgres psql -U secondbrain
+# All operations through Docker - no Python installation needed
+docker-compose up -d                # Start services
+docker ps                           # Check status
+docker-compose logs -f app          # View logs
+docker exec -it secondbrain-postgres psql -U secondbrain
 
-# Python/Development - Use native Windows
-.venv\Scripts\python.exe scripts\run_dev.py
-.venv\Scripts\python.exe -m pytest tests/unit/ -v
+# Running tests and tools
+docker exec -it secondbrain-app python -m pytest tests/unit/ -v
+docker exec -it secondbrain-app ruff check .
+docker exec -it secondbrain-app black .
 
-# File operations - Choose based on need
-wsl grep -r "pattern" .            # Fast Unix-style search
-wsl find . -name "*.py"            # Unix find
-cmd.exe /c "dir /s *.py"           # Windows alternative
-
-# Process management
-cmd.exe /c "netstat -ano | findstr :8001"
+# Port management (if needed)
+netstat -ano | findstr :8000
 taskkill /PID <pid> /F
 ```
 
-### macOS M4 / Linux (Native)
+### macOS / Linux
 ```bash
-# Everything runs natively
+# All operations through Docker
 docker-compose up -d
 docker ps
-.venv/bin/python scripts/run_dev.py
-.venv/bin/python -m pytest tests/unit/ -v
-lsof -i :8001                      # macOS
-ss -tlnp | grep 8001               # Linux
+docker exec -it secondbrain-app python -m pytest tests/unit/ -v
+lsof -i :8000                      # macOS
+ss -tlnp | grep 8000               # Linux
 ```
 
 ### Why WSL2 on Windows?
@@ -152,14 +144,12 @@ ss -tlnp | grep 8001               # Linux
 1. Copy `.env.example` to `.env`
 2. Key variables:
    - `DATABASE_URL` - PostgreSQL connection (defaults to SQLite for dev)
-   - `USE_MOCK_DATABASE=true` - Use mock storage for quick development
-   - `OPENAI_API_KEY` - Optional, for enhanced features
+      - `OPENAI_API_KEY` - Optional, for enhanced features
    - `ENVIRONMENT=development` - Environment mode
 
 ### Development Modes
-- **Full Stack**: `make dev` (Docker with PostgreSQL + pgvector)
-- **Quick Mode**: `python scripts/run_dev.py` (SQLite + mock storage)
-- **GPU Services**: `cd services/gpu && python llava_api.py` (local vision models)
+- **Full Stack**: `docker-compose up -d` (PostgreSQL + pgvector + app)
+- **GPU Services**: `docker-compose -f docker-compose.gpu.yml up -d` (includes vision models)
 
 ## Testing Strategy
 The project uses a tiered testing approach:
@@ -185,15 +175,14 @@ The project uses a tiered testing approach:
 ## Common Tasks
 - View logs: `make logs` or `docker-compose logs -f app`
 - Database shell: `make db-shell` or connect to PostgreSQL on port 5432
-- Run specific test: `.venv\Scripts\python -m pytest tests/unit/test_memory_service.py -v`
+- Run specific test: `docker exec -it secondbrain-app python -m pytest tests/unit/test_memory_service.py -v`
 - Check health: `curl http://localhost:8001/health`
 - View API docs: http://localhost:8001/docs
 
 ## Important Notes
-- Docker-first development approach - prefer `make` commands
-- The `.venv` is used as fallback when Docker isn't available
-- Use `USE_MOCK_DATABASE=true` for rapid development without PostgreSQL
-- Frontend development: `cd frontend && npm run dev`
+- Docker-only development - no local Python needed
+- All commands run through Docker containers
+- Frontend development: `docker exec -it secondbrain-frontend npm run dev`
 - All linting/formatting should pass before committing
 
 ## Claude Assistant Guidelines
@@ -213,9 +202,9 @@ Claude automatically detects your platform from the environment and adjusts comm
 Commands in this file are platform-agnostic - Claude will adapt them using the optimal approach for your system
 
 ### Session Behavior
-1. **Automatically on start**: Activate `.venv` silently using the right method for your OS
-2. **Smart command execution**: If a command fails, Claude will try platform-appropriate alternatives
-3. **Port awareness**: Defaults to port 8001 for development (our standard)
+1. **Docker first**: All operations use Docker containers
+2. **Smart command execution**: Claude uses docker exec for running commands
+3. **Port awareness**: Always uses port 8000 (Docker standard)
 
 ### Development Standards
 - Read existing code before making changes to match conventions

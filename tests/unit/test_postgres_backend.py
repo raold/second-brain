@@ -22,7 +22,7 @@ from app.storage.postgres_unified import PostgresUnifiedBackend
 # Skip tests if PostgreSQL is not available
 pytestmark = pytest.mark.skipif(
     not os.getenv("TEST_DATABASE_URL"),
-    reason="TEST_DATABASE_URL not set"
+    reason="TEST_DATABASE_URL not set",
 )
 
 
@@ -30,7 +30,7 @@ pytestmark = pytest.mark.skipif(
 async def postgres_backend():
     """Create a test PostgreSQL backend"""
     backend = PostgresUnifiedBackend(
-        os.getenv("TEST_DATABASE_URL", "postgresql://localhost/test_second_brain")
+        os.getenv("TEST_DATABASE_URL", "postgresql://localhost/test_second_brain"),
     )
     await backend.initialize()
 
@@ -52,7 +52,7 @@ async def memory_service():
     """Create a test memory service"""
     service = MemoryServicePostgres(
         connection_string=os.getenv("TEST_DATABASE_URL"),
-        enable_embeddings=False  # Disable for tests
+        enable_embeddings=False,  # Disable for tests
     )
     await service.initialize()
 
@@ -70,22 +70,22 @@ def sample_memories():
             "memory_type": "knowledge",
             "importance_score": 0.8,
             "tags": ["python", "programming"],
-            "metadata": {"category": "technology"}
+            "metadata": {"category": "technology"},
         },
         {
             "content": "Machine learning uses statistical methods",
             "memory_type": "knowledge",
             "importance_score": 0.9,
             "tags": ["ml", "ai"],
-            "metadata": {"category": "technology"}
+            "metadata": {"category": "technology"},
         },
         {
             "content": "PostgreSQL is a powerful database system",
             "memory_type": "knowledge",
             "importance_score": 0.7,
             "tags": ["database", "postgresql"],
-            "metadata": {"category": "technology"}
-        }
+            "metadata": {"category": "technology"},
+        },
     ]
 
 
@@ -153,7 +153,7 @@ async def test_update_memory(postgres_backend, sample_memories):
     updates = {
         "content": "Python is an interpreted programming language",
         "importance_score": 0.9,
-        "tags": ["python", "programming", "interpreted"]
+        "tags": ["python", "programming", "interpreted"],
     }
 
     updated = await postgres_backend.update_memory(created["id"], updates)
@@ -208,21 +208,21 @@ async def test_list_memories_with_filters(postgres_backend, sample_memories):
     # Filter by memory type
     knowledge_memories = await postgres_backend.list_memories(
         memory_type="knowledge",
-        container_id="test"
+        container_id="test",
     )
     assert len(knowledge_memories) == 3
 
     # Filter by tags
     python_memories = await postgres_backend.list_memories(
         tags=["python"],
-        container_id="test"
+        container_id="test",
     )
     assert len(python_memories) == 1
 
     # Filter by importance
     important_memories = await postgres_backend.list_memories(
         min_importance=0.8,
-        container_id="test"
+        container_id="test",
     )
     assert len(important_memories) == 2
 
@@ -258,7 +258,7 @@ async def test_vector_search(postgres_backend, sample_memories, sample_embedding
     results = await postgres_backend.vector_search(
         embedding=sample_embedding,
         limit=2,
-        container_id="test"
+        container_id="test",
     )
 
     assert len(results) <= 2
@@ -282,7 +282,7 @@ async def test_hybrid_search(postgres_backend, sample_memories, sample_embedding
         embedding=sample_embedding,
         limit=3,
         vector_weight=0.5,
-        container_id="test"
+        container_id="test",
     )
 
     assert len(results) > 0
@@ -308,7 +308,7 @@ async def test_create_relationship(postgres_backend, sample_memories):
         source_id=memory1["id"],
         target_id=memory2["id"],
         relationship_type="related",
-        strength=0.8
+        strength=0.8,
     )
 
     assert relationship["id"] is not None
@@ -330,16 +330,16 @@ async def test_get_related_memories(postgres_backend, sample_memories):
 
     # Create relationships
     await postgres_backend.create_relationship(
-        memories[0]["id"], memories[1]["id"], "similar", 0.9
+        memories[0]["id"], memories[1]["id"], "similar", 0.9,
     )
     await postgres_backend.create_relationship(
-        memories[0]["id"], memories[2]["id"], "related", 0.7
+        memories[0]["id"], memories[2]["id"], "related", 0.7,
     )
 
     # Get related memories
     related = await postgres_backend.get_related_memories(
         memory_id=memories[0]["id"],
-        min_strength=0.6
+        min_strength=0.6,
     )
 
     assert len(related) == 2
@@ -362,7 +362,7 @@ async def test_consolidate_memories(postgres_backend, sample_memories):
     consolidated = await postgres_backend.consolidate_memories(
         source_ids=memory_ids,
         consolidated_content="Combined knowledge about Python and ML",
-        consolidation_type="merge"
+        consolidation_type="merge",
     )
 
     assert consolidated["id"] is not None
@@ -378,9 +378,9 @@ async def test_find_duplicates(postgres_backend, sample_embedding):
     memory1 = await postgres_backend.create_memory(
         {
             "content": "Test memory 1",
-            "container_id": "test"
+            "container_id": "test",
         },
-        sample_embedding
+        sample_embedding,
     )
 
     # Create nearly identical embedding
@@ -388,9 +388,9 @@ async def test_find_duplicates(postgres_backend, sample_embedding):
     memory2 = await postgres_backend.create_memory(
         {
             "content": "Test memory 2",
-            "container_id": "test"
+            "container_id": "test",
         },
-        similar_embedding
+        similar_embedding,
     )
 
     # Find duplicates
@@ -437,13 +437,13 @@ async def test_record_search_history(postgres_backend, sample_embedding):
         selected_ids=[str(uuid.uuid4()), str(uuid.uuid4())],
         search_type="hybrid",
         metadata={"user_action": "clicked"},
-        container_id="test"
+        container_id="test",
     )
 
     # Verify search was recorded (would need a getter method)
     async with postgres_backend.acquire() as conn:
         count = await conn.fetchval(
-            "SELECT COUNT(*) FROM search_history WHERE container_id = 'test'"
+            "SELECT COUNT(*) FROM search_history WHERE container_id = 'test'",
         )
         assert count > 0
 
@@ -459,7 +459,7 @@ async def test_service_create_and_search(memory_service):
         memory_type="test",
         importance_score=0.5,
         tags=["test"],
-        generate_embedding=False
+        generate_embedding=False,
     )
 
     assert memory is not None
@@ -478,31 +478,31 @@ async def test_service_knowledge_graph(memory_service):
     # Create connected memories
     memory1 = await memory_service.create_memory(
         content="Central memory",
-        generate_embedding=False
+        generate_embedding=False,
     )
 
     memory2 = await memory_service.create_memory(
         content="Related memory 1",
-        generate_embedding=False
+        generate_embedding=False,
     )
 
     memory3 = await memory_service.create_memory(
         content="Related memory 2",
-        generate_embedding=False
+        generate_embedding=False,
     )
 
     # Create relationships
     await memory_service.create_relationship(
-        memory1["id"], memory2["id"], "related", 0.8
+        memory1["id"], memory2["id"], "related", 0.8,
     )
     await memory_service.create_relationship(
-        memory1["id"], memory3["id"], "related", 0.7
+        memory1["id"], memory3["id"], "related", 0.7,
     )
 
     # Build knowledge graph
     graph = await memory_service.build_knowledge_graph(
         center_memory_id=memory1["id"],
-        depth=1
+        depth=1,
     )
 
     assert len(graph["nodes"]) >= 1
@@ -514,20 +514,20 @@ async def test_service_knowledge_graph(memory_service):
 async def test_service_auto_consolidation(memory_service):
     """Test automatic consolidation of duplicates"""
     # Create similar memories
-    memory1 = await memory_service.create_memory(
+    await memory_service.create_memory(
         content="Duplicate content here",
-        generate_embedding=False
+        generate_embedding=False,
     )
 
-    memory2 = await memory_service.create_memory(
+    await memory_service.create_memory(
         content="Duplicate content here",
-        generate_embedding=False
+        generate_embedding=False,
     )
 
     # Run auto-consolidation (dry run)
     results = await memory_service.auto_consolidate_duplicates(
         similarity_threshold=0.95,
-        dry_run=True
+        dry_run=True,
     )
 
     assert results["dry_run"] is True
@@ -547,7 +547,7 @@ async def test_bulk_insert_performance(postgres_backend):
             "content": f"Bulk test memory {i}",
             "memory_type": "test",
             "importance_score": 0.5,
-            "container_id": "test"
+            "container_id": "test",
         })
 
     start = time.time()
@@ -562,7 +562,7 @@ async def test_bulk_insert_performance(postgres_backend):
 
     # Verify all were created
     count_query = """
-        SELECT COUNT(*) FROM memories 
+        SELECT COUNT(*) FROM memories
         WHERE container_id = 'test' AND memory_type = 'test'
     """
     async with postgres_backend.acquire() as conn:
@@ -580,7 +580,7 @@ async def test_search_performance(postgres_backend, sample_memories):
         memory_data = {
             "content": f"Performance test memory {i} with searchable content",
             "memory_type": "test",
-            "container_id": "test"
+            "container_id": "test",
         }
         await postgres_backend.create_memory(memory_data)
 

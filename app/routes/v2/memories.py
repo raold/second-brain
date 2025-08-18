@@ -4,7 +4,6 @@ Handles creation, retrieval, update, and deletion of memories
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
@@ -35,15 +34,15 @@ class MemoryBase(BaseModel):
     content: str = Field(..., min_length=1, max_length=50000, description="Memory content")
     memory_type: str = Field("generic", description="Type of memory")
     importance_score: float = Field(0.5, ge=0, le=1, description="Importance score")
-    tags: List[str] = Field(default_factory=list, max_items=20)
-    metadata: Dict = Field(default_factory=dict)
+    tags: list[str] = Field(default_factory=list, max_items=20)
+    metadata: dict = Field(default_factory=dict)
 
 
 class MemoryCreate(MemoryBase):
     """Memory creation request"""
 
-    embedding_model: Optional[str] = Field(
-        "text-embedding-ada-002", description="Embedding model to use"
+    embedding_model: str | None = Field(
+        "text-embedding-ada-002", description="Embedding model to use",
     )
     auto_tag: bool = Field(True, description="Automatically generate tags")
     auto_importance: bool = Field(True, description="Automatically calculate importance")
@@ -52,11 +51,11 @@ class MemoryCreate(MemoryBase):
 class MemoryUpdate(BaseModel):
     """Memory update request - all fields optional"""
 
-    content: Optional[str] = None
-    memory_type: Optional[str] = None
-    importance_score: Optional[float] = Field(None, ge=0, le=1)
-    tags: Optional[List[str]] = None
-    metadata: Optional[Dict] = None
+    content: str | None = None
+    memory_type: str | None = None
+    importance_score: float | None = Field(None, ge=0, le=1)
+    tags: list[str] | None = None
+    metadata: dict | None = None
 
 
 class Memory(MemoryBase):
@@ -66,7 +65,7 @@ class Memory(MemoryBase):
     created_at: datetime
     updated_at: datetime
     access_count: int = 0
-    last_accessed: Optional[datetime] = None
+    last_accessed: datetime | None = None
 
 
 class MemoryResponse(BaseModel):
@@ -74,14 +73,14 @@ class MemoryResponse(BaseModel):
 
     success: bool
     memory: Memory
-    message: Optional[str] = None
+    message: str | None = None
 
 
 class MemoriesResponse(BaseModel):
     """Multiple memories response with pagination"""
 
     success: bool
-    memories: List[Memory]
+    memories: list[Memory]
     total: int
     page: int
     page_size: int
@@ -100,7 +99,7 @@ async def get_memory_service() -> MemoryService:
 async def validate_pagination(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-) -> Dict[str, int]:
+) -> dict[str, int]:
     """Validate pagination parameters"""
     return {
         "page": page,
@@ -155,11 +154,11 @@ async def create_memory(
         )
 
         return MemoryResponse(
-            success=True, memory=memory_obj, message="Memory created successfully"
+            success=True, memory=memory_obj, message="Memory created successfully",
         )
 
     except Exception as e:
-        logger.error(f"Error creating memory: {e}")
+        logger.exception(f"Error creating memory: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
@@ -198,15 +197,15 @@ async def get_memory(memory_id: UUID, memory_service: MemoryService = Depends(ge
     description="List all memories with optional filtering and pagination",
 )
 async def list_memories(
-    pagination: Dict[str, int] = Depends(validate_pagination),
-    memory_type: Optional[str] = Query(None, description="Filter by memory type"),
-    tags: Optional[List[str]] = Query(None, description="Filter by tags"),
-    importance_min: Optional[float] = Query(None, ge=0, le=1),
+    pagination: dict[str, int] = Depends(validate_pagination),
+    memory_type: str | None = Query(None, description="Filter by memory type"),
+    tags: list[str] | None = Query(None, description="Filter by tags"),
+    importance_min: float | None = Query(None, ge=0, le=1),
     memory_service: MemoryService = Depends(get_memory_service),
 ):
     """List memories with advanced filtering and pagination"""
     memories_data = await memory_service.list_memories(
-        limit=pagination["limit"], offset=pagination["offset"]
+        limit=pagination["limit"], offset=pagination["offset"],
     )
 
     memories = []
@@ -230,7 +229,7 @@ async def list_memories(
                 created_at=datetime.fromisoformat(mem_data["created_at"]),
                 updated_at=datetime.fromisoformat(mem_data["updated_at"]),
                 access_count=mem_data.get("access_count", 0),
-            )
+            ),
         )
 
     total = len(memories_data) * 10  # Estimate
@@ -272,7 +271,7 @@ async def update_memory(
 
     if not updated_data:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update memory"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update memory",
         )
 
     memory = Memory(
@@ -304,7 +303,7 @@ async def delete_memory(
     success = await memory_service.delete_memory(str(memory_id))
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete memory"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete memory",
         )
 
     return {"success": True, "message": "Memory deleted successfully"}
