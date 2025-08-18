@@ -9,6 +9,21 @@ Second Brain v5.0 - A **100% local AI-powered** knowledge management system with
 1. **Docker Required**: All development uses Docker - no Python installation needed
 2. **Default Port**: 8000 for all services
 3. **Database**: PostgreSQL with pgvector (managed by Docker)
+4. **GPU Services**: Run on Windows host (CLIP:8002, LLaVA:8003, LM Studio:1234)
+
+### Network Architecture (Windows + Docker)
+```
+Windows Host (your machine)
+├── Browser → http://localhost:8000 (accesses Docker container)
+├── CLIP Service (port 8002) - GPU image embeddings
+├── LM Studio (port 1234) - Text generation & embeddings
+└── Docker Containers
+    ├── secondbrain-app (8000) → uses host.docker.internal:8002 for CLIP
+    ├── secondbrain-postgres (5432) - Vector database
+    └── secondbrain-adminer (8080) - Database UI
+```
+
+**Key Point**: Containers use `host.docker.internal` to reach Windows services
 
 ### Key Commands
 ```bash

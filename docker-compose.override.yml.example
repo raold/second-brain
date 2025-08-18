@@ -1,0 +1,45 @@
+# Docker Compose Override Template
+# Copy this to docker-compose.override.yml and uncomment your platform section
+
+services:
+  app:
+    # ============================================
+    # WINDOWS - Uncomment this section for Windows
+    # ============================================
+    # environment:
+    #   # GPU Services running on Windows host
+    #   - CLIP_SERVICE_URL=http://host.docker.internal:8002
+    #   - LLAVA_SERVICE_URL=http://host.docker.internal:8003
+    #   - LM_STUDIO_URL=http://host.docker.internal:1234
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+
+    # ============================================
+    # MAC - Uncomment this section for macOS
+    # ============================================
+    # environment:
+    #   # GPU Services running on Mac host
+    #   - CLIP_SERVICE_URL=http://host.docker.internal:8002
+    #   - LLAVA_SERVICE_URL=http://host.docker.internal:8003
+    #   - LM_STUDIO_URL=http://host.docker.internal:1234
+    # # Note: host.docker.internal works natively on Mac
+
+    # ============================================
+    # LINUX - Uncomment this section for Linux
+    # ============================================
+    # environment:
+    #   # GPU Services running on Linux host
+    #   - CLIP_SERVICE_URL=http://172.17.0.1:8002  # Docker bridge IP
+    #   - LLAVA_SERVICE_URL=http://172.17.0.1:8003
+    #   - LM_STUDIO_URL=http://172.17.0.1:1234
+    # # Alternative for newer Docker versions:
+    # # extra_hosts:
+    # #   - "host.docker.internal:host-gateway"
+    
+    # ============================================
+    # COMMON SETTINGS - Always active
+    # ============================================
+    environment:
+      - DATABASE_URL=postgresql://secondbrain:changeme@postgres:5432/secondbrain
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO

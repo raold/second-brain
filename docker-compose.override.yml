@@ -1,0 +1,29 @@
+# Docker Compose Override for Windows Development
+# This file automatically extends docker-compose.yml
+# Handles Windows-specific networking and host service connections
+
+services:
+  app:
+    # Windows host service connections
+    # host.docker.internal resolves to Windows host IP
+    environment:
+      # GPU Services running on Windows host
+      - CLIP_SERVICE_URL=http://host.docker.internal:8002
+      - LLAVA_SERVICE_URL=http://host.docker.internal:8003
+      - LM_STUDIO_URL=http://host.docker.internal:1234
+      
+      # Database - use container name for internal networking
+      - DATABASE_URL=postgresql://secondbrain:changeme@postgres:5432/secondbrain
+      
+      # Development settings
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+      
+    # Additional Windows-specific settings
+    extra_hosts:
+      # Ensure host.docker.internal works on all Docker versions
+      - "host.docker.internal:host-gateway"
+    
+    # Development tools - uncomment to enable
+    # stdin_open: true  # Keep stdin open (docker run -i)
+    # tty: true         # Allocate pseudo-TTY (docker run -t)

@@ -120,8 +120,18 @@ class PipelineManager:
         elif self.status == PipelineStatus.IDLE:
             # Initialize processor if not already done
             if not self.processor:
-                self.processor = GooglePhotosProcessor()
-                await self.processor.initialize()
+                try:
+                    print("🔧 Initializing GooglePhotosProcessor...")
+                    self.processor = GooglePhotosProcessor()
+                    await self.processor.initialize()
+                    # Pass pipeline manager reference for updates
+                    self.processor.pipeline_manager = self
+                    print("✅ GooglePhotosProcessor initialized successfully")
+                except Exception as e:
+                    import traceback
+                    print(f"❌ Failed to initialize processor: {e}")
+                    print(f"Traceback: {traceback.format_exc()}")
+                    raise
 
             # Start processing in background task
             self.status = PipelineStatus.RUNNING
@@ -178,7 +188,10 @@ class PipelineManager:
                 print(f"❌ Path does not exist: {takeout_path}")
                 zip_files = []
 
-            self.metrics["total_files"] = len(zip_files) * 100  # Estimate 100 images per zip
+            # Better estimate based on actual zip content
+            estimated_images_per_zip = 2000  # More realistic for 10GB zips
+            self.metrics["total_files"] = len(zip_files) * estimated_images_per_zip
+            self.metrics["total_zip_files"] = len(zip_files)
             self.metrics["current_zip"] = "Scanning for zip files..."
 
             await self.broadcast_update({
@@ -203,22 +216,39 @@ class PipelineManager:
 
                 try:
                     # Process the zip file
+                    print(f"🔄 Starting to process {zip_file.name}")
+                    
+                    # Create a callback to update metrics in real-time
+                    async def update_progress(count: int):
+                        self.metrics["processed_files"] = count
+                        self.calculate_performance_metrics()
+                        await self.broadcast_update({
+                            "type": "metrics",
+                            "metrics": self.metrics,
+                        })
+                    
+                    # Pass the callback to the processor
                     processed = await self.processor.extract_and_process_zip(zip_file)
                     self.metrics["processed_files"] += processed
+                    self.metrics["processed_zips"] += 1
+                    print(f"✅ Processed {processed} files from {zip_file.name}")
 
-                    # Calculate performance metrics
+                    # Final update
                     self.calculate_performance_metrics()
-
                     await self.broadcast_update({
                         "type": "metrics",
                         "metrics": self.metrics,
                     })
 
                 except Exception as e:
+                    import traceback
+                    error_msg = f"Failed to process {zip_file.name}: {e!s}"
+                    print(f"❌ {error_msg}")
+                    print(f"Traceback: {traceback.format_exc()}")
                     self.metrics["failed_files"] += 1
                     await self.broadcast_update({
                         "type": "error",
-                        "message": f"Failed to process {zip_file.name}: {e!s}",
+                        "message": error_msg,
                         "metrics": self.metrics,
                     })
 

@@ -122,7 +122,8 @@
       "Bash(wsl .venv/Scripts/pip.exe install -r requirements.txt)",
       "Bash(wsl:*)",
       "Bash(.venv/Scripts/python.exe -m uvicorn:*)",
-      "Bash(.venv\\Scripts\\python.exe -m uvicorn:*)"
+      "Bash(.venv\\Scripts\\python.exe -m uvicorn:*)",
+      "Bash(docker inspect:*)"
     ],
     "deny": [],
     "additionalDirectories": []

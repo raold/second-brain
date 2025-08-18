@@ -65,17 +65,25 @@ git clone https://github.com/raold/second-brain.git
 cd second-brain
 ```
 
-### 2. Start Everything with Docker
+### 2. Platform Setup (One-time)
 ```bash
 # Copy environment file
 cp .env.example .env
 
-# Start all services
-docker-compose up -d
+# Auto-configure for your platform
+./setup-platform.sh     # Mac/Linux
+# OR
+setup-platform.bat      # Windows (coming soon)
+```
 
-# Or use the convenience script:
-./dev.bat start     # Windows
-./dev.sh start      # Mac/Linux
+### 3. Start Everything
+```bash
+# Quick start with platform-specific script:
+./start-dev.sh          # Mac/Linux  
+./start-dev.bat         # Windows
+
+# OR manually with Docker:
+docker-compose up -d
 ```
 
 ### 3. Access the Application
@@ -90,13 +98,6 @@ For GPU-accelerated vision features:
 # Start GPU services with Docker
 docker-compose -f docker-compose.gpu.yml up -d
 ```
-
-## ⚙️ Models
-| Component | Default | Source | Approx Size |
-|-----------|---------|--------|-------------|
-| Text/Vision (LLaVA) | llava-1.6-mistral-7b Q6_K | LM Studio | ~5–7 GB |
-| Text Embeddings | nomic-embed-text | Hugging Face | ~300 MB |
-| CLIP | ViT-L/14 | Hugging Face | ~1 GB |
 
 ## 📊 **Architecture**
 
@@ -143,6 +144,13 @@ GOOGLE_CLIENT_ID=your_client_id
 GOOGLE_CLIENT_SECRET=your_client_secret
 GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/api/v1/gdrive/callback
 ```
+
+## ⚙️ Models
+| Component | Default | Source | Approx Size |
+|-----------|---------|--------|-------------|
+| Text/Vision (LLaVA) | llava-1.6-mistral-7b Q6_K | LM Studio | ~5–7 GB |
+| Text Embeddings | nomic-embed-text | Hugging Face | ~300 MB |
+| CLIP | ViT-L/14 | Hugging Face | ~1 GB |
 
 ## 📈 **Performance**
 

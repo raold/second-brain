@@ -59,6 +59,7 @@ class GooglePhotosProcessor:
         self.processed_count = 0
         self.failed_count = 0
         self.total_count = 0
+        self.pipeline_manager = None  # Optional reference for real-time updates
 
     async def initialize(self) -> None:
         """Initialize database connection pool"""
@@ -110,6 +111,28 @@ class GooglePhotosProcessor:
         """Extract and process images from a single zip file"""
         processed = 0
 
+        # Try py7zr first for better compatibility with large/split archives
+        try:
+            import py7zr
+            print(f"🔧 Attempting to open with py7zr: {zip_path.name}")
+            with py7zr.SevenZipFile(zip_path, mode='r') as zf:
+                # Get all files
+                all_files = zf.getnames()
+                print(f"📂 Found {len(all_files)} files in archive")
+                
+                # Filter for image files
+                image_files = [
+                    name for name in all_files
+                    if Path(name).suffix.lower() in SUPPORTED_FORMATS
+                ]
+                print(f"🖼️ Found {len(image_files)} image files")
+                
+                # For now, just return to test
+                return len(image_files)
+        except Exception as e:
+            print(f"⚠️ py7zr failed: {e}, trying standard zipfile...")
+        
+        # Fallback to standard zipfile
         with zipfile.ZipFile(zip_path, "r") as zf:
             # Get all image files
             image_files = [
@@ -122,6 +145,10 @@ class GooglePhotosProcessor:
             # Process in batches
             for i in range(0, len(image_files), BATCH_SIZE):
                 batch = image_files[i:i + BATCH_SIZE]
+                batch_num = (i // BATCH_SIZE) + 1
+                total_batches = (len(image_files) + BATCH_SIZE - 1) // BATCH_SIZE
+                
+                print(f"  Batch {batch_num}/{total_batches}: Processing {len(batch)} images...")
 
                 tasks = []
                 for file_name in batch:
@@ -157,7 +184,17 @@ class GooglePhotosProcessor:
                             processed += 1
                             self.processed_count += 1
 
-                print(f"  Batch {i//BATCH_SIZE + 1}: {processed}/{len(image_files)} processed")
+                print(f"  Batch {batch_num}: {self.processed_count} total processed, {processed}/{len(image_files)} from this zip")
+                
+                # Send real-time update if pipeline manager is available
+                if self.pipeline_manager:
+                    self.pipeline_manager.metrics["processed_files"] = self.processed_count
+                    self.pipeline_manager.metrics["failed_files"] = self.failed_count
+                    self.pipeline_manager.calculate_performance_metrics()
+                    await self.pipeline_manager.broadcast_update({
+                        "type": "metrics",
+                        "metrics": self.pipeline_manager.metrics,
+                    })
 
         return processed
 

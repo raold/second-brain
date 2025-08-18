@@ -199,9 +199,12 @@ def create_app(config_name: str = "development") -> FastAPI:
         logger.info("✅ Google Drive routes loaded")
 
         # Add the Google Drive pipeline for processing files
-        from app.routes.gdrive_pipeline import router as gdrive_pipeline_router
-        app.include_router(gdrive_pipeline_router, tags=["Google Drive Pipeline"])
-        logger.info("✅ Google Drive Pipeline loaded")
+        try:
+            from app.routes.gdrive_pipeline import router as gdrive_pipeline_router
+            app.include_router(gdrive_pipeline_router, tags=["Google Drive Pipeline"])
+            logger.info("✅ Google Drive Pipeline loaded")
+        except ImportError as e:
+            logger.warning(f"Failed to import Google Drive pipeline routes: {e}")
 
         # Photo Pipeline Routes
         try:
