@@ -5,12 +5,11 @@
 
 ### 100% Local AI-Powered Knowledge Management System
 
-[![Documentation](https://img.shields.io/badge/docs-GitHub_Pages-blue)](https://raold.github.io/second-brain/)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://docker.com/)
+[![Docker Required](https://img.shields.io/badge/Docker-Required-orange.svg)](https://www.docker.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
 [![pgvector](https://img.shields.io/badge/pgvector-0.8.0-blue.svg)](https://github.com/pgvector/pgvector)
-[![Docker Required](https://img.shields.io/badge/Docker-Required-orange.svg)](https://www.docker.com/)
 
 </div>
 
