@@ -5,6 +5,7 @@ Extracts images from zip files, generates embeddings, and stores in PostgreSQL
 
 import asyncio
 import io
+import os
 import sys
 
 # Force UTF-8 encoding for Windows console
@@ -38,7 +39,11 @@ import contextlib
 from app.core.service_config import config
 
 # Get all configuration from central source
-TAKEOUT_PATH = config.TAKEOUT_PATH
+# Use Windows path if available, otherwise Docker mount
+if os.path.exists("G:/My Drive/Takeout"):
+    TAKEOUT_PATH = "G:/My Drive/Takeout"
+else:
+    TAKEOUT_PATH = config.TAKEOUT_PATH
 CLIP_SERVICE_URL = config.get_clip_url()
 LLAVA_SERVICE_URL = config.get_llava_url()
 DATABASE_URL = config.get_database_url()
@@ -208,6 +213,11 @@ class GooglePhotosProcessor:
         """Process a single image: generate embedding and store in database"""
 
         try:
+            # Skip tiny files (likely corrupted)
+            if len(image_data) < 100:
+                print(f"  ⏭️  Skipping {file_name} (too small, likely corrupted)")
+                return False
+                
             # Check if already processed
             async with self.pool.acquire() as conn:
                 exists = await conn.fetchval(

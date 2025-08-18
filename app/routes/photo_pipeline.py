@@ -160,7 +160,10 @@ class PipelineManager:
         try:
             # Get all zip files to process
             # Check if running in Docker or locally
-            if os.path.exists("/takeout"):
+            if os.path.exists("/takeout_local") and list(Path("/takeout_local").glob("*.zip")):
+                takeout_path = Path("/takeout_local")  # Docker local copy
+                print(f"📁 Using Docker local copy: {takeout_path}")
+            elif os.path.exists("/takeout") and list(Path("/takeout").glob("*.zip")):
                 takeout_path = Path("/takeout")  # Docker mount
                 print(f"📁 Using Docker mount: {takeout_path}")
             elif os.path.exists("G:/My Drive/Takeout"):
@@ -180,9 +183,8 @@ class PipelineManager:
                 print(f"📊 Total files in directory: {len(all_files)}")
                 zip_files = sorted(takeout_path.glob("*.zip"))
                 print(f"📦 Total zip files found: {len(zip_files)}")
-                # Filter for the ones we want
-                zip_files = sorted([f for f in zip_files
-                                  if "-1-" in f.name or f.name.endswith("-032.zip")])
+                # Process ALL zip files
+                zip_files = sorted(zip_files)
                 print(f"✅ Filtered zip files to process: {len(zip_files)}")
             else:
                 print(f"❌ Path does not exist: {takeout_path}")

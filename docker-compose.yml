@@ -18,7 +18,7 @@ services:
     volumes:
       - .:/app:rw
       - /app/.venv  # Exclude .venv from mount
-      - "./takeout:/takeout:ro"  # Mount local takeout folder
+      - "G:\\My Drive\\Takeout:/takeout:ro"  # Mount Google Drive Takeout folder (Windows format)
     depends_on:
       postgres:
         condition: service_healthy

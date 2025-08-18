@@ -51,7 +51,7 @@ class TestApplicationFactory:
 
         data = response.json()
         assert data["environment"] == "testing"
-        assert data["version"] == "4.2.3"
+        assert data["version"] == "5.0.0"
         assert "ready" in data
 
     def test_health_endpoint(self):

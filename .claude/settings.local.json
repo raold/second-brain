@@ -123,7 +123,10 @@
       "Bash(wsl:*)",
       "Bash(.venv/Scripts/python.exe -m uvicorn:*)",
       "Bash(.venv\\Scripts\\python.exe -m uvicorn:*)",
-      "Bash(docker inspect:*)"
+      "Bash(docker inspect:*)",
+      "Bash(docker cp \"$file\" secondbrain-app:/takeout_local/)",
+      "Bash(do docker cp \"$file\" secondbrain-app:/takeout_local/)",
+      "Bash(docker cp:*)"
     ],
     "deny": [],
     "additionalDirectories": []
