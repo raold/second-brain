@@ -244,10 +244,12 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## 🔮 **Roadmap**
 
+- [ ] Apple Silicon optimization
 - [ ] Ollama integration
 - [ ] Web UI improvements
 - [ ] Mobile apps
 - [ ] Voice input/output
+- [ ] Self-supervised learning
 - [ ] Automated model optimization
 - [ ] Multi-user support
 - [ ] Federated learning
