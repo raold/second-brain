@@ -122,15 +122,18 @@ def create_lifespan(config_name: str):
 
 
 async def periodic_persistence(memory_service, interval: int = 30) -> None:
-    """Periodically persist memories to disk"""
+    """Periodically persist memories to disk (only for mock storage)"""
     while True:
         try:
             await asyncio.sleep(interval)
-            await memory_service.save_to_disk()
-            logger.debug("💾 Periodic persistence checkpoint")
+            # Only save to disk if using mock storage
+            if hasattr(memory_service, 'save_to_disk'):
+                await memory_service.save_to_disk()
+                logger.debug("💾 Periodic persistence checkpoint")
         except asyncio.CancelledError:
             # Final save before exit
-            await memory_service.save_to_disk()
+            if hasattr(memory_service, 'save_to_disk'):
+                await memory_service.save_to_disk()
             raise
         except Exception as e:
             logger.exception(f"Persistence error: {e}")
