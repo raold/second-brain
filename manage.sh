@@ -1,5 +1,6 @@
 #!/bin/bash
-# Docker-only development script
+# Docker management script for Mac/Linux
+# Use start-dev.sh for initial setup and startup
 
 case "$1" in
   start)

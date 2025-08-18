@@ -1,5 +1,6 @@
 @echo off
-REM Docker-only development script for Windows
+REM Docker management script for Windows
+REM Use start-dev.bat for initial setup and startup
 
 if "%1"=="start" (
     echo Starting Second Brain services...

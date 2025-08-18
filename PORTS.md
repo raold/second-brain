@@ -48,7 +48,7 @@ Windows Host Machine
 docker-compose up -d
 
 # Or use convenience script
-./dev.bat start
+./manage.bat start
 ```
 
 ### 2. GPU Services on Windows Host
