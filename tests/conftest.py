@@ -200,7 +200,6 @@ def mock_external_services():
     """Auto-mock external services to prevent network calls in CI."""
     with (
         patch("httpx.AsyncClient") as mock_client,
-        patch("openai.AsyncOpenAI") as mock_openai,
         patch("asyncpg.create_pool") as mock_pg_pool,
     ):
 
@@ -212,7 +211,6 @@ def mock_external_services():
 
         yield {
             "http_client": mock_client,
-            "openai_client": mock_openai,
             "pg_pool": mock_pg_pool,
         }
 
@@ -246,7 +244,8 @@ class MockDependencies:
 
     def __init__(self):
         self.database = AsyncMock()
-        self.openai_client = AsyncMock()
+        self.lm_studio_client = AsyncMock()  # Local LM Studio instead of OpenAI
+        self.clip_client = AsyncMock()  # CLIP service for image embeddings
         self.setup_defaults()
 
     def setup_defaults(self):
@@ -255,10 +254,13 @@ class MockDependencies:
         self.database.list_memories.return_value = []
         self.database.get_memory.return_value = None
 
-        # OpenAI defaults
+        # LM Studio defaults (local embeddings)
         embedding_response = MagicMock()
-        embedding_response.data = [MagicMock(embedding=[0.1] * 1536)]
-        self.openai_client.embeddings.create.return_value = embedding_response
+        embedding_response.embeddings = [[0.1] * 768]  # Nomic uses 768 dimensions
+        self.lm_studio_client.create_embedding.return_value = embedding_response
+        
+        # CLIP defaults
+        self.clip_client.embed_image.return_value = {"embeddings": [[0.1] * 768]}
 
 
 
