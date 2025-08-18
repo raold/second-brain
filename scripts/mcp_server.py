@@ -23,7 +23,7 @@ class SecondBrainMCP:
     """
 
     def __init__(self) -> None:
-        self.base_url = os.getenv("SECOND_BRAIN_URL", "http://localhost:8001")
+        self.base_url = os.getenv("SECOND_BRAIN_URL", "http://localhost:8000")
         self.api_key = os.getenv("API_KEY", "")
         self.client = None
 

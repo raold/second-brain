@@ -58,7 +58,7 @@ curl http://localhost:8000/
 # Use mock database (no PostgreSQL needed)
 python scripts/run_dev.py
 
-# API will be available at http://localhost:8001
+# API will be available at http://localhost:8000
 ```
 
 ### 4. Verify Installation

@@ -37,7 +37,7 @@ def setup_cipher_mcp() -> bool:
                     str(Path(__file__).parent / "mcp_server.py"),
                 ],
                 "env": {
-                    "SECOND_BRAIN_URL": "http://localhost:8001",
+                    "SECOND_BRAIN_URL": "http://localhost:8000",
                     "API_KEY": os.getenv("API_KEY", ""),
                 },
             },
@@ -54,12 +54,12 @@ def setup_cipher_mcp() -> bool:
     # Create VS Code settings
     vscode_settings = {
         "cipher.enabled": True,
-        "cipher.serverUrl": "http://localhost:8001",
+        "cipher.serverUrl": "http://localhost:8000",
         "cipher.syncInterval": 300,
         "mcp.servers": {
             "second-brain": {
                 "enabled": True,
-                "url": "http://localhost:8001",
+                "url": "http://localhost:8000",
             },
         },
     }
@@ -93,11 +93,11 @@ def setup_cipher_mcp() -> bool:
     print("\nFor Claude Desktop:")
     print("  1. Open Claude Desktop settings")
     print("  2. Add MCP server configuration:")
-    print("     - Server URL: http://localhost:8001")
+    print("     - Server URL: http://localhost:8000")
     print(f"     - Config path: {config_file}")
 
     print("\nFor other IDEs:")
-    print("  1. Point to Second Brain API: http://localhost:8001")
+    print("  1. Point to Second Brain API: http://localhost:8000")
     print("  2. Use API key from .env file")
     print("  3. Enable auto-sync if available")
 

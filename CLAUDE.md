@@ -70,8 +70,8 @@ wsl docker-compose logs -f app
 - **Solution**: Save as UTF-8 without BOM in VS Code/Notepad++
 
 ### Issue: Port already in use
-- **Windows**: `cmd.exe /c "netstat -ano | findstr :8001"` then `taskkill /PID <pid> /F`
-- **Mac/Linux**: `lsof -i :8001` then `kill -9 <pid>`
+- **Windows**: `cmd.exe /c "netstat -ano | findstr :8000"` then `taskkill /PID <pid> /F`
+- **Mac/Linux**: `lsof -i :8000` then `kill -9 <pid>`
 
 ### Issue: venv activation doesn't persist
 - **All platforms**: Just use direct paths: `.venv\Scripts\python.exe` (Windows) or `.venv/bin/python` (Unix)
@@ -115,7 +115,7 @@ ss -tlnp | grep 8000               # Linux
 ## Project Architecture
 
 ### Core Services
-- **FastAPI Backend** (port 8001) - Main application server
+- **FastAPI Backend** (port 8000) - Main application server
 - **PostgreSQL + pgvector** (port 5432) - Vector database for embeddings
 - **LM Studio** (port 1234) - Local text generation (LLaVA 1.6 Mistral 7B)
 - **CLIP Service** (port 8002) - Image embeddings and similarity
@@ -176,8 +176,8 @@ The project uses a tiered testing approach:
 - View logs: `make logs` or `docker-compose logs -f app`
 - Database shell: `make db-shell` or connect to PostgreSQL on port 5432
 - Run specific test: `docker exec -it secondbrain-app python -m pytest tests/unit/test_memory_service.py -v`
-- Check health: `curl http://localhost:8001/health`
-- View API docs: http://localhost:8001/docs
+- Check health: `curl http://localhost:8000/health`
+- View API docs: http://localhost:8000/docs
 
 ## Important Notes
 - Docker-only development - no local Python needed

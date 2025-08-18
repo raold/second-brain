@@ -68,7 +68,7 @@ python process_all_photos.py  # Process Google Takeout archives
 ### Create a Memory
 
 ```bash
-curl -X POST http://localhost:8001/api/v2/memories \
+curl -X POST http://localhost:8000/api/v2/memories \
   -H "Content-Type: application/json" \
   -d '{
     "content": "Important meeting notes from today",
@@ -80,13 +80,13 @@ curl -X POST http://localhost:8001/api/v2/memories \
 ### Search Memories
 
 ```bash
-curl http://localhost:8001/api/v2/memories/search?query="meeting"
+curl http://localhost:8000/api/v2/memories/search?query="meeting"
 ```
 
 ### Get Statistics
 
 ```bash
-curl http://localhost:8001/api/v2/statistics
+curl http://localhost:8000/api/v2/statistics
 ```
 
 ## 🏗️ Architecture
@@ -95,7 +95,7 @@ Second Brain v5.0 features a comprehensive AI stack:
 
 ### Core Services
 - **PostgreSQL + pgvector** - Vector database (port 5432)
-- **FastAPI** - Main API server (port 8000/8001)
+- **FastAPI** - Main API server (port 8000)
 - **CLIP Service** - Image embeddings (port 8002)
 - **LLaVA (LM Studio)** - Vision understanding (port 1234)
 

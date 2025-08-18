@@ -21,7 +21,7 @@ cd "/Users/dro/Library/CloudStorage/GoogleDrive-dro@lynchburgsmiles.com/My Drive
 ```
 
 ### 2. Open the UI
-Go to: http://localhost:8001/static/gdrive-ui.html
+Go to: http://localhost:8000/static/gdrive-ui.html
 
 ### 3. Connect Google Drive
 1. Click "Connect Google Drive"

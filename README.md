@@ -6,7 +6,6 @@
 ### 100% Local AI-Powered Knowledge Management System
 
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://docker.com/)
-[![Docker Required](https://img.shields.io/badge/Docker-Required-orange.svg)](https://www.docker.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
 [![pgvector](https://img.shields.io/badge/pgvector-0.8.0-blue.svg)](https://github.com/pgvector/pgvector)
@@ -35,6 +34,7 @@ Second Brain is your personal AI-powered knowledge management system that runs *
 
 ### 📁 **Google Drive Integration**
 - OAuth 2.0 authentication
+- Stream files using Google Drive API - no storage required
 - Automatic document synchronization
 - Process Google Docs, Sheets, PDFs, and images
 - Maintain folder structure and metadata
@@ -139,7 +139,7 @@ LLAVA_SERVICE_URL=http://127.0.0.1:8003
 # Google Drive (optional)
 GOOGLE_CLIENT_ID=your_client_id
 GOOGLE_CLIENT_SECRET=your_client_secret
-GOOGLE_REDIRECT_URI=http://127.0.0.1:8001/api/v1/gdrive/callback
+GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/api/v1/gdrive/callback
 ```
 
 ## 📈 **Performance**
@@ -216,7 +216,7 @@ docker-compose up --build
 
 ## 📚 **Documentation**
 
-- [API Documentation](http://localhost:8001/docs)
+- [API Documentation](http://localhost:8000/docs)
 - [Architecture Guide](docs/ARCHITECTURE.md)
 - [Setup Guide](docs/SETUP.md)
 - [Contributing](CONTRIBUTING.md)

@@ -21,7 +21,7 @@ class GoogleDriveSimple:
         self.client_id = os.getenv("GOOGLE_CLIENT_ID")
         self.client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
         self.redirect_uri = os.getenv(
-            "GOOGLE_REDIRECT_URI", "http://localhost:8001/api/v1/gdrive/callback",
+            "GOOGLE_REDIRECT_URI", "http://localhost:8000/api/v1/gdrive/callback",
         )
 
         # Store tokens in memory for single user

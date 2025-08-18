@@ -67,7 +67,7 @@ python services/gpu/llava/llava_api.py    # Port 8003
 # LM Studio - start manually on port 1234
 
 # Main backend
-uvicorn app.main:app --port 8001
+uvicorn app.main:app --port 8000
 ```
 
 3. **Update your .env**:

@@ -73,7 +73,7 @@ ENCRYPTION_KEY=test-encryption-key
         print()
         print("🚀 Next steps:")
         print("1. Restart the application if it's running")
-        print("2. Open http://localhost:8001/static/gdrive-ui.html")
+        print("2. Open http://localhost:8000/static/gdrive-ui.html")
         print("3. Click 'Connect Google Drive'")
         return
 
@@ -122,7 +122,7 @@ ENCRYPTION_KEY=test-encryption-key
         print()
         print("🚀 Next steps:")
         print("1. Start the application: ./start_with_gdrive.sh")
-        print("2. Open http://localhost:8001/static/gdrive-ui.html")
+        print("2. Open http://localhost:8000/static/gdrive-ui.html")
         print("3. Click 'Connect Google Drive'")
     else:
         print()
