@@ -33,18 +33,15 @@ except ImportError:
     HEIC_SUPPORT = False
     print("⚠️ HEIC support not available. Install pillow-heif for HEIC processing.")
 
-# Configuration
-# Detect if running in WSL and adjust path
-import platform
-if 'microsoft' in platform.uname().release.lower():
-    TAKEOUT_PATH = "/mnt/g/My Drive/Takeout"  # WSL path
-else:
-    TAKEOUT_PATH = "G:/My Drive/Takeout"  # Windows path
-# Use localhost for native Windows, or host IP for WSL
-CLIP_SERVICE_URL = os.getenv("CLIP_SERVICE_URL", "http://localhost:8002")
-LLAVA_SERVICE_URL = os.getenv("LLAVA_SERVICE_URL", "http://127.0.0.1:1234")
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://secondbrain:changeme@localhost/secondbrain")
-BATCH_SIZE = 20  # Process 20 images at a time
+# Configuration - Use centralized config
+from app.core.service_config import config
+
+# Get all configuration from central source
+TAKEOUT_PATH = config.TAKEOUT_PATH
+CLIP_SERVICE_URL = config.get_clip_url()
+LLAVA_SERVICE_URL = config.get_llava_url()
+DATABASE_URL = config.get_database_url()
+BATCH_SIZE = config.PHOTO_BATCH_SIZE
 
 # Include HEIC/HEIF if support is available
 SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
@@ -446,12 +443,21 @@ async def main():
         
         # Check CLIP service
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{CLIP_SERVICE_URL}/") as response:
-                if response.status != 200:
-                    print("❌ CLIP service not available. Please start it first.")
-                    return
-                status = await response.json()
-                print(f"✅ CLIP service ready: {status}")
+            try:
+                async with session.get(f"{CLIP_SERVICE_URL}/") as response:
+                    if response.status != 200:
+                        print("❌ CLIP service not available. Please start it first:")
+                        print("   cd services/gpu/clip")
+                        print("   python clip_api.py")
+                        return
+                    status = await response.json()
+                    print(f"✅ CLIP service ready: {status}")
+            except Exception as e:
+                print("❌ CLIP service not available at port 8002")
+                print("   Please start CLIP service:")
+                print("   cd services/gpu/clip")
+                print("   python clip_api.py")
+                return
         
         # Ask user for mode
         print("\nSelect mode:")

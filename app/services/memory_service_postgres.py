@@ -532,10 +532,7 @@ class MemoryServicePostgres:
 
             # For single embedding, process immediately
             embedding = await self._local_client.get_embedding(text)
-            if embedding:
-                return embedding
-
-            return response.data[0].embedding
+            return embedding  # Will be None if generation failed
 
         except Exception as e:
             logger.error(f"Failed to generate embedding: {e}")
@@ -555,8 +552,6 @@ class MemoryServicePostgres:
                 emb = await self._local_client.get_embedding(txt)
                 if emb:
                     embeddings.append(emb)
-
-            embeddings = [item.embedding for item in response.data]
 
             # Clear queue and return last embedding
             self._embedding_queue.clear()

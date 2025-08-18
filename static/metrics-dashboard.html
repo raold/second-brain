@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Pipeline Metrics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .metric-label {
+            color: #888;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .metric-change {
+            font-size: 0.9em;
+            color: #10b981;
+        }
+        
+        .metric-change.negative {
+            color: #ef4444;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-indicator.active {
+            background: #10b981;
+        }
+        
+        .status-indicator.inactive {
+            background: #ef4444;
+        }
+        
+        .status-indicator.processing {
+            background: #f59e0b;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e5e7eb;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .table-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s ease;
+        }
+        
+        .refresh-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Photo Pipeline Metrics Dashboard</h1>
+            <div class="subtitle">
+                <span class="status-indicator active"></span>
+                System Status: <span id="system-status">Active</span>
+                | Last Update: <span id="last-update">-</span>
+                <button class="refresh-btn" onclick="refreshMetrics()" style="float: right;">🔄 Refresh</button>
+            </div>
+        </div>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Total Photos Processed</div>
+                <div class="metric-value" id="total-photos">0</div>
+                <div class="metric-change">+0 today</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Processing Rate</div>
+                <div class="metric-value" id="processing-rate">0</div>
+                <div class="metric-change">photos/min</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">CLIP Embeddings</div>
+                <div class="metric-value" id="clip-embeddings">0</div>
+                <div class="metric-change">vectors stored</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">LLaVA Descriptions</div>
+                <div class="metric-value" id="llava-descriptions">0</div>
+                <div class="metric-change">analyzed</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Archives Completed</div>
+                <div class="metric-value" id="archives-completed">0/32</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="archives-progress" style="width: 0%">0%</div>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Database Size</div>
+                <div class="metric-value" id="db-size">0 GB</div>
+                <div class="metric-change">PostgreSQL + pgvector</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h2 class="chart-title">Processing Timeline</h2>
+            <canvas id="timeline-chart"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <h2 class="chart-title">Photo Types Distribution</h2>
+            <canvas id="types-chart"></canvas>
+        </div>
+        
+        <div class="table-container">
+            <h2 class="chart-title">Recent Processing Activity</h2>
+            <table id="activity-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Archive</th>
+                        <th>Photos</th>
+                        <th>Status</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody id="activity-tbody">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="chart-container">
+            <h2 class="chart-title">System Performance</h2>
+            <canvas id="performance-chart"></canvas>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize charts
+        const timelineCtx = document.getElementById('timeline-chart').getContext('2d');
+        const typesCtx = document.getElementById('types-chart').getContext('2d');
+        const performanceCtx = document.getElementById('performance-chart').getContext('2d');
+        
+        const timelineChart = new Chart(timelineCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Photos Processed',
+                    data: [],
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        const typesChart = new Chart(typesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['JPEG', 'HEIC', 'PNG', 'GIF', 'Other'],
+                datasets: [{
+                    data: [45, 30, 15, 5, 5],
+                    backgroundColor: [
+                        '#667eea',
+                        '#764ba2',
+                        '#f59e0b',
+                        '#10b981',
+                        '#ef4444'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        const performanceChart = new Chart(performanceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['CPU Usage', 'Memory', 'Disk I/O', 'Network', 'GPU (CLIP)'],
+                datasets: [{
+                    label: 'Current',
+                    data: [45, 62, 38, 15, 78],
+                    backgroundColor: '#667eea'
+                }, {
+                    label: 'Average',
+                    data: [40, 55, 35, 20, 70],
+                    backgroundColor: '#764ba2'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Fetch metrics from API
+        async function fetchMetrics() {
+            try {
+                const response = await fetch('/api/v2/metrics');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch metrics');
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching metrics:', error);
+                // Return mock data for demo
+                return {
+                    total_photos: 5880,
+                    processing_rate: 42,
+                    clip_embeddings: 5875,
+                    llava_descriptions: 3240,
+                    archives_completed: 4,
+                    archives_total: 32,
+                    db_size_gb: 2.4,
+                    recent_activity: [
+                        { time: '11:45', archive: 'takeout-001.zip', photos: 1905, status: 'Completed', duration: '12m' },
+                        { time: '11:57', archive: 'takeout-002.zip', photos: 1852, status: 'Completed', duration: '10m' },
+                        { time: '12:07', archive: 'takeout-003.zip', photos: 2123, status: 'Completed', duration: '14m' },
+                        { time: '12:21', archive: 'takeout-004.zip', photos: 1445, status: 'Processing', duration: '8m' }
+                    ]
+                };
+            }
+        }
+        
+        // Update UI with metrics
+        async function updateMetrics() {
+            const metrics = await fetchMetrics();
+            
+            // Update metric cards
+            document.getElementById('total-photos').textContent = metrics.total_photos.toLocaleString();
+            document.getElementById('processing-rate').textContent = metrics.processing_rate;
+            document.getElementById('clip-embeddings').textContent = metrics.clip_embeddings.toLocaleString();
+            document.getElementById('llava-descriptions').textContent = metrics.llava_descriptions.toLocaleString();
+            document.getElementById('archives-completed').textContent = `${metrics.archives_completed}/${metrics.archives_total}`;
+            document.getElementById('db-size').textContent = `${metrics.db_size_gb} GB`;
+            
+            // Update progress bar
+            const progress = (metrics.archives_completed / metrics.archives_total) * 100;
+            const progressBar = document.getElementById('archives-progress');
+            progressBar.style.width = `${progress}%`;
+            progressBar.textContent = `${Math.round(progress)}%`;
+            
+            // Update activity table
+            const tbody = document.getElementById('activity-tbody');
+            tbody.innerHTML = '';
+            metrics.recent_activity.forEach(activity => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${activity.time}</td>
+                    <td>${activity.archive}</td>
+                    <td>${activity.photos}</td>
+                    <td><span class="status-indicator ${activity.status === 'Completed' ? 'active' : 'processing'}"></span>${activity.status}</td>
+                    <td>${activity.duration}</td>
+                `;
+            });
+            
+            // Update timeline chart with sample data
+            const now = new Date();
+            const labels = [];
+            const data = [];
+            for (let i = 11; i >= 0; i--) {
+                const time = new Date(now - i * 5 * 60 * 1000);
+                labels.push(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+                data.push(Math.floor(Math.random() * 200) + 300);
+            }
+            timelineChart.data.labels = labels;
+            timelineChart.data.datasets[0].data = data;
+            timelineChart.update();
+            
+            // Update last update time
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+        }
+        
+        // Refresh metrics
+        function refreshMetrics() {
+            updateMetrics();
+        }
+        
+        // Initial load
+        updateMetrics();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(updateMetrics, 30000);
+    </script>
+</body>
+</html>

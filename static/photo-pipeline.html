@@ -143,6 +143,7 @@
         }
         .processing { animation: pulse 2s infinite; }
     </style>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>"><text y='.9em' font-size='90'>🧠</text></svg>">
 </head>
 <body>
     <div class="container">
@@ -235,8 +236,8 @@
         let ws = null;
         let currentStatus = 'idle';
         const wsUrl = window.location.protocol === 'https:' ? 
-            `wss://${window.location.host}/photo-pipeline/ws` : 
-            `ws://${window.location.host}/photo-pipeline/ws`;
+            `wss://${window.location.host}/api/photo-pipeline/ws` : 
+            `ws://${window.location.host}/api/photo-pipeline/ws`;
 
         function connectWebSocket() {
             ws = new WebSocket(wsUrl);
@@ -356,15 +357,15 @@
         }
 
         async function startProcessing() {
-            await fetch('/photo-pipeline/start', { method: 'POST' });
+            await fetch('/api/photo-pipeline/start', { method: 'POST' });
         }
 
         async function pauseProcessing() {
-            await fetch('/photo-pipeline/pause', { method: 'POST' });
+            await fetch('/api/photo-pipeline/pause', { method: 'POST' });
         }
 
         async function stopProcessing() {
-            await fetch('/photo-pipeline/stop', { method: 'POST' });
+            await fetch('/api/photo-pipeline/stop', { method: 'POST' });
         }
 
         // Connect on load

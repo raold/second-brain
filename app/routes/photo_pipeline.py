@@ -5,6 +5,7 @@ Provides web interface for monitoring and controlling photo processing
 
 import asyncio
 import json
+import os
 import time
 from datetime import datetime
 from pathlib import Path
@@ -118,9 +119,16 @@ class PipelineManager:
                 "message": "Processing resumed"
             })
         elif self.status == PipelineStatus.IDLE:
-            # Processing logic would go here
-            # For now, just update status
+            # Initialize processor if not already done
+            if not self.processor:
+                self.processor = GooglePhotosProcessor()
+                await self.processor.initialize()
+            
+            # Start processing in background task
             self.status = PipelineStatus.RUNNING
+            self.metrics["start_time"] = time.time()
+            self.current_task = asyncio.create_task(self._run_processing())
+            
             await self.broadcast_update({
                 "type": "status",
                 "status": self.status.value,
@@ -138,11 +146,111 @@ class PipelineManager:
                 "message": "Processing paused"
             })
     
+    async def _run_processing(self):
+        """Run the actual processing logic"""
+        try:
+            # Get all zip files to process
+            # Check if running in Docker or locally
+            if os.path.exists("/takeout"):
+                takeout_path = Path("/takeout")  # Docker mount
+                print(f"📁 Using Docker mount: {takeout_path}")
+            elif os.path.exists("G:/My Drive/Takeout"):
+                takeout_path = Path("G:/My Drive/Takeout")  # Windows local
+                print(f"📁 Using Windows path: {takeout_path}")
+            else:
+                takeout_path = Path("./takeout")  # Fallback to local folder
+                print(f"📁 Using fallback path: {takeout_path}")
+            
+            # Log what we're looking for
+            print(f"🔍 Looking for zip files in: {takeout_path}")
+            print(f"📂 Path exists: {takeout_path.exists()}")
+            
+            # Try to list all files first
+            if takeout_path.exists():
+                all_files = list(takeout_path.glob("*"))
+                print(f"📊 Total files in directory: {len(all_files)}")
+                zip_files = sorted([f for f in takeout_path.glob("*.zip")])
+                print(f"📦 Total zip files found: {len(zip_files)}")
+                # Filter for the ones we want
+                zip_files = sorted([f for f in zip_files 
+                                  if '-1-' in f.name or f.name.endswith('-032.zip')])
+                print(f"✅ Filtered zip files to process: {len(zip_files)}")
+            else:
+                print(f"❌ Path does not exist: {takeout_path}")
+                zip_files = []
+            
+            self.metrics["total_files"] = len(zip_files) * 100  # Estimate 100 images per zip
+            self.metrics["current_zip"] = "Scanning for zip files..."
+            
+            await self.broadcast_update({
+                "type": "metrics",
+                "metrics": self.metrics
+            })
+            
+            # Process each zip file
+            for zip_file in zip_files:
+                if self.status != PipelineStatus.RUNNING:
+                    break
+                    
+                # Wait if paused
+                await self.pause_event.wait()
+                
+                self.metrics["current_zip"] = zip_file.name
+                await self.broadcast_update({
+                    "type": "processing",
+                    "current_zip": zip_file.name,
+                    "metrics": self.metrics
+                })
+                
+                try:
+                    # Process the zip file
+                    processed = await self.processor.extract_and_process_zip(zip_file)
+                    self.metrics["processed_files"] += processed
+                    
+                    # Calculate performance metrics
+                    self.calculate_performance_metrics()
+                    
+                    await self.broadcast_update({
+                        "type": "metrics",
+                        "metrics": self.metrics
+                    })
+                    
+                except Exception as e:
+                    self.metrics["failed_files"] += 1
+                    await self.broadcast_update({
+                        "type": "error",
+                        "message": f"Failed to process {zip_file.name}: {str(e)}",
+                        "metrics": self.metrics
+                    })
+            
+            # Processing complete
+            self.status = PipelineStatus.COMPLETED
+            await self.broadcast_update({
+                "type": "completed",
+                "status": self.status.value,
+                "message": "All processing complete!",
+                "metrics": self.metrics
+            })
+            
+        except asyncio.CancelledError:
+            # Task was cancelled (stop was called)
+            pass
+        except Exception as e:
+            self.status = PipelineStatus.ERROR
+            await self.broadcast_update({
+                "type": "error",
+                "status": self.status.value,
+                "message": f"Pipeline error: {str(e)}",
+                "metrics": self.metrics
+            })
+    
     async def stop_processing(self):
         """Stop processing completely"""
         if self.current_task:
             self.current_task.cancel()
+            self.current_task = None
         self.status = PipelineStatus.IDLE
+        self.pause_event.set()  # Release any pause
         await self.broadcast_update({
             "type": "status",
             "status": self.status.value,
@@ -155,7 +263,8 @@ pipeline_manager = PipelineManager()
 @router.get("/", response_class=HTMLResponse)
 async def get_dashboard():
     """Serve the photo pipeline dashboard"""
-    with open("app/static/photo-pipeline.html", "r") as f:
+    # Fix path to work from container's /app directory
+    with open("static/photo-pipeline.html", "r") as f:
         return HTMLResponse(content=f.read())
 
 @router.websocket("/ws")

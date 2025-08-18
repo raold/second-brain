@@ -132,7 +132,7 @@ async def app_with_mocks(mock_database, mock_openai_client):
         patch("app.utils.openai_client.get_openai_client", return_value=mock_openai_client),
     ):
 
-        from app.app import app
+        from app.main import app
 
         yield app
 

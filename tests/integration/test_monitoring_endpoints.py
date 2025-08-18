@@ -214,6 +214,7 @@ class TestMonitoringEndpoints:
     async def test_metrics_data_consistency(self, client: AsyncClient, api_key: str):
         """Test consistency of metrics data across requests"""
         # Make two requests to metrics endpoint
+        import asyncio
         response1 = await client.get("/metrics", params={"api_key": api_key})
         await asyncio.sleep(0.1)  # Small delay
         response2 = await client.get("/metrics", params={"api_key": api_key})

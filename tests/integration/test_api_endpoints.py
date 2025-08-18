@@ -212,6 +212,7 @@ class TestMockDatabaseEdgeCases:
     @pytest.mark.asyncio
     async def test_uninitialized_database(self):
         """Test operations on uninitialized database."""
+        from app.storage.mock_storage import MockDatabase
         db = MockDatabase()
 
         with pytest.raises(RuntimeError, match="Database not initialized"):

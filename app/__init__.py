@@ -1,9 +1,9 @@
 """
-Second Brain - AI-Powered Knowledge Management System
-Version 4.0.0
+Second Brain - 100% Local AI-Powered Knowledge Management System
+Version 5.0.0 - Fully Local, No API Keys Required
 """
 
-__version__ = "4.2.3"
+__version__ = "5.0.0"
 __author__ = "raold"
 __email__ = "dro@lynchburgsmiles.com"
-__description__ = "AI-powered second brain with Cipher memory integration"
+__description__ = "100% local AI-powered second brain with multimodal search and knowledge graph"

@@ -108,8 +108,19 @@
       "Bash(wsl python3:*)",
       "Bash(wsl ip route:*)",
       "Bash(wsl ls:*)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "Bash(wsl sudo service docker start:*)",
+      "Bash(wsl tail:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker restart:*)",
+      "Bash(wsl find . -name \"*.py\")",
+      "Bash(wsl find . -name '*.py')",
+      "Bash(.venv\\Scripts\\pip.exe install:*)",
+      "Bash(ruff check:*)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "C:\\Users\\dro\\Library"
+    ]
   }
 }

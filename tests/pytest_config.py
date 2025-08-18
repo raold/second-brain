@@ -16,7 +16,7 @@ sys.path.insert(0, str(project_root))
 # Set test environment variables
 os.environ.update({
     'TESTING': 'true',
-    '    'PYTHONIOENCODING': 'utf-8',
+    'PYTHONIOENCODING': 'utf-8',
     'PYTHONPATH': str(project_root),
 })
 
@@ -40,7 +40,7 @@ def mock_env_vars(monkeypatch):
         'DATABASE_URL': 'sqlite:///:memory:',
         'REDIS_URL': 'redis://localhost:6379/1',
         'JWT_SECRET_KEY': 'test-secret-key',
-        '    }
+    }
 
     for key, value in test_vars.items():
         monkeypatch.setenv(key, value)

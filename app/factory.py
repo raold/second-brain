@@ -10,12 +10,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import __version__
 from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
-
-# Version
-__version__ = "4.2.3"
 
 
 class AppState:
@@ -198,21 +196,30 @@ def create_app(config_name: str = "development") -> FastAPI:
         app.include_router(websocket_router, prefix="/api/v2", tags=["Real-time"])
 
         # Google Drive Integration
-        try:
-            from app.routes.gdrive_real import router as gdrive_router
-            app.include_router(gdrive_router, prefix="/api/v1/gdrive", tags=["Google Drive"])
-            logger.info("✅ Google Drive routes loaded (real implementation)")
+        from app.routes.gdrive_real import router as gdrive_router
+        app.include_router(gdrive_router, prefix="/api/v1/gdrive", tags=["Google Drive"])
+        logger.info("✅ Google Drive routes loaded")
 
-            # Add the Google Drive pipeline for processing files
-            from app.routes.gdrive_pipeline import router as gdrive_pipeline_router
-            app.include_router(gdrive_pipeline_router, tags=["Google Drive Pipeline"])
-            logger.info("✅ Google Drive Pipeline loaded - Ready to feed the beast!")
+        # Add the Google Drive pipeline for processing files
+        from app.routes.gdrive_pipeline import router as gdrive_pipeline_router
+        app.include_router(gdrive_pipeline_router, tags=["Google Drive Pipeline"])
+        logger.info("✅ Google Drive Pipeline loaded")
+        
+        # Photo Pipeline Routes
+        try:
+            from app.routes.photo_pipeline import router as photo_pipeline_router
+            app.include_router(photo_pipeline_router, prefix="/api", tags=["Photo Pipeline"])
+            logger.info("📸 Photo Pipeline routes loaded - Ready to process your images!")
         except ImportError as e:
-            logger.error(f"Import error: {e}")
-            # Fallback to mock routes
-            from app.routes.gdrive import router as gdrive_router
-            app.include_router(gdrive_router, prefix="/api/v1", tags=["Google Drive"])
-            logger.info("⚠️ Using mock Google Drive routes")
+            logger.error(f"Failed to import photo pipeline routes: {e}")
+        
+        # Metrics Routes
+        try:
+            from app.routes.metrics import router as metrics_router
+            app.include_router(metrics_router, prefix="/api/v2", tags=["Metrics"])
+            logger.info("📊 Metrics routes loaded - Performance monitoring active!")
+        except ImportError as e:
+            logger.error(f"Failed to import metrics routes: {e}")
 
         logger.info("📍 Routes registered successfully with tags")
     except ImportError as e:
