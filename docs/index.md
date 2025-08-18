@@ -1,40 +1,42 @@
 # 🧠 Second Brain
 
-[![Version](https://img.shields.io/badge/version-4.2.3-blue)](https://github.com/raold/second-brain)
+[![Version](https://img.shields.io/badge/version-5.0.0-blue)](https://github.com/raold/second-brain)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-green)](https://www.gnu.org/licenses/agpl-3.0.html)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2B-blue)](https://www.postgresql.org/)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![100% Local](https://img.shields.io/badge/100%25-Local_AI-orange)](https://github.com/raold/second-brain)
 
 ## 🚀 What is Second Brain?
 
-Second Brain is a production-ready personal knowledge management system that helps you capture, organize, and retrieve information using advanced AI capabilities. Built with modern Python and PostgreSQL, it provides a robust API for managing your digital memory.
+Second Brain v5.0 is a **100% local AI-powered** personal knowledge management system with multimodal search, Google Drive integration, and photo processing capabilities. NO API KEYS REQUIRED for core functionality - runs entirely on local models (CLIP, LLaVA, Whisper).
 
-### 📊 Project Stats
+### 📊 Latest Achievements
 
-- **55+ Tests Passing** - Comprehensive test coverage
-- **50% Faster Searches** - Optimized vector search with pgvector
-- **60% Storage Reduction** - Efficient data compression
-- **91.6 Code Quality Score** - Clean, maintainable codebase
+- **64,000+ Photos Processed** - Google Takeout photo pipeline
+- **100% Local AI** - No cloud dependencies for core features
+- **Multimodal Search** - Text, image, and semantic search
+- **Real-time Processing** - WebSocket support for live updates
+- **768-dim CLIP Embeddings** - State-of-the-art image understanding
 
 ## ✨ Key Features
 
-### 🔍 Smart Search
-Vector, text, and hybrid search with sub-100ms latency using PostgreSQL and pgvector.
+### 📸 Photo Pipeline
+Process Google Takeout exports with automatic HEIC conversion, CLIP embeddings, and LLaVA descriptions.
 
-### 🗄️ Unified Database
-Single PostgreSQL database for vectors, text, and metadata - no complex multi-database setup.
+### 🔍 Multimodal Search
+Search by text, image similarity, or semantic meaning across all your memories.
 
-### 🚀 Production Ready
-Comprehensive test coverage, monitoring, and Docker deployment ready.
+### 🏠 100% Local Option
+Run entirely on local models - CLIP for embeddings, LLaVA for vision, Whisper for audio.
 
-### 🔌 RESTful API
-Clean, well-documented API with WebSocket support for real-time updates.
+### 🗄️ PostgreSQL + pgvector
+Unified storage for vectors, metadata, and relationships with sub-100ms search.
 
-### 🧪 Mock Mode
-Development mode with in-memory storage for testing without PostgreSQL.
+### 📁 Google Drive Integration
+OAuth 2.0 integration for automatic document and photo sync.
 
-### 🔒 Security First
-Environment-based configuration, API key authentication, and security best practices.
+### 📊 Real-time Dashboard
+WebSocket-powered live metrics, processing status, and performance monitoring.
 
 ## 💻 Quick Start
 
@@ -51,12 +53,14 @@ pip install -r requirements.txt
 # Copy environment template
 cp .env.example .env
 
-# Start with mock database (no PostgreSQL needed)
-USE_MOCK_DB=true uvicorn app.main:app --port 8001
+# Start full stack with Docker (recommended)
+docker-compose up -d
 
-# Or with PostgreSQL
-docker-compose up -d postgres
-uvicorn app.main:app --port 8001
+# Or run development server
+python scripts/run_dev.py  # Port 8001, uses SQLite/mock
+
+# For photo processing
+python process_all_photos.py  # Process Google Takeout archives
 ```
 
 ## 📚 API Usage
@@ -87,14 +91,18 @@ curl http://localhost:8001/api/v2/statistics
 
 ## 🏗️ Architecture
 
-Second Brain uses a clean, modular architecture:
+Second Brain v5.0 features a comprehensive AI stack:
 
-- **PostgreSQL + pgvector** - Unified storage for all data types
-- **FastAPI** - Modern, fast Python web framework
-- **Pydantic** - Data validation and serialization
-- **SQLAlchemy** - Database ORM and query builder
-- **OpenAI/Anthropic** - Optional AI integrations for embeddings
-- **Docker** - Containerized deployment
+### Core Services
+- **PostgreSQL + pgvector** - Vector database (port 5432)
+- **FastAPI** - Main API server (port 8000/8001)
+- **CLIP Service** - Image embeddings (port 8002)
+- **LLaVA (LM Studio)** - Vision understanding (port 1234)
+
+### Optional Enhancements
+- **OpenAI/Anthropic** - Enhanced embeddings and generation
+- **Whisper** - Audio transcription
+- **Google Drive** - Cloud storage integration
 
 ## 📦 Project Structure
 
