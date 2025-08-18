@@ -1,6 +1,6 @@
-# 🚀 Second Brain v5.0.0 - FULLY LOCAL AI
+# 🚀 Second Brain v5.0.0 - FULLY LOCAL AI (Re-release)
 
-## Release Date: January 16, 2025
+## Release Date: January 16, 2025 (Updated: January 18, 2025)
 
 ## 🎯 NO MORE API KEYS! 100% LOCAL MODELS!
 
@@ -40,13 +40,29 @@ Tested on RTX 4090:
 - **Memory usage**: ~12GB VRAM (all services combined)
 - **Processing speed**: 200 docs/minute, 20 images/minute
 
-### 🔧 Architecture
+### 📸 Google Photos Takeout Pipeline (NEW!)
+- **Batch processing** of multi-part Google Takeout archives
+- **HEIC support** for iPhone photos with automatic conversion
+- **Real-time dashboard** with WebSocket updates
+- **Deduplication** to avoid reprocessing existing photos
+- Successfully tested with **60,000+ photos** indexed
+- Processes 10GB+ archive files without memory issues
+
+### 🐳 Docker-First Development (UPDATED)
+- **Complete Docker-only workflow** - no Python venv needed
+- **Cross-platform support** with automatic OS detection
+- **Windows 11 + WSL2** optimized configuration
+- **Port standardization** - all services on port 8000 (was 8001)
+- **Host service connectivity** via docker-compose.override.yml
+
+### 🔧 Architecture (UPDATED)
 ```
-Port 8001: Main FastAPI backend
+Port 8000: Main FastAPI backend (changed from 8001)
 Port 8002: CLIP image embeddings
-Port 8003: LLaVA vision understanding
+Port 8003: LLaVA vision understanding  
 Port 1234: LM Studio (text + embeddings)
 Port 5432: PostgreSQL with pgvector
+Port 8080: Adminer database UI
 ```
 
 ### 🚀 Quick Start
@@ -128,9 +144,20 @@ LLAVA_SERVICE_URL=http://127.0.0.1:8003
 - Hybrid search: <100ms
 - Image similarity: <200ms
 
+### 🛠️ Re-release Fixes (January 18, 2025)
+- **REMOVED** all OpenAI references from codebase (was causing test failures)
+- **FIXED** `save_to_disk` AttributeError in periodic persistence
+- **FIXED** CI/CD pipeline - all tests passing
+- **FIXED** WebSocket real-time updates for photo pipeline
+- **IMPROVED** Photo processor to handle corrupted files gracefully
+- **UPDATED** Docker mounts for Google Drive integration
+- **RENAMED** dev.bat/sh to manage.bat/sh for clarity
+- **ADDED** Cross-platform startup scripts (start-dev.bat/sh)
+
 ### 🐛 Known Issues
 - LM Studio must be started manually
 - First model load takes 30-60 seconds
+- Google Drive files must be "Available offline" for Docker access
 - Vision API requires proper CUDA setup
 
 ### 🔮 Roadmap
