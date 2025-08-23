@@ -1,7 +1,7 @@
 <div align="center">
 <img src="logo.png" alt="Second Brain Logo" width="400">
 
-# 🧠 Second Brain v5.0
+# 🧠 Second Brain v5
 
 ### 100% Local AI-Powered Knowledge Management System
 
